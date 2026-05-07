@@ -1,0 +1,54 @@
+# =============================================================================
+# gravi-signal-ml — Configuration
+# =============================================================================
+# Central configuration for all pipeline stages.
+# Override individual values via CLI flags or environment variables.
+
+detectors:
+  - "H1"   # LIGO Hanford
+  - "L1"   # LIGO Livingston
+  - "V1"   # Virgo
+
+# Known reference events for validation and PoC demonstrations
+reference_events:
+  GW150914:
+    start: 1126259446
+    end: 1126259478
+    detector: "H1"
+  GW170817:
+    start: 1187008882
+    end: 1187008914
+    detector: "H1"
+  GW231123:
+    start: 1385097252
+    end: 1385097284
+    detector: "H1"
+
+# O4a observing run window (GPS times)
+# May 24, 2023 00:00:00 UTC → Jan 16, 2024 16:00:00 UTC
+o4a_window:
+  gps_start: 1369598418
+  gps_end: 1390060818
+
+# Preprocessing parameters
+preprocessing:
+  sample_rate: 4096
+  f_low: 20.0
+  f_high: 2000.0
+  qrange: [4, 64]
+  frange: [20, 2048]
+  output_size: [256, 256]
+
+# Self-supervised encoder (Phase 2)
+encoder:
+  backbone: "convnext_tiny"
+  embedding_dim: 128
+  pretrained: true
+
+# Unsupervised clustering (Phase 3)
+clustering:
+  umap_components: 2
+  umap_n_neighbors: 15
+  umap_min_dist: 0.1
+  hdbscan_min_cluster_size: 30
+  hdbscan_min_samples: 10

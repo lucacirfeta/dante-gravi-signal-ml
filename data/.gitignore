@@ -1,0 +1,19 @@
+# Ignore all data artifacts — large binary files should not be in git
+# Raw HDF5 strain data downloads
+raw/
+*.hdf5
+*.h5
+*.hdf
+
+# Generated spectrograms (PNG + PyTorch tensors)
+spectrograms/
+*.pt
+*.png
+
+# Latent embedding vectors from encoder
+embeddings/
+*.npy
+*.npz
+
+# Keep this .gitignore
+!.gitignore
