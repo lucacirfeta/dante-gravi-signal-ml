@@ -60,8 +60,8 @@ Raw Strain Data (GWOSC)
          │
          ▼
 ┌─────────────────┐
-│  Encoder        │  Self-supervised CNN (SimCLR/MAE)
-│  (Phase 2)      │  ConvNeXt-Tiny → 128-dim embeddings
+│  Encoder        │  DINOv2-Reg ViT-S/14 (frozen)
+│  (Phase 2)      │  CLS token → 384-dim L2-norm embeddings
 └────────┬────────┘
          │
          ▼
@@ -118,11 +118,28 @@ python main.py scan --detector H1 --hours 2
 Spectrograms are saved to `data/spectrograms/o4a/H1/` with progress tracking
 and fault-tolerant error handling.
 
-### Extract Embeddings (Phase 2)
+### Phase 2 — Feature Extraction (DINOv2 with Registers)
+
+**Why DINOv2-Reg and not SimCLR/MAE:**
+- SimCLR on GW waveforms: already published (sidml, 2022)
+- Autoencoder anomaly detection on O3 glitches: already published (arXiv:2310.03453)
+- DINOv2 frozen on GW spectrograms: **not done — our contribution**
+- No labeled data, no GPU training, fully reproducible on a laptop
+- Register tokens (ICLR 2024) suppress feature artifacts → cleaner clusters
+
+Extract 384-dim embeddings from spectrograms:
 
 ```bash
-python main.py encode --input-dir data/spectrograms/
+python main.py encode \
+  --input-dir data/spectrograms/o4a/H1/ \
+  --output    data/embeddings/o4a_h1.npy \
+  --batch-size 32
 ```
+
+This will:
+- Load DINOv2-Reg ViT-S/14 via `torch.hub` (~90 MB on first run)
+- Extract L2-normalized 384-dim CLS token embeddings
+- Save `.npy` embeddings and companion `.json` metadata
 
 ### Cluster for Novel Classes (Phase 3)
 
@@ -135,7 +152,7 @@ python main.py cluster --input-dir data/embeddings/
 | Phase | Description | Status |
 |-------|------------|--------|
 | **Phase 1** | Verified preprocessing pipeline + spectrogram generation | ✅ Complete |
-| **Phase 2** | Self-supervised feature extraction (SimCLR or MAE) | 🔲 Scaffolded |
+| **Phase 2** | Frozen DINOv2-Reg feature extraction (384-dim embeddings) | ✅ Complete |
 | **Phase 3** | Unsupervised clustering (UMAP + HDBSCAN) on O4a data | 🔲 Scaffolded |
 | **Phase 4** | Novel class candidate reporting + community contribution | 🔲 Planned |
 

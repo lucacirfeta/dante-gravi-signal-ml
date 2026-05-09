@@ -39,11 +39,12 @@ preprocessing:
   frange: [20, 2048]
   output_size: [256, 256]
 
-# Self-supervised encoder (Phase 2)
+# Self-supervised encoder (Phase 2) — DINOv2 with Registers
 encoder:
-  backbone: "convnext_tiny"
-  embedding_dim: 128
-  pretrained: true
+  model: "dinov2_vits14_reg"
+  embedding_dim: 384
+  input_size: 518
+  batch_size: 32
 
 # Unsupervised clustering (Phase 3)
 clustering:

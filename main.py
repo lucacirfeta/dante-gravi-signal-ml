@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 
 from src.data_loader import fetch_o4a_segments, fetch_strain_data
+from src.encoder import DINOv2Encoder
 from src.preprocessor import bandpass, batch_process, generate_qtransform, whiten
 from src.utils import load_config, setup_logger
 
@@ -98,12 +99,26 @@ def cmd_scan(args: argparse.Namespace) -> None:
 
 
 def cmd_encode(args: argparse.Namespace) -> None:
-    """Extract embeddings from spectrograms using the self-supervised encoder."""
+    """Extract embeddings from spectrograms using the DINOv2-Reg encoder."""
     input_dir = Path(args.input_dir)
+    output_path = Path(args.output)
+    batch_size: int = args.batch_size
+
     logger.info("=== ENCODE: %s ===", input_dir)
-    logger.warning("Not implemented yet — Phase 2.")
-    print("Not implemented yet — Phase 2.")
-    print(f"Will process spectrograms from: {input_dir}")
+
+    # Ensure output directory exists
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    encoder = DINOv2Encoder()
+
+    try:
+        encoder.extract_dataset(input_dir, output_path, batch_size)
+    except FileNotFoundError as exc:
+        logger.error(str(exc))
+        print(f"Error: {exc}")
+        sys.exit(1)
+
+    print("Phase 2 complete. Embeddings ready for Phase 3 clustering.")
 
 
 def cmd_cluster(args: argparse.Namespace) -> None:
@@ -163,13 +178,25 @@ def build_parser() -> argparse.ArgumentParser:
     # --- encode (Phase 2) ---
     p_encode = subparsers.add_parser(
         "encode",
-        help="[Phase 2] Extract embeddings from spectrograms.",
+        help="[Phase 2] Extract DINOv2-Reg embeddings from spectrograms.",
     )
     p_encode.add_argument(
         "--input-dir",
         type=str,
-        default="data/spectrograms/",
+        required=True,
         help="Directory containing spectrogram PNGs.",
+    )
+    p_encode.add_argument(
+        "--output",
+        type=str,
+        required=True,
+        help="Output .npy file path (e.g. data/embeddings/o4a_h1.npy).",
+    )
+    p_encode.add_argument(
+        "--batch-size",
+        type=int,
+        default=32,
+        help="Batch size for inference. Default: 32.",
     )
     p_encode.set_defaults(func=cmd_encode)
 

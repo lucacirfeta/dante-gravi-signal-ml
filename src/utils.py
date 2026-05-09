@@ -12,8 +12,30 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import torch
 import yaml
 from astropy.time import Time
+
+
+# ---------------------------------------------------------------------------
+# Device selection
+# ---------------------------------------------------------------------------
+
+
+def get_device() -> str:
+    """Return the best available compute device: ``'cuda'``, ``'mps'``, or ``'cpu'``.
+
+    Used by :class:`~src.encoder.DINOv2Encoder` to automatically select
+    hardware acceleration when available.
+
+    Returns:
+        Device string compatible with ``torch.device()``.
+    """
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
 
 
 # ---------------------------------------------------------------------------

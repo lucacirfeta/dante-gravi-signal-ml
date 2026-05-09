@@ -18,8 +18,13 @@ matplotlib>=3.8
 seaborn>=0.13
 
 # --- ML framework (Phase 2+) ---
-torch>=2.2
-torchvision>=0.17
+torch>=2.1.0
+torchvision>=0.16.0
+# DINOv2 loaded via torch.hub — no pip package needed.
+# First run downloads ~90MB to ~/.cache/torch/hub/
+
+# --- Image processing ---
+Pillow>=10.0.0
 
 # --- Dimensionality reduction & clustering (Phase 3) ---
 umap-learn>=0.5.5
@@ -27,7 +32,7 @@ hdbscan>=0.8.33
 
 # --- Utilities ---
 PyYAML>=6.0
-tqdm>=4.66
+tqdm>=4.66.0
 python-dotenv>=1.0
 
 # --- Dev tooling ---
