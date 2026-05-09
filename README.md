@@ -207,6 +207,25 @@ Each anomalous spectrogram is classified as:
 - **LOW_CONFIDENCE** — uncertain Gravity Spy match (confidence < 0.95)
 - **UNCLASSIFIED** — genuine novel candidate (no Gravity Spy match)
 
+### Performance & Parallelization
+
+By default, all scans run sequentially (`--workers 1`).
+This works on any machine including laptops.
+
+If you have a multi-core CPU:
+```bash
+python main.py scan --detector H1 --hours 6 --workers 6
+python main.py scan-extended --workers 6
+```
+
+Recommended workers = CPU cores - 2 (leave headroom for OS).
+
+Hardware reference (Ryzen 7 7800X3D, 32GB RAM):
+- Sequential (`--workers 1`): ~1.5s/segment → 4h for 48h scan
+- Parallel (`--workers 6`): ~0.35s/segment → ~55min for 48h scan
+
+Note: GWOSC fetch threads are capped at 4 regardless of `--workers` to respect the public server's rate limits.
+
 ## 🗺️ Roadmap
 
 | Phase | Description | Status |

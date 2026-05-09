@@ -124,9 +124,9 @@ class TestGetAnomalousGpsWindows:
 class TestQueryGravitySpy:
     """Tests for Gravity Spy database queries (mocked)."""
 
-    @patch("gwpy.table.EventTable")
+    @patch("gwpy.table.GravitySpyTable")
     def test_returns_empty_list(self, mock_et_cls: MagicMock) -> None:
-        """An empty EventTable should produce an empty result list."""
+        """An empty GravitySpyTable should produce an empty result list."""
         mock_table = MagicMock()
         mock_table.__iter__ = MagicMock(return_value=iter([]))
         mock_et_cls.fetch.return_value = mock_table
@@ -136,7 +136,7 @@ class TestQueryGravitySpy:
         assert isinstance(result, list)
         assert len(result) == 0
 
-    @patch("gwpy.table.EventTable")
+    @patch("gwpy.table.GravitySpyTable")
     def test_connection_failure_returns_empty(
         self, mock_et_cls: MagicMock, caplog: pytest.LogCaptureFixture
     ) -> None:

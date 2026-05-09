@@ -262,11 +262,33 @@ def run_full_pipeline(
         metric=umap_clust_cfg.get("metric", "cosine"),
     )
 
-    # --- Step 3: HDBSCAN ---
+    # --- Step 3: HDBSCAN (auto-scaled parameters) ---
     hdbscan_cfg = config.get("hdbscan", {})
+    n = len(embeddings)
+
+    raw_min_cluster = hdbscan_cfg.get("min_cluster_size", 5)
+    min_cluster_size = (
+        max(5, int(n * 0.005))
+        if raw_min_cluster == "auto"
+        else raw_min_cluster
+    )
+
+    raw_anomaly = config.get("anomaly_threshold", 10)
+    anomaly_threshold = (
+        max(10, int(n * 0.01))
+        if raw_anomaly == "auto"
+        else raw_anomaly
+    )
+
+    logger.info(
+        f"HDBSCAN params (N={n}): "
+        f"min_cluster_size={min_cluster_size}, "
+        f"anomaly_threshold={anomaly_threshold}"
+    )
+
     labels, hdbscan_stats = run_hdbscan(
         umap_10d,
-        min_cluster_size=hdbscan_cfg.get("min_cluster_size", 5),
+        min_cluster_size=min_cluster_size,
         min_samples=hdbscan_cfg.get("min_samples", 3),
         cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
     )
@@ -275,7 +297,7 @@ def run_full_pipeline(
     anomalous = identify_anomalous_clusters(
         labels,
         hdbscan_stats,
-        small_cluster_threshold=config.get("anomaly_threshold", 10),
+        small_cluster_threshold=anomaly_threshold,
     )
 
     # --- Step 5: UMAP Pass B — visualization (2D, min_dist=0.1) ---

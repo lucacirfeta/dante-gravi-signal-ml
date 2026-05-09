@@ -128,9 +128,9 @@ def query_gravity_spy(
         fails (logged as a warning — never crashes).
     """
     try:
-        from gwpy.table import EventTable
+        from gwpy.table import GravitySpyTable  # type: ignore
 
-        table = EventTable.fetch(
+        table = GravitySpyTable.fetch(
             "gravityspy",
             "glitches",
             selection=[
@@ -138,7 +138,6 @@ def query_gravity_spy(
                 f'"ifo" = "{detector}"',
                 f'"snr" > {snr_threshold}',
             ],
-            host="https://gravityspy.ciera.northwestern.edu",
         )
 
         results: list[dict] = []
@@ -146,8 +145,8 @@ def query_gravity_spy(
             results.append(
                 {
                     "peakGPS": float(row["peakGPS"]),
-                    "label": str(row["label"]),
-                    "confidence": float(row["confidence"]),
+                    "label": str(row["ml_label"]),
+                    "confidence": float(row["ml_confidence"]),
                     "snr": float(row["snr"]),
                     "peak_frequency": float(row["peak_frequency"]),
                     "ifo": str(row["ifo"]),

@@ -92,14 +92,25 @@ def cmd_scan(args: argparse.Namespace) -> None:
     # Output directory
     output_dir = Path(f"data/spectrograms/o4a/{detector}")
 
+    workers: int = args.workers
+
     # Run batch processing
-    saved_paths = batch_process(segments, detector, output_dir)
+    if workers == 1:
+        saved_paths = batch_process(segments, detector, output_dir)
+        processed_count = len(saved_paths)
+    else:
+        from src.parallel_processor import batch_process_parallel
+        cfg = load_config()
+        fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
+        processed_count, _ = batch_process_parallel(
+            segments, detector, output_dir, cfg, workers=workers, fetch_workers=fetch_workers
+        )
 
     total_duration = sum(end - start for start, end in segments)
     logger.info(
         "Scan complete: %d processed, %d skipped, %.1f h scanned",
-        len(saved_paths),
-        len(segments) - len(saved_paths),
+        processed_count,
+        len(segments) - processed_count,
         total_duration / 3600,
     )
 
@@ -115,6 +126,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         "H1": scan_cfg["h1_offset_hours"],
         "L1": scan_cfg["l1_offset_hours"],
     }
+    workers: int = args.workers
+    fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
 
     logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
 
@@ -138,17 +151,24 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         output_dir = Path(f"data/spectrograms/o4a/{det}")
 
         # Run batch processing
-        saved_paths = batch_process(segments, det, output_dir)
+        if workers == 1:
+            saved_paths = batch_process(segments, det, output_dir)
+            processed_count = len(saved_paths)
+        else:
+            from src.parallel_processor import batch_process_parallel
+            processed_count, _ = batch_process_parallel(
+                segments, det, output_dir, cfg, workers=workers, fetch_workers=fetch_workers
+            )
 
         total_duration = sum(end - start for start, end in segments)
         logger.info(
             "%s scan complete: %d processed, %d skipped, %.1f h scanned",
             det,
-            len(saved_paths),
-            len(segments) - len(saved_paths),
+            processed_count,
+            len(segments) - processed_count,
             total_duration / 3600,
         )
-        totals[det] = len(saved_paths)
+        totals[det] = processed_count
 
     parts = " ".join(f"{d}={n}" for d, n in totals.items())
     print(f"Extended scan complete: {parts} spectrograms saved.")
@@ -297,12 +317,32 @@ def build_parser() -> argparse.ArgumentParser:
         default=1.0,
         help="Duration to scan from O4a start (hours). Default: 1.0",
     )
+    p_scan.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Number of parallel workers. Use 1 (default) for sequential mode "
+            "(any hardware). Use cpu_count-2 for maximum speed on multi-core "
+            "systems. Recommended: 6 for Ryzen 7 7800X3D."
+        ),
+    )
     p_scan.set_defaults(func=cmd_scan)
 
     # --- scan-extended (Phase 3.1) ---
     p_scan_ext = subparsers.add_parser(
         "scan-extended",
         help="[Phase 3.1] Extended 48h scan of H1 + L1 detectors.",
+    )
+    p_scan_ext.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Number of parallel workers. Use 1 (default) for sequential mode "
+            "(any hardware). Use cpu_count-2 for maximum speed on multi-core "
+            "systems. Recommended: 6 for Ryzen 7 7800X3D."
+        ),
     )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
 

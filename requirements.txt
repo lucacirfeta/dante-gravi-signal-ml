@@ -35,6 +35,11 @@ PyYAML>=6.0
 tqdm>=4.66.0
 python-dotenv>=1.0
 
+# --- Database (Phase 3.1 Gravity Spy) ---
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+pandas>=2.0.0
+
 # --- Dev tooling ---
 pytest>=8.0
 ruff>=0.3
