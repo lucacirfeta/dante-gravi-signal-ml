@@ -28,7 +28,16 @@ reference_events:
 # May 24, 2023 00:00:00 UTC → Jan 16, 2024 16:00:00 UTC
 o4a_window:
   gps_start: 1369598418
+  gps_start_H1: 1369598418
+  gps_start_L1: 1369598418
   gps_end: 1390060818
+
+# Extended scan parameters (Phase 3.1)
+scan_extended:
+  hours_per_detector: 48
+  detectors: ["H1", "L1"]
+  h1_offset_hours: 6
+  l1_offset_hours: 0
 
 # Preprocessing parameters
 preprocessing:
@@ -47,9 +56,21 @@ encoder:
   batch_size: 32
 
 # Unsupervised clustering (Phase 3)
+# Calibrated for N=344 samples, 384-dim DINOv2-Reg embeddings
 clustering:
-  umap_components: 2
-  umap_n_neighbors: 15
-  umap_min_dist: 0.1
-  hdbscan_min_cluster_size: 30
-  hdbscan_min_samples: 10
+  pca_components: 50
+  umap_clustering:
+    n_components: 10
+    n_neighbors: 20
+    min_dist: 0.0
+    metric: cosine
+  umap_viz:
+    n_components: 2
+    n_neighbors: 20
+    min_dist: 0.1
+    metric: cosine
+  hdbscan:
+    min_cluster_size: 5
+    min_samples: 3
+    cluster_selection_method: eom
+  anomaly_threshold: 10   # clusters <= this size flagged as anomalous

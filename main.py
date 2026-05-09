@@ -3,16 +3,20 @@
 
 Provides subcommands for each pipeline stage:
 
-    fetch   — Download and process a known reference event (PoC)
-    scan    — Batch-scan O4a segments for a detector
-    encode  — Extract embeddings from spectrograms (Phase 2)
-    cluster — Cluster embeddings to discover novel classes (Phase 3)
+    fetch         — Download and process a known reference event (PoC)
+    scan          — Batch-scan O4a segments for a detector
+    scan-extended — Extended 48h scan of H1 + L1 (Phase 3.1)
+    encode        — Extract embeddings from spectrograms (Phase 2)
+    cluster       — Cluster embeddings to discover novel classes (Phase 3)
+    crosscheck    — Gravity Spy cross-check of anomalous clusters (Phase 3.1)
 
 Usage:
-    python main.py fetch   --event GW150914
-    python main.py scan    --detector H1 --hours 2
-    python main.py encode  --input-dir data/spectrograms/
-    python main.py cluster --input-dir data/embeddings/
+    python main.py fetch          --event GW150914
+    python main.py scan           --detector H1 --hours 2
+    python main.py scan-extended
+    python main.py encode         --input-dir data/spectrograms/ --output data/embeddings/o4a_h1.npy
+    python main.py cluster        --input data/embeddings/o4a_h1_6h.npy --output data/clusters/
+    python main.py crosscheck     --report data/clusters/cluster_report.json --metadata data/embeddings/o4a_h1_6h.json
 """
 
 from __future__ import annotations
@@ -20,6 +24,8 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+
+import numpy as np
 
 from src.data_loader import fetch_o4a_segments, fetch_strain_data
 from src.encoder import DINOv2Encoder
@@ -98,6 +104,56 @@ def cmd_scan(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_scan_extended(args: argparse.Namespace) -> None:
+    """Run an extended 48h scan of H1 + L1 sequentially."""
+    cfg = load_config()
+    scan_cfg = cfg["scan_extended"]
+
+    hours = scan_cfg["hours_per_detector"]
+    detectors = scan_cfg["detectors"]
+    offsets = {
+        "H1": scan_cfg["h1_offset_hours"],
+        "L1": scan_cfg["l1_offset_hours"],
+    }
+
+    logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
+
+    totals: dict[str, int] = {}
+
+    for det in detectors:
+        offset = offsets.get(det, 0)
+        logger.info("--- Scanning %s: %d h, offset %.1f h ---", det, hours, offset)
+
+        # Generate segment list with offset
+        segments = fetch_o4a_segments(
+            det, duration_hours=hours, gps_offset_hours=offset
+        )
+
+        if not segments:
+            logger.warning("No segments for %s — skipping.", det)
+            totals[det] = 0
+            continue
+
+        # Output directory (preserves existing spectrograms)
+        output_dir = Path(f"data/spectrograms/o4a/{det}")
+
+        # Run batch processing
+        saved_paths = batch_process(segments, det, output_dir)
+
+        total_duration = sum(end - start for start, end in segments)
+        logger.info(
+            "%s scan complete: %d processed, %d skipped, %.1f h scanned",
+            det,
+            len(saved_paths),
+            len(segments) - len(saved_paths),
+            total_duration / 3600,
+        )
+        totals[det] = len(saved_paths)
+
+    parts = " ".join(f"{d}={n}" for d, n in totals.items())
+    print(f"Extended scan complete: {parts} spectrograms saved.")
+
+
 def cmd_encode(args: argparse.Namespace) -> None:
     """Extract embeddings from spectrograms using the DINOv2-Reg encoder."""
     input_dir = Path(args.input_dir)
@@ -123,11 +179,79 @@ def cmd_encode(args: argparse.Namespace) -> None:
 
 def cmd_cluster(args: argparse.Namespace) -> None:
     """Cluster embeddings to discover novel glitch classes."""
-    input_dir = Path(args.input_dir)
-    logger.info("=== CLUSTER: %s ===", input_dir)
-    logger.warning("Not implemented yet — Phase 3.")
-    print("Not implemented yet — Phase 3.")
-    print(f"Will cluster embeddings from: {input_dir}")
+    input_path = Path(args.input)
+    output_dir = Path(args.output)
+
+    logger.info("=== CLUSTER: %s ===", input_path)
+
+    # 1. Load embeddings (.npy)
+    if not input_path.exists():
+        logger.error("Embeddings file not found: %s", input_path)
+        sys.exit(1)
+
+    embeddings = np.load(input_path)
+    logger.info("Loaded embeddings: shape %s, dtype %s", embeddings.shape, embeddings.dtype)
+
+    # 2. Load companion metadata JSON (same path, .json suffix)
+    json_path = input_path.with_suffix(".json")
+    metadata = {}
+    if json_path.exists():
+        import json
+
+        with open(json_path, "r", encoding="utf-8") as fh:
+            metadata = json.load(fh)
+        logger.info("Loaded metadata: %d files", len(metadata.get("files", [])))
+    else:
+        logger.warning("No companion metadata JSON found at %s", json_path)
+
+    # 3. Load clustering config
+    cfg = load_config()
+    cluster_cfg = cfg["clustering"]
+
+    # 4. Run full clustering pipeline
+    from src.clustering import run_full_pipeline
+
+    result = run_full_pipeline(embeddings, cluster_cfg)
+
+    # 5. Save cluster report (JSON + UMAP plot + gallery)
+    from src.reporter import print_summary, save_cluster_report
+
+    save_cluster_report(result, metadata, output_dir)
+
+    # 6. Print human-readable summary
+    print_summary(result)
+
+    print(f"Phase 3 complete. Results in {output_dir}")
+
+
+def cmd_crosscheck(args: argparse.Namespace) -> None:
+    """Cross-check anomalous clusters against the Gravity Spy database."""
+    from src.gravity_spy_checker import (
+        cross_check_anomalous_clusters,
+        print_crosscheck_summary,
+    )
+
+    report_path = Path(args.report)
+    metadata_path = Path(args.metadata)
+    detector: str = args.detector
+    output_path = Path(args.output) if args.output else None
+
+    logger.info("=== CROSSCHECK: %s, report=%s ===", detector, report_path)
+
+    # 1. Run the full cross-check
+    results = cross_check_anomalous_clusters(
+        cluster_report_path=report_path,
+        metadata_path=metadata_path,
+        detector=detector,
+        output_path=output_path,
+    )
+
+    # 2. Print human-readable summary
+    print_crosscheck_summary(results)
+
+    # 3. Final message
+    n_unclassified = results["unclassified"]
+    print(f"Cross-check complete. Results: {n_unclassified} unclassified candidates.")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -175,6 +299,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_scan.set_defaults(func=cmd_scan)
 
+    # --- scan-extended (Phase 3.1) ---
+    p_scan_ext = subparsers.add_parser(
+        "scan-extended",
+        help="[Phase 3.1] Extended 48h scan of H1 + L1 detectors.",
+    )
+    p_scan_ext.set_defaults(func=cmd_scan_extended)
+
     # --- encode (Phase 2) ---
     p_encode = subparsers.add_parser(
         "encode",
@@ -206,12 +337,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="[Phase 3] Cluster embeddings to discover novel glitch classes.",
     )
     p_cluster.add_argument(
-        "--input-dir",
+        "--input",
         type=str,
-        default="data/embeddings/",
-        help="Directory containing embedding .npy files.",
+        required=True,
+        help="Path to embedding .npy file (e.g. data/embeddings/o4a_h1_6h.npy).",
+    )
+    p_cluster.add_argument(
+        "--output",
+        type=str,
+        default="data/clusters/",
+        help="Output directory for cluster report. Default: data/clusters/",
     )
     p_cluster.set_defaults(func=cmd_cluster)
+
+    # --- crosscheck (Phase 3.1) ---
+    p_cross = subparsers.add_parser(
+        "crosscheck",
+        help="[Phase 3.1] Cross-check anomalous clusters against Gravity Spy.",
+    )
+    p_cross.add_argument(
+        "--report",
+        type=str,
+        required=True,
+        help="Path to cluster_report.json.",
+    )
+    p_cross.add_argument(
+        "--metadata",
+        type=str,
+        required=True,
+        help="Path to encoder metadata JSON (e.g. data/embeddings/o4a_h1_6h.json).",
+    )
+    p_cross.add_argument(
+        "--detector",
+        type=str,
+        default="H1",
+        choices=["H1", "L1", "V1"],
+        help="Detector for Gravity Spy queries. Default: H1.",
+    )
+    p_cross.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Output JSON path for cross-check results.",
+    )
+    p_cross.set_defaults(func=cmd_crosscheck)
 
     return parser
 

@@ -17,3 +17,14 @@ embeddings/
 
 # Keep this .gitignore
 !.gitignore
+
+# Data — never commit
+data/raw/
+data/spectrograms/
+data/embeddings/
+data/clusters/
+
+# Results — commit only final images
+results/figures/**
+!results/figures/*.png
+!results/figures/clusters/*.png

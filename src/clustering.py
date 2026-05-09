@@ -1,18 +1,18 @@
-"""Unsupervised clustering pipeline — Phase 3 scaffold.
+"""Unsupervised clustering pipeline — Phase 3.
 
-This module will implement UMAP dimensionality reduction followed by
-HDBSCAN density-based clustering on the embedding vectors produced by
-the :mod:`src.encoder` module.  The goal is to discover novel glitch
-classes in O4a data that are not yet catalogued by Gravity Spy.
+Implements PCA → UMAP → HDBSCAN for discovering novel glitch classes in
+O4a gravitational-wave data.
 
 Pipeline:
-    1. Load 128-dim embeddings from ``data/embeddings/``
-    2. Reduce to 2-D via UMAP (for visualization and clustering)
-    3. Cluster with HDBSCAN (no need to pre-specify *k*)
-    4. Report candidate novel classes with representative spectrograms
+    1. PCA(50) — reduce 384-dim DINOv2 embeddings to 50 principal components
+    2. UMAP (Pass A) — 50D → 10D clustering-optimized (min_dist=0.0, cosine)
+    3. HDBSCAN — density-based clustering on 10D UMAP space
+    4. UMAP (Pass B) — 50D → 2D visualization-only (min_dist=0.1, cosine)
+    5. Anomaly identification — flag small clusters as novel candidates
 
-NOTE: This is a Phase 3 scaffold.  Functions have full signatures and
-docstrings but raise ``NotImplementedError`` until Phase 3.
+Two UMAP passes are required because min_dist=0.0 packs points tightly
+for optimal HDBSCAN density detection, but produces poor visualizations.
+Pass B with min_dist=0.1 generates a readable 2D scatter plot.
 """
 
 from __future__ import annotations
@@ -20,86 +20,279 @@ from __future__ import annotations
 import logging
 
 import numpy as np
+from sklearn.cluster import HDBSCAN
+from sklearn.decomposition import PCA
 
-from src.utils import load_config, setup_logger
+from src.utils import setup_logger
 
 logger: logging.Logger = setup_logger(__name__)
 
-_CFG = load_config()
-_CLUSTER_CFG = _CFG["clustering"]
+
+# ---------------------------------------------------------------------------
+# PCA
+# ---------------------------------------------------------------------------
+
+
+def run_pca(
+    embeddings: np.ndarray,
+    n_components: int = 50,
+    random_state: int = 42,
+) -> tuple[np.ndarray, float]:
+    """Reduce embedding dimensionality via Principal Component Analysis.
+
+    Args:
+        embeddings: Input array of shape ``(N, D)`` — typically (344, 384).
+        n_components: Number of principal components to keep (default 50).
+        random_state: Random seed for reproducibility.
+
+    Returns:
+        Tuple of (reduced_embeddings, explained_variance_ratio_sum):
+        - reduced_embeddings: array of shape ``(N, n_components)``
+        - explained_variance_ratio_sum: cumulative variance explained (0–1)
+    """
+    in_dim = embeddings.shape[1]
+    pca = PCA(n_components=n_components, random_state=random_state)
+    reduced = pca.fit_transform(embeddings)
+    variance_sum = float(np.sum(pca.explained_variance_ratio_))
+
+    logger.info(
+        "PCA: %dD → %dD | variance explained: %.1f%%",
+        in_dim,
+        n_components,
+        variance_sum * 100,
+    )
+    return reduced, variance_sum
+
+
+# ---------------------------------------------------------------------------
+# UMAP
+# ---------------------------------------------------------------------------
 
 
 def run_umap(
     embeddings: np.ndarray,
-    n_components: int = _CLUSTER_CFG["umap_components"],
-    n_neighbors: int = _CLUSTER_CFG["umap_n_neighbors"],
-    min_dist: float = _CLUSTER_CFG["umap_min_dist"],
+    n_components: int = 10,
+    n_neighbors: int = 20,
+    min_dist: float = 0.0,
+    metric: str = "cosine",
+    random_state: int = 42,
 ) -> np.ndarray:
-    """Reduce high-dimensional embeddings to a low-dimensional manifold.
-
-    Uses Uniform Manifold Approximation and Projection (UMAP) to produce
-    a 2-D representation suitable for visualization and downstream
-    density-based clustering.
+    """Reduce dimensionality via Uniform Manifold Approximation and Projection.
 
     Args:
-        embeddings: Input array of shape ``(N, D)`` where *D* is the
-            embedding dimensionality (typically 128).
-        n_components: Number of output dimensions (default 2).
-        n_neighbors: Size of the local neighborhood for UMAP
-            (default 15).
-        min_dist: Minimum distance between points in the output space
-            (default 0.1).
+        embeddings: Input array of shape ``(N, D)``.
+        n_components: Output dimensionality (10 for clustering, 2 for viz).
+        n_neighbors: Size of the local neighborhood (default 20).
+        min_dist: Minimum distance between output points (default 0.0).
+        metric: Distance metric for the input space (default 'cosine').
+        random_state: Random seed for reproducibility.
 
     Returns:
         Array of shape ``(N, n_components)`` with the reduced coordinates.
-
-    Raises:
-        NotImplementedError: Always — implementation deferred to Phase 3.
     """
+    import umap
+
+    in_dim = embeddings.shape[1]
+    reducer = umap.UMAP(
+        n_components=n_components,
+        n_neighbors=n_neighbors,
+        min_dist=min_dist,
+        metric=metric,
+        random_state=random_state,
+    )
+    reduced = reducer.fit_transform(embeddings)
+
     logger.info(
-        "UMAP: %s -> %d-D (n_neighbors=%d, min_dist=%.2f) [NOT IMPLEMENTED]",
-        embeddings.shape,
+        "UMAP: %dD → %dD | neighbors=%d",
+        in_dim,
         n_components,
         n_neighbors,
-        min_dist,
     )
-    raise NotImplementedError(
-        "UMAP dimensionality reduction is not yet implemented — Phase 3."
-    )
+    return reduced
+
+
+# ---------------------------------------------------------------------------
+# HDBSCAN
+# ---------------------------------------------------------------------------
 
 
 def run_hdbscan(
-    umap_coords: np.ndarray,
-    min_cluster_size: int = _CLUSTER_CFG["hdbscan_min_cluster_size"],
-    min_samples: int = _CLUSTER_CFG["hdbscan_min_samples"],
-) -> np.ndarray:
-    """Cluster UMAP-reduced embeddings using HDBSCAN.
+    embeddings: np.ndarray,
+    min_cluster_size: int = 5,
+    min_samples: int = 3,
+    cluster_selection_method: str = "eom",
+) -> tuple[np.ndarray, dict]:
+    """Cluster embeddings using HDBSCAN (sklearn implementation).
 
-    HDBSCAN is a density-based clustering algorithm that does not require
-    pre-specifying the number of clusters.  Points that do not belong to
-    any dense region are labeled as noise (``-1``), making it ideal for
-    discovering previously unknown glitch morphologies.
+    Uses ``sklearn.cluster.HDBSCAN`` (scikit-learn ≥ 1.3) — NOT the
+    standalone ``hdbscan`` pip package.
 
     Args:
-        umap_coords: Input array of shape ``(N, 2)`` from :func:`run_umap`.
-        min_cluster_size: Minimum number of points to form a cluster
-            (default 30).
-        min_samples: Number of samples in a neighborhood for a point to
-            be considered a core point (default 10).
+        embeddings: Input array of shape ``(N, D)`` from UMAP Pass A.
+        min_cluster_size: Minimum points to form a cluster (default 5).
+        min_samples: Core point neighborhood size (default 3).
+        cluster_selection_method: Cluster extraction method — ``'eom'``
+            (Excess of Mass) or ``'leaf'`` (default ``'eom'``).
 
     Returns:
-        Integer array of shape ``(N,)`` with cluster labels.  Label
-        ``-1`` indicates noise / unclustered points.
-
-    Raises:
-        NotImplementedError: Always — implementation deferred to Phase 3.
+        Tuple of (labels, stats):
+        - labels: int array of shape ``(N,)``, where ``-1`` = noise
+        - stats: dict with clustering statistics
     """
+    clusterer = HDBSCAN(
+        min_cluster_size=min_cluster_size,
+        min_samples=min_samples,
+        cluster_selection_method=cluster_selection_method,
+        metric="euclidean",
+    )
+    labels = clusterer.fit_predict(embeddings)
+
+    unique_labels = set(labels)
+    unique_labels.discard(-1)
+    n_clusters = len(unique_labels)
+    n_noise = int(np.sum(labels == -1))
+    total = len(labels)
+    noise_ratio = n_noise / total if total > 0 else 0.0
+
+    cluster_sizes = {}
+    for cid in sorted(unique_labels):
+        cluster_sizes[int(cid)] = int(np.sum(labels == cid))
+
+    stats = {
+        "n_clusters": n_clusters,
+        "n_noise": n_noise,
+        "noise_ratio": noise_ratio,
+        "cluster_sizes": cluster_sizes,
+        "largest_cluster": max(cluster_sizes.values()) if cluster_sizes else 0,
+        "smallest_cluster": min(cluster_sizes.values()) if cluster_sizes else 0,
+    }
+
     logger.info(
-        "HDBSCAN: %d points, min_cluster_size=%d, min_samples=%d [NOT IMPLEMENTED]",
-        len(umap_coords),
-        min_cluster_size,
-        min_samples,
+        "HDBSCAN: %d clusters | %d noise pts (%.1f%%)",
+        n_clusters,
+        n_noise,
+        noise_ratio * 100,
     )
-    raise NotImplementedError(
-        "HDBSCAN clustering is not yet implemented — Phase 3."
+    return labels, stats
+
+
+# ---------------------------------------------------------------------------
+# Anomaly identification
+# ---------------------------------------------------------------------------
+
+
+def identify_anomalous_clusters(
+    labels: np.ndarray,
+    stats: dict,
+    small_cluster_threshold: int = 10,
+) -> list[int]:
+    """Identify anomalous (small) clusters as novel glitch candidates.
+
+    Clusters with size ≤ ``small_cluster_threshold`` are flagged as
+    potential novel / unknown glitch classes worth investigating.
+
+    Args:
+        labels: HDBSCAN cluster labels — unused but kept for API symmetry.
+        stats: Statistics dict from :func:`run_hdbscan`.
+        small_cluster_threshold: Maximum size for a cluster to be
+            considered anomalous (default 10).
+
+    Returns:
+        Sorted list of anomalous cluster IDs.
+    """
+    anomalous = [
+        cid
+        for cid, size in stats["cluster_sizes"].items()
+        if size <= small_cluster_threshold
+    ]
+    anomalous.sort()
+
+    if anomalous:
+        sizes = [stats["cluster_sizes"][cid] for cid in anomalous]
+        logger.info(
+            "Anomalous cluster candidates: %s (%s pts each)",
+            anomalous,
+            sizes,
+        )
+    else:
+        logger.info("No anomalous clusters found (threshold=%d)", small_cluster_threshold)
+
+    return anomalous
+
+
+# ---------------------------------------------------------------------------
+# Full pipeline orchestrator
+# ---------------------------------------------------------------------------
+
+
+def run_full_pipeline(
+    embeddings: np.ndarray,
+    config: dict,
+) -> dict:
+    """Orchestrate the full clustering pipeline.
+
+    Sequence: PCA → UMAP(clustering) → HDBSCAN → anomaly ID → UMAP(viz)
+
+    Args:
+        embeddings: Raw embeddings of shape ``(N, 384)``.
+        config: Clustering config dict from ``config.yaml['clustering']``.
+
+    Returns:
+        Result dict with keys:
+        - ``labels``: HDBSCAN cluster labels per sample
+        - ``umap_2d``: 2D coordinates for visualization
+        - ``umap_10d``: 10D clustering space
+        - ``pca_variance``: explained variance ratio from PCA
+        - ``hdbscan_stats``: statistics dict from HDBSCAN
+        - ``anomalous_clusters``: list of anomalous cluster IDs
+    """
+    # --- Step 1: PCA ---
+    pca_reduced, pca_variance = run_pca(
+        embeddings,
+        n_components=config.get("pca_components", 50),
     )
+
+    # --- Step 2: UMAP Pass A — clustering (10D, min_dist=0.0) ---
+    umap_clust_cfg = config.get("umap_clustering", {})
+    umap_10d = run_umap(
+        pca_reduced,
+        n_components=umap_clust_cfg.get("n_components", 10),
+        n_neighbors=umap_clust_cfg.get("n_neighbors", 20),
+        min_dist=umap_clust_cfg.get("min_dist", 0.0),
+        metric=umap_clust_cfg.get("metric", "cosine"),
+    )
+
+    # --- Step 3: HDBSCAN ---
+    hdbscan_cfg = config.get("hdbscan", {})
+    labels, hdbscan_stats = run_hdbscan(
+        umap_10d,
+        min_cluster_size=hdbscan_cfg.get("min_cluster_size", 5),
+        min_samples=hdbscan_cfg.get("min_samples", 3),
+        cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
+    )
+
+    # --- Step 4: Identify anomalous clusters ---
+    anomalous = identify_anomalous_clusters(
+        labels,
+        hdbscan_stats,
+        small_cluster_threshold=config.get("anomaly_threshold", 10),
+    )
+
+    # --- Step 5: UMAP Pass B — visualization (2D, min_dist=0.1) ---
+    umap_viz_cfg = config.get("umap_viz", {})
+    umap_2d = run_umap(
+        pca_reduced,
+        n_components=umap_viz_cfg.get("n_components", 2),
+        n_neighbors=umap_viz_cfg.get("n_neighbors", 20),
+        min_dist=umap_viz_cfg.get("min_dist", 0.1),
+        metric=umap_viz_cfg.get("metric", "cosine"),
+    )
+
+    return {
+        "labels": labels,
+        "umap_2d": umap_2d,
+        "umap_10d": umap_10d,
+        "pca_variance": pca_variance,
+        "hdbscan_stats": hdbscan_stats,
+        "anomalous_clusters": anomalous,
+    }

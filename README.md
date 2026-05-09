@@ -141,11 +141,71 @@ This will:
 - Extract L2-normalized 384-dim CLS token embeddings
 - Save `.npy` embeddings and companion `.json` metadata
 
-### Cluster for Novel Classes (Phase 3)
+### Phase 3 — Clustering & Novel Glitch Discovery
+
+**Pipeline:** PCA(50D) → UMAP(10D, cosine) → HDBSCAN → Report + Gallery
+
+**Why two UMAP passes?**
+- **Clustering pass** (`min_dist=0.0`): packs points tightly for optimal HDBSCAN density detection
+- **Visualization pass** (`min_dist=0.1`): produces a readable 2D scatter plot
+
+Clustering is performed on the 10D output (not the 2D visualization).
 
 ```bash
-python main.py cluster --input-dir data/embeddings/
+python main.py cluster \
+  --input  data/embeddings/o4a_h1_6h.npy \
+  --output data/clusters/
 ```
+
+**Outputs:**
+- `data/clusters/cluster_report.json` — full structured report with cluster sizes, anomaly flags, and file lists
+- `data/clusters/umap_visualization.png` — colored 2D UMAP scatter plot
+- `data/clusters/cluster_gallery/` — per-cluster folders with representative spectrogram grids
+
+Small clusters (≤ 10 samples) are automatically flagged as **anomalous** — potential novel glitch classes not yet catalogued by Gravity Spy.
+
+### Phase 3.1 — Extended Scan + Gravity Spy Validation
+
+**Why this step:**
+- 344 samples (6h) insufficient for statistical confidence
+- Cross-detector replication (H1+L1) rules out local artefacts
+- Gravity Spy cross-check prevents false novelty claims
+
+**Extended scan** (~6-8h runtime, run overnight):
+
+```bash
+# Extended scan: 48h H1 (offset 6h) + 48h L1 (offset 0h)
+python main.py scan-extended
+
+# Re-encode all spectrograms per detector
+python main.py encode \
+  --input-dir data/spectrograms/o4a/H1/ \
+  --output    data/embeddings/o4a_h1_48h.npy
+
+python main.py encode \
+  --input-dir data/spectrograms/o4a/L1/ \
+  --output    data/embeddings/o4a_l1_48h.npy
+
+# Re-cluster with larger dataset
+python main.py cluster \
+  --input  data/embeddings/o4a_h1_48h.npy \
+  --output data/clusters/h1_48h/
+```
+
+**Cross-check anomalous candidates** against the [Gravity Spy](https://gravityspy.org/) glitch database:
+
+```bash
+python main.py crosscheck \
+  --report   data/clusters/h1_48h/cluster_report.json \
+  --metadata data/embeddings/o4a_h1_48h.json \
+  --detector H1 \
+  --output   data/clusters/h1_48h/gravity_spy_crosscheck.json
+```
+
+Each anomalous spectrogram is classified as:
+- **CLASSIFIED** — known Gravity Spy glitch (confidence ≥ 0.95)
+- **LOW_CONFIDENCE** — uncertain Gravity Spy match (confidence < 0.95)
+- **UNCLASSIFIED** — genuine novel candidate (no Gravity Spy match)
 
 ## 🗺️ Roadmap
 
@@ -153,7 +213,8 @@ python main.py cluster --input-dir data/embeddings/
 |-------|------------|--------|
 | **Phase 1** | Verified preprocessing pipeline + spectrogram generation | ✅ Complete |
 | **Phase 2** | Frozen DINOv2-Reg feature extraction (384-dim embeddings) | ✅ Complete |
-| **Phase 3** | Unsupervised clustering (UMAP + HDBSCAN) on O4a data | 🔲 Scaffolded |
+| **Phase 3** | PCA + UMAP + HDBSCAN clustering & novel glitch discovery | ✅ Complete |
+| **Phase 3.1** | Extended scan (48h H1+L1) + Gravity Spy cross-check | 🔄 In Progress |
 | **Phase 4** | Novel class candidate reporting + community contribution | 🔲 Planned |
 
 ## 🧪 Running Tests
@@ -181,7 +242,8 @@ gravi-signal-ml/
 │   ├── data_loader.py      # GWOSC fetch + segment management
 │   ├── preprocessor.py     # Whitening, bandpass, Q-transform
 │   ├── encoder.py          # Self-supervised backbone (Phase 2)
-│   ├── clustering.py       # UMAP + HDBSCAN pipeline (Phase 3)
+│   ├── clustering.py       # PCA + UMAP + HDBSCAN pipeline (Phase 3)
+│   ├── reporter.py         # Cluster reporting & visualization (Phase 3)
 │   └── utils.py            # Config, logging, time conversion
 ├── notebooks/              # Exploratory Jupyter notebooks
 ├── tests/                  # Pytest test suite

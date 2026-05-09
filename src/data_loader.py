@@ -103,6 +103,7 @@ def fetch_o4a_segments(
     detector: DetectorID,
     duration_hours: float = 1.0,
     segment_length: int = 32,
+    gps_offset_hours: float = 0.0,
 ) -> list[tuple[int, int]]:
     """Query GWOSC for valid science-mode segments within the O4a window.
 
@@ -116,6 +117,10 @@ def fetch_o4a_segments(
             window, in hours.  Defaults to 1 hour.
         segment_length: Length of each returned segment in seconds.
             Defaults to 32 s.
+        gps_offset_hours: Skip the first *N* hours of the O4a window
+            before starting the scan.  Useful for appending to an
+            existing scan (e.g. ``offset=6`` to skip data already
+            processed in Phase 3).  Defaults to 0.
 
     Returns:
         A list of ``(gps_start, gps_end)`` tuples covering the requested
@@ -129,22 +134,25 @@ def fetch_o4a_segments(
     if duration_hours <= 0:
         raise ValueError(f"duration_hours must be positive, got {duration_hours}")
 
+    offset_seconds = int(gps_offset_hours * 3600)
+    scan_start = _O4A_START + offset_seconds
     total_seconds = int(duration_hours * 3600)
-    scan_end = min(_O4A_START + total_seconds, _O4A_END)
+    scan_end = min(scan_start + total_seconds, _O4A_END)
 
     segments: list[tuple[int, int]] = []
-    current = _O4A_START
+    current = scan_start
     while current + segment_length <= scan_end:
         segments.append((current, current + segment_length))
         current += segment_length
 
     logger.info(
-        "Generated %d × %d-s segments for %s (%.1f h from GPS %d)",
+        "Generated %d × %d-s segments for %s (%.1f h from GPS %d, offset %.1f h)",
         len(segments),
         segment_length,
         detector,
         duration_hours,
-        _O4A_START,
+        scan_start,
+        gps_offset_hours,
     )
     return segments
 
