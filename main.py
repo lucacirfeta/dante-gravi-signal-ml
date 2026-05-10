@@ -15,18 +15,23 @@ Provides subcommands for each pipeline stage:
 Usage:
     python main.py fetch                    --event GW150914
     python main.py scan                     --detector H1 --hours 2
-    python main.py scan-extended
-    python main.py encode                   --input-dir data/spectrograms/ --output data/embeddings/o4a_h1.npy
-    python main.py cluster                  --input data/embeddings/o4a_h1_6h.npy --output data/clusters/
+    python main.py scan-extended            --workers 6 --hours 72
+    python main.py encode                   --session-id 20260510_143022 --detector H1
+    python main.py cluster                  --session-id 20260510_143022 --detector H1
     python main.py crosscheck               --report data/clusters/cluster_report.json --metadata data/embeddings/o4a_h1_6h.json
     python main.py build-indomain-reference --output data/reference/indomain_index.npz
     python main.py validate-reference       --reference data/reference/indomain_index.npz
+
+    # Backward-compatible explicit paths (override session-id):
+    python main.py encode  --input-dir data/spectrograms/o4a/H1/ --output data/embeddings/o4a_h1_48h.npy
+    python main.py cluster --input data/embeddings/o4a_h1_6h.npy --output data/clusters/
 """
 
 from __future__ import annotations
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -37,6 +42,13 @@ from src.preprocessor import bandpass, batch_process, generate_qtransform, white
 from src.utils import load_config, setup_logger
 
 logger = setup_logger("main", log_file=Path("logs/gravi-signal-ml.log"))
+
+
+def _resolve_session_id(args: argparse.Namespace) -> str:
+    """Return the session ID from args or generate one from current timestamp."""
+    if hasattr(args, "session_id") and args.session_id:
+        return args.session_id
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
 def cmd_fetch(args: argparse.Namespace) -> None:
@@ -83,7 +95,9 @@ def cmd_scan(args: argparse.Namespace) -> None:
     """Batch-scan O4a segments for a given detector."""
     detector: str = args.detector
     hours: float = args.hours
+    session_id = _resolve_session_id(args)
 
+    logger.info("Session ID: %s", session_id)
     logger.info("=== SCAN: %s, %.1f hours ===", detector, hours)
 
     # Generate segment list
@@ -93,8 +107,9 @@ def cmd_scan(args: argparse.Namespace) -> None:
         logger.warning("No segments found for %s in the requested window.", detector)
         sys.exit(0)
 
-    # Output directory
-    output_dir = Path(f"data/spectrograms/o4a/{detector}")
+    # Output directory — isolated by session_id
+    output_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    logger.info("Output dir: %s", output_dir)
 
     workers: int = args.workers
 
@@ -123,8 +138,9 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     """Run an extended 48h scan of H1 + L1 sequentially."""
     cfg = load_config()
     scan_cfg = cfg["scan_extended"]
+    session_id = _resolve_session_id(args)
 
-    hours = scan_cfg["hours_per_detector"]
+    hours = getattr(args, "hours", None) or scan_cfg["hours_per_detector"]
     detectors = scan_cfg["detectors"]
     offsets = {
         "H1": scan_cfg["h1_offset_hours"],
@@ -133,6 +149,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     workers: int = args.workers
     fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
 
+    logger.info("Session ID: %s", session_id)
     logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
 
     totals: dict[str, int] = {}
@@ -151,8 +168,9 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             totals[det] = 0
             continue
 
-        # Output directory (preserves existing spectrograms)
-        output_dir = Path(f"data/spectrograms/o4a/{det}")
+        # Output directory — isolated by session_id
+        output_dir = Path(f"data/spectrograms/o4a/{session_id}/{det}")
+        logger.info("Output dir: %s", output_dir)
 
         # Run batch processing
         if workers == 1:
@@ -180,11 +198,37 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
 
 def cmd_encode(args: argparse.Namespace) -> None:
     """Extract embeddings from spectrograms using the DINOv2-Reg encoder."""
-    input_dir = Path(args.input_dir)
-    output_path = Path(args.output)
+    session_id = getattr(args, "session_id", None) or None
+    detector = getattr(args, "detector", None)
     batch_size: int = args.batch_size
 
+    # Resolve paths: explicit flags take priority over session-id
+    if args.input_dir:
+        input_dir = Path(args.input_dir)
+    elif session_id and detector:
+        input_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    else:
+        logger.error(
+            "Either --input-dir or both --session-id and --detector are required."
+        )
+        sys.exit(1)
+
+    if args.output:
+        output_path = Path(args.output)
+    elif session_id and detector:
+        output_path = Path(
+            f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy"
+        )
+    else:
+        logger.error(
+            "Either --output or both --session-id and --detector are required."
+        )
+        sys.exit(1)
+
+    if session_id:
+        logger.info("Session ID: %s", session_id)
     logger.info("=== ENCODE: %s ===", input_dir)
+    logger.info("Output: %s", output_path)
 
     # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -203,10 +247,34 @@ def cmd_encode(args: argparse.Namespace) -> None:
 
 def cmd_cluster(args: argparse.Namespace) -> None:
     """Cluster embeddings to discover novel glitch classes."""
-    input_path = Path(args.input)
-    output_dir = Path(args.output)
+    session_id = getattr(args, "session_id", None) or None
+    detector = getattr(args, "detector", None)
 
+    # Resolve paths: explicit flags take priority over session-id
+    if args.input:
+        input_path = Path(args.input)
+    elif session_id and detector:
+        input_path = Path(
+            f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy"
+        )
+    else:
+        logger.error(
+            "Either --input or both --session-id and --detector are required."
+        )
+        sys.exit(1)
+
+    if args.output is not None:
+        # Explicit --output was given — take priority
+        output_dir = Path(args.output)
+    elif session_id and detector:
+        output_dir = Path(f"data/clusters/{session_id}/{detector.lower()}")
+    else:
+        output_dir = Path("data/clusters/")
+
+    if session_id:
+        logger.info("Session ID: %s", session_id)
     logger.info("=== CLUSTER: %s ===", input_path)
+    logger.info("Output dir: %s", output_dir)
 
     # 1. Load embeddings (.npy)
     if not input_path.exists():
@@ -595,6 +663,15 @@ def build_parser() -> argparse.ArgumentParser:
             "systems. Recommended: 6 for Ryzen 7 7800X3D."
         ),
     )
+    p_scan.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help=(
+            "Session identifier for output isolation (e.g. 20260510_143022). "
+            "Auto-generated as YYYYMMDD_HHMMSS if omitted."
+        ),
+    )
     p_scan.set_defaults(func=cmd_scan)
 
     # --- scan-extended (Phase 3.1) ---
@@ -612,6 +689,24 @@ def build_parser() -> argparse.ArgumentParser:
             "systems. Recommended: 6 for Ryzen 7 7800X3D."
         ),
     )
+    p_scan_ext.add_argument(
+        "--hours",
+        type=int,
+        default=None,
+        help=(
+            "Override hours_per_detector from config.yaml. "
+            "If omitted, uses scan_extended.hours_per_detector."
+        ),
+    )
+    p_scan_ext.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help=(
+            "Session identifier for output isolation (e.g. 20260510_143022). "
+            "Auto-generated as YYYYMMDD_HHMMSS if omitted."
+        ),
+    )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
 
     # --- encode (Phase 2) ---
@@ -622,20 +717,42 @@ def build_parser() -> argparse.ArgumentParser:
     p_encode.add_argument(
         "--input-dir",
         type=str,
-        required=True,
-        help="Directory containing spectrogram PNGs.",
+        default=None,
+        help=(
+            "Directory containing spectrogram PNGs. "
+            "Can be omitted if --session-id and --detector are provided."
+        ),
     )
     p_encode.add_argument(
         "--output",
         type=str,
-        required=True,
-        help="Output .npy file path (e.g. data/embeddings/o4a_h1.npy).",
+        default=None,
+        help=(
+            "Output .npy file path (e.g. data/embeddings/o4a_h1.npy). "
+            "Can be omitted if --session-id and --detector are provided."
+        ),
     )
     p_encode.add_argument(
         "--batch-size",
         type=int,
         default=32,
         help="Batch size for inference. Default: 32.",
+    )
+    p_encode.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help=(
+            "Session identifier to resolve input/output paths automatically. "
+            "Requires --detector. Explicit --input-dir/--output take priority."
+        ),
+    )
+    p_encode.add_argument(
+        "--detector",
+        type=str,
+        default=None,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier. Required when using --session-id.",
     )
     p_encode.set_defaults(func=cmd_encode)
 
@@ -647,14 +764,36 @@ def build_parser() -> argparse.ArgumentParser:
     p_cluster.add_argument(
         "--input",
         type=str,
-        required=True,
-        help="Path to embedding .npy file (e.g. data/embeddings/o4a_h1_6h.npy).",
+        default=None,
+        help=(
+            "Path to embedding .npy file (e.g. data/embeddings/o4a_h1_6h.npy). "
+            "Can be omitted if --session-id and --detector are provided."
+        ),
     )
     p_cluster.add_argument(
         "--output",
         type=str,
-        default="data/clusters/",
-        help="Output directory for cluster report. Default: data/clusters/",
+        default=None,
+        help=(
+            "Output directory for cluster report. Default: data/clusters/. "
+            "Can be omitted if --session-id and --detector are provided."
+        ),
+    )
+    p_cluster.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help=(
+            "Session identifier to resolve input/output paths automatically. "
+            "Requires --detector. Explicit --input/--output take priority."
+        ),
+    )
+    p_cluster.add_argument(
+        "--detector",
+        type=str,
+        default=None,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier. Required when using --session-id.",
     )
     p_cluster.set_defaults(func=cmd_cluster)
 
