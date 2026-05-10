@@ -115,6 +115,11 @@ def batch_process_parallel(
         with ProcessPoolExecutor(max_workers=cpu_workers) as cpu_pool:
             futures = []
             
+            import threading
+            # Limit pending tasks to prevent OOM / swap hangs on large scans
+            max_pending = cpu_workers * 2
+            semaphore = threading.BoundedSemaphore(max_pending)
+            
             # Consume from queue
             for _ in range(len(segments)):
                 gps_start, gps_end, ts = q.get()
@@ -122,7 +127,13 @@ def batch_process_parallel(
                     skipped_count += 1
                 else:
                     args = (gps_start, gps_end, ts, detector, output_dir, config)
-                    futures.append(cpu_pool.submit(_process_single_segment, args))
+                    
+                    # Wait if there are already too many pending tasks
+                    semaphore.acquire()
+                    
+                    future = cpu_pool.submit(_process_single_segment, args)
+                    future.add_done_callback(lambda f: semaphore.release())
+                    futures.append(future)
                     
             for future in as_completed(futures):
                 segment_id, success = future.result()
