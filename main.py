@@ -371,14 +371,15 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
     # Collect anomalous samples
     # The user request mentioned checking all 42 anomalous H1 spectrograms.
     # We check clusters > 0, which are typically valid. If noise (-1) is not considered, we skip it.
-    for cluster in cluster_report["clusters"]:
+    for cluster_id_str, cluster in cluster_report["results"]["clusters"].items():
+        cluster_id = int(cluster_id_str)
         # If it's a valid cluster, we check it
-        if cluster["cluster_id"] >= 0:
-            for sample in cluster.get("samples", []):
-                file_name = Path(sample["file"]).name
+        if cluster_id >= 0:
+            for sample_file in cluster.get("sample_files", []):
+                file_name = Path(sample_file).name
                 if file_name in file_to_idx:
-                    anomalous_files.append(sample["file"])
-                    anomalous_cluster_ids.append(cluster["cluster_id"])
+                    anomalous_files.append(sample_file)
+                    anomalous_cluster_ids.append(cluster_id)
                     anomalous_indices.append(file_to_idx[file_name])
 
     if not anomalous_indices:

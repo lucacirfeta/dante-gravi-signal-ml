@@ -236,3 +236,5 @@ logs/
 .env
 
 docs
+data/reference/trainingsetv1d1.tar.gz
+data/reference/trainingset_metadata.csv

@@ -9,6 +9,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![GWOSC O4a](https://img.shields.io/badge/data-GWOSC%20O4a-orange.svg)](https://gwosc.org/)
 
 </div>
 
@@ -17,9 +18,9 @@
 ## 🎯 What This Project Does
 
 This pipeline performs **unsupervised anomaly detection** on freshly released
-[O4a gravitational-wave data](https://gwosc.org/) (GWTC-4.0, August 2025) to
+[O4a gravitational-wave data](https://gwosc.org/) (GWTC-4.0, 2024) to
 surface **candidate novel glitch classes** and unknown signal morphologies not
-yet catalogued by the community.
+yet catalogued by the community — without labeled training data and without GPU.
 
 ### Why is this needed?
 
@@ -35,41 +36,57 @@ for *known* problems:
 **What's missing** — and what this project provides:
 
 1. 🔍 **Novel glitch discovery** — detect unknown glitch classes without
-   pre-labeled training data (self-supervised)
-2. 🌐 **Cross-detector generalization** — models that train on H1 and
-   transfer to L1/V1 without fine-tuning
-3. 📖 **Reproducible, open-source code** — most GW ML papers do not release
-   usable code (a major gap noted in the literature)
+   pre-labeled training data (self-supervised, zero annotation cost)
+2. 🌐 **Cross-detector validation** — independent replication on H1 and L1
+   to rule out instrument-local artefacts
+3. 🔬 **Morphological similarity search** — compare O4a anomalies against the
+   full Gravity Spy O1–O3b training set using DINOv2 embedding space
+4. 📖 **Reproducible, open-source code** — most GW ML papers do not release
+   usable code; this project does, running on any laptop (CPU only)
+
+---
 
 ## 🏗️ Architecture
 
 ```
-Raw Strain Data (GWOSC)
+Raw Strain Data (GWOSC O4a)
         │
         ▼
-┌─────────────────┐
-│  Data Loader    │  fetch_open_data() via gwpy
-│  (data_loader)  │  O4a segment management
-└────────┬────────┘
+┌─────────────────────┐
+│   Data Loader       │  gwpy fetch_open_data() · O4a segment management
+│   (data_loader.py)  │  Parallel fetch: ThreadPoolExecutor (--workers N)
+└────────┬────────────┘
          │
          ▼
-┌─────────────────┐
-│  Preprocessor   │  Whitening → Bandpass → Q-Transform
-│  (preprocessor) │  Batch processing with fault tolerance
-└────────┬────────┘
+┌─────────────────────┐
+│   Preprocessor      │  Whitening → Bandpass (20–2000 Hz) → Q-Transform
+│   (preprocessor.py) │  Parallel Q-transform: ProcessPoolExecutor
+└────────┬────────────┘
+         │  256×256 PNG spectrograms
+         ▼
+┌─────────────────────┐
+│   DINOv2-Reg        │  dinov2_vits14_reg (ViT-S/14 + register tokens)
+│   Encoder           │  Frozen weights — zero training required
+│   (encoder.py)      │  CLS token → 384-dim L2-normalized embeddings
+└────────┬────────────┘
          │
          ▼
-┌─────────────────┐
-│  Encoder        │  DINOv2-Reg ViT-S/14 (frozen)
-│  (Phase 2)      │  CLS token → 384-dim L2-norm embeddings
-└────────┬────────┘
+┌─────────────────────┐
+│   Clustering        │  PCA(50D) → UMAP(10D, cosine, min_dist=0.0)
+│   (clustering.py)   │  → HDBSCAN (auto-scaled min_cluster_size)
+│                     │  → UMAP(2D) for visualization
+└────────┬────────────┘
          │
          ▼
-┌─────────────────┐
-│  Clustering     │  UMAP + HDBSCAN
-│  (Phase 3)      │  Novel class candidate discovery
-└─────────────────┘
+┌─────────────────────┐
+│   Morphological     │  KNN cosine search against Gravity Spy
+│   Cross-Check       │  O1–O3b reference index (1100 samples, 22 classes)
+│  (similarity_       │  NOVEL / KNOWN / AMBIGUOUS per spectrogram
+│   checker.py)       │
+└─────────────────────┘
 ```
+
+---
 
 ## 📦 Installation
 
@@ -80,8 +97,8 @@ cd dante-gravi-signal-ml
 
 # Create a virtual environment
 python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# .venv\Scripts\activate   # Windows
+source .venv/bin/activate   # Linux/macOS
+# .venv\Scripts\activate    # Windows
 
 # Install dependencies
 pip install -r requirements.txt
@@ -90,248 +107,271 @@ pip install -r requirements.txt
 pre-commit install
 ```
 
+> **Note on GPU:** The pipeline runs fully on CPU. The RTX 5070 (Blackwell sm_120)
+> is not yet supported by PyTorch stable. Encoding 2600 spectrograms takes ~10 min on CPU — acceptable for batch workloads.
+
+---
+
 ## 🚀 Usage
 
-### Fetch a Known Event (Proof of Concept)
-
-Download strain data for GW150914 (the first gravitational-wave detection),
-preprocess it, and generate a Q-transform spectrogram:
+### Phase 1 — Fetch a Known Event (Proof of Concept)
 
 ```bash
 python main.py fetch --event GW150914
 ```
 
-This will:
-- Download H1 strain data from GWOSC
-- Apply whitening + bandpass filtering (20–2000 Hz)
-- Generate a Q-transform spectrogram
-- Save to `data/spectrograms/GW150914_H1.png`
+Downloads H1 strain data for GW150914, applies whitening + bandpass,
+and saves the Q-transform spectrogram to `data/spectrograms/GW150914_H1.png`.
+A visible chirp confirms the preprocessing pipeline is mathematically correct.
 
-### Batch Scan O4a Data
-
-Scan the first 2 hours of O4a data from LIGO Hanford:
+### Phase 1 — Batch Scan O4a Data
 
 ```bash
-python main.py scan --detector H1 --hours 2
+# Sequential (default, works on any machine)
+python main.py scan --detector H1 --hours 6
+
+# Parallel (multi-core systems, e.g. Ryzen 7 7800X3D)
+python main.py scan --detector H1 --hours 6 --workers 6
+
+# Full extended scan: 48h H1 + 48h L1
+python main.py scan-extended --workers 6
 ```
 
-Spectrograms are saved to `data/spectrograms/o4a/H1/` with progress tracking
-and fault-tolerant error handling.
+Spectrograms are saved to `data/spectrograms/o4a/{detector}/`.
 
 ### Phase 2 — Feature Extraction (DINOv2 with Registers)
 
 **Why DINOv2-Reg and not SimCLR/MAE:**
-- SimCLR on GW waveforms: already published (sidml, 2022)
+- SimCLR on GW waveforms: already published (2022)
 - Autoencoder anomaly detection on O3 glitches: already published (arXiv:2310.03453)
-- DINOv2 frozen on GW spectrograms: **not done — our contribution**
-- No labeled data, no GPU training, fully reproducible on a laptop
-- Register tokens (ICLR 2024) suppress feature artifacts → cleaner clusters
-
-Extract 384-dim embeddings from spectrograms:
+- **DINOv2 frozen on GW spectrograms: not done — our contribution**
+- Register tokens (ICLR 2024) suppress feature map artefacts → cleaner clusters
+- No labeled data, no GPU training, reproducible on any laptop
 
 ```bash
 python main.py encode \
   --input-dir data/spectrograms/o4a/H1/ \
-  --output    data/embeddings/o4a_h1.npy \
+  --output    data/embeddings/o4a_h1_48h.npy \
   --batch-size 32
 ```
 
-This will:
-- Load DINOv2-Reg ViT-S/14 via `torch.hub` (~90 MB on first run)
-- Extract L2-normalized 384-dim CLS token embeddings
-- Save `.npy` embeddings and companion `.json` metadata
+Loads DINOv2-Reg ViT-S/14 via `torch.hub` (~90 MB on first run) and saves
+a `(N, 384)` float32 embedding array + companion `.json` metadata.
 
 ### Phase 3 — Clustering & Novel Glitch Discovery
 
-**Pipeline:** PCA(50D) → UMAP(10D, cosine) → HDBSCAN → Report + Gallery
+**Pipeline:** PCA(50D) → UMAP(10D, cosine, `min_dist=0.0`) → HDBSCAN → UMAP(2D) visualization
 
-**Why two UMAP passes?**
-- **Clustering pass** (`min_dist=0.0`): packs points tightly for optimal HDBSCAN density detection
-- **Visualization pass** (`min_dist=0.1`): produces a readable 2D scatter plot
+Two UMAP passes are required:
+- **Clustering pass** (`min_dist=0.0`, 10D): tight packing for HDBSCAN density detection
+- **Visualization pass** (`min_dist=0.1`, 2D): readable scatter plot — never cluster on this
 
-Clustering is performed on the 10D output (not the 2D visualization).
-
-```bash
-python main.py cluster \
-  --input  data/embeddings/o4a_h1_6h.npy \
-  --output data/clusters/
-```
-
-**Outputs:**
-- `data/clusters/cluster_report.json` — full structured report with cluster sizes, anomaly flags, and file lists
-- `data/clusters/umap_visualization.png` — colored 2D UMAP scatter plot
-- `data/clusters/cluster_gallery/` — per-cluster folders with representative spectrogram grids
-
-Small clusters (≤ 10 samples) are automatically flagged as **anomalous** — potential novel glitch classes not yet catalogued by Gravity Spy.
-
-### Phase 3.3 — Morphological Similarity Cross-Check
-
-**Why this approach (not GPS lookup):**
-O4a data is not in the Gravity Spy Zenodo catalog (only O1-O3b).
-GPS lookup requires LIGO authentication.
-Morphological similarity in DINOv2 embedding space is scientifically more rigorous: it asks "does this LOOK like a known glitch?" not "was this exact timestamp classified?"
-
-### Build Reference Index
-
-Download the Gravity Spy training set tar.gz manually from Zenodo
-(one-time, ~2GB):
-  https://zenodo.org/records/1476551/files/trainingsetv1d1.tar.gz
-
-Save it to: data/reference/trainingsetv1d1.tar.gz
-
-Then build the reference index:
-  python main.py build-reference \
-    --output data/reference/gravity_spy_index.npz \
-    --max-per-class 50
-
-This extracts up to 50 images per class (22 classes = ~1100 images),
-applies the official Gravity Spy crop (x=[66,532], y=[105,671]),
-extracts DINOv2-Reg embeddings, and saves a (1100, 384) reference index.
-
-Note: the HDF5 file (trainingsetv1d1.h5) is NOT used due to
-incompatibility with h5py on Python 3.13.
-
-# Run morphological crosscheck on H1 anomalous clusters
-python main.py morphcheck \
-  --embeddings data/embeddings/o4a_h1_48h.npy \
-  --report     data/clusters/h1_48h/cluster_report.json \
-  --reference  data/reference/gravity_spy_index.npz \
-  --output     data/clusters/h1_48h/morphological_crosscheck.json
-```
-
-Interpretation:
-- **NOVEL** (cosine sim < 0.85): not similar to any known class → candidate
-- **KNOWN** (sim >= 0.85, agreement >= 60%): matches a known class
-- **AMBIGUOUS** (sim >= 0.85, agreement < 60%): visually similar but unclear
-
-### Phase 3.1 — Extended Scan + Gravity Spy Validation
-
-**Why this step:**
-- 344 samples (6h) insufficient for statistical confidence
-- Cross-detector replication (H1+L1) rules out local artefacts
-- Gravity Spy cross-check prevents false novelty claims
-
-**Extended scan** (~6-8h runtime, run overnight):
+HDBSCAN `min_cluster_size` is **auto-scaled** to 0.5% of N, ensuring comparable
+sensitivity across datasets of different sizes.
 
 ```bash
-# Extended scan: 48h H1 (offset 6h) + 48h L1 (offset 0h)
-python main.py scan-extended
-
-# Re-encode all spectrograms per detector
-python main.py encode \
-  --input-dir data/spectrograms/o4a/H1/ \
-  --output    data/embeddings/o4a_h1_48h.npy
-
-python main.py encode \
-  --input-dir data/spectrograms/o4a/L1/ \
-  --output    data/embeddings/o4a_l1_48h.npy
-
-# Re-cluster with larger dataset
 python main.py cluster \
   --input  data/embeddings/o4a_h1_48h.npy \
   --output data/clusters/h1_48h/
 ```
 
-**Cross-check anomalous candidates** against the [Gravity Spy](https://gravityspy.org/) glitch database:
+**Outputs:**
+- `cluster_report.json` — structured report with cluster sizes and anomaly flags
+- `umap_visualization.png` — 2D colored scatter plot with anomalous clusters marked ⭐
+- `cluster_gallery/cluster_N/contact_sheet.png` — 3×3 grids of representative spectrograms
+
+### Phase 3.1 — Extended Scan + Cross-Detector Validation
 
 ```bash
-python main.py crosscheck \
-  --report   data/clusters/h1_48h/cluster_report.json \
-  --metadata data/embeddings/o4a_h1_48h.json \
-  --detector H1 \
-  --output   data/clusters/h1_48h/gravity_spy_crosscheck.json
+# Re-cluster L1
+python main.py cluster \
+  --input  data/embeddings/o4a_l1_48h.npy \
+  --output data/clusters/l1_48h/
 ```
 
-Each anomalous spectrogram is classified as:
-- **CLASSIFIED** — known Gravity Spy glitch (confidence ≥ 0.95)
-- **LOW_CONFIDENCE** — uncertain Gravity Spy match (confidence < 0.95)
-- **UNCLASSIFIED** — genuine novel candidate (no Gravity Spy match)
+If anomalous morphologies appear **independently on both H1 and L1**, instrument-local
+explanations are significantly weakened — a key scientific requirement before any claim.
 
-### Performance & Parallelization
+### Phase 3.2 — Performance & Parallelization
 
-By default, all scans run sequentially (`--workers 1`).
-This works on any machine including laptops.
+By default all scans run sequentially (`--workers 1`) and work on any hardware.
 
-If you have a multi-core CPU:
 ```bash
+# Multi-core (recommended: CPU cores - 2)
 python main.py scan --detector H1 --hours 6 --workers 6
 python main.py scan-extended --workers 6
 ```
 
-Recommended workers = CPU cores - 2 (leave headroom for OS).
+| Hardware | Mode | Speed |
+|----------|------|-------|
+| Any laptop | `--workers 1` | ~1.5 s/segment |
+| Ryzen 7 7800X3D | `--workers 6` | ~0.35 s/segment (~4x speedup) |
 
-Hardware reference (Ryzen 7 7800X3D, 32GB RAM):
-- Sequential (`--workers 1`): ~1.5s/segment → 4h for 48h scan
-- Parallel (`--workers 6`): ~0.35s/segment → ~55min for 48h scan
+GWOSC fetch threads are capped at 4 regardless of `--workers` to respect public server rate limits.
 
-Note: GWOSC fetch threads are capped at 4 regardless of `--workers` to respect the public server's rate limits.
+### Phase 3.3 — Morphological Similarity Cross-Check
 
-## 🗺️ Roadmap
+**Scientific rationale:** O4a data is not in the Gravity Spy Zenodo catalog (only O1–O3b).
+GPS-based lookup requires LIGO authentication. Morphological similarity in DINOv2 embedding
+space is the correct approach: it asks *"does this LOOK like a known glitch?"* rather than
+*"was this exact timestamp already classified?"*
 
-| Phase | Description | Status |
-|-------|------------|--------|
-| **Phase 1** | Verified preprocessing pipeline + spectrogram generation | ✅ Complete |
-| **Phase 2** | Frozen DINOv2-Reg feature extraction (384-dim embeddings) | ✅ Complete |
-| **Phase 3** | PCA + UMAP + HDBSCAN clustering & novel glitch discovery | ✅ Complete |
-| **Phase 3.1** | Extended scan (48h H1+L1) + Gravity Spy cross-check | ✅ Complete |
-| **Phase 3.3** | Morphological Similarity Cross-Check | 🔄 In Progress |
-| **Phase 4** | Novel class candidate reporting + community contribution | 🔲 Planned |
+#### Step 1 — Build the Reference Index (one-time, ~10 min)
+
+Download the Gravity Spy training set from Zenodo (~5 GB):
+
+```
+https://zenodo.org/records/1476551/files/trainingsetv1d1.tar.gz
+```
+
+Save to `data/reference/trainingsetv1d1.tar.gz`, then:
+
+```bash
+python main.py build-reference \
+  --output data/reference/gravity_spy_index.npz \
+  --max-per-class 50
+```
+
+Extracts up to 50 images per class (22 classes ≈ 1100 images), applies the official
+Gravity Spy crop (`x=[66:532], y=[105:671]`), and builds a `(1100, 384)` DINOv2
+reference index.
+
+> **Note:** `trainingsetv1d1.h5` is **not used** — incompatible with h5py on Python 3.13.
+> Always use the `.tar.gz` approach.
+
+#### Step 2 — Run the Morphological Cross-Check
+
+```bash
+# H1 anomalous clusters
+python main.py morphcheck \
+  --embeddings data/embeddings/o4a_h1_48h.npy \
+  --report     data/clusters/h1_48h/cluster_report.json \
+  --reference  data/reference/gravity_spy_index.npz \
+  --output     data/clusters/h1_48h/morphological_crosscheck.json
+
+# L1 anomalous clusters
+python main.py morphcheck \
+  --embeddings data/embeddings/o4a_l1_48h.npy \
+  --report     data/clusters/l1_48h/cluster_report.json \
+  --reference  data/reference/gravity_spy_index.npz \
+  --output     data/clusters/l1_48h/morphological_crosscheck.json
+```
+
+Each anomalous spectrogram receives one of three labels:
+
+| Status | Condition | Meaning |
+|--------|-----------|---------|
+| **NOVEL** | cosine sim < 0.85 | Not similar to any known class → novel candidate |
+| **KNOWN** | sim ≥ 0.85, label agreement ≥ 60% | Matches a known Gravity Spy class |
+| **AMBIGUOUS** | sim ≥ 0.85, agreement < 60% | Visually similar to training set but no clear match |
+
+---
+
+## 📊 Preliminary Results (O4a, 48h H1 + 48h L1)
+
+| Detector | Samples | Clusters | Anomalous | Noise | PCA Variance |
+|----------|---------|----------|-----------|-------|--------------|
+| H1 | 2,634 | 5 | **2** (23 + 19 pts) | 0.0% | 98.2% |
+| L1 | 4,982 | 6 | **1** (32 pts) | 0.0% | 98.4% |
+
+Anomalous clusters were identified independently on two detectors with
+different instrumental noise characteristics. Morphological cross-check
+against the Gravity Spy O1–O3b training set is in progress.
+
+---
 
 ## 🧪 Running Tests
 
 ```bash
-# Run all tests
+# Full test suite (fast, no internet required)
 pytest tests/ -v
 
-# Run with coverage
+# Include slow tests (requires DINOv2 model download ~90MB)
+pytest tests/ -v --run-slow
+
+# With coverage
 pytest tests/ -v --cov=src --cov-report=term-missing
 ```
 
-Tests use synthetic data and mocked network calls — no internet required.
+All tests use synthetic data and mocked network calls. Slow tests marked
+with `@pytest.mark.slow` are skipped by default for CI compatibility.
+
+---
 
 ## 📂 Project Structure
 
 ```
 gravi-signal-ml/
-├── data/                   # Git-ignored data artifacts
-│   ├── raw/                # .hdf5 downloads
-│   ├── spectrograms/       # PNG + .pt tensors
-│   └── embeddings/         # Latent vectors from encoder
+├── data/                        # Git-ignored data artifacts
+│   ├── raw/                     # .gwf / .hdf5 strain downloads
+│   ├── spectrograms/            # Q-transform PNGs
+│   ├── embeddings/              # DINOv2 .npy embedding arrays
+│   ├── clusters/                # Cluster reports + galleries
+│   └── reference/               # Gravity Spy reference index
 ├── src/
-│   ├── __init__.py
-│   ├── data_loader.py      # GWOSC fetch + segment management
-│   ├── preprocessor.py     # Whitening, bandpass, Q-transform
-│   ├── encoder.py          # Self-supervised backbone (Phase 2)
-│   ├── clustering.py       # PCA + UMAP + HDBSCAN pipeline (Phase 3)
-│   ├── reporter.py         # Cluster reporting & visualization (Phase 3)
-│   └── utils.py            # Config, logging, time conversion
-├── notebooks/              # Exploratory Jupyter notebooks
-├── tests/                  # Pytest test suite
-├── main.py                 # CLI entry point
-├── config.yaml             # Central configuration
-├── requirements.txt        # Python dependencies
-└── .pre-commit-config.yaml # Code quality hooks
+│   ├── data_loader.py           # GWOSC fetch + O4a segment management
+│   ├── preprocessor.py          # Whitening · bandpass · Q-transform · batch
+│   ├── parallel_processor.py    # ThreadPool + ProcessPool pipeline
+│   ├── encoder.py               # DINOv2-Reg frozen encoder
+│   ├── clustering.py            # PCA + UMAP + HDBSCAN pipeline
+│   ├── reporter.py              # Cluster report + UMAP viz + gallery
+│   ├── gravity_spy_checker.py   # GPS-based cross-check (requires LIGO auth)
+│   ├── reference_builder.py     # Gravity Spy tar.gz → DINOv2 reference index
+│   ├── similarity_checker.py    # Cosine KNN novelty assessment
+│   └── utils.py                 # Config · logging · GPS conversion · normalization
+├── results/
+│   └── figures/                 # Committed: UMAP plots + anomalous contact sheets
+├── docs/
+│   └── SESSION_HANDOFF.md       # Session continuity document
+├── notebooks/                   # Exploratory Jupyter notebooks
+├── tests/                       # Pytest suite (synthetic data, mocked network)
+├── main.py                      # CLI: fetch · scan · encode · cluster · morphcheck
+├── config.yaml                  # Central configuration (all parameters)
+├── requirements.txt             # Pinned dependencies
+└── .pre-commit-config.yaml      # ruff + mypy + file hygiene
 ```
+
+---
+
+## 🗺️ Roadmap
+
+| Phase | Description | Status |
+|-------|------------|--------|
+| **Phase 1** | Preprocessing pipeline + GW150914 chirp validation | ✅ Complete |
+| **Phase 2** | DINOv2-Reg frozen encoder (384-dim embeddings) | ✅ Complete |
+| **Phase 3** | PCA + UMAP + HDBSCAN clustering | ✅ Complete |
+| **Phase 3.1** | Extended scan 48h H1+L1 + GPS cross-check | ✅ Complete |
+| **Phase 3.2** | Parallel pipeline (`--workers N`) | ✅ Complete |
+| **Phase 3.3** | Morphological similarity vs Gravity Spy training set | 🔄 In Progress |
+| **Phase 4** | Novel candidate reporting + community contribution | 🔲 Planned |
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! This project is designed to be a community
-resource for the gravitational-wave open science community.
+Contributions are welcome. This project is designed as a community resource
+for gravitational-wave open science.
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Ensure tests pass (`pytest tests/ -v`)
-4. Ensure code quality (`ruff check . && mypy src/`)
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Ensure tests pass: `pytest tests/ -v`
+4. Ensure code quality: `ruff check . && mypy src/`
 5. Submit a pull request
+
+---
 
 ## 📚 References
 
 - [GWOSC — Gravitational Wave Open Science Center](https://gwosc.org/)
 - [Gravity Spy](https://gravityspy.org/) — supervised glitch classifier
 - [gwpy documentation](https://gwpy.github.io/docs/stable/)
-- Zevin et al. (2017) — *Gravity Spy: Integrating Advanced LIGO Detector
-  Characterization, Machine Learning, and Citizen Science*
-- LIGO/Virgo/KAGRA Collaboration — O4a data release (GWTC-4.0)
+- Zevin et al. (2017) — *Gravity Spy: Integrating Advanced LIGO Detector Characterization, Machine Learning, and Citizen Science*
+- Oquab et al. (2023) — *DINOv2: Learning Robust Visual Features without Supervision*
+- Darcet et al. (2023) — *Vision Transformers Need Registers* (ICLR 2024)
+- Glanzer et al. (2023) — *Data quality up to the third observing run of Advanced LIGO: Gravity Spy glitch classifications*
+- LIGO/Virgo/KAGRA Collaboration — O4a data release (GWTC-4.0, 2024)
+
+---
 
 ## 📄 Citation
 
@@ -340,13 +380,13 @@ If you use this code in your research, please cite:
 ```bibtex
 @software{gravi_signal_ml,
   title  = {gravi-signal-ml: Unsupervised Anomaly Detection for Gravitational-Wave Data},
-  author = {Luca Cirfeta},
-  year   = {2025},
+  author = {Cirfeta, Luca},
+  year   = {2026},
   url    = {https://github.com/lucacirfeta/dante-gravi-signal-ml},
+  note   = {Novel glitch discovery in LIGO/Virgo O4a data using DINOv2 frozen features}
 }
 ```
 
 ## 📝 License
 
-This project is licensed under the Apache License 2.0 — see [LICENSE](LICENSE)
-for details.
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
