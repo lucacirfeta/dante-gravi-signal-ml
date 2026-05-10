@@ -278,45 +278,59 @@ def cmd_build_reference(args: argparse.Namespace) -> None:
     """Build a DINOv2 embedding reference index from the Gravity Spy training set."""
     from src.reference_builder import (
         download_training_set_metadata,
-        download_training_images,
-        build_reference_index,
+        extract_from_tar,
+        build_reference_index_from_paths,
     )
 
     output_path = Path(args.output)
+    tar_path = Path(args.tar_path)
     max_per_class: int = args.max_per_class
     cfg = load_config()
     sim_cfg = cfg.get("similarity", {})
     # Use exact zenodo url string matching the expected file
-    zenodo_url = f"https://zenodo.org/record/{sim_cfg.get('training_set_zenodo', '10.5281/zenodo.1476551').split('/')[-1]}/files/trainingset_v1d0_metadata.csv"
+    zenodo_url = f"https://zenodo.org/records/{sim_cfg.get('training_set_zenodo', '10.5281/zenodo/1476551').split('/')[-1]}/files/trainingset_v1d1_metadata.csv"
     if '10.5281' in zenodo_url:
-        zenodo_url = "https://zenodo.org/record/1476551/files/trainingset_v1d0_metadata.csv"
+        zenodo_url = "https://zenodo.org/records/1476551/files/trainingset_v1d1_metadata.csv"
     duration = sim_cfg.get("duration", 1.0)
 
     logger.info("=== BUILD-REFERENCE ===")
 
-    # 1. Download metadata CSV
+    # Step 1: metadata
     metadata_df = download_training_set_metadata(output_path.parent, zenodo_url=zenodo_url)
 
-    # 2. Download training images
-    image_paths = download_training_images(
-        metadata_df,
-        output_path.parent,
-        duration=duration,
+    # Step 2: check tar exists
+    if not tar_path.exists():
+        logger.error(
+            "tar.gz not found at %s. "
+            "Download it manually from: "
+            "https://zenodo.org/records/1476551/files/trainingsetv1d1.tar.gz",
+            tar_path
+        )
+        raise FileNotFoundError(f"Training set tar.gz not found: {tar_path}")
+
+    # Step 3: extract PNGs from tar
+    image_paths, labels = extract_from_tar(
+        tar_path=tar_path,
+        output_dir=output_path.parent,
+        metadata=metadata_df,
         max_per_class=max_per_class,
         sample_type="train",
+        duration=str(duration),
     )
 
     if not image_paths:
-        logger.error("No images downloaded. Aborting reference build.")
-        sys.exit(1)
+        raise RuntimeError("No images extracted from tar.gz. Check file integrity.")
 
-    # Extract labels from parent directory names
-    labels = [p.parent.name for p in image_paths]
+    # Step 4: build DINOv2 reference index
+    meta = build_reference_index_from_paths(
+        image_paths=image_paths,
+        labels=labels,
+        output_path=output_path,
+        batch_size=32,
+    )
 
-    # 3. Extract embeddings and build index
-    metadata = build_reference_index(image_paths, labels, output_path, batch_size=cfg.get("encoder", {}).get("batch_size", 32))
-
-    print(f"Reference index ready: {metadata['n_samples']} samples, {metadata['n_classes']} classes")
+    print(f"Reference index complete: {meta['n_samples']} samples, "
+          f"{meta['n_classes']} classes → {output_path}")
 
 
 def cmd_morphcheck(args: argparse.Namespace) -> None:
@@ -560,6 +574,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=50,
         help="Maximum samples per class to download.",
+    )
+    p_build.add_argument(
+        "--tar-path",
+        default="data/reference/trainingsetv1d1.tar.gz",
+        help="Path to the Gravity Spy tar.gz training set "
+             "(default: data/reference/trainingsetv1d1.tar.gz)"
     )
     p_build.set_defaults(func=cmd_build_reference)
 

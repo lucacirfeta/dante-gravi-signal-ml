@@ -7,6 +7,9 @@
 gwpy>=3.0.13
 gwosc>=0.7.1
 h5py>=3.10
+# h5py: keep for GWOSC data loading. Note: trainingsetv1d1.h5
+# is incompatible with h5py>=3.12 on Python 3.13.
+# Use tar.gz extraction instead (see reference_builder.py).
 astropy>=6.0
 
 # --- Signal processing ---
@@ -25,6 +28,7 @@ torchvision>=0.16.0
 
 # --- Image processing ---
 Pillow>=10.0.0
+scikit-image>=0.21.0
 
 # --- Dimensionality reduction & clustering (Phase 3) ---
 umap-learn>=0.5.6

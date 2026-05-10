@@ -23,8 +23,11 @@ data/raw/
 data/spectrograms/
 data/embeddings/
 data/clusters/
+data/reference/
 
 # Results — commit only final images
 results/figures/**
 !results/figures/*.png
 !results/figures/clusters/*.png
+
+docs/

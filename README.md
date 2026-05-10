@@ -171,11 +171,25 @@ O4a data is not in the Gravity Spy Zenodo catalog (only O1-O3b).
 GPS lookup requires LIGO authentication.
 Morphological similarity in DINOv2 embedding space is scientifically more rigorous: it asks "does this LOOK like a known glitch?" not "was this exact timestamp classified?"
 
-Usage:
-```bash
-# Build reference index (one-time, ~500MB download)
-python main.py build-reference \
-  --output data/reference/gravity_spy_index.npz
+### Build Reference Index
+
+Download the Gravity Spy training set tar.gz manually from Zenodo
+(one-time, ~2GB):
+  https://zenodo.org/records/1476551/files/trainingsetv1d1.tar.gz
+
+Save it to: data/reference/trainingsetv1d1.tar.gz
+
+Then build the reference index:
+  python main.py build-reference \
+    --output data/reference/gravity_spy_index.npz \
+    --max-per-class 50
+
+This extracts up to 50 images per class (22 classes = ~1100 images),
+applies the official Gravity Spy crop (x=[66,532], y=[105,671]),
+extracts DINOv2-Reg embeddings, and saves a (1100, 384) reference index.
+
+Note: the HDF5 file (trainingsetv1d1.h5) is NOT used due to
+incompatibility with h5py on Python 3.13.
 
 # Run morphological crosscheck on H1 anomalous clusters
 python main.py morphcheck \

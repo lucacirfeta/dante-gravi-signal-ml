@@ -234,3 +234,5 @@ logs/
 
 # Environment variables
 .env
+
+docs
