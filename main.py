@@ -3,20 +3,24 @@
 
 Provides subcommands for each pipeline stage:
 
-    fetch         — Download and process a known reference event (PoC)
-    scan          — Batch-scan O4a segments for a detector
-    scan-extended — Extended 48h scan of H1 + L1 (Phase 3.1)
-    encode        — Extract embeddings from spectrograms (Phase 2)
-    cluster       — Cluster embeddings to discover novel classes (Phase 3)
-    crosscheck    — Gravity Spy cross-check of anomalous clusters (Phase 3.1)
+    fetch                    — Download and process a known reference event (PoC)
+    scan                     — Batch-scan O4a segments for a detector
+    scan-extended            — Extended 48h scan of H1 + L1 (Phase 3.1)
+    encode                   — Extract embeddings from spectrograms (Phase 2)
+    cluster                  — Cluster embeddings to discover novel classes (Phase 3)
+    crosscheck               — Gravity Spy cross-check of anomalous clusters (Phase 3.1)
+    build-indomain-reference — Build in-domain reference from labeled GPS (Phase 3.4)
+    validate-reference       — Validate reference with GW150914 sanity check (Phase 3.4)
 
 Usage:
-    python main.py fetch          --event GW150914
-    python main.py scan           --detector H1 --hours 2
+    python main.py fetch                    --event GW150914
+    python main.py scan                     --detector H1 --hours 2
     python main.py scan-extended
-    python main.py encode         --input-dir data/spectrograms/ --output data/embeddings/o4a_h1.npy
-    python main.py cluster        --input data/embeddings/o4a_h1_6h.npy --output data/clusters/
-    python main.py crosscheck     --report data/clusters/cluster_report.json --metadata data/embeddings/o4a_h1_6h.json
+    python main.py encode                   --input-dir data/spectrograms/ --output data/embeddings/o4a_h1.npy
+    python main.py cluster                  --input data/embeddings/o4a_h1_6h.npy --output data/clusters/
+    python main.py crosscheck               --report data/clusters/cluster_report.json --metadata data/embeddings/o4a_h1_6h.json
+    python main.py build-indomain-reference --output data/reference/indomain_index.npz
+    python main.py validate-reference       --reference data/reference/indomain_index.npz
 """
 
 from __future__ import annotations
@@ -411,6 +415,133 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
     print(f"Morphological check complete. {summary['novel']} novel candidates.")
 
 
+def cmd_build_indomain_reference(args: argparse.Namespace) -> None:
+    """Build an in-domain DINOv2 reference index from Gravity Spy labeled GPS times."""
+    from src.indomain_reference_builder import (
+        build_indomain_reference,
+        download_gs_classifications_csv,
+        select_reference_events,
+    )
+
+    output_path = Path(args.output)
+    detector: str = args.detector
+    run: str = args.run
+    max_per_class: int = args.max_per_class
+    min_confidence: float = args.min_confidence
+    workers: int = args.workers
+
+    logger.info("=== BUILD-INDOMAIN-REFERENCE ===")
+
+    # Step 1: Download GPS classifications CSV from Zenodo
+    csv_path = download_gs_classifications_csv(
+        output_path.parent, run=run, detector=detector
+    )
+
+    # Step 2: Select high-confidence events
+    events_df = select_reference_events(
+        csv_path,
+        detector=detector,
+        min_confidence=min_confidence,
+        max_per_class=max_per_class,
+    )
+
+    if events_df.empty:
+        print("No events passed filters. Check the CSV and filter criteria.")
+        sys.exit(1)
+
+    # Step 3: Build in-domain reference (fetch → preprocess → embed)
+    meta = build_indomain_reference(
+        events_df, output_path, workers=workers
+    )
+
+    print(
+        f"In-domain reference ready: {meta['n_samples']} samples, "
+        f"{meta['n_classes']} classes → {output_path}"
+    )
+
+
+def cmd_validate_reference(args: argparse.Namespace) -> None:
+    """Validate reference index with a GW150914 sanity check."""
+    from src.similarity_checker import cosine_knn_search
+    from src.reference_builder import load_reference_index
+
+    reference_path = Path(args.reference)
+    test_event: str = args.test_event
+
+    logger.info("=== VALIDATE-REFERENCE: %s ===", test_event)
+
+    cfg = load_config()
+
+    if test_event not in cfg["reference_events"]:
+        available = ", ".join(cfg["reference_events"].keys())
+        logger.error("Unknown event '%s'. Available: %s", test_event, available)
+        sys.exit(1)
+
+    event = cfg["reference_events"][test_event]
+    detector = event["detector"]
+    gps_start = event["start"]
+    gps_end = event["end"]
+
+    # Step 1: Fetch and preprocess the test event with our pipeline
+    from src.data_loader import fetch_strain_data as _fetch
+    from src.preprocessor import bandpass as _bp, generate_qtransform as _qt, whiten as _wh
+
+    logger.info("Fetching %s (%s) [%d, %d]", test_event, detector, gps_start, gps_end)
+    ts = _fetch(detector, gps_start, gps_end)
+    ts_white = _wh(ts)
+    ts_bp = _bp(ts_white)
+
+    test_dir = reference_path.parent / "validation"
+    test_dir.mkdir(parents=True, exist_ok=True)
+    test_png = test_dir / f"{test_event}_{detector}.png"
+    _qt(ts_bp, save_path=test_png)
+
+    # Step 2: Extract DINOv2 embedding
+    encoder = DINOv2Encoder()
+    query_embedding = encoder.extract(test_png)
+    query_embedding = query_embedding.reshape(1, -1)
+
+    # Step 3: Run cosine KNN search against reference
+    ref_embeddings, ref_labels = load_reference_index(reference_path)
+
+    results = cosine_knn_search(
+        query_embedding, ref_embeddings, ref_labels, k=5
+    )
+
+    # Step 4: Print top-5 neighbors
+    r = results[0]
+    print(f"\n{'='*60}")
+    print(f"  REFERENCE VALIDATION: {test_event}")
+    print(f"{'='*60}")
+    print(f"  Top-5 neighbors:")
+    for n in r["neighbors"]:
+        print(f"    #{n['rank']}: {n['label']:<25s} sim={n['similarity']:.3f}")
+
+    # Step 5: Assess result
+    nearest_label = r["top_label"]
+    nearest_sim = r["top_similarity"]
+
+    print(f"\n  Domain gap check: {test_event} → nearest={nearest_label} sim={nearest_sim:.3f}")
+
+    # For GW150914 we expect Chirp (it's a real CBC merger)
+    chirp_labels = {"Chirp", "chirp"}
+    if nearest_label in chirp_labels:
+        print(f"  ✅ PASS: in-domain reference is working correctly")
+    else:
+        # Check if Chirp is anywhere in top-5
+        chirp_in_top5 = any(
+            n["label"] in chirp_labels for n in r["neighbors"]
+        )
+        if chirp_in_top5:
+            print(f"  ⚠️  WARN: Chirp in top-5 but not nearest — acceptable")
+        else:
+            print(
+                f"  ⚠️  WARN: {test_event} not nearest to Chirp — "
+                f"check preprocessing consistency"
+            )
+    print(f"{'='*60}\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -584,10 +715,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_build.set_defaults(func=cmd_build_reference)
 
-    # --- morphcheck (Phase 3.3) ---
+    # --- morphcheck (Phase 3.3 / 3.4) ---
     p_morph = subparsers.add_parser(
         "morphcheck",
-        help="[Phase 3.3] Run morphological similarity cross-check.",
+        help="[Phase 3.3/3.4] Run morphological similarity cross-check.",
     )
     p_morph.add_argument(
         "--embeddings",
@@ -605,7 +736,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--reference",
         type=str,
         required=True,
-        help="Path to reference index .npz.",
+        help=(
+            "Path to reference index .npz. Accepts either: "
+            "(1) Gravity Spy training set index (Phase 3.3, build-reference), or "
+            "(2) In-domain reference index (Phase 3.4, build-indomain-reference, recommended)."
+        ),
     )
     p_morph.add_argument(
         "--output",
@@ -614,6 +749,69 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output JSON path for morphcheck results.",
     )
     p_morph.set_defaults(func=cmd_morphcheck)
+
+    # --- build-indomain-reference (Phase 3.4) ---
+    p_indomain = subparsers.add_parser(
+        "build-indomain-reference",
+        help="[Phase 3.4] Build in-domain reference from labeled GPS timestamps.",
+    )
+    p_indomain.add_argument(
+        "--output",
+        type=str,
+        required=True,
+        help="Path to save the .npz index (e.g. data/reference/indomain_index.npz).",
+    )
+    p_indomain.add_argument(
+        "--detector",
+        type=str,
+        default="H1",
+        choices=["H1", "L1", "V1"],
+        help="Detector to filter on. Default: H1.",
+    )
+    p_indomain.add_argument(
+        "--run",
+        type=str,
+        default="O3b",
+        help="Observing run (e.g. O3b). Default: O3b.",
+    )
+    p_indomain.add_argument(
+        "--max-per-class",
+        type=int,
+        default=30,
+        help="Maximum samples per class. Default: 30.",
+    )
+    p_indomain.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.95,
+        help="Minimum ml_confidence threshold. Default: 0.95.",
+    )
+    p_indomain.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of parallel workers for GWOSC fetch. Default: 1.",
+    )
+    p_indomain.set_defaults(func=cmd_build_indomain_reference)
+
+    # --- validate-reference (Phase 3.4) ---
+    p_validate = subparsers.add_parser(
+        "validate-reference",
+        help="[Phase 3.4] Validate reference index with a known event.",
+    )
+    p_validate.add_argument(
+        "--reference",
+        type=str,
+        required=True,
+        help="Path to reference index .npz.",
+    )
+    p_validate.add_argument(
+        "--test-event",
+        type=str,
+        default="GW150914",
+        help="Known event to test against (default: GW150914).",
+    )
+    p_validate.set_defaults(func=cmd_validate_reference)
 
     return parser
 

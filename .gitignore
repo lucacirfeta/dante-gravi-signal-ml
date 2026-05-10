@@ -238,3 +238,5 @@ logs/
 docs
 data/reference/trainingsetv1d1.tar.gz
 data/reference/trainingset_metadata.csv
+data/clusters/h1_48h/morphological_crosscheck.json
+data/reference/gs_classifications_O3b_H1.csv

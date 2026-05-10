@@ -23,7 +23,11 @@ data/raw/
 data/spectrograms/
 data/embeddings/
 data/clusters/
-data/reference/
+data/reference/indomain_images/
+data/reference/training_images/
+data/reference/*.npz
+data/reference/*.csv
+data/reference/*.tar.gz
 
 # Results — commit only final images
 results/figures/**

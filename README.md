@@ -79,10 +79,10 @@ Raw Strain Data (GWOSC O4a)
          │
          ▼
 ┌─────────────────────┐
-│   Morphological     │  KNN cosine search against Gravity Spy
-│   Cross-Check       │  O1–O3b reference index (1100 samples, 22 classes)
-│  (similarity_       │  NOVEL / KNOWN / AMBIGUOUS per spectrogram
-│   checker.py)       │
+│   Morphological     │  KNN cosine search against in-domain
+│   Cross-Check       │  reference index (Phase 3.4, recommended)
+│  (similarity_       │  or Gravity Spy training set (Phase 3.3)
+│   checker.py)       │  NOVEL / KNOWN / AMBIGUOUS per spectrogram
 └─────────────────────┘
 ```
 
@@ -265,6 +265,48 @@ Each anomalous spectrogram receives one of three labels:
 | **KNOWN** | sim ≥ 0.85, label agreement ≥ 60% | Matches a known Gravity Spy class |
 | **AMBIGUOUS** | sim ≥ 0.85, agreement < 60% | Visually similar to training set but no clear match |
 
+> **⚠️ Domain Gap Warning (Phase 3.3):** The Gravity Spy training images use
+> different Q-transform parameters, color normalization, and image dimensions
+> than our pipeline. This creates a systematic domain gap (all similarities
+> < 0.85, even GW150914 → Wandering_Line@0.67 instead of Chirp). Use the
+> in-domain reference (Phase 3.4) for scientifically valid results.
+
+### Phase 3.4 — In-Domain Morphological Reference (Recommended)
+
+**Why in-domain instead of the Gravity Spy training images:**
+
+The Gravity Spy training set images use different Q-transform parameters,
+color mapping, and normalization than our pipeline. DINOv2 sees two different
+"image styles", creating a systematic domain gap (all similarities < 0.85,
+even GW150914 → Wandering_Line@0.67 instead of Chirp).
+
+**Solution:** download Gravity Spy labeled glitch timestamps (Zenodo, public),
+fetch their strain from GWOSC, and process with **our** pipeline. Reference and
+query are now in identical domain.
+
+```bash
+# Build in-domain reference (~30 events × 21 classes = ~600 downloads, ~2h)
+python main.py build-indomain-reference \
+  --output data/reference/indomain_index.npz \
+  --detector H1 --run O3b
+
+# Validate: GW150914 should map to Chirp class
+python main.py validate-reference \
+  --reference data/reference/indomain_index.npz \
+  --test-event GW150914
+
+# Run morphological crosscheck with in-domain reference
+python main.py morphcheck \
+  --embeddings data/embeddings/o4a_h1_48h.npy \
+  --report     data/clusters/h1_48h/cluster_report.json \
+  --reference  data/reference/indomain_index.npz \
+  --output     data/clusters/h1_48h/morphological_crosscheck_indomain.json
+```
+
+**Scientific validity:** If `validate-reference` PASSES (GW150914 → Chirp with
+high similarity), the morphcheck results are trustworthy. **NOVEL** status then
+means the morphology genuinely differs from all known O1–O3b glitch classes.
+
 ---
 
 ## 📊 Preliminary Results (O4a, 48h H1 + 48h L1)
@@ -315,10 +357,11 @@ gravi-signal-ml/
 │   ├── encoder.py               # DINOv2-Reg frozen encoder
 │   ├── clustering.py            # PCA + UMAP + HDBSCAN pipeline
 │   ├── reporter.py              # Cluster report + UMAP viz + gallery
-│   ├── gravity_spy_checker.py   # GPS-based cross-check (requires LIGO auth)
-│   ├── reference_builder.py     # Gravity Spy tar.gz → DINOv2 reference index
-│   ├── similarity_checker.py    # Cosine KNN novelty assessment
-│   └── utils.py                 # Config · logging · GPS conversion · normalization
+│   ├── gravity_spy_checker.py       # GPS-based cross-check (requires LIGO auth)
+│   ├── reference_builder.py         # Gravity Spy tar.gz → DINOv2 reference index
+│   ├── indomain_reference_builder.py # In-domain reference from labeled GPS (Phase 3.4)
+│   ├── similarity_checker.py        # Cosine KNN novelty assessment
+│   └── utils.py                     # Config · logging · GPS conversion · normalization
 ├── results/
 │   └── figures/                 # Committed: UMAP plots + anomalous contact sheets
 ├── docs/
@@ -342,7 +385,8 @@ gravi-signal-ml/
 | **Phase 3** | PCA + UMAP + HDBSCAN clustering | ✅ Complete |
 | **Phase 3.1** | Extended scan 48h H1+L1 + GPS cross-check | ✅ Complete |
 | **Phase 3.2** | Parallel pipeline (`--workers N`) | ✅ Complete |
-| **Phase 3.3** | Morphological similarity vs Gravity Spy training set | 🔄 In Progress |
+| **Phase 3.3** | Morphological similarity vs Gravity Spy training set | ✅ Complete (domain gap noted) |
+| **Phase 3.4** | In-domain reference (our pipeline on labeled GPS) | 🔄 In Progress |
 | **Phase 4** | Novel candidate reporting + community contribution | 🔲 Planned |
 
 ---

@@ -64,6 +64,17 @@ similarity:
   max_per_class: 50
   duration: 1.0              # spectrogram window used for reference
 
+# In-Domain Reference Index (Phase 3.4)
+# Eliminates domain gap by using our own pipeline on labeled GPS timestamps
+indomain_reference:
+  zenodo_doi: "10.5281/zenodo.5649212"
+  detector: "H1"
+  run: "O3b"
+  min_confidence: 0.95
+  max_per_class: 30
+  excluded_labels: ["None_of_the_Above"]
+  segment_duration: 32.0
+
 # Unsupervised clustering (Phase 3)
 clustering:
   pca_components: 50
