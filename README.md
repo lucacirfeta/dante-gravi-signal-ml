@@ -164,6 +164,32 @@ python main.py cluster \
 
 Small clusters (≤ 10 samples) are automatically flagged as **anomalous** — potential novel glitch classes not yet catalogued by Gravity Spy.
 
+### Phase 3.3 — Morphological Similarity Cross-Check
+
+**Why this approach (not GPS lookup):**
+O4a data is not in the Gravity Spy Zenodo catalog (only O1-O3b).
+GPS lookup requires LIGO authentication.
+Morphological similarity in DINOv2 embedding space is scientifically more rigorous: it asks "does this LOOK like a known glitch?" not "was this exact timestamp classified?"
+
+Usage:
+```bash
+# Build reference index (one-time, ~500MB download)
+python main.py build-reference \
+  --output data/reference/gravity_spy_index.npz
+
+# Run morphological crosscheck on H1 anomalous clusters
+python main.py morphcheck \
+  --embeddings data/embeddings/o4a_h1_48h.npy \
+  --report     data/clusters/h1_48h/cluster_report.json \
+  --reference  data/reference/gravity_spy_index.npz \
+  --output     data/clusters/h1_48h/morphological_crosscheck.json
+```
+
+Interpretation:
+- **NOVEL** (cosine sim < 0.85): not similar to any known class → candidate
+- **KNOWN** (sim >= 0.85, agreement >= 60%): matches a known class
+- **AMBIGUOUS** (sim >= 0.85, agreement < 60%): visually similar but unclear
+
 ### Phase 3.1 — Extended Scan + Gravity Spy Validation
 
 **Why this step:**
@@ -233,7 +259,8 @@ Note: GWOSC fetch threads are capped at 4 regardless of `--workers` to respect t
 | **Phase 1** | Verified preprocessing pipeline + spectrogram generation | ✅ Complete |
 | **Phase 2** | Frozen DINOv2-Reg feature extraction (384-dim embeddings) | ✅ Complete |
 | **Phase 3** | PCA + UMAP + HDBSCAN clustering & novel glitch discovery | ✅ Complete |
-| **Phase 3.1** | Extended scan (48h H1+L1) + Gravity Spy cross-check | 🔄 In Progress |
+| **Phase 3.1** | Extended scan (48h H1+L1) + Gravity Spy cross-check | ✅ Complete |
+| **Phase 3.3** | Morphological Similarity Cross-Check | 🔄 In Progress |
 | **Phase 4** | Novel class candidate reporting + community contribution | 🔲 Planned |
 
 ## 🧪 Running Tests

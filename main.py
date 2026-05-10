@@ -274,6 +274,128 @@ def cmd_crosscheck(args: argparse.Namespace) -> None:
     print(f"Cross-check complete. Results: {n_unclassified} unclassified candidates.")
 
 
+def cmd_build_reference(args: argparse.Namespace) -> None:
+    """Build a DINOv2 embedding reference index from the Gravity Spy training set."""
+    from src.reference_builder import (
+        download_training_set_metadata,
+        download_training_images,
+        build_reference_index,
+    )
+
+    output_path = Path(args.output)
+    max_per_class: int = args.max_per_class
+    cfg = load_config()
+    sim_cfg = cfg.get("similarity", {})
+    # Use exact zenodo url string matching the expected file
+    zenodo_url = f"https://zenodo.org/record/{sim_cfg.get('training_set_zenodo', '10.5281/zenodo.1476551').split('/')[-1]}/files/trainingset_v1d0_metadata.csv"
+    if '10.5281' in zenodo_url:
+        zenodo_url = "https://zenodo.org/record/1476551/files/trainingset_v1d0_metadata.csv"
+    duration = sim_cfg.get("duration", 1.0)
+
+    logger.info("=== BUILD-REFERENCE ===")
+
+    # 1. Download metadata CSV
+    metadata_df = download_training_set_metadata(output_path.parent, zenodo_url=zenodo_url)
+
+    # 2. Download training images
+    image_paths = download_training_images(
+        metadata_df,
+        output_path.parent,
+        duration=duration,
+        max_per_class=max_per_class,
+        sample_type="train",
+    )
+
+    if not image_paths:
+        logger.error("No images downloaded. Aborting reference build.")
+        sys.exit(1)
+
+    # Extract labels from parent directory names
+    labels = [p.parent.name for p in image_paths]
+
+    # 3. Extract embeddings and build index
+    metadata = build_reference_index(image_paths, labels, output_path, batch_size=cfg.get("encoder", {}).get("batch_size", 32))
+
+    print(f"Reference index ready: {metadata['n_samples']} samples, {metadata['n_classes']} classes")
+
+
+def cmd_morphcheck(args: argparse.Namespace) -> None:
+    """Run morphological similarity cross-check against reference index."""
+    import json
+    from src.similarity_checker import (
+        run_morphological_crosscheck,
+        print_morphological_summary,
+    )
+
+    embeddings_path = Path(args.embeddings)
+    report_path = Path(args.report)
+    reference_path = Path(args.reference)
+    output_path = Path(args.output)
+
+    logger.info("=== MORPHCHECK ===")
+
+    # 1. Load embeddings and cluster report
+    embeddings = np.load(embeddings_path)
+    with open(report_path, "r", encoding="utf-8") as f:
+        cluster_report = json.load(f)
+
+    # Extract anomalous embeddings based on cluster report
+    anomalous_files = []
+    anomalous_cluster_ids = []
+    anomalous_indices = []
+
+    # Map files to their indices in the embeddings array
+    # We need the companion metadata for the embeddings to know which row corresponds to which file
+    metadata_path = embeddings_path.with_suffix(".json")
+    with open(metadata_path, "r", encoding="utf-8") as f:
+        embedding_metadata = json.load(f)
+        
+    all_files = embedding_metadata["files"]
+    # Be robust against path string representations
+    file_to_idx = {str(Path(f).name): i for i, f in enumerate(all_files)}
+
+    # Collect anomalous samples
+    # The user request mentioned checking all 42 anomalous H1 spectrograms.
+    # We check clusters > 0, which are typically valid. If noise (-1) is not considered, we skip it.
+    for cluster in cluster_report["clusters"]:
+        # If it's a valid cluster, we check it
+        if cluster["cluster_id"] >= 0:
+            for sample in cluster.get("samples", []):
+                file_name = Path(sample["file"]).name
+                if file_name in file_to_idx:
+                    anomalous_files.append(sample["file"])
+                    anomalous_cluster_ids.append(cluster["cluster_id"])
+                    anomalous_indices.append(file_to_idx[file_name])
+
+    if not anomalous_indices:
+        print("No cluster samples to check.")
+        return
+
+    anomalous_embeddings = embeddings[anomalous_indices]
+
+    # Load config for thresholds
+    cfg = load_config()
+    sim_cfg = cfg.get("similarity", {})
+    k = sim_cfg.get("k_neighbors", 5)
+    novelty_threshold = sim_cfg.get("novelty_threshold", 0.85)
+    consensus_threshold = sim_cfg.get("consensus_threshold", 0.60)
+
+    # Run check
+    summary = run_morphological_crosscheck(
+        anomalous_embeddings,
+        anomalous_files,
+        anomalous_cluster_ids,
+        reference_path,
+        output_path,
+        k=k,
+        novelty_threshold=novelty_threshold,
+        consensus_threshold=consensus_threshold,
+    )
+
+    print_morphological_summary(summary)
+    print(f"Morphological check complete. {summary['novel']} novel candidates.")
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -421,6 +543,56 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output JSON path for cross-check results.",
     )
     p_cross.set_defaults(func=cmd_crosscheck)
+
+    # --- build-reference (Phase 3.3) ---
+    p_build = subparsers.add_parser(
+        "build-reference",
+        help="[Phase 3.3] Build a reference index from Gravity Spy training set.",
+    )
+    p_build.add_argument(
+        "--output",
+        type=str,
+        required=True,
+        help="Path to save the .npz index.",
+    )
+    p_build.add_argument(
+        "--max-per-class",
+        type=int,
+        default=50,
+        help="Maximum samples per class to download.",
+    )
+    p_build.set_defaults(func=cmd_build_reference)
+
+    # --- morphcheck (Phase 3.3) ---
+    p_morph = subparsers.add_parser(
+        "morphcheck",
+        help="[Phase 3.3] Run morphological similarity cross-check.",
+    )
+    p_morph.add_argument(
+        "--embeddings",
+        type=str,
+        required=True,
+        help="Path to embeddings .npy.",
+    )
+    p_morph.add_argument(
+        "--report",
+        type=str,
+        required=True,
+        help="Path to cluster_report.json.",
+    )
+    p_morph.add_argument(
+        "--reference",
+        type=str,
+        required=True,
+        help="Path to reference index .npz.",
+    )
+    p_morph.add_argument(
+        "--output",
+        type=str,
+        required=True,
+        help="Output JSON path for morphcheck results.",
+    )
+    p_morph.set_defaults(func=cmd_morphcheck)
 
     return parser
 
