@@ -4,7 +4,7 @@
 
 **Unsupervised Anomaly Detection for Gravitational-Wave Data**
 
-*Discovering novel glitch classes in LIGO/Virgo O4a data that Gravity Spy can't see*
+*Unsupervised morphological characterization of LIGO/Virgo O4a glitches using DINOv2 frozen features*
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
@@ -271,9 +271,17 @@ GWOSC fetch threads are capped at 4 regardless of `--workers` to respect public 
 | H1       | 2,634   | 5        | **2** (23 + 19 pts) | 0.0%  | 98.2%        |
 | L1       | 4,982   | 6        | **1** (32 pts)      | 0.0%  | 98.4%        |
 
-Anomalous clusters were identified independently on two detectors with
-different instrumental noise characteristics. Morphological cross-check
-against the in-domain Gravity Spy O3b reference is in progress (Phase 3.4).
+Anomalous clusters were identified independently on both detectors.
+Morphological cross-check against the in-domain Gravity Spy O3b reference
+(Phase 3.4, GW150914 validation: Chirp@0.997) shows:
+
+- **H1 Cluster 1** (23 pts): maps to Low_Frequency_Lines / 1400Ripples (KNOWN)
+- **H1 Cluster 4** (19 pts): 89% AMBIGUOUS between Low_Frequency_Lines and
+  No_Glitch — suggests subtle sub-threshold narrowband activity in O4a
+- **L1 Cluster 4** (32 pts): morphological crosscheck in progress
+
+No fully novel morphologies were identified in this 48h window. The pipeline
+is validated end-to-end and ready for extended analysis.
 
 ---
 

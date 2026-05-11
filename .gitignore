@@ -225,6 +225,7 @@ __marimo__/
 data/raw/
 data/spectrograms/
 data/embeddings/
+data/clusters/
 data/reference/training_images/
 data/reference/*.npz
 data/reference/*.json
