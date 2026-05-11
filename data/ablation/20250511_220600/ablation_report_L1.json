@@ -1,0 +1,84 @@
+{
+  "session_id": "20250511_220600",
+  "n_samples": 4982,
+  "original_n_clusters": 6,
+  "results": {
+    "grayscale": {
+      "ari": 0.3767239210259088,
+      "n_clusters": 7,
+      "hdbscan_stats": {
+        "n_clusters": 7,
+        "n_noise": 6,
+        "noise_ratio": 0.0012043356081894822,
+        "cluster_sizes": {
+          "0": 161,
+          "1": 2375,
+          "2": 1797,
+          "3": 460,
+          "4": 54,
+          "5": 41,
+          "6": 88
+        },
+        "largest_cluster": 2375,
+        "smallest_cluster": 41
+      }
+    },
+    "inverted": {
+      "ari": 0.9868965087012579,
+      "n_clusters": 10,
+      "hdbscan_stats": {
+        "n_clusters": 10,
+        "n_noise": 5,
+        "noise_ratio": 0.0010036130068245685,
+        "cluster_sizes": {
+          "0": 4178,
+          "1": 76,
+          "2": 26,
+          "3": 96,
+          "4": 226,
+          "5": 46,
+          "6": 42,
+          "7": 178,
+          "8": 38,
+          "9": 71
+        },
+        "largest_cluster": 4178,
+        "smallest_cluster": 26
+      }
+    },
+    "shuffled-intensity": {
+      "ari": 0.999268994796099,
+      "n_clusters": 5,
+      "hdbscan_stats": {
+        "n_clusters": 5,
+        "n_noise": 0,
+        "noise_ratio": 0.0,
+        "cluster_sizes": {
+          "0": 4178,
+          "1": 161,
+          "2": 129,
+          "3": 442,
+          "4": 72
+        },
+        "largest_cluster": 4178,
+        "smallest_cluster": 72
+      }
+    },
+    "random-baseline": {
+      "ari": -0.00018457416454263628,
+      "n_clusters": 2,
+      "hdbscan_stats": {
+        "n_clusters": 2,
+        "n_noise": 2112,
+        "noise_ratio": 0.4239261340826977,
+        "cluster_sizes": {
+          "0": 2837,
+          "1": 33
+        },
+        "largest_cluster": 2837,
+        "smallest_cluster": 33
+      }
+    }
+  },
+  "interpretation": "WARNING: preprocessing-dominant. Clusters rely heavily on rendering statistics (colormap/intensity) rather than physical morphology."
+}
