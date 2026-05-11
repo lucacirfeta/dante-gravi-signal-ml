@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌊 gravi-signal-ml
+# 🌊 gravi-signal-ml [![DOI](https://zenodo.org/badge/1231613598.svg)](https://doi.org/10.5281/zenodo.20121859)
 
 **Unsupervised Anomaly Detection for Gravitational-Wave Data**
 
