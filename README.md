@@ -244,6 +244,26 @@ Each anomalous spectrogram receives one of three labels:
 | **KNOWN**     | sim ≥ threshold, label agreement ≥ 60% | Matches a known Gravity Spy class                |
 | **AMBIGUOUS** | sim ≥ threshold, agreement < 60%       | Visually similar but no clear class match        |
 
+#### Step 5 — Ablation Study (Robustness Check)
+
+Verify if the DINOv2+UMAP+HDBSCAN clustering is capturing true physical morphologies or just rendering artifacts (e.g. colormap, intensity, contrast). The ablation subcommand generates alternative embeddings using grayscale, inverted, and random-intensity spectrograms, as well as a random baseline, and computes the Adjusted Rand Index (ARI) against the original clusters.
+
+```bash
+python main.py ablation --session-id <SESSION_ID> --detector H1
+```
+
+If the `grayscale` ARI < 0.4, the pipeline warns of "preprocessing-dominant" behavior.
+
+#### Step 6 — Stability Analysis
+
+Measure the robustness of the clustering pipeline against variations in hyperparameters. The `stability` subcommand runs the clustering pipeline multiple times, applying random perturbations to the UMAP `n_neighbors` and HDBSCAN `min_cluster_size` parameters. It computes the pairwise Adjusted Rand Index (ARI) to evaluate consistency.
+
+```bash
+python main.py stability --session-id <SESSION_ID> --detector H1 --n-runs 20
+```
+
+Outputs a comprehensive `stability_report.json` with an $N \times N$ ARI matrix and flags clusters that are consistently anomalous across $\ge 80\%$ of runs.
+
 ---
 
 ### Performance & Parallelization

@@ -434,6 +434,140 @@ def cmd_report(args: argparse.Namespace) -> None:
     print(f"Report generation complete. Outputs updated in {output_dir}")
 
 
+def cmd_stability(args: argparse.Namespace) -> None:
+    """Measure clustering robustness with ARI on multiple perturbed runs."""
+    from src.stability import run_stability_analysis
+
+    session_id = getattr(args, "session_id", None) or "default"
+    detector = getattr(args, "detector", None) or "H1"
+    n_runs = getattr(args, "n_runs", 20)
+
+    # Resolve paths
+    if args.embeddings:
+        embeddings_path = Path(args.embeddings)
+    elif session_id != "default" and detector:
+        embeddings_path = Path(f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy")
+    else:
+        logger.error("Either --embeddings or both --session-id and --detector are required.")
+        sys.exit(1)
+
+    logger.info("=== STABILITY ===")
+    logger.info("Embeddings: %s", embeddings_path)
+    logger.info("Runs: %d", n_runs)
+
+    if not embeddings_path.exists():
+        logger.error("Embeddings file not found: %s", embeddings_path)
+        sys.exit(1)
+
+    # 1. Load embeddings
+    embeddings = np.load(embeddings_path)
+
+    # 2. Load config
+    cfg = load_config()
+    cluster_cfg = cfg.get("clustering", {})
+
+    # 3. Run stability analysis
+    run_stability_analysis(
+        embeddings=embeddings,
+        cluster_cfg=cluster_cfg,
+        n_runs=n_runs,
+        session_id=session_id,
+        detector=detector,
+    )
+
+
+def cmd_ablation(args: argparse.Namespace) -> None:
+    """Run ablation study to test clustering robustness against image perturbations."""
+    import json
+    from src.ablation import run_ablation_study
+    from src.clustering import run_full_pipeline
+
+    session_id = getattr(args, "session_id", None) or None
+    detector = getattr(args, "detector", None)
+
+    # Resolve paths
+    if args.embeddings:
+        embeddings_path = Path(args.embeddings)
+    elif session_id and detector:
+        embeddings_path = Path(f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy")
+    else:
+        logger.error("Either --embeddings or both --session-id and --detector are required.")
+        sys.exit(1)
+
+    if args.spectrogram_dir:
+        spec_dir = Path(args.spectrogram_dir)
+    elif session_id and detector:
+        spec_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    else:
+        logger.error("Either --spectrogram-dir or both --session-id and --detector are required.")
+        sys.exit(1)
+
+    if args.output_dir:
+        output_dir = Path(args.output_dir)
+    elif session_id and detector:
+        output_dir = Path(f"data/ablation/{session_id}")
+    else:
+        output_dir = Path("data/ablation/")
+
+    logger.info("=== ABLATION ===")
+    logger.info("Embeddings: %s", embeddings_path)
+    logger.info("Spectrograms: %s", spec_dir)
+    logger.info("Output dir: %s", output_dir)
+
+    if not embeddings_path.exists():
+        logger.error("Embeddings file not found: %s", embeddings_path)
+        sys.exit(1)
+    if not spec_dir.exists():
+        logger.error("Spectrogram directory not found: %s", spec_dir)
+        sys.exit(1)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # 1. Load baseline embeddings and original file paths
+    embeddings = np.load(embeddings_path)
+    json_path = embeddings_path.with_suffix(".json")
+    if not json_path.exists():
+        logger.error("Metadata JSON not found for embeddings: %s", json_path)
+        sys.exit(1)
+    
+    with open(json_path, "r", encoding="utf-8") as f:
+        metadata = json.load(f)
+    
+    files = metadata.get("files", [])
+    if not files:
+        logger.error("No file list found in metadata.")
+        sys.exit(1)
+        
+    image_paths = [spec_dir / Path(f).name for f in files]
+    
+    # Verify a few exist
+    for p in image_paths[:5]:
+        if not p.exists():
+            logger.error("Could not find expected spectrogram: %s", p)
+            sys.exit(1)
+            
+    # 2. Run baseline clustering to get original labels
+    logger.info("Running baseline clustering to establish original labels...")
+    cfg = load_config()
+    cluster_cfg = cfg["clustering"]
+    baseline_result = run_full_pipeline(embeddings, cluster_cfg)
+    original_labels = baseline_result["labels"]
+    
+    # 3. Initialize Encoder once
+    encoder = DINOv2Encoder(batch_size=args.batch_size)
+    
+    # 4. Run Ablation
+    actual_session_id = session_id or "default_session"
+    run_ablation_study(
+        original_labels=original_labels,
+        image_paths=image_paths,
+        encoder=encoder,
+        cluster_cfg=cluster_cfg,
+        output_dir=output_dir,
+        session_id=actual_session_id
+    )
+
+
 def cmd_crosscheck(args: argparse.Namespace) -> None:
     """Cross-check anomalous clusters against the Gravity Spy database."""
     from src.gravity_spy_checker import (
@@ -952,6 +1086,82 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier. Required when using --session-id.",
     )
     p_report.set_defaults(func=cmd_report)
+
+    # --- stability ---
+    p_stability = subparsers.add_parser(
+        "stability",
+        help="Measure clustering robustness with ARI on multiple runs.",
+    )
+    p_stability.add_argument(
+        "--embeddings",
+        type=str,
+        default=None,
+        help="Path to baseline embeddings .npy.",
+    )
+    p_stability.add_argument(
+        "--n-runs",
+        type=int,
+        default=20,
+        help="Number of perturbed runs to perform. Default: 20.",
+    )
+    p_stability.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="Session identifier to resolve paths automatically.",
+    )
+    p_stability.add_argument(
+        "--detector",
+        type=str,
+        default="H1",
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier. Default: H1.",
+    )
+    p_stability.set_defaults(func=cmd_stability)
+
+    # --- ablation ---
+    p_ablation = subparsers.add_parser(
+        "ablation",
+        help="Run ablation study to test clustering robustness against perturbations.",
+    )
+    p_ablation.add_argument(
+        "--embeddings",
+        type=str,
+        default=None,
+        help="Path to baseline embeddings .npy.",
+    )
+    p_ablation.add_argument(
+        "--spectrogram-dir",
+        type=str,
+        default=None,
+        help="Path to original spectrograms directory.",
+    )
+    p_ablation.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Output directory for ablation report.",
+    )
+    p_ablation.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="Session identifier to resolve paths automatically.",
+    )
+    p_ablation.add_argument(
+        "--detector",
+        type=str,
+        default=None,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier. Required when using --session-id.",
+    )
+    p_ablation.add_argument(
+        "--batch-size",
+        type=int,
+        default=32,
+        help="Batch size for DINOv2 inference.",
+    )
+    p_ablation.set_defaults(func=cmd_ablation)
 
     # --- crosscheck (Phase 3.1) ---
     p_cross = subparsers.add_parser(
