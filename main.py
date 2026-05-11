@@ -310,7 +310,7 @@ def cmd_cluster(args: argparse.Namespace) -> None:
     # 5. Save cluster report (JSON + UMAP plot + gallery)
     from src.reporter import print_summary, save_cluster_report
 
-    save_cluster_report(result, metadata, output_dir)
+    save_cluster_report(result, metadata, output_dir, detector=detector or "H1")
 
     # 6. Print human-readable summary
     print_summary(result)
@@ -401,7 +401,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     }
     anomalous = results.get("anomalous_clusters", [])
     
-    detector_val = cluster_report.get("detector", detector or "H1")
+    detector_val = detector or cluster_report.get("detector", "H1")
 
     # 2. Recalculate PCA and UMAP
     cfg = load_config()

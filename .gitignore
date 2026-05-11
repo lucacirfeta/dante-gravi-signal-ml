@@ -270,3 +270,4 @@ embeddings/
 
 # Keep this .gitignore
 !.gitignore
+data/reference/indomain_index.json

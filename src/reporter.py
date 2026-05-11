@@ -30,6 +30,7 @@ def save_cluster_report(
     result: dict,
     metadata: dict,
     output_dir: Path,
+    detector: str = "H1",
 ) -> None:
     """Save a full cluster report: JSON, UMAP plot, and spectrogram gallery.
 
@@ -55,11 +56,11 @@ def save_cluster_report(
     anomalous = result["anomalous_clusters"]
 
     # --- A) cluster_report.json ---
-    _save_json_report(result, metadata, stats, anomalous, labels, output_dir)
+    _save_json_report(result, metadata, stats, anomalous, labels, output_dir, detector=detector)
 
     # --- B) umap_visualization.png ---
     _save_umap_plot(
-        umap_2d, labels, stats, anomalous, output_dir, detector=metadata.get("detector", "H1")
+        umap_2d, labels, stats, anomalous, output_dir, detector=detector
     )
 
     # --- C) cluster_gallery/ ---
@@ -77,6 +78,7 @@ def _save_json_report(
     anomalous: list[int],
     labels: np.ndarray,
     output_dir: Path,
+    detector: str = "H1",
 ) -> None:
     """Write cluster_report.json."""
     files = metadata.get("files", [])
@@ -96,7 +98,7 @@ def _save_json_report(
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "model": metadata.get("model", "dinov2_vits14_reg"),
         "n_samples": int(len(labels)),
-        "detector": metadata.get("detector", "H1"),
+        "detector": detector,
         "pipeline": {
             "pca_components": 50,
             "pca_variance_explained": result["pca_variance"],
