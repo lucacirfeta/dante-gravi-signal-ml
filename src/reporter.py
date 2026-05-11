@@ -58,7 +58,9 @@ def save_cluster_report(
     _save_json_report(result, metadata, stats, anomalous, labels, output_dir)
 
     # --- B) umap_visualization.png ---
-    _save_umap_plot(umap_2d, labels, stats, anomalous, output_dir)
+    _save_umap_plot(
+        umap_2d, labels, stats, anomalous, output_dir, detector=metadata.get("detector", "H1")
+    )
 
     # --- C) cluster_gallery/ ---
     _save_cluster_gallery(
@@ -136,6 +138,7 @@ def _save_umap_plot(
     stats: dict,
     anomalous: list[int],
     output_dir: Path,
+    detector: str = "H1",
 ) -> None:
     """Create and save the 2D UMAP scatter plot."""
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -185,7 +188,7 @@ def _save_umap_plot(
                 )
 
     ax.set_title(
-        f"O4a H1 - DINOv2 Clustering ({n_clusters} clusters, {n_noise} noise)",
+        f"O4a {detector} - DINOv2 Clustering ({n_clusters} clusters, {n_noise} noise)",
         fontsize=14,
         fontweight="bold",
     )

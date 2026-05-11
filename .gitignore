@@ -226,9 +226,11 @@ data/raw/
 data/spectrograms/
 data/embeddings/
 data/clusters/
+data/reference/indomain_images/
 data/reference/training_images/
 data/reference/*.npz
-data/reference/*.json
+data/reference/*.csv
+data/reference/*.tar.gz
 
 # Logs
 logs/
@@ -241,3 +243,30 @@ data/reference/trainingsetv1d1.tar.gz
 data/reference/trainingset_metadata.csv
 data/clusters/h1_48h/morphological_crosscheck.json
 data/reference/gs_classifications_O3b_H1.csv
+
+
+# Results — commit only final images
+results/figures/**
+!results/figures/*.png
+!results/figures/clusters/*.png
+
+docs/
+
+# Raw HDF5 strain data downloads
+raw/
+*.hdf5
+*.h5
+*.hdf
+
+# Generated spectrograms (PNG + PyTorch tensors)
+spectrograms/
+*.pt
+*.png
+
+# Latent embedding vectors from encoder
+embeddings/
+*.npy
+*.npz
+
+# Keep this .gitignore
+!.gitignore

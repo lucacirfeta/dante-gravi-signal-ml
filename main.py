@@ -8,6 +8,7 @@ Provides subcommands for each pipeline stage:
     scan-extended            — Extended 48h scan of H1 + L1 (Phase 3.1)
     encode                   — Extract embeddings from spectrograms (Phase 2)
     cluster                  — Cluster embeddings to discover novel classes (Phase 3)
+    report                   — Regenerate UMAP and cluster gallery from existing outputs
     crosscheck               — Gravity Spy cross-check of anomalous clusters (Phase 3.1)
     build-indomain-reference — Build in-domain reference from labeled GPS (Phase 3.4)
     validate-reference       — Validate reference with GW150914 sanity check (Phase 3.4)
@@ -18,6 +19,7 @@ Usage:
     python main.py scan-extended            --workers 6 --hours 72
     python main.py encode                   --session-id 20260510_143022 --detector H1
     python main.py cluster                  --session-id 20260510_143022 --detector H1
+    python main.py report                   --session-id 20260510_143022 --detector H1
     python main.py crosscheck               --report data/clusters/cluster_report.json --metadata data/embeddings/o4a_h1_6h.json
     python main.py build-indomain-reference --output data/reference/indomain_index.npz
     python main.py validate-reference       --reference data/reference/indomain_index.npz
@@ -314,6 +316,122 @@ def cmd_cluster(args: argparse.Namespace) -> None:
     print_summary(result)
 
     print(f"Phase 3 complete. Results in {output_dir}")
+
+
+def cmd_report(args: argparse.Namespace) -> None:
+    """Regenerate UMAP and cluster gallery from existing embeddings and cluster_report.json."""
+    import json
+    from src.clustering import run_pca, run_umap
+    from src.reporter import _save_umap_plot, _save_cluster_gallery
+
+    session_id = getattr(args, "session_id", None) or None
+    detector = getattr(args, "detector", None)
+
+    # Resolve paths
+    if args.embeddings:
+        embeddings_path = Path(args.embeddings)
+    elif session_id and detector:
+        embeddings_path = Path(f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy")
+    else:
+        logger.error("Either --embeddings or both --session-id and --detector are required.")
+        sys.exit(1)
+
+    if args.report:
+        report_path = Path(args.report)
+    elif session_id and detector:
+        report_path = Path(f"data/clusters/{session_id}/{detector.lower()}/cluster_report.json")
+    else:
+        logger.error("Either --report or both --session-id and --detector are required.")
+        sys.exit(1)
+
+    if args.output_dir:
+        output_dir = Path(args.output_dir)
+    elif session_id and detector:
+        output_dir = Path(f"data/clusters/{session_id}/{detector.lower()}")
+    else:
+        output_dir = Path("data/clusters/")
+
+    logger.info("=== REPORT ===")
+    logger.info("Embeddings: %s", embeddings_path)
+    logger.info("Report: %s", report_path)
+    logger.info("Output dir: %s", output_dir)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if not embeddings_path.exists():
+        logger.error("Embeddings file not found: %s", embeddings_path)
+        sys.exit(1)
+    if not report_path.exists():
+        logger.error("Report file not found: %s", report_path)
+        sys.exit(1)
+
+    # 1. Load data
+    embeddings = np.load(embeddings_path)
+    with open(report_path, "r", encoding="utf-8") as f:
+        cluster_report = json.load(f)
+
+    json_path = embeddings_path.with_suffix(".json")
+    metadata = {}
+    if json_path.exists():
+        with open(json_path, "r", encoding="utf-8") as fh:
+            metadata = json.load(fh)
+
+    files = metadata.get("files", [])
+    if not files:
+        logger.warning("No file list in metadata. Gallery generation might fail or be incomplete.")
+
+    # Reconstruct labels from cluster_report
+    labels = np.full(len(embeddings), -1, dtype=int)
+    file_to_idx = {str(Path(f).name): i for i, f in enumerate(files)}
+    for cid_str, cdata in cluster_report.get("results", {}).get("clusters", {}).items():
+        cid = int(cid_str)
+        if cid < 0:
+            continue
+        for f_path in cdata.get("sample_files", []):
+            name = str(Path(f_path).name)
+            if name in file_to_idx:
+                labels[file_to_idx[name]] = cid
+
+    results = cluster_report.get("results", {})
+    stats = {
+        "n_clusters": results.get("n_clusters", 0),
+        "n_noise": results.get("n_noise", 0),
+        "noise_ratio": results.get("noise_ratio", 0.0),
+        "cluster_sizes": {int(k): v for k, v in results.get("cluster_sizes", {}).items()},
+    }
+    anomalous = results.get("anomalous_clusters", [])
+    
+    detector_val = cluster_report.get("detector", detector or "H1")
+
+    # 2. Recalculate PCA and UMAP
+    cfg = load_config()
+    cluster_cfg = cfg["clustering"]
+
+    pca_reduced, _ = run_pca(embeddings, n_components=cluster_cfg.get("pca_components", 50))
+
+    umap_clust_cfg = cluster_cfg.get("umap_clustering", {})
+    umap_10d = run_umap(
+        pca_reduced,
+        n_components=umap_clust_cfg.get("n_components", 10),
+        n_neighbors=umap_clust_cfg.get("n_neighbors", 20),
+        min_dist=umap_clust_cfg.get("min_dist", 0.0),
+        metric=umap_clust_cfg.get("metric", "cosine"),
+    )
+
+    umap_viz_cfg = cluster_cfg.get("umap_viz", {})
+    umap_2d = run_umap(
+        pca_reduced,
+        n_components=umap_viz_cfg.get("n_components", 2),
+        n_neighbors=umap_viz_cfg.get("n_neighbors", 20),
+        min_dist=umap_viz_cfg.get("min_dist", 0.1),
+        metric=umap_viz_cfg.get("metric", "cosine"),
+    )
+
+    # 3. Regenerate plots
+    _save_umap_plot(umap_2d, labels, stats, anomalous, output_dir, detector=detector_val)
+    _save_cluster_gallery(labels, umap_10d, stats, anomalous, metadata, output_dir)
+
+    print(f"Report generation complete. Outputs updated in {output_dir}")
 
 
 def cmd_crosscheck(args: argparse.Namespace) -> None:
@@ -796,6 +914,44 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier. Required when using --session-id.",
     )
     p_cluster.set_defaults(func=cmd_cluster)
+
+    # --- report ---
+    p_report = subparsers.add_parser(
+        "report",
+        help="Regenerate UMAP and gallery from existing embeddings and report.",
+    )
+    p_report.add_argument(
+        "--embeddings",
+        type=str,
+        default=None,
+        help="Path to embeddings .npy.",
+    )
+    p_report.add_argument(
+        "--report",
+        type=str,
+        default=None,
+        help="Path to cluster_report.json.",
+    )
+    p_report.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Output directory to save generated plots and gallery.",
+    )
+    p_report.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="Session identifier to resolve paths automatically. Requires --detector.",
+    )
+    p_report.add_argument(
+        "--detector",
+        type=str,
+        default=None,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier. Required when using --session-id.",
+    )
+    p_report.set_defaults(func=cmd_report)
 
     # --- crosscheck (Phase 3.1) ---
     p_cross = subparsers.add_parser(
