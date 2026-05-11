@@ -236,7 +236,6 @@ data/reference/*.tar.gz
 logs/
 
 # Environment variables
-.env
 
 docs
 data/reference/trainingsetv1d1.tar.gz
@@ -271,3 +270,4 @@ embeddings/
 # Keep this .gitignore
 !.gitignore
 data/reference/indomain_index.json
+data/reference/

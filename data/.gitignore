@@ -29,9 +29,4 @@ data/reference/*.npz
 data/reference/*.csv
 data/reference/*.tar.gz
 
-# Results — commit only final images
-results/figures/**
-!results/figures/*.png
-!results/figures/clusters/*.png
-
 docs/
