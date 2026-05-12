@@ -105,6 +105,10 @@ python -m venv .venv
 source .venv/bin/activate   # Linux/macOS
 # .venv\Scripts\activate    # Windows
 
+# Enable GWPY caching to avoid re-downloading identical segments
+export GWPY_CACHE=1         # Linux/macOS
+# set GWPY_CACHE=1          # Windows
+
 # Install dependencies
 pip install -r requirements.txt
 pre-commit install          # Optional
@@ -296,13 +300,18 @@ Morphological cross-check against the in-domain Gravity Spy O3b reference
 (Phase 3.4, GW150914 validation: Chirp@0.997) shows:
 
 - **H1 Cluster 1** (23 pts): maps to Low_Frequency_Lines / 1400Ripples (KNOWN)
-- **H1 Cluster 4** (19 pts): 89% AMBIGUOUS between Low_Frequency_Lines and
-  No_Glitch — suggests subtle sub-threshold narrowband activity in O4a
-- **L1 Cluster 4** (32 pts): morphological crosscheck in progress
+- **H1 Cluster 4** (19 pts): 89% AMBIGUOUS between Low_Frequency_Lines and No_Glitch
+- **L1 Cluster 4** (32 pts): maps to Low_Frequency_Lines (KNOWN/AMBIGUOUS)
 
 No fully novel morphologies were identified in this 48h window. The pipeline
 is validated end-to-end and ready for extended analysis.
 
+**Robustness validation (H1):**
+- Ablation study: ARI > 0.999 across grayscale/inverted/shuffled-intensity variants
+- Random baseline: ARI ≈ 0.000 (correct negative control)
+- Stability analysis: ARI mean=0.9997 ± 0.0003 across 21 hyperparameter configurations
+- **L1 note:** grayscale ARI = 0.377 — L1 clustering shows partial dependence on
+  rendering statistics; physical interpretation requires further investigation
 ---
 
 ## 🧪 Running Tests
@@ -327,6 +336,8 @@ gravi-signal-ml/
 │   ├── spectrograms/o4a/<session_id>/ # Q-transform PNGs, isolated per run
 │   ├── embeddings/<session_id>/      # DINOv2 .npy embedding arrays
 │   ├── clusters/<session_id>/        # Cluster reports + galleries
+│   ├── ablation/<session_id>/        # Ablation study results
+│   ├── stability/<session_id>/       # Robustness analysis (ARI metrics)
 │   └── reference/                    # Static — Gravity Spy reference indexes
 ├── src/
 │   ├── data_loader.py                # GWOSC fetch + O4a segment management
@@ -340,6 +351,9 @@ gravi-signal-ml/
 │   ├── indomain_reference_builder.py # In-domain reference from labeled GPS (Phase 3.4)
 │   ├── similarity_checker.py         # Cosine KNN novelty assessment
 │   └── utils.py                      # Config · logging · GPS conversion · normalization
+│   ├── ablation.py                   # Ablation study — ARI vs preprocessing variants
+│   ├── stability.py                  # Stability analysis — ARI across hyperparameter runs
+│   ├── timeslide.py                  # Time-slide background estimation
 ├── results/
 │   └── figures/                      # Committed: UMAP plots + anomalous contact sheets
 ├── docs/
@@ -366,7 +380,10 @@ gravi-signal-ml/
 | **Phase 3.2** | Parallel pipeline (`--workers N`)                    | ✅ Complete                         |
 | **Phase 3.3** | Morphological similarity vs Gravity Spy training set | ✅ Complete (domain gap documented) |
 | **Phase 3.4** | In-domain reference + session isolation              | ✅ Complete                         |
-| **Phase 4**   | Novel candidate reporting + community contribution   | 🔲 Planned                         |
+| **Phase 3.5** | Ablation study + stability analysis (ARI-based robustness) | ✅ Complete |
+| **Phase 3.6** | Incremental scan (cache GWOSC + skip existing spectrograms) | ✅ Complete |
+| **Phase 4**   | Extended scan 72h+ + timeslide background validation        | 🔄 In progress |
+| **Phase 5**   | Novel candidate reporting + community contribution          | 🔲 Planned |
 
 ---
 
@@ -406,7 +423,7 @@ If you use this code in your research, please cite:
   author = {Cirfeta, Luca},
   year   = {2026},
   url    = {https://github.com/lucacirfeta/dante-gravi-signal-ml},
-  note   = {Novel glitch discovery in LIGO/Virgo O4a data using DINOv2 frozen features}
+  note   = {Unsupervised morphological characterization of LIGO O4a glitches using DINOv2 frozen features}
 }
 ```
 

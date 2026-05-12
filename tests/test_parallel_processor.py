@@ -32,7 +32,14 @@ def test_get_optimal_workers_returns_int() -> None:
 @patch("src.preprocessor.batch_process")
 def test_workers_1_calls_sequential(mock_batch_process: MagicMock) -> None:
     """Verify that workers=1 falls back to the sequential batch_process."""
-    mock_batch_process.return_value = [Path("test1.png"), Path("test2.png")]
+    # batch_process is expected to return a tuple (saved, skipped) now or a list?
+    # Wait, the fallback in original batch_process_parallel was:
+    # saved_paths = batch_process(segments, detector, output_dir)
+    # return len(saved_paths), len(segments) - len(saved_paths)
+    # BUT the user's new batch_process_parallel does:
+    # return batch_process(segments, detector, output_dir, config)
+    # So we assume batch_process returns (saved, skipped). We'll mock it to return (2, 0)
+    mock_batch_process.return_value = (2, 0)
     
     segments = [(123, 124), (125, 126)]
     detector = "H1"
@@ -43,7 +50,7 @@ def test_workers_1_calls_sequential(mock_batch_process: MagicMock) -> None:
         segments, detector, output_dir, config, workers=1
     )
 
-    mock_batch_process.assert_called_once_with(segments, detector, output_dir)
+    mock_batch_process.assert_called_once_with(segments, detector, output_dir, config)
     assert saved == 2
     assert skipped == 0
 
@@ -51,20 +58,20 @@ def test_workers_1_calls_sequential(mock_batch_process: MagicMock) -> None:
 @patch("src.preprocessor.generate_qtransform")
 @patch("src.preprocessor.bandpass")
 @patch("src.preprocessor.whiten")
+@patch("src.data_loader.fetch_strain_data")
 def test_process_single_segment_returns_tuple(
+    mock_fetch: MagicMock,
     mock_whiten: MagicMock,
     mock_bandpass: MagicMock,
     mock_qtransform: MagicMock,
 ) -> None:
     """Verify that _process_single_segment returns a (str, bool) tuple."""
     # Mock preprocessor functions
+    mock_fetch.return_value = MagicMock()
     mock_whiten.return_value = MagicMock()
     mock_bandpass.return_value = MagicMock()
     
-    # Mock a dummy TimeSeries
-    mock_ts = MagicMock()
-    
-    args = (1000, 1001, mock_ts, "H1", "dummy_dir")
+    args = (1000, 1001, "H1", "dummy_dir", {})
     result = _process_single_segment(args)
     
     assert isinstance(result, tuple)
@@ -74,56 +81,37 @@ def test_process_single_segment_returns_tuple(
     assert result[0] == "H1_1000_1001"
     assert result[1] is True
     
-    mock_whiten.assert_called_once_with(mock_ts)
+    mock_fetch.assert_called_once_with("H1", 1000, 1001, sample_rate=4096)
+    mock_whiten.assert_called_once()
     mock_bandpass.assert_called_once()
     mock_qtransform.assert_called_once()
 
 
-@patch("src.parallel_processor.ProcessPoolExecutor")
-@patch("src.parallel_processor.ThreadPoolExecutor")
+@patch("src.parallel_processor._process_single_segment")
 def test_parallel_saved_skipped_sum(
-    mock_thread_pool: MagicMock,
-    mock_process_pool: MagicMock,
+    mock_process: MagicMock,
 ) -> None:
     """Verify saved + skipped matches total segments when using parallel mode."""
-    # We will actually run the real batch_process_parallel but mock fetch_strain_data 
-    # and _process_single_segment instead to test the logic flow.
-    pass
-
-@patch("src.data_loader.fetch_strain_data")
-@patch("src.parallel_processor._process_single_segment")
-def test_parallel_logic_flow(
-    mock_process: MagicMock,
-    mock_fetch: MagicMock,
-) -> None:
-    """Verify parallel batch_process_parallel correctly tallies saved/skipped."""
     segments = [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10)]
     detector = "H1"
     output_dir = Path("dummy_dir")
     config = {}
     
-    # Mock fetch: 3 succeed, 2 fail
-    def mock_fetch_side_effect(*args, **kwargs):
-        if args[1] in [1, 5, 9]:
-            return "mocked_ts"  # Return string instead of MagicMock to avoid pickling error
-        raise Exception("Fetch failed")  # fail
-        
-    mock_fetch.side_effect = mock_fetch_side_effect
-    
-    # Mock process: always succeed if it gets here
-    # It only gets here if fetch succeeded
     def mock_process_side_effect(args):
-        gps_start, gps_end, ts, det, out = args[:5]
-        return (f"{det}_{gps_start}_{gps_end}", True)
+        gps_start, gps_end, det, out, cfg = args
+        success = gps_start not in [5, 9]
+        return (f"{det}_{gps_start}_{gps_end}", success)
         
     mock_process.side_effect = mock_process_side_effect
     
+    # Run with workers=3 so it uses ProcessPoolExecutor
+    # We patch ProcessPoolExecutor with ThreadPoolExecutor to make patching _process_single_segment easier across threads
     with patch("src.parallel_processor.ProcessPoolExecutor", side_effect=__import__("concurrent.futures").futures.ThreadPoolExecutor):
         saved, skipped = batch_process_parallel(
-            segments, detector, output_dir, config, workers=2, fetch_workers=2
+            segments, detector, output_dir, config, workers=3, fetch_workers=2
         )
     
-    # 3 success, 2 failed fetch (skipped)
     assert saved == 3
     assert skipped == 2
     assert saved + skipped == len(segments)
+

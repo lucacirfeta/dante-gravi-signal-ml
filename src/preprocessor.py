@@ -219,6 +219,15 @@ def batch_process(
         segment_list, desc=f"Processing {detector}", unit="seg"
     ):
         try:
+            filename = f"{detector}_{gps_start}_{gps_end}.png"
+            save_path = output_dir / filename
+
+            # Skip existing spectrograms (resumable pipeline)
+            if save_path.exists():
+                logger.info("Skipping existing spectrogram: %s", filename)
+                saved.append(save_path)
+                continue
+
             # 1. Fetch strain data
             ts = fetch_strain_data(detector, gps_start, gps_end)
 
@@ -229,8 +238,6 @@ def batch_process(
             ts_bp = bandpass(ts_white)
 
             # 4. Q-transform → PNG
-            filename = f"{detector}_{gps_start}_{gps_end}.png"
-            save_path = output_dir / filename
             generate_qtransform(ts_bp, save_path=save_path)
 
             saved.append(save_path)

@@ -100,10 +100,19 @@ def cmd_scan(args: argparse.Namespace) -> None:
     session_id = _resolve_session_id(args)
 
     logger.info("Session ID: %s", session_id)
-    logger.info("=== SCAN: %s, %.1f hours ===", detector, hours)
 
-    # Generate segment list
-    segments = fetch_o4a_segments(detector, duration_hours=hours)
+    # Generate segment list — explicit GPS range or hours-based
+    start_gps = getattr(args, "start_gps", None)
+    end_gps = getattr(args, "end_gps", None)
+
+    if start_gps is not None and end_gps is not None:
+        from src.data_loader import generate_segments_from_gps_range
+
+        logger.info("=== SCAN: %s, GPS [%d, %d] ===", detector, start_gps, end_gps)
+        segments = generate_segments_from_gps_range(start_gps, end_gps)
+    else:
+        logger.info("=== SCAN: %s, %.1f hours ===", detector, hours)
+        segments = fetch_o4a_segments(detector, duration_hours=hours)
 
     if not segments:
         logger.warning("No segments found for %s in the requested window.", detector)
@@ -152,18 +161,33 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
 
     logger.info("Session ID: %s", session_id)
-    logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
+
+    # Check for explicit GPS range
+    start_gps = getattr(args, "start_gps", None)
+    end_gps = getattr(args, "end_gps", None)
+    use_explicit_gps = start_gps is not None and end_gps is not None
+
+    if use_explicit_gps:
+        logger.info("=== SCAN-EXTENDED: %s, GPS [%d, %d] ===", detectors, start_gps, end_gps)
+    else:
+        logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
 
     totals: dict[str, int] = {}
 
     for det in detectors:
-        offset = offsets.get(det, 0)
-        logger.info("--- Scanning %s: %d h, offset %.1f h ---", det, hours, offset)
+        if use_explicit_gps:
+            from src.data_loader import generate_segments_from_gps_range
 
-        # Generate segment list with offset
-        segments = fetch_o4a_segments(
-            det, duration_hours=hours, gps_offset_hours=offset
-        )
+            logger.info("--- Scanning %s: GPS [%d, %d] ---", det, start_gps, end_gps)
+            segments = generate_segments_from_gps_range(start_gps, end_gps)
+        else:
+            offset = offsets.get(det, 0)
+            logger.info("--- Scanning %s: %d h, offset %.1f h ---", det, hours, offset)
+
+            # Generate segment list with offset
+            segments = fetch_o4a_segments(
+                det, duration_hours=hours, gps_offset_hours=offset
+            )
 
         if not segments:
             logger.warning("No segments for %s — skipping.", det)
@@ -196,6 +220,49 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
 
     parts = " ".join(f"{d}={n}" for d, n in totals.items())
     print(f"Extended scan complete: {parts} spectrograms saved.")
+
+
+def cmd_last_gps(args: argparse.Namespace) -> None:
+    """Print the highest GPS end-time found in spectrogram filenames of a session.
+
+    Filename convention: ``<detector>_<gps_start>_<gps_end>.png``.
+    Scans the directory without touching GWOSC.
+    """
+    import re
+
+    session_id = args.session_id
+    if not session_id:
+        logger.error("--session-id is required for last-gps.")
+        sys.exit(1)
+
+    detector: str = args.detector
+    spec_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+
+    if not spec_dir.exists():
+        logger.error("Spectrogram directory not found: %s", spec_dir)
+        sys.exit(1)
+
+    # Filename pattern: H1_<start>_<end>.png  (or L1_, V1_)
+    pattern = re.compile(r"^[A-Z]\d_(\d+)_(\d+)\.png$")
+
+    max_gps = 0
+    count = 0
+    for png_file in spec_dir.glob("*.png"):
+        m = pattern.match(png_file.name)
+        if m:
+            end_gps = int(m.group(2))
+            if end_gps > max_gps:
+                max_gps = end_gps
+            count += 1
+
+    if count == 0:
+        logger.warning("No matching spectrogram PNGs found in %s", spec_dir)
+        sys.exit(1)
+
+    logger.info(
+        "Scanned %d PNGs in %s — max GPS end-time: %d", count, spec_dir, max_gps
+    )
+    print(max_gps)
 
 
 def cmd_encode(args: argparse.Namespace) -> None:
@@ -924,6 +991,21 @@ def build_parser() -> argparse.ArgumentParser:
             "Auto-generated as YYYYMMDD_HHMMSS if omitted."
         ),
     )
+    p_scan.add_argument(
+        "--start-gps",
+        type=int,
+        default=None,
+        help=(
+            "Explicit GPS start time. If provided with --end-gps, "
+            "overrides --hours and scans the given GPS window."
+        ),
+    )
+    p_scan.add_argument(
+        "--end-gps",
+        type=int,
+        default=None,
+        help="Explicit GPS end time. Must be used together with --start-gps.",
+    )
     p_scan.set_defaults(func=cmd_scan)
 
     # --- scan-extended (Phase 3.1) ---
@@ -959,7 +1041,42 @@ def build_parser() -> argparse.ArgumentParser:
             "Auto-generated as YYYYMMDD_HHMMSS if omitted."
         ),
     )
+    p_scan_ext.add_argument(
+        "--start-gps",
+        type=int,
+        default=None,
+        help=(
+            "Explicit GPS start time. If provided with --end-gps, "
+            "overrides --hours and scans the given GPS window."
+        ),
+    )
+    p_scan_ext.add_argument(
+        "--end-gps",
+        type=int,
+        default=None,
+        help="Explicit GPS end time. Must be used together with --start-gps.",
+    )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
+
+    # --- last-gps ---
+    p_last_gps = subparsers.add_parser(
+        "last-gps",
+        help="Print the highest GPS end-time from spectrogram filenames in a session.",
+    )
+    p_last_gps.add_argument(
+        "--session-id",
+        type=str,
+        required=True,
+        help="Session identifier to locate the spectrogram directory.",
+    )
+    p_last_gps.add_argument(
+        "--detector",
+        type=str,
+        required=True,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier.",
+    )
+    p_last_gps.set_defaults(func=cmd_last_gps)
 
     # --- encode (Phase 2) ---
     p_encode = subparsers.add_parser(

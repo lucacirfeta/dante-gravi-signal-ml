@@ -157,6 +157,49 @@ def fetch_o4a_segments(
     return segments
 
 
+def generate_segments_from_gps_range(
+    gps_start: int,
+    gps_end: int,
+    segment_length: int = 32,
+) -> list[tuple[int, int]]:
+    """Generate fixed-length segments from an explicit GPS range.
+
+    Unlike :func:`fetch_o4a_segments`, this function does **not** reference
+    the O4a window boundaries — the caller provides the exact GPS interval.
+
+    Args:
+        gps_start: GPS start time (inclusive).
+        gps_end: GPS end time (exclusive upper bound for the last segment).
+        segment_length: Length of each segment in seconds.  Defaults to 32.
+
+    Returns:
+        A list of ``(gps_start, gps_end)`` tuples covering the requested
+        range.
+
+    Raises:
+        ValueError: If *gps_end* ≤ *gps_start*.
+    """
+    if gps_end <= gps_start:
+        raise ValueError(
+            f"gps_end ({gps_end}) must be greater than gps_start ({gps_start})"
+        )
+
+    segments: list[tuple[int, int]] = []
+    current = gps_start
+    while current + segment_length <= gps_end:
+        segments.append((current, current + segment_length))
+        current += segment_length
+
+    logger.info(
+        "Generated %d × %d-s segments for GPS range [%d, %d]",
+        len(segments),
+        segment_length,
+        gps_start,
+        gps_end,
+    )
+    return segments
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
