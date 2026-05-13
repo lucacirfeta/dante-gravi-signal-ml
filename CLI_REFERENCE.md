@@ -6,6 +6,16 @@
 
 ---
 
+## Interfaccia Grafica (GUI)
+
+È disponibile un'interfaccia grafica (basata su Gooey) per tutti i comandi elencati in questo documento. Per avviarla, esegui:
+```bash
+python gui.py
+```
+La GUI genererà automaticamente i campi di input per tutti i parametri richiesti.
+
+---
+
 ## Indice comandi
 
 | # | Comando | Descrizione | Prerequisiti |

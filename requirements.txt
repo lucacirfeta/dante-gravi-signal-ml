@@ -52,3 +52,6 @@ pre-commit>=3.6
 
 # --- Data download (Phase 3.3) ---
 requests>=2.31.0
+
+# --- GUI ---
+Gooey>=1.2.0a0

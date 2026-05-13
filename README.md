@@ -121,6 +121,15 @@ pre-commit install          # Optional
 
 ## 🚀 Usage
 
+### Graphical User Interface (GUI)
+
+For those who prefer a graphical interface over the command line, a Gooey-based wrapper is available:
+
+```bash
+python gui.py
+```
+This opens a minimalist user interface where you can configure and run all the commands listed below without typing parameters manually.
+
 ### Phase 1 — Fetch a Known Event (Proof of Concept) - ONE TIME
 
 ```bash
