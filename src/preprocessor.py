@@ -108,6 +108,7 @@ def generate_qtransform(
     frange: tuple[int, int] = tuple(_PREPROC["frange"]),  # type: ignore[arg-type]
     output_size: tuple[int, int] = tuple(_PREPROC["output_size"]),  # type: ignore[arg-type]
     save_path: Path | None = None,
+    cmap: str | None = None,
 ) -> np.ndarray:
     """Compute a constant-Q transform spectrogram from a time series.
 
@@ -121,16 +122,23 @@ def generate_qtransform(
         frange: Frequency range ``(f_min, f_max)`` in Hz.
         output_size: Output array shape ``(height, width)`` in pixels.
         save_path: If provided, save a PNG rendering to this path.
+        cmap: Matplotlib colormap name.  If ``None``, reads from
+            ``config.yaml`` → ``preprocessing.colormap`` (default:
+            ``"cividis"``).
 
     Returns:
         Normalized 2-D :class:`numpy.ndarray` with shape *output_size*
         and values in [0, 1].
     """
+    if cmap is None:
+        cmap = _PREPROC.get("colormap", "cividis")
+
     logger.debug(
-        "Q-transform: qrange=%s, frange=%s, output=%s",
+        "Q-transform: qrange=%s, frange=%s, output=%s, cmap=%s",
         qrange,
         frange,
         output_size,
+        cmap,
     )
 
     # Compute the Q-transform spectrogram via gwpy
@@ -165,7 +173,7 @@ def generate_qtransform(
             spectrogram,
             origin="lower",
             aspect="auto",
-            cmap="viridis",
+            cmap=cmap,
             interpolation="bilinear",
         )
         ax.set_xlabel("Time")

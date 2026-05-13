@@ -187,6 +187,11 @@ python main.py scan --detector H1 --hours 72 --workers 6
 python main.py scan --detector L1 --hours 72 --workers 6
 ```
 
+**Incremental Mode:** To resume an interrupted scan or append more data, simply provide the same `--session-id`. The pipeline will automatically detect the highest GPS end-time of existing spectrograms and resume from there, reading the scan duration from `config.yaml`.
+```bash
+python main.py scan-extended --workers 6 --session-id <PREVIOUS_SESSION_ID>
+```
+
 📋 Note the **Session ID** printed at startup — you will need it for all subsequent steps.
 
 Spectrograms are saved to `data/spectrograms/o4a/<SESSION_ID>/{detector}/`.
@@ -267,6 +272,16 @@ python main.py stability --session-id <SESSION_ID> --detector H1 --n-runs 20
 ```
 
 Outputs a comprehensive `stability_report.json` with an $N \times N$ ARI matrix and flags clusters that are consistently anomalous across $\ge 80\%$ of runs.
+
+#### Step 7 — Time-slide Background Validation
+
+Estimate the statistical significance of anomalous cluster coincidences between H1 and L1 using time-slides to model the random background rate.
+
+```bash
+python main.py timeslide --session-id <SESSION_ID>
+```
+
+Calculates the zero-lag coincidences (±32s window) and compares it against 50 random L1 time shifts to produce an empirical p-value and z-score.
 
 ---
 
@@ -358,11 +373,14 @@ gravi-signal-ml/
 │   └── figures/                      # Committed: UMAP plots + anomalous contact sheets
 ├── docs/
 │   ├── SESSION_HANDOFF.md            # Session continuity document
-│   └── STEPS.md                      # Full pipeline commands reference
+│   ├── STEP.md                       # Full pipeline commands reference
+│   ├── TODO.md                       # Current TODO and open tasks
+│   └── IMPL.md                       # Implementation notes
 ├── notebooks/                        # Exploratory Jupyter notebooks
 ├── tests/                            # Pytest suite (synthetic data, mocked network)
-├── main.py                           # CLI entry point
+├── main.py                           # CLI entry point (16 subcommands)
 ├── config.yaml                       # Central configuration (all parameters)
+├── CLI_REFERENCE.md                  # Complete CLI reference (auto-generated)
 ├── requirements.txt                  # Pinned dependencies
 └── .pre-commit-config.yaml           # ruff + mypy + file hygiene
 ```
@@ -371,19 +389,20 @@ gravi-signal-ml/
 
 ## 🗺️ Roadmap
 
-| Phase         | Description                                          | Status                             |
-|---------------|------------------------------------------------------|------------------------------------|
-| **Phase 1**   | Preprocessing pipeline + GW150914 chirp validation   | ✅ Complete                         |
-| **Phase 2**   | DINOv2-Reg frozen encoder (384-dim embeddings)       | ✅ Complete                         |
-| **Phase 3**   | PCA + UMAP + HDBSCAN clustering                      | ✅ Complete                         |
-| **Phase 3.1** | Extended scan 48h H1+L1 + GPS cross-check            | ✅ Complete                         |
-| **Phase 3.2** | Parallel pipeline (`--workers N`)                    | ✅ Complete                         |
-| **Phase 3.3** | Morphological similarity vs Gravity Spy training set | ✅ Complete (domain gap documented) |
-| **Phase 3.4** | In-domain reference + session isolation              | ✅ Complete                         |
-| **Phase 3.5** | Ablation study + stability analysis (ARI-based robustness) | ✅ Complete |
-| **Phase 3.6** | Incremental scan (cache GWOSC + skip existing spectrograms) | ✅ Complete |
-| **Phase 4**   | Extended scan 72h+ + timeslide background validation        | 🔄 In progress |
-| **Phase 5**   | Novel candidate reporting + community contribution          | 🔲 Planned |
+| Phase         | Description                                                 | Status                             |
+|---------------|-------------------------------------------------------------|------------------------------------|
+| **Phase 1**   | Preprocessing pipeline + GW150914 chirp validation          | ✅ Complete                         |
+| **Phase 2**   | DINOv2-Reg frozen encoder (384-dim embeddings)              | ✅ Complete                         |
+| **Phase 3**   | PCA + UMAP + HDBSCAN clustering                             | ✅ Complete                         |
+| **Phase 3.1** | Extended scan 48h H1+L1 + GPS cross-check                   | ✅ Complete                         |
+| **Phase 3.2** | Parallel pipeline (`--workers N`)                           | ✅ Complete                         |
+| **Phase 3.3** | Morphological similarity vs Gravity Spy training set        | ✅ Complete (domain gap documented) |
+| **Phase 3.4** | In-domain reference + session isolation                     | ✅ Complete                         |
+| **Phase 3.5** | Ablation study + stability analysis (ARI-based robustness)  | ✅ Complete                         |
+| **Phase 3.6** | Incremental scan (cache GWOSC + skip existing spectrograms) | ✅ Complete                         |
+| **Phase 3.7** | Colormap migration (`viridis` → `cividis`) & Reprocessing   | ✅ Complete                         |
+| **Phase 4**   | Extended scan 72h+ + timeslide background validation        | ✅ Complete                         |
+| **Phase 5**   | Novel candidate reporting + community contribution          | 🔲 Planned                         |
 
 ---
 

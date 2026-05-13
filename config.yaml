@@ -34,7 +34,7 @@ o4a_window:
 
 # Extended scan parameters (Phase 3.1)
 scan_extended:
-  hours_per_detector: 72
+  hours_per_detector: 48
   detectors: ["H1", "L1"]
   h1_offset_hours: 6
   l1_offset_hours: 0
@@ -47,6 +47,7 @@ preprocessing:
   qrange: [4, 64]
   frange: [20, 2048]
   output_size: [256, 256]
+  colormap: cividis            # perceptually uniform; safe under grayscale conversion
 
 # Self-supervised encoder (Phase 2) — DINOv2 with Registers
 encoder:

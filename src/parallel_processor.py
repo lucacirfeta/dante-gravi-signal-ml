@@ -59,7 +59,8 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
                          f_high=config.get('f_high', 2000.0))
         
         # Save PNG
-        generate_qtransform(ts_bp, save_path=save_path)
+        generate_qtransform(ts_bp, save_path=save_path,
+                            cmap=config.get('colormap', 'cividis'))
         
         return (segment_id, True)
         
@@ -101,6 +102,7 @@ def batch_process_parallel(
         'qrange': config.get('preprocessing', {}).get('qrange', [4, 64]),
         'frange': config.get('preprocessing', {}).get('frange', [20, 2048]),
         'output_size': config.get('preprocessing', {}).get('output_size', [256, 256]),
+        'colormap': config.get('preprocessing', {}).get('colormap', 'cividis'),
     }
     
     args_list = [

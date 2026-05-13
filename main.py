@@ -6,6 +6,7 @@ Provides subcommands for each pipeline stage:
     fetch                    — Download and process a known reference event (PoC)
     scan                     — Batch-scan O4a segments for a detector
     scan-extended            — Extended 48h scan of H1 + L1 (Phase 3.1)
+    reprocess-spectrograms   — Re-render existing spectrograms with updated colormap
     encode                   — Extract embeddings from spectrograms (Phase 2)
     cluster                  — Cluster embeddings to discover novel classes (Phase 3)
     report                   — Regenerate UMAP and cluster gallery from existing outputs
@@ -53,6 +54,31 @@ def _resolve_session_id(args: argparse.Namespace) -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
+def _find_last_gps(session_id: str, detector: str) -> int | None:
+    """Scan existing PNGs and return the highest GPS end-time, or None.
+
+    Filename convention: ``<detector>_<gps_start>_<gps_end>.png``.
+    """
+    import re
+
+    spec_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    if not spec_dir.exists():
+        return None
+
+    pattern = re.compile(r"^[A-Z]\d_(\d+)_(\d+)\.png$")
+    max_gps = 0
+    count = 0
+    for png_file in spec_dir.glob("*.png"):
+        m = pattern.match(png_file.name)
+        if m:
+            end_gps = int(m.group(2))
+            if end_gps > max_gps:
+                max_gps = end_gps
+            count += 1
+
+    return max_gps if count > 0 else None
+
+
 def cmd_fetch(args: argparse.Namespace) -> None:
     """Fetch a known reference event, preprocess it, and save a spectrogram."""
     cfg = load_config()
@@ -94,23 +120,43 @@ def cmd_fetch(args: argparse.Namespace) -> None:
 
 
 def cmd_scan(args: argparse.Namespace) -> None:
-    """Batch-scan O4a segments for a given detector."""
+    """Batch-scan O4a segments for a given detector.
+
+    Incremental mode (automatic):
+        When ``--session-id`` is provided and the session directory already
+        contains spectrograms, the scan resumes from the highest GPS
+        end-time found in the existing filenames.  The resume window is
+        ``last_gps … last_gps + scan_extended.hours_per_detector * 3600``
+        (read from config.yaml, **not** from ``--hours``).
+    """
     detector: str = args.detector
     hours: float = args.hours
     session_id = _resolve_session_id(args)
 
     logger.info("Session ID: %s", session_id)
 
-    # Generate segment list — explicit GPS range or hours-based
-    start_gps = getattr(args, "start_gps", None)
-    end_gps = getattr(args, "end_gps", None)
+    # --- Incremental logic ---------------------------------------------------
+    explicit_session = hasattr(args, "session_id") and args.session_id
+    last_gps: int | None = None
 
-    if start_gps is not None and end_gps is not None:
+    if explicit_session:
+        last_gps = _find_last_gps(session_id, detector)
+
+    if last_gps is not None:
+        # Resume from last GPS end-time.
+        # Duration comes from config, not from the CLI --hours flag.
         from src.data_loader import generate_segments_from_gps_range
 
-        logger.info("=== SCAN: %s, GPS [%d, %d] ===", detector, start_gps, end_gps)
+        resume_hours: float = load_config()["scan_extended"]["hours_per_detector"]
+        start_gps = last_gps
+        end_gps = last_gps + int(resume_hours * 3600)
+        logger.info(
+            "Resuming session %s from GPS %d (+%.1fh)",
+            session_id, last_gps, resume_hours,
+        )
         segments = generate_segments_from_gps_range(start_gps, end_gps)
     else:
+        # Fresh scan (no previous data or auto-generated session)
         logger.info("=== SCAN: %s, %.1f hours ===", detector, hours)
         segments = fetch_o4a_segments(detector, duration_hours=hours)
 
@@ -146,7 +192,13 @@ def cmd_scan(args: argparse.Namespace) -> None:
 
 
 def cmd_scan_extended(args: argparse.Namespace) -> None:
-    """Run an extended 48h scan of H1 + L1 sequentially."""
+    """Run an extended scan of H1 + L1 sequentially.
+
+    Incremental mode (automatic):
+        When ``--session-id`` is provided and a detector directory already
+        contains spectrograms, the scan for that detector resumes from
+        the highest GPS end-time found in the filenames.
+    """
     cfg = load_config()
     scan_cfg = cfg["scan_extended"]
     session_id = _resolve_session_id(args)
@@ -159,32 +211,32 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     }
     workers: int = args.workers
     fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
+    explicit_session = hasattr(args, "session_id") and args.session_id
 
     logger.info("Session ID: %s", session_id)
-
-    # Check for explicit GPS range
-    start_gps = getattr(args, "start_gps", None)
-    end_gps = getattr(args, "end_gps", None)
-    use_explicit_gps = start_gps is not None and end_gps is not None
-
-    if use_explicit_gps:
-        logger.info("=== SCAN-EXTENDED: %s, GPS [%d, %d] ===", detectors, start_gps, end_gps)
-    else:
-        logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
+    logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
 
     totals: dict[str, int] = {}
 
     for det in detectors:
-        if use_explicit_gps:
+        # --- Incremental logic per detector --------------------------------
+        last_gps: int | None = None
+        if explicit_session:
+            last_gps = _find_last_gps(session_id, det)
+
+        if last_gps is not None:
             from src.data_loader import generate_segments_from_gps_range
 
-            logger.info("--- Scanning %s: GPS [%d, %d] ---", det, start_gps, end_gps)
+            start_gps = last_gps
+            end_gps = last_gps + int(hours * 3600)
+            logger.info(
+                "Resuming session %s / %s from GPS %d (+%.1fh)",
+                session_id, det, last_gps, hours,
+            )
             segments = generate_segments_from_gps_range(start_gps, end_gps)
         else:
             offset = offsets.get(det, 0)
             logger.info("--- Scanning %s: %d h, offset %.1f h ---", det, hours, offset)
-
-            # Generate segment list with offset
             segments = fetch_o4a_segments(
                 det, duration_hours=hours, gps_offset_hours=offset
             )
@@ -263,6 +315,179 @@ def cmd_last_gps(args: argparse.Namespace) -> None:
         "Scanned %d PNGs in %s — max GPS end-time: %d", count, spec_dir, max_gps
     )
     print(max_gps)
+
+
+def _reprocess_single_png(
+    args: tuple,
+) -> tuple[str, bool, str]:
+    """Autonomous worker for reprocessing a single spectrogram PNG.
+
+    Receives only picklable primitives — safe for Windows ``spawn``.
+
+    Returns:
+        ``(filename, success, message)``
+    """
+    filename, detector, gps_start, gps_end, output_dir_str, cmap, backup, use_cache = args
+    from pathlib import Path as _Path
+
+    save_path = _Path(output_dir_str) / filename
+
+    try:
+        # Optional backup
+        if backup and save_path.exists():
+            bak_name = save_path.stem + ".viridis.bak" + save_path.suffix
+            bak_path = save_path.parent / bak_name
+            if not bak_path.exists():
+                import shutil
+                shutil.copy2(save_path, bak_path)
+
+        # Try local cache first if requested
+        ts = None
+        if use_cache:
+            cache_dir = _Path("data/raw")
+            cache_file = cache_dir / f"{detector}_{gps_start}_{gps_end}.hdf5"
+            if cache_file.exists():
+                from gwpy.timeseries import TimeSeries
+                ts = TimeSeries.read(cache_file)
+                print(f"  Cache hit: {cache_file.name}")
+
+        if ts is None:
+            from src.data_loader import fetch_strain_data
+            ts = fetch_strain_data(detector, gps_start, gps_end)
+
+        from src.preprocessor import whiten, bandpass, generate_qtransform
+        ts_w = whiten(ts)
+        ts_bp = bandpass(ts_w)
+        generate_qtransform(ts_bp, save_path=save_path, cmap=cmap)
+
+        return (filename, True, "OK")
+
+    except Exception as exc:
+        return (filename, False, str(exc))
+
+
+def cmd_reprocess_spectrograms(args: argparse.Namespace) -> None:
+    """Re-render existing spectrograms with the current colormap from config.
+
+    For each PNG in the target directory, parse the GPS range from the
+    filename (``<detector>_<gps_start>_<gps_end>.png``), re-fetch the raw
+    strain data, and re-run the full preprocessing pipeline with the
+    colormap specified in ``config.yaml → preprocessing.colormap``.
+    """
+    import re
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+
+    cfg = load_config()
+    cmap = cfg["preprocessing"].get("colormap", "cividis")
+    session_id = getattr(args, "session_id", None)
+    detector = getattr(args, "detector", None)
+    workers: int = args.workers
+    backup: bool = args.backup
+    dry_run: bool = args.dry_run
+    use_cache: bool = args.use_cache
+
+    # Resolve input directory
+    if args.input_dir:
+        input_dir = Path(args.input_dir)
+    elif session_id and detector:
+        input_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    else:
+        logger.error(
+            "Either --input-dir or both --session-id and --detector are required."
+        )
+        sys.exit(1)
+
+    if not input_dir.exists():
+        logger.error("Directory not found: %s", input_dir)
+        sys.exit(1)
+
+    # Discover PNGs and parse GPS ranges
+    pattern = re.compile(r"^([A-Z]\d)_(\d+)_(\d+)\.png$")
+    tasks: list[tuple[str, str, int, int]] = []  # (filename, det, start, end)
+
+    for png_file in sorted(input_dir.glob("*.png")):
+        m = pattern.match(png_file.name)
+        if m:
+            det = m.group(1)
+            gps_start = int(m.group(2))
+            gps_end = int(m.group(3))
+            # If --detector is given, only reprocess matching files
+            if detector and det != detector:
+                continue
+            tasks.append((png_file.name, det, gps_start, gps_end))
+
+    if not tasks:
+        logger.warning("No matching spectrogram PNGs found in %s", input_dir)
+        sys.exit(0)
+
+    logger.info(
+        "=== REPROCESS-SPECTROGRAMS: %d PNGs, cmap=%s ===",
+        len(tasks), cmap,
+    )
+
+    if dry_run:
+        total_seconds = sum(end - start for _, _, start, end in tasks)
+        print(f"\n[DRY RUN] Would reprocess {len(tasks)} spectrograms")
+        print(f"  Directory : {input_dir}")
+        print(f"  Colormap  : {cmap}")
+        print(f"  Backup    : {'yes' if backup else 'no'}")
+        print(f"  Use cache : {'yes' if use_cache else 'no'}")
+        print(f"  Workers   : {workers}")
+        print(f"  Total GPS : {total_seconds:,} s ({total_seconds/3600:.1f} h)")
+        # Estimate time: ~5s per segment for GWOSC fetch + preprocessing
+        eff_workers = max(1, workers - 2) if workers > 1 else 1
+        est_seconds = (len(tasks) * 5) / eff_workers
+        print(f"  Est. time : ~{est_seconds/60:.0f} min (assuming ~5s/segment, {eff_workers} workers)")
+        return
+
+    # Build picklable args for workers
+    worker_args = [
+        (fname, det, gps_s, gps_e, str(input_dir), cmap, backup, use_cache)
+        for fname, det, gps_s, gps_e in tasks
+    ]
+
+    succeeded = 0
+    failed = 0
+
+    if workers <= 1:
+        # Sequential mode
+        from tqdm import tqdm as _tqdm
+        for wa in _tqdm(worker_args, desc="Reprocessing", unit="png"):
+            fname, ok, msg = _reprocess_single_png(wa)
+            if ok:
+                succeeded += 1
+            else:
+                logger.warning("Failed %s: %s", fname, msg)
+                failed += 1
+    else:
+        # Parallel mode
+        cpu_workers = max(1, workers - 2)
+        from tqdm import tqdm as _tqdm
+        with ProcessPoolExecutor(max_workers=cpu_workers) as executor:
+            futures = {
+                executor.submit(_reprocess_single_png, wa): wa[0]
+                for wa in worker_args
+            }
+            for future in _tqdm(
+                as_completed(futures),
+                total=len(futures),
+                desc="Reprocessing",
+                unit="png",
+            ):
+                try:
+                    fname, ok, msg = future.result(timeout=120)
+                    if ok:
+                        succeeded += 1
+                    else:
+                        logger.warning("Failed %s: %s", fname, msg)
+                        failed += 1
+                except Exception:
+                    failed += 1
+
+    print(
+        f"\nReprocessing complete: {succeeded} succeeded, {failed} failed "
+        f"(colormap: {cmap})"
+    )
 
 
 def cmd_encode(args: argparse.Namespace) -> None:
@@ -929,6 +1154,58 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
     print(f"{'='*60}\n")
 
 
+def cmd_timeslide(args: argparse.Namespace) -> None:
+    """Run time-slide analysis to estimate background coincidence significance."""
+    from src.timeslide import run_timeslide
+
+    logger.info("=== TIMESLIDE ===")
+    
+    # Check if we have explicit inputs or session-id
+    session_id = getattr(args, "session_id", None)
+    
+    if session_id:
+        logger.info("Session ID: %s", session_id)
+        # Auto-resolve paths if not provided
+        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else Path(f"data/embeddings/{session_id}/o4a_h1.json")
+        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else Path(f"data/embeddings/{session_id}/o4a_l1.json")
+        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else Path(f"data/clusters/{session_id}/h1/cluster_report.json")
+        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else Path(f"data/clusters/{session_id}/l1/cluster_report.json")
+        output_dir = Path(f"data/timeslide/{session_id}")
+    else:
+        # Require explicit inputs
+        if not (args.embeddings_h1 and args.embeddings_l1 and args.metadata_h1 and args.metadata_l1):
+            logger.error("Must provide --session-id OR all explicit --embeddings and --metadata paths.")
+            sys.exit(1)
+            
+        # The prompt only specified --embeddings-* and --metadata-*.
+        # We need report files to know which clusters are anomalous.
+        # Try to infer them or expect them.
+        meta_h1 = Path(args.metadata_h1)
+        meta_l1 = Path(args.metadata_l1)
+        
+        # We assume reports are next to embeddings but in the clusters directory. 
+        # But if the user didn't specify --report-*, we can try to guess or use the CLI args.
+        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else Path("data/clusters/h1/cluster_report.json")
+        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else Path("data/clusters/l1/cluster_report.json")
+        output_dir = Path("data/timeslide/")
+
+    logger.info("Metadata H1: %s", meta_h1)
+    logger.info("Metadata L1: %s", meta_l1)
+    logger.info("Report H1: %s", rep_h1)
+    logger.info("Report L1: %s", rep_l1)
+    logger.info("Output dir: %s", output_dir)
+    
+    run_timeslide(
+        meta_h1=meta_h1,
+        rep_h1=rep_h1,
+        meta_l1=meta_l1,
+        rep_l1=rep_l1,
+        output_dir=output_dir,
+        iterations=50,
+        window=32
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -991,21 +1268,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Auto-generated as YYYYMMDD_HHMMSS if omitted."
         ),
     )
-    p_scan.add_argument(
-        "--start-gps",
-        type=int,
-        default=None,
-        help=(
-            "Explicit GPS start time. If provided with --end-gps, "
-            "overrides --hours and scans the given GPS window."
-        ),
-    )
-    p_scan.add_argument(
-        "--end-gps",
-        type=int,
-        default=None,
-        help="Explicit GPS end time. Must be used together with --start-gps.",
-    )
+
     p_scan.set_defaults(func=cmd_scan)
 
     # --- scan-extended (Phase 3.1) ---
@@ -1041,21 +1304,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Auto-generated as YYYYMMDD_HHMMSS if omitted."
         ),
     )
-    p_scan_ext.add_argument(
-        "--start-gps",
-        type=int,
-        default=None,
-        help=(
-            "Explicit GPS start time. If provided with --end-gps, "
-            "overrides --hours and scans the given GPS window."
-        ),
-    )
-    p_scan_ext.add_argument(
-        "--end-gps",
-        type=int,
-        default=None,
-        help="Explicit GPS end time. Must be used together with --start-gps.",
-    )
+
     p_scan_ext.set_defaults(func=cmd_scan_extended)
 
     # --- last-gps ---
@@ -1077,6 +1326,68 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier.",
     )
     p_last_gps.set_defaults(func=cmd_last_gps)
+
+    # --- reprocess-spectrograms ---
+    p_reprocess = subparsers.add_parser(
+        "reprocess-spectrograms",
+        help="Re-render existing spectrograms with the current colormap from config.",
+    )
+    p_reprocess.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="Session identifier to locate the spectrogram directory.",
+    )
+    p_reprocess.add_argument(
+        "--detector",
+        type=str,
+        default=None,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier. Required when using --session-id.",
+    )
+    p_reprocess.add_argument(
+        "--input-dir",
+        type=str,
+        default=None,
+        help=(
+            "Explicit path to the spectrogram directory. "
+            "Overrides --session-id + --detector."
+        ),
+    )
+    p_reprocess.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Number of parallel workers. Use 1 (default) for sequential. "
+            "Use cpu_count-2 for max speed on multi-core systems."
+        ),
+    )
+    p_reprocess.add_argument(
+        "--backup",
+        action="store_true",
+        default=False,
+        help=(
+            "Create a .viridis.bak.png backup of each PNG before overwriting. "
+            "Off by default."
+        ),
+    )
+    p_reprocess.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Report how many PNGs would be reprocessed, without doing it.",
+    )
+    p_reprocess.add_argument(
+        "--use-cache",
+        action="store_true",
+        default=False,
+        help=(
+            "Check data/raw/ for local HDF5 strain files before fetching "
+            "from GWOSC. File pattern: <detector>_<start>_<end>.hdf5."
+        ),
+    )
+    p_reprocess.set_defaults(func=cmd_reprocess_spectrograms)
 
     # --- encode (Phase 2) ---
     p_encode = subparsers.add_parser(
@@ -1371,6 +1682,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output JSON path for morphcheck results.",
     )
     p_morph.set_defaults(func=cmd_morphcheck)
+
+    # --- timeslide ---
+    p_ts = subparsers.add_parser(
+        "timeslide",
+        help="Estimate background coincidence significance between H1 and L1.",
+    )
+    p_ts.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="Session identifier to resolve paths automatically.",
+    )
+    p_ts.add_argument("--embeddings-h1", type=str, help="Path to H1 embeddings")
+    p_ts.add_argument("--embeddings-l1", type=str, help="Path to L1 embeddings")
+    p_ts.add_argument("--metadata-h1", type=str, help="Path to H1 metadata JSON")
+    p_ts.add_argument("--metadata-l1", type=str, help="Path to L1 metadata JSON")
+    p_ts.add_argument("--report-h1", type=str, help="Path to H1 cluster report")
+    p_ts.add_argument("--report-l1", type=str, help="Path to L1 cluster report")
+    p_ts.set_defaults(func=cmd_timeslide)
 
     # --- build-indomain-reference (Phase 3.4) ---
     p_indomain = subparsers.add_parser(
