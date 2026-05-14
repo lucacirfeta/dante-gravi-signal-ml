@@ -130,7 +130,7 @@ def fetch_strain_data(
 
     try:
         cache_dir.mkdir(parents=True, exist_ok=True)
-        ts.write(cache_file, format='hdf5.gwosc')
+        ts.write(cache_file, format='hdf5')
         logger.info("Saved raw data to cache: %s", cache_file.name)
     except Exception as exc:
         logger.warning("Failed to save raw data to cache %s: %s", cache_file.name, exc)

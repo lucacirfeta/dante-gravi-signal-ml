@@ -111,7 +111,7 @@ def main():
                             else:
                                 raise inner_e
 
-                    ts.write(filepath, format="hdf5.gwosc")
+                    ts.write(filepath, format="hdf5")
                     print("OK")
                     success = True
                     break

@@ -331,7 +331,7 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
                             else:
                                 raise inner_e
 
-                    ts.write(filepath, format="hdf5.gwosc")
+                    ts.write(filepath, format="hdf5")
                     print("OK")
                     logger.info("Saved %s", filename)
                     success = True

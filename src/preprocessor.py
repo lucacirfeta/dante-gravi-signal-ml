@@ -245,6 +245,16 @@ def batch_process(
             # 3. Bandpass
             ts_bp = bandpass(ts_white)
 
+            # Check for NaN/Inf after filtering
+            if not np.isfinite(ts_bp.value).all():
+                logger.warning(
+                    "Skipping segment [%d, %d]: contains NaN/Inf after processing",
+                    gps_start,
+                    gps_end,
+                )
+                skipped += 1
+                continue
+
             # 4. Q-transform → PNG
             generate_qtransform(ts_bp, save_path=save_path)
 

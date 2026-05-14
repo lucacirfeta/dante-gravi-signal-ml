@@ -32,10 +32,10 @@ done
 
 # GPS Iniziali (Run + 6h offset)
 case $RUN in
-    "O2")  START_GPS=1164578417 ;;
-    "O3a") START_GPS=1238187618 ;;
-    "O3b") START_GPS=1256677218 ;;
-    "O4a") START_GPS=1368997218 ;;
+    "O2")  START_GPS=1164578417; DATASET="O2_4KHZ_R1" ;;
+    "O3a") START_GPS=1238187618; DATASET="O3a_4KHZ_R1" ;;
+    "O3b") START_GPS=1256677218; DATASET="O3b_4KHZ_R1" ;;
+    "O4a") START_GPS=1368997218; DATASET="O4a_4KHZ_R1" ;;
     *) echo "Run non supportata: $RUN"; exit 1 ;;
 esac
 
@@ -79,7 +79,7 @@ while [ $CURRENT_START -lt $END_GPS ]; do
             sleep $BASE_DELAY
             
             # Query GWOSC JSON API for the file path
-            API_URL="https://gwosc.org/archive/links/$RUN/$DETECTOR/$CURRENT_START/$CURRENT_START/json/"
+            API_URL="https://gwosc.org/archive/links/$DATASET/$DETECTOR/$CURRENT_START/$CURRENT_START/json/"
             
             HTTP_CODE=$(curl -s -o /tmp/gwosc_api.json -w "%{http_code}" "$API_URL")
             

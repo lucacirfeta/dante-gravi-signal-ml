@@ -58,6 +58,12 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
                          f_low=config.get('f_low', 20.0),
                          f_high=config.get('f_high', 2000.0))
         
+        # Check for NaN/Inf after filtering
+        import numpy as np
+        if not np.isfinite(ts_bp.value).all():
+            print(f"Skipping segment {segment_id}: contains NaN/Inf after processing")
+            return (segment_id, False)
+
         # Save PNG
         generate_qtransform(ts_bp, save_path=save_path,
                             cmap=config.get('colormap', 'cividis'))
