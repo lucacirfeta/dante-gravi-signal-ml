@@ -32,6 +32,15 @@ o4a_window:
   gps_start_L1: 1369598418
   gps_end: 1390060818
 
+# Multi-run configuration — observing run start dates and scan defaults
+# GPS start is computed at runtime as to_gps(start_date) + 6*3600
+# (offset 6h to avoid the exact beginning of the run)
+run_config:
+  O2:  {start_date: "2016-11-30", hours_per_detector: 72}
+  O3a: {start_date: "2019-04-01", hours_per_detector: 72}
+  O3b: {start_date: "2019-11-01", hours_per_detector: 72}
+  O4a: {start_date: "2023-05-24", hours_per_detector: 72}
+
 # Extended scan parameters (Phase 3.1)
 scan_extended:
   hours_per_detector: 48

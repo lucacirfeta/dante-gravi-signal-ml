@@ -18,8 +18,8 @@
 ## 🎯 What This Project Does
 
 This pipeline performs **unsupervised anomaly detection** on freshly released
-[O4a gravitational-wave data](https://gwosc.org/) (GWTC-4.0, 2024) to
-perform **unsupervised morphological characterization** of O4a glitch activity not
+[O2–O4a gravitational-wave data](https://gwosc.org/) to
+perform **unsupervised morphological characterization** of glitch activity not
 yet catalogued by the community — without labeled training data and without GPU.
 
 ### Why is this needed?
@@ -39,7 +39,7 @@ for *known* problems:
    pre-labeled training data (self-supervised, zero annotation cost)
 2. 🌐 **Cross-detector validation** — independent replication on H1 and L1
    to rule out instrument-local artefacts
-3. 🔬 **Morphological similarity search** — compare O4a anomalies against the
+3. 🔬 **Morphological similarity search** — compare anomalies against the
    full Gravity Spy O1–O3b training set using DINOv2 embedding space
 4. 📖 **Reproducible, open-source code** — most GW ML papers do not release
    usable code; this project does, running on any laptop (CPU only)
@@ -47,18 +47,18 @@ for *known* problems:
 > **Note on Virgo (V1):** Virgo did not participate in O4a due to a commissioning
 > issue. It rejoined the network in O4b. This pipeline therefore targets H1
 > (Hanford) and L1 (Livingston) only, which operated with duty cycles of 67.5%
-> and 69% respectively during O4a.
+> and 69% respectively during O4a (and similarly in other runs).
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-Raw Strain Data (GWOSC O4a)
+Raw Strain Data (GWOSC O2–O4a)
         │
         ▼
 ┌─────────────────────┐
-│   Data Loader       │  gwpy fetch_open_data() · O4a segment management
+│   Data Loader       │  gwpy fetch_open_data() · Segment management
 │   (data_loader.py)  │  Parallel fetch: ThreadPoolExecutor (--workers N)
 └────────┬────────────┘
          │
@@ -188,12 +188,12 @@ Edit `config.yaml` to set scan duration and other parameters before starting.
 #### Step 1 — Scan
 
 ```bash
-# H1 + L1 together, duration from config.yaml
+# H1 + L1 together, duration from config.yaml (defaults to O4a)
 python main.py scan-extended --workers 6
 
-# Or custom duration per detector
-python main.py scan --detector H1 --hours 72 --workers 6
-python main.py scan --detector L1 --hours 72 --workers 6
+# Or custom duration per detector for a specific run
+python main.py scan --detector H1 --hours 72 --workers 6 --run O3a
+python main.py scan --detector L1 --hours 72 --workers 6 --run O3a
 ```
 
 **Incremental Mode:** To resume an interrupted scan or append more data, simply provide the same `--session-id`. The pipeline will automatically detect the highest GPS end-time of existing spectrograms and resume from there, reading the scan duration from `config.yaml`.
@@ -203,7 +203,7 @@ python main.py scan-extended --workers 6 --session-id <PREVIOUS_SESSION_ID>
 
 📋 Note the **Session ID** printed at startup — you will need it for all subsequent steps.
 
-Spectrograms are saved to `data/spectrograms/o4a/<SESSION_ID>/{detector}/`.
+Spectrograms are saved to `data/spectrograms/{run}/<SESSION_ID>/{detector}/`.
 
 #### Step 2 — Feature Extraction (DINOv2 with Registers)
 
@@ -215,8 +215,8 @@ Spectrograms are saved to `data/spectrograms/o4a/<SESSION_ID>/{detector}/`.
 - No labeled data, no GPU training, reproducible on any laptop
 
 ```bash
-python main.py encode --session-id <SESSION_ID> --detector H1
-python main.py encode --session-id <SESSION_ID> --detector L1
+python main.py encode --session-id <SESSION_ID> --detector H1 --run O4a
+python main.py encode --session-id <SESSION_ID> --detector L1 --run O4a
 ```
 
 Loads DINOv2-Reg ViT-S/14 via `torch.hub` (~90 MB on first run) and saves
@@ -234,8 +234,8 @@ HDBSCAN `min_cluster_size` is **auto-scaled** to 0.5% of N, ensuring comparable
 sensitivity across datasets of different sizes.
 
 ```bash
-python main.py cluster --session-id <SESSION_ID> --detector H1
-python main.py cluster --session-id <SESSION_ID> --detector L1
+python main.py cluster --session-id <SESSION_ID> --detector H1 --run O4a
+python main.py cluster --session-id <SESSION_ID> --detector L1 --run O4a
 ```
 
 **Outputs:**
@@ -249,9 +249,9 @@ explanations are significantly weakened — a key scientific requirement before 
 #### Step 4 — Morphological Cross-Check
 
 ```bash
-python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_h1.npy --report data/clusters/<SESSION_ID>/h1/cluster_report.json --reference data/reference/indomain_index.npz --output data/clusters/<SESSION_ID>/h1/morphological_crosscheck_indomain.json
+python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_h1.npy --report data/clusters/<SESSION_ID>/h1/cluster_report.json --reference data/reference/indomain_index.npz --output data/clusters/<SESSION_ID>/h1/morphological_crosscheck_indomain.json --run O4a
 
-python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_l1.npy --report data/clusters/<SESSION_ID>/l1/cluster_report.json --reference data/reference/indomain_index.npz --output data/clusters/<SESSION_ID>/l1/morphological_crosscheck_indomain.json
+python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_l1.npy --report data/clusters/<SESSION_ID>/l1/cluster_report.json --reference data/reference/indomain_index.npz --output data/clusters/<SESSION_ID>/l1/morphological_crosscheck_indomain.json --run O4a
 ```
 
 Each anomalous spectrogram receives one of three labels:
@@ -267,7 +267,7 @@ Each anomalous spectrogram receives one of three labels:
 Verify if the DINOv2+UMAP+HDBSCAN clustering is capturing true physical morphologies or just rendering artifacts (e.g. colormap, intensity, contrast). The ablation subcommand generates alternative embeddings using grayscale, inverted, and random-intensity spectrograms, as well as a random baseline, and computes the Adjusted Rand Index (ARI) against the original clusters.
 
 ```bash
-python main.py ablation --session-id <SESSION_ID> --detector H1
+python main.py ablation --session-id <SESSION_ID> --detector H1 --run O4a
 ```
 
 If the `grayscale` ARI < 0.4, the pipeline warns of "preprocessing-dominant" behavior.
@@ -277,7 +277,7 @@ If the `grayscale` ARI < 0.4, the pipeline warns of "preprocessing-dominant" beh
 Measure the robustness of the clustering pipeline against variations in hyperparameters. The `stability` subcommand runs the clustering pipeline multiple times, applying random perturbations to the UMAP `n_neighbors` and HDBSCAN `min_cluster_size` parameters. It computes the pairwise Adjusted Rand Index (ARI) to evaluate consistency.
 
 ```bash
-python main.py stability --session-id <SESSION_ID> --detector H1 --n-runs 20
+python main.py stability --session-id <SESSION_ID> --detector H1 --n-runs 20 --run O4a
 ```
 
 Outputs a comprehensive `stability_report.json` with an $N \times N$ ARI matrix and flags clusters that are consistently anomalous across $\ge 80\%$ of runs.
@@ -287,7 +287,7 @@ Outputs a comprehensive `stability_report.json` with an $N \times N$ ARI matrix 
 Estimate the statistical significance of anomalous cluster coincidences between H1 and L1 using time-slides to model the random background rate.
 
 ```bash
-python main.py timeslide --session-id <SESSION_ID>
+python main.py timeslide --session-id <SESSION_ID> --run O4a
 ```
 
 Calculates the zero-lag coincidences (±32s window) and compares it against 50 random L1 time shifts to produce an empirical p-value and z-score.
@@ -299,8 +299,8 @@ Calculates the zero-lag coincidences (±32s window) and compares it against 50 r
 By default all scans run sequentially (`--workers 1`) and work on any hardware.
 
 ```bash
-python main.py scan --detector H1 --hours 6 --workers 6
-python main.py scan-extended --workers 6
+python main.py scan --detector H1 --hours 6 --workers 6 --run O4a
+python main.py scan-extended --workers 6 --run O4a
 ```
 
 | Hardware        | Mode          | Speed                         |

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """gravi-signal-ml — CLI entry point.
 
-Provides subcommands for each pipeline stage:
+Provides subcommands for each pipeline stage.  Supports multiple
+observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
 
     fetch                    — Download and process a known reference event (PoC)
-    scan                     — Batch-scan O4a segments for a detector
-    scan-extended            — Extended 48h scan of H1 + L1 (Phase 3.1)
+    scan                     — Batch-scan segments for a detector
+    scan-extended            — Extended scan of H1 + L1 (Phase 3.1)
     reprocess-spectrograms   — Re-render existing spectrograms with updated colormap
     encode                   — Extract embeddings from spectrograms (Phase 2)
     cluster                  — Cluster embeddings to discover novel classes (Phase 3)
@@ -17,6 +18,7 @@ Provides subcommands for each pipeline stage:
 Usage:
     python main.py fetch                    --event GW150914
     python main.py scan                     --detector H1 --hours 2
+    python main.py scan                     --detector H1 --run O3a
     python main.py scan-extended            --workers 6 --hours 72
     python main.py encode                   --session-id 20260510_143022 --detector H1
     python main.py cluster                  --session-id 20260510_143022 --detector H1
@@ -38,6 +40,7 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+from astropy.time import Time
 
 from src.data_loader import fetch_o4a_segments, fetch_strain_data
 from src.encoder import DINOv2Encoder
@@ -47,6 +50,13 @@ from src.utils import load_config, setup_logger
 logger = setup_logger("main", log_file=Path("logs/gravi-signal-ml.log"))
 
 
+# ---------------------------------------------------------------------------
+# Multi-run support
+# ---------------------------------------------------------------------------
+
+VALID_RUNS: list[str] = ["O2", "O3a", "O3b", "O4a"]
+
+
 def _resolve_session_id(args: argparse.Namespace) -> str:
     """Return the session ID from args or generate one from current timestamp."""
     if hasattr(args, "session_id") and args.session_id:
@@ -54,14 +64,42 @@ def _resolve_session_id(args: argparse.Namespace) -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def _find_last_gps(session_id: str, detector: str) -> int | None:
+def _resolve_run(args: argparse.Namespace) -> str:
+    """Return the observing run from args (default: O4a)."""
+    return getattr(args, "run", "O4a") or "O4a"
+
+
+def _run_start_gps(run: str, cfg: dict | None = None) -> int:
+    """Compute the GPS start time for a given observing run.
+
+    Uses ``run_config[run].start_date`` from config.yaml and adds a
+    6-hour offset to avoid the exact beginning of the run.
+    """
+    if cfg is None:
+        cfg = load_config()
+    run_cfg = cfg.get("run_config", {})
+    if run not in run_cfg:
+        raise ValueError(f"Unknown run '{run}'. Valid runs: {VALID_RUNS}")
+    start_date = run_cfg[run]["start_date"]
+    gps = int(Time(start_date, format="iso", scale="utc").gps)
+    return gps + 6 * 3600  # +6h offset
+
+
+def _log_run_header(run: str, detector: str | None, session_id: str) -> None:
+    """Log the standard run header at command start."""
+    det_str = detector or "ALL"
+    logger.info("Run: %s | Detector: %s | Session: %s", run, det_str, session_id)
+
+
+def _find_last_gps(session_id: str, detector: str, run: str = "O4a") -> int | None:
     """Scan existing PNGs and return the highest GPS end-time, or None.
 
     Filename convention: ``<detector>_<gps_start>_<gps_end>.png``.
     """
     import re
 
-    spec_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    run_lower = run.lower()
+    spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
     if not spec_dir.exists():
         return None
 
@@ -120,34 +158,40 @@ def cmd_fetch(args: argparse.Namespace) -> None:
 
 
 def cmd_scan(args: argparse.Namespace) -> None:
-    """Batch-scan O4a segments for a given detector.
+    """Batch-scan segments for a given detector and observing run.
 
     Incremental mode (automatic):
         When ``--session-id`` is provided and the session directory already
         contains spectrograms, the scan resumes from the highest GPS
         end-time found in the existing filenames.  The resume window is
-        ``last_gps … last_gps + scan_extended.hours_per_detector * 3600``
+        ``last_gps … last_gps + run_config[run].hours_per_detector * 3600``
         (read from config.yaml, **not** from ``--hours``).
+
+        If ``--session-id`` is provided but the directory is empty, the
+        scan starts from ``run_config[run].start_date + 6h``.
     """
+    from src.data_loader import generate_segments_from_gps_range
+
     detector: str = args.detector
     hours: float = args.hours
+    run = _resolve_run(args)
+    run_lower = run.lower()
     session_id = _resolve_session_id(args)
+    cfg = load_config()
 
-    logger.info("Session ID: %s", session_id)
+    _log_run_header(run, detector, session_id)
 
     # --- Incremental logic ---------------------------------------------------
     explicit_session = hasattr(args, "session_id") and args.session_id
     last_gps: int | None = None
 
     if explicit_session:
-        last_gps = _find_last_gps(session_id, detector)
+        last_gps = _find_last_gps(session_id, detector, run=run)
 
     if last_gps is not None:
         # Resume from last GPS end-time.
         # Duration comes from config, not from the CLI --hours flag.
-        from src.data_loader import generate_segments_from_gps_range
-
-        resume_hours: float = load_config()["scan_extended"]["hours_per_detector"]
+        resume_hours: float = cfg["run_config"][run]["hours_per_detector"]
         start_gps = last_gps
         end_gps = last_gps + int(resume_hours * 3600)
         logger.info(
@@ -156,16 +200,18 @@ def cmd_scan(args: argparse.Namespace) -> None:
         )
         segments = generate_segments_from_gps_range(start_gps, end_gps)
     else:
-        # Fresh scan (no previous data or auto-generated session)
-        logger.info("=== SCAN: %s, %.1f hours ===", detector, hours)
-        segments = fetch_o4a_segments(detector, duration_hours=hours)
+        # Fresh scan — use start_date from run_config
+        start_gps = _run_start_gps(run, cfg)
+        end_gps = start_gps + int(hours * 3600)
+        logger.info("=== SCAN: %s [%s], %.1f hours ===", detector, run, hours)
+        segments = generate_segments_from_gps_range(start_gps, end_gps)
 
     if not segments:
         logger.warning("No segments found for %s in the requested window.", detector)
         sys.exit(0)
 
-    # Output directory — isolated by session_id
-    output_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    # Output directory — isolated by run and session_id
+    output_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
     logger.info("Output dir: %s", output_dir)
 
     workers: int = args.workers
@@ -176,7 +222,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         processed_count = len(saved_paths)
     else:
         from src.parallel_processor import batch_process_parallel
-        cfg = load_config()
+        cfg = load_config()  # noqa: F841 — needed by batch_process_parallel
         fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
         processed_count, _ = batch_process_parallel(
             segments, detector, output_dir, cfg, workers=workers, fetch_workers=fetch_workers
@@ -199,22 +245,22 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         contains spectrograms, the scan for that detector resumes from
         the highest GPS end-time found in the filenames.
     """
+    from src.data_loader import generate_segments_from_gps_range
+
     cfg = load_config()
     scan_cfg = cfg["scan_extended"]
+    run = _resolve_run(args)
+    run_lower = run.lower()
     session_id = _resolve_session_id(args)
 
     hours = getattr(args, "hours", None) or scan_cfg["hours_per_detector"]
     detectors = scan_cfg["detectors"]
-    offsets = {
-        "H1": scan_cfg["h1_offset_hours"],
-        "L1": scan_cfg["l1_offset_hours"],
-    }
     workers: int = args.workers
     fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
     explicit_session = hasattr(args, "session_id") and args.session_id
 
-    logger.info("Session ID: %s", session_id)
-    logger.info("=== SCAN-EXTENDED: %s, %d h per detector ===", detectors, hours)
+    _log_run_header(run, None, session_id)
+    logger.info("=== SCAN-EXTENDED: %s [%s], %d h per detector ===", detectors, run, hours)
 
     totals: dict[str, int] = {}
 
@@ -222,11 +268,9 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         # --- Incremental logic per detector --------------------------------
         last_gps: int | None = None
         if explicit_session:
-            last_gps = _find_last_gps(session_id, det)
+            last_gps = _find_last_gps(session_id, det, run=run)
 
         if last_gps is not None:
-            from src.data_loader import generate_segments_from_gps_range
-
             start_gps = last_gps
             end_gps = last_gps + int(hours * 3600)
             logger.info(
@@ -235,19 +279,19 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             )
             segments = generate_segments_from_gps_range(start_gps, end_gps)
         else:
-            offset = offsets.get(det, 0)
-            logger.info("--- Scanning %s: %d h, offset %.1f h ---", det, hours, offset)
-            segments = fetch_o4a_segments(
-                det, duration_hours=hours, gps_offset_hours=offset
-            )
+            # Fresh scan — use start_date from run_config
+            start_gps = _run_start_gps(run, cfg)
+            end_gps = start_gps + int(hours * 3600)
+            logger.info("--- Scanning %s [%s]: %d h ---", det, run, hours)
+            segments = generate_segments_from_gps_range(start_gps, end_gps)
 
         if not segments:
             logger.warning("No segments for %s — skipping.", det)
             totals[det] = 0
             continue
 
-        # Output directory — isolated by session_id
-        output_dir = Path(f"data/spectrograms/o4a/{session_id}/{det}")
+        # Output directory — isolated by run and session_id
+        output_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{det}")
         logger.info("Output dir: %s", output_dir)
 
         # Run batch processing
@@ -288,7 +332,12 @@ def cmd_last_gps(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     detector: str = args.detector
-    spec_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+    run = _resolve_run(args)
+    run_lower = run.lower()
+
+    _log_run_header(run, detector, session_id)
+
+    spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
 
     if not spec_dir.exists():
         logger.error("Spectrogram directory not found: %s", spec_dir)
@@ -381,16 +430,21 @@ def cmd_reprocess_spectrograms(args: argparse.Namespace) -> None:
     cmap = cfg["preprocessing"].get("colormap", "cividis")
     session_id = getattr(args, "session_id", None)
     detector = getattr(args, "detector", None)
+    run = _resolve_run(args)
+    run_lower = run.lower()
     workers: int = args.workers
     backup: bool = args.backup
     dry_run: bool = args.dry_run
     use_cache: bool = args.use_cache
 
+    if session_id:
+        _log_run_header(run, detector, session_id)
+
     # Resolve input directory
     if args.input_dir:
         input_dir = Path(args.input_dir)
     elif session_id and detector:
-        input_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+        input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
     else:
         logger.error(
             "Either --input-dir or both --session-id and --detector are required."
@@ -494,13 +548,15 @@ def cmd_encode(args: argparse.Namespace) -> None:
     """Extract embeddings from spectrograms using the DINOv2-Reg encoder."""
     session_id = getattr(args, "session_id", None) or None
     detector = getattr(args, "detector", None)
+    run = _resolve_run(args)
+    run_lower = run.lower()
     batch_size: int = args.batch_size
 
     # Resolve paths: explicit flags take priority over session-id
     if args.input_dir:
         input_dir = Path(args.input_dir)
     elif session_id and detector:
-        input_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+        input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
     else:
         logger.error(
             "Either --input-dir or both --session-id and --detector are required."
@@ -511,7 +567,7 @@ def cmd_encode(args: argparse.Namespace) -> None:
         output_path = Path(args.output)
     elif session_id and detector:
         output_path = Path(
-            f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy"
+            f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy"
         )
     else:
         logger.error(
@@ -520,7 +576,7 @@ def cmd_encode(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     if session_id:
-        logger.info("Session ID: %s", session_id)
+        _log_run_header(run, detector, session_id)
     logger.info("=== ENCODE: %s ===", input_dir)
     logger.info("Output: %s", output_path)
 
@@ -543,13 +599,15 @@ def cmd_cluster(args: argparse.Namespace) -> None:
     """Cluster embeddings to discover novel glitch classes."""
     session_id = getattr(args, "session_id", None) or None
     detector = getattr(args, "detector", None)
+    run = _resolve_run(args)
+    run_lower = run.lower()
 
     # Resolve paths: explicit flags take priority over session-id
     if args.input:
         input_path = Path(args.input)
     elif session_id and detector:
         input_path = Path(
-            f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy"
+            f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy"
         )
     else:
         logger.error(
@@ -561,12 +619,12 @@ def cmd_cluster(args: argparse.Namespace) -> None:
         # Explicit --output was given — take priority
         output_dir = Path(args.output)
     elif session_id and detector:
-        output_dir = Path(f"data/clusters/{session_id}/{detector.lower()}")
+        output_dir = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}")
     else:
         output_dir = Path("data/clusters/")
 
     if session_id:
-        logger.info("Session ID: %s", session_id)
+        _log_run_header(run, detector, session_id)
     logger.info("=== CLUSTER: %s ===", input_path)
     logger.info("Output dir: %s", output_dir)
 
@@ -618,12 +676,14 @@ def cmd_report(args: argparse.Namespace) -> None:
 
     session_id = getattr(args, "session_id", None) or None
     detector = getattr(args, "detector", None)
+    run = _resolve_run(args)
+    run_lower = run.lower()
 
     # Resolve paths
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id and detector:
-        embeddings_path = Path(f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy")
+        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -631,7 +691,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.report:
         report_path = Path(args.report)
     elif session_id and detector:
-        report_path = Path(f"data/clusters/{session_id}/{detector.lower()}/cluster_report.json")
+        report_path = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}/cluster_report.json")
     else:
         logger.error("Either --report or both --session-id and --detector are required.")
         sys.exit(1)
@@ -639,10 +699,12 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     elif session_id and detector:
-        output_dir = Path(f"data/clusters/{session_id}/{detector.lower()}")
+        output_dir = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}")
     else:
         output_dir = Path("data/clusters/")
 
+    if session_id:
+        _log_run_header(run, detector, session_id)
     logger.info("=== REPORT ===")
     logger.info("Embeddings: %s", embeddings_path)
     logger.info("Report: %s", report_path)
@@ -732,13 +794,18 @@ def cmd_stability(args: argparse.Namespace) -> None:
 
     session_id = getattr(args, "session_id", None) or "default"
     detector = getattr(args, "detector", None) or "H1"
+    run = _resolve_run(args)
+    run_lower = run.lower()
     n_runs = getattr(args, "n_runs", 20)
+
+    if session_id != "default":
+        _log_run_header(run, detector, session_id)
 
     # Resolve paths
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id != "default" and detector:
-        embeddings_path = Path(f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy")
+        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -776,12 +843,17 @@ def cmd_ablation(args: argparse.Namespace) -> None:
 
     session_id = getattr(args, "session_id", None) or None
     detector = getattr(args, "detector", None)
+    run = _resolve_run(args)
+    run_lower = run.lower()
+
+    if session_id:
+        _log_run_header(run, detector, session_id)
 
     # Resolve paths
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id and detector:
-        embeddings_path = Path(f"data/embeddings/{session_id}/o4a_{detector.lower()}.npy")
+        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -789,7 +861,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.spectrogram_dir:
         spec_dir = Path(args.spectrogram_dir)
     elif session_id and detector:
-        spec_dir = Path(f"data/spectrograms/o4a/{session_id}/{detector}")
+        spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
     else:
         logger.error("Either --spectrogram-dir or both --session-id and --detector are required.")
         sys.exit(1)
@@ -797,7 +869,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     elif session_id and detector:
-        output_dir = Path(f"data/ablation/{session_id}")
+        output_dir = Path(f"data/ablation/{run_lower}/{session_id}")
     else:
         output_dir = Path("data/ablation/")
 
@@ -1158,19 +1230,22 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
     """Run time-slide analysis to estimate background coincidence significance."""
     from src.timeslide import run_timeslide
 
+    run = _resolve_run(args)
+    run_lower = run.lower()
+
     logger.info("=== TIMESLIDE ===")
     
     # Check if we have explicit inputs or session-id
     session_id = getattr(args, "session_id", None)
     
     if session_id:
-        logger.info("Session ID: %s", session_id)
+        _log_run_header(run, None, session_id)
         # Auto-resolve paths if not provided
-        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else Path(f"data/embeddings/{session_id}/o4a_h1.json")
-        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else Path(f"data/embeddings/{session_id}/o4a_l1.json")
-        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else Path(f"data/clusters/{session_id}/h1/cluster_report.json")
-        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else Path(f"data/clusters/{session_id}/l1/cluster_report.json")
-        output_dir = Path(f"data/timeslide/{session_id}")
+        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_h1.json")
+        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_l1.json")
+        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else Path(f"data/clusters/{run_lower}/{session_id}/h1/cluster_report.json")
+        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else Path(f"data/clusters/{run_lower}/{session_id}/l1/cluster_report.json")
+        output_dir = Path(f"data/timeslide/{run_lower}/{session_id}")
     else:
         # Require explicit inputs
         if not (args.embeddings_h1 and args.embeddings_l1 and args.metadata_h1 and args.metadata_l1):
@@ -1206,13 +1281,28 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
     )
 
 
+def _add_run_argument(parser: argparse.ArgumentParser) -> None:
+    """Add the ``--run`` argument to a subparser."""
+    parser.add_argument(
+        "--run",
+        type=str,
+        default="O4a",
+        choices=VALID_RUNS,
+        help=(
+            "Observing run: O2, O3a, O3b, O4a. "
+            "Controls directory layout and scan start date. Default: O4a."
+        ),
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
         prog="gravi-signal-ml",
         description=(
             "Unsupervised anomaly detection pipeline for gravitational-wave "
-            "data.  Discovers novel glitch classes in LIGO/Virgo O4a data."
+            "data.  Discovers novel glitch classes in LIGO/Virgo data "
+            "across observing runs O2–O4a."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -1234,7 +1324,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- scan ---
     p_scan = subparsers.add_parser(
         "scan",
-        help="Batch-scan O4a segments and save spectrograms.",
+        help="Batch-scan segments for a detector (use --run to select observing run).",
     )
     p_scan.add_argument(
         "--detector",
@@ -1247,7 +1337,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--hours",
         type=float,
         default=1.0,
-        help="Duration to scan from O4a start (hours). Default: 1.0",
+        help="Duration to scan from run start (hours). Default: 1.0",
     )
     p_scan.add_argument(
         "--workers",
@@ -1270,6 +1360,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     p_scan.set_defaults(func=cmd_scan)
+    _add_run_argument(p_scan)
 
     # --- scan-extended (Phase 3.1) ---
     p_scan_ext = subparsers.add_parser(
@@ -1306,6 +1397,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     p_scan_ext.set_defaults(func=cmd_scan_extended)
+    _add_run_argument(p_scan_ext)
 
     # --- last-gps ---
     p_last_gps = subparsers.add_parser(
@@ -1326,6 +1418,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier.",
     )
     p_last_gps.set_defaults(func=cmd_last_gps)
+    _add_run_argument(p_last_gps)
 
     # --- reprocess-spectrograms ---
     p_reprocess = subparsers.add_parser(
@@ -1388,6 +1481,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     p_reprocess.set_defaults(func=cmd_reprocess_spectrograms)
+    _add_run_argument(p_reprocess)
 
     # --- encode (Phase 2) ---
     p_encode = subparsers.add_parser(
@@ -1435,6 +1529,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier. Required when using --session-id.",
     )
     p_encode.set_defaults(func=cmd_encode)
+    _add_run_argument(p_encode)
 
     # --- cluster (Phase 3) ---
     p_cluster = subparsers.add_parser(
@@ -1476,6 +1571,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier. Required when using --session-id.",
     )
     p_cluster.set_defaults(func=cmd_cluster)
+    _add_run_argument(p_cluster)
 
     # --- report ---
     p_report = subparsers.add_parser(
@@ -1514,6 +1610,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier. Required when using --session-id.",
     )
     p_report.set_defaults(func=cmd_report)
+    _add_run_argument(p_report)
 
     # --- stability ---
     p_stability = subparsers.add_parser(
@@ -1546,6 +1643,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Detector identifier. Default: H1.",
     )
     p_stability.set_defaults(func=cmd_stability)
+    _add_run_argument(p_stability)
 
     # --- ablation ---
     p_ablation = subparsers.add_parser(
@@ -1590,6 +1688,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Batch size for DINOv2 inference.",
     )
     p_ablation.set_defaults(func=cmd_ablation)
+    _add_run_argument(p_ablation)
 
     # --- crosscheck (Phase 3.1) ---
     p_cross = subparsers.add_parser(
@@ -1682,6 +1781,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output JSON path for morphcheck results.",
     )
     p_morph.set_defaults(func=cmd_morphcheck)
+    _add_run_argument(p_morph)
 
     # --- timeslide ---
     p_ts = subparsers.add_parser(
@@ -1701,6 +1801,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_ts.add_argument("--report-h1", type=str, help="Path to H1 cluster report")
     p_ts.add_argument("--report-l1", type=str, help="Path to L1 cluster report")
     p_ts.set_defaults(func=cmd_timeslide)
+    _add_run_argument(p_ts)
 
     # --- build-indomain-reference (Phase 3.4) ---
     p_indomain = subparsers.add_parser(

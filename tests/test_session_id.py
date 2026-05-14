@@ -116,6 +116,18 @@ class TestParserSessionId:
         assert args.input == "data/embeddings/o4a_h1_6h.npy"
         assert args.output == "data/clusters/h1/"
 
+    def test_scan_accepts_run_flag(self, parser):
+        args = parser.parse_args(["scan", "--detector", "H1", "--run", "O3a"])
+        assert args.run == "O3a"
+        
+    def test_run_defaults_to_o4a(self, parser):
+        args = parser.parse_args(["scan", "--detector", "H1"])
+        assert args.run == "O4a"
+
+    def test_encode_accepts_run_flag(self, parser):
+        args = parser.parse_args(["encode", "--session-id", "123", "--detector", "H1", "--run", "O2"])
+        assert args.run == "O2"
+
 
 class TestPathResolution:
     """Test that cmd functions resolve paths correctly from session-id."""
@@ -129,16 +141,19 @@ class TestPathResolution:
             hours=1.0,
             session_id="20260510_143022",
             workers=1,
+            run="O4a",
         )
 
-        with patch("main.fetch_o4a_segments", return_value=[]), \
+        with patch("src.data_loader.generate_segments_from_gps_range", return_value=[]), \
              patch("main.logger") as mock_logger:
-            # fetch_o4a_segments returns [] → sys.exit(0) via SystemExit
+            # generate_segments_from_gps_range returns [] → sys.exit(0) via SystemExit
             with pytest.raises(SystemExit):
                 cmd_scan(args)
 
-            # Check that session ID was logged
-            mock_logger.info.assert_any_call("Session ID: %s", "20260510_143022")
+            # Check that run header was logged
+            mock_logger.info.assert_any_call(
+                "Run: %s | Detector: %s | Session: %s", "O4a", "H1", "20260510_143022"
+            )
 
     def test_encode_resolves_paths_from_session_id(self):
         """cmd_encode should derive input_dir and output from session-id + detector."""
@@ -147,6 +162,7 @@ class TestPathResolution:
         args = argparse.Namespace(
             session_id="20260510_143022",
             detector="H1",
+            run="O4a",
             input_dir=None,
             output=None,
             batch_size=32,
@@ -176,6 +192,7 @@ class TestPathResolution:
         args = argparse.Namespace(
             session_id="20260510_143022",
             detector="H1",
+            run="O4a",
             input_dir="my/custom/input/",
             output="my/custom/output.npy",
             batch_size=32,
@@ -203,13 +220,14 @@ class TestPathResolution:
         args = argparse.Namespace(
             session_id="20260510_143022",
             detector="H1",
+            run="O4a",
             input=None,
             output=None,
         )
 
         # Create a mock embeddings file for the expected path
-        expected_input = Path("data/embeddings/20260510_143022/o4a_h1.npy")
-        expected_output = Path("data/clusters/20260510_143022/h1")
+        expected_input = Path("data/embeddings/o4a/20260510_143022/o4a_h1.npy")
+        expected_output = Path("data/clusters/o4a/20260510_143022/h1")
 
         with patch("main.np.load") as mock_load, \
              patch("main.logger") as mock_logger, \
@@ -228,7 +246,9 @@ class TestPathResolution:
             except Exception:
                 pass  # Will fail on clustering import — that's OK
 
-            mock_logger.info.assert_any_call("Session ID: %s", "20260510_143022")
+            mock_logger.info.assert_any_call(
+                "Run: %s | Detector: %s | Session: %s", "O4a", "H1", "20260510_143022"
+            )
 
     def test_encode_fails_without_paths_or_session(self):
         """cmd_encode should exit(1) if neither paths nor session-id are given."""
@@ -237,6 +257,7 @@ class TestPathResolution:
         args = argparse.Namespace(
             session_id=None,
             detector=None,
+            run="O4a",
             input_dir=None,
             output=None,
             batch_size=32,
@@ -252,6 +273,7 @@ class TestPathResolution:
         args = argparse.Namespace(
             session_id=None,
             detector=None,
+            run="O4a",
             input=None,
             output=None,
         )

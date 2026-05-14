@@ -21,8 +21,8 @@ La GUI genererà automaticamente i campi di input per tutti i parametri richiest
 | # | Comando | Descrizione | Prerequisiti |
 |---|---------|-------------|--------------|
 | 1 | [`fetch`](#1-fetch) | Scarica un evento GW noto e genera uno spettrogramma di validazione | Connessione internet |
-| 2 | [`scan`](#2-scan) | Scansiona segmenti O4a per un singolo rivelatore | Connessione internet |
-| 3 | [`scan-extended`](#3-scan-extended) | Scansione estesa H1 + L1 in sequenza | Connessione internet |
+| 2 | [`scan`](#2-scan) | Scansiona segmenti per un singolo rivelatore (O2-O4a) | Connessione internet |
+| 3 | [`scan-extended`](#3-scan-extended) | Scansione estesa H1 + L1 in sequenza (O2-O4a) | Connessione internet |
 | 4 | [`last-gps`](#4-last-gps) | Stampa l'ultimo tempo GPS trovato negli spettrogrammi di una sessione | Sessione con PNG esistenti |
 | 5 | [`reprocess-spectrograms`](#5-reprocess-spectrograms) | Ri-renderizza gli spettrogrammi con la colormap corrente | PNG esistenti + connessione internet |
 | 6 | [`encode`](#6-encode) | Estrae embedding DINOv2 dagli spettrogrammi | PNG da scan/scan-extended |
@@ -66,6 +66,7 @@ python main.py fetch --event GW150914
 | Argomento | Tipo | Obbligatorio | Default | Descrizione |
 |-----------|------|:---:|---------|-------------|
 | `--detector` | `str` | ✅ | — | Rivelatore: `H1`, `L1` o `V1` |
+| `--run` | `str` | — | `O4a` | Run osservativo: `O2`, `O3a`, `O3b`, `O4a` |
 | `--hours` | `float` | — | `1.0` | Durata da scansionare (ore). Ignorato in modalità incrementale |
 | `--workers` | `int` | — | `1` | Worker paralleli. `1` = sequenziale. Consigliato: `6` |
 | `--session-id` | `str` | — | `auto` | ID sessione (es. `20260510_143022`). Auto-generato se omesso |
@@ -80,7 +81,7 @@ python main.py scan --detector H1 --hours 6 --workers 6
 python main.py scan --detector H1 --session-id 20260510_143022
 ```
 
-**Output:** `data/spectrograms/o4a/<SESSION_ID>/H1/*.png`  
+**Output:** `data/spectrograms/{run_lower}/<SESSION_ID>/H1/*.png`  
 **Log:** `Scan complete: N processed, M skipped, X.X h scanned`
 
 **Note:** In modalità incrementale la durata viene letta da `config.yaml → scan_extended.hours_per_detector` (default: 48h), non da `--hours`. I thread GWOSC sono limitati a 4 (`config.yaml → performance.gwosc_fetch_threads`).
@@ -94,6 +95,7 @@ python main.py scan --detector H1 --session-id 20260510_143022
 | Argomento | Tipo | Obbligatorio | Default | Descrizione |
 |-----------|------|:---:|---------|-------------|
 | `--workers` | `int` | — | `1` | Worker paralleli |
+| `--run` | `str` | — | `O4a` | Run osservativo: `O2`, `O3a`, `O3b`, `O4a` |
 | `--hours` | `int` | — | `48` (da config) | Override ore per rivelatore |
 | `--session-id` | `str` | — | `auto` | ID sessione |
 
@@ -105,10 +107,10 @@ python main.py scan-extended --workers 6
 python main.py scan-extended --workers 6 --session-id 20260510_143022
 ```
 
-**Output:** `data/spectrograms/o4a/<SESSION_ID>/H1/*.png` e `.../L1/*.png`  
+**Output:** `data/spectrograms/{run_lower}/<SESSION_ID>/H1/*.png` e `.../L1/*.png`  
 **Log:** `Extended scan complete: H1=N L1=M spectrograms saved.`
 
-**Note:** Offset di default: H1 = +6h, L1 = +0h dall'inizio di O4a. Detectors: `["H1", "L1"]` da config.
+**Note:** Offset di default: letti da `config.yaml` (`run_config`). Detectors: `["H1", "L1"]` da config.
 
 ---
 
@@ -120,6 +122,7 @@ python main.py scan-extended --workers 6 --session-id 20260510_143022
 |-----------|------|:---:|---------|-------------|
 | `--session-id` | `str` | ✅ | — | ID sessione |
 | `--detector` | `str` | ✅ | — | Rivelatore: `H1`, `L1`, `V1` |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 
 **Esempio:**
 ```bash
@@ -139,6 +142,7 @@ python main.py last-gps --session-id 20260510_143022 --detector H1
 |-----------|------|:---:|---------|-------------|
 | `--session-id` | `str` | — | `None` | ID sessione (richiede anche `--detector`) |
 | `--detector` | `str` | — | `None` | Rivelatore |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 | `--input-dir` | `str` | — | `None` | Path esplicito alla directory PNG. Override di session-id+detector |
 | `--workers` | `int` | — | `1` | Worker paralleli |
 | `--backup` | flag | — | `False` | Crea `.viridis.bak.png` prima di sovrascrivere |
@@ -170,6 +174,7 @@ python main.py reprocess-spectrograms --session-id 20260510_143022 --detector H1
 | `--batch-size` | `int` | — | `32` | Batch size per inferenza |
 | `--session-id` | `str` | — | `None` | ID sessione |
 | `--detector` | `str` | — | `None` | Rivelatore: `H1`, `L1`, `V1` |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 
 Serve almeno `--input-dir` oppure `--session-id` + `--detector`.
 
@@ -179,8 +184,8 @@ python main.py encode --session-id 20260510_143022 --detector H1
 ```
 
 **Output:**  
-- `data/embeddings/<SESSION_ID>/o4a_h1.npy` — array `(N, 384)` float32  
-- `data/embeddings/<SESSION_ID>/o4a_h1.json` — metadati  
+- `data/embeddings/{run_lower}/<SESSION_ID>/{run_lower}_h1.npy` — array `(N, 384)` float32  
+- `data/embeddings/{run_lower}/<SESSION_ID>/{run_lower}_h1.json` — metadati  
 
 **Log:** `Phase 2 complete. Embeddings ready for Phase 3 clustering.`
 
@@ -198,6 +203,7 @@ python main.py encode --session-id 20260510_143022 --detector H1
 | `--output` | `str` | — | `data/clusters/` | Directory output |
 | `--session-id` | `str` | — | `None` | ID sessione |
 | `--detector` | `str` | — | `None` | Rivelatore: `H1`, `L1`, `V1` |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 
 **Esempio:**
 ```bash
@@ -205,9 +211,9 @@ python main.py cluster --session-id 20260510_143022 --detector H1
 ```
 
 **Output:**  
-- `data/clusters/<SESSION_ID>/h1/cluster_report.json`  
-- `data/clusters/<SESSION_ID>/h1/umap_visualization.png`  
-- `data/clusters/<SESSION_ID>/h1/cluster_gallery/cluster_N/contact_sheet.png`  
+- `data/clusters/{run_lower}/<SESSION_ID>/h1/cluster_report.json`  
+- `data/clusters/{run_lower}/<SESSION_ID>/h1/umap_visualization.png`  
+- `data/clusters/{run_lower}/<SESSION_ID>/h1/cluster_gallery/cluster_N/contact_sheet.png`  
 
 **Log:** `Phase 3 complete. Results in data/clusters/...`
 
@@ -226,6 +232,7 @@ python main.py cluster --session-id 20260510_143022 --detector H1
 | `--output-dir` | `str` | — | `data/clusters/` | Directory output |
 | `--session-id` | `str` | — | `None` | ID sessione |
 | `--detector` | `str` | — | `None` | Rivelatore |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 
 **Esempio:**
 ```bash
@@ -246,13 +253,14 @@ python main.py report --session-id 20260510_143022 --detector H1
 | `--n-runs` | `int` | — | `20` | Numero di run perturbati |
 | `--session-id` | `str` | — | `None` | ID sessione |
 | `--detector` | `str` | — | `H1` | Rivelatore |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 
 **Esempio:**
 ```bash
 python main.py stability --session-id 20260510_143022 --detector H1 --n-runs 20
 ```
 
-**Output:** `data/stability/<SESSION_ID>/stability_report.json` — contiene matrice ARI N×N e cluster consistentemente anomali (≥80% dei run).
+**Output:** `data/stability/{run_lower}/<SESSION_ID>/stability_report.json` — contiene matrice ARI N×N e cluster consistentemente anomali (≥80% dei run).
 
 ---
 
@@ -267,6 +275,7 @@ python main.py stability --session-id 20260510_143022 --detector H1 --n-runs 20
 | `--output-dir` | `str` | — | `data/ablation/` | Directory output |
 | `--session-id` | `str` | — | `None` | ID sessione |
 | `--detector` | `str` | — | `None` | Rivelatore |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 | `--batch-size` | `int` | — | `32` | Batch size DINOv2 |
 
 **Esempio:**
@@ -274,7 +283,7 @@ python main.py stability --session-id 20260510_143022 --detector H1 --n-runs 20
 python main.py ablation --session-id 20260510_143022 --detector H1
 ```
 
-**Output:** `data/ablation/<SESSION_ID>/ablation_report.json`
+**Output:** `data/ablation/{run_lower}/<SESSION_ID>/ablation_report.json`
 
 **Note:** Se ARI grayscale < 0.4, la pipeline segnala comportamento "preprocessing-dominant".
 
@@ -296,8 +305,8 @@ python main.py ablation --session-id 20260510_143022 --detector H1
 **Esempio:**
 ```bash
 python main.py crosscheck \
-  --report data/clusters/20260510_143022/h1/cluster_report.json \
-  --metadata data/embeddings/20260510_143022/o4a_h1.json \
+  --report data/clusters/o4a/20260510_143022/h1/cluster_report.json \
+  --metadata data/embeddings/o4a/20260510_143022/o4a_h1.json \
   --detector H1
 ```
 
@@ -338,14 +347,16 @@ python main.py build-reference --output data/reference/gravity_spy_index.npz --m
 | `--report` | `str` | ✅ | — | Path `cluster_report.json` |
 | `--reference` | `str` | ✅ | — | Path indice `.npz` (da build-reference o build-indomain-reference) |
 | `--output` | `str` | ✅ | — | Path output JSON |
+| `--run` | `str` | — | `O4a` | Run osservativo per query Gravity Spy e logging |
 
 **Esempio:**
 ```bash
 python main.py morphcheck \
-  --embeddings data/embeddings/20260510_143022/o4a_h1.npy \
-  --report data/clusters/20260510_143022/h1/cluster_report.json \
+  --embeddings data/embeddings/o4a/20260510_143022/o4a_h1.npy \
+  --report data/clusters/o4a/20260510_143022/h1/cluster_report.json \
   --reference data/reference/indomain_index.npz \
-  --output data/clusters/20260510_143022/h1/morphological_crosscheck.json
+  --output data/clusters/o4a/20260510_143022/h1/morphological_crosscheck.json \
+  --run O4a
 ```
 
 **Output:** JSON con label per-spettrogramma. Log: `Morphological check complete. N novel candidates.`
@@ -407,6 +418,7 @@ python main.py validate-reference \
 | Argomento | Tipo | Obbligatorio | Default | Descrizione |
 |-----------|------|:---:|---------|-------------|
 | `--session-id` | `str` | — | `None` | ID sessione (risolve automaticamente tutti i path se usato) |
+| `--run` | `str` | — | `O4a` | Run osservativo |
 | `--embeddings-h1` | `str` | — | `None` | Path embedding H1 |
 | `--embeddings-l1` | `str` | — | `None` | Path embedding L1 |
 | `--metadata-h1` | `str` | — | `None` | Path metadata H1 `.json` |
@@ -419,7 +431,7 @@ python main.py validate-reference \
 python main.py timeslide --session-id 20260510_143022
 ```
 
-**Output:** `data/timeslide/<SESSION_ID>/timeslide_report.json` con p-value, z-score, e interpretazione.  
+**Output:** `data/timeslide/{run_lower}/<SESSION_ID>/timeslide_report.json` con p-value, z-score, e interpretazione.  
 **Log:** `Time-slide: zero-lag=X coincidences, background mean=Y±Z, p-value=P`
 
 ---
@@ -437,34 +449,36 @@ python main.py validate-reference \
   --reference data/reference/indomain_index.npz                # Deve stampare ✅ PASS
 
 # ── 1. Scansione ───────────────────────────────────────────────────
-python main.py scan-extended --workers 6
+python main.py scan-extended --workers 6 --run O4a
 # → Annotare il Session ID stampato: <SID>
 
 # ── 2. Estrazione feature ─────────────────────────────────────────
-python main.py encode --session-id <SID> --detector H1
-python main.py encode --session-id <SID> --detector L1
+python main.py encode --session-id <SID> --detector H1 --run O4a
+python main.py encode --session-id <SID> --detector L1 --run O4a
 
 # ── 3. Clustering ─────────────────────────────────────────────────
-python main.py cluster --session-id <SID> --detector H1
-python main.py cluster --session-id <SID> --detector L1
+python main.py cluster --session-id <SID> --detector H1 --run O4a
+python main.py cluster --session-id <SID> --detector L1 --run O4a
 
 # ── 4. Confronto morfologico ──────────────────────────────────────
 python main.py morphcheck \
-  --embeddings data/embeddings/<SID>/o4a_h1.npy \
-  --report data/clusters/<SID>/h1/cluster_report.json \
+  --embeddings data/embeddings/o4a/<SID>/o4a_h1.npy \
+  --report data/clusters/o4a/<SID>/h1/cluster_report.json \
   --reference data/reference/indomain_index.npz \
-  --output data/clusters/<SID>/h1/morphological_crosscheck.json
+  --output data/clusters/o4a/<SID>/h1/morphological_crosscheck.json \
+  --run O4a
 
 python main.py morphcheck \
-  --embeddings data/embeddings/<SID>/o4a_l1.npy \
-  --report data/clusters/<SID>/l1/cluster_report.json \
+  --embeddings data/embeddings/o4a/<SID>/o4a_l1.npy \
+  --report data/clusters/o4a/<SID>/l1/cluster_report.json \
   --reference data/reference/indomain_index.npz \
-  --output data/clusters/<SID>/l1/morphological_crosscheck.json
+  --output data/clusters/o4a/<SID>/l1/morphological_crosscheck.json \
+  --run O4a
 
 # ── 5. Validazione robustezza e coincidenze ───────────────────────
-python main.py ablation --session-id <SID> --detector H1
-python main.py stability --session-id <SID> --detector H1 --n-runs 20
-python main.py timeslide --session-id <SID>
+python main.py ablation --session-id <SID> --detector H1 --run O4a
+python main.py stability --session-id <SID> --detector H1 --n-runs 20 --run O4a
+python main.py timeslide --session-id <SID> --run O4a
 ```
 
 ---
