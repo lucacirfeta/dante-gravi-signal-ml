@@ -35,7 +35,7 @@ case $RUN in
     "O2")  START_GPS=1164578417 ;;
     "O3a") START_GPS=1238187618 ;;
     "O3b") START_GPS=1256677218 ;;
-    "O4a") START_GPS=1368978018 ;;
+    "O4a") START_GPS=1368997218 ;;
     *) echo "Run non supportata: $RUN"; exit 1 ;;
 esac
 
