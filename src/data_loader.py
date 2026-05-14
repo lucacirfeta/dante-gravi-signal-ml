@@ -14,10 +14,13 @@ from typing import Literal
 from gwpy.timeseries import TimeSeries
 
 from src.utils import gps_to_utc, load_config, setup_logger
+import time
 
 logger: logging.Logger = setup_logger(__name__)
 
 DetectorID = Literal["H1", "L1", "V1"]
+
+_GWOSC_BASE_DELAY = 0.3
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -97,15 +100,28 @@ def fetch_strain_data(
                 except Exception:
                     pass
 
+    global _GWOSC_BASE_DELAY
     try:
-        ts: TimeSeries = TimeSeries.fetch_open_data(
-            detector,
-            gps_start,
-            gps_end,
-            sample_rate=sample_rate,
-            verbose=False,
-            cache=True,
-        )
+        while True:
+            time.sleep(_GWOSC_BASE_DELAY)
+            try:
+                ts: TimeSeries = TimeSeries.fetch_open_data(
+                    detector,
+                    gps_start,
+                    gps_end,
+                    sample_rate=sample_rate,
+                    verbose=False,
+                    cache=True,
+                )
+                break
+            except Exception as inner_exc:
+                err_str = str(inner_exc)
+                if "429" in err_str or "Too Many Requests" in err_str:
+                    logger.warning("GWOSC 429 Too Many Requests. Increasing base delay by 300ms and retrying in 1s...")
+                    _GWOSC_BASE_DELAY += 0.3
+                    time.sleep(1.0)
+                else:
+                    raise inner_exc
     except Exception as exc:
         raise RuntimeError(
             f"Failed to fetch strain data for {detector} "

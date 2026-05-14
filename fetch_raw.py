@@ -76,6 +76,7 @@ def main():
 
     block_num = 1
     retry_delays = [5, 10, 20] if args.retry else [0]
+    base_delay = 0.3
 
     while current_start < end_gps:
         current_end = min(current_start + args.segment_duration, end_gps)
@@ -90,13 +91,26 @@ def main():
             success = False
             for attempt, backoff in enumerate(retry_delays):
                 try:
-                    ts = TimeSeries.fetch_open_data(
-                        args.detector,
-                        current_start,
-                        current_end,
-                        verbose=False,
-                        cache=True,
-                    )
+                    while True:
+                        time.sleep(base_delay)
+                        try:
+                            ts = TimeSeries.fetch_open_data(
+                                args.detector,
+                                current_start,
+                                current_end,
+                                verbose=False,
+                                cache=True,
+                            )
+                            break
+                        except Exception as inner_e:
+                            err_str = str(inner_e)
+                            if "429" in err_str or "Too Many Requests" in err_str:
+                                print(f"(429 Too Many Requests. Delay +300ms, attesa 1s)... ", end="", flush=True)
+                                base_delay += 0.3
+                                time.sleep(1.0)
+                            else:
+                                raise inner_e
+
                     ts.write(filepath, format="hdf5.gwosc")
                     print("OK")
                     success = True

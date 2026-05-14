@@ -294,6 +294,7 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
         return
 
     block_num = 1
+    base_delay = 0.3
 
     while current_start < end_gps:
         current_end = min(current_start + segment_duration, end_gps)
@@ -310,13 +311,26 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
             retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
             for attempt, backoff in enumerate(retry_delays):
                 try:
-                    ts = TimeSeries.fetch_open_data(
-                        detector,
-                        current_start,
-                        current_end,
-                        verbose=False,
-                        cache=True,
-                    )
+                    while True:
+                        time.sleep(base_delay)
+                        try:
+                            ts = TimeSeries.fetch_open_data(
+                                detector,
+                                current_start,
+                                current_end,
+                                verbose=False,
+                                cache=True,
+                            )
+                            break
+                        except Exception as inner_e:
+                            err_str = str(inner_e)
+                            if "429" in err_str or "Too Many Requests" in err_str:
+                                logger.warning("GWOSC 429 Too Many Requests. Increasing delay by 300ms and waiting 1s...")
+                                base_delay += 0.3
+                                time.sleep(1.0)
+                            else:
+                                raise inner_e
+
                     ts.write(filepath, format="hdf5.gwosc")
                     print("OK")
                     logger.info("Saved %s", filename)
