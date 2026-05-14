@@ -45,21 +45,24 @@ Scarica un evento GW noto (es. GW150914) ed estrae uno spettrogramma. Utile per 
 ---
 
 ### 2. `scan`
-Esegue la scansione dei segmenti per un rivelatore in un periodo definito. Includendo il `--session-id` esistente, attua automaticamente un resume dall'ultimo GPS processato.
+Esegue la scansione dei segmenti per un **singolo rivelatore** in un periodo definito. Includendo il `--session-id` esistente, attua automaticamente un resume dall'ultimo GPS processato.
+
+> [!IMPORTANT]
+> **Modalità Resume:** Se si riprende una sessione esistente, il comando ignora il flag `--hours` e utilizza la durata predefinita definita in `config.yaml` (`hours_per_detector`).
 
 - `--detector` **(Richiesto)**: Rivelatore da usare. Scelte: `H1`, `L1`, `V1`.
 - `--run`: Run osservativo di riferimento. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
-- `--hours`: Ore di durata della scansione. *Default: `1.0`*.
+- `--hours`: Ore di durata della scansione (solo per nuovi scan). *Default: `1.0`*.
 - `--workers`: Thread in parallelo. 1 = sequenziale. *Default: `1`*.
 - `--session-id`: ID sessione univoco (es. `20260510_143022`). *Default: auto-generato*.
 
 ---
 
 ### 3. `scan-extended`
-Scansione estesa automatizzata di `H1` e `L1` usando i parametri di configurazione. Effettua scansioni continue e permette resume automatici in base alla sessione e al rivelatore.
+Scansione estesa automatizzata di **tutti i rivelatori** definiti in `config.yaml` (solitamente `H1` e `L1`) in sequenza. Effettua scansioni continue e permette resume automatici indipendenti per ogni rivelatore.
 
 - `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
-- `--hours`: Override ore per rivelatore rispetto al config yaml.
+- `--hours`: Override ore per rivelatore rispetto al config yaml (solo per nuovi scan).
 - `--workers`: Numero thread paralleli. *Default: `1`*.
 - `--session-id`: ID sessione. *Default: auto-generato*.
 
@@ -75,6 +78,7 @@ Tool indipendente per il download massivo di dati strain (GWOSC) come file .hdf5
 - `--output-dir`: Cartella output cache. *Default: `data/raw`*.
 - `--segment-duration`: Durata chunk in download (in secondi). *Default: `3600`*.
 - `--no-resume`: Flag. Disattiva il check e resume dei file hdf5 già scaricati.
+- `--retry`: Flag. Abilita la logica di retry in caso di fallimento del download. *Default: disabilitato*.
 
 ---
 

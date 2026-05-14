@@ -320,7 +320,8 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
             logger.info("File %s already exists. Skipping.", filename)
         else:
             success = False
-            for attempt, backoff in enumerate([5, 10, 20]):
+            retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
+            for attempt, backoff in enumerate(retry_delays):
                 try:
                     ts = TimeSeries.fetch_open_data(
                         detector,
@@ -335,12 +336,15 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
                     success = True
                     break
                 except Exception as e:
-                    if attempt < 2:
+                    if attempt < len(retry_delays) - 1:
                         logger.warning("Attempt %d failed for %s: %s. Retrying in %ds...", attempt + 1, filename, e, backoff)
                         time.sleep(backoff)
                     else:
                         print("ERRORE")
-                        logger.error("Failed to fetch %s after 3 attempts: %s", filename, e)
+                        if getattr(args, "retry", False):
+                            logger.error("Failed to fetch %s after %d attempts: %s", filename, len(retry_delays), e)
+                        else:
+                            logger.error("Failed to fetch %s: %s", filename, e)
             
             if not success:
                 logger.error("Skipping block %d due to errors.", block_num)
@@ -1576,6 +1580,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_false",
         dest="resume",
         help="Disable automatic resume from existing files.",
+    )
+    p_fetch_raw.add_argument(
+        "--retry",
+        action="store_true",
+        default=False,
+        help="Enable retry logic on download failure. Default: False.",
     )
     p_fetch_raw.set_defaults(func=cmd_fetch_raw)
     _add_run_argument(p_fetch_raw)

@@ -187,16 +187,24 @@ Edit `config.yaml` to set scan duration and other parameters before starting.
 
 #### Step 1 — Scan
 
+You can choose between a manual scan of a single detector or an automated extended scan.
+
 ```bash
-# H1 + L1 together, duration from config.yaml (defaults to O4a)
+# AUTOMATED: H1 + L1 together, duration from config.yaml (defaults to O4a)
 python main.py scan-extended --workers 6
 
-# Or custom duration per detector for a specific run
+# MANUAL: Custom duration for a specific detector and run
 python main.py scan --detector H1 --hours 72 --workers 6 --run O3a
-python main.py scan --detector L1 --hours 72 --workers 6 --run O3a
 ```
 
-**Incremental Mode:** To resume an interrupted scan or append more data, simply provide the same `--session-id`. The pipeline will automatically detect the highest GPS end-time of existing spectrograms and resume from there, reading the scan duration from `config.yaml`.
+> [!TIP]
+> **Which one to use?** Use `scan-extended` for production runs to process both main detectors automatically. Use `scan` for testing or when you need data from a single specific instrument (like V1).
+
+**Incremental Mode:** To resume an interrupted scan or append more data, simply provide the same `--session-id`. The pipeline will automatically detect the highest GPS end-time of existing spectrograms and resume from there.
+
+> [!IMPORTANT]
+> **Priority Note:** In resume mode, the pipeline ignores the `--hours` CLI flag and always reads the scan duration from `config.yaml` (`hours_per_detector`) to ensure session consistency.
+
 ```bash
 python main.py scan-extended --workers 6 --session-id <PREVIOUS_SESSION_ID>
 ```
