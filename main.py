@@ -237,6 +237,120 @@ def cmd_scan(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_fetch_raw(args: argparse.Namespace) -> None:
+    """Standalone downloader for raw GWOSC strain data."""
+    import time
+    from datetime import datetime, timezone
+    from gwpy.timeseries import TimeSeries
+    
+    detector: str = args.detector
+    hours: float = args.hours
+    mode: str = args.mode
+    output_dir_str: str = args.output_dir
+    segment_duration: int = args.segment_duration
+    run = _resolve_run(args)
+    cfg = load_config()
+
+    # Calculate the total GPS interval
+    if mode == "current":
+        # Current GPS time
+        end_gps = int(datetime.now(timezone.utc).timestamp() - 315964818)
+        start_gps = int(end_gps - hours * 3600)
+    elif mode == "o4a_start":
+        start_gps = _run_start_gps(run, cfg)
+        end_gps = int(datetime.now(timezone.utc).timestamp() - 315964818)
+    else:
+        logger.error("Unknown mode '%s'", mode)
+        sys.exit(1)
+
+    aligned_start = (start_gps // 4096) * 4096
+    if aligned_start != start_gps:
+        logger.warning("Start GPS allineato da %d a %d per evitare boundary bug", start_gps, aligned_start)
+        start_gps = aligned_start
+
+    logger.info("=== FETCH-RAW: %s [%s] ===", detector, run)
+    logger.info("Interval: %d to %d (%.1f hours)", start_gps, end_gps, (end_gps - start_gps) / 3600)
+
+    output_dir = Path(output_dir_str)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    current_start = start_gps
+    resume = getattr(args, "resume", True)
+    if resume:
+        import re
+        pattern = re.compile(rf"^{detector}_(\d+)_(\d+)\.hdf5$")
+        max_end_gps = 0
+        for f in output_dir.glob("*.hdf5"):
+            m = pattern.match(f.name)
+            if m:
+                file_end = int(m.group(2))
+                if file_end > max_end_gps:
+                    max_end_gps = file_end
+        
+        if max_end_gps > 0:
+            current_start = max_end_gps
+            if current_start >= end_gps:
+                print("Nessun nuovo dato da scaricare.")
+                logger.info("Nessun nuovo dato da scaricare.")
+                return
+            
+            aligned_current = (current_start // 4096) * 4096
+            if aligned_current != current_start:
+                logger.warning("Ripresa allineata da %d a %d per evitare boundary bug", current_start, aligned_current)
+                current_start = aligned_current
+                
+            logger.info("Ripresa dal GPS %d (ultimo file trovato %d)", current_start, max_end_gps)
+
+    total_blocks = (end_gps - current_start + segment_duration - 1) // segment_duration
+    if total_blocks <= 0:
+        logger.info("No data to download for the requested interval.")
+        return
+
+    block_num = 1
+
+    while current_start < end_gps:
+        current_end = min(current_start + segment_duration, end_gps)
+        filename = f"{detector}_{current_start}_{current_end}.hdf5"
+        filepath = output_dir / filename
+
+        print(f"Blocco {block_num}/{total_blocks}: {detector} da {current_start} a {current_end}...", end=" ", flush=True)
+
+        if filepath.exists():
+            print("già presente")
+            logger.info("File %s already exists. Skipping.", filename)
+        else:
+            success = False
+            for attempt, backoff in enumerate([5, 10, 20]):
+                try:
+                    ts = TimeSeries.fetch_open_data(
+                        detector,
+                        current_start,
+                        current_end,
+                        verbose=False,
+                        cache=True,
+                    )
+                    ts.write(filepath, format="hdf5.gwosc")
+                    print("OK")
+                    logger.info("Saved %s", filename)
+                    success = True
+                    break
+                except Exception as e:
+                    if attempt < 2:
+                        logger.warning("Attempt %d failed for %s: %s. Retrying in %ds...", attempt + 1, filename, e, backoff)
+                        time.sleep(backoff)
+                    else:
+                        print("ERRORE")
+                        logger.error("Failed to fetch %s after 3 attempts: %s", filename, e)
+            
+            if not success:
+                logger.error("Skipping block %d due to errors.", block_num)
+
+        current_start = current_end
+        block_num += 1
+
+    print("Download completato.")
+
+
 def cmd_scan_extended(args: argparse.Namespace) -> None:
     """Run an extended scan of H1 + L1 sequentially.
 
@@ -1419,6 +1533,52 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_last_gps.set_defaults(func=cmd_last_gps)
     _add_run_argument(p_last_gps)
+
+    # --- fetch-raw ---
+    p_fetch_raw = subparsers.add_parser(
+        "fetch-raw",
+        help="Download raw GWOSC strain data into local cache.",
+    )
+    p_fetch_raw.add_argument(
+        "--detector",
+        type=str,
+        required=True,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier.",
+    )
+    p_fetch_raw.add_argument(
+        "--hours",
+        type=float,
+        default=1.0,
+        help="Total hours to download (used in 'current' mode).",
+    )
+    p_fetch_raw.add_argument(
+        "--mode",
+        type=str,
+        default="current",
+        choices=["current", "o4a_start"],
+        help="Download mode: 'current' (last N hours) or 'o4a_start' (from run start to now).",
+    )
+    p_fetch_raw.add_argument(
+        "--output-dir",
+        type=str,
+        default="data/raw",
+        help="Output directory for HDF5 files. Default: data/raw.",
+    )
+    p_fetch_raw.add_argument(
+        "--segment-duration",
+        type=int,
+        default=3600,
+        help="Duration of each download block in seconds. Default: 3600.",
+    )
+    p_fetch_raw.add_argument(
+        "--no-resume",
+        action="store_false",
+        dest="resume",
+        help="Disable automatic resume from existing files.",
+    )
+    p_fetch_raw.set_defaults(func=cmd_fetch_raw)
+    _add_run_argument(p_fetch_raw)
 
     # --- reprocess-spectrograms ---
     p_reprocess = subparsers.add_parser(

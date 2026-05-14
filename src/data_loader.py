@@ -61,6 +61,8 @@ def fetch_strain_data(
         RuntimeError: If the GWOSC fetch fails after retries (network
             timeout, missing data, rate limits).
     """
+    from pathlib import Path
+
     _validate_detector(detector)
 
     utc_start = gps_to_utc(gps_start)
@@ -73,6 +75,27 @@ def fetch_strain_data(
         utc_start,
         utc_end,
     )
+
+    cache_dir = Path("data/raw")
+    cache_file = cache_dir / f"{detector}_{gps_start}_{gps_end}.hdf5"
+
+    if cache_file.exists():
+        try:
+            ts = TimeSeries.read(cache_file)
+            logger.info("Cache hit for %s", cache_file.name)
+            return ts
+        except Exception as exc:
+            logger.warning("Cache read failed for %s, moving to .corrupt: %s", cache_file.name, exc)
+            corrupt_dir = cache_dir / ".corrupt"
+            corrupt_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                cache_file.rename(corrupt_dir / cache_file.name)
+            except Exception as rename_exc:
+                logger.warning("Failed to move corrupt file %s: %s", cache_file.name, rename_exc)
+                try:
+                    cache_file.unlink()
+                except Exception:
+                    pass
 
     try:
         ts: TimeSeries = TimeSeries.fetch_open_data(
@@ -88,6 +111,13 @@ def fetch_strain_data(
             f"Failed to fetch strain data for {detector} "
             f"[{gps_start}, {gps_end}]: {exc}"
         ) from exc
+
+    try:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        ts.write(cache_file, format='hdf5.gwosc')
+        logger.info("Saved raw data to cache: %s", cache_file.name)
+    except Exception as exc:
+        logger.warning("Failed to save raw data to cache %s: %s", cache_file.name, exc)
 
     logger.info(
         "Fetched %s: %d samples @ %d Hz (%.1f s)",

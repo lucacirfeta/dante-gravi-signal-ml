@@ -15,12 +15,12 @@ try:
 except ImportError:
     sys.exit("Errore: la libreria 'gwpy' non è installata. Puoi installarla con 'pip install gwpy'")
 
-def get_last_gps(detector, output_dir):
+def get_last_gps(detector, output_dir, run_lower):
     """
-    Cerca i file HDF5 già scaricati per il detector e restituisce
+    Cerca i file HDF5 già scaricati per il detector e run e restituisce
     il tempo GPS (fine) più avanzato trovato.
     """
-    out_path = Path(output_dir) / detector
+    out_path = Path(output_dir) / run_lower / detector
     if not out_path.exists():
         return None
         
@@ -53,16 +53,17 @@ def load_config_val(keys, default_val):
     except Exception:
         return default_val
 
-def fetch_and_save_raw_data(detector, target_gps_start, total_hours, output_dir, chunk_seconds=4096, max_retries=1, retry_delay=2):
+def fetch_and_save_raw_data(detector, run, target_gps_start, total_hours, output_dir, chunk_seconds=4096, max_retries=1, retry_delay=2):
     """
     Scarica i dati strain grezzi da GWOSC suddividendo il lavoro in blocchi (default 4096s).
     Allinea l'inizio ai confini dei file di GWOSC per evitare errori di attraversamento.
     Verifica l'ultimo download per riprendere in automatico in caso di interruzione.
     """
-    out_path = Path(output_dir) / detector
+    run_lower = run.lower()
+    out_path = Path(output_dir) / run_lower / detector
     out_path.mkdir(parents=True, exist_ok=True)
     
-    last_gps = get_last_gps(detector, output_dir)
+    last_gps = get_last_gps(detector, output_dir, run_lower)
     
     if last_gps is not None and last_gps > target_gps_start:
         print(f"Trovati dati esistenti per {detector}. Riprendo il download dall'ultimo blocco scaricato (GPS: {last_gps})")
@@ -120,25 +121,45 @@ def main():
         description="Scarica dati strain grezzi da GWOSC. Divide il download in blocchi di 1 ora per sicurezza e supporta il resume."
     )
     parser.add_argument("detector", choices=["H1", "L1", "V1"], help="Identificativo del rivelatore (H1, L1, o V1)")
+    parser.add_argument("--run", type=str, default="O4a", choices=["O2", "O3a", "O3b", "O4a"], 
+                        help="Run osservativo (default: O4a). Determina la struttura directory e l'inizio GPS se --start non è fornito.")
     parser.add_argument("--hours", type=float, 
-                        help="Ore totali da scaricare. Se non specificato, legge da config.yaml (scan_extended.hours_per_detector)")
+                        help="Ore totali da scaricare. Se non specificato, legge da config.yaml in base al run.")
     parser.add_argument("--start", type=int, 
-                        help="Tempo GPS di inizio. Se non specificato, usa config.yaml (inizio O4a)")
+                        help="Tempo GPS di inizio manuale. Se non specificato, viene calcolato da config.yaml in base a --run.")
     parser.add_argument("--outdir", default="data/raw", help="Directory di destinazione (default: data/raw)")
     
     args = parser.parse_args()
+    run = args.run
+    
+    if args.start is not None:
+        start = args.start
+    else:
+        # Leggi start_date dal config.yaml per il run specificato
+        start_date = load_config_val(["run_config", run, "start_date"], None)
+        if start_date is None:
+            # Fallback hardcoded se manca il config
+            fallbacks = {"O2": "2016-11-30", "O3a": "2019-04-01", "O3b": "2019-11-01", "O4a": "2023-05-24"}
+            start_date = fallbacks.get(run, "2023-05-24")
+        
+        # Aggiungiamo 6 ore per evitare i primissimi minuti instabili del run, in coerenza con main.py
+        from gwpy.time import to_gps
+        start = int(to_gps(start_date)) + 6 * 3600
     
     # Carica da config.yaml se non specificati
-    hours = args.hours if args.hours is not None else load_config_val(["scan_extended", "hours_per_detector"], 48.0)
-    start = args.start if args.start is not None else load_config_val(["o4a_window", "gps_start"], 1369598418)
+    if args.hours is not None:
+        hours = args.hours
+    else:
+        hours = load_config_val(["run_config", run, "hours_per_detector"], 48.0)
     
     if hours <= 0:
         sys.exit("Errore: il numero di ore deve essere maggiore di zero.")
         
-    print(f"Inizio operazione per {args.detector}. Obiettivo: {hours} ore partendo da GPS {start}")
+    print(f"Inizio operazione per {args.detector} ({run}). Obiettivo: {hours} ore partendo da GPS {start}")
     
     fetch_and_save_raw_data(
         detector=args.detector,
+        run=run,
         target_gps_start=start,
         total_hours=hours,
         output_dir=args.outdir
