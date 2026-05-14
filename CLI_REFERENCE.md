@@ -69,12 +69,11 @@ Scansione estesa automatizzata di **tutti i rivelatori** definiti in `config.yam
 ---
 
 ### 4. `fetch-raw`
-Tool indipendente per il download massivo di dati strain (GWOSC) come file .hdf5, usabili poi come cache locale. Implementa un blocco anti-interruzione.
+Tool indipendente per il download massivo di dati strain (GWOSC) come file .hdf5, usabili poi come cache locale. Implementa un blocco anti-interruzione. Lavora a "blocchi" di durata: se lanciato da zero parte dall'inizio della run, se in modalità resume riprende dall'ultimo file scaricato e aggiunge le ore richieste.
 
 - `--detector` **(Richiesto)**: Rivelatore. Scelte: `H1`, `L1`, `V1`.
-- `--mode`: Modalità. Scelte: `current` (ultime N ore) o `o4a_start` (da inizio run O4a). *Default: `current`*.
 - `--run`: Run osservativo base. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
-- `--hours`: Ore totali (se mode=`current`). *Default: `1.0`*.
+- `--hours`: Ore totali da scaricare (a partire dall'origine o dal punto di resume). *Default: `1.0`*.
 - `--output-dir`: Cartella output cache. *Default: `data/raw`*.
 - `--segment-duration`: Durata chunk in download (in secondi). *Default: `3600`*.
 - `--no-resume`: Flag. Disattiva il check e resume dei file hdf5 già scaricati.

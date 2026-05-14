@@ -245,37 +245,17 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     
     detector: str = args.detector
     hours: float = args.hours
-    mode: str = args.mode
     output_dir_str: str = args.output_dir
     segment_duration: int = args.segment_duration
     run = _resolve_run(args)
     cfg = load_config()
 
-    # Calculate the total GPS interval
-    if mode == "current":
-        # Current GPS time
-        end_gps = int(datetime.now(timezone.utc).timestamp() - 315964818)
-        start_gps = int(end_gps - hours * 3600)
-    elif mode == "o4a_start":
-        start_gps = _run_start_gps(run, cfg)
-        end_gps = int(datetime.now(timezone.utc).timestamp() - 315964818)
-    else:
-        logger.error("Unknown mode '%s'", mode)
-        sys.exit(1)
-
-    aligned_start = (start_gps // 4096) * 4096
-    if aligned_start != start_gps:
-        logger.warning("Start GPS allineato da %d a %d per evitare boundary bug", start_gps, aligned_start)
-        start_gps = aligned_start
-
-    logger.info("=== FETCH-RAW: %s [%s] ===", detector, run)
-    logger.info("Interval: %d to %d (%.1f hours)", start_gps, end_gps, (end_gps - start_gps) / 3600)
-
     output_dir = Path(output_dir_str)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    current_start = start_gps
     resume = getattr(args, "resume", True)
+    current_start = None
+
     if resume:
         import re
         pattern = re.compile(rf"^{detector}_(\d+)_(\d+)\.hdf5$")
@@ -289,17 +269,24 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
         
         if max_end_gps > 0:
             current_start = max_end_gps
-            if current_start >= end_gps:
-                print("Nessun nuovo dato da scaricare.")
-                logger.info("Nessun nuovo dato da scaricare.")
-                return
-            
-            aligned_current = (current_start // 4096) * 4096
-            if aligned_current != current_start:
-                logger.warning("Ripresa allineata da %d a %d per evitare boundary bug", current_start, aligned_current)
-                current_start = aligned_current
-                
-            logger.info("Ripresa dal GPS %d (ultimo file trovato %d)", current_start, max_end_gps)
+            logger.info("Ripresa dal GPS %d (ultimo file trovato)", current_start)
+
+    if current_start is None:
+        # Fresh scan
+        current_start = _run_start_gps(run, cfg)
+        logger.info("Nuovo download dall'inizio della run: GPS %d", current_start)
+
+    aligned_start = (current_start // 4096) * 4096
+    if aligned_start != current_start:
+        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", current_start, aligned_start)
+        current_start = aligned_start
+
+    end_gps = current_start + int(hours * 3600)
+
+    logger.info("=== FETCH-RAW: %s [%s] ===", detector, run)
+    logger.info("Interval: %d to %d (%.1f hours)", current_start, end_gps, hours)
+
+
 
     total_blocks = (end_gps - current_start + segment_duration - 1) // segment_duration
     if total_blocks <= 0:
@@ -1554,14 +1541,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--hours",
         type=float,
         default=1.0,
-        help="Total hours to download (used in 'current' mode).",
-    )
-    p_fetch_raw.add_argument(
-        "--mode",
-        type=str,
-        default="current",
-        choices=["current", "o4a_start"],
-        help="Download mode: 'current' (last N hours) or 'o4a_start' (from run start to now).",
+        help="Total hours to download from the origin or from the resume point. Default: 1.0.",
     )
     p_fetch_raw.add_argument(
         "--output-dir",
