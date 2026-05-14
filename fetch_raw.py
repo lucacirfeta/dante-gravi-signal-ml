@@ -1,169 +1,138 @@
+#!/usr/bin/env python3
 import argparse
-import os
 import sys
 import time
 import re
 from pathlib import Path
 
-try:
-    import yaml
-except ImportError:
-    sys.exit("Errore: il modulo 'yaml' non è installato. Esegui 'pip install pyyaml'")
-
-try:
-    from gwpy.timeseries import TimeSeries
-except ImportError:
-    sys.exit("Errore: la libreria 'gwpy' non è installata. Puoi installarla con 'pip install gwpy'")
-
-def get_last_gps(detector, output_dir, run_lower):
-    """
-    Cerca i file HDF5 già scaricati per il detector e run e restituisce
-    il tempo GPS (fine) più avanzato trovato.
-    """
-    out_path = Path(output_dir) / run_lower / detector
-    if not out_path.exists():
-        return None
-        
-    max_gps_end = None
-    # Cerca i file corrispondenti al formato DETECTOR-RAW-START-DURATION.hdf5
-    pattern = re.compile(rf"^{detector}-RAW-(\d+)-(\d+)\.hdf5$")
-    
-    for file_path in out_path.glob(f"{detector}-RAW-*.hdf5"):
-        match = pattern.match(file_path.name)
-        if match:
-            start = int(match.group(1))
-            duration = int(match.group(2))
-            end = start + duration
-            if max_gps_end is None or end > max_gps_end:
-                max_gps_end = end
-                
-    return max_gps_end
-
-def load_config_val(keys, default_val):
-    """Legge un valore ricorsivo dal config.yaml o ritorna default_val"""
-    try:
-        with open("config.yaml", "r") as f:
-            config = yaml.safe_load(f)
-            val = config
-            for k in keys:
-                val = val.get(k)
-                if val is None:
-                    return default_val
-            return val
-    except Exception:
-        return default_val
-
-def fetch_and_save_raw_data(detector, run, target_gps_start, total_hours, output_dir, chunk_seconds=4096, max_retries=1, retry_delay=2):
-    """
-    Scarica i dati strain grezzi da GWOSC suddividendo il lavoro in blocchi (default 4096s).
-    Allinea l'inizio ai confini dei file di GWOSC per evitare errori di attraversamento.
-    Verifica l'ultimo download per riprendere in automatico in caso di interruzione.
-    """
-    run_lower = run.lower()
-    out_path = Path(output_dir) / run_lower / detector
-    out_path.mkdir(parents=True, exist_ok=True)
-    
-    last_gps = get_last_gps(detector, output_dir, run_lower)
-    
-    if last_gps is not None and last_gps > target_gps_start:
-        print(f"Trovati dati esistenti per {detector}. Riprendo il download dall'ultimo blocco scaricato (GPS: {last_gps})")
-        current_start = last_gps
-    else:
-        current_start = target_gps_start
-        
-    # ALLINEAMENTO AI CONFINI 4096s DI GWOSC:
-    # Se iniziamo in mezzo a un file di 4096s (e la richiesta supera il confine), gwpy andrà in errore.
-    # Allineiamo current_start al multiplo di 4096 più vicino verso l'alto (o lo lasciamo invariato se già allineato).
-    current_start = ((current_start + chunk_seconds - 1) // chunk_seconds) * chunk_seconds
-        
-    target_end = target_gps_start + int(total_hours * 3600)
-    
-    if current_start >= target_end:
-        print(f"Il download per {detector} è già completo fino a {total_hours} ore dal punto di partenza.")
-        return
-    
-    while current_start < target_end:
-        current_end = min(current_start + chunk_seconds, target_end)
-        duration = current_end - current_start
-        
-        filename = f"{detector}-RAW-{current_start}-{duration}.hdf5"
-        filepath = out_path / filename
-        
-        print(f"Scaricando {detector} da {current_start} a {current_end} (Blocco da {duration}s)...")
-        
-        success = False
-        for attempt in range(1, max_retries + 1):
-            try:
-                ts = TimeSeries.fetch_open_data(
-                    detector,
-                    current_start,
-                    current_end,
-                    verbose=False,
-                    cache=True
-                )
-                ts.write(filepath, format="hdf5")
-                print(f"-> Dati salvati con successo in: {filepath}")
-                success = True
-                break
-            except Exception as e:
-                print(f"-> Errore durante il download (Tentativo {attempt}/{max_retries}): {e}")
-                if attempt < max_retries:
-                    print(f"-> Attesa di {retry_delay} secondi prima di riprovare...")
-                    time.sleep(retry_delay)
-                else:
-                    print(f"-> Impossibile scaricare il blocco {current_start}-{current_end}. I dati potrebbero non essere pronti (ANALYSIS_READY). Salto al blocco successivo...")
-        
-        # Incrementiamo current_start a prescindere dal successo (non fermiamo il ciclo)
-        current_start = current_end
-
 def main():
     parser = argparse.ArgumentParser(
-        description="Scarica dati strain grezzi da GWOSC. Divide il download in blocchi di 1 ora per sicurezza e supporta il resume."
+        description="Standalone raw GWOSC strain data fetcher. Usabile in Termux o ambienti minimi."
     )
-    parser.add_argument("detector", choices=["H1", "L1", "V1"], help="Identificativo del rivelatore (H1, L1, o V1)")
-    parser.add_argument("--run", type=str, default="O4a", choices=["O2", "O3a", "O3b", "O4a"], 
-                        help="Run osservativo (default: O4a). Determina la struttura directory e l'inizio GPS se --start non è fornito.")
-    parser.add_argument("--hours", type=float, 
-                        help="Ore totali da scaricare. Se non specificato, legge da config.yaml in base al run.")
-    parser.add_argument("--start", type=int, 
-                        help="Tempo GPS di inizio manuale. Se non specificato, viene calcolato da config.yaml in base a --run.")
-    parser.add_argument("--outdir", default="data/raw", help="Directory di destinazione (default: data/raw)")
-    
+    parser.add_argument("--detector", type=str, required=True, choices=["H1", "L1", "V1"], help="Rivelatore.")
+    parser.add_argument("--mode", type=str, default="current", choices=["current", "o4a_start"], help="Modalità di download.")
+    parser.add_argument("--run", type=str, default="O4a", choices=["O2", "O3a", "O3b", "O4a"], help="Run osservativo base.")
+    parser.add_argument("--hours", type=float, default=72, help="Ore totali da scaricare (se mode=current).")
+    parser.add_argument("--output-dir", type=str, default="data/raw", help="Cartella output cache per i file HDF5.")
+    parser.add_argument("--segment-duration", type=int, default=4096, help="Durata di ogni blocco di download in secondi.")
+    parser.add_argument("--no-resume", action="store_false", dest="resume", help="Disattiva il check e resume dei file HDF5 già scaricati.")
+
     args = parser.parse_args()
-    run = args.run
-    
-    if args.start is not None:
-        start = args.start
+
+    # Import ritardato per gestire la dipendenza in modo pulito
+    try:
+        from gwpy.timeseries import TimeSeries
+        from gwpy.time import tconvert
+    except ImportError:
+        sys.exit("Errore: la libreria 'gwpy' non è installata. Esegui 'pip install gwpy h5py'.")
+
+    # Tempi GPS di inizio dei run (ricavati da GWOSC + 6 ore di offset per evitare anomalie iniziali)
+    RUN_STARTS = {
+        "O2": 1164556817 + 6 * 3600,
+        "O3a": 1238166018 + 6 * 3600,
+        "O3b": 1256655618 + 6 * 3600,
+        "O4a": 1368956418 + 6 * 3600,
+    }
+
+    # Calcolo finestra GPS
+    if args.mode == "current":
+        end_gps = int(tconvert('now'))
+        start_gps = int(end_gps - args.hours * 3600)
+    elif args.mode == "o4a_start":
+        start_gps = RUN_STARTS[args.run]
+        end_gps = int(tconvert('now'))
     else:
-        # Leggi start_date dal config.yaml per il run specificato
-        start_date = load_config_val(["run_config", run, "start_date"], None)
-        if start_date is None:
-            # Fallback hardcoded se manca il config
-            fallbacks = {"O2": "2016-11-30", "O3a": "2019-04-01", "O3b": "2019-11-01", "O4a": "2023-05-24"}
-            start_date = fallbacks.get(run, "2023-05-24")
+        sys.exit(f"Modalità sconosciuta: {args.mode}")
+
+    # Allineamento dell'inizio a multipli di 4096 secondi (standard GWOSC) 
+    # per prevenire bug di attraversamento file in gwpy
+    aligned_start = (start_gps // 4096) * 4096
+    if aligned_start != start_gps:
+        print(f"Start GPS allineato da {start_gps} a {aligned_start} per evitare boundary bug.")
+        start_gps = aligned_start
+
+    print(f"=== FETCH-RAW: {args.detector} [{args.run}] ===")
+    print(f"Intervallo GPS: {start_gps} -> {end_gps} ({(end_gps - start_gps) / 3600:.1f} ore)")
+
+    out_dir = Path(args.output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    current_start = start_gps
+
+    # Logica di Resume Incrementale
+    if args.resume:
+        # main.py si aspetta i file nel formato: <detector>_<start>_<end>.hdf5
+        pattern = re.compile(rf"^{args.detector}_(\d+)_(\d+)\.hdf5$")
+        max_end_gps = 0
+        for f in out_dir.glob("*.hdf5"):
+            m = pattern.match(f.name)
+            if m:
+                file_end = int(m.group(2))
+                if file_end > max_end_gps:
+                    max_end_gps = file_end
         
-        # Aggiungiamo 6 ore per evitare i primissimi minuti instabili del run, in coerenza con main.py
-        from gwpy.time import to_gps
-        start = int(to_gps(start_date)) + 6 * 3600
-    
-    # Carica da config.yaml se non specificati
-    if args.hours is not None:
-        hours = args.hours
-    else:
-        hours = load_config_val(["run_config", run, "hours_per_detector"], 48.0)
-    
-    if hours <= 0:
-        sys.exit("Errore: il numero di ore deve essere maggiore di zero.")
+        if max_end_gps > 0:
+            current_start = max_end_gps
+            if current_start >= end_gps:
+                print("Nessun nuovo dato da scaricare. La cache è aggiornata.")
+                return
+
+            aligned_current = (current_start // 4096) * 4096
+            if aligned_current != current_start:
+                print(f"Ripresa allineata da {current_start} a {aligned_current} per evitare boundary bug.")
+                current_start = aligned_current
+                
+            print(f"Ripresa dal GPS {current_start} (ultimo file trovato arriva a {max_end_gps}).")
+
+    # Inizio download in blocchi
+    total_blocks = (end_gps - current_start + args.segment_duration - 1) // args.segment_duration
+    if total_blocks <= 0:
+        print("Nessun dato da scaricare per l'intervallo richiesto.")
+        return
+
+    block_num = 1
+    while current_start < end_gps:
+        current_end = min(current_start + args.segment_duration, end_gps)
         
-    print(f"Inizio operazione per {args.detector} ({run}). Obiettivo: {hours} ore partendo da GPS {start}")
-    
-    fetch_and_save_raw_data(
-        detector=args.detector,
-        run=run,
-        target_gps_start=start,
-        total_hours=hours,
-        output_dir=args.outdir
-    )
+        # Stessa naming convention attesa dal main.py nella funzione di reprocessing e cache check
+        filename = f"{args.detector}_{current_start}_{current_end}.hdf5"
+        filepath = out_dir / filename
+
+        print(f"Blocco {block_num}/{total_blocks}: {args.detector} da {current_start} a {current_end}... ", end="", flush=True)
+
+        if filepath.exists():
+            print("già presente")
+        else:
+            success = False
+            # Meccanismo di Exponential Backoff in caso di API down
+            for attempt, backoff in enumerate([5, 10, 20]):
+                try:
+                    ts = TimeSeries.fetch_open_data(
+                        args.detector,
+                        current_start,
+                        current_end,
+                        verbose=False,
+                        cache=True,
+                    )
+                    # Scriviamo in hdf5.gwosc format nativo come fa il main.py
+                    ts.write(filepath, format="hdf5.gwosc")
+                    print("OK")
+                    success = True
+                    break
+                except Exception as e:
+                    if attempt < 2:
+                        print(f"ERRORE. Riprovo in {backoff}s... ", end="", flush=True)
+                        time.sleep(backoff)
+                    else:
+                        print(f"FALLITO ({str(e)})")
+            
+            if not success:
+                print(f"Salto il blocco {block_num} a causa di errori persistenti.")
+
+        current_start = current_end
+        block_num += 1
+
+    print("Download completato.")
 
 if __name__ == "__main__":
     main()

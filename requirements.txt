@@ -54,4 +54,4 @@ pre-commit>=3.6
 requests>=2.31.0
 
 # --- GUI ---
-Gooey>=1.2.0a0
+#Gooey>=1.2.0a0
