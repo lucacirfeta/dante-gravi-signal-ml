@@ -19,7 +19,7 @@
 
 This pipeline performs **unsupervised anomaly detection** on freshly released
 [O4a gravitational-wave data](https://gwosc.org/) (GWTC-4.0, 2024) to
-surface **candidate novel glitch classes** and unknown signal morphologies not
+perform **unsupervised morphological characterization** of O4a glitch activity not
 yet catalogued by the community — without labeled training data and without GPU.
 
 ### Why is this needed?
@@ -336,6 +336,17 @@ is validated end-to-end and ready for extended analysis.
 - Stability analysis: ARI mean=0.9997 ± 0.0003 across 21 hyperparameter configurations
 - **L1 note:** grayscale ARI = 0.377 — L1 clustering shows partial dependence on
   rendering statistics; physical interpretation requires further investigation
+
+**Known methodological limitations:**
+- UMAP distorts global distances to preserve local structure — anomalous
+  clusters separated by UMAP may reflect preprocessing artifacts, not distinct
+  physical morphologies. Ablation ARI > 0.999 partially mitigates this concern.
+- DINOv2 is trained on natural images; transfer to GW spectrograms is assumed
+  but not yet formally validated for this domain.
+- Standard Q-transform (qrange=[4,64]) may miss fast narrowband or slow
+  broadband structures — Multi-Q analysis (Phase 5) addresses this.
+- L1 clustering shows partial rendering dependence (grayscale ARI=0.377);
+  physical interpretation of L1 clusters requires further validation.
 ---
 
 ## 🧪 Running Tests
@@ -377,6 +388,7 @@ gravi-signal-ml/
 │   └── utils.py                      # Config · logging · GPS conversion · normalization
 │   ├── ablation.py                   # Ablation study — ARI vs preprocessing variants
 │   ├── stability.py                  # Stability analysis — ARI across hyperparameter runs
+│   ├── multiq_encoder.py             # Multi-Q DINOv2 encoder (3×384 = 1152-dim)
 │   ├── timeslide.py                  # Time-slide background estimation
 ├── results/
 │   └── figures/                      # Committed: UMAP plots + anomalous contact sheets
@@ -387,7 +399,7 @@ gravi-signal-ml/
 │   └── IMPL.md                       # Implementation notes
 ├── notebooks/                        # Exploratory Jupyter notebooks
 ├── tests/                            # Pytest suite (synthetic data, mocked network)
-├── main.py                           # CLI entry point (16 subcommands)
+├── main.py  # CLI entry point (19 subcommands, including experimental multi-Q)
 ├── config.yaml                       # Central configuration (all parameters)
 ├── CLI_REFERENCE.md                  # Complete CLI reference (auto-generated)
 ├── requirements.txt                  # Pinned dependencies
@@ -410,7 +422,7 @@ gravi-signal-ml/
 | **Phase 3.5** | Ablation study + stability analysis (ARI-based robustness)  | ✅ Complete                         |
 | **Phase 3.6** | Incremental scan (cache GWOSC + skip existing spectrograms) | ✅ Complete                         |
 | **Phase 3.7** | Colormap migration (`viridis` → `cividis`) & Reprocessing   | ✅ Complete                         |
-| **Phase 4**   | Extended scan 72h+ + timeslide background validation        | ✅ Complete                         |
+| **Phase 4**   | Extended scan 72h+ + timeslide background validation        | 🔄 Complete                         |
 | **Phase 5**   | Novel candidate reporting + community contribution          | 🔲 Planned                         |
 
 ---

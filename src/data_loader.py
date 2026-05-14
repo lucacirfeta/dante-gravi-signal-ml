@@ -136,6 +136,12 @@ def fetch_o4a_segments(
 
     offset_seconds = int(gps_offset_hours * 3600)
     scan_start = _O4A_START + offset_seconds
+    
+    # Allineiamo lo start al multiplo del segment_length per garantire che
+    # nessun segmento scavalchi i confini dei file GWOSC (multipli di 4096).
+    # (Poiché 4096 è multiplo di 32, allineando a 32 evitiamo il bug).
+    scan_start = ((scan_start + segment_length - 1) // segment_length) * segment_length
+    
     total_seconds = int(duration_hours * 3600)
     scan_end = min(scan_start + total_seconds, _O4A_END)
 
@@ -185,7 +191,9 @@ def generate_segments_from_gps_range(
         )
 
     segments: list[tuple[int, int]] = []
-    current = gps_start
+    # Allineiamo il primo segmento per non attraversare i confini di 4096s
+    current = ((gps_start + segment_length - 1) // segment_length) * segment_length
+    
     while current + segment_length <= gps_end:
         segments.append((current, current + segment_length))
         current += segment_length
