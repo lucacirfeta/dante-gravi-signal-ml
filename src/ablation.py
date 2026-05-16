@@ -93,6 +93,7 @@ def run_ablation_study(
     cluster_cfg: dict,
     output_dir: Path,
     session_id: str,
+    detector: str = "H1",
 ) -> None:
     """Run ablation study across different conditions and compare with baseline.
     
@@ -103,6 +104,7 @@ def run_ablation_study(
         cluster_cfg: Dictionary with clustering configuration.
         output_dir: Directory to save the ablation report.
         session_id: Session identifier.
+        detector: Detector identifier (e.g. H1).
     """
     conditions = ["grayscale", "inverted", "shuffled-intensity", "random-baseline"]
     
@@ -110,6 +112,7 @@ def run_ablation_study(
     
     report = {
         "session_id": session_id,
+        "detector": detector,
         "n_samples": n_samples,
         "original_n_clusters": len(set(original_labels)) - (1 if -1 in original_labels else 0),
         "results": {}
@@ -163,7 +166,7 @@ def run_ablation_study(
     report["interpretation"] = interpretation
     
     # Save report
-    report_path = output_dir / "ablation_report.json"
+    report_path = output_dir / f"ablation_report_{detector}.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
         

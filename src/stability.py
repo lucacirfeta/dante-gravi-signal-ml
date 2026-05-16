@@ -209,7 +209,7 @@ def run_stability_analysis(
     # 8. Save report
     output_dir = Path(f"data/stability/{session_id}")
     output_dir.mkdir(parents=True, exist_ok=True)
-    report_path = output_dir / "stability_report.json"
+    report_path = output_dir / f"stability_report_{detector}.json"
 
     report = {
         "session_id": session_id,

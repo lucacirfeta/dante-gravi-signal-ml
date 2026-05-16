@@ -42,7 +42,7 @@ def fetch_strain_data(
     gps_start: int,
     gps_end: int,
     sample_rate: int = _SAMPLE_RATE,
-    cache_raw: bool = True,
+    cache_raw: bool = False,
 ) -> TimeSeries:
     """Fetch open strain data from GWOSC for a given detector and time range.
 

@@ -154,7 +154,7 @@ def run_timeslide(
     }
     
     output_dir.mkdir(parents=True, exist_ok=True)
-    out_file = output_dir / "timeslide_report.json"
+    out_file = output_dir / "timeslide_report_H1_L1.json"
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=4)
         

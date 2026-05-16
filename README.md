@@ -219,7 +219,7 @@ python main.py scan-extended --workers 6 --session-id <PREVIOUS_SESSION_ID>
 ```
 
 > [!TIP]
-> **Disk Space Optimization:** Use the `--no-cache-raw` flag to skip saving the raw HDF5 files to `data/raw`. This is useful if you only care about the spectrograms and want to save disk space.
+> **Disk Space Optimization:** By default, the pipeline **does not save** raw HDF5 files to `data/raw` to save disk space. If you need to cache raw data, use the `--no-cache-raw False` flag.
 
 
 📋 Note the **Session ID** printed at startup — you will need it for all subsequent steps.

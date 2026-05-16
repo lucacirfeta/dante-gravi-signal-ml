@@ -83,7 +83,7 @@ def batch_process_parallel(
     config: dict,
     workers: int = 1,
     fetch_workers: int = 4,
-    cache_raw: bool = True,
+    cache_raw: bool = False,
 ) -> tuple[int, int]:
     
     output_dir = Path(output_dir)

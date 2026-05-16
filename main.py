@@ -91,6 +91,18 @@ def _log_run_header(run: str, detector: str | None, session_id: str) -> None:
     logger.info("Run: %s | Detector: %s | Session: %s", run, det_str, session_id)
 
 
+def str2bool(v: str | bool) -> bool:
+    """Parse common boolean strings into actual bools."""
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
 def _find_last_gps(session_id: str, detector: str, run: str = "O4a") -> int | None:
     """Scan existing PNGs and return the highest GPS end-time, or None.
 
@@ -225,7 +237,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         cfg = load_config()  # noqa: F841 — needed by batch_process_parallel
         fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
         processed_count, _ = batch_process_parallel(
-            segments, detector, output_dir, cfg, workers=workers, fetch_workers=fetch_workers, cache_raw=args.cache_raw
+            segments, detector, output_dir, cfg, workers=workers, fetch_workers=fetch_workers, cache_raw=not args.no_cache_raw
         )
 
     total_duration = sum(end - start for start, end in segments)
@@ -297,7 +309,7 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
 
     resume = getattr(args, "resume", True)
     workers = getattr(args, "workers", None)
-    cache_raw = getattr(args, "cache_raw", True)
+    cache_raw = not getattr(args, "no_cache_raw", True)
 
     if workers is not None:
         if workers == 1 or workers % 2 != 0:
@@ -465,7 +477,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
 
     from src.parallel_processor import batch_process_parallel
     processed_count, skipped = batch_process_parallel(
-        segments, detectors, output_dir_base, cfg, workers=workers, fetch_workers=fetch_workers, cache_raw=args.cache_raw
+        segments, detectors, output_dir_base, cfg, workers=workers, fetch_workers=fetch_workers, cache_raw=not args.no_cache_raw
     )
 
     total_duration = sum(end - start for start, end in segments)
@@ -1088,7 +1100,8 @@ def cmd_ablation(args: argparse.Namespace) -> None:
         encoder=encoder,
         cluster_cfg=cluster_cfg,
         output_dir=output_dir,
-        session_id=actual_session_id
+        session_id=actual_session_id,
+        detector=detector or "H1"
     )
 
 
@@ -1521,11 +1534,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_scan.add_argument(
         "--no-cache-raw",
-        action="store_false",
-        dest="cache_raw",
-        help="Disable saving raw HDF5 files to data/raw during scan.",
+        type=str2bool,
+        default=True,
+        help="If True (default), disables saving raw HDF5 files to data/raw during scan. Set to False to enable.",
     )
-    p_scan.set_defaults(func=cmd_scan, cache_raw=True)
+    p_scan.set_defaults(func=cmd_scan)
     _add_run_argument(p_scan)
 
     # --- scan-extended (Phase 3.1) ---
@@ -1564,11 +1577,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_scan_ext.add_argument(
         "--no-cache-raw",
-        action="store_false",
-        dest="cache_raw",
-        help="Disable saving raw HDF5 files to data/raw during scan.",
+        type=str2bool,
+        default=True,
+        help="If True (default), disables saving raw HDF5 files to data/raw during scan. Set to False to enable.",
     )
-    p_scan_ext.set_defaults(func=cmd_scan_extended, cache_raw=True)
+    p_scan_ext.set_defaults(func=cmd_scan_extended)
     _add_run_argument(p_scan_ext)
 
     # --- last-gps ---
@@ -1636,9 +1649,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_fetch_raw.add_argument(
         "--no-cache-raw",
-        action="store_false",
-        dest="cache_raw",
-        help="Disabilita il salvataggio dei file HDF5 grezzi nella cartella output-dir.",
+        type=str2bool,
+        default=True,
+        help="If True (default), disables saving raw HDF5 files to data/raw. Set to False to enable.",
     )
     p_fetch_raw.add_argument(
         "--retry",

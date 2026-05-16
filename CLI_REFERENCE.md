@@ -55,7 +55,7 @@ Esegue la scansione dei segmenti per un **singolo rivelatore** in un periodo def
 - `--hours`: Ore di durata della scansione (solo per nuovi scan). *Default: `1.0`*.
 - `--workers`: Thread in parallelo. 1 = sequenziale. *Default: `1`*.
 - `--session-id`: ID sessione univoco (es. `20260510_143022`). *Default: auto-generato*.
-- `--no-cache-raw`: Flag. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`.
+- `--no-cache-raw`: Flag booleano. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`. *Default: `True`* (non salva). Impostare a `False` per attivare il salvataggio.
 
 ---
 
@@ -66,7 +66,7 @@ Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). A di
 - `--hours`: Override ore per rivelatore rispetto al config yaml (solo per nuovi scan).
 - `--workers`: Numero di worker (deve essere un **numero pari**, es. 2, 4, 6, 8). I worker vengono divisi equamente tra H1 e L1. *Default: `1` (sequenziale)*.
 - `--session-id`: ID sessione. *Default: auto-generato*.
-- `--no-cache-raw`: Flag. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`.
+- `--no-cache-raw`: Flag booleano. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`. *Default: `True`* (non salva). Impostare a `False` per attivare il salvataggio.
 
 ---
 
@@ -80,7 +80,7 @@ Tool per il download massivo di dati strain (GWOSC) in formato `.hdf5`. Supporta
 - `--output-dir`: Cartella output cache. *Default: `data/raw`*.
 - `--segment-duration`: Durata chunk in download (in secondi). *Default: `3600`*.
 - `--no-resume`: Flag. Disattiva il resume automatico.
-- `--no-cache-raw`: Flag. Esegue il fetch dei dati ma **non salva** i file HDF5 (utile per test o pipeline volatili).
+- `--no-cache-raw`: Flag booleano. Esegue il fetch dei dati ma **non salva** i file HDF5. *Default: `True`* (non salva). Impostare a `False` per attivare il salvataggio.
 - `--retry`: Flag. Abilita la logica di retry con backoff esponenziale.
 
 ---
