@@ -55,6 +55,7 @@ Esegue la scansione dei segmenti per un **singolo rivelatore** in un periodo def
 - `--hours`: Ore di durata della scansione (solo per nuovi scan). *Default: `1.0`*.
 - `--workers`: Thread in parallelo. 1 = sequenziale. *Default: `1`*.
 - `--session-id`: ID sessione univoco (es. `20260510_143022`). *Default: auto-generato*.
+- `--no-cache-raw`: Flag. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`.
 
 ---
 
@@ -65,6 +66,7 @@ Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). A di
 - `--hours`: Override ore per rivelatore rispetto al config yaml (solo per nuovi scan).
 - `--workers`: Numero di worker (deve essere un **numero pari**, es. 2, 4, 6, 8). I worker vengono divisi equamente tra H1 e L1. *Default: `1` (sequenziale)*.
 - `--session-id`: ID sessione. *Default: auto-generato*.
+- `--no-cache-raw`: Flag. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`.
 
 ---
 

@@ -42,6 +42,7 @@ def fetch_strain_data(
     gps_start: int,
     gps_end: int,
     sample_rate: int = _SAMPLE_RATE,
+    cache_raw: bool = True,
 ) -> TimeSeries:
     """Fetch open strain data from GWOSC for a given detector and time range.
 
@@ -128,12 +129,13 @@ def fetch_strain_data(
             f"[{gps_start}, {gps_end}]: {exc}"
         ) from exc
 
-    try:
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        ts.write(cache_file, format='hdf5')
-        logger.info("Saved raw data to cache: %s", cache_file.name)
-    except Exception as exc:
-        logger.warning("Failed to save raw data to cache %s: %s", cache_file.name, exc)
+    if cache_raw:
+        try:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            ts.write(cache_file, format='hdf5')
+            logger.info("Saved raw data to cache: %s", cache_file.name)
+        except Exception as exc:
+            logger.warning("Failed to save raw data to cache %s: %s", cache_file.name, exc)
 
     logger.info(
         "Fetched %s: %d samples @ %d Hz (%.1f s)",

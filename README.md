@@ -218,6 +218,10 @@ python main.py scan-extended --workers 6
 python main.py scan-extended --workers 6 --session-id <PREVIOUS_SESSION_ID>
 ```
 
+> [!TIP]
+> **Disk Space Optimization:** Use the `--no-cache-raw` flag to skip saving the raw HDF5 files to `data/raw`. This is useful if you only care about the spectrograms and want to save disk space.
+
+
 📋 Note the **Session ID** printed at startup — you will need it for all subsequent steps.
 
 Spectrograms are saved to `data/spectrograms/{run}/<SESSION_ID>/{detector}/`.

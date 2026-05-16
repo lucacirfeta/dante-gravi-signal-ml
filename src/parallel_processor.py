@@ -31,7 +31,7 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
     Autonomous worker: fetch + whiten + bandpass + Q-transform + save PNG.
     Receives only picklable primitives — safe for Windows spawn.
     """
-    gps_start, gps_end, detector, output_dir_str, config = args
+    gps_start, gps_end, detector, output_dir_str, config, cache_raw = args
     output_dir = Path(output_dir_str)
     
     filename = f"{detector}_{gps_start}_{gps_end}.png"
@@ -50,7 +50,8 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
         
         # Fetch
         ts = fetch_strain_data(detector, gps_start, gps_end,
-                               sample_rate=config.get('sample_rate', 4096))
+                               sample_rate=config.get('sample_rate', 4096),
+                               cache_raw=cache_raw)
         
         # Preprocess
         ts_w = whiten(ts)
@@ -82,6 +83,7 @@ def batch_process_parallel(
     config: dict,
     workers: int = 1,
     fetch_workers: int = 4,
+    cache_raw: bool = True,
 ) -> tuple[int, int]:
     
     output_dir = Path(output_dir)
@@ -133,7 +135,7 @@ def batch_process_parallel(
             else:
                 det_out_dir = output_dir
                 det_out_dir.mkdir(parents=True, exist_ok=True)
-            args_list.append((gps_start, gps_end, det, str(det_out_dir), preprocessing_config))
+            args_list.append((gps_start, gps_end, det, str(det_out_dir), preprocessing_config, cache_raw))
     
     saved = 0
     skipped = 0

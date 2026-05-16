@@ -225,7 +225,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         cfg = load_config()  # noqa: F841 — needed by batch_process_parallel
         fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
         processed_count, _ = batch_process_parallel(
-            segments, detector, output_dir, cfg, workers=workers, fetch_workers=fetch_workers
+            segments, detector, output_dir, cfg, workers=workers, fetch_workers=fetch_workers, cache_raw=args.cache_raw
         )
 
     total_duration = sum(end - start for start, end in segments)
@@ -465,7 +465,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
 
     from src.parallel_processor import batch_process_parallel
     processed_count, skipped = batch_process_parallel(
-        segments, detectors, output_dir_base, cfg, workers=workers, fetch_workers=fetch_workers
+        segments, detectors, output_dir_base, cfg, workers=workers, fetch_workers=fetch_workers, cache_raw=args.cache_raw
     )
 
     total_duration = sum(end - start for start, end in segments)
@@ -1519,7 +1519,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    p_scan.set_defaults(func=cmd_scan)
+    p_scan.add_argument(
+        "--no-cache-raw",
+        action="store_false",
+        dest="cache_raw",
+        help="Disable saving raw HDF5 files to data/raw during scan.",
+    )
+    p_scan.set_defaults(func=cmd_scan, cache_raw=True)
     _add_run_argument(p_scan)
 
     # --- scan-extended (Phase 3.1) ---
@@ -1556,7 +1562,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    p_scan_ext.set_defaults(func=cmd_scan_extended)
+    p_scan_ext.add_argument(
+        "--no-cache-raw",
+        action="store_false",
+        dest="cache_raw",
+        help="Disable saving raw HDF5 files to data/raw during scan.",
+    )
+    p_scan_ext.set_defaults(func=cmd_scan_extended, cache_raw=True)
     _add_run_argument(p_scan_ext)
 
     # --- last-gps ---
