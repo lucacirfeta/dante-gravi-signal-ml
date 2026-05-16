@@ -109,6 +109,26 @@ def normalize_spectrogram(arr: np.ndarray) -> np.ndarray:
     return ((arr - arr_min) / (arr_max - arr_min)).astype(np.float32)
 
 
+def enable_ansi_colors() -> None:
+    """Enable VT100 terminal support for Windows PowerShell/CMD.
+    
+    Ensures ANSI escape sequences (colors) work correctly on Windows.
+    """
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            # STD_OUTPUT_HANDLE = -11
+            # ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+            # ENABLE_PROCESSED_OUTPUT = 0x0001
+            # ENABLE_WRAP_AT_EOL_OUTPUT = 0x0002
+            handle = kernel32.GetStdHandle(-11)
+            mode = 0x0004 | 0x0001 | 0x0002
+            kernel32.SetConsoleMode(handle, mode)
+        except Exception:
+            # Fallback: if it fails, colors might just not show up
+            pass
+
 # ---------------------------------------------------------------------------
 # Structured logging
 # ---------------------------------------------------------------------------

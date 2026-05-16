@@ -33,6 +33,20 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger: logging.Logger = setup_logger(__name__)
 
+def _get_det_color(det: str) -> str:
+    """Return ANSI color code for a detector."""
+    colors = {
+        "H1": "\033[96m",  # Cyan
+        "L1": "\033[92m",  # Green
+        "V1": "\033[95m",  # Magenta
+        "TIMESLIDE": "\033[93m",  # Yellow
+    }
+    return colors.get(det.upper(), "\033[0m")
+
+def _reset_color() -> str:
+    """Return ANSI reset code."""
+    return "\033[0m"
+
 def _analyze_detector(
     det: str,
     session_id: str,
@@ -45,7 +59,10 @@ def _analyze_detector(
 ) -> tuple[str, dict, Path]:
     """Internal helper to run analysis for a single detector."""
     det = det.upper()
-    logger.info("=== Starting Full Analysis for %s ===", det)
+    color = _get_det_color(det)
+    reset = _reset_color()
+    
+    logger.info("%s=== Starting Full Analysis for %s ===%s", color, det, reset)
     
     det_report = {
         "session_id": session_id,
@@ -103,12 +120,12 @@ def _analyze_detector(
         
         step_start = datetime.now(timezone.utc).isoformat()
         if not output_path.exists():
-            logger.info("[%s] Step 0: Encoding spectrograms...", det)
+            logger.info("%s[%s]%s Step 0: Encoding spectrograms...", color, det, reset)
             encoder = DINOv2Encoder(batch_size=batch_size)
             encoder.extract_dataset(input_dir, output_path, batch_size)
             det_report["steps"]["encode"] = {"status": "OK", "timestamp": step_start}
         else:
-            logger.info("[%s] Step 0: Embeddings already exist. Skipping encode.", det)
+            logger.info("%s[%s]%s Step 0: Embeddings already exist. Skipping encode.", color, det, reset)
             det_report["steps"]["encode"] = {"status": "SKIPPED", "timestamp": step_start}
 
         # Load embeddings and metadata
@@ -118,7 +135,7 @@ def _analyze_detector(
             metadata = json.load(f)
 
         # Step 1: Cluster
-        logger.info("[%s] Step 1: Clustering...", det)
+        logger.info("%s[%s]%s Step 1: Clustering...", color, det, reset)
         step_start = datetime.now(timezone.utc).isoformat()
         cluster_cfg = cfg["clustering"]
         cluster_dir = Path(f"data/clusters/{run_lower}/{session_id}/{det.lower()}")
@@ -137,7 +154,7 @@ def _analyze_detector(
         }
 
         # Step 2: Morphcheck
-        logger.info("[%s] Step 2: Morphological cross-check...", det)
+        logger.info("%s[%s]%s Step 2: Morphological cross-check...", color, det, reset)
         step_start = datetime.now(timezone.utc).isoformat()
         morph_report_path = cluster_dir / "morphcheck_report.json"
         
@@ -179,11 +196,11 @@ def _analyze_detector(
                 "ambiguous": morph_summary["ambiguous"]
             }
         else:
-            logger.info("[%s] No anomalous clusters found. Skipping morphcheck.", det)
+            logger.info("%s[%s]%s No anomalous clusters found. Skipping morphcheck.", color, det, reset)
             det_report["steps"]["morphcheck"] = {"status": "SKIPPED", "timestamp": step_start}
 
         # Step 3: Ablation
-        logger.info("[%s] Step 3: Ablation study...", det)
+        logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
         step_start = datetime.now(timezone.utc).isoformat()
         ablation_dir = Path(f"data/ablation/{run_lower}/{session_id}")
         
@@ -214,7 +231,7 @@ def _analyze_detector(
             det_report["steps"]["ablation"] = {"status": "FAILED", "timestamp": step_start, "error": "Report not found"}
 
         # Step 4: Stability
-        logger.info("[%s] Step 4: Stability analysis...", det)
+        logger.info("%s[%s]%s Step 4: Stability analysis...", color, det, reset)
         step_start = datetime.now(timezone.utc).isoformat()
         
         run_stability_analysis(
@@ -332,7 +349,9 @@ def run_full_analysis(
     # 3. Timeslide (if H1 and L1 are both OK)
     if not skip_timeslide and "H1" in overall_status and "L1" in overall_status:
         if overall_status["H1"] == "OK" and overall_status["L1"] == "OK":
-            logger.info("=== Starting Timeslide Analysis (H1 + L1) ===")
+            ts_color = _get_det_color("TIMESLIDE")
+            reset = _reset_color()
+            logger.info("%s=== Starting Timeslide Analysis (H1 + L1) ===%s", ts_color, reset)
             step_start = datetime.now(timezone.utc).isoformat()
             
             try:

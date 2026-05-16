@@ -144,10 +144,18 @@ def run_morphological_crosscheck(
 
 def print_morphological_summary(summary: dict, detector: str | None = None) -> None:
     """Print human-readable table of crosscheck results."""
+    det_colors = {
+        "H1": "\033[96m",  # Cyan
+        "L1": "\033[92m",  # Green
+        "V1": "\033[95m",  # Magenta
+    }
+    color = det_colors.get(str(detector).upper(), "")
+    reset = "\033[0m" if color else ""
+
     det_str = f" ({detector})" if detector else ""
-    print(f"\n{'='*80}")
+    print(f"\n{color}{'='*80}")
     print(f"{'MORPHOLOGICAL CROSSCHECK SUMMARY' + det_str:^80}")
-    print(f"{'='*80}")
+    print(f"{'='*80}{reset}")
     
     header = f"{'File':<30} {'Cluster':<8} {'Status':<12} {'Nearest Class':<20} {'Sim':<5}"
     print(header)

@@ -321,10 +321,18 @@ def print_summary(result: dict, detector: str | None = None) -> None:
     anomalous = result["anomalous_clusters"]
     labels = result["labels"]
 
+    det_colors = {
+        "H1": "\033[96m",  # Cyan
+        "L1": "\033[92m",  # Green
+        "V1": "\033[95m",  # Magenta
+    }
+    color = det_colors.get(str(detector).upper(), "")
+    reset = "\033[0m" if color else ""
+
     det_str = f" ({detector})" if detector else ""
-    print("\n" + "=" * 60)
+    print("\n" + color + "=" * 60)
     print(f"  CLUSTERING SUMMARY{det_str}")
-    print("=" * 60)
+    print("=" * 60 + reset)
     print(f"  Total samples:    {len(labels)}")
     print(f"  Clusters found:   {stats['n_clusters']}")
     print(f"  Noise points:     {stats['n_noise']} ({stats['noise_ratio']:.1%})")

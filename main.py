@@ -46,7 +46,10 @@ from astropy.time import Time
 from src.data_loader import fetch_o4a_segments, fetch_strain_data
 from src.encoder import DINOv2Encoder
 from src.preprocessor import bandpass, batch_process, generate_qtransform, whiten
-from src.utils import load_config, setup_logger
+from src.utils import enable_ansi_colors, load_config, setup_logger
+
+# Enable ANSI escape sequences for Windows terminal
+enable_ansi_colors()
 
 logger = setup_logger("main", log_file=Path("logs/gravi-signal-ml.log"))
 
