@@ -73,6 +73,7 @@ Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). A di
 - `--full-analysis`: Flag booleano. Se impostato a `True`, avvia automaticamente l'intera pipeline di analisi (`full-analysis`) al termine della scansione. *Default: `False`*.
 - `--skip-timeslide`: Flag. Se la `full-analysis` automatica è attiva, salta l'analisi timeslide.
 - `--n-runs`: Numero di run per la stability analysis (se `full-analysis` è attiva). *Default: `20`*.
+- `--sequential`: Se `full-analysis` è attiva, esegue l'analisi dei detector in sequenza anziché in parallelo.
 
 ---
 
@@ -241,13 +242,14 @@ Utilizza un indice di riferimento (via in-domain o standard npz) per valutare i 
 ---
 
 ### 18. `full-analysis`
-Automatizza l'intero workflow di analisi in modo sequenziale per uno o più rivelatori. Esegue: Encode (se necessario), Clustering, Morphological Cross-check, Ablation Study, Stability Analysis e Time-slide (se applicabile).
+Automatizza l'intero workflow di analisi. Per impostazione predefinita, l'analisi di **H1 e L1 viene eseguita in parallelo** per massimizzare l'efficienza. Esegue: Encode (se necessario), Clustering, Morphological Cross-check, Ablation Study, Stability Analysis e Time-slide (se applicabile).
 
 - `--session-id` **(Richiesto)**: ID della sessione da analizzare.
 - `--detector`: Uno o più rivelatori da analizzare (es. `--detector H1 L1`). Se omesso, il comando identifica automaticamente i rivelatori presenti nella cartella della sessione.
 - `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
 - `--skip-timeslide`: Flag. Forza l'esclusione dell'analisi timeslide anche se H1 e L1 sono entrambi presenti.
 - `--n-runs`: Numero di run ripetuti per la stability analysis. *Default: `20`*.
+- `--sequential`: Forza l'esecuzione sequenziale dei detector (prima H1, poi L1) invece di quella parallela predefinita.
 
 > [!NOTE]
 > **Session Summary:** Il report generato include ora una sezione iniziale `session_summary` con statistiche descrittive del dataset analizzato (numero di spettrogrammi, intervallo GPS, durata totale e duty cycle), calcolate direttamente dai file PNG prima dell'encoding.

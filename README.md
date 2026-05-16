@@ -295,6 +295,8 @@ To automate the entire analysis pipeline (Level 1, 2, and 3 validation) for a se
 ```bash
 python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 --run O4a
 ```
+> [!TIP]
+> **Performance:** By default, detector analysis (H1/L1) runs in **parallel** to save time. If you experience resource issues, use the `--sequential` flag to run them one after the other.
 
 **Automatic trigger after scan:**
 ```bash

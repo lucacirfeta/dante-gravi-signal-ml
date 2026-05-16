@@ -499,7 +499,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             detectors=detectors,
             run=run,
             skip_timeslide=getattr(args, "skip_timeslide", False),
-            n_runs=getattr(args, "n_runs", 20)
+            n_runs=getattr(args, "n_runs", 20),
+            sequential=getattr(args, "sequential", False)
         )
 
 
@@ -1484,7 +1485,8 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
         detectors=detectors,
         run=run,
         skip_timeslide=skip_timeslide,
-        n_runs=n_runs
+        n_runs=n_runs,
+        sequential=getattr(args, "sequential", False)
     )
 
     if result["status"] == "FAILED":
@@ -1643,6 +1645,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=20,
         help="Number of stability runs if full-analysis is enabled. Default: 20.",
     )
+    p_scan_ext.add_argument(
+        "--sequential",
+        action="store_true",
+        help="If full-analysis is enabled, execute detector analysis sequentially.",
+    )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
     _add_run_argument(p_scan_ext)
 
@@ -1674,6 +1681,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=20,
         help="Number of runs for stability analysis. Default: 20.",
+    )
+    p_full.add_argument(
+        "--sequential",
+        action="store_true",
+        help="Execute detector analysis sequentially instead of in parallel.",
     )
     _add_run_argument(p_full)
     p_full.set_defaults(func=cmd_full_analysis)
