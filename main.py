@@ -237,13 +237,55 @@ def cmd_scan(args: argparse.Namespace) -> None:
     )
 
 
+def _fetch_single_block(detector: str, start: int, end: int, output_dir: Path, retry_delays: list[int], base_delay: float, cache_raw: bool) -> tuple[bool, str]:
+    import time
+    from gwpy.timeseries import TimeSeries
+
+    filename = f"{detector}_{start}_{end}.hdf5"
+    filepath = output_dir / filename
+
+    if cache_raw and filepath.exists():
+        return True, f"File {filename} already exists. Skipping."
+
+    success = False
+    for attempt, backoff in enumerate(retry_delays):
+        try:
+            while True:
+                time.sleep(base_delay)
+                try:
+                    ts = TimeSeries.fetch_open_data(
+                        detector,
+                        start,
+                        end,
+                        verbose=False,
+                        cache=True,
+                    )
+                    break
+                except Exception as inner_e:
+                    err_str = str(inner_e)
+                    if "429" in err_str or "Too Many Requests" in err_str:
+                        base_delay += 0.3
+                        time.sleep(1.0)
+                    else:
+                        raise inner_e
+
+            if cache_raw:
+                ts.write(filepath, format="hdf5")
+            success = True
+            return True, f"Saved {filename}" if cache_raw else f"Fetched {filename} (cache disabled)"
+        except Exception as e:
+            if attempt < len(retry_delays) - 1:
+                time.sleep(backoff)
+            else:
+                return False, f"Failed {filename}: {e}"
+    return False, f"Failed {filename}"
+
+
 def cmd_fetch_raw(args: argparse.Namespace) -> None:
     """Standalone downloader for raw GWOSC strain data."""
-    import time
-    from datetime import datetime, timezone
-    from gwpy.timeseries import TimeSeries
-    
-    detector: str = args.detector
+    import re
+    from concurrent.futures import ThreadPoolExecutor, wait
+
     hours: float = args.hours
     output_dir_str: str = args.output_dir
     segment_duration: int = args.segment_duration
@@ -254,21 +296,47 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     resume = getattr(args, "resume", True)
+    workers = getattr(args, "workers", None)
+    cache_raw = getattr(args, "cache_raw", True)
+
+    if workers is not None:
+        if workers == 1 or workers % 2 != 0:
+            logger.error("Errore: --workers deve essere un numero pari maggiore di 1 (es. 2, 4, 6, 8).")
+            sys.exit(1)
+        if workers > 8:
+            logger.error("Errore: il limite massimo è di 4 thread per detector (--workers 8).")
+            sys.exit(1)
+        detectors = ["H1", "L1"]
+        W = workers // 2
+    else:
+        if not args.detector:
+            logger.error("Errore: specificare --detector oppure usare --workers.")
+            sys.exit(1)
+        detectors = [args.detector]
+        W = 1
+
     current_start = None
 
-    if resume:
-        import re
-        pattern = re.compile(rf"^{detector}_(\d+)_(\d+)\.hdf5$")
-        max_end_gps = 0
-        for f in output_dir.glob("*.hdf5"):
-            m = pattern.match(f.name)
-            if m:
-                file_end = int(m.group(2))
-                if file_end > max_end_gps:
-                    max_end_gps = file_end
-        
-        if max_end_gps > 0:
-            current_start = max_end_gps
+    if resume and cache_raw:
+        # Trova max GPS per ciascun detector
+        max_ends = []
+        for det in detectors:
+            pattern = re.compile(rf"^{det}_(\d+)_(\d+)\.hdf5$")
+            max_end_gps = 0
+            for f in output_dir.glob("*.hdf5"):
+                m = pattern.match(f.name)
+                if m:
+                    file_end = int(m.group(2))
+                    if file_end > max_end_gps:
+                        max_end_gps = file_end
+            max_ends.append(max_end_gps)
+
+        # Se tutti i detector hanno almeno un file, prendiamo il minimo dei max GPS
+        if all(m > 0 for m in max_ends) and len(max_ends) > 0:
+            current_start = min(max_ends)
+            logger.info("Ripresa contemporanea dal GPS %d (minimo tra i detector)", current_start)
+        elif len(max_ends) == 1 and max_ends[0] > 0:
+            current_start = max_ends[0]
             logger.info("Ripresa dal GPS %d (ultimo file trovato)", current_start)
 
     if current_start is None:
@@ -283,86 +351,73 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
 
     end_gps = current_start + int(hours * 3600)
 
-    logger.info("=== FETCH-RAW: %s [%s] ===", detector, run)
+    logger.info("=== FETCH-RAW: %s [%s] ===", detectors, run)
     logger.info("Interval: %d to %d (%.1f hours)", current_start, end_gps, hours)
-
-
+    if not cache_raw:
+        logger.info("Cache raw disabled: data will be fetched but not saved.")
 
     total_blocks = (end_gps - current_start + segment_duration - 1) // segment_duration
     if total_blocks <= 0:
         logger.info("No data to download for the requested interval.")
         return
 
-    block_num = 1
+    retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
     base_delay = 0.3
 
-    while current_start < end_gps:
-        current_end = min(current_start + segment_duration, end_gps)
-        filename = f"{detector}_{current_start}_{current_end}.hdf5"
-        filepath = output_dir / filename
-
-        print(f"Blocco {block_num}/{total_blocks}: {detector} da {current_start} a {current_end}...", end=" ", flush=True)
-
-        if filepath.exists():
-            print("già presente")
-            logger.info("File %s already exists. Skipping.", filename)
-        else:
-            success = False
-            retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
-            for attempt, backoff in enumerate(retry_delays):
-                try:
-                    while True:
-                        time.sleep(base_delay)
-                        try:
-                            ts = TimeSeries.fetch_open_data(
-                                detector,
-                                current_start,
-                                current_end,
-                                verbose=False,
-                                cache=True,
-                            )
+    if workers is not None:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            block_num = 1
+            while current_start < end_gps:
+                futures = []
+                # Prepare batch of size W for each detector
+                for det in detectors:
+                    for i in range(W):
+                        s = current_start + i * segment_duration
+                        e = min(s + segment_duration, end_gps)
+                        if s >= end_gps:
                             break
-                        except Exception as inner_e:
-                            err_str = str(inner_e)
-                            if "429" in err_str or "Too Many Requests" in err_str:
-                                logger.warning("GWOSC 429 Too Many Requests. Increasing delay by 300ms and waiting 1s...")
-                                base_delay += 0.3
-                                time.sleep(1.0)
-                            else:
-                                raise inner_e
-
-                    ts.write(filepath, format="hdf5")
-                    print("OK")
-                    logger.info("Saved %s", filename)
-                    success = True
-                    break
-                except Exception as e:
-                    if attempt < len(retry_delays) - 1:
-                        logger.warning("Attempt %d failed for %s: %s. Retrying in %ds...", attempt + 1, filename, e, backoff)
-                        time.sleep(backoff)
+                        futures.append(executor.submit(_fetch_single_block, det, s, e, output_dir, retry_delays, base_delay, cache_raw))
+                
+                # Wait for all to finish
+                wait(futures)
+                
+                # Log results
+                for f in futures:
+                    ok, msg = f.result()
+                    if ok:
+                        logger.info(msg)
                     else:
-                        print("ERRORE")
-                        if getattr(args, "retry", False):
-                            logger.error("Failed to fetch %s after %d attempts: %s", filename, len(retry_delays), e)
-                        else:
-                            logger.error("Failed to fetch %s: %s", filename, e)
+                        logger.error(msg)
+                
+                current_start += W * segment_duration
+                block_num += W
+    else:
+        # Sequential logic
+        block_num = 1
+        while current_start < end_gps:
+            current_end = min(current_start + segment_duration, end_gps)
+            print(f"Blocco {block_num}/{total_blocks}: {detectors[0]} da {current_start} a {current_end}...", end=" ", flush=True)
+            ok, msg = _fetch_single_block(detectors[0], current_start, current_end, output_dir, retry_delays, base_delay, cache_raw)
+            if ok:
+                print("OK")
+                logger.info(msg)
+            else:
+                print("ERRORE")
+                logger.error(msg)
             
-            if not success:
-                logger.error("Skipping block %d due to errors.", block_num)
-
-        current_start = current_end
-        block_num += 1
+            current_start = current_end
+            block_num += 1
 
     print("Download completato.")
 
 
 def cmd_scan_extended(args: argparse.Namespace) -> None:
-    """Run an extended scan of H1 + L1 sequentially.
+    """Run an extended scan of H1 + L1 contemporaneously.
 
     Incremental mode (automatic):
-        When ``--session-id`` is provided and a detector directory already
-        contains spectrograms, the scan for that detector resumes from
-        the highest GPS end-time found in the filenames.
+        When ``--session-id`` is provided and detector directories already
+        contain spectrograms, the scan resumes from the minimum highest GPS
+        end-time found across the detectors to ensure strict alignment.
     """
     from src.data_loader import generate_segments_from_gps_range
 
@@ -381,60 +436,46 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     _log_run_header(run, None, session_id)
     logger.info("=== SCAN-EXTENDED: %s [%s], %d h per detector ===", detectors, run, hours)
 
-    totals: dict[str, int] = {}
+    if workers == 1 or workers % 2 != 0:
+        logger.error("Errore: per scan-extended parallelo --workers deve essere un numero pari maggiore di 1 (es. 2, 4, 6, 8).")
+        sys.exit(1)
 
-    for det in detectors:
-        # --- Incremental logic per detector --------------------------------
-        last_gps: int | None = None
-        if explicit_session:
-            last_gps = _find_last_gps(session_id, det, run=run)
+    # Trova il min max_gps tra i detector per un resume condiviso
+    last_gps_list = []
+    if explicit_session:
+        for det in detectors:
+            lgps = _find_last_gps(session_id, det, run=run)
+            last_gps_list.append(lgps if lgps is not None else 0)
 
-        if last_gps is not None:
-            start_gps = last_gps
-            end_gps = last_gps + int(hours * 3600)
-            logger.info(
-                "Resuming session %s / %s from GPS %d (+%.1fh)",
-                session_id, det, last_gps, hours,
-            )
-            segments = generate_segments_from_gps_range(start_gps, end_gps)
-        else:
-            # Fresh scan — use start_date from run_config
-            start_gps = _run_start_gps(run, cfg)
-            end_gps = start_gps + int(hours * 3600)
-            logger.info("--- Scanning %s [%s]: %d h ---", det, run, hours)
-            segments = generate_segments_from_gps_range(start_gps, end_gps)
+    start_gps = _run_start_gps(run, cfg)
 
-        if not segments:
-            logger.warning("No segments for %s — skipping.", det)
-            totals[det] = 0
-            continue
+    if explicit_session and any(g > 0 for g in last_gps_list):
+        start_gps = min(g for g in last_gps_list if g > 0)
+        logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, start_gps)
 
-        # Output directory — isolated by run and session_id
-        output_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{det}")
-        logger.info("Output dir: %s", output_dir)
+    end_gps = start_gps + int(hours * 3600)
+    segments = generate_segments_from_gps_range(start_gps, end_gps)
 
-        # Run batch processing
-        if workers == 1:
-            saved_paths = batch_process(segments, det, output_dir)
-            processed_count = len(saved_paths)
-        else:
-            from src.parallel_processor import batch_process_parallel
-            processed_count, _ = batch_process_parallel(
-                segments, det, output_dir, cfg, workers=workers, fetch_workers=fetch_workers
-            )
+    if not segments:
+        logger.warning("Nessun segmento trovato per la finestra temporale richiesta.")
+        sys.exit(0)
 
-        total_duration = sum(end - start for start, end in segments)
-        logger.info(
-            "%s scan complete: %d processed, %d skipped, %.1f h scanned",
-            det,
-            processed_count,
-            len(segments) - processed_count,
-            total_duration / 3600,
-        )
-        totals[det] = processed_count
+    output_dir_base = Path(f"data/spectrograms/{run_lower}/{session_id}")
+    logger.info("Output dir base: %s", output_dir_base)
 
-    parts = " ".join(f"{d}={n}" for d, n in totals.items())
-    print(f"Extended scan complete: {parts} spectrograms saved.")
+    from src.parallel_processor import batch_process_parallel
+    processed_count, skipped = batch_process_parallel(
+        segments, detectors, output_dir_base, cfg, workers=workers, fetch_workers=fetch_workers
+    )
+
+    total_duration = sum(end - start for start, end in segments)
+    logger.info(
+        "Extended scan complete: %d saved, %d skipped, %.1f h scanned per detector",
+        processed_count,
+        skipped,
+        total_duration / 3600,
+    )
+    print(f"Extended scan complete: {processed_count} saved, {skipped} skipped.")
 
 
 def cmd_last_gps(args: argparse.Namespace) -> None:
@@ -1547,9 +1588,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_fetch_raw.add_argument(
         "--detector",
         type=str,
-        required=True,
+        default=None,
         choices=["H1", "L1", "V1"],
-        help="Detector identifier.",
+        help="Detector identifier. Opzionale se si usa --workers.",
+    )
+    p_fetch_raw.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help="Numero di worker totali da suddividere tra H1 e L1. Deve essere pari (es. 2, 4, 6, 8).",
     )
     p_fetch_raw.add_argument(
         "--hours",
@@ -1574,6 +1621,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_false",
         dest="resume",
         help="Disable automatic resume from existing files.",
+    )
+    p_fetch_raw.add_argument(
+        "--no-cache-raw",
+        action="store_false",
+        dest="cache_raw",
+        help="Disabilita il salvataggio dei file HDF5 grezzi nella cartella output-dir.",
     )
     p_fetch_raw.add_argument(
         "--retry",

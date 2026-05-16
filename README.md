@@ -185,20 +185,29 @@ to reconstruct all paths in subsequent commands.
 
 Edit `config.yaml` to set scan duration and other parameters before starting.
 
-#### Step 1 — Scan
+#### Step 1 — Scan (Data Acquisition Strategies)
 
-You can choose between a manual scan of a single detector or an automated extended scan.
+The pipeline supports two distinct scientific strategies for data acquisition depending on your objective:
 
+**Mode A — Independent Scans (Single Detector)**
+- **Goal:** Independent morphological discovery for each detector.
+- **Approach:** Each detector is analyzed during its optimal observing period (e.g., high duty cycle, high stability). The anomalous clusters found are independent morphological candidates and do not require temporal coincidence.
+- **Command:** Use the `scan` command to specify custom durations and runs for a single instrument.
 ```bash
-# AUTOMATED: H1 + L1 together, duration from config.yaml (defaults to O4a)
-python main.py scan-extended --workers 6
-
-# MANUAL: Custom duration for a specific detector and run
-python main.py scan --detector H1 --hours 72 --workers 6 --run O3a
+python main.py scan --detector H1 --hours 72 --workers 6 --run O4a
+python main.py scan --detector L1 --hours 48 --workers 6 --run O3b
 ```
 
-> [!TIP]
-> **Which one to use?** Use `scan-extended` for production runs to process both main detectors automatically. Use `scan` for testing or when you need data from a single specific instrument (like V1).
+**Mode B — Coincident Scans (Cross-Detector)**
+- **Goal:** Cross-detector validation to exclude local instrumental artifacts.
+- **Approach:** H1 and L1 are scanned over the *exact same time window*. If a novel anomalous cluster appears independently on both H1 and L1 during the same period, it is significantly less likely to be a local environmental or instrumental artifact.
+- **Command:** Use the `scan-extended` command to process both main detectors **contemporaneously**.
+```bash
+python main.py scan-extended --workers 6
+```
+
+> [!IMPORTANT]
+> **Synchronized Parallelism:** For `scan-extended`, the `--workers` parameter must be an **even number** (e.g. 2, 4, 6, 8). The pipeline will automatically divide the workers between H1 and L1, processing the same time window in parallel to ensure perfect temporal alignment.
 
 **Incremental Mode:** To resume an interrupted scan or append more data, simply provide the same `--session-id`. The pipeline will automatically detect the highest GPS end-time of existing spectrograms and resume from there.
 
@@ -251,8 +260,33 @@ python main.py cluster --session-id <SESSION_ID> --detector L1 --run O4a
 - `umap_visualization.png` — 2D colored scatter plot with anomalous clusters marked ⭐
 - `cluster_gallery/cluster_N/contact_sheet.png` — 3×3 grids of representative spectrograms
 
-If anomalous morphologies appear **independently on both H1 and L1**, instrument-local
-explanations are significantly weakened — a key scientific requirement before any claim.
+> [!TIP]
+> **Cross-Detector Validation:** If you used **Mode B (Coincident Scans)** and an anomalous morphology appears **independently on both H1 and L1** in the same time window, instrument-local explanations are significantly weakened — a key scientific requirement before any claim.
+
+### The Three Levels of Glitch Validation
+
+Glitch validation in this pipeline is not a single step, but a rigorous **three-level process** designed to ensure scientific solidity before making any claims about novel morphological classes.
+
+| Level | Phase | Question it Answers | When to Execute |
+|-------|-------|---------------------|-----------------|
+| **1. Internal Robustness** | `ablation` + `stability` | Are the clusters real, or just artifacts of preprocessing/hyperparameters? | Immediately after clustering |
+| **2. Physical Significance** | `timeslide` | Do anomalies appear on both detectors simultaneously, or are they random coincidences? | After robustness checks pass |
+| **3. Morphological Classification** | `morphcheck` | Does this anomaly match a known Gravity Spy class, or is it truly NOVEL? | After timeslide (or in parallel) |
+
+**Validation Flowchart:**
+```text
+scan → encode → cluster
+                      ↓
+                 ABLATION ──── if it fails → STOP, clusters are not robust
+                      ↓
+                 STABILITY ─── if it fails → STOP, clusters are unstable
+                      ↓
+                 TIMESLIDE ─── if p > 0.05 → H1-L1 coincidences are not significant
+                      ↓
+                 MORPHCHECK ── NOVEL / KNOWN / AMBIGUOUS
+```
+> [!IMPORTANT]
+> **Scientific Rigor:** Only when all three levels of validation yield positive results can you scientifically claim the discovery of a truly NOVEL or exceptionally rare glitch class.
 
 #### Step 4 — Morphological Cross-Check
 
@@ -261,6 +295,9 @@ python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_h1.npy -
 
 python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_l1.npy --report data/clusters/<SESSION_ID>/l1/cluster_report.json --reference data/reference/indomain_index.npz --output data/clusters/<SESSION_ID>/l1/morphological_crosscheck_indomain.json --run O4a
 ```
+
+**Outputs:**
+- `morphological_crosscheck_indomain.json` — Detailed report classifying each anomalous spectrogram as NOVEL, KNOWN, or AMBIGUOUS with cosine similarity scores and nearest-neighbor classes.
 
 Each anomalous spectrogram receives one of three labels:
 
@@ -396,7 +433,6 @@ gravi-signal-ml/
 │   └── utils.py                      # Config · logging · GPS conversion · normalization
 │   ├── ablation.py                   # Ablation study — ARI vs preprocessing variants
 │   ├── stability.py                  # Stability analysis — ARI across hyperparameter runs
-│   ├── multiq_encoder.py             # Multi-Q DINOv2 encoder (3×384 = 1152-dim)
 │   ├── timeslide.py                  # Time-slide background estimation
 ├── results/
 │   └── figures/                      # Committed: UMAP plots + anomalous contact sheets
@@ -407,7 +443,7 @@ gravi-signal-ml/
 │   └── IMPL.md                       # Implementation notes
 ├── notebooks/                        # Exploratory Jupyter notebooks
 ├── tests/                            # Pytest suite (synthetic data, mocked network)
-├── main.py  # CLI entry point (19 subcommands, including experimental multi-Q)
+├── main.py                           # CLI entry point (18 subcommands)
 ├── config.yaml                       # Central configuration (all parameters)
 ├── CLI_REFERENCE.md                  # Complete CLI reference (auto-generated)
 ├── requirements.txt                  # Pinned dependencies

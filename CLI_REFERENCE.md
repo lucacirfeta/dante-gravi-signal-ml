@@ -59,25 +59,27 @@ Esegue la scansione dei segmenti per un **singolo rivelatore** in un periodo def
 ---
 
 ### 3. `scan-extended`
-Scansione estesa automatizzata di **tutti i rivelatori** definiti in `config.yaml` (solitamente `H1` e `L1`) in sequenza. Effettua scansioni continue e permette resume automatici indipendenti per ogni rivelatore.
+Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). A differenza del comando `scan`, questo comando sincronizza i due rivelatori: se interrotto, il resume riparte dal punto minimo comune ad entrambi per garantire un allineamento temporale perfetto.
 
 - `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
 - `--hours`: Override ore per rivelatore rispetto al config yaml (solo per nuovi scan).
-- `--workers`: Numero thread paralleli. *Default: `1`*.
+- `--workers`: Numero di worker (deve essere un **numero pari**, es. 2, 4, 6, 8). I worker vengono divisi equamente tra H1 e L1. *Default: `1` (sequenziale)*.
 - `--session-id`: ID sessione. *Default: auto-generato*.
 
 ---
 
 ### 4. `fetch-raw`
-Tool indipendente per il download massivo di dati strain (GWOSC) come file .hdf5, usabili poi come cache locale. Implementa un blocco anti-interruzione. Lavora a "blocchi" di durata: se lanciato da zero parte dall'inizio della run, se in modalità resume riprende dall'ultimo file scaricato e aggiunge le ore richieste.
+Tool per il download massivo di dati strain (GWOSC) in formato `.hdf5`. Supporta l'esecuzione parallela sincronizzata per H1 e L1. Se lanciato con `--workers`, suddivide il carico tra i due detector garantendo che l'intervallo temporale scaricato sia identico per entrambi.
 
-- `--detector` **(Richiesto)**: Rivelatore. Scelte: `H1`, `L1`, `V1`.
+- `--detector`: Rivelatore. Scelte: `H1`, `L1`, `V1`. *Opzionale se si usa --workers*.
+- `--workers`: Numero totale di worker. Deve essere un **numero pari** (2, 4, 6 o 8). Se usato, attiva il download parallelo H1+L1.
 - `--run`: Run osservativo base. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
-- `--hours`: Ore totali da scaricare (a partire dall'origine o dal punto di resume). *Default: `1.0`*.
+- `--hours`: Ore totali da scaricare. *Default: `1.0`*.
 - `--output-dir`: Cartella output cache. *Default: `data/raw`*.
 - `--segment-duration`: Durata chunk in download (in secondi). *Default: `3600`*.
-- `--no-resume`: Flag. Disattiva il check e resume dei file hdf5 già scaricati.
-- `--retry`: Flag. Abilita la logica di retry in caso di fallimento del download. *Default: disabilitato*.
+- `--no-resume`: Flag. Disattiva il resume automatico.
+- `--no-cache-raw`: Flag. Esegue il fetch dei dati ma **non salva** i file HDF5 (utile per test o pipeline volatili).
+- `--retry`: Flag. Abilita la logica di retry con backoff esponenziale.
 
 ---
 
@@ -225,5 +227,5 @@ Utilizza un indice di riferimento (via in-domain o standard npz) per valutare i 
 - `--embeddings` **(Richiesto)**: Path file Numpy base array.
 - `--report` **(Richiesto)**: Path cluster report JSON a cui si fa capo.
 - `--reference` **(Richiesto)**: Indice `.npz` di paragone generato su GravitySpy.
-- `--output` **(Richiesto)**: Path output.
+- `--output` **(Richiesto)**: Percorso del file JSON in uscita (es. `morphological_crosscheck_indomain.json`). Contiene la classificazione di ogni spettrogramma anomalo (NOVEL, KNOWN, AMBIGUOUS).
 - `--run`: Run associato. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.

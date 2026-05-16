@@ -77,7 +77,7 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
 
 def batch_process_parallel(
     segments: list[tuple[int, int]],
-    detector: str,
+    detector: str | list[str],
     output_dir: Path,
     config: dict,
     workers: int = 1,
@@ -85,12 +85,23 @@ def batch_process_parallel(
 ) -> tuple[int, int]:
     
     output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
     
     if workers <= 1:
         # Sequential fallback — unchanged behavior
         from src.preprocessor import batch_process
-        return batch_process(segments, detector, output_dir, config)
+        if isinstance(detector, list):
+            saved, skipped = 0, 0
+            for det in detector:
+                det_out = output_dir / det
+                det_out.mkdir(parents=True, exist_ok=True)
+                p_saved = batch_process(segments, det, det_out, config)
+                saved += len(p_saved)
+                skipped += len(segments) - len(p_saved)
+            return saved, skipped
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            saved_paths = batch_process(segments, detector, output_dir, config)
+            return len(saved_paths), len(segments) - len(saved_paths)
     
     # Embarrassingly parallel: each worker is fully autonomous
     cpu_workers = max(1, workers - 2)
@@ -111,10 +122,18 @@ def batch_process_parallel(
         'colormap': config.get('preprocessing', {}).get('colormap', 'cividis'),
     }
     
-    args_list = [
-        (gps_start, gps_end, detector, str(output_dir), preprocessing_config)
-        for gps_start, gps_end in segments
-    ]
+    detectors = detector if isinstance(detector, list) else [detector]
+    
+    args_list = []
+    for gps_start, gps_end in segments:
+        for det in detectors:
+            if len(detectors) > 1:
+                det_out_dir = output_dir / det
+                det_out_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                det_out_dir = output_dir
+                det_out_dir.mkdir(parents=True, exist_ok=True)
+            args_list.append((gps_start, gps_end, det, str(det_out_dir), preprocessing_config))
     
     saved = 0
     skipped = 0
@@ -124,10 +143,11 @@ def batch_process_parallel(
                    for args in args_list}
         
         from tqdm import tqdm
+        det_str = "+".join(detectors)
         for future in tqdm(
             as_completed(futures),
             total=len(futures),
-            desc=f"Processing {detector}",
+            desc=f"Processing {det_str}",
             unit="seg"
         ):
             try:
