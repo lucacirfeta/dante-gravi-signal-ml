@@ -233,6 +233,6 @@ def run_stability_analysis(
 
     # 9. Log requested summary
     print(
-        f"Stability ARI: mean={mean_ari:.2f} ± {std_ari:.2f} — "
+        f"Stability ARI ({detector}): mean={mean_ari:.2f} ± {std_ari:.2f} — "
         f"clusters {stable_anomalous_list} anomalous across {threshold_count}/{total_runs} runs"
     )

@@ -171,7 +171,7 @@ def run_ablation_study(
         json.dump(report, f, indent=2)
         
     logger.info("Ablation complete. Report saved to %s", report_path)
-    print(f"\nAblation Complete. Report saved to {report_path}")
+    print(f"\nAblation Complete ({detector}). Report saved to {report_path}")
     print(f"Interpretation: {interpretation}")
     for method, data in report["results"].items():
         print(f"  {method:<20s}: ARI = {data['ari']:.3f} | Clusters = {data['n_clusters']}")

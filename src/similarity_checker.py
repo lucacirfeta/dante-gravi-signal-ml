@@ -142,10 +142,11 @@ def run_morphological_crosscheck(
         
     return summary
 
-def print_morphological_summary(summary: dict) -> None:
+def print_morphological_summary(summary: dict, detector: str | None = None) -> None:
     """Print human-readable table of crosscheck results."""
+    det_str = f" ({detector})" if detector else ""
     print(f"\n{'='*80}")
-    print(f"{'MORPHOLOGICAL CROSSCHECK SUMMARY':^80}")
+    print(f"{'MORPHOLOGICAL CROSSCHECK SUMMARY' + det_str:^80}")
     print(f"{'='*80}")
     
     header = f"{'File':<30} {'Cluster':<8} {'Status':<12} {'Nearest Class':<20} {'Sim':<5}"

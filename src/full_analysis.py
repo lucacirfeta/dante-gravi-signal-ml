@@ -22,7 +22,7 @@ import numpy as np
 
 from src.clustering import run_full_pipeline
 from src.reporter import save_cluster_report, print_summary
-from src.similarity_checker import run_morphological_crosscheck
+from src.similarity_checker import run_morphological_crosscheck, print_morphological_summary
 from src.ablation import run_ablation_study
 from src.stability import run_stability_analysis
 from src.timeslide import run_timeslide
@@ -125,7 +125,7 @@ def _analyze_detector(
         
         result = run_full_pipeline(embeddings, cluster_cfg)
         save_cluster_report(result, metadata, cluster_dir, detector=det)
-        print_summary(result)
+        print_summary(result, detector=det)
         
         det_report["steps"]["cluster"] = {
             "status": "OK",
@@ -170,6 +170,7 @@ def _analyze_detector(
                 novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
                 consensus_threshold=sim_cfg.get("consensus_threshold", 0.60)
             )
+            print_morphological_summary(morph_summary, detector=det)
             det_report["steps"]["morphcheck"] = {
                 "status": "OK",
                 "timestamp": step_start,

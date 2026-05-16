@@ -310,18 +310,20 @@ def _make_contact_sheet(
 # ---------------------------------------------------------------------------
 
 
-def print_summary(result: dict) -> None:
+def print_summary(result: dict, detector: str | None = None) -> None:
     """Print a human-readable clustering summary to the console.
 
     Args:
         result: Dict returned by :func:`~src.clustering.run_full_pipeline`.
+        detector: Optional detector name to include in the header.
     """
     stats = result["hdbscan_stats"]
     anomalous = result["anomalous_clusters"]
     labels = result["labels"]
 
+    det_str = f" ({detector})" if detector else ""
     print("\n" + "=" * 60)
-    print("  CLUSTERING SUMMARY")
+    print(f"  CLUSTERING SUMMARY{det_str}")
     print("=" * 60)
     print(f"  Total samples:    {len(labels)}")
     print(f"  Clusters found:   {stats['n_clusters']}")
