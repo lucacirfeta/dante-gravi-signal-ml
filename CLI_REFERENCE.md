@@ -33,6 +33,9 @@ Questa guida fornisce un elenco completo e aggiornato di tutti i comandi disponi
    - [`validate-reference`](#16-validate-reference) — Valida indice con un evento reale
    - [`morphcheck`](#17-morphcheck) — Confronta anomalie con indice reference
 
+5. **Automazione End-to-End**
+   - [`full-analysis`](#18-full-analysis) — Pipeline automatizzata completa
+
 ---
 
 ## Acquisizione Dati
@@ -67,6 +70,9 @@ Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). A di
 - `--workers`: Numero di worker (deve essere un **numero pari**, es. 2, 4, 6, 8). I worker vengono divisi equamente tra H1 e L1. *Default: `1` (sequenziale)*.
 - `--session-id`: ID sessione. *Default: auto-generato*.
 - `--no-cache-raw`: Flag booleano. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`. *Default: `True`* (non salva). Impostare a `False` per attivare il salvataggio.
+- `--full-analysis`: Flag booleano. Se impostato a `True`, avvia automaticamente l'intera pipeline di analisi (`full-analysis`) al termine della scansione. *Default: `False`*.
+- `--skip-timeslide`: Flag. Se la `full-analysis` automatica è attiva, salta l'analisi timeslide.
+- `--n-runs`: Numero di run per la stability analysis (se `full-analysis` è attiva). *Default: `20`*.
 
 ---
 
@@ -231,3 +237,14 @@ Utilizza un indice di riferimento (via in-domain o standard npz) per valutare i 
 - `--reference` **(Richiesto)**: Indice `.npz` di paragone generato su GravitySpy.
 - `--output` **(Richiesto)**: Percorso del file JSON in uscita (es. `morphological_crosscheck_indomain.json`). Contiene la classificazione di ogni spettrogramma anomalo (NOVEL, KNOWN, AMBIGUOUS).
 - `--run`: Run associato. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
+
+---
+
+### 18. `full-analysis`
+Automatizza l'intero workflow di analisi in modo sequenziale per uno o più rivelatori. Esegue: Encode (se necessario), Clustering, Morphological Cross-check, Ablation Study, Stability Analysis e Time-slide (se applicabile).
+
+- `--session-id` **(Richiesto)**: ID della sessione da analizzare.
+- `--detector`: Uno o più rivelatori da analizzare (es. `--detector H1 L1`). Se omesso, il comando identifica automaticamente i rivelatori presenti nella cartella della sessione.
+- `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
+- `--skip-timeslide`: Flag. Forza l'esclusione dell'analisi timeslide anche se H1 e L1 sono entrambi presenti.
+- `--n-runs`: Numero di run ripetuti per la stability analysis. *Default: `20`*.

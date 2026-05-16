@@ -198,16 +198,11 @@ python main.py scan --detector H1 --hours 72 --workers 6 --run O4a
 python main.py scan --detector L1 --hours 48 --workers 6 --run O3b
 ```
 
-**Mode B — Coincident Scans (Cross-Detector)**
-- **Goal:** Cross-detector validation to exclude local instrumental artifacts.
-- **Approach:** H1 and L1 are scanned over the *exact same time window*. If a novel anomalous cluster appears independently on both H1 and L1 during the same period, it is significantly less likely to be a local environmental or instrumental artifact.
-- **Command:** Use the `scan-extended` command to process both main detectors **contemporaneously**.
-```bash
-python main.py scan-extended --workers 6
-```
-
 > [!IMPORTANT]
 > **Synchronized Parallelism:** For `scan-extended`, the `--workers` parameter must be an **even number** (e.g. 2, 4, 6, 8). The pipeline will automatically divide the workers between H1 and L1, processing the same time window in parallel to ensure perfect temporal alignment.
+
+> [!TIP]
+> **Automated Analysis:** You can automatically trigger the entire analysis pipeline (encoding, clustering, and all validation levels) after a scan by adding the `--full-analysis True` flag to your `scan-extended` or `scan` command.
 
 **Incremental Mode:** To resume an interrupted scan or append more data, simply provide the same `--session-id`. The pipeline will automatically detect the highest GPS end-time of existing spectrograms and resume from there.
 
@@ -291,6 +286,24 @@ scan → encode → cluster
 ```
 > [!IMPORTANT]
 > **Scientific Rigor:** Only when all three levels of validation yield positive results can you scientifically claim the discovery of a truly NOVEL or exceptionally rare glitch class.
+
+### 🤖 Automated Full Analysis (Recommended)
+
+To automate the entire analysis pipeline (Level 1, 2, and 3 validation) for a session, use the `full-analysis` command. This sequentially executes **encoding, clustering, morphological cross-checks, ablation studies, stability analysis, and time-slides**, producing a unified report.
+
+**Manual execution:**
+```bash
+python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 --run O4a
+```
+
+**Automatic trigger after scan:**
+```bash
+python main.py scan-extended --workers 6 --full-analysis True
+```
+
+This produces a unified JSON report at `data/reports/{run}/<SESSION_ID>/{detector}_full_report.json` summarizing the entire pipeline status.
+
+---
 
 #### Step 4 — Morphological Cross-Check
 
@@ -422,6 +435,7 @@ gravi-signal-ml/
 │   ├── clusters/<session_id>/        # Cluster reports + galleries
 │   ├── ablation/<session_id>/        # Ablation study results
 │   ├── stability/<session_id>/       # Robustness analysis (ARI metrics)
+│   ├── reports/<session_id>/         # Unified end-to-end analysis reports
 │   └── reference/                    # Static — Gravity Spy reference indexes
 ├── src/
 │   ├── data_loader.py                # GWOSC fetch + O4a segment management
@@ -438,6 +452,7 @@ gravi-signal-ml/
 │   ├── ablation.py                   # Ablation study — ARI vs preprocessing variants
 │   ├── stability.py                  # Stability analysis — ARI across hyperparameter runs
 │   ├── timeslide.py                  # Time-slide background estimation
+│   └── full_analysis.py              # End-to-end pipeline orchestrator
 ├── results/
 │   └── figures/                      # Committed: UMAP plots + anomalous contact sheets
 ├── docs/
@@ -453,25 +468,6 @@ gravi-signal-ml/
 ├── requirements.txt                  # Pinned dependencies
 └── .pre-commit-config.yaml           # ruff + mypy + file hygiene
 ```
-
----
-
-## 🗺️ Roadmap
-
-| Phase         | Description                                                 | Status                             |
-|---------------|-------------------------------------------------------------|------------------------------------|
-| **Phase 1**   | Preprocessing pipeline + GW150914 chirp validation          | ✅ Complete                         |
-| **Phase 2**   | DINOv2-Reg frozen encoder (384-dim embeddings)              | ✅ Complete                         |
-| **Phase 3**   | PCA + UMAP + HDBSCAN clustering                             | ✅ Complete                         |
-| **Phase 3.1** | Extended scan 48h H1+L1 + GPS cross-check                   | ✅ Complete                         |
-| **Phase 3.2** | Parallel pipeline (`--workers N`)                           | ✅ Complete                         |
-| **Phase 3.3** | Morphological similarity vs Gravity Spy training set        | ✅ Complete (domain gap documented) |
-| **Phase 3.4** | In-domain reference + session isolation                     | ✅ Complete                         |
-| **Phase 3.5** | Ablation study + stability analysis (ARI-based robustness)  | ✅ Complete                         |
-| **Phase 3.6** | Incremental scan (cache GWOSC + skip existing spectrograms) | ✅ Complete                         |
-| **Phase 3.7** | Colormap migration (`viridis` → `cividis`) & Reprocessing   | ✅ Complete                         |
-| **Phase 4**   | Extended scan 72h+ + timeslide background validation        | 🔄 Complete                         |
-| **Phase 5**   | Novel candidate reporting + community contribution          | 🔲 Planned                         |
 
 ---
 

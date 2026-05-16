@@ -14,6 +14,7 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
     crosscheck               — Gravity Spy cross-check of anomalous clusters (Phase 3.1)
     build-indomain-reference — Build in-domain reference from labeled GPS (Phase 3.4)
     validate-reference       — Validate reference with GW150914 sanity check (Phase 3.4)
+    full-analysis            — Automated end-to-end analysis (Cluster, Morph, Ablation, Stability, Timeslide)
 
 Usage:
     python main.py fetch                    --event GW150914
@@ -488,6 +489,18 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         total_duration / 3600,
     )
     print(f"Extended scan complete: {processed_count} saved, {skipped} skipped.")
+
+    # --- Automatic full analysis trigger ---
+    if getattr(args, "full_analysis", False):
+        from src.full_analysis import run_full_analysis
+        logger.info("Triggering automatic full analysis...")
+        run_full_analysis(
+            session_id=session_id,
+            detectors=detectors,
+            run=run,
+            skip_timeslide=getattr(args, "skip_timeslide", False),
+            n_runs=getattr(args, "n_runs", 20)
+        )
 
 
 def cmd_last_gps(args: argparse.Namespace) -> None:
@@ -1454,6 +1467,38 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_full_analysis(args: argparse.Namespace) -> None:
+    """Automate the full analysis pipeline for one or more detectors."""
+    from src.full_analysis import run_full_analysis
+
+    session_id = _resolve_session_id(args)
+    run = _resolve_run(args)
+    detectors = getattr(args, "detector", None)
+    skip_timeslide = getattr(args, "skip_timeslide", False)
+    n_runs = getattr(args, "n_runs", 20)
+
+    _log_run_header(run, str(detectors) if detectors else "AUTO", session_id)
+
+    result = run_full_analysis(
+        session_id=session_id,
+        detectors=detectors,
+        run=run,
+        skip_timeslide=skip_timeslide,
+        n_runs=n_runs
+    )
+
+    if result["status"] == "FAILED":
+        logger.error("Full analysis failed: %s", result.get("error"))
+        sys.exit(1)
+
+    print("\nFull Analysis Complete.")
+    for det, status in result["status"].items():
+        if det in ["H1", "L1", "V1", "timeslide"]:
+            print(f"  {det:<10}: {status}")
+            if det in result["reports"]:
+                print(f"    Report: {result['reports'][det]}")
+
+
 def _add_run_argument(parser: argparse.ArgumentParser) -> None:
     """Add the ``--run`` argument to a subparser."""
     parser.add_argument(
@@ -1581,8 +1626,57 @@ def build_parser() -> argparse.ArgumentParser:
         default=True,
         help="If True (default), disables saving raw HDF5 files to data/raw during scan. Set to False to enable.",
     )
+    p_scan_ext.add_argument(
+        "--full-analysis",
+        type=str2bool,
+        default=False,
+        help="If True, automatically runs the full analysis pipeline (clustering, morphcheck, ablation, stability, timeslide) after scanning.",
+    )
+    p_scan_ext.add_argument(
+        "--skip-timeslide",
+        action="store_true",
+        help="Skip time-slide analysis during automatic full-analysis.",
+    )
+    p_scan_ext.add_argument(
+        "--n-runs",
+        type=int,
+        default=20,
+        help="Number of stability runs if full-analysis is enabled. Default: 20.",
+    )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
     _add_run_argument(p_scan_ext)
+
+    # --- full-analysis ---
+    p_full = subparsers.add_parser(
+        "full-analysis",
+        help="Automated end-to-end analysis (Cluster, Morph, Ablation, Stability, Timeslide).",
+    )
+    p_full.add_argument(
+        "--session-id",
+        type=str,
+        required=True,
+        help="Session identifier to analyze.",
+    )
+    p_full.add_argument(
+        "--detector",
+        type=str,
+        nargs="+",
+        choices=["H1", "L1", "V1"],
+        help="One or more detectors to analyze. If omitted, auto-discovers from session data.",
+    )
+    p_full.add_argument(
+        "--skip-timeslide",
+        action="store_true",
+        help="Skip time-slide analysis even if H1 and L1 are both analyzed.",
+    )
+    p_full.add_argument(
+        "--n-runs",
+        type=int,
+        default=20,
+        help="Number of runs for stability analysis. Default: 20.",
+    )
+    _add_run_argument(p_full)
+    p_full.set_defaults(func=cmd_full_analysis)
 
     # --- last-gps ---
     p_last_gps = subparsers.add_parser(
