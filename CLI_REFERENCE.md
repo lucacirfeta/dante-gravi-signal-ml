@@ -248,3 +248,6 @@ Automatizza l'intero workflow di analisi in modo sequenziale per uno o più rive
 - `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
 - `--skip-timeslide`: Flag. Forza l'esclusione dell'analisi timeslide anche se H1 e L1 sono entrambi presenti.
 - `--n-runs`: Numero di run ripetuti per la stability analysis. *Default: `20`*.
+
+> [!NOTE]
+> **Session Summary:** Il report generato include ora una sezione iniziale `session_summary` con statistiche descrittive del dataset analizzato (numero di spettrogrammi, intervallo GPS, durata totale e duty cycle), calcolate direttamente dai file PNG prima dell'encoding.

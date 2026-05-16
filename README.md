@@ -301,7 +301,7 @@ python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 --run O4
 python main.py scan-extended --workers 6 --full-analysis True
 ```
 
-This produces a unified JSON report at `data/reports/{run}/<SESSION_ID>/{detector}_full_report.json` summarizing the entire pipeline status.
+This produces a unified JSON report at `data/reports/{run}/<SESSION_ID>/{detector}_full_report.json` summarizing the entire pipeline status, including a **session summary** with descriptive statistics (GPS range, duration, duty cycle).
 
 ---
 

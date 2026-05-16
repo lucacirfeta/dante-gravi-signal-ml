@@ -87,9 +87,50 @@ def run_full_analysis(
             "steps": {}
         }
         
+        # Descriptive Statistics
+        input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{det}")
+        png_files = list(input_dir.glob(f"{det}_*.png"))
+        gps_starts = []
+        gps_ends = []
+        for f in png_files:
+            parts = f.stem.split("_")
+            if len(parts) >= 3:
+                try:
+                    gps_starts.append(int(parts[1]))
+                    gps_ends.append(int(parts[2]))
+                except ValueError:
+                    continue
+        
+        if gps_starts:
+            g_start = min(gps_starts)
+            g_end = max(gps_ends)
+            n_specs = len(png_files)
+            duration_hours = round((g_end - g_start) / 3600, 1)
+            
+            # Formula: (n_spectrograms * 32) / (duration_hours * 3600) * 100
+            if duration_hours > 0:
+                duty_cycle = round((n_specs * 32) / (duration_hours * 3600) * 100, 1)
+            else:
+                duty_cycle = 0.0
+                
+            det_report["session_summary"] = {
+                "n_spectrograms": n_specs,
+                "gps_start": g_start,
+                "gps_end": g_end,
+                "duration_hours": duration_hours,
+                "duty_cycle_percent": duty_cycle
+            }
+        else:
+            det_report["session_summary"] = {
+                "n_spectrograms": 0,
+                "gps_start": 0,
+                "gps_end": 0,
+                "duration_hours": 0.0,
+                "duty_cycle_percent": 0.0
+            }
+
         try:
             # Step 0: Encode
-            input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{det}")
             output_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{det.lower()}.npy")
             
             step_start = datetime.now(timezone.utc).isoformat()
