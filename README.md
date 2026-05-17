@@ -305,6 +305,28 @@ python main.py scan-extended --workers 6 --full-analysis True
 
 This produces a unified JSON report at `data/reports/{run}/<SESSION_ID>/{detector}_full_report.json` summarizing the entire pipeline status, including a **session summary** with descriptive statistics (GPS range, duration, duty cycle).
 
+### 🔄 Continuous Synchronized Run Mode (`--continue-run`)
+
+To perform large-scale sequential analyses over consecutive time periods automatically, you can use the `--continue-run` option with either `full-analysis` or `scan-extended` (when `--full-analysis True` is specified).
+
+When specified, after completing the full analysis of the current session:
+1. It automatically searches for the highest processed GPS timestamps for H1 and L1 in the session folder.
+2. It calculates the synchronized resume time: `GPS_synchronized = min(ultimo_H1, ultimo_L1)`.
+3. It generates a new, collision-free `session-id`.
+4. It programmatically launches `scan-extended` on the new session starting at `GPS = GPS_synchronized + 1` for the duration configured in `config.yaml` (`run_config.<run>.hours_per_detector`).
+5. It runs `full-analysis` on the new session and repeats.
+
+This loop safely stops when it reaches `--max-iterations` (default `10`) or when it passes the `--stop-date` limit (ISO string or GPS time).
+
+**Examples:**
+```bash
+# Start from full-analysis and continue up to 5 iterations
+python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 --continue-run --max-iterations 5
+
+# Start from scan-extended, auto-analyze, and continue until a specific stop date
+python main.py scan-extended --workers 6 --full-analysis True --continue-run --stop-date "2023-06-01 12:00:00"
+```
+
 ---
 
 #### Step 4 — Morphological Cross-Check

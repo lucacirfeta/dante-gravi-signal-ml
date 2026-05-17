@@ -74,6 +74,10 @@ Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). A di
 - `--skip-timeslide`: Flag. Se la `full-analysis` automatica è attiva, salta l'analisi timeslide.
 - `--n-runs`: Numero di run per la stability analysis (se `full-analysis` è attiva). *Default: `20`*.
 - `--sequential`: Se `full-analysis` è attiva, esegue l'analisi dei detector in sequenza anziché in parallelo.
+- `--start-gps`: Fornisce un tempo GPS d'inizio fisso, bypassando la logica di resume automatico o del run start.
+- `--continue-run`: Flag. Attiva il ciclo continuo di scansione e analisi sincronizzata (loop di resume). Al termine dell'analisi completa corrente, genera una nuova sessione e lancia `scan-extended` a partire da `GPS = min(last_H1, last_L1) + 1` con la durata definita in `config.yaml`, per poi ri-analizzarla.
+- `--max-iterations`: Numero massimo di iterazioni per il ciclo continuo. *Default: `10`*.
+- `--stop-date`: Limite temporale (data ISO UTC o tempo GPS) oltre il quale interrompere il ciclo continuo.
 
 ---
 
@@ -250,6 +254,9 @@ Automatizza l'intero workflow di analisi. Per impostazione predefinita, l'analis
 - `--skip-timeslide`: Flag. Forza l'esclusione dell'analisi timeslide anche se H1 e L1 sono entrambi presenti.
 - `--n-runs`: Numero di run ripetuti per la stability analysis. *Default: `20`*.
 - `--sequential`: Forza l'esecuzione sequenziale dei detector (prima H1, poi L1) invece di quella parallela predefinita.
+- `--continue-run`: Flag. Attiva il ciclo continuo di scansione e analisi sincronizzata (loop di resume). Al termine dell'analisi completa corrente, genera una nuova sessione e lancia `scan-extended` a partire da `GPS = min(last_H1, last_L1) + 1` con la durata definita in `config.yaml`, per poi ri-analizzarla.
+- `--max-iterations`: Numero massimo di iterazioni per il ciclo continuo. *Default: `10`*.
+- `--stop-date`: Limite temporale (data ISO UTC o tempo GPS) oltre il quale interrompere il ciclo continuo.
 
 > [!NOTE]
 > **Session Summary:** Il report generato include ora una sezione iniziale `session_summary` con statistiche descrittive del dataset analizzato (numero di spettrogrammi, intervallo GPS, durata totale e duty cycle), calcolate direttamente dai file PNG prima dell'encoding.
