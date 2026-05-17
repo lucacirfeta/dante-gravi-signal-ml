@@ -71,7 +71,7 @@ def test_process_single_segment_returns_tuple(
     mock_whiten.return_value = MagicMock()
     mock_bandpass.return_value = MagicMock()
     
-    args = (1000, 1001, "H1", "dummy_dir", {})
+    args = (1000, 1001, "H1", "dummy_dir", {}, True)
     result = _process_single_segment(args)
     
     assert isinstance(result, tuple)
@@ -81,7 +81,7 @@ def test_process_single_segment_returns_tuple(
     assert result[0] == "H1_1000_1001"
     assert result[1] is True
     
-    mock_fetch.assert_called_once_with("H1", 1000, 1001, sample_rate=4096)
+    mock_fetch.assert_called_once_with("H1", 1000, 1001, sample_rate=4096, cache_raw=True)
     mock_whiten.assert_called_once()
     mock_bandpass.assert_called_once()
     mock_qtransform.assert_called_once()
@@ -98,7 +98,7 @@ def test_parallel_saved_skipped_sum(
     config = {}
     
     def mock_process_side_effect(args):
-        gps_start, gps_end, det, out, cfg = args
+        gps_start, gps_end, det, out, cfg, cache_raw = args
         success = gps_start not in [5, 9]
         return (f"{det}_{gps_start}_{gps_end}", success)
         

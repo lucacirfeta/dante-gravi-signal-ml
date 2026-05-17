@@ -21,7 +21,7 @@ from src.clustering import (
     run_pca,
     run_umap,
 )
-from src.utils import setup_logger
+from src.utils import setup_logger, session_path
 
 logger: logging.Logger = setup_logger(__name__)
 
@@ -32,6 +32,7 @@ def run_stability_analysis(
     n_runs: int = 20,
     session_id: str = "default",
     detector: str = "H1",
+    run: str = "O4a",
 ) -> None:
     """Run stability analysis and save report.
 
@@ -207,7 +208,10 @@ def run_stability_analysis(
     stable_anomalous_list = sorted(list(stable_anomalous_clusters))
 
     # 8. Save report
-    output_dir = Path(f"data/stability/{session_id}")
+    if session_id == "default":
+        output_dir = Path("data/stability")
+    else:
+        output_dir = session_path(run, session_id) / "stability"
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / f"stability_report_{detector}.json"
 

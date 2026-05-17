@@ -183,3 +183,17 @@ def setup_logger(
         logger.addHandler(file_handler)
 
     return logger
+
+
+def session_path(run: str, session_id: str) -> Path:
+    """Return the base path for a run session.
+
+    Args:
+        run: Observing run (e.g. O4a).
+        session_id: Session identifier.
+
+    Returns:
+        Path object pointing to the unified session directory.
+    """
+    return Path(f"data/runs/{run.lower()}/{session_id}")
+

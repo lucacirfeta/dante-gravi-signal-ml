@@ -46,7 +46,7 @@ from astropy.time import Time
 from src.data_loader import fetch_o4a_segments, fetch_strain_data
 from src.encoder import DINOv2Encoder
 from src.preprocessor import bandpass, batch_process, generate_qtransform, whiten
-from src.utils import enable_ansi_colors, load_config, setup_logger
+from src.utils import enable_ansi_colors, load_config, setup_logger, session_path
 
 # Enable ANSI escape sequences for Windows terminal
 enable_ansi_colors()
@@ -114,8 +114,7 @@ def _find_last_gps(session_id: str, detector: str, run: str = "O4a") -> int | No
     """
     import re
 
-    run_lower = run.lower()
-    spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+    spec_dir = session_path(run, session_id) / "spectrograms" / detector
     if not spec_dir.exists():
         return None
 
@@ -227,7 +226,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         sys.exit(0)
 
     # Output directory — isolated by run and session_id
-    output_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+    output_dir = session_path(run, session_id) / "spectrograms" / detector
     logger.info("Output dir: %s", output_dir)
 
     workers: int = args.workers
@@ -476,7 +475,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         logger.warning("Nessun segmento trovato per la finestra temporale richiesta.")
         sys.exit(0)
 
-    output_dir_base = Path(f"data/spectrograms/{run_lower}/{session_id}")
+    output_dir_base = session_path(run, session_id) / "spectrograms"
     logger.info("Output dir base: %s", output_dir_base)
 
     from src.parallel_processor import batch_process_parallel
@@ -526,7 +525,7 @@ def cmd_last_gps(args: argparse.Namespace) -> None:
 
     _log_run_header(run, detector, session_id)
 
-    spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+    spec_dir = session_path(run, session_id) / "spectrograms" / detector
 
     if not spec_dir.exists():
         logger.error("Spectrogram directory not found: %s", spec_dir)
@@ -633,7 +632,7 @@ def cmd_reprocess_spectrograms(args: argparse.Namespace) -> None:
     if args.input_dir:
         input_dir = Path(args.input_dir)
     elif session_id and detector:
-        input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+        input_dir = session_path(run, session_id) / "spectrograms" / detector
     else:
         logger.error(
             "Either --input-dir or both --session-id and --detector are required."
@@ -745,7 +744,7 @@ def cmd_encode(args: argparse.Namespace) -> None:
     if args.input_dir:
         input_dir = Path(args.input_dir)
     elif session_id and detector:
-        input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+        input_dir = session_path(run, session_id) / "spectrograms" / detector
     else:
         logger.error(
             "Either --input-dir or both --session-id and --detector are required."
@@ -755,9 +754,7 @@ def cmd_encode(args: argparse.Namespace) -> None:
     if args.output:
         output_path = Path(args.output)
     elif session_id and detector:
-        output_path = Path(
-            f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy"
-        )
+        output_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error(
             "Either --output or both --session-id and --detector are required."
@@ -795,9 +792,7 @@ def cmd_cluster(args: argparse.Namespace) -> None:
     if args.input:
         input_path = Path(args.input)
     elif session_id and detector:
-        input_path = Path(
-            f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy"
-        )
+        input_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error(
             "Either --input or both --session-id and --detector are required."
@@ -808,7 +803,7 @@ def cmd_cluster(args: argparse.Namespace) -> None:
         # Explicit --output was given — take priority
         output_dir = Path(args.output)
     elif session_id and detector:
-        output_dir = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}")
+        output_dir = session_path(run, session_id) / "clusters" / detector.lower()
     else:
         output_dir = Path("data/clusters/")
 
@@ -872,7 +867,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id and detector:
-        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
+        embeddings_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -880,7 +875,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.report:
         report_path = Path(args.report)
     elif session_id and detector:
-        report_path = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}/cluster_report.json")
+        report_path = session_path(run, session_id) / "clusters" / detector.lower() / "cluster_report.json"
     else:
         logger.error("Either --report or both --session-id and --detector are required.")
         sys.exit(1)
@@ -888,7 +883,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     elif session_id and detector:
-        output_dir = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}")
+        output_dir = session_path(run, session_id) / "clusters" / detector.lower()
     else:
         output_dir = Path("data/clusters/")
 
@@ -994,7 +989,7 @@ def cmd_stability(args: argparse.Namespace) -> None:
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id != "default" and detector:
-        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
+        embeddings_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -1021,6 +1016,7 @@ def cmd_stability(args: argparse.Namespace) -> None:
         n_runs=n_runs,
         session_id=session_id,
         detector=detector,
+        run=run,
     )
 
 
@@ -1042,7 +1038,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id and detector:
-        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
+        embeddings_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -1050,7 +1046,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.spectrogram_dir:
         spec_dir = Path(args.spectrogram_dir)
     elif session_id and detector:
-        spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+        spec_dir = session_path(run, session_id) / "spectrograms" / detector
     else:
         logger.error("Either --spectrogram-dir or both --session-id and --detector are required.")
         sys.exit(1)
@@ -1058,7 +1054,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     elif session_id and detector:
-        output_dir = Path(f"data/ablation/{run_lower}/{session_id}")
+        output_dir = session_path(run, session_id) / "ablation"
     else:
         output_dir = Path("data/ablation/")
 
@@ -1431,11 +1427,11 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
     if session_id:
         _log_run_header(run, None, session_id)
         # Auto-resolve paths if not provided
-        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_h1.json")
-        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_l1.json")
-        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else Path(f"data/clusters/{run_lower}/{session_id}/h1/cluster_report.json")
-        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else Path(f"data/clusters/{run_lower}/{session_id}/l1/cluster_report.json")
-        output_dir = Path(f"data/timeslide/{run_lower}/{session_id}")
+        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else session_path(run, session_id) / "embeddings" / f"{run_lower}_h1.json"
+        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
+        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
+        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
+        output_dir = session_path(run, session_id) / "timeslide"
     else:
         # Require explicit inputs
         if not (args.embeddings_h1 and args.embeddings_l1 and args.metadata_h1 and args.metadata_l1):

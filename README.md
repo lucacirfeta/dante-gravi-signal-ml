@@ -432,12 +432,14 @@ with `@pytest.mark.slow` are skipped by default for CI compatibility.
 gravi-signal-ml/
 ├── data/                             # Git-ignored data artifacts
 │   ├── raw/                          # .gwf / .hdf5 strain downloads
-│   ├── spectrograms/o4a/<session_id>/ # Q-transform PNGs, isolated per run
-│   ├── embeddings/<session_id>/      # DINOv2 .npy embedding arrays
-│   ├── clusters/<session_id>/        # Cluster reports + galleries
-│   ├── ablation/<session_id>/        # Ablation study results
-│   ├── stability/<session_id>/       # Robustness analysis (ARI metrics)
-│   ├── reports/<session_id>/         # Unified end-to-end analysis reports
+│   ├── runs/<run>/<session_id>/      # Complete run and session isolation
+│   │   ├── spectrograms/             # Q-transform PNGs (H1/L1)
+│   │   ├── embeddings/               # DINOv2 .npy embedding arrays and metadata .json
+│   │   ├── clusters/                 # Cluster reports, galleries, and morphcheck reports
+│   │   ├── reports/                  # Unified end-to-end analysis reports
+│   │   ├── ablation/                 # Ablation study results
+│   │   ├── stability/                # Robustness analysis (ARI metrics)
+│   │   └── timeslide/                # Time-slide background estimation reports
 │   └── reference/                    # Static — Gravity Spy reference indexes
 ├── src/
 │   ├── data_loader.py                # GWOSC fetch + O4a segment management
