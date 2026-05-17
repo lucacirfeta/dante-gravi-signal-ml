@@ -2,7 +2,7 @@
 
 # 🌊 gravi-signal-ml [![DOI](https://zenodo.org/badge/1231613598.svg)](https://doi.org/10.5281/zenodo.20121859)
 
-**Unsupervised Anomaly Detection for Gravitational-Wave Data**
+**Unsupervised Morphological Characterization of Gravitational-Wave Glitches**
 
 *Unsupervised morphological characterization of LIGO/Virgo O4a glitches using DINOv2 frozen features*
 
@@ -17,10 +17,14 @@
 
 ## 🎯 What This Project Does
 
-This pipeline performs **unsupervised anomaly detection** on freshly released
-[O2–O4a gravitational-wave data](https://gwosc.org/) to
-perform **unsupervised morphological characterization** of glitch activity not
-yet catalogued by the community — without labeled training data and without GPU.
+This pipeline performs **unsupervised morphological characterization** of glitch
+activity in [O2–O4a gravitational-wave data](https://gwosc.org/) — without
+labeled training data and without GPU.
+
+It clusters glitch spectrograms by visual morphology using frozen DINOv2 features,
+identifies statistically anomalous clusters, and cross-checks them against
+known Gravity Spy classes to assess whether they represent known or potentially
+uncharacterized glitch morphologies.
 
 ### Why is this needed?
 
@@ -35,19 +39,17 @@ for *known* problems:
 
 **What's missing** — and what this project provides:
 
-1. 🔍 **Novel glitch discovery** — detect unknown glitch classes without
-   pre-labeled training data (self-supervised, zero annotation cost)
+1. 🔍 **Unsupervised morphological grouping** — cluster glitch spectrograms
+   without pre-labeled training data (self-supervised, zero annotation cost)
 2. 🌐 **Cross-detector validation** — independent replication on H1 and L1
    to rule out instrument-local artefacts
-3. 🔬 **Morphological similarity search** — compare anomalies against the
-   full Gravity Spy O1–O3b training set using DINOv2 embedding space
-4. 📖 **Reproducible, open-source code** — most GW ML papers do not release
-   usable code; this project does, running on any laptop (CPU only)
+3. 🔬 **Morphological similarity search** — compare anomalous clusters against
+   the Gravity Spy training set using DINOv2 embedding space
+4. 📖 **Reproducible, open-source code** — runs on any laptop (CPU only)
 
 > **Note on Virgo (V1):** Virgo did not participate in O4a due to a commissioning
 > issue. It rejoined the network in O4b. This pipeline therefore targets H1
-> (Hanford) and L1 (Livingston) only, which operated with duty cycles of 67.5%
-> and 69% respectively during O4a (and similarly in other runs).
+> (Hanford) and L1 (Livingston) only.
 
 ---
 
@@ -66,6 +68,8 @@ Raw Strain Data (GWOSC O2–O4a)
 ┌─────────────────────┐
 │   Preprocessor      │  Whitening → Bandpass (20–2000 Hz) → Q-Transform
 │   (preprocessor.py) │  Parallel Q-transform: ProcessPoolExecutor
+│   (parallel_        │  Colormap: cividis (perceptually uniform)
+│    processor.py)    │
 └────────┬────────────┘
          │  256×256 PNG spectrograms
          ▼
@@ -79,16 +83,24 @@ Raw Strain Data (GWOSC O2–O4a)
 ┌─────────────────────┐
 │   Clustering        │  PCA(50D) → UMAP(10D, cosine, min_dist=0.0)
 │   (clustering.py)   │  → HDBSCAN (auto-scaled min_cluster_size)
-│                     │  → UMAP(2D) for visualization
+│   (reporter.py)     │  → UMAP(2D) for visualization
 └────────┬────────────┘
          │
          ▼
-┌─────────────────────┐
-│   Morphological     │  KNN cosine search against in-domain
-│   Cross-Check       │  reference index (Phase 3.4, recommended)
-│  (similarity_       │  or Gravity Spy training set (Phase 3.3)
-│   checker.py)       │  NOVEL / KNOWN / AMBIGUOUS per spectrogram
-└─────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│   Validation & Cross-Check                          │
+│                                                     │
+│   similarity_checker.py  — KNN cosine morphcheck    │
+│   ablation.py            — ARI vs perturbations     │
+│   stability.py           — ARI across hyperparams   │
+│   timeslide.py           — H1-L1 coincidence p-val  │
+│   full_analysis.py       — End-to-end orchestrator  │
+│                                                     │
+│   indomain_reference_    — In-domain reference from │
+│     builder.py             labeled GPS (Phase 3.4)  │
+│   reference_builder.py   — Gravity Spy tar.gz index │
+│   gravity_spy_checker.py — GPS-based DB query       │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -114,55 +126,39 @@ pip install -r requirements.txt
 pre-commit install          # Optional
 ```
 
-> **Note on GPU:** The pipeline runs fully on CPU. The RTX 5070 (Blackwell sm_120)
-> is not yet supported by PyTorch stable. Encoding 2600 spectrograms takes ~10 min on CPU — acceptable for batch workloads.
+> **Note on GPU:** The pipeline runs fully on CPU. Encoding ~7000 spectrograms
+> takes ~25 min on CPU — acceptable for batch workloads.
+
+---
+
+## 🖥️ Graphical User Interface (GUI)
+
+A Gooey-based wrapper is available for graphical configuration of all commands:
+
+```bash
+pip install Gooey>=1.2.0a0   # Not included in requirements.txt by default
+python gui.py
+```
 
 ---
 
 ## 🚀 Usage
 
-### Graphical User Interface (GUI)
+### ONE-TIME Setup Commands
 
-For those who prefer a graphical interface over the command line, a Gooey-based wrapper is available:
-
-```bash
-python gui.py
-```
-This opens a minimalist user interface where you can configure and run all the commands listed below without typing parameters manually.
-
-### Phase 1 — Fetch a Known Event (Proof of Concept) - ONE TIME
+#### 1. Validate the Preprocessing Pipeline
 
 ```bash
 python main.py fetch --event GW150914
 ```
 
 Downloads H1 strain data for GW150914, applies whitening + bandpass,
-and saves the Q-transform spectrogram to `data/spectrograms/GW150914_H1.png`.
-A visible chirp confirms the preprocessing pipeline is mathematically correct.
+and saves the Q-transform spectrogram. A visible chirp confirms the
+preprocessing pipeline is mathematically correct.
 
----
+#### 2. Build Reference Indexes
 
-### ONE-TIME — Build Reference Indexes
-
-#### Gravity Spy Out-of-Domain Reference
-
-> Download `trainingsetv1d1.tar.gz` (~5GB) from:
-> https://zenodo.org/records/1476551/files/trainingsetv1d1.tar.gz
-> and save to `data/reference/trainingsetv1d1.tar.gz`
-
-```bash
-python main.py build-reference --output data/reference/gravity_spy_index.npz --max-per-class 50
-```
-
-> **Note:** `trainingsetv1d1.h5` is **not used** — incompatible with h5py on Python 3.13.
-> Always use the `.tar.gz` approach.
-
-> **⚠️ Domain Gap Warning:** The Gravity Spy training images use different
-> Q-transform parameters, color normalization, and image dimensions than this
-> pipeline. This creates a systematic domain gap — use the in-domain reference
-> below for scientifically valid morphcheck results.
-
-#### In-Domain Reference (Recommended)
+##### In-Domain Reference (Recommended)
 
 Fetches labeled Gravity Spy glitch timestamps from Zenodo, downloads their
 strain from GWOSC, and processes them through **our** pipeline — ensuring
@@ -173,278 +169,233 @@ python main.py build-indomain-reference --output data/reference/indomain_index.n
 python main.py validate-reference --reference data/reference/indomain_index.npz --test-event GW150914
 ```
 
-✅ Validation passes if GW150914 maps to class `Chirp` with high cosine similarity.
+⚠️ **Requires ~2h of GWOSC downloads** for ~600 labeled glitch segments.
+
+✅ Validation passes if GW150914 maps to class `Chirp` with cosine similarity ≥ 0.99.
+
+##### Gravity Spy Out-of-Domain Reference (Not Recommended)
+
+> ⚠️ Download `trainingsetv1d1.tar.gz` (~5 GB) from:
+> https://zenodo.org/records/1476551/files/trainingsetv1d1.tar.gz
+> and save to `data/reference/trainingsetv1d1.tar.gz`
+
+```bash
+python main.py build-reference --output data/reference/gravity_spy_index.npz --max-per-class 50
+```
+
+> ⚠️ **Domain Gap Warning:** The Gravity Spy training images use different
+> Q-transform parameters, color normalization, and image dimensions than this
+> pipeline. Use the in-domain reference above for scientifically valid results.
 
 ---
 
 ### EVERY NEW RUN
 
-Each run is automatically isolated by a **session ID** (timestamp-based, e.g. `20260510_143022`),
-so multiple runs never overwrite each other. The session ID is printed at startup and used
-to reconstruct all paths in subsequent commands.
+Each run is automatically isolated by a **session ID** (timestamp-based, e.g.
+`20260510_143022`), so multiple runs never overwrite each other.
 
-Edit `config.yaml` to set scan duration and other parameters before starting.
+#### Step 1 — Data Acquisition
 
-#### Step 1 — Scan (Data Acquisition Strategies)
+**Recommended: Extended Scan (H1 + L1 synchronized)**
 
-The pipeline supports two distinct scientific strategies for data acquisition depending on your objective:
-
-**Mode A — Independent Scans (Single Detector)**
-- **Goal:** Independent morphological discovery for each detector.
-- **Approach:** Each detector is analyzed during its optimal observing period (e.g., high duty cycle, high stability). The anomalous clusters found are independent morphological candidates and do not require temporal coincidence.
-- **Command:** Use the `scan` command to specify custom durations and runs for a single instrument.
 ```bash
-python main.py scan --detector H1 --hours 72 --workers 6 --run O4a
-python main.py scan --detector L1 --hours 48 --workers 6 --run O3b
+python main.py scan-extended --workers 6 --run O4a
 ```
 
 > [!IMPORTANT]
-> **Synchronized Parallelism:** For `scan-extended`, the `--workers` parameter must be an **even number** (e.g. 2, 4, 6, 8). The pipeline will automatically divide the workers between H1 and L1, processing the same time window in parallel to ensure perfect temporal alignment.
+> `--workers` must be an **even number** (2, 4, 6, 8). Workers are split equally between H1 and L1.
 
-> [!TIP]
-> **Automated Analysis:** You can automatically trigger the entire analysis pipeline (encoding, clustering, and all validation levels) after a scan by adding the `--full-analysis True` flag to your `scan-extended` or `scan` command.
+**Single-detector scan:**
 
-**Incremental Mode:** To resume an interrupted scan or append more data, simply provide the same `--session-id`. The pipeline will automatically detect the highest GPS end-time of existing spectrograms and resume from there.
+```bash
+python main.py scan --detector H1 --hours 72 --workers 6 --run O4a
+```
 
-> [!IMPORTANT]
-> **Priority Note:** In resume mode, the pipeline ignores the `--hours` CLI flag and always reads the scan duration from `config.yaml` (`hours_per_detector`) to ensure session consistency.
+**Incremental mode** — resume an interrupted scan:
 
 ```bash
 python main.py scan-extended --workers 6 --session-id <PREVIOUS_SESSION_ID>
 ```
 
+> [!IMPORTANT]
+> In resume mode, `--hours` is ignored; duration comes from `config.yaml` (`hours_per_detector`).
+
 > [!TIP]
-> **Disk Space Optimization:** By default, the pipeline **does not save** raw HDF5 files to `data/raw` to save disk space. If you need to cache raw data, use the `--no-cache-raw False` flag.
+> By default, raw HDF5 files are **not saved** to disk. Use `--no-cache-raw False` to enable caching.
 
+📋 Note the **Session ID** printed at startup — needed for all subsequent steps.
 
-📋 Note the **Session ID** printed at startup — you will need it for all subsequent steps.
+#### Step 2 — Automated Full Analysis (Recommended)
 
-Spectrograms are saved to `data/spectrograms/{run}/<SESSION_ID>/{detector}/`.
+```bash
+python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 --run O4a
+```
+
+This sequentially executes: **encoding → clustering → morphcheck → ablation → stability → timeslide**, producing a unified report per detector at `data/runs/o4a/<SESSION_ID>/reports/<DET>_full_report.json`.
+
+> [!TIP]
+> Trigger automatically after scanning:
+> ```bash
+> python main.py scan-extended --workers 6 --full-analysis True
+> ```
+
+> [!TIP]
+> Use `--sequential` if you experience resource issues with parallel detector analysis.
+
+#### Continuous Run Mode
+
+```bash
+python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 \
+    --continue-run --max-iterations 5 --stop-date "2023-06-01 12:00:00"
+```
+
+This loop automatically creates new sessions and advances through the observing run.
+
+---
+
+### Manual Step-by-Step Analysis
+
+<details>
+<summary>Click to expand manual commands</summary>
 
 #### Step 2 — Feature Extraction (DINOv2 with Registers)
-
-**Why DINOv2-Reg and not SimCLR/MAE:**
-- SimCLR on GW waveforms: already published (2022)
-- Autoencoder anomaly detection on O3 glitches: already published (arXiv:2310.03453)
-- **DINOv2 frozen on GW spectrograms: not done — our contribution**
-- Register tokens (ICLR 2024) suppress feature map artefacts → cleaner clusters
-- No labeled data, no GPU training, reproducible on any laptop
 
 ```bash
 python main.py encode --session-id <SESSION_ID> --detector H1 --run O4a
 python main.py encode --session-id <SESSION_ID> --detector L1 --run O4a
 ```
 
-Loads DINOv2-Reg ViT-S/14 via `torch.hub` (~90 MB on first run) and saves
-a `(N, 384)` float32 embedding array + companion `.json` metadata.
-
-#### Step 3 — Clustering & Novel Glitch Discovery
-
-**Pipeline:** PCA(50D) → UMAP(10D, cosine, `min_dist=0.0`) → HDBSCAN → UMAP(2D) visualization
-
-Two UMAP passes are required:
-- **Clustering pass** (`min_dist=0.0`, 10D): tight packing for HDBSCAN density detection
-- **Visualization pass** (`min_dist=0.1`, 2D): readable scatter plot — never cluster on this
-
-HDBSCAN `min_cluster_size` is **auto-scaled** to 0.5% of N, ensuring comparable
-sensitivity across datasets of different sizes.
+#### Step 3 — Clustering & Anomaly Identification
 
 ```bash
 python main.py cluster --session-id <SESSION_ID> --detector H1 --run O4a
 python main.py cluster --session-id <SESSION_ID> --detector L1 --run O4a
 ```
 
-**Outputs:**
-- `cluster_report.json` — structured report with cluster sizes and anomaly flags
-- `umap_visualization.png` — 2D colored scatter plot with anomalous clusters marked ⭐
-- `cluster_gallery/cluster_N/contact_sheet.png` — 3×3 grids of representative spectrograms
+**Pipeline:** PCA(50D) → UMAP(10D, cosine, `min_dist=0.0`) → HDBSCAN → UMAP(2D) viz
 
-> [!TIP]
-> **Cross-Detector Validation:** If you used **Mode B (Coincident Scans)** and an anomalous morphology appears **independently on both H1 and L1** in the same time window, instrument-local explanations are significantly weakened — a key scientific requirement before any claim.
-
-### The Three Levels of Glitch Validation
-
-Glitch validation in this pipeline is not a single step, but a rigorous **three-level process** designed to ensure scientific solidity before making any claims about novel morphological classes.
-
-| Level | Phase | Question it Answers | When to Execute |
-|-------|-------|---------------------|-----------------|
-| **1. Internal Robustness** | `ablation` + `stability` | Are the clusters real, or just artifacts of preprocessing/hyperparameters? | Immediately after clustering |
-| **2. Physical Significance** | `timeslide` | Do anomalies appear on both detectors simultaneously, or are they random coincidences? | After robustness checks pass |
-| **3. Morphological Classification** | `morphcheck` | Does this anomaly match a known Gravity Spy class, or is it truly NOVEL? | After timeslide (or in parallel) |
-
-**Validation Flowchart:**
-```text
-scan → encode → cluster
-                      ↓
-                 ABLATION ──── if it fails → STOP, clusters are not robust
-                      ↓
-                 STABILITY ─── if it fails → STOP, clusters are unstable
-                      ↓
-                 TIMESLIDE ─── if p > 0.05 → H1-L1 coincidences are not significant
-                      ↓
-                 MORPHCHECK ── NOVEL / KNOWN / AMBIGUOUS
-```
-> [!IMPORTANT]
-> **Scientific Rigor:** Only when all three levels of validation yield positive results can you scientifically claim the discovery of a truly NOVEL or exceptionally rare glitch class.
-
-### 🤖 Automated Full Analysis (Recommended)
-
-To automate the entire analysis pipeline (Level 1, 2, and 3 validation) for a session, use the `full-analysis` command. This sequentially executes **encoding, clustering, morphological cross-checks, ablation studies, stability analysis, and time-slides**, producing a unified report.
-
-**Manual execution:**
-```bash
-python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 --run O4a
-```
-> [!TIP]
-> **Performance:** By default, detector analysis (H1/L1) runs in **parallel** to save time. If you experience resource issues, use the `--sequential` flag to run them one after the other.
-
-**Automatic trigger after scan:**
-```bash
-python main.py scan-extended --workers 6 --full-analysis True
-```
-
-This produces a unified JSON report at `data/reports/{run}/<SESSION_ID>/{detector}_full_report.json` summarizing the entire pipeline status, including a **session summary** with descriptive statistics (GPS range, duration, duty cycle).
-
-### 🔄 Continuous Synchronized Run Mode (`--continue-run`)
-
-To perform large-scale sequential analyses over consecutive time periods automatically, you can use the `--continue-run` option with either `full-analysis` or `scan-extended` (when `--full-analysis True` is specified).
-
-When specified, after completing the full analysis of the current session:
-1. It automatically searches for the highest processed GPS timestamps for H1 and L1 in the session folder.
-2. It calculates the synchronized resume time: `GPS_synchronized = min(ultimo_H1, ultimo_L1)`.
-3. It generates a new, collision-free `session-id`.
-4. It programmatically launches `scan-extended` on the new session starting at `GPS = GPS_synchronized + 1` for the duration configured in `config.yaml` (`run_config.<run>.hours_per_detector`).
-5. It runs `full-analysis` on the new session and repeats.
-
-This loop safely stops when it reaches `--max-iterations` (default `10`) or when it passes the `--stop-date` limit (ISO string or GPS time).
-
-**Examples:**
-```bash
-# Start from full-analysis and continue up to 5 iterations
-python main.py full-analysis --session-id <SESSION_ID> --detector H1 L1 --continue-run --max-iterations 5
-
-# Start from scan-extended, auto-analyze, and continue until a specific stop date
-python main.py scan-extended --workers 6 --full-analysis True --continue-run --stop-date "2023-06-01 12:00:00"
-```
-
----
+HDBSCAN `min_cluster_size` is auto-scaled to 0.5% of N.
 
 #### Step 4 — Morphological Cross-Check
 
 ```bash
-python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_h1.npy --report data/clusters/<SESSION_ID>/h1/cluster_report.json --reference data/reference/indomain_index.npz --output data/clusters/<SESSION_ID>/h1/morphological_crosscheck_indomain.json --run O4a
-
-python main.py morphcheck --embeddings data/embeddings/<SESSION_ID>/o4a_l1.npy --report data/clusters/<SESSION_ID>/l1/cluster_report.json --reference data/reference/indomain_index.npz --output data/clusters/<SESSION_ID>/l1/morphological_crosscheck_indomain.json --run O4a
+python main.py morphcheck \
+    --embeddings data/runs/o4a/<SESSION_ID>/embeddings/o4a_h1.npy \
+    --report data/runs/o4a/<SESSION_ID>/clusters/h1/cluster_report.json \
+    --reference data/reference/indomain_index.npz \
+    --output data/runs/o4a/<SESSION_ID>/clusters/h1/morphcheck_report.json
 ```
 
-**Outputs:**
-- `morphological_crosscheck_indomain.json` — Detailed report classifying each anomalous spectrogram as NOVEL, KNOWN, or AMBIGUOUS with cosine similarity scores and nearest-neighbor classes.
+Each anomalous spectrogram receives: **NOVEL** / **KNOWN** / **AMBIGUOUS**.
 
-Each anomalous spectrogram receives one of three labels:
-
-| Status        | Condition                              | Meaning                                          |
-|---------------|----------------------------------------|--------------------------------------------------|
-| **NOVEL**     | cosine sim < threshold                 | Not similar to any known class → novel candidate |
-| **KNOWN**     | sim ≥ threshold, label agreement ≥ 60% | Matches a known Gravity Spy class                |
-| **AMBIGUOUS** | sim ≥ threshold, agreement < 60%       | Visually similar but no clear class match        |
-
-#### Step 5 — Ablation Study (Robustness Check)
-
-Verify if the DINOv2+UMAP+HDBSCAN clustering is capturing true physical morphologies or just rendering artifacts (e.g. colormap, intensity, contrast). The ablation subcommand generates alternative embeddings using grayscale, inverted, and random-intensity spectrograms, as well as a random baseline, and computes the Adjusted Rand Index (ARI) against the original clusters.
+#### Step 5 — Ablation Study
 
 ```bash
 python main.py ablation --session-id <SESSION_ID> --detector H1 --run O4a
 ```
 
-If the `grayscale` ARI < 0.4, the pipeline warns of "preprocessing-dominant" behavior.
+Tests: grayscale, inverted, shuffled-intensity, random-baseline.
 
 #### Step 6 — Stability Analysis
-
-Measure the robustness of the clustering pipeline against variations in hyperparameters. The `stability` subcommand runs the clustering pipeline multiple times, applying random perturbations to the UMAP `n_neighbors` and HDBSCAN `min_cluster_size` parameters. It computes the pairwise Adjusted Rand Index (ARI) to evaluate consistency.
 
 ```bash
 python main.py stability --session-id <SESSION_ID> --detector H1 --n-runs 20 --run O4a
 ```
 
-Outputs a comprehensive `stability_report.json` with an $N \times N$ ARI matrix and flags clusters that are consistently anomalous across $\ge 80\%$ of runs.
-
-#### Step 7 — Time-slide Background Validation
-
-Estimate the statistical significance of anomalous cluster coincidences between H1 and L1 using time-slides to model the random background rate.
+#### Step 7 — Time-Slide Background Validation
 
 ```bash
 python main.py timeslide --session-id <SESSION_ID> --run O4a
 ```
 
-Calculates the zero-lag coincidences (±32s window) and compares it against 50 random L1 time shifts to produce an empirical p-value and z-score.
+50 random L1 time shifts, ±32s coincidence window, empirical p-value.
+
+</details>
+
+---
+
+### The Three Levels of Glitch Validation
+
+| Level | Phase | Question | Commands |
+|-------|-------|----------|----------|
+| **1. Internal Robustness** | `ablation` + `stability` | Are clusters real or preprocessing artifacts? | After clustering |
+| **2. Physical Significance** | `timeslide` | Are H1-L1 coincidences significant? | After robustness |
+| **3. Morphological Classification** | `morphcheck` | Known Gravity Spy class or uncharacterized? | After timeslide |
 
 ---
 
 ### Performance & Parallelization
 
-By default all scans run sequentially (`--workers 1`) and work on any hardware.
-
-```bash
-python main.py scan --detector H1 --hours 6 --workers 6 --run O4a
-python main.py scan-extended --workers 6 --run O4a
-```
-
 | Hardware        | Mode          | Speed                         |
 |-----------------|---------------|-------------------------------|
 | Any laptop      | `--workers 1` | ~1.5 s/segment                |
-| Ryzen 7 7800X3D | `--workers 6` | ~0.35 s/segment (~4x speedup) |
+| Ryzen 7 7800X3D | `--workers 6` | ~0.35 s/segment (~4× speedup) |
 
-GWOSC fetch threads are capped at 4 regardless of `--workers` to respect public server rate limits.
+GWOSC fetch threads are capped at 4 regardless of `--workers`.
 
 ---
 
-## 📊 Preliminary Results (O4a, 48h H1 + 48h L1)
+## 📊 Preliminary Results (O4a, 72h)
 
-| Detector | Samples | Clusters | Anomalous           | Noise | PCA Variance |
-|----------|---------|----------|---------------------|-------|--------------|
-| H1       | 2,634   | 5        | **2** (23 + 19 pts) | 0.0%  | 98.2%        |
-| L1       | 4,982   | 6        | **1** (32 pts)      | 0.0%  | 98.4%        |
+| Detector | Samples | Duty Cycle | Clusters | Anomalous |
+|----------|---------|------------|----------|-----------|
+| H1       | 1,501   | 18.5%      | 6        | **2**     |
+| L1       | 7,153   | 88.3%      | 7        | **0**     |
 
-Anomalous clusters were identified independently on both detectors.
 Morphological cross-check against the in-domain Gravity Spy O3b reference
-(Phase 3.4, GW150914 validation: Chirp@0.997) shows:
+(validated: GW150914 → Chirp@0.997):
 
-- **H1 Cluster 1** (23 pts): maps to Low_Frequency_Lines / 1400Ripples (KNOWN)
-- **H1 Cluster 4** (19 pts): 89% AMBIGUOUS between Low_Frequency_Lines and No_Glitch
-- **L1 Cluster 4** (32 pts): maps to Low_Frequency_Lines (KNOWN/AMBIGUOUS)
+- **H1 anomalous clusters**: map to Low_Frequency_Lines / 1400Ripples (KNOWN/AMBIGUOUS)
+- **L1**: no anomalous clusters identified in this 72h window
 
-No fully novel morphologies were identified in this 48h window. The pipeline
-is validated end-to-end and ready for extended analysis.
+**Temporal analysis finding:** H1 anomalous clusters concentrated on 2023-05-27
+(first week of O4a, active commissioning period).
+
+No fully novel morphologies were identified. The pipeline is validated end-to-end.
 
 **Robustness validation (H1):**
 - Ablation study: ARI > 0.999 across grayscale/inverted/shuffled-intensity variants
 - Random baseline: ARI ≈ 0.000 (correct negative control)
-- Stability analysis: ARI mean=0.9997 ± 0.0003 across 21 hyperparameter configurations
-- **L1 note:** grayscale ARI = 0.377 — L1 clustering shows partial dependence on
-  rendering statistics; physical interpretation requires further investigation
+- Stability analysis: ARI mean ≈ 0.9997 ± 0.0003 across 21 hyperparameter configs
 
-**Known methodological limitations:**
-- UMAP distorts global distances to preserve local structure — anomalous
-  clusters separated by UMAP may reflect preprocessing artifacts, not distinct
-  physical morphologies. Ablation ARI > 0.999 partially mitigates this concern.
-- DINOv2 is trained on natural images; transfer to GW spectrograms is assumed
-  but not yet formally validated for this domain.
-- Standard Q-transform (qrange=[4,64]) may miss fast narrowband or slow
-  broadband structures — Multi-Q analysis (Phase 5) addresses this.
-- L1 clustering shows partial rendering dependence (grayscale ARI=0.377);
-  physical interpretation of L1 clusters requires further validation.
+**L1 note:** grayscale ARI = 0.377 — L1 clustering shows partial dependence on
+rendering statistics; physical interpretation requires further investigation.
+
+---
+
+## ⚠️ Known Limitations
+
+1. **UMAP distortion:** UMAP distorts global distances to preserve local structure.
+   Anomalous clusters separated by UMAP may reflect preprocessing artifacts,
+   not distinct physical morphologies. Ablation ARI > 0.999 partially mitigates this.
+
+2. **Domain transfer assumption:** DINOv2 is trained on natural images; transfer
+   to GW spectrograms is assumed but not formally validated for this domain.
+
+3. **Single Q-transform window:** Standard Q-transform (qrange=[4,64], 32s window)
+   may miss fast narrowband or slow broadband structures.
+
+4. **L1 rendering dependence:** L1 clustering shows partial dependence on colormap
+   (grayscale ARI = 0.377). Physical interpretation of L1 clusters requires
+   further validation.
+
+5. **No GPU acceleration:** PyTorch stable does not yet support RTX 5070 (Blackwell
+   sm_120). Pipeline is CPU-only, which limits throughput on very large datasets.
+
+6. **GUI dependency:** The `Gooey` GUI package is commented out in `requirements.txt`
+   and must be installed manually.
+
 ---
 
 ## 🧪 Running Tests
 
 ```bash
 pytest tests/ -v
-pytest tests/ -v --run-slow
+pytest tests/ -v --run-slow          # Include slow tests
 pytest tests/ -v --cov=src --cov-report=term-missing
 ```
 
-All tests use synthetic data and mocked network calls. Slow tests marked
-with `@pytest.mark.slow` are skipped by default for CI compatibility.
+All tests use synthetic data and mocked network calls.
 
 ---
 
@@ -453,45 +404,40 @@ with `@pytest.mark.slow` are skipped by default for CI compatibility.
 ```
 gravi-signal-ml/
 ├── data/                             # Git-ignored data artifacts
-│   ├── raw/                          # .gwf / .hdf5 strain downloads
+│   ├── raw/                          # .hdf5 strain downloads (optional cache)
 │   ├── runs/<run>/<session_id>/      # Complete run and session isolation
-│   │   ├── spectrograms/             # Q-transform PNGs (H1/L1)
-│   │   ├── embeddings/               # DINOv2 .npy embedding arrays and metadata .json
-│   │   ├── clusters/                 # Cluster reports, galleries, and morphcheck reports
-│   │   ├── reports/                  # Unified end-to-end analysis reports
+│   │   ├── spectrograms/             # Q-transform PNGs (H1/L1 subdirs)
+│   │   ├── embeddings/               # DINOv2 .npy arrays + .json metadata
+│   │   ├── clusters/                 # Cluster reports, galleries, morphcheck
+│   │   ├── reports/                  # Unified full-analysis reports
 │   │   ├── ablation/                 # Ablation study results
 │   │   ├── stability/                # Robustness analysis (ARI metrics)
-│   │   └── timeslide/                # Time-slide background estimation reports
-│   └── reference/                    # Static — Gravity Spy reference indexes
+│   │   ├── timeslide/                # Time-slide background estimation
+│   │   └── logs/                     # Session-specific log files
+│   └── reference/                    # Static — reference indexes
 ├── src/
-│   ├── data_loader.py                # GWOSC fetch + O4a segment management
-│   ├── preprocessor.py               # Whitening · bandpass · Q-transform · batch
+│   ├── data_loader.py                # GWOSC fetch + segment management
+│   ├── preprocessor.py               # Whitening · bandpass · Q-transform
 │   ├── parallel_processor.py         # ThreadPool + ProcessPool pipeline
 │   ├── encoder.py                    # DINOv2-Reg frozen encoder
 │   ├── clustering.py                 # PCA + UMAP + HDBSCAN pipeline
 │   ├── reporter.py                   # Cluster report + UMAP viz + gallery
-│   ├── gravity_spy_checker.py        # GPS-based cross-check (requires LIGO auth)
-│   ├── reference_builder.py          # Gravity Spy tar.gz → DINOv2 reference index
-│   ├── indomain_reference_builder.py # In-domain reference from labeled GPS (Phase 3.4)
 │   ├── similarity_checker.py         # Cosine KNN novelty assessment
-│   └── utils.py                      # Config · logging · GPS conversion · normalization
-│   ├── ablation.py                   # Ablation study — ARI vs preprocessing variants
-│   ├── stability.py                  # Stability analysis — ARI across hyperparameter runs
+│   ├── reference_builder.py          # Gravity Spy tar.gz → reference index
+│   ├── indomain_reference_builder.py # In-domain reference (Phase 3.4)
+│   ├── gravity_spy_checker.py        # GPS-based Gravity Spy DB query
+│   ├── ablation.py                   # ARI vs preprocessing variants
+│   ├── stability.py                  # ARI across hyperparameter runs
 │   ├── timeslide.py                  # Time-slide background estimation
-│   └── full_analysis.py              # End-to-end pipeline orchestrator
-├── results/
-│   └── figures/                      # Committed: UMAP plots + anomalous contact sheets
-├── docs/
-│   ├── SESSION_HANDOFF.md            # Session continuity document
-│   ├── STEP.md                       # Full pipeline commands reference
-│   ├── TODO.md                       # Current TODO and open tasks
-│   └── IMPL.md                       # Implementation notes
-├── notebooks/                        # Exploratory Jupyter notebooks
-├── tests/                            # Pytest suite (synthetic data, mocked network)
+│   ├── full_analysis.py              # End-to-end pipeline orchestrator
+│   └── utils.py                      # Config · logging · GPS conversion
+├── tests/                            # Pytest suite (synthetic data, mocked)
+├── docs/                             # Pipeline steps, implementation notes
 ├── main.py                           # CLI entry point (18 subcommands)
-├── config.yaml                       # Central configuration (all parameters)
-├── CLI_REFERENCE.md                  # Complete CLI reference (auto-generated)
-├── requirements.txt                  # Pinned dependencies
+├── gui.py                            # Gooey-based GUI wrapper
+├── config.yaml                       # Central configuration
+├── CLI_REFERENCE.md                  # Complete CLI reference
+├── requirements.txt                  # Dependencies
 └── .pre-commit-config.yaml           # ruff + mypy + file hygiene
 ```
 
@@ -529,10 +475,11 @@ If you use this code in your research, please cite:
 
 ```bibtex
 @software{gravi_signal_ml,
-  title  = {gravi-signal-ml: Unsupervised Anomaly Detection for Gravitational-Wave Data},
+  title  = {gravi-signal-ml: Unsupervised Morphological Characterization of Gravitational-Wave Glitches},
   author = {Cirfeta, Luca},
   year   = {2026},
   url    = {https://github.com/lucacirfeta/dante-gravi-signal-ml},
+  doi    = {10.5281/zenodo.20121859},
   note   = {Unsupervised morphological characterization of LIGO O4a glitches using DINOv2 frozen features}
 }
 ```

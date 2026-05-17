@@ -161,23 +161,23 @@ Rigenera gallerie d'immagini riepilogative e plot UMAP 2D caricando il JSON risu
 ### 10. `stability`
 Riesegue svariate volte (n-runs) il cluster introducendo micro-perturbazioni in HDBSCAN e UMAP, e tramite Adjusted Rand Index verifica la robustezza.
 
-- `--n-runs`: Numero di prove ripetute. *Default: `20`*.
+- `--session-id`: ID della sessione target.
 - `--detector`: Rivelatore (`H1`, `L1`, `V1`). *Default: `H1`*.
 - `--run`: Run osservativo (`O2`, `O3a`, `O3b`, `O4a`). *Default: `O4a`*.
-- `--session-id`: ID della sessione target.
-- `--embeddings`: Path input `.npy`.
+- `--n-runs`: Numero di prove ripetute. *Default: `20`*.
+- `--embeddings`: Path input `.npy`. Override esplicito — se omesso, il path viene derivato da `--session-id` e `--detector`.
 
 ---
 
 ### 11. `ablation`
-Valuta l'impatto pre-processuale. Muta le immagini PNG sorgente e analizza l'accuratezza in ARI dei vari cluster.
+Valuta l'impatto pre-processuale. Muta le immagini PNG sorgente e analizza l'accuratezza in ARI dei vari cluster. Condizioni testate: `grayscale`, `inverted`, `shuffled-intensity`, `random-baseline`.
 
-- `--detector`: Rivelatore target. Scelte: `H1`, `L1`, `V1`.
-- `--run`: Run osservativo in esame. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
 - `--session-id`: ID sessione.
-- `--embeddings`: Path baseline embedding `.npy`.
-- `--spectrogram-dir`: Percorso agli spettrogrammi intatti `.png`.
-- `--output-dir`: JSON in uscita.
+- `--detector`: Rivelatore target. Scelte: `H1`, `L1`, `V1`. Richiesto con `--session-id`.
+- `--run`: Run osservativo in esame. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
+- `--embeddings`: Path baseline embedding `.npy`. Se omesso, derivato da `--session-id` e `--detector`.
+- `--spectrogram-dir`: Percorso agli spettrogrammi intatti `.png`. Se omesso, derivato da `--session-id` e `--detector`.
+- `--output-dir`: Cartella di destinazione per il report JSON. Se omesso, derivato dalla sessione.
 - `--batch-size`: Batch size per DINOv2. *Default: `32`*.
 
 ---
@@ -193,13 +193,16 @@ Incrocia i cluster anomali del JSON col set reale di LIGO tramite query remote v
 ---
 
 ### 13. `timeslide`
-Estima p-value per anomali pattern di background coincidenziale incrociando `H1` e `L1`.
+Stima il p-value empirico di coincidenza tra anomalie `H1` e `L1` tramite 50 time-shift casuali (±5000s). L'output è salvato automaticamente nella cartella `timeslide/` della sessione.
 
+- `--session-id`: ID univoco sessione. Se fornito, tutti i path sono derivati automaticamente dalla struttura della sessione.
 - `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
-- `--session-id`: ID univoco sessione per auto-parsing file.
-- `--embeddings-h1` / `--embeddings-l1`: Path a matrice embeddings dei rivelatori.
-- `--metadata-h1` / `--metadata-l1`: Path ai metadati base `.json`.
-- `--report-h1` / `--report-l1`: Path ai json finali del cluster.
+- `--embeddings-h1` / `--embeddings-l1`: Path a matrice embeddings dei rivelatori. Override espliciti (opzionali se si usa `--session-id`).
+- `--metadata-h1` / `--metadata-l1`: Path ai metadati base `.json`. Override espliciti.
+- `--report-h1` / `--report-l1`: Path ai json finali del cluster. Override espliciti.
+
+> [!NOTE]
+> Non esiste un parametro `--output`. Il report viene salvato automaticamente in `data/runs/<run>/<session_id>/timeslide/timeslide_report_H1_L1.json`.
 
 ---
 

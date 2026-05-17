@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from src.utils import setup_logger
+from src.utils import load_config, setup_logger
 
 logger: logging.Logger = setup_logger(__name__)
 
@@ -94,27 +94,37 @@ def _save_json_report(
             "sample_files": sample_files,
         }
 
+    # Read actual pipeline parameters from config.yaml
+    cfg = load_config()
+    cluster_cfg = cfg.get("clustering", {})
+    umap_clust_cfg = cluster_cfg.get("umap_clustering", {})
+    umap_viz_cfg = cluster_cfg.get("umap_viz", {})
+    hdbscan_cfg = cluster_cfg.get("hdbscan", {})
+
     report = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "model": metadata.get("model", "dinov2_vits14_reg"),
         "n_samples": int(len(labels)),
         "detector": detector,
         "pipeline": {
-            "pca_components": 50,
+            "pca_components": cluster_cfg.get("pca_components", 50),
             "pca_variance_explained": result["pca_variance"],
             "umap_clustering": {
-                "n_components": 10,
-                "n_neighbors": 20,
-                "min_dist": 0.0,
+                "n_components": umap_clust_cfg.get("n_components", 10),
+                "n_neighbors": umap_clust_cfg.get("n_neighbors", 20),
+                "min_dist": umap_clust_cfg.get("min_dist", 0.0),
+                "metric": umap_clust_cfg.get("metric", "cosine"),
             },
             "umap_viz": {
-                "n_components": 2,
-                "n_neighbors": 20,
-                "min_dist": 0.1,
+                "n_components": umap_viz_cfg.get("n_components", 2),
+                "n_neighbors": umap_viz_cfg.get("n_neighbors", 20),
+                "min_dist": umap_viz_cfg.get("min_dist", 0.1),
+                "metric": umap_viz_cfg.get("metric", "cosine"),
             },
             "hdbscan": {
-                "min_cluster_size": 5,
-                "min_samples": 3,
+                "min_cluster_size": hdbscan_cfg.get("min_cluster_size", 5),
+                "min_samples": hdbscan_cfg.get("min_samples", 3),
+                "cluster_selection_method": hdbscan_cfg.get("cluster_selection_method", "eom"),
             },
         },
         "results": {
@@ -294,7 +304,7 @@ def _make_contact_sheet(
         if idx < n_images:
             try:
                 img = Image.open(image_paths[idx])
-                ax.imshow(np.array(img), cmap="viridis")
+                ax.imshow(np.array(img))
             except Exception:
                 ax.text(0.5, 0.5, "Error", ha="center", va="center")
         # Empty cells are left blank (axis is off)
