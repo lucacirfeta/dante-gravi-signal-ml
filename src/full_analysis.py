@@ -27,7 +27,7 @@ from src.ablation import run_ablation_study
 from src.stability import run_stability_analysis
 from src.timeslide import run_timeslide
 from src.encoder import DINOv2Encoder
-from src.utils import load_config, setup_logger
+from src.utils import load_config, setup_logger, session_path
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -73,7 +73,7 @@ def _analyze_detector(
     }
     
     # Descriptive Statistics
-    input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{det}")
+    input_dir = session_path(run, session_id) / "spectrograms" / det
     png_files = list(input_dir.glob(f"{det}_*.png"))
     gps_starts = []
     gps_ends = []
@@ -116,7 +116,7 @@ def _analyze_detector(
 
     try:
         # Step 0: Encode
-        output_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{det.lower()}.npy")
+        output_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{det.lower()}.npy"
         
         step_start = datetime.now(timezone.utc).isoformat()
         if not output_path.exists():
@@ -138,7 +138,7 @@ def _analyze_detector(
         logger.info("%s[%s]%s Step 1: Clustering...", color, det, reset)
         step_start = datetime.now(timezone.utc).isoformat()
         cluster_cfg = cfg["clustering"]
-        cluster_dir = Path(f"data/clusters/{run_lower}/{session_id}/{det.lower()}")
+        cluster_dir = session_path(run, session_id) / "clusters" / det.lower()
         
         result = run_full_pipeline(embeddings, cluster_cfg)
         save_cluster_report(result, metadata, cluster_dir, detector=det)
@@ -202,7 +202,7 @@ def _analyze_detector(
         # Step 3: Ablation
         logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
         step_start = datetime.now(timezone.utc).isoformat()
-        ablation_dir = Path(f"data/ablation/{run_lower}/{session_id}")
+        ablation_dir = session_path(run, session_id) / "ablation"
         
         image_paths = [input_dir / Path(f).name for f in all_files]
         encoder = DINOv2Encoder(batch_size=batch_size)
@@ -239,11 +239,12 @@ def _analyze_detector(
             cluster_cfg=cluster_cfg,
             n_runs=n_runs,
             session_id=session_id,
-            detector=det
+            detector=det,
+            run=run,
         )
         
         # Read back stability report
-        stability_report_file = Path(f"data/stability/{session_id}/stability_report_{det}.json")
+        stability_report_file = session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
         if stability_report_file.exists():
             with open(stability_report_file, "r") as f:
                 stability_data = json.load(f)
@@ -264,7 +265,7 @@ def _analyze_detector(
         det_report["status"] = "OK"
 
     # Save unified report for this detector
-    report_dir = Path(f"data/reports/{run_lower}/{session_id}")
+    report_dir = session_path(run, session_id) / "reports"
     report_dir.mkdir(parents=True, exist_ok=True)
     report_path = report_dir / f"{det}_full_report.json"
     with open(report_path, "w") as f:
@@ -302,7 +303,7 @@ def run_full_analysis(
     
     # 1. Discovery
     if not detectors:
-        spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}")
+        spec_dir = session_path(run, session_id) / "spectrograms"
         if not spec_dir.exists():
             logger.error("Session directory not found: %s", spec_dir)
             return {"status": "FAILED", "error": "Session directory not found"}
@@ -355,11 +356,11 @@ def run_full_analysis(
             step_start = datetime.now(timezone.utc).isoformat()
             
             try:
-                meta_h1 = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_h1.json")
-                rep_h1 = Path(f"data/clusters/{run_lower}/{session_id}/h1/cluster_report.json")
-                meta_l1 = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_l1.json")
-                rep_l1 = Path(f"data/clusters/{run_lower}/{session_id}/l1/cluster_report.json")
-                output_dir = Path(f"data/timeslide/{run_lower}/{session_id}")
+                meta_h1 = session_path(run, session_id) / "embeddings" / f"{run_lower}_h1.json"
+                rep_h1 = session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
+                meta_l1 = session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
+                rep_l1 = session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
+                output_dir = session_path(run, session_id) / "timeslide"
                 
                 ts_report = run_timeslide(
                     meta_h1=meta_h1,

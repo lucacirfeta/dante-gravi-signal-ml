@@ -46,7 +46,7 @@ from astropy.time import Time
 from src.data_loader import fetch_o4a_segments, fetch_strain_data
 from src.encoder import DINOv2Encoder
 from src.preprocessor import bandpass, batch_process, generate_qtransform, whiten
-from src.utils import enable_ansi_colors, load_config, setup_logger
+from src.utils import enable_ansi_colors, load_config, setup_logger, session_path
 
 # Enable ANSI escape sequences for Windows terminal
 enable_ansi_colors()
@@ -114,8 +114,7 @@ def _find_last_gps(session_id: str, detector: str, run: str = "O4a") -> int | No
     """
     import re
 
-    run_lower = run.lower()
-    spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+    spec_dir = session_path(run, session_id) / "spectrograms" / detector
     if not spec_dir.exists():
         return None
 
@@ -131,6 +130,159 @@ def _find_last_gps(session_id: str, detector: str, run: str = "O4a") -> int | No
             count += 1
 
     return max_gps if count > 0 else None
+
+
+def parse_stop_date_to_gps(stop_date_str: str) -> int:
+    """Parse a stop date (ISO string or GPS time) to GPS integer."""
+    try:
+        return int(stop_date_str)
+    except ValueError:
+        pass
+
+    for fmt in ["iso", "isot", "fits", "yday"]:
+        try:
+            return int(Time(stop_date_str, format=fmt, scale="utc").gps)
+        except Exception:
+            continue
+    try:
+        return int(Time(stop_date_str, scale="utc").gps)
+    except Exception as e:
+        raise ValueError(f"Could not parse stop date '{stop_date_str}': {e}")
+
+
+def _run_continue_loop(
+    initial_session_id: str,
+    run: str,
+    max_iterations: int,
+    stop_date_str: str | None,
+    args: argparse.Namespace,
+) -> None:
+    """Run the continuous scan-extended + full-analysis loop."""
+    import time
+    logger.info("=== Starting Continuous Run Loop ===")
+    logger.info("Initial Session: %s", initial_session_id)
+    logger.info("Max Iterations: %d", max_iterations)
+    
+    stop_gps = None
+    if stop_date_str:
+        logger.info("Stop Date: %s", stop_date_str)
+        try:
+            stop_gps = parse_stop_date_to_gps(stop_date_str)
+            logger.info("Stop GPS: %d", stop_gps)
+        except Exception as e:
+            logger.error("Invalid stop-date: %s", e)
+            sys.exit(1)
+
+    current_session_id = initial_session_id
+    cfg = load_config()
+    
+    run_cfg = cfg.get("run_config", {})
+    if run not in run_cfg:
+        logger.error("Unknown run '%s'. Valid runs: %s", run, VALID_RUNS)
+        sys.exit(1)
+    hours = run_cfg[run]["hours_per_detector"]
+    logger.info("Iteration scan duration: %d hours per detector", hours)
+
+    for iteration in range(1, max_iterations + 1):
+        logger.info("--- Continuous Run Loop: Iteration %d / %d ---", iteration, max_iterations)
+        
+        # 1. Cerca l'ultimo GPS processato per H1 e L1 nella sessione corrente
+        ultimo_H1 = _find_last_gps(current_session_id, "H1", run=run)
+        ultimo_L1 = _find_last_gps(current_session_id, "L1", run=run)
+        
+        if ultimo_H1 is None or ultimo_L1 is None:
+            logger.error(
+                "Could not find processed spectrograms for both H1 and L1 in current session %s. "
+                "Aborting continuous run loop.", current_session_id
+            )
+            break
+            
+        # 2. Calcola il GPS sincronizzato = min(ultimo_H1, ultimo_L1)
+        gps_sincronizzato = min(ultimo_H1, ultimo_L1)
+        logger.info(
+            "Current session %s ends: H1=%s, L1=%s. Synchronized GPS = %d",
+            current_session_id, ultimo_H1, ultimo_L1, gps_sincronizzato
+        )
+        
+        next_start_gps = gps_sincronizzato + 1
+        logger.info("Next iteration start GPS: %d", next_start_gps)
+        
+        # Check stop date limit
+        if stop_gps is not None and next_start_gps >= stop_gps:
+            logger.info("Reached or exceeded stop date (GPS %d >= %d). Stopping loop.", next_start_gps, stop_gps)
+            break
+            
+        # 3. Genera un nuovo session-id
+        time.sleep(1.0)  # avoid collision
+        new_session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        logger.info("Generated new session ID: %s", new_session_id)
+        
+        # Update the active session log file to target the new session directory
+        from src.utils import set_session_log_file
+        new_log_dir = session_path(run, new_session_id) / "logs"
+        new_log_file = new_log_dir / "session.log"
+        set_session_log_file(new_log_file)
+        
+        logger.info(
+            "=== CONTINUOUS RUN LOOP: NEW ITERATION SESSION STARTED: %s ===", 
+            new_session_id, 
+            extra={"session_key": True}
+        )
+        
+        # 4. Lancia automaticamente scan-extended sulla nuova sessione
+        logger.info("Launching scan-extended on session %s starting from GPS %d...", new_session_id, next_start_gps)
+        
+        scan_args = argparse.Namespace(
+            run=run,
+            session_id=new_session_id,
+            hours=hours,
+            workers=args.workers if hasattr(args, "workers") else 2,
+            no_cache_raw=args.no_cache_raw if hasattr(args, "no_cache_raw") else True,
+            full_analysis=False,  # We handle full-analysis manually in the loop
+            skip_timeslide=args.skip_timeslide if hasattr(args, "skip_timeslide") else False,
+            n_runs=args.n_runs if hasattr(args, "n_runs") else 20,
+            sequential=args.sequential if hasattr(args, "sequential") else False,
+            start_gps=next_start_gps,
+        )
+        
+        try:
+            cmd_scan_extended(scan_args)
+        except Exception as e:
+            logger.error("scan-extended failed in iteration %d: %s", iteration, e, exc_info=True)
+            break
+            
+        # 5. Al termine dello scan, rilancia automaticamente full-analysis sulla nuova sessione
+        logger.info("Launching full-analysis on session %s...", new_session_id)
+        from src.full_analysis import run_full_analysis
+        
+        try:
+            result = run_full_analysis(
+                session_id=new_session_id,
+                detectors=["H1", "L1"],
+                run=run,
+                skip_timeslide=scan_args.skip_timeslide,
+                n_runs=scan_args.n_runs,
+                sequential=scan_args.sequential,
+            )
+            
+            status_val = result.get("status")
+            is_failed = False
+            if status_val == "FAILED":
+                is_failed = True
+            elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
+                is_failed = True
+
+            if is_failed:
+                logger.error("full-analysis failed in iteration %d: %s", iteration, result.get("error"))
+                break
+        except Exception as e:
+            logger.error("full-analysis failed in iteration %d: %s", iteration, e, exc_info=True)
+            break
+            
+        # Advance to the new session
+        current_session_id = new_session_id
+
+    logger.info("=== Continuous Run Loop Completed ===")
 
 
 def cmd_fetch(args: argparse.Namespace) -> None:
@@ -227,7 +379,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         sys.exit(0)
 
     # Output directory — isolated by run and session_id
-    output_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+    output_dir = session_path(run, session_id) / "spectrograms" / detector
     logger.info("Output dir: %s", output_dir)
 
     workers: int = args.workers
@@ -463,11 +615,13 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             lgps = _find_last_gps(session_id, det, run=run)
             last_gps_list.append(lgps if lgps is not None else 0)
 
-    start_gps = _run_start_gps(run, cfg)
+    start_gps = getattr(args, "start_gps", None)
+    if start_gps is None:
+        start_gps = _run_start_gps(run, cfg)
 
-    if explicit_session and any(g > 0 for g in last_gps_list):
-        start_gps = min(g for g in last_gps_list if g > 0)
-        logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, start_gps)
+        if explicit_session and any(g > 0 for g in last_gps_list):
+            start_gps = min(g for g in last_gps_list if g > 0)
+            logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, start_gps)
 
     end_gps = start_gps + int(hours * 3600)
     segments = generate_segments_from_gps_range(start_gps, end_gps)
@@ -476,7 +630,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         logger.warning("Nessun segmento trovato per la finestra temporale richiesta.")
         sys.exit(0)
 
-    output_dir_base = Path(f"data/spectrograms/{run_lower}/{session_id}")
+    output_dir_base = session_path(run, session_id) / "spectrograms"
     logger.info("Output dir base: %s", output_dir_base)
 
     from src.parallel_processor import batch_process_parallel
@@ -497,7 +651,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     if getattr(args, "full_analysis", False):
         from src.full_analysis import run_full_analysis
         logger.info("Triggering automatic full analysis...")
-        run_full_analysis(
+        result = run_full_analysis(
             session_id=session_id,
             detectors=detectors,
             run=run,
@@ -505,6 +659,24 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             n_runs=getattr(args, "n_runs", 20),
             sequential=getattr(args, "sequential", False)
         )
+        
+        status_val = result.get("status")
+        is_failed = False
+        if status_val == "FAILED":
+            is_failed = True
+        elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
+            is_failed = True
+
+        if not is_failed and getattr(args, "continue_run", False):
+            max_iterations = getattr(args, "max_iterations", 10)
+            stop_date = getattr(args, "stop_date", None)
+            _run_continue_loop(
+                initial_session_id=session_id,
+                run=run,
+                max_iterations=max_iterations,
+                stop_date_str=stop_date,
+                args=args,
+            )
 
 
 def cmd_last_gps(args: argparse.Namespace) -> None:
@@ -526,7 +698,7 @@ def cmd_last_gps(args: argparse.Namespace) -> None:
 
     _log_run_header(run, detector, session_id)
 
-    spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+    spec_dir = session_path(run, session_id) / "spectrograms" / detector
 
     if not spec_dir.exists():
         logger.error("Spectrogram directory not found: %s", spec_dir)
@@ -633,7 +805,7 @@ def cmd_reprocess_spectrograms(args: argparse.Namespace) -> None:
     if args.input_dir:
         input_dir = Path(args.input_dir)
     elif session_id and detector:
-        input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+        input_dir = session_path(run, session_id) / "spectrograms" / detector
     else:
         logger.error(
             "Either --input-dir or both --session-id and --detector are required."
@@ -745,7 +917,7 @@ def cmd_encode(args: argparse.Namespace) -> None:
     if args.input_dir:
         input_dir = Path(args.input_dir)
     elif session_id and detector:
-        input_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+        input_dir = session_path(run, session_id) / "spectrograms" / detector
     else:
         logger.error(
             "Either --input-dir or both --session-id and --detector are required."
@@ -755,9 +927,7 @@ def cmd_encode(args: argparse.Namespace) -> None:
     if args.output:
         output_path = Path(args.output)
     elif session_id and detector:
-        output_path = Path(
-            f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy"
-        )
+        output_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error(
             "Either --output or both --session-id and --detector are required."
@@ -795,9 +965,7 @@ def cmd_cluster(args: argparse.Namespace) -> None:
     if args.input:
         input_path = Path(args.input)
     elif session_id and detector:
-        input_path = Path(
-            f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy"
-        )
+        input_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error(
             "Either --input or both --session-id and --detector are required."
@@ -808,7 +976,7 @@ def cmd_cluster(args: argparse.Namespace) -> None:
         # Explicit --output was given — take priority
         output_dir = Path(args.output)
     elif session_id and detector:
-        output_dir = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}")
+        output_dir = session_path(run, session_id) / "clusters" / detector.lower()
     else:
         output_dir = Path("data/clusters/")
 
@@ -872,7 +1040,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id and detector:
-        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
+        embeddings_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -880,7 +1048,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.report:
         report_path = Path(args.report)
     elif session_id and detector:
-        report_path = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}/cluster_report.json")
+        report_path = session_path(run, session_id) / "clusters" / detector.lower() / "cluster_report.json"
     else:
         logger.error("Either --report or both --session-id and --detector are required.")
         sys.exit(1)
@@ -888,7 +1056,7 @@ def cmd_report(args: argparse.Namespace) -> None:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     elif session_id and detector:
-        output_dir = Path(f"data/clusters/{run_lower}/{session_id}/{detector.lower()}")
+        output_dir = session_path(run, session_id) / "clusters" / detector.lower()
     else:
         output_dir = Path("data/clusters/")
 
@@ -994,7 +1162,7 @@ def cmd_stability(args: argparse.Namespace) -> None:
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id != "default" and detector:
-        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
+        embeddings_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -1021,6 +1189,7 @@ def cmd_stability(args: argparse.Namespace) -> None:
         n_runs=n_runs,
         session_id=session_id,
         detector=detector,
+        run=run,
     )
 
 
@@ -1042,7 +1211,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.embeddings:
         embeddings_path = Path(args.embeddings)
     elif session_id and detector:
-        embeddings_path = Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_{detector.lower()}.npy")
+        embeddings_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
     else:
         logger.error("Either --embeddings or both --session-id and --detector are required.")
         sys.exit(1)
@@ -1050,7 +1219,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.spectrogram_dir:
         spec_dir = Path(args.spectrogram_dir)
     elif session_id and detector:
-        spec_dir = Path(f"data/spectrograms/{run_lower}/{session_id}/{detector}")
+        spec_dir = session_path(run, session_id) / "spectrograms" / detector
     else:
         logger.error("Either --spectrogram-dir or both --session-id and --detector are required.")
         sys.exit(1)
@@ -1058,7 +1227,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     elif session_id and detector:
-        output_dir = Path(f"data/ablation/{run_lower}/{session_id}")
+        output_dir = session_path(run, session_id) / "ablation"
     else:
         output_dir = Path("data/ablation/")
 
@@ -1431,11 +1600,11 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
     if session_id:
         _log_run_header(run, None, session_id)
         # Auto-resolve paths if not provided
-        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_h1.json")
-        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else Path(f"data/embeddings/{run_lower}/{session_id}/{run_lower}_l1.json")
-        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else Path(f"data/clusters/{run_lower}/{session_id}/h1/cluster_report.json")
-        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else Path(f"data/clusters/{run_lower}/{session_id}/l1/cluster_report.json")
-        output_dir = Path(f"data/timeslide/{run_lower}/{session_id}")
+        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else session_path(run, session_id) / "embeddings" / f"{run_lower}_h1.json"
+        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
+        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
+        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
+        output_dir = session_path(run, session_id) / "timeslide"
     else:
         # Require explicit inputs
         if not (args.embeddings_h1 and args.embeddings_l1 and args.metadata_h1 and args.metadata_l1):
@@ -1492,8 +1661,15 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
         sequential=getattr(args, "sequential", False)
     )
 
-    if result["status"] == "FAILED":
-        logger.error("Full analysis failed: %s", result.get("error"))
+    status_val = result.get("status")
+    is_failed = False
+    if status_val == "FAILED":
+        is_failed = True
+    elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
+        is_failed = True
+
+    if is_failed:
+        logger.error("Full analysis failed. Aborting continuous run loop.")
         sys.exit(1)
 
     print("\nFull Analysis Complete.")
@@ -1502,6 +1678,17 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
             print(f"  {det:<10}: {status}")
             if det in result["reports"]:
                 print(f"    Report: {result['reports'][det]}")
+
+    if getattr(args, "continue_run", False):
+        max_iterations = getattr(args, "max_iterations", 10)
+        stop_date = getattr(args, "stop_date", None)
+        _run_continue_loop(
+            initial_session_id=session_id,
+            run=run,
+            max_iterations=max_iterations,
+            stop_date_str=stop_date,
+            args=args,
+        )
 
 
 def _add_run_argument(parser: argparse.ArgumentParser) -> None:
@@ -1653,6 +1840,29 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="If full-analysis is enabled, execute detector analysis sequentially.",
     )
+    p_scan_ext.add_argument(
+        "--start-gps",
+        type=int,
+        default=None,
+        help="Optional GPS start time to override the run start or resume logic.",
+    )
+    p_scan_ext.add_argument(
+        "--continue-run",
+        action="store_true",
+        help="Enable continuous run loop after full-analysis.",
+    )
+    p_scan_ext.add_argument(
+        "--max-iterations",
+        type=int,
+        default=10,
+        help="Maximum iterations for the continuous run loop. Default: 10.",
+    )
+    p_scan_ext.add_argument(
+        "--stop-date",
+        type=str,
+        default=None,
+        help="Stop date (ISO string or GPS time) for the continuous run loop.",
+    )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
     _add_run_argument(p_scan_ext)
 
@@ -1689,6 +1899,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--sequential",
         action="store_true",
         help="Execute detector analysis sequentially instead of in parallel.",
+    )
+    p_full.add_argument(
+        "--continue-run",
+        action="store_true",
+        help="Enable continuous run loop after full-analysis.",
+    )
+    p_full.add_argument(
+        "--max-iterations",
+        type=int,
+        default=10,
+        help="Maximum iterations for the continuous run loop. Default: 10.",
+    )
+    p_full.add_argument(
+        "--stop-date",
+        type=str,
+        default=None,
+        help="Stop date (ISO string or GPS time) for the continuous run loop.",
     )
     _add_run_argument(p_full)
     p_full.set_defaults(func=cmd_full_analysis)
@@ -2224,7 +2451,87 @@ def main() -> None:
     """Parse arguments and dispatch to the appropriate subcommand."""
     parser = build_parser()
     args = parser.parse_args()
-    args.func(args)
+
+    # If the subcommand supports session-id, wrap execution in session-specific logging
+    if hasattr(args, "session_id"):
+        # Resolve concrete session ID and run in place so subcommands align
+        session_id = _resolve_session_id(args)
+        args.session_id = session_id
+        run = _resolve_run(args)
+
+        # Setup session logging
+        from src.utils import set_session_log_file, close_session_log
+        log_dir = session_path(run, session_id) / "logs"
+        log_file = log_dir / "session.log"
+        set_session_log_file(log_file)
+
+        # Capture command name and arguments
+        cmd_name = sys.argv[1] if len(sys.argv) > 1 else "unknown"
+        # Filter out big or unpicklable command args to keep log tidy
+        cmd_args = {k: v for k, v in vars(args).items() if k != "func"}
+
+        logger.info(
+            "=== COMMAND START: %s === (Args: %s)",
+            cmd_name,
+            cmd_args,
+            extra={"session_key": True}
+        )
+
+        start_time = datetime.now()
+        try:
+            args.func(args)
+            duration = (datetime.now() - start_time).total_seconds()
+            logger.info(
+                "=== COMMAND END: %s (SUCCESS) === (Duration: %.2fs)",
+                cmd_name,
+                duration,
+                extra={"session_key": True}
+            )
+        except SystemExit as se:
+            duration = (datetime.now() - start_time).total_seconds()
+            status = "SUCCESS" if se.code == 0 or se.code is None else f"FAILED (Exit Code: {se.code})"
+            if se.code == 0 or se.code is None:
+                logger.info(
+                    "=== COMMAND END: %s (%s) === (Duration: %.2fs)",
+                    cmd_name,
+                    status,
+                    duration,
+                    extra={"session_key": True}
+                )
+            else:
+                logger.error(
+                    "=== COMMAND END: %s (%s) === (Duration: %.2fs)",
+                    cmd_name,
+                    status,
+                    duration,
+                    extra={"session_key": True}
+                )
+            raise se
+        except KeyboardInterrupt as ki:
+            duration = (datetime.now() - start_time).total_seconds()
+            logger.warning(
+                "=== COMMAND END: %s (INTERRUPTED) === (Duration: %.2fs)",
+                cmd_name,
+                duration,
+                extra={"session_key": True}
+            )
+            raise ki
+        except BaseException as e:
+            duration = (datetime.now() - start_time).total_seconds()
+            logger.error(
+                "=== COMMAND END: %s (FAILED) === (Duration: %.2fs, Error: %s)",
+                cmd_name,
+                duration,
+                str(e),
+                extra={"session_key": True},
+                exc_info=True
+            )
+            raise e
+        finally:
+            close_session_log()
+    else:
+        # Standard execution for commands without session context
+        args.func(args)
 
 
 if __name__ == "__main__":

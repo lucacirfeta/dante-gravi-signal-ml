@@ -183,3 +183,77 @@ def setup_logger(
         logger.addHandler(file_handler)
 
     return logger
+
+
+def session_path(run: str, session_id: str) -> Path:
+    """Return the base path for a run session.
+
+    Args:
+        run: Observing run (e.g. O4a).
+        session_id: Session identifier.
+
+    Returns:
+        Path object pointing to the unified session directory.
+    """
+    return Path(f"data/runs/{run.lower()}/{session_id}")
+
+
+# ---------------------------------------------------------------------------
+# Session-specific essential logging
+# ---------------------------------------------------------------------------
+
+_SESSION_LOG_FILE: Path | None = None
+_SESSION_LOG_HANDLER: logging.FileHandler | None = None
+
+
+class SessionLogFilter(logging.Filter):
+    """Filter that only permits logs with level >= WARNING or having session_key = True."""
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno >= logging.WARNING:
+            return True
+        return getattr(record, "session_key", False)
+
+
+def set_session_log_file(log_file: Path) -> None:
+    """Set the session-specific log file and add its handler to the root logger."""
+    global _SESSION_LOG_FILE, _SESSION_LOG_HANDLER
+    
+    # Clean up any existing handler first
+    close_session_log()
+    
+    _SESSION_LOG_FILE = log_file
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    formatter = logging.Formatter(
+        fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    
+    handler = logging.FileHandler(log_file, encoding="utf-8")
+    handler.setLevel(logging.INFO)  # Capture both INFO boundaries and WARNING/ERROR
+    handler.setFormatter(formatter)
+    handler.addFilter(SessionLogFilter())
+    
+    _SESSION_LOG_HANDLER = handler
+    
+    # Add to root logger only to prevent duplication through propagation
+    root_logger = logging.getLogger()
+    if handler not in root_logger.handlers:
+        root_logger.addHandler(handler)
+
+
+def close_session_log() -> None:
+    """Safely detach and close the session log handler."""
+    global _SESSION_LOG_FILE, _SESSION_LOG_HANDLER
+    if _SESSION_LOG_HANDLER is not None:
+        handler = _SESSION_LOG_HANDLER
+        
+        # Remove from root logger only
+        root_logger = logging.getLogger()
+        if handler in root_logger.handlers:
+            root_logger.removeHandler(handler)
+            
+        handler.close()
+        _SESSION_LOG_HANDLER = None
+    _SESSION_LOG_FILE = None
+
