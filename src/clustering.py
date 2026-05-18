@@ -74,7 +74,6 @@ def run_umap(
     n_components: int = 10,
     n_neighbors: int = 30,
     min_dist: float = 0.0,
-    metric: str = "cosine",
     random_state: int = 42,
 ) -> np.ndarray:
     """Reduce dimensionality via Uniform Manifold Approximation and Projection.
@@ -84,7 +83,6 @@ def run_umap(
         n_components: Output dimensionality (10 for clustering, 2 for viz).
         n_neighbors: Size of the local neighborhood (default 30).
         min_dist: Minimum distance between output points (default 0.0).
-        metric: Distance metric for the input space (default 'cosine').
         random_state: Random seed for reproducibility.
 
     Returns:
@@ -97,7 +95,7 @@ def run_umap(
         n_components=n_components,
         n_neighbors=n_neighbors,
         min_dist=min_dist,
-        metric=metric,
+        metric="cosine",  # Enforce cosine for pre-normalized DINOv2 embeddings
         random_state=random_state,
     )
     reduced = reducer.fit_transform(embeddings)
@@ -259,7 +257,6 @@ def run_full_pipeline(
         n_components=umap_clust_cfg.get("n_components", 10),
         n_neighbors=umap_clust_cfg.get("n_neighbors", 30),
         min_dist=umap_clust_cfg.get("min_dist", 0.0),
-        metric=umap_clust_cfg.get("metric", "cosine"),
     )
 
     # --- Step 3: HDBSCAN ---
@@ -302,7 +299,6 @@ def run_full_pipeline(
         n_components=umap_viz_cfg.get("n_components", 2),
         n_neighbors=umap_viz_cfg.get("n_neighbors", 30),
         min_dist=umap_viz_cfg.get("min_dist", 0.1),
-        metric=umap_viz_cfg.get("metric", "cosine"),
     )
 
     return {

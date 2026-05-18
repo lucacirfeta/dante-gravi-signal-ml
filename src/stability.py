@@ -82,7 +82,6 @@ def run_stability_analysis(
         n_components=umap_clust_cfg.get("n_components", 10),
         n_neighbors=base_n_neighbors,
         min_dist=umap_clust_cfg.get("min_dist", 0.0),
-        metric=umap_clust_cfg.get("metric", "cosine"),
     )
     base_labels, base_stats = run_hdbscan(
         base_umap,
@@ -132,7 +131,6 @@ def run_stability_analysis(
             n_components=umap_clust_cfg.get("n_components", 10),
             n_neighbors=p_n_neighbors,
             min_dist=umap_clust_cfg.get("min_dist", 0.0),
-            metric=umap_clust_cfg.get("metric", "cosine"),
             random_state=seed,
         )
 
