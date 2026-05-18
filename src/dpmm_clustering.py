@@ -45,7 +45,7 @@ def run_dpmm(
         weight_concentration_prior_type="dirichlet_process",
         weight_concentration_prior=1.0 / n_components,
         random_state=random_state,
-        n_init=1,  # Can be increased for better stability if needed
+        n_init=5,  # Can be increased for better stability if needed
     )
     
     labels = bgm.fit_predict(embeddings)
