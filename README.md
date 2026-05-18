@@ -82,8 +82,8 @@ Raw Strain Data (GWOSC O2–O4a)
          ▼
 ┌─────────────────────┐
 │   Clustering        │  PCA(50D) → UMAP(10D, cosine, min_dist=0.0)
-│   (clustering.py)   │  → HDBSCAN (strict conservative parameters)
-│   (reporter.py)     │  → UMAP(2D) for visualization
+│   (clustering.py)   │  → DPMM (default, Dirichlet Process Mixture Model)
+│   (reporter.py)     │    or HDBSCAN; UMAP(2D) for visualization
 └────────┬────────────┘
          │
          ▼
@@ -272,9 +272,9 @@ python main.py cluster --session-id <SESSION_ID> --detector H1 --run O4a
 python main.py cluster --session-id <SESSION_ID> --detector L1 --run O4a
 ```
 
-**Pipeline:** PCA(50D) → UMAP(10D, cosine, `min_dist=0.0`) → HDBSCAN → UMAP(2D) viz
+**Pipeline:** PCA(50D) → UMAP(10D, cosine, `min_dist=0.0`) → DPMM (default) or HDBSCAN → UMAP(2D) viz
 
-HDBSCAN parameters use strict, conservative values (e.g., `min_cluster_size=15`, `min_samples=10`) to prevent over-fragmentation.
+By default, the pipeline uses a **Dirichlet Process Mixture Model (DPMM)** for probabilistic clustering and novelty detection. The top 5% of samples with the lowest log-likelihood scores are flagged as anomalies. Alternatively, HDBSCAN can be selected using strict, conservative values (e.g., `min_cluster_size=15`, `min_samples=10`) to prevent over-fragmentation.
 
 #### Step 4 — Morphological Cross-Check
 
@@ -392,7 +392,7 @@ gravi-signal-ml/
 │   ├── preprocessor.py               # Whitening · bandpass · Q-transform
 │   ├── parallel_processor.py         # ThreadPool + ProcessPool pipeline
 │   ├── encoder.py                    # DINOv2-Reg frozen encoder
-│   ├── clustering.py                 # PCA + UMAP + HDBSCAN pipeline
+│   ├── clustering.py                 # PCA + UMAP + DPMM/HDBSCAN pipeline
 │   ├── reporter.py                   # Cluster report + UMAP viz + gallery
 │   ├── similarity_checker.py         # Cosine KNN novelty assessment
 │   ├── reference_builder.py          # Gravity Spy tar.gz → reference index

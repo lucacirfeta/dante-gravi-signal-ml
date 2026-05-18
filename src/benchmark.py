@@ -27,6 +27,7 @@ def run_benchmark(
     reference_path: str | Path = "data/reference/indomain_index.npz",
     min_samples_per_class: int = 10,
     output_path: str | Path | None = "data/reference/benchmark_report.json",
+    algorithm: str = "hdbscan",
 ) -> dict:
     """Run benchmark of clustering pipeline using Ground Truth labels.
 
@@ -70,6 +71,7 @@ def run_benchmark(
     logger.info("Running unsupervised clustering pipeline...")
     cfg = load_config()
     clustering_cfg = cfg.get("clustering", {})
+    clustering_cfg["algorithm"] = algorithm
     
     results = run_full_pipeline(filtered_embeddings, clustering_cfg)
     pred_labels = results["labels"]
@@ -77,17 +79,23 @@ def run_benchmark(
     # Calculate metrics
     # Note: HDBSCAN labels noise points as -1. We exclude them from ARI/AMI
     # calculations because noise points do not form a coherent semantic cluster.
-    valid_mask = pred_labels != -1
+    # DPMM does not use -1, so valid_mask will be all True for DPMM.
+    if algorithm == "hdbscan":
+        valid_mask = pred_labels != -1
+    else:
+        valid_mask = np.ones(len(pred_labels), dtype=bool)
+        
     clean_true_labels = filtered_labels[valid_mask]
     clean_pred_labels = pred_labels[valid_mask]
     
     n_noise = int(np.sum(~valid_mask))
     noise_ratio = n_noise / n_samples if n_samples > 0 else 0.0
     
-    logger.info(
-        "Excluding %d noise points (%.1f%%) for metric calculations.", 
-        n_noise, noise_ratio * 100
-    )
+    if n_noise > 0:
+        logger.info(
+            "Excluding %d noise points (%.1f%%) for metric calculations.", 
+            n_noise, noise_ratio * 100
+        )
     
     if len(clean_true_labels) > 0:
         ari = float(adjusted_rand_score(clean_true_labels, clean_pred_labels))
@@ -142,10 +150,12 @@ def run_benchmark(
     print(" CLUSTERING BENCHMARK RESULTS".center(60))
     print("=" * 60)
     print(f" Reference Data : {ref_path.name}")
+    print(f" Algorithm      : {algorithm.upper()}")
     print(f" True Classes   : {report['clustering_stats']['n_true_classes']}")
     print(f" Clusters Found : {report['clustering_stats']['n_clusters_found']}")
     print(f" Total Samples  : {n_samples}")
-    print(f" Noise Points   : {n_noise} ({noise_ratio*100:.1f}%)")
+    if algorithm == "hdbscan":
+        print(f" Noise Points   : {n_noise} ({noise_ratio*100:.1f}%)")
     print("-" * 60)
     print(f" Adjusted Rand Index (ARI)       : {ari:.4f}")
     print(f" Adjusted Mutual Info (AMI)      : {ami:.4f}")

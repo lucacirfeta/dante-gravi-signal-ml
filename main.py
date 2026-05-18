@@ -1009,6 +1009,8 @@ def cmd_cluster(args: argparse.Namespace) -> None:
     # 3. Load clustering config
     cfg = load_config()
     cluster_cfg = cfg["clustering"]
+    if hasattr(args, "algorithm"):
+        cluster_cfg["algorithm"] = args.algorithm
 
     # 4. Run full clustering pipeline
     from src.clustering import run_full_pipeline
@@ -1597,6 +1599,7 @@ def cmd_benchmark_clustering(args: argparse.Namespace) -> None:
             reference_path=args.reference,
             min_samples_per_class=args.min_samples_per_class,
             output_path=args.output,
+            algorithm=args.algorithm,
         )
     except Exception as e:
         logger.error("Benchmark failed: %s", e)
@@ -1935,6 +1938,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Stop date (ISO string or GPS time) for the continuous run loop.",
     )
+    p_full.add_argument(
+        "--algorithm",
+        type=str,
+        choices=["dpmm", "hdbscan"],
+        default="dpmm",
+        help="Clustering algorithm to use. Default: dpmm.",
+    )
     _add_run_argument(p_full)
     p_full.set_defaults(func=cmd_full_analysis)
 
@@ -2166,6 +2176,13 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["H1", "L1", "V1"],
         help="Detector identifier. Required when using --session-id.",
     )
+    p_cluster.add_argument(
+        "--algorithm",
+        type=str,
+        choices=["dpmm", "hdbscan"],
+        default="dpmm",
+        help="Clustering algorithm to use. Default: dpmm.",
+    )
     p_cluster.set_defaults(func=cmd_cluster)
     _add_run_argument(p_cluster)
 
@@ -2204,6 +2221,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         choices=["H1", "L1", "V1"],
         help="Detector identifier. Required when using --session-id.",
+    )
+    p_report.add_argument(
+        "--algorithm",
+        type=str,
+        choices=["dpmm", "hdbscan"],
+        default="dpmm",
+        help="Clustering algorithm to use. Default: dpmm.",
     )
     p_report.set_defaults(func=cmd_report)
     _add_run_argument(p_report)
@@ -2484,6 +2508,13 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default="data/reference/benchmark_report.json",
         help="Output JSON path for benchmark report.",
+    )
+    p_benchmark.add_argument(
+        "--algorithm",
+        type=str,
+        choices=["hdbscan", "dpmm"],
+        default="dpmm",
+        help="Clustering algorithm to use. Default: dpmm.",
     )
     p_benchmark.set_defaults(func=cmd_benchmark_clustering)
 

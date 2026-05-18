@@ -52,20 +52,23 @@ def save_cluster_report(
     labels = result["labels"]
     umap_2d = result["umap_2d"]
     umap_10d = result["umap_10d"]
-    stats = result["hdbscan_stats"]
-    anomalous = result["anomalous_clusters"]
+    stats = result.get("cluster_stats", result.get("hdbscan_stats", {}))
+    anomalous_clusters = result.get("anomalous_clusters", [])
+    anomalous_samples = result.get("anomalous_samples", [])
 
     # --- A) cluster_report.json ---
-    _save_json_report(result, metadata, stats, anomalous, labels, output_dir, detector=detector)
+    _save_json_report(
+        result, metadata, stats, anomalous_clusters, anomalous_samples, labels, output_dir, detector=detector
+    )
 
     # --- B) umap_visualization.png ---
     _save_umap_plot(
-        umap_2d, labels, stats, anomalous, output_dir, detector=detector
+        umap_2d, labels, stats, anomalous_clusters, anomalous_samples, output_dir, detector=detector
     )
 
     # --- C) cluster_gallery/ ---
     _save_cluster_gallery(
-        labels, umap_10d, stats, anomalous, metadata, output_dir
+        labels, umap_10d, stats, anomalous_clusters, anomalous_samples, metadata, output_dir
     )
 
     logger.info("Cluster report saved to %s", output_dir)
@@ -75,7 +78,8 @@ def _save_json_report(
     result: dict,
     metadata: dict,
     stats: dict,
-    anomalous: list[int],
+    anomalous_clusters: list[int],
+    anomalous_samples: list[int],
     labels: np.ndarray,
     output_dir: Path,
     detector: str = "H1",
@@ -85,12 +89,12 @@ def _save_json_report(
 
     # Build per-cluster detail
     clusters_detail = {}
-    for cid, size in stats["cluster_sizes"].items():
+    for cid, size in stats.get("cluster_sizes", {}).items():
         mask = labels == cid
         sample_files = [files[i] for i in np.where(mask)[0]] if files else []
         clusters_detail[str(cid)] = {
             "size": size,
-            "is_anomalous": cid in anomalous,
+            "is_anomalous": cid in anomalous_clusters,
             "sample_files": sample_files,
         }
 
@@ -128,11 +132,13 @@ def _save_json_report(
             },
         },
         "results": {
-            "n_clusters": stats["n_clusters"],
-            "n_noise": stats["n_noise"],
-            "noise_ratio": stats["noise_ratio"],
-            "cluster_sizes": stats["cluster_sizes"],
-            "anomalous_clusters": anomalous,
+            "n_clusters": stats.get("n_clusters", 0),
+            "n_noise": stats.get("n_noise", 0),
+            "noise_ratio": stats.get("noise_ratio", 0.0),
+            "algorithm": stats.get("algorithm", "hdbscan"),
+            "cluster_sizes": stats.get("cluster_sizes", {}),
+            "anomalous_clusters": anomalous_clusters,
+            "anomalous_samples": anomalous_samples,
             "clusters": clusters_detail,
         },
     }
@@ -148,7 +154,8 @@ def _save_umap_plot(
     umap_2d: np.ndarray,
     labels: np.ndarray,
     stats: dict,
-    anomalous: list[int],
+    anomalous_clusters: list[int],
+    anomalous_samples: list[int],
     output_dir: Path,
     detector: str = "H1",
 ) -> None:
@@ -177,7 +184,7 @@ def _save_umap_plot(
             color = cmap(label % 20)
             size_count = stats["cluster_sizes"].get(int(label), 0)
 
-            if label in anomalous:
+            if label in anomalous_clusters:
                 # Anomalous clusters get star markers
                 ax.scatter(
                     umap_2d[mask, 0],
@@ -188,6 +195,7 @@ def _save_umap_plot(
                     edgecolors="black",
                     linewidths=0.5,
                     label=f"* Cluster {label} ({size_count})",
+                    zorder=2,
                 )
             else:
                 ax.scatter(
@@ -197,10 +205,25 @@ def _save_umap_plot(
                     s=20,
                     alpha=0.7,
                     label=f"Cluster {label} ({size_count})",
+                    zorder=1,
                 )
 
+    # Plot anomalous samples (Novelty points from DPMM) on top
+    if anomalous_samples:
+        ax.scatter(
+            umap_2d[anomalous_samples, 0],
+            umap_2d[anomalous_samples, 1],
+            c="none",
+            s=80,
+            marker="X",
+            edgecolors="black",
+            linewidths=1.5,
+            label=f"Anomalous Samples ({len(anomalous_samples)})",
+            zorder=3,
+        )
+
     ax.set_title(
-        f"O4a {detector} - DINOv2 Clustering ({n_clusters} clusters, {n_noise} noise)",
+        f"O4a {detector} - Clustering ({n_clusters} clusters, {n_noise} noise)",
         fontsize=14,
         fontweight="bold",
     )
@@ -227,7 +250,8 @@ def _save_cluster_gallery(
     labels: np.ndarray,
     umap_10d: np.ndarray,
     stats: dict,
-    anomalous: list[int],
+    anomalous_clusters: list[int],
+    anomalous_samples: list[int],
     metadata: dict,
     output_dir: Path,
 ) -> None:
@@ -270,8 +294,36 @@ def _save_cluster_gallery(
                 copied_paths,
                 cluster_dir,
                 cid,
-                stats["cluster_sizes"][cid],
-                is_anomalous=(cid in anomalous),
+                stats.get("cluster_sizes", {}).get(cid, 0),
+                is_anomalous=(cid in anomalous_clusters),
+            )
+
+    # -----------------------------------------------------
+    # Generate gallery for DPMM Anomalous Samples
+    # -----------------------------------------------------
+    if anomalous_samples:
+        anomaly_dir = output_dir / "Anomalie_Morfologiche_Rilevate"
+        anomaly_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Pick top 9 most anomalous samples (already sorted by lowest log-likelihood)
+        top_anomalies = anomalous_samples[:9]
+        copied_paths = []
+        
+        for idx in top_anomalies:
+            if idx < len(files):
+                src_path = Path(files[idx])
+                if src_path.exists():
+                    dst_path = anomaly_dir / src_path.name
+                    shutil.copy2(src_path, dst_path)
+                    copied_paths.append(dst_path)
+                    
+        if copied_paths:
+            _make_contact_sheet(
+                copied_paths,
+                anomaly_dir,
+                cluster_id=-1,  # Special ID for anomalous samples
+                cluster_size=len(anomalous_samples),
+                is_anomalous=True,
             )
 
 
@@ -291,7 +343,10 @@ def _make_contact_sheet(
 
     # Title
     if is_anomalous:
-        title = f"* ANOMALOUS - Cluster {cluster_id} - {cluster_size} samples"
+        if cluster_id == -1:
+            title = f"* MORPHOLOGICAL ANOMALIES - {cluster_size} Candidates"
+        else:
+            title = f"* ANOMALOUS - Cluster {cluster_id} - {cluster_size} samples"
     else:
         title = f"Cluster {cluster_id} - {cluster_size} samples"
     fig.suptitle(title, fontsize=14, fontweight="bold")
@@ -327,9 +382,11 @@ def print_summary(result: dict, detector: str | None = None) -> None:
         result: Dict returned by :func:`~src.clustering.run_full_pipeline`.
         detector: Optional detector name to include in the header.
     """
-    stats = result["hdbscan_stats"]
-    anomalous = result["anomalous_clusters"]
+    stats = result.get("cluster_stats", result.get("hdbscan_stats", {}))
+    anomalous = result.get("anomalous_clusters", [])
+    anomalous_samples = result.get("anomalous_samples", [])
     labels = result["labels"]
+    algorithm = stats.get("algorithm", "hdbscan").upper()
 
     det_colors = {
         "H1": "\033[96m",  # Cyan
@@ -341,22 +398,27 @@ def print_summary(result: dict, detector: str | None = None) -> None:
 
     det_str = f" ({detector})" if detector else ""
     print("\n" + color + "=" * 60)
-    print(f"  CLUSTERING SUMMARY{det_str}")
+    print(f"  CLUSTERING SUMMARY{det_str} - {algorithm}")
     print("=" * 60 + reset)
     print(f"  Total samples:    {len(labels)}")
-    print(f"  Clusters found:   {stats['n_clusters']}")
-    print(f"  Noise points:     {stats['n_noise']} ({stats['noise_ratio']:.1%})")
+    print(f"  Clusters found:   {stats.get('n_clusters', 0)}")
+    if algorithm == "HDBSCAN":
+        print(f"  Noise points:     {stats.get('n_noise', 0)} ({stats.get('noise_ratio', 0.0):.1%})")
     print(f"  PCA variance:     {result['pca_variance']:.1%}")
     print("-" * 60)
     print(f"  {'ID':>4}  {'Size':>6}  {'Status'}")
     print(f"  {'-' * 4}  {'-' * 6}  {'-' * 20}")
 
-    for cid, size in sorted(stats["cluster_sizes"].items()):
+    for cid, size in sorted(stats.get("cluster_sizes", {}).items()):
         flag = "  * ANOMALOUS" if cid in anomalous else ""
         print(f"  {cid:>4}  {size:>6}{flag}")
 
     if anomalous:
         print("-" * 60)
         print(f"  *  Anomalous clusters (novel candidates): {anomalous}")
+
+    if anomalous_samples:
+        print("-" * 60)
+        print(f"  *  Anomalous samples (novel candidates): {len(anomalous_samples)} points")
 
     print("=" * 60 + "\n")

@@ -87,7 +87,11 @@ indomain_reference:
 
 # Unsupervised clustering (Phase 3)
 clustering:
+  algorithm: dpmm            # Set DPMM as the default algorithm
   pca_components: 50
+  dpmm:
+    n_components: 25
+    anomaly_percentile: 5.0
   umap_clustering:
     n_components: 10
     n_neighbors: 30

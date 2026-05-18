@@ -23,6 +23,7 @@ import numpy as np
 from sklearn.cluster import HDBSCAN
 from sklearn.decomposition import PCA
 
+from src.dpmm_clustering import run_dpmm
 from src.utils import setup_logger
 
 logger: logging.Logger = setup_logger(__name__)
@@ -259,38 +260,51 @@ def run_full_pipeline(
         min_dist=umap_clust_cfg.get("min_dist", 0.0),
     )
 
-    # --- Step 3: HDBSCAN ---
-    hdbscan_cfg = config.get("hdbscan", {})
-    n = len(embeddings)
+    algorithm = config.get("algorithm", "dpmm")
+    
+    if algorithm == "dpmm":
+        # --- Step 3: DPMM ---
+        dpmm_cfg = config.get("dpmm", {})
+        labels, cluster_stats, anomalous_samples = run_dpmm(
+            umap_10d,
+            n_components=dpmm_cfg.get("n_components", 25),
+            anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
+        )
+        anomalous_clusters = []
+    else:
+        # --- Step 3: HDBSCAN ---
+        hdbscan_cfg = config.get("hdbscan", {})
+        n = len(embeddings)
 
-    min_cluster_size = hdbscan_cfg.get("min_cluster_size", 15)
+        min_cluster_size = hdbscan_cfg.get("min_cluster_size", 15)
 
-    raw_anomaly = config.get("anomaly_threshold", 10)
-    anomaly_threshold = (
-        max(10, int(n * 0.01))
-        if raw_anomaly == "auto"
-        else raw_anomaly
-    )
+        raw_anomaly = config.get("anomaly_threshold", 10)
+        anomaly_threshold = (
+            max(10, int(n * 0.01))
+            if raw_anomaly == "auto"
+            else raw_anomaly
+        )
 
-    logger.info(
-        f"HDBSCAN params (N={n}): "
-        f"min_cluster_size={min_cluster_size}, "
-        f"anomaly_threshold={anomaly_threshold}"
-    )
+        logger.info(
+            f"HDBSCAN params (N={n}): "
+            f"min_cluster_size={min_cluster_size}, "
+            f"anomaly_threshold={anomaly_threshold}"
+        )
 
-    labels, hdbscan_stats = run_hdbscan(
-        umap_10d,
-        min_cluster_size=min_cluster_size,
-        min_samples=hdbscan_cfg.get("min_samples", 10),
-        cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
-    )
+        labels, cluster_stats = run_hdbscan(
+            umap_10d,
+            min_cluster_size=min_cluster_size,
+            min_samples=hdbscan_cfg.get("min_samples", 10),
+            cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
+        )
 
-    # --- Step 4: Identify anomalous clusters ---
-    anomalous = identify_anomalous_clusters(
-        labels,
-        hdbscan_stats,
-        small_cluster_threshold=anomaly_threshold,
-    )
+        # --- Step 4: Identify anomalous clusters ---
+        anomalous_clusters = identify_anomalous_clusters(
+            labels,
+            cluster_stats,
+            small_cluster_threshold=anomaly_threshold,
+        )
+        anomalous_samples = []
 
     # --- Step 5: UMAP Pass B — visualization (2D, min_dist=0.1) ---
     umap_viz_cfg = config.get("umap_viz", {})
@@ -306,6 +320,8 @@ def run_full_pipeline(
         "umap_2d": umap_2d,
         "umap_10d": umap_10d,
         "pca_variance": pca_variance,
-        "hdbscan_stats": hdbscan_stats,
-        "anomalous_clusters": anomalous,
+        "hdbscan_stats": cluster_stats,
+        "cluster_stats": cluster_stats,  # alias for agnostic reporting
+        "anomalous_clusters": anomalous_clusters,
+        "anomalous_samples": anomalous_samples,
     }
