@@ -205,6 +205,13 @@ python main.py build-indomain-reference --output data/reference/indomain_index.n
 python main.py validate-reference --reference data/reference/indomain_index.npz --test-event GW150914
 ```
 
+# 3. Benchmark clustering against Gravity Spy labels
+```bash
+python main.py benchmark-clustering --reference data/reference/indomain_index.npz --min-samples-per-class 10 --output data/reference/benchmark_report.json
+```
+Quantitatively compares the unsupervised clusters against the Gravity Spy
+ground truth labels. Computes ARI, AMI, and a contingency matrix.
+
 ⚠️ **Requires ~2h of GWOSC downloads** for ~600 labeled glitch segments.
 
 ✅ Validation passes if GW150914 maps to class `Chirp` with cosine similarity ≥ 0.99.
@@ -383,9 +390,12 @@ GWOSC fetch threads are capped at 4 regardless of `--workers`.
 3. **Single Q-transform window:** Standard Q-transform (qrange=[4,64], 32s window)
    may miss fast narrowband or slow broadband structures.
 
-4. **L1 rendering dependence:** L1 clustering shows partial dependence on colormap
-   (grayscale ARI = 0.377). Physical interpretation of L1 clusters requires
-   further validation.
+4. **Clustering vs. Gravity Spy ground truth:** The unsupervised clustering
+   achieves an ARI of 0.146 against the Gravity Spy labeled catalog (benchmark
+   via `benchmark-clustering`). This reflects a structural difference between
+   visual morphology similarity (captured by DINOv2) and physics-based human
+   classification. Clusters are morphologically coherent but do not map 1:1
+   onto existing class labels.
 
 5. **No GPU acceleration:** PyTorch stable does not yet support RTX 5070 (Blackwell
    sm_120). Pipeline is CPU-only, which limits throughput on very large datasets.
@@ -441,7 +451,7 @@ gravi-signal-ml/
 │   └── utils.py                      # Config · logging · GPS conversion
 ├── tests/                            # Pytest suite (synthetic data, mocked)
 ├── docs/                             # Pipeline steps, implementation notes
-├── main.py                           # CLI entry point (18 subcommands)
+├── main.py                           # CLI entry point (19 subcommands)
 ├── gui.py                            # Gooey-based GUI wrapper
 ├── config.yaml                       # Central configuration
 ├── CLI_REFERENCE.md                  # Complete CLI reference
@@ -474,6 +484,8 @@ for gravitational-wave open science.
 - Darcet et al. (2023) — *Vision Transformers Need Registers* (ICLR 2024)
 - Glanzer et al. (2023) — *Data quality up to the third observing run of Advanced LIGO: Gravity Spy glitch classifications*
 - LIGO/Virgo/KAGRA Collaboration — O4a data release (GWTC-4.0, 2024)
+- CTSAE (2024) — Cross-Temporal Spectrogram Autoencoder for GW glitch clustering. arXiv:2404.15552
+- Soni et al. (2025) — LIGO Detector Characterization in O4a. arXiv:2409.02831
 
 ---
 
