@@ -58,13 +58,8 @@ def run_stability_analysis(
     umap_clust_cfg = cluster_cfg.get("umap_clustering", {})
     hdbscan_cfg = cluster_cfg.get("hdbscan", {})
 
-    base_n_neighbors = umap_clust_cfg.get("n_neighbors", 20)
-    raw_min_cluster = hdbscan_cfg.get("min_cluster_size", 5)
-    base_min_cluster_size = (
-        max(5, int(n_samples * 0.005))
-        if raw_min_cluster == "auto"
-        else raw_min_cluster
-    )
+    base_n_neighbors = umap_clust_cfg.get("n_neighbors", 30)
+    base_min_cluster_size = hdbscan_cfg.get("min_cluster_size", 15)
 
     raw_anomaly = cluster_cfg.get("anomaly_threshold", 10)
     anomaly_threshold = (
@@ -92,7 +87,7 @@ def run_stability_analysis(
     base_labels, base_stats = run_hdbscan(
         base_umap,
         min_cluster_size=base_min_cluster_size,
-        min_samples=hdbscan_cfg.get("min_samples", 3),
+        min_samples=hdbscan_cfg.get("min_samples", 10),
         cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
     )
     base_anomalous = identify_anomalous_clusters(
@@ -144,7 +139,7 @@ def run_stability_analysis(
         p_labels, p_stats = run_hdbscan(
             p_umap,
             min_cluster_size=p_min_cluster,
-            min_samples=hdbscan_cfg.get("min_samples", 3),
+            min_samples=hdbscan_cfg.get("min_samples", 10),
             cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
         )
 

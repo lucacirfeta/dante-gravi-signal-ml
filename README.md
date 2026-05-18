@@ -82,7 +82,7 @@ Raw Strain Data (GWOSC O2–O4a)
          ▼
 ┌─────────────────────┐
 │   Clustering        │  PCA(50D) → UMAP(10D, cosine, min_dist=0.0)
-│   (clustering.py)   │  → HDBSCAN (auto-scaled min_cluster_size)
+│   (clustering.py)   │  → HDBSCAN (strict conservative parameters)
 │   (reporter.py)     │  → UMAP(2D) for visualization
 └────────┬────────────┘
          │
@@ -274,7 +274,7 @@ python main.py cluster --session-id <SESSION_ID> --detector L1 --run O4a
 
 **Pipeline:** PCA(50D) → UMAP(10D, cosine, `min_dist=0.0`) → HDBSCAN → UMAP(2D) viz
 
-HDBSCAN `min_cluster_size` is auto-scaled to 0.5% of N.
+HDBSCAN parameters use strict, conservative values (e.g., `min_cluster_size=15`, `min_samples=10`) to prevent over-fragmentation.
 
 #### Step 4 — Morphological Cross-Check
 

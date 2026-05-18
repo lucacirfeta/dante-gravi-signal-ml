@@ -111,19 +111,19 @@ def _save_json_report(
             "pca_variance_explained": result["pca_variance"],
             "umap_clustering": {
                 "n_components": umap_clust_cfg.get("n_components", 10),
-                "n_neighbors": umap_clust_cfg.get("n_neighbors", 20),
+                "n_neighbors": umap_clust_cfg.get("n_neighbors", 30),
                 "min_dist": umap_clust_cfg.get("min_dist", 0.0),
                 "metric": umap_clust_cfg.get("metric", "cosine"),
             },
             "umap_viz": {
                 "n_components": umap_viz_cfg.get("n_components", 2),
-                "n_neighbors": umap_viz_cfg.get("n_neighbors", 20),
+                "n_neighbors": umap_viz_cfg.get("n_neighbors", 30),
                 "min_dist": umap_viz_cfg.get("min_dist", 0.1),
                 "metric": umap_viz_cfg.get("metric", "cosine"),
             },
             "hdbscan": {
-                "min_cluster_size": hdbscan_cfg.get("min_cluster_size", 5),
-                "min_samples": hdbscan_cfg.get("min_samples", 3),
+                "min_cluster_size": hdbscan_cfg.get("min_cluster_size", 15),
+                "min_samples": hdbscan_cfg.get("min_samples", 10),
                 "cluster_selection_method": hdbscan_cfg.get("cluster_selection_method", "eom"),
             },
         },

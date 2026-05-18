@@ -75,16 +75,16 @@ class TestRunHDBSCAN:
     def test_run_hdbscan_returns_labels(self) -> None:
         """HDBSCAN on make_blobs(100, 10, centers=5) finds >= 1 cluster."""
         data, _ = make_blobs(
-            n_samples=100, n_features=10, centers=5, random_state=42
+            n_samples=200, n_features=10, centers=5, random_state=42
         )
 
         labels, stats = run_hdbscan(
             data.astype(np.float32),
-            min_cluster_size=5,
-            min_samples=3,
+            min_cluster_size=15,
+            min_samples=10,
         )
 
-        assert labels.shape == (100,)
+        assert labels.shape == (200,)
         assert stats["n_clusters"] >= 1
         assert stats["n_noise"] >= 0
         assert 0.0 <= stats["noise_ratio"] <= 1.0
@@ -154,8 +154,8 @@ class TestFullPipelineSmoke:
                 "metric": "cosine",
             },
             "hdbscan": {
-                "min_cluster_size": 5,
-                "min_samples": 3,
+                "min_cluster_size": 15,
+                "min_samples": 10,
                 "cluster_selection_method": "eom",
             },
             "anomaly_threshold": 10,
