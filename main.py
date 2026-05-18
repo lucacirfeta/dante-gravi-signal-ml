@@ -14,6 +14,7 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
     crosscheck               — Gravity Spy cross-check of anomalous clusters (Phase 3.1)
     build-indomain-reference — Build in-domain reference from labeled GPS (Phase 3.4)
     validate-reference       — Validate reference with GW150914 sanity check (Phase 3.4)
+    benchmark-clustering     — Validate unsupervised clustering using ground truth labels
     full-analysis            — Automated end-to-end analysis (Cluster, Morph, Ablation, Stability, Timeslide)
 
 Usage:
@@ -1585,6 +1586,23 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
     print(f"{'='*60}\n")
 
 
+def cmd_benchmark_clustering(args: argparse.Namespace) -> None:
+    """Run benchmark of the clustering pipeline against a reference index."""
+    from src.benchmark import run_benchmark
+    
+    logger.info("=== BENCHMARK CLUSTERING ===")
+    
+    try:
+        run_benchmark(
+            reference_path=args.reference,
+            min_samples_per_class=args.min_samples_per_class,
+            output_path=args.output,
+        )
+    except Exception as e:
+        logger.error("Benchmark failed: %s", e)
+        sys.exit(1)
+
+
 def cmd_timeslide(args: argparse.Namespace) -> None:
     """Run time-slide analysis to estimate background coincidence significance."""
     from src.timeslide import run_timeslide
@@ -2443,6 +2461,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Known event to test against (default: GW150914).",
     )
     p_validate.set_defaults(func=cmd_validate_reference)
+
+    # --- benchmark-clustering ---
+    p_benchmark = subparsers.add_parser(
+        "benchmark-clustering",
+        help="Validate unsupervised clustering pipeline using ground truth labels.",
+    )
+    p_benchmark.add_argument(
+        "--reference",
+        type=str,
+        default="data/reference/indomain_index.npz",
+        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+    )
+    p_benchmark.add_argument(
+        "--min-samples-per-class",
+        type=int,
+        default=10,
+        help="Exclude classes with fewer samples. Default: 10.",
+    )
+    p_benchmark.add_argument(
+        "--output",
+        type=str,
+        default="data/reference/benchmark_report.json",
+        help="Output JSON path for benchmark report.",
+    )
+    p_benchmark.set_defaults(func=cmd_benchmark_clustering)
 
     return parser
 

@@ -335,34 +335,6 @@ GWOSC fetch threads are capped at 4 regardless of `--workers`.
 
 ---
 
-## 📊 Preliminary Results (O4a, 72h)
-
-| Detector | Samples | Duty Cycle | Clusters | Anomalous |
-|----------|---------|------------|----------|-----------|
-| H1       | 1,501   | 18.5%      | 6        | **2**     |
-| L1       | 7,153   | 88.3%      | 7        | **0**     |
-
-Morphological cross-check against the in-domain Gravity Spy O3b reference
-(validated: GW150914 → Chirp@0.997):
-
-- **H1 anomalous clusters**: map to Low_Frequency_Lines / 1400Ripples (KNOWN/AMBIGUOUS)
-- **L1**: no anomalous clusters identified in this 72h window
-
-**Temporal analysis finding:** H1 anomalous clusters concentrated on 2023-05-27
-(first week of O4a, active commissioning period).
-
-No fully novel morphologies were identified. The pipeline is validated end-to-end.
-
-**Robustness validation (H1):**
-- Ablation study: ARI > 0.999 across grayscale/inverted/shuffled-intensity variants
-- Random baseline: ARI ≈ 0.000 (correct negative control)
-- Stability analysis: ARI mean ≈ 0.9997 ± 0.0003 across 21 hyperparameter configs
-
-**L1 note:** grayscale ARI = 0.377 — L1 clustering shows partial dependence on
-rendering statistics; physical interpretation requires further investigation.
-
----
-
 ## ⚠️ Known Limitations
 
 1. **UMAP distortion:** UMAP distorts global distances to preserve local structure.
