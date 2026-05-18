@@ -23,6 +23,7 @@ import numpy as np
 from sklearn.cluster import HDBSCAN
 from sklearn.decomposition import PCA
 
+from src.dpmm_clustering import run_dpmm
 from src.utils import setup_logger
 
 logger: logging.Logger = setup_logger(__name__)
@@ -72,9 +73,8 @@ def run_pca(
 def run_umap(
     embeddings: np.ndarray,
     n_components: int = 10,
-    n_neighbors: int = 20,
+    n_neighbors: int = 30,
     min_dist: float = 0.0,
-    metric: str = "cosine",
     random_state: int = 42,
 ) -> np.ndarray:
     """Reduce dimensionality via Uniform Manifold Approximation and Projection.
@@ -82,9 +82,8 @@ def run_umap(
     Args:
         embeddings: Input array of shape ``(N, D)``.
         n_components: Output dimensionality (10 for clustering, 2 for viz).
-        n_neighbors: Size of the local neighborhood (default 20).
+        n_neighbors: Size of the local neighborhood (default 30).
         min_dist: Minimum distance between output points (default 0.0).
-        metric: Distance metric for the input space (default 'cosine').
         random_state: Random seed for reproducibility.
 
     Returns:
@@ -97,7 +96,7 @@ def run_umap(
         n_components=n_components,
         n_neighbors=n_neighbors,
         min_dist=min_dist,
-        metric=metric,
+        metric="cosine",  # Enforce cosine for pre-normalized DINOv2 embeddings
         random_state=random_state,
     )
     reduced = reducer.fit_transform(embeddings)
@@ -118,8 +117,8 @@ def run_umap(
 
 def run_hdbscan(
     embeddings: np.ndarray,
-    min_cluster_size: int = 5,
-    min_samples: int = 3,
+    min_cluster_size: int = 15,
+    min_samples: int = 10,
     cluster_selection_method: str = "eom",
 ) -> tuple[np.ndarray, dict]:
     """Cluster embeddings using HDBSCAN (sklearn implementation).
@@ -129,8 +128,8 @@ def run_hdbscan(
 
     Args:
         embeddings: Input array of shape ``(N, D)`` from UMAP Pass A.
-        min_cluster_size: Minimum points to form a cluster (default 5).
-        min_samples: Core point neighborhood size (default 3).
+        min_cluster_size: Minimum points to form a cluster (default 15).
+        min_samples: Core point neighborhood size (default 10).
         cluster_selection_method: Cluster extraction method — ``'eom'``
             (Excess of Mass) or ``'leaf'`` (default ``'eom'``).
 
@@ -257,57 +256,63 @@ def run_full_pipeline(
     umap_10d = run_umap(
         pca_reduced,
         n_components=umap_clust_cfg.get("n_components", 10),
-        n_neighbors=umap_clust_cfg.get("n_neighbors", 20),
+        n_neighbors=umap_clust_cfg.get("n_neighbors", 30),
         min_dist=umap_clust_cfg.get("min_dist", 0.0),
-        metric=umap_clust_cfg.get("metric", "cosine"),
     )
 
-    # --- Step 3: HDBSCAN (auto-scaled parameters) ---
-    hdbscan_cfg = config.get("hdbscan", {})
-    n = len(embeddings)
+    algorithm = config.get("algorithm", "dpmm")
+    
+    if algorithm == "dpmm":
+        # --- Step 3: DPMM ---
+        dpmm_cfg = config.get("dpmm", {})
+        labels, cluster_stats, anomalous_samples = run_dpmm(
+            umap_10d,
+            n_components=dpmm_cfg.get("n_components", 25),
+            anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
+        )
+        anomalous_clusters = []
+    else:
+        # --- Step 3: HDBSCAN ---
+        hdbscan_cfg = config.get("hdbscan", {})
+        n = len(embeddings)
 
-    raw_min_cluster = hdbscan_cfg.get("min_cluster_size", 5)
-    min_cluster_size = (
-        max(5, int(n * 0.005))
-        if raw_min_cluster == "auto"
-        else raw_min_cluster
-    )
+        min_cluster_size = hdbscan_cfg.get("min_cluster_size", 15)
 
-    raw_anomaly = config.get("anomaly_threshold", 10)
-    anomaly_threshold = (
-        max(10, int(n * 0.01))
-        if raw_anomaly == "auto"
-        else raw_anomaly
-    )
+        raw_anomaly = config.get("anomaly_threshold", 10)
+        anomaly_threshold = (
+            max(10, int(n * 0.01))
+            if raw_anomaly == "auto"
+            else raw_anomaly
+        )
 
-    logger.info(
-        f"HDBSCAN params (N={n}): "
-        f"min_cluster_size={min_cluster_size}, "
-        f"anomaly_threshold={anomaly_threshold}"
-    )
+        logger.info(
+            f"HDBSCAN params (N={n}): "
+            f"min_cluster_size={min_cluster_size}, "
+            f"anomaly_threshold={anomaly_threshold}"
+        )
 
-    labels, hdbscan_stats = run_hdbscan(
-        umap_10d,
-        min_cluster_size=min_cluster_size,
-        min_samples=hdbscan_cfg.get("min_samples", 3),
-        cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
-    )
+        labels, cluster_stats = run_hdbscan(
+            umap_10d,
+            min_cluster_size=min_cluster_size,
+            min_samples=hdbscan_cfg.get("min_samples", 10),
+            cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
+        )
 
-    # --- Step 4: Identify anomalous clusters ---
-    anomalous = identify_anomalous_clusters(
-        labels,
-        hdbscan_stats,
-        small_cluster_threshold=anomaly_threshold,
-    )
+        # --- Step 4: Identify anomalous clusters ---
+        anomalous_clusters = identify_anomalous_clusters(
+            labels,
+            cluster_stats,
+            small_cluster_threshold=anomaly_threshold,
+        )
+        anomalous_samples = []
 
     # --- Step 5: UMAP Pass B — visualization (2D, min_dist=0.1) ---
     umap_viz_cfg = config.get("umap_viz", {})
     umap_2d = run_umap(
         pca_reduced,
         n_components=umap_viz_cfg.get("n_components", 2),
-        n_neighbors=umap_viz_cfg.get("n_neighbors", 20),
+        n_neighbors=umap_viz_cfg.get("n_neighbors", 30),
         min_dist=umap_viz_cfg.get("min_dist", 0.1),
-        metric=umap_viz_cfg.get("metric", "cosine"),
     )
 
     return {
@@ -315,6 +320,8 @@ def run_full_pipeline(
         "umap_2d": umap_2d,
         "umap_10d": umap_10d,
         "pca_variance": pca_variance,
-        "hdbscan_stats": hdbscan_stats,
-        "anomalous_clusters": anomalous,
+        "hdbscan_stats": cluster_stats,
+        "cluster_stats": cluster_stats,  # alias for agnostic reporting
+        "anomalous_clusters": anomalous_clusters,
+        "anomalous_samples": anomalous_samples,
     }

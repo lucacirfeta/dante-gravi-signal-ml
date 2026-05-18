@@ -18,8 +18,8 @@ Questa guida fornisce un elenco completo e aggiornato di tutti i comandi disponi
 2. **Pipeline ML (Fasi 2 e 3)**
    - [`reprocess-spectrograms`](#6-reprocess-spectrograms) — Ri-processa spettrogrammi
    - [`encode`](#7-encode) — Estrae embedding DINOv2
-   - [`cluster`](#8-cluster) — Esegue HDBSCAN clustering
-   - [`report`](#9-report) — Rigenera grafici UMAP/gallery
+    - [`cluster`](#8-cluster) — Esegue DPMM o HDBSCAN clustering
+    - [`report`](#9-report) — Rigenera grafici UMAP/gallery
 
 3. **Analisi & Validazione**
    - [`stability`](#10-stability) — Analisi stabilità clustering
@@ -134,18 +134,19 @@ Usa il modello DINOv2-Reg preaddestrato per mappare gli spettrogrammi in vettori
 ---
 
 ### 8. `cluster`
-Prende il file `.npy` di encode e raggruppa dinamicamente i dati con PCA, UMAP, HDBSCAN trovando eventuali classi sconosciute di glitch. 
+Prende il file `.npy` di encode e raggruppa dinamicamente i dati con PCA, UMAP, DPMM (default) o HDBSCAN, trovando eventuali classi sconosciute di glitch. Con DPMM, le anomalie morfologiche (novelty) vengono identificate calcolando la log-likelihood di ciascun campione ed isolando il 5% a densità probabilistica più bassa.
 
 - `--session-id`: ID della sessione per auto-matching cartelle.
 - `--detector`: Rivelatore (`H1`, `L1`, `V1`). 
 - `--run`: Run osservativo (`O2`, `O3a`, `O3b`, `O4a`). *Default: `O4a`*.
 - `--input`: File numpy (`.npy`).
 - `--output`: Cartella in cui salvare i plot e i report JSON.
+- `--algorithm`: Algoritmo di clustering da utilizzare (`dpmm`, `hdbscan`). *Default: `dpmm`*.
 
 ---
 
 ### 9. `report`
-Rigenera gallerie d'immagini riepilogative e plot UMAP 2D caricando il JSON risultante da un precedente `cluster`.
+Rigenera gallerie d'immagini riepilogative e plot UMAP 2D caricando il JSON risultante da un precedente `cluster`. I campioni isolati come anomalie probabilistiche da DPMM vengono raccolti ed esportati automaticamente in una cartella dedicata denominata `Anomalie_Morfologiche_Rilevate` ed evidenziati graficamente nel plot UMAP 2D con un marcatore `'X'` nero.
 
 - `--session-id`: ID della sessione target.
 - `--detector`: Rivelatore target (`H1`, `L1`, `V1`).
@@ -153,13 +154,14 @@ Rigenera gallerie d'immagini riepilogative e plot UMAP 2D caricando il JSON risu
 - `--embeddings`: Path ad embedding.
 - `--report`: Path a JSON (`cluster_report.json`).
 - `--output-dir`: Cartella output custom.
+- `--algorithm`: Algoritmo utilizzato per i dati (`dpmm`, `hdbscan`). *Default: `dpmm`*.
 
 ---
 
 ## Analisi & Validazione
 
 ### 10. `stability`
-Riesegue svariate volte (n-runs) il cluster introducendo micro-perturbazioni in HDBSCAN e UMAP, e tramite Adjusted Rand Index verifica la robustezza.
+Riesegue svariate volte (n-runs) il cluster introducendo micro-perturbazioni nei parametri dell'algoritmo selezionato (DPMM o HDBSCAN) e UMAP, e tramite Adjusted Rand Index verifica la robustezza.
 
 - `--session-id`: ID della sessione target.
 - `--detector`: Rivelatore (`H1`, `L1`, `V1`). *Default: `H1`*.
@@ -249,7 +251,7 @@ Utilizza un indice di riferimento (via in-domain o standard npz) per valutare i 
 ---
 
 ### 18. `full-analysis`
-Automatizza l'intero workflow di analisi. Per impostazione predefinita, l'analisi di **H1 e L1 viene eseguita in parallelo** per massimizzare l'efficienza. Esegue: Encode (se necessario), Clustering, Morphological Cross-check, Ablation Study, Stability Analysis e Time-slide (se applicabile).
+Automatizza l'intero workflow di analisi. Per impostazione predefinita, l'analisi di **H1 e L1 viene eseguita in parallelo** per massimizzare l'efficienza. Esegue: Encode (se necessario), Clustering (DPMM di default), Morphological Cross-check, Ablation Study, Stability Analysis e Time-slide (se applicabile).
 
 - `--session-id` **(Richiesto)**: ID della sessione da analizzare.
 - `--detector`: Uno o più rivelatori da analizzare (es. `--detector H1 L1`). Se omesso, il comando identifica automaticamente i rivelatori presenti nella cartella della sessione.
@@ -260,6 +262,7 @@ Automatizza l'intero workflow di analisi. Per impostazione predefinita, l'analis
 - `--continue-run`: Flag. Attiva il ciclo continuo di scansione e analisi sincronizzata (loop di resume). Al termine dell'analisi completa corrente, genera una nuova sessione e lancia `scan-extended` a partire da `GPS = min(last_H1, last_L1) + 1` con la durata definita in `config.yaml`, per poi ri-analizzarla.
 - `--max-iterations`: Numero massimo di iterazioni per il ciclo continuo. *Default: `10`*.
 - `--stop-date`: Limite temporale (data ISO UTC o tempo GPS) oltre il quale interrompere il ciclo continuo.
+- `--algorithm`: Algoritmo di clustering da utilizzare (`dpmm`, `hdbscan`). *Default: `dpmm`*.
 
 > [!NOTE]
 > **Session Summary:** Il report generato include ora una sezione iniziale `session_summary` con statistiche descrittive del dataset analizzato (numero di spettrogrammi, intervallo GPS, durata totale e duty cycle), calcolate direttamente dai file PNG prima dell'encoding.

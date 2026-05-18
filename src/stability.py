@@ -21,6 +21,7 @@ from src.clustering import (
     run_pca,
     run_umap,
 )
+from src.dpmm_clustering import run_dpmm
 from src.utils import setup_logger, session_path
 
 logger: logging.Logger = setup_logger(__name__)
@@ -58,13 +59,8 @@ def run_stability_analysis(
     umap_clust_cfg = cluster_cfg.get("umap_clustering", {})
     hdbscan_cfg = cluster_cfg.get("hdbscan", {})
 
-    base_n_neighbors = umap_clust_cfg.get("n_neighbors", 20)
-    raw_min_cluster = hdbscan_cfg.get("min_cluster_size", 5)
-    base_min_cluster_size = (
-        max(5, int(n_samples * 0.005))
-        if raw_min_cluster == "auto"
-        else raw_min_cluster
-    )
+    base_n_neighbors = umap_clust_cfg.get("n_neighbors", 30)
+    base_min_cluster_size = hdbscan_cfg.get("min_cluster_size", 15)
 
     raw_anomaly = cluster_cfg.get("anomaly_threshold", 10)
     anomaly_threshold = (
@@ -87,17 +83,26 @@ def run_stability_analysis(
         n_components=umap_clust_cfg.get("n_components", 10),
         n_neighbors=base_n_neighbors,
         min_dist=umap_clust_cfg.get("min_dist", 0.0),
-        metric=umap_clust_cfg.get("metric", "cosine"),
     )
-    base_labels, base_stats = run_hdbscan(
-        base_umap,
-        min_cluster_size=base_min_cluster_size,
-        min_samples=hdbscan_cfg.get("min_samples", 3),
-        cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
-    )
-    base_anomalous = identify_anomalous_clusters(
-        base_labels, base_stats, small_cluster_threshold=anomaly_threshold
-    )
+    algorithm = cluster_cfg.get("algorithm", "dpmm")
+    
+    if algorithm == "dpmm":
+        dpmm_cfg = cluster_cfg.get("dpmm", {})
+        base_labels, base_stats, base_anomalous = run_dpmm(
+            base_umap,
+            n_components=dpmm_cfg.get("n_components", 25),
+            anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
+        )
+    else:
+        base_labels, base_stats = run_hdbscan(
+            base_umap,
+            min_cluster_size=base_min_cluster_size,
+            min_samples=hdbscan_cfg.get("min_samples", 10),
+            cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
+        )
+        base_anomalous = identify_anomalous_clusters(
+            base_labels, base_stats, small_cluster_threshold=anomaly_threshold
+        )
 
     # Add baseline to results
     run_labels.append(base_labels)
@@ -113,8 +118,11 @@ def run_stability_analysis(
         }
     )
 
-    for cid in base_anomalous:
-        sample_anomaly_counts[base_labels == cid] += 1
+    if algorithm == "dpmm":
+        sample_anomaly_counts[base_anomalous] += 1
+    else:
+        for cid in base_anomalous:
+            sample_anomaly_counts[base_labels == cid] += 1
 
     # 4. Perturbed runs
     for i in range(1, n_runs + 1):
@@ -137,20 +145,27 @@ def run_stability_analysis(
             n_components=umap_clust_cfg.get("n_components", 10),
             n_neighbors=p_n_neighbors,
             min_dist=umap_clust_cfg.get("min_dist", 0.0),
-            metric=umap_clust_cfg.get("metric", "cosine"),
             random_state=seed,
         )
 
-        p_labels, p_stats = run_hdbscan(
-            p_umap,
-            min_cluster_size=p_min_cluster,
-            min_samples=hdbscan_cfg.get("min_samples", 3),
-            cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
-        )
-
-        p_anomalous = identify_anomalous_clusters(
-            p_labels, p_stats, small_cluster_threshold=anomaly_threshold
-        )
+        if algorithm == "dpmm":
+            dpmm_cfg = cluster_cfg.get("dpmm", {})
+            p_labels, p_stats, p_anomalous = run_dpmm(
+                p_umap,
+                n_components=dpmm_cfg.get("n_components", 25),
+                anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
+                random_state=seed,
+            )
+        else:
+            p_labels, p_stats = run_hdbscan(
+                p_umap,
+                min_cluster_size=p_min_cluster,
+                min_samples=hdbscan_cfg.get("min_samples", 10),
+                cluster_selection_method=hdbscan_cfg.get("cluster_selection_method", "eom"),
+            )
+            p_anomalous = identify_anomalous_clusters(
+                p_labels, p_stats, small_cluster_threshold=anomaly_threshold
+            )
 
         run_labels.append(p_labels)
         run_metadata.append(
@@ -165,8 +180,11 @@ def run_stability_analysis(
             }
         )
 
-        for cid in p_anomalous:
-            sample_anomaly_counts[p_labels == cid] += 1
+        if algorithm == "dpmm":
+            sample_anomaly_counts[p_anomalous] += 1
+        else:
+            for cid in p_anomalous:
+                sample_anomaly_counts[p_labels == cid] += 1
 
     # 5. Calculate ARI matrix
     total_runs = n_runs + 1
