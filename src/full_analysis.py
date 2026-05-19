@@ -174,30 +174,29 @@ def _analyze_detector(
                     anomalous_files.append(all_files[idx])
                     anomalous_cluster_ids.append(cid)
         
-        if anomalous_indices:
-            anomalous_embeddings = embeddings[anomalous_indices]
-            sim_cfg = cfg.get("similarity", {})
-            morph_summary = run_morphological_crosscheck(
-                anomalous_embeddings,
-                anomalous_files,
-                anomalous_cluster_ids,
-                Path(reference_path),
-                morph_report_path,
-                k=sim_cfg.get("k_neighbors", 5),
-                novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
-                consensus_threshold=sim_cfg.get("consensus_threshold", 0.60)
-            )
-            print_morphological_summary(morph_summary, detector=det)
-            det_report["steps"]["morphcheck"] = {
-                "status": "OK",
-                "timestamp": step_start,
-                "novel": morph_summary["novel"],
-                "known": morph_summary["known"],
-                "ambiguous": morph_summary["ambiguous"]
-            }
-        else:
-            logger.info("%s[%s]%s No anomalous clusters found. Skipping morphcheck.", color, det, reset)
-            det_report["steps"]["morphcheck"] = {"status": "SKIPPED", "timestamp": step_start}
+        if not anomalous_indices:
+            logger.info("%s[%s]%s No anomalous clusters found. Running morphcheck with empty list to generate report.", color, det, reset)
+        
+        anomalous_embeddings = embeddings[anomalous_indices]
+        sim_cfg = cfg.get("similarity", {})
+        morph_summary = run_morphological_crosscheck(
+            anomalous_embeddings,
+            anomalous_files,
+            anomalous_cluster_ids,
+            Path(reference_path),
+            morph_report_path,
+            k=sim_cfg.get("k_neighbors", 5),
+            novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
+            consensus_threshold=sim_cfg.get("consensus_threshold", 0.60)
+        )
+        print_morphological_summary(morph_summary, detector=det)
+        det_report["steps"]["morphcheck"] = {
+            "status": "OK",
+            "timestamp": step_start,
+            "novel": morph_summary["novel"],
+            "known": morph_summary["known"],
+            "ambiguous": morph_summary["ambiguous"]
+        }
 
         # Step 3: Ablation
         logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)

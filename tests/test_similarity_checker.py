@@ -117,3 +117,34 @@ def test_run_morphcheck_output_keys(tmp_path):
     assert "ambiguous" in summary
     assert "details" in summary
     assert summary["total_checked"] == 2
+
+def test_run_morphcheck_empty_query(tmp_path):
+    # Mock reference index
+    ref = np.random.randn(10, 384)
+    ref = ref / np.linalg.norm(ref, axis=1, keepdims=True)
+    labels = np.array(["Blip"]*10)
+    
+    ref_path = tmp_path / "ref.npz"
+    np.savez(ref_path, embeddings=ref, labels=labels, image_paths=np.array(["a.png"]*10))
+    
+    # Empty query array
+    query = np.empty((0, 384))
+    
+    out_path = tmp_path / "out.json"
+    
+    summary = run_morphological_crosscheck(
+        anomalous_embeddings=query,
+        anomalous_files=[],
+        anomalous_cluster_ids=[],
+        reference_index_path=ref_path,
+        output_path=out_path,
+        k=3
+    )
+    
+    assert summary["total_checked"] == 0
+    assert summary["novel"] == 0
+    assert summary["known"] == 0
+    assert summary["ambiguous"] == 0
+    assert len(summary["details"]) == 0
+    assert out_path.exists()
+
