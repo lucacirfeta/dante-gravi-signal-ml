@@ -80,6 +80,19 @@ Raw Strain Data (GWOSC O2–O4a)
 │   reference_builder.py   — Gravity Spy tar.gz index │
 │   gravity_spy_checker.py — GPS-based DB query       │
 └─────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────┐
+│   Autopilot (scan-live)                             │
+│                                                     │
+│   threshold_calibrator.py — Per-class threshold     │
+│                              calibration from       │
+│                              intra-class cosine sim │
+│   scan_live.py            — Producer-consumer live  │
+│                              scanner: KNOWN/NOVEL   │
+│                              classification via     │
+│                              DINOv2 + KNN cosine    │
+└─────────────────────────────────────────────────────┘
 ```
 
 ### Critical Design Choices (Context per LLM/Sviluppatori)
@@ -160,6 +173,17 @@ Per l'elenco completo di tutti i comandi disponibili, opzioni e subcommand, cons
    python main.py scan-extended --workers 6 --run O4a --full-analysis True
    ```
    > I risultati verranno salvati in `data/runs/o4a/<SESSION_ID>/reports/`.
+
+### Autopilot: Scansione Live con Classificazione Automatica
+1. **Calibrazione soglie per-classe:**
+   ```bash
+   python main.py calibrate-threshold --reference data/reference/indomain_index.npz --percentile 5
+   ```
+2. **Scan live con classificazione KNOWN/NOVEL:**
+   ```bash
+   python main.py scan-live --detector H1 --run O4a --workers 4
+   ```
+   > I risultati verranno salvati in `data/autopilot/<SESSION_ID>/`. Se il numero di NOVEL supera `--min-novel`, il comando suggerirà di usare la pipeline standard per il clustering.
 
 Tutti i risultati scientifici, validazioni e benchmark prodotti dalla pipeline sono disponibili in **[RESULTS.md](RESULTS.md)**.
 

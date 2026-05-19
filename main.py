@@ -16,6 +16,8 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
     validate-reference       — Validate reference with GW150914 sanity check (Phase 3.4)
     benchmark-clustering     — Validate unsupervised clustering using ground truth labels
     full-analysis            — Automated end-to-end analysis (Cluster, Morph, Ablation, Stability, Timeslide)
+    calibrate-threshold      — Calibrate per-class cosine similarity thresholds (Autopilot)
+    scan-live                — Autopilot live scanner: classify spectrograms as KNOWN/NOVEL
 
 Usage:
     python main.py fetch                    --event GW150914
@@ -1712,6 +1714,38 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
         )
 
 
+def cmd_calibrate_threshold(args: argparse.Namespace) -> None:
+    """Calibrate per-class cosine similarity thresholds from the reference index."""
+    from src.threshold_calibrator import calibrate_thresholds
+
+    result = calibrate_thresholds(
+        reference_path=args.reference,
+        percentile=args.percentile,
+        output_path=args.output,
+    )
+    n_classes = result["metadata"]["n_classes"]
+    logger.info("Calibration complete: %d class thresholds saved.", n_classes)
+
+
+def cmd_scan_live(args: argparse.Namespace) -> None:
+    """Run the autopilot live scanner."""
+    from src.scan_live import run_scan_live
+
+    run = _resolve_run(args)
+    session_id = getattr(args, "session_id", None)
+    hours = getattr(args, "hours", None)
+
+    run_scan_live(
+        detector=args.detector,
+        run=run,
+        workers=args.workers,
+        session_id=session_id,
+        min_novel=args.min_novel,
+        reference_path=args.reference,
+        hours=hours,
+    )
+
+
 def _add_run_argument(parser: argparse.ArgumentParser) -> None:
     """Add the ``--run`` argument to a subparser."""
     parser.add_argument(
@@ -2517,6 +2551,76 @@ def build_parser() -> argparse.ArgumentParser:
         help="Clustering algorithm to use. Default: dpmm.",
     )
     p_benchmark.set_defaults(func=cmd_benchmark_clustering)
+
+    # --- calibrate-threshold (Autopilot) ---
+    p_cal = subparsers.add_parser(
+        "calibrate-threshold",
+        help="[Autopilot] Calibrate per-class cosine similarity thresholds.",
+    )
+    p_cal.add_argument(
+        "--reference",
+        type=str,
+        default="data/reference/indomain_index.npz",
+        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+    )
+    p_cal.add_argument(
+        "--percentile",
+        type=int,
+        default=5,
+        help="Percentile for intra-class similarity threshold. Default: 5.",
+    )
+    p_cal.add_argument(
+        "--output",
+        type=str,
+        default="data/autopilot/reference/thresholds.json",
+        help="Output JSON path. Default: data/autopilot/reference/thresholds.json.",
+    )
+    p_cal.set_defaults(func=cmd_calibrate_threshold)
+
+    # --- scan-live (Autopilot) ---
+    p_live = subparsers.add_parser(
+        "scan-live",
+        help="[Autopilot] Live scanner: classify spectrograms as KNOWN/AMBIGUOUS/NOVEL.",
+    )
+    p_live.add_argument(
+        "--detector",
+        type=str,
+        required=True,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier.",
+    )
+    p_live.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        help="Number of parallel producer threads for GWOSC fetch. Default: 4.",
+    )
+    p_live.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="Session identifier. Default: autopilot_{timestamp}.",
+    )
+    p_live.add_argument(
+        "--min-novel",
+        type=int,
+        default=10,
+        help="Minimum NOVEL count to suggest clustering. Default: 10.",
+    )
+    p_live.add_argument(
+        "--reference",
+        type=str,
+        default="data/reference/indomain_index.npz",
+        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+    )
+    p_live.add_argument(
+        "--hours",
+        type=float,
+        default=None,
+        help="Override scan duration in hours. Default: from run_config.",
+    )
+    _add_run_argument(p_live)
+    p_live.set_defaults(func=cmd_scan_live)
 
     return parser
 

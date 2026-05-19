@@ -66,7 +66,11 @@ La pipeline supporta l'analisi di diversi run osservativi di LIGO/Virgo. I run a
    - [`benchmark-clustering`](#18-benchmark-clustering) — Valida pipeline non supervisionata con etichette ground truth
 
 5. **Automazione End-to-End**
-   - [`full-analysis`](#19-full-analysis) — Pipeline automatizzata completa
+    - [`full-analysis`](#19-full-analysis) — Pipeline automatizzata completa
+
+6. **Autopilot**
+    - [`calibrate-threshold`](#20-calibrate-threshold) — Calibra soglie di similarità per-classe
+    - [`scan-live`](#21-scan-live) — Scanner live: classifica spettrogrammi come KNOWN/NOVEL
 
 ---
 
@@ -254,3 +258,75 @@ Automatizza l'intero workflow di analisi (Encode, Cluster, Morphcheck, Ablation,
 - `--max-iterations`: Limite iterazioni loop continuo. *Default: `10`*.
 - `--stop-date`: Limite data in cui interrompere il ciclo.
 - `--algorithm`: Algoritmo di clustering (`dpmm`, `hdbscan`). *Default: `dpmm`*.
+
+---
+
+## Autopilot
+
+I comandi Autopilot operano in modo **completamente separato** dalla pipeline standard (`data/runs/`). Tutti gli output sono scritti in `data/autopilot/`.
+
+### 20. `calibrate-threshold`
+Calibra le soglie di similarità coseno per-classe dall'indice di reference in-domain. Per ogni classe, campiona fino a 200 coppie intra-classe, calcola la similarità coseno, e salva il percentile N-esimo come soglia.
+
+```bash
+python main.py calibrate-threshold --reference data/reference/indomain_index.npz --percentile 5 --output data/autopilot/reference/thresholds.json
+```
+
+- `--reference`: Path all'indice reference `.npz`. *Default: `data/reference/indomain_index.npz`*.
+- `--percentile`: Percentile per la soglia intra-classe (più basso = più restrittivo). *Default: `5`*.
+- `--output`: Path JSON di destinazione. *Default: `data/autopilot/reference/thresholds.json`*.
+
+Formato output (`thresholds.json`):
+```json
+{
+  "metadata": {
+    "reference": "data/reference/indomain_index.npz",
+    "percentile": 5,
+    "calibrated_at": "2026-05-16T12:00:00",
+    "n_classes": 22
+  },
+  "thresholds": {
+    "Blip": 0.847,
+    "Low_Frequency_Lines": 0.812
+  }
+}
+```
+
+### 21. `scan-live`
+Scanner autopilot con architettura producer-consumer. I producer (thread paralleli) scaricano e preprocessano dati strain; un consumer singolo classifica ogni spettrogramma come KNOWN/AMBIGUOUS/NOVEL usando DINOv2 + soglie per-classe.
+
+```bash
+python main.py scan-live --detector H1 --run O4a --workers 4
+python main.py scan-live --detector H1 --run O4a --session-id autopilot_20260516_120000 --workers 4 --min-novel 10
+```
+
+- `--detector` **(Richiesto)**: Rivelatore da usare. Scelte: `H1`, `L1`, `V1`.
+- `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
+- `--workers`: Thread producer paralleli per fetch GWOSC. *Default: `4`*.
+- `--session-id`: ID sessione. *Default: `autopilot_{timestamp}`*.
+- `--min-novel`: Soglia minima NOVEL per suggerire il clustering. *Default: `10`*.
+- `--reference`: Path all'indice reference `.npz`. *Default: `data/reference/indomain_index.npz`*.
+- `--hours`: Override durata scan in ore. *Default: da `run_config`*.
+
+Struttura output:
+```
+data/autopilot/
+├── reference/
+│   └── thresholds.json
+└── <session_id>/
+    ├── tmp/                     ← PNG temporanei, cancellati dopo processing
+    ├── novel/                   ← PNG + .npy embedding NOVEL
+    ├── metadata.jsonl           ← un record JSON per spettrogramma processato
+    └── report.json              ← report finale
+```
+
+Formato record `metadata.jsonl`:
+```json
+{"gps_start": 1369211232, "gps_end": 1369211264, "status": "NOVEL", "top_label": "Low_Frequency_Lines", "top_similarity": 0.743, "threshold_used": 0.812}
+```
+
+Se NOVEL ≥ `--min-novel`, il comando suggerisce di usare la pipeline standard:
+```
+Ready for clustering — use standard pipeline:
+  python main.py full-analysis --session-id <session_id> --run <run>
+```
