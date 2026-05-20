@@ -4,6 +4,17 @@ Questo documento raccoglie la cronologia dei run effettuati con la pipeline `gra
 
 ---
 
+## 📦 Intervalli di Dati Scaricati (HDF5 Cache)
+
+Di seguito sono registrati gli intervalli temporali GPS scaricati e memorizzati localmente come cache grezza in `data/raw/` per le analisi:
+
+| Identificativo | Intervallo GPS Inizio | Intervallo GPS Fine | Durata Totale (Ore) | Stato / Note |
+| :--- | :--- | :--- | :---: | :--- |
+| `run1` | `1368993792` | `1370203392` | `336.0` | Scaricato offline |
+| `run2` | `1370206208` | `1371415808` | `336.0` | Scaricato offline |
+
+---
+
 ## 📅 Indice Cronologico delle Sessioni
 
 | Run | Session ID | Data/Ora Run | Stato Analisi | Rilevazioni Salienti / Anomalie Novel |
