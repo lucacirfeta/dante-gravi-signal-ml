@@ -117,44 +117,46 @@ def _classify_status(
 # ---------------------------------------------------------------------------
 
 
-def _produce_spectrogram(
+def _produce_spectrogram_chunk(
     gps_start: int,
     gps_end: int,
     detector: str,
     tmp_dir: Path,
     semaphore: threading.Semaphore,
-) -> tuple[Path, int, int] | None:
-    """Fetch, preprocess, and save one spectrogram PNG.
+) -> tuple[list[tuple[Path, int, int]], Path, int, int, str] | None:
+    """Fetch 4096s chunk, preprocess 128 32s segments, and save PNGs.
 
-    Returns ``(png_path, gps_start, gps_end)`` on success, or ``None``
+    Returns ``(pngs, hdf5_path, gps_start, gps_end, detector)`` on success, or ``None``
     on failure.
     """
-    # Lazy imports to avoid pulling heavy deps at module level
-    from src.data_loader import fetch_strain_data
+    from src.data_loader import download_gwosc_4096s
+    from gwpy.timeseries import TimeSeries
     from src.preprocessor import bandpass, generate_qtransform, whiten
-
-    filename = f"{detector}_{gps_start}_{gps_end}.png"
-    save_path = tmp_dir / filename
+    import numpy as np
 
     with semaphore:
         try:
-            time.sleep(_GWOSC_BASE_DELAY)
-
-            ts = fetch_strain_data(detector, gps_start, gps_end)
-            ts_white = whiten(ts)
-            ts_bp = bandpass(ts_white)
-
-            # Sanity check
-            if not np.isfinite(ts_bp.value).all():
-                logger.warning(
-                    "Skipping segment [%d, %d]: NaN/Inf after processing",
-                    gps_start,
-                    gps_end,
-                )
-                return None
-
-            generate_qtransform(ts_bp, save_path=save_path)
-            return (save_path, gps_start, gps_end)
+            hdf5_path = download_gwosc_4096s(detector, gps_start, gps_end, tmp_dir)
+            ts = TimeSeries.read(hdf5_path)
+            
+            chunk_size = 32
+            pngs = []
+            
+            for c_start in range(gps_start, gps_end, chunk_size):
+                c_end = c_start + chunk_size
+                save_path = tmp_dir / f"{detector}_{c_start}_{c_end}.png"
+                
+                try:
+                    ts_chunk = ts.crop(c_start, c_end)
+                    ts_white = whiten(ts_chunk)
+                    ts_bp = bandpass(ts_white)
+                    if np.isfinite(ts_bp.value).all():
+                        generate_qtransform(ts_bp, save_path=save_path)
+                        pngs.append((save_path, c_start, c_end))
+                except Exception as exc:
+                    logger.warning("Producer failed on chunk [%d, %d]: %s", c_start, c_end, exc)
+                    
+            return (pngs, hdf5_path, gps_start, gps_end, detector)
 
         except Exception as exc:
             logger.warning(
@@ -199,72 +201,84 @@ def _consumer_loop(
             q.task_done()
             break
 
-        png_path, gps_start, gps_end = item
+        pngs, hdf5_path, chunk_gps_start, chunk_gps_end, detector = item
 
-        try:
-            # Encode
-            embedding = encoder.extract(png_path)  # (384,) L2-normalised
+        novel_count = 0
 
-            # KNN cosine search (dot product of L2-normed vectors)
-            similarities = embedding @ ref_embeddings.T  # (N_ref,)
-            top_k_indices = np.argsort(similarities)[-k:][::-1]
+        for png_path, gps_start, gps_end in pngs:
+            try:
+                # Encode
+                embedding = encoder.extract(png_path)  # (384,) L2-normalised
 
-            neighbors_labels = [str(ref_labels[idx]) for idx in top_k_indices]
-            label_dist = dict(Counter(neighbors_labels))
-            top_label = max(label_dist.items(), key=lambda x: x[1])[0]
-            top_similarity = float(similarities[top_k_indices[0]])
+                # KNN cosine search (dot product of L2-normed vectors)
+                similarities = embedding @ ref_embeddings.T  # (N_ref,)
+                top_k_indices = np.argsort(similarities)[-k:][::-1]
 
-            # Classify
-            status, threshold_used = _classify_status(
-                top_similarity, top_label, label_dist, thresholds
-            )
+                neighbors_labels = [str(ref_labels[idx]) for idx in top_k_indices]
+                label_dist = dict(Counter(neighbors_labels))
+                top_label = max(label_dist.items(), key=lambda x: x[1])[0]
+                top_similarity = float(similarities[top_k_indices[0]])
 
-            # Record
-            record = {
-                "gps_start": gps_start,
-                "gps_end": gps_end,
-                "status": status,
-                "top_label": top_label,
-                "top_similarity": round(top_similarity, 4),
-                "threshold_used": round(threshold_used, 4),
-            }
-            _append_metadata(metadata_path, record)
-
-            # Track statistics
-            counts[status] += 1
-            sim_by_class[top_label].append(top_similarity)
-
-            if status == "NOVEL":
-                novel_gps_list.append(gps_start)
-
-                # Move PNG to novel/
-                novel_png = novel_dir / png_path.name
-                shutil.move(str(png_path), str(novel_png))
-
-                # Save embedding
-                emb_path = novel_dir / f"{gps_start}.npy"
-                np.save(emb_path, embedding)
-
-                logger.info(
-                    "[NOVEL] GPS %d | nearest=%s | sim=%.4f",
-                    gps_start,
-                    top_label,
-                    top_similarity,
+                # Classify
+                status, threshold_used = _classify_status(
+                    top_similarity, top_label, label_dist, thresholds
                 )
-            else:
-                # KNOWN or AMBIGUOUS — delete temp PNG
-                try:
-                    png_path.unlink()
-                except OSError:
-                    pass
 
-        except Exception as exc:
-            logger.warning(
-                "Consumer failed for GPS %d: %s",
-                gps_start,
-                exc,
-            )
-            counts["ERROR"] += 1
+                # Record
+                record = {
+                    "gps_start": gps_start,
+                    "gps_end": gps_end,
+                    "status": status,
+                    "top_label": top_label,
+                    "top_similarity": round(top_similarity, 4),
+                    "threshold_used": round(threshold_used, 4),
+                }
+                _append_metadata(metadata_path, record)
+
+                # Track statistics
+                counts[status] += 1
+                sim_by_class[top_label].append(top_similarity)
+
+                if status == "NOVEL":
+                    novel_gps_list.append(gps_start)
+                    novel_count += 1
+
+                    # Move PNG to novel/
+                    novel_png = novel_dir / png_path.name
+                    shutil.move(str(png_path), str(novel_png))
+
+                    # Save embedding
+                    emb_path = novel_dir / f"{gps_start}.npy"
+                    np.save(emb_path, embedding)
+
+                    logger.info(
+                        "[NOVEL] GPS %d | nearest=%s | sim=%.4f",
+                        gps_start,
+                        top_label,
+                        top_similarity,
+                    )
+                else:
+                    # KNOWN or AMBIGUOUS — delete temp PNG
+                    try:
+                        png_path.unlink()
+                    except OSError:
+                        pass
+
+            except Exception as exc:
+                logger.warning(
+                    "Consumer failed for GPS %d: %s",
+                    gps_start,
+                    exc,
+                )
+                counts["ERROR"] += 1
+                
+        logger.info("[%s] Chunk %d-%d | %d NOVEL / %d segments", detector, chunk_gps_start, chunk_gps_end, novel_count, len(pngs))
+        
+        # Cleanup HDF5 after processing chunk
+        try:
+            hdf5_path.unlink()
+        except OSError:
+            pass
 
         q.task_done()
 
@@ -425,7 +439,7 @@ def run_scan_live(
         hours = run_cfg[run]["hours_per_detector"]
 
     gps_end = gps_start + int(hours * 3600)
-    segments = generate_segments_from_gps_range(gps_start, gps_end)
+    segments = generate_segments_from_gps_range(gps_start, gps_end, segment_length=4096)
 
     if not segments:
         logger.warning("No segments generated for the requested window.")
@@ -483,7 +497,7 @@ def run_scan_live(
         futures = []
         for seg_start, seg_end in segments:
             future = executor.submit(
-                _produce_spectrogram,
+                _produce_spectrogram_chunk,
                 seg_start,
                 seg_end,
                 detector,

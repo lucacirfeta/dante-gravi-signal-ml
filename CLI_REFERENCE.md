@@ -82,15 +82,17 @@ Scarica un evento GW noto (es. GW150914) ed estrae uno spettrogramma. Utile per 
 
 ### 2. `scan`
 Esegue la scansione dei segmenti per un **singolo rivelatore** in un periodo definito. Includendo il `--session-id` esistente, attua automaticamente un resume dall'ultimo GPS processato.
+Quando legge dai dati `data/raw/` (comportamento di default), legge i blocchi da 4096 secondi scaricati in precedenza con `fetch-raw` e ne estrae internamente 128 spettrogrammi da 32 secondi. Se non sono presenti, esegue in automatico il fallback interrogando direttamente GWOSC.
 - `--detector` **(Richiesto)**: Rivelatore da usare. Scelte: `H1`, `L1`, `V1`.
 - `--run`: Run osservativo di riferimento. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
 - `--hours`: Ore di durata della scansione (solo per nuovi scan). *Default: `1.0`*.
 - `--workers`: Thread in parallelo. 1 = sequenziale. *Default: `1`*.
 - `--session-id`: ID sessione univoco (es. `20260510_143022`). *Default: auto-generato*.
 - `--no-cache-raw`: Flag booleano. Disabilita il salvataggio dei file HDF5 grezzi nella cartella `data/raw`. *Default: `True`* (non salva). Impostare a `False` per attivare il salvataggio.
+- `--raw-path`: Percorso manuale ad una specifica sessione raw. Se non specificato, utilizzerà l'ultima cartella disponibile in `data/raw/` con GPS più alto.
 
 ### 3. `scan-extended`
-Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). Sincronizza i due rivelatori in modo che riprendano dallo stesso GPS in caso di resume.
+Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). Sincronizza i due rivelatori in modo che riprendano dallo stesso GPS in caso di resume. Anche questo comando legge blocchi da 4096s da `data/raw/` di default prima di fare fallback su GWOSC.
 - `--run`: Run osservativo. Scelte: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
 - `--hours`: Override ore per rivelatore rispetto al config yaml (solo per nuovi scan).
 - `--workers`: Numero di worker (deve essere un **numero pari**, es. 2, 4, 6, 8). I worker vengono divisi equamente tra H1 e L1. *Default: `1`*.
@@ -104,6 +106,7 @@ Scansione estesa automatizzata di **H1 e L1** contemporaneamente (Phase 4). Sinc
 - `--continue-run`: Flag. Attiva il ciclo continuo di scansione e analisi sincronizzata (loop di resume).
 - `--max-iterations`: Numero massimo di iterazioni per il ciclo continuo. *Default: `10`*.
 - `--stop-date`: Limite temporale oltre il quale interrompere il ciclo continuo.
+- `--raw-path`: Percorso manuale ad una specifica sessione raw. Se non specificato, utilizzerà l'ultima cartella disponibile in `data/raw/` con GPS più alto.
 
 ### 4. `fetch-raw`
 Download massivo di dati strain (GWOSC) in formato `.hdf5`.
@@ -112,9 +115,8 @@ Download massivo di dati strain (GWOSC) in formato `.hdf5`.
 - `--run`: Run osservativo base. *Default: `O4a`*.
 - `--hours`: Ore totali da scaricare. *Default: `1.0`*.
 - `--output-dir`: Cartella output cache. *Default: `data/raw`*.
-- `--segment-duration`: Durata chunk in download (in secondi). *Default: `3600`*.
+- `--segment-duration`: Durata chunk in download (in secondi). *Default: `4092`*.
 - `--no-resume`: Flag. Disattiva il resume automatico.
-- `--no-cache-raw`: Flag booleano. Se `True` disabilita salvataggio `.hdf5`. *Default: `True`*.
 - `--retry`: Flag. Abilita retry con backoff esponenziale.
 
 ### 5. `last-gps`
@@ -293,7 +295,7 @@ Formato output (`thresholds.json`):
 ```
 
 ### 21. `scan-live`
-Scanner autopilot con architettura producer-consumer. I producer (thread paralleli) scaricano e preprocessano dati strain; un consumer singolo classifica ogni spettrogramma come KNOWN/AMBIGUOUS/NOVEL usando DINOv2 + soglie per-classe.
+Scanner autopilot con architettura producer-consumer. Lavora a blocchi di 4096s in cui un producer scarica l'HDF5 di 4096s in `tmp/`, processa internamente 128 segmenti da 32s ciascuno (`whiten -> bandpass -> q-transform`), ed il consumer le valuta classificando ogni spettrogramma come KNOWN/AMBIGUOUS/NOVEL usando DINOv2 + soglie per-classe. Cancella temporanei HDF5 e PNG in tempo reale ad eccezione dei NOVEL.
 
 ```bash
 python main.py scan-live --detector H1 --run O4a --workers 4

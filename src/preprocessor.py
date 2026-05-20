@@ -227,42 +227,73 @@ def batch_process(
         segment_list, desc=f"Processing {detector}", unit="seg"
     ):
         try:
-            filename = f"{detector}_{gps_start}_{gps_end}.png"
-            save_path = output_dir / filename
-
-            # Skip existing spectrograms (resumable pipeline)
-            if save_path.exists():
-                logger.info("Skipping existing spectrogram: %s", filename)
-                saved.append(save_path)
-                continue
+            segment_duration = gps_end - gps_start
+            chunk_size = 32
 
             # 1. Fetch strain data
             ts = fetch_strain_data(detector, gps_start, gps_end)
 
-            # 2. Whiten
-            ts_white = whiten(ts)
+            if segment_duration > chunk_size:
+                # Slice into chunks (e.g. 128 chunks for 4096s)
+                for chunk_start in range(gps_start, gps_end, chunk_size):
+                    chunk_end = chunk_start + chunk_size
+                    filename = f"{detector}_{chunk_start}_{chunk_end}.png"
+                    save_path = output_dir / filename
 
-            # 3. Bandpass
-            ts_bp = bandpass(ts_white)
+                    if save_path.exists():
+                        logger.info("Skipping existing spectrogram: %s", filename)
+                        saved.append(save_path)
+                        continue
 
-            # Check for NaN/Inf after filtering
-            if not np.isfinite(ts_bp.value).all():
-                logger.warning(
-                    "Skipping segment [%d, %d]: contains NaN/Inf after processing",
-                    gps_start,
-                    gps_end,
-                )
-                skipped += 1
-                continue
+                    try:
+                        ts_chunk = ts.crop(chunk_start, chunk_end)
+                        ts_white = whiten(ts_chunk)
+                        ts_bp = bandpass(ts_white)
 
-            # 4. Q-transform → PNG
-            generate_qtransform(ts_bp, save_path=save_path)
+                        if not np.isfinite(ts_bp.value).all():
+                            logger.warning("Skipping chunk [%d, %d]: contains NaN/Inf", chunk_start, chunk_end)
+                            skipped += 1
+                            continue
 
-            saved.append(save_path)
+                        generate_qtransform(ts_bp, save_path=save_path)
+                        saved.append(save_path)
+                    except Exception:
+                        logger.warning("Skipping chunk [%d, %d]: processing failed", chunk_start, chunk_end, exc_info=True)
+                        skipped += 1
+            else:
+                filename = f"{detector}_{gps_start}_{gps_end}.png"
+                save_path = output_dir / filename
+
+                # Skip existing spectrograms (resumable pipeline)
+                if save_path.exists():
+                    logger.info("Skipping existing spectrogram: %s", filename)
+                    saved.append(save_path)
+                    continue
+
+                # 2. Whiten
+                ts_white = whiten(ts)
+
+                # 3. Bandpass
+                ts_bp = bandpass(ts_white)
+
+                # Check for NaN/Inf after filtering
+                if not np.isfinite(ts_bp.value).all():
+                    logger.warning(
+                        "Skipping segment [%d, %d]: contains NaN/Inf after processing",
+                        gps_start,
+                        gps_end,
+                    )
+                    skipped += 1
+                    continue
+
+                # 4. Q-transform → PNG
+                generate_qtransform(ts_bp, save_path=save_path)
+
+                saved.append(save_path)
 
         except Exception:
             logger.warning(
-                "Skipping segment [%d, %d]: processing failed",
+                "Skipping segment [%d, %d]: fetch or global processing failed",
                 gps_start,
                 gps_end,
                 exc_info=True,

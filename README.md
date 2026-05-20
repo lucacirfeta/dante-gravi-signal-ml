@@ -39,13 +39,13 @@ Raw Strain Data (GWOSC O2–O4a)
         │
         ▼
 ┌─────────────────────┐
-│   Data Loader       │  gwpy fetch_open_data() · Segment management
+│   Data Loader       │  gwpy fetch_open_data() or local 4096s raw HDF5
 │   (data_loader.py)  │  Parallel fetch: ThreadPoolExecutor (--workers N)
 └────────┬────────────┘
          │
          ▼
 ┌─────────────────────┐
-│   Preprocessor      │  Whitening → Bandpass (20–2000 Hz) → Q-Transform
+│   Preprocessor      │  Chunking 4096s into 32s · Whitening → Bandpass → Q-Transform
 │   (preprocessor.py) │  Parallel Q-transform: ProcessPoolExecutor
 │   (parallel_        │  Colormap: cividis (perceptually uniform)
 │    processor.py)    │
@@ -89,7 +89,7 @@ Raw Strain Data (GWOSC O2–O4a)
 │                              calibration from       │
 │                              intra-class cosine sim │
 │   scan_live.py            — Producer-consumer live  │
-│                              scanner: KNOWN/NOVEL   │
+│                              scanner (4096s chunks) │
 │                              classification via     │
 │                              DINOv2 + KNN cosine    │
 └─────────────────────────────────────────────────────┘

@@ -38,11 +38,6 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
     save_path = output_dir / filename
     segment_id = f"{detector}_{gps_start}_{gps_end}"
     
-    # Skip existing spectrograms (resumable pipeline)
-    if save_path.exists():
-        print(f"Skipping existing spectrogram: {filename}")
-        return (segment_id, True)
-    
     try:
         # Import inside function to avoid pickling issues
         from src.data_loader import fetch_strain_data
@@ -53,26 +48,69 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
                                sample_rate=config.get('sample_rate', 4096),
                                cache_raw=cache_raw)
         
-        # Preprocess
-        ts_w = whiten(ts)
-        ts_bp = bandpass(ts_w,
-                         f_low=config.get('f_low', 20.0),
-                         f_high=config.get('f_high', 2000.0))
+        segment_duration = gps_end - gps_start
+        chunk_size = 32
         
-        # Check for NaN/Inf after filtering
-        import numpy as np
-        if not np.isfinite(ts_bp.value).all():
-            print(f"Skipping segment {segment_id}: contains NaN/Inf after processing")
-            return (segment_id, False)
+        if segment_duration > chunk_size:
+            all_success = True
+            for chunk_start in range(gps_start, gps_end, chunk_size):
+                chunk_end = chunk_start + chunk_size
+                filename = f"{detector}_{chunk_start}_{chunk_end}.png"
+                save_path = output_dir / filename
+                
+                if save_path.exists():
+                    print(f"Skipping existing spectrogram: {filename}")
+                    continue
+                    
+                import numpy as np
+                try:
+                    ts_chunk = ts.crop(chunk_start, chunk_end)
+                    ts_w = whiten(ts_chunk)
+                    ts_bp = bandpass(ts_w,
+                                     f_low=config.get('f_low', 20.0),
+                                     f_high=config.get('f_high', 2000.0))
+                                     
+                    if not np.isfinite(ts_bp.value).all():
+                        print(f"Skipping segment {filename}: contains NaN/Inf after processing")
+                        all_success = False
+                        continue
+                        
+                    generate_qtransform(ts_bp, save_path=save_path,
+                                        cmap=config.get('colormap', 'cividis'))
+                except Exception as exc:
+                    print(f"Worker Error on {filename}: {exc}")
+                    all_success = False
+            
+            return (segment_id, all_success)
+        else:
+            filename = f"{detector}_{gps_start}_{gps_end}.png"
+            save_path = output_dir / filename
+            
+            # Skip existing spectrograms (resumable pipeline)
+            if save_path.exists():
+                print(f"Skipping existing spectrogram: {filename}")
+                return (segment_id, True)
 
-        # Save PNG
-        generate_qtransform(ts_bp, save_path=save_path,
-                            cmap=config.get('colormap', 'cividis'))
-        
-        return (segment_id, True)
-        
+            # Preprocess
+            ts_w = whiten(ts)
+            ts_bp = bandpass(ts_w,
+                             f_low=config.get('f_low', 20.0),
+                             f_high=config.get('f_high', 2000.0))
+            
+            # Check for NaN/Inf after filtering
+            import numpy as np
+            if not np.isfinite(ts_bp.value).all():
+                print(f"Skipping segment {segment_id}: contains NaN/Inf after processing")
+                return (segment_id, False)
+
+            # Save PNG
+            generate_qtransform(ts_bp, save_path=save_path,
+                                cmap=config.get('colormap', 'cividis'))
+            
+            return (segment_id, True)
+            
     except Exception as exc:
-        print(f"Worker Error on {segment_id}: {exc}")
+        print(f"Worker Error on global {segment_id}: {exc}")
         return (segment_id, False)
 
 

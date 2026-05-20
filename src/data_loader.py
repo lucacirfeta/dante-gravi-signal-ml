@@ -81,7 +81,13 @@ def fetch_strain_data(
     )
 
     cache_dir = Path("data/raw")
-    cache_file = cache_dir / f"{detector}_{gps_start}_{gps_end}.hdf5"
+    cache_file_name = f"{detector}_{gps_start}_{gps_end}.hdf5"
+    cache_file = cache_dir / cache_file_name
+    # Also search in GPS subdirectories (data/raw/{gps_start}/)
+    if not cache_file.exists() and cache_dir.exists():
+        sub_matches = list(cache_dir.glob(f"*/{cache_file_name}"))
+        if sub_matches:
+            cache_file = sub_matches[0]
 
     if cache_file.exists():
         try:
@@ -132,10 +138,11 @@ def fetch_strain_data(
     if cache_raw:
         try:
             cache_dir.mkdir(parents=True, exist_ok=True)
-            ts.write(cache_file, format='hdf5')
-            logger.info("Saved raw data to cache: %s", cache_file.name)
+            cache_write_path = cache_dir / cache_file_name
+            ts.write(cache_write_path, format='hdf5')
+            logger.info("Saved raw data to cache: %s", cache_write_path.name)
         except Exception as exc:
-            logger.warning("Failed to save raw data to cache %s: %s", cache_file.name, exc)
+            logger.warning("Failed to save raw data to cache %s: %s", cache_file_name, exc)
 
     logger.info(
         "Fetched %s: %d samples @ %d Hz (%.1f s)",
@@ -259,6 +266,91 @@ def generate_segments_from_gps_range(
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+
+def _find_latest_raw_session() -> Path | None:
+    """Scans data/raw/ and returns the path to the folder with the highest GPS name."""
+    from pathlib import Path
+    raw_dir = Path("data/raw")
+    if not raw_dir.exists():
+        return None
+    
+    max_gps = -1
+    latest_path = None
+    for d in raw_dir.iterdir():
+        if d.is_dir():
+            try:
+                gps_val = int(d.name)
+                if gps_val > max_gps:
+                    max_gps = gps_val
+                    latest_path = d
+            except ValueError:
+                pass
+    return latest_path
+
+
+def download_gwosc_4096s(detector: str, gps_start: int, gps_end: int, output_dir: Path) -> Path:
+    """Download HDF5 file from GWOSC using gwosc.locate and requests.
+    
+    Returns the Path to the downloaded file.
+    """
+    import requests
+    from gwosc.locate import get_urls
+    import time
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+    
+    filename = f"{detector}_{gps_start}_{gps_end}.hdf5"
+    output_path = output_dir / filename
+    
+    if output_path.exists():
+        logger.info("Found cached GWOSC HDF5: %s", output_path)
+        return output_path
+
+    urls = get_urls(detector, gps_start, gps_end)
+    if not urls:
+        raise RuntimeError(f"No GWOSC URLs found for {detector} [{gps_start}, {gps_end}]")
+        
+    hdf5_urls = [u for u in urls if u.endswith('.hdf5')]
+    if not hdf5_urls:
+        raise RuntimeError(f"No HDF5 URLs found for {detector} [{gps_start}, {gps_end}]")
+        
+    url = hdf5_urls[-1]
+    
+    logger.info("Downloading %s from %s", filename, url)
+    
+    global _GWOSC_BASE_DELAY
+    base_delay = _GWOSC_BASE_DELAY
+    
+    for attempt in range(5):
+        try:
+            time.sleep(base_delay)
+            # Create session with retry on typical network errors (not 429, we handle 429 manually)
+            session = requests.Session()
+            retry = Retry(connect=3, backoff_factor=0.5)
+            adapter = HTTPAdapter(max_retries=retry)
+            session.mount('http://', adapter)
+            session.mount('https://', adapter)
+            
+            with session.get(url, stream=True, timeout=30) as r:
+                r.raise_for_status()
+                with open(output_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            return output_path
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 429:
+                logger.warning("429 Too Many Requests downloading %s. Retrying...", url)
+                base_delay += 1.0
+                time.sleep(1.0)
+            else:
+                raise RuntimeError(f"Failed to download {url}: {e}")
+        except Exception as e:
+            if attempt == 4:
+                raise RuntimeError(f"Failed to download {url}: {e}")
+            time.sleep(2.0)
+            
+    return output_path
 
 
 def _validate_detector(detector: str) -> None:

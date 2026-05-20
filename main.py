@@ -359,23 +359,65 @@ def cmd_scan(args: argparse.Namespace) -> None:
     if explicit_session:
         last_gps = _find_last_gps(session_id, detector, run=run)
 
-    if last_gps is not None:
-        # Resume from last GPS end-time.
-        # Duration comes from config, not from the CLI --hours flag.
-        resume_hours: float = cfg["run_config"][run]["hours_per_detector"]
-        start_gps = last_gps
-        end_gps = last_gps + int(resume_hours * 3600)
-        logger.info(
-            "Resuming session %s from GPS %d (+%.1fh)",
-            session_id, last_gps, resume_hours,
-        )
-        segments = generate_segments_from_gps_range(start_gps, end_gps)
+    # --- Raw Path Logic ---
+    raw_path = getattr(args, "raw_path", None)
+    if not raw_path:
+        from src.data_loader import _find_latest_raw_session
+        raw_path = _find_latest_raw_session()
+        
+    if raw_path:
+        import re
+        from pathlib import Path
+        raw_path = Path(raw_path)
+        logger.info("Using raw session: %s", raw_path)
+        segment_length = 4096
+        
+        min_start = float('inf')
+        max_end = 0
+        pattern = re.compile(rf"^{detector}_(\d+)_(\d+)\.hdf5$")
+        for f in raw_path.glob("*.hdf5"):
+            m = pattern.match(f.name)
+            if m:
+                min_start = min(min_start, int(m.group(1)))
+                max_end = max(max_end, int(m.group(2)))
+                
+        if min_start < float('inf') and max_end > 0:
+            if last_gps is not None:
+                start_gps = last_gps
+                logger.info("Resuming session %s from GPS %d", session_id, last_gps)
+                if start_gps >= max_end:
+                    logger.info("I dati in raw_path terminano al GPS %d, ma la sessione è già al GPS %d. Scan completato.", max_end, start_gps)
+                    sys.exit(0)
+            else:
+                start_gps = min_start
+                logger.info("=== SCAN: %s [%s] ===", detector, run)
+                logger.info("Auto-detected start GPS da raw_path: %d", start_gps)
+            end_gps = max_end
+            logger.info("Auto-detected end GPS da raw_path: %d", end_gps)
+        else:
+            logger.warning("Nessun file HDF5 valido per %s in %s. Fallback a config standard.", detector, raw_path)
+            if last_gps is not None:
+                resume_hours = cfg["run_config"][run]["hours_per_detector"]
+                start_gps = last_gps
+                end_gps = last_gps + int(resume_hours * 3600)
+                logger.info("Resuming session %s from GPS %d (+%.1fh)", session_id, last_gps, resume_hours)
+            else:
+                start_gps = _run_start_gps(run, cfg)
+                end_gps = start_gps + int(hours * 3600)
+                logger.info("=== SCAN: %s [%s], %.1f hours ===", detector, run, hours)
     else:
-        # Fresh scan — use start_date from run_config
-        start_gps = _run_start_gps(run, cfg)
-        end_gps = start_gps + int(hours * 3600)
-        logger.info("=== SCAN: %s [%s], %.1f hours ===", detector, run, hours)
-        segments = generate_segments_from_gps_range(start_gps, end_gps)
+        segment_length = 32
+        if last_gps is not None:
+            resume_hours = cfg["run_config"][run]["hours_per_detector"]
+            start_gps = last_gps
+            end_gps = last_gps + int(resume_hours * 3600)
+            logger.info("Resuming session %s from GPS %d (+%.1fh)", session_id, last_gps, resume_hours)
+        else:
+            start_gps = _run_start_gps(run, cfg)
+            end_gps = start_gps + int(hours * 3600)
+            logger.info("=== SCAN: %s [%s], %.1f hours ===", detector, run, hours)
+
+    segments = generate_segments_from_gps_range(start_gps, end_gps, segment_length=segment_length)
 
     if not segments:
         logger.warning("No segments found for %s in the requested window.", detector)
@@ -458,17 +500,18 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     from concurrent.futures import ThreadPoolExecutor, wait
 
     hours: float = args.hours
-    output_dir_str: str = args.output_dir
+    base_dir_str: str = args.output_dir
     segment_duration: int = args.segment_duration
     run = _resolve_run(args)
     cfg = load_config()
 
-    output_dir = Path(output_dir_str)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    base_dir = Path(base_dir_str)
+    base_dir.mkdir(parents=True, exist_ok=True)
 
     resume = getattr(args, "resume", True)
+    continue_download = getattr(args, "continue_download", False)
     workers = getattr(args, "workers", None)
-    cache_raw = not getattr(args, "no_cache_raw", True)
+    cache_raw = True
 
     if workers is not None:
         if workers == 1 or workers % 2 != 0:
@@ -487,9 +530,71 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
         W = 1
 
     current_start = None
+    continue_from_gps = None
 
-    if resume and cache_raw:
-        # Trova max GPS per ciascun detector
+    if continue_download:
+        # --continue: trova l'ultima cartella GPS in base_dir
+        gps_folders = []
+        for d in base_dir.iterdir():
+            if d.is_dir():
+                try:
+                    gps_folders.append(int(d.name))
+                except ValueError:
+                    continue
+
+        if not gps_folders:
+            logger.error("--continue: nessuna cartella GPS trovata in %s", base_dir)
+            sys.exit(1)
+
+        last_folder_gps = max(gps_folders)
+        last_folder = base_dir / str(last_folder_gps)
+
+        # Trova il max GPS end per ciascun detector nell'ultima cartella
+        max_ends = []
+        for det in detectors:
+            pattern = re.compile(rf"^{det}_(\d+)_(\d+)\.hdf5$")
+            max_end_gps = 0
+            for f in last_folder.glob("*.hdf5"):
+                m = pattern.match(f.name)
+                if m:
+                    file_end = int(m.group(2))
+                    if file_end > max_end_gps:
+                        max_end_gps = file_end
+            max_ends.append(max_end_gps)
+
+        if all(m > 0 for m in max_ends) and len(max_ends) > 0:
+            current_start = min(max_ends)
+        elif len(max_ends) == 1 and max_ends[0] > 0:
+            current_start = max_ends[0]
+
+        if current_start is None or current_start == 0:
+            logger.error("--continue: nessun file HDF5 trovato in %s", last_folder)
+            sys.exit(1)
+
+        continue_from_gps = current_start
+
+    if current_start is None:
+        # Fresh download from run start
+        current_start = _run_start_gps(run, cfg)
+        logger.info("Nuovo download dall'inizio della run: GPS %d", current_start)
+
+    aligned_start = (current_start // 4096) * 4096
+    if aligned_start != current_start:
+        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", current_start, aligned_start)
+        current_start = aligned_start
+
+    # Output directory: data/raw/{gps_start}/
+    output_dir = base_dir / str(current_start)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if continue_from_gps is not None:
+        logger.info(
+            "Continuing from GPS %d \u2192 new session %s",
+            continue_from_gps, output_dir,
+        )
+
+    # Resume within current folder (skip if --continue, the folder is fresh)
+    if not continue_download and resume and cache_raw:
         max_ends = []
         for det in detectors:
             pattern = re.compile(rf"^{det}_(\d+)_(\d+)\.hdf5$")
@@ -502,7 +607,6 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
                         max_end_gps = file_end
             max_ends.append(max_end_gps)
 
-        # Se tutti i detector hanno almeno un file, prendiamo il minimo dei max GPS
         if all(m > 0 for m in max_ends) and len(max_ends) > 0:
             current_start = min(max_ends)
             logger.info("Ripresa contemporanea dal GPS %d (minimo tra i detector)", current_start)
@@ -510,20 +614,11 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
             current_start = max_ends[0]
             logger.info("Ripresa dal GPS %d (ultimo file trovato)", current_start)
 
-    if current_start is None:
-        # Fresh scan
-        current_start = _run_start_gps(run, cfg)
-        logger.info("Nuovo download dall'inizio della run: GPS %d", current_start)
-
-    aligned_start = (current_start // 4096) * 4096
-    if aligned_start != current_start:
-        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", current_start, aligned_start)
-        current_start = aligned_start
-
     end_gps = current_start + int(hours * 3600)
 
     logger.info("=== FETCH-RAW: %s [%s] ===", detectors, run)
     logger.info("Interval: %d to %d (%.1f hours)", current_start, end_gps, hours)
+    logger.info("Output dir: %s", output_dir)
     if not cache_raw:
         logger.info("Cache raw disabled: data will be fetched but not saved.")
 
@@ -619,15 +714,59 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             last_gps_list.append(lgps if lgps is not None else 0)
 
     start_gps = getattr(args, "start_gps", None)
-    if start_gps is None:
-        start_gps = _run_start_gps(run, cfg)
+    last_gps = None
+    if explicit_session and any(g > 0 for g in last_gps_list):
+        last_gps = min(g for g in last_gps_list if g > 0)
+        logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, last_gps)
+        if start_gps is None:
+            start_gps = last_gps
 
-        if explicit_session and any(g > 0 for g in last_gps_list):
-            start_gps = min(g for g in last_gps_list if g > 0)
-            logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, start_gps)
+    # --- Raw Path Logic ---
+    raw_path = getattr(args, "raw_path", None)
+    if not raw_path:
+        from src.data_loader import _find_latest_raw_session
+        raw_path = _find_latest_raw_session()
+        
+    if raw_path:
+        import re
+        from pathlib import Path
+        raw_path = Path(raw_path)
+        logger.info("Using raw session: %s", raw_path)
+        segment_length = 4096
+        
+        # Auto-detect boundaries from raw HDF5 files for all requested detectors
+        min_start = float('inf')
+        max_end = 0
+        pattern = re.compile(r"^[A-Z]\d_(\d+)_(\d+)\.hdf5$")
+        for f in raw_path.glob("*.hdf5"):
+            m = pattern.match(f.name)
+            if m:
+                det = f.name.split('_')[0]
+                if det in detectors:
+                    min_start = min(min_start, int(m.group(1)))
+                    max_end = max(max_end, int(m.group(2)))
+                    
+        if min_start < float('inf') and max_end > 0:
+            if start_gps is None:
+                start_gps = min_start
+                logger.info("Auto-detected start GPS da raw_path: %d", start_gps)
+            if start_gps >= max_end:
+                logger.info("I dati in raw_path terminano al GPS %d, ma la sessione è già al GPS %d. Scan completato.", max_end, start_gps)
+                sys.exit(0)
+            end_gps = max_end
+            logger.info("Auto-detected end GPS da raw_path: %d", end_gps)
+        else:
+            logger.warning("Nessun file HDF5 valido in %s. Fallback a config standard.", raw_path)
+            if start_gps is None:
+                start_gps = _run_start_gps(run, cfg)
+            end_gps = start_gps + int(hours * 3600)
+    else:
+        segment_length = 32
+        if start_gps is None:
+            start_gps = _run_start_gps(run, cfg)
+        end_gps = start_gps + int(hours * 3600)
 
-    end_gps = start_gps + int(hours * 3600)
-    segments = generate_segments_from_gps_range(start_gps, end_gps)
+    segments = generate_segments_from_gps_range(start_gps, end_gps, segment_length=segment_length)
 
     if not segments:
         logger.warning("Nessun segmento trovato per la finestra temporale richiesta.")
@@ -758,7 +897,13 @@ def _reprocess_single_png(
         ts = None
         if use_cache:
             cache_dir = _Path("data/raw")
-            cache_file = cache_dir / f"{detector}_{gps_start}_{gps_end}.hdf5"
+            cache_file_name = f"{detector}_{gps_start}_{gps_end}.hdf5"
+            cache_file = cache_dir / cache_file_name
+            # Also search in GPS subdirectories (data/raw/{gps_start}/)
+            if not cache_file.exists() and cache_dir.exists():
+                sub_matches = list(cache_dir.glob(f"*/{cache_file_name}"))
+                if sub_matches:
+                    cache_file = sub_matches[0]
             if cache_file.exists():
                 from gwpy.timeseries import TimeSeries
                 ts = TimeSeries.read(cache_file)
@@ -1830,6 +1975,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=True,
         help="If True (default), disables saving raw HDF5 files to data/raw during scan. Set to False to enable.",
     )
+    p_scan.add_argument(
+        "--raw-path",
+        type=str,
+        default=None,
+        help="Manual path to a specific raw session (e.g., data/raw/1369211232). If omitted, the latest folder is used.",
+    )
     p_scan.set_defaults(func=cmd_scan)
     _add_run_argument(p_scan)
 
@@ -1917,6 +2068,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Stop date (ISO string or GPS time) for the continuous run loop.",
+    )
+    p_scan_ext.add_argument(
+        "--raw-path",
+        type=str,
+        default=None,
+        help="Manual path to a specific raw session (e.g., data/raw/1369211232). If omitted, the latest folder is used.",
     )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
     _add_run_argument(p_scan_ext)
@@ -2031,13 +2188,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir",
         type=str,
         default="data/raw",
-        help="Output directory for HDF5 files. Default: data/raw.",
+        help="Base directory for HDF5 files. Saves to {base}/{gps_start}/. Default: data/raw.",
     )
     p_fetch_raw.add_argument(
         "--segment-duration",
         type=int,
-        default=3600,
-        help="Duration of each download block in seconds. Default: 3600.",
+        default=4096,
+        help="Duration of each download block in seconds. Default: 4096.",
     )
     p_fetch_raw.add_argument(
         "--no-resume",
@@ -2046,16 +2203,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Disable automatic resume from existing files.",
     )
     p_fetch_raw.add_argument(
-        "--no-cache-raw",
-        type=str2bool,
-        default=True,
-        help="If True (default), disables saving raw HDF5 files to data/raw. Set to False to enable.",
-    )
-    p_fetch_raw.add_argument(
         "--retry",
         action="store_true",
         default=False,
         help="Enable retry logic on download failure. Default: False.",
+    )
+    p_fetch_raw.add_argument(
+        "--continue",
+        action="store_true",
+        default=False,
+        dest="continue_download",
+        help="Continue download from the last GPS folder in data/raw/. Default: False.",
     )
     p_fetch_raw.set_defaults(func=cmd_fetch_raw)
     _add_run_argument(p_fetch_raw)
