@@ -1761,50 +1761,77 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
     run_lower = run.lower()
 
     logger.info("=== TIMESLIDE ===")
-    
+
+    iterations: int = getattr(args, "iterations", 100)
+    window: int = getattr(args, "window", 32)
+
     # Check if we have explicit inputs or session-id
     session_id = getattr(args, "session_id", None)
-    
+
     if session_id:
         _log_run_header(run, None, session_id)
-        # Auto-resolve paths if not provided
-        meta_h1 = Path(args.metadata_h1) if getattr(args, "metadata_h1", None) else session_path(run, session_id) / "embeddings" / f"{run_lower}_h1.json"
-        meta_l1 = Path(args.metadata_l1) if getattr(args, "metadata_l1", None) else session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
-        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
-        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
+        # Auto-resolve paths; CLI overrides take precedence
+        meta_h1 = (
+            Path(args.metadata_h1)
+            if getattr(args, "metadata_h1", None)
+            else session_path(run, session_id) / "embeddings" / f"{run_lower}_h1.json"
+        )
+        meta_l1 = (
+            Path(args.metadata_l1)
+            if getattr(args, "metadata_l1", None)
+            else session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
+        )
+        rep_h1 = (
+            Path(args.report_h1)
+            if getattr(args, "report_h1", None)
+            else session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
+        )
+        rep_l1 = (
+            Path(args.report_l1)
+            if getattr(args, "report_l1", None)
+            else session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
+        )
         output_dir = session_path(run, session_id) / "timeslide"
     else:
-        # Require explicit inputs
-        if not (args.embeddings_h1 and args.embeddings_l1 and args.metadata_h1 and args.metadata_l1):
-            logger.error("Must provide --session-id OR all explicit --embeddings and --metadata paths.")
+        # Without session-id, metadata AND report paths are both required.
+        # (embeddings are NOT needed by run_timeslide)
+        missing = []
+        if not getattr(args, "metadata_h1", None):
+            missing.append("--metadata-h1")
+        if not getattr(args, "metadata_l1", None):
+            missing.append("--metadata-l1")
+        if not getattr(args, "report_h1", None):
+            missing.append("--report-h1")
+        if not getattr(args, "report_l1", None):
+            missing.append("--report-l1")
+        if missing:
+            logger.error(
+                "Must provide --session-id OR all explicit paths. Missing: %s",
+                ", ".join(missing),
+            )
             sys.exit(1)
-            
-        # The prompt only specified --embeddings-* and --metadata-*.
-        # We need report files to know which clusters are anomalous.
-        # Try to infer them or expect them.
+
         meta_h1 = Path(args.metadata_h1)
         meta_l1 = Path(args.metadata_l1)
-        
-        # We assume reports are next to embeddings but in the clusters directory. 
-        # But if the user didn't specify --report-*, we can try to guess or use the CLI args.
-        rep_h1 = Path(args.report_h1) if getattr(args, "report_h1", None) else Path("data/clusters/h1/cluster_report.json")
-        rep_l1 = Path(args.report_l1) if getattr(args, "report_l1", None) else Path("data/clusters/l1/cluster_report.json")
+        rep_h1 = Path(args.report_h1)
+        rep_l1 = Path(args.report_l1)
         output_dir = Path("data/timeslide/")
 
-    logger.info("Metadata H1: %s", meta_h1)
-    logger.info("Metadata L1: %s", meta_l1)
-    logger.info("Report H1: %s", rep_h1)
-    logger.info("Report L1: %s", rep_l1)
-    logger.info("Output dir: %s", output_dir)
-    
+    logger.info("Metadata H1 : %s", meta_h1)
+    logger.info("Metadata L1 : %s", meta_l1)
+    logger.info("Report H1   : %s", rep_h1)
+    logger.info("Report L1   : %s", rep_l1)
+    logger.info("Output dir  : %s", output_dir)
+    logger.info("Iterations  : %d | Window: %ds", iterations, window)
+
     run_timeslide(
         meta_h1=meta_h1,
         rep_h1=rep_h1,
         meta_l1=meta_l1,
         rep_l1=rep_l1,
         output_dir=output_dir,
-        iterations=50,
-        window=32
+        iterations=iterations,
+        window=window,
     )
 
 
@@ -2604,14 +2631,47 @@ def build_parser() -> argparse.ArgumentParser:
         "--session-id",
         type=str,
         default=None,
-        help="Session identifier to resolve paths automatically.",
+        help=(
+            "Session identifier to auto-resolve metadata and report paths. "
+            "If provided, individual --metadata-* and --report-* are optional overrides."
+        ),
     )
-    p_ts.add_argument("--embeddings-h1", type=str, help="Path to H1 embeddings")
-    p_ts.add_argument("--embeddings-l1", type=str, help="Path to L1 embeddings")
-    p_ts.add_argument("--metadata-h1", type=str, help="Path to H1 metadata JSON")
-    p_ts.add_argument("--metadata-l1", type=str, help="Path to L1 metadata JSON")
-    p_ts.add_argument("--report-h1", type=str, help="Path to H1 cluster report")
-    p_ts.add_argument("--report-l1", type=str, help="Path to L1 cluster report")
+    p_ts.add_argument(
+        "--metadata-h1",
+        type=str,
+        default=None,
+        help="Path to H1 embeddings metadata JSON (overrides session-id auto-resolution).",
+    )
+    p_ts.add_argument(
+        "--metadata-l1",
+        type=str,
+        default=None,
+        help="Path to L1 embeddings metadata JSON (overrides session-id auto-resolution).",
+    )
+    p_ts.add_argument(
+        "--report-h1",
+        type=str,
+        default=None,
+        help="Path to H1 cluster report JSON (overrides session-id auto-resolution).",
+    )
+    p_ts.add_argument(
+        "--report-l1",
+        type=str,
+        default=None,
+        help="Path to L1 cluster report JSON (overrides session-id auto-resolution).",
+    )
+    p_ts.add_argument(
+        "--iterations",
+        type=int,
+        default=100,
+        help="Number of time-slide iterations for background estimation. Default: 100.",
+    )
+    p_ts.add_argument(
+        "--window",
+        type=int,
+        default=32,
+        help="Coincidence window in seconds. Default: 32.",
+    )
     p_ts.set_defaults(func=cmd_timeslide)
     _add_run_argument(p_ts)
 

@@ -114,3 +114,8 @@ performance:
   recommended_workers: auto   # printed in --help, not auto-applied
   gwosc_fetch_threads: 4      # hard cap, do not exceed (rate limit)
   queue_buffer_multiplier: 2  # queue maxsize = workers * this
+
+# Time-slide background estimation
+timeslide:
+  iterations: 100   # number of random time-shift trials
+  window: 32        # coincidence window in seconds (= segment duration)

@@ -9,12 +9,22 @@ Automates the sequential execution of:
 6. Timeslide (if applicable)
 
 Produces a unified report for each detector.
+
+Parallel safety notes
+---------------------
+Cluster, morphcheck and stability are CPU-bound and can run fully in parallel.
+Encode and ablation both instantiate DINOv2Encoder and use the GPU.  A single
+module-level ``_gpu_lock`` (threading.Lock) serialises those sections so that
+only one detector thread accesses the GPU at a time, preventing CUDA OOM
+errors.  Each pipeline step has its own try/except so that a failure in
+ablation does **not** prevent stability from running.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -33,6 +43,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger: logging.Logger = setup_logger(__name__)
 
+# ---------------------------------------------------------------------------
+# Module-level GPU lock — ensures only one thread uses the GPU at a time.
+# Both the encode step and the ablation step (which re-runs DINOv2 inference)
+# acquire this lock so they never race on CUDA memory.
+# ---------------------------------------------------------------------------
+_gpu_lock: threading.Lock = threading.Lock()
+
+
 def _get_det_color(det: str) -> str:
     """Return ANSI color code for a detector."""
     colors = {
@@ -43,9 +61,21 @@ def _get_det_color(det: str) -> str:
     }
     return colors.get(det.upper(), "\033[0m")
 
+
 def _reset_color() -> str:
     """Return ANSI reset code."""
     return "\033[0m"
+
+
+def _save_detector_report(det_report: dict, run: str, session_id: str, det: str) -> Path:
+    """Persist the per-detector unified report and return its path."""
+    report_dir = session_path(run, session_id) / "reports"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / f"{det}_full_report.json"
+    with open(report_path, "w", encoding="utf-8") as fh:
+        json.dump(det_report, fh, indent=2)
+    return report_path
+
 
 def _analyze_detector(
     det: str,
@@ -56,27 +86,41 @@ def _analyze_detector(
     n_runs: int,
     reference_path: str,
     batch_size: int,
+    gpu_lock: threading.Lock | None = None,
 ) -> tuple[str, dict, Path]:
-    """Internal helper to run analysis for a single detector."""
+    """Internal helper to run analysis for a single detector.
+
+    Each pipeline step is wrapped in its own try/except so that a failure in
+    one optional step (e.g. ablation) does not prevent subsequent steps (e.g.
+    stability) from running.
+
+    Steps 0–2 (encode → cluster → morphcheck) share a common dependency chain:
+    if encode or cluster fails we cannot continue and return early.  Morphcheck
+    failure is logged but does not abort ablation/stability.
+
+    Steps 3 (ablation) and 4 (stability) are independent of each other and are
+    each individually guarded.
+    """
     det = det.upper()
     color = _get_det_color(det)
     reset = _reset_color()
-    
+
     logger.info("%s=== Starting Full Analysis for %s ===%s", color, det, reset)
-    
-    det_report = {
+
+    det_report: dict = {
         "session_id": session_id,
         "detector": det,
         "run": run,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "steps": {}
+        "steps": {},
     }
-    
-    # Descriptive Statistics
+
+    # ------------------------------------------------------------------ #
+    # Descriptive statistics from spectrogram filenames                   #
+    # ------------------------------------------------------------------ #
     input_dir = session_path(run, session_id) / "spectrograms" / det
     png_files = list(input_dir.glob(f"{det}_*.png"))
-    gps_starts = []
-    gps_ends = []
+    gps_starts, gps_ends = [], []
     for f in png_files:
         parts = f.stem.split("_")
         if len(parts) >= 3:
@@ -85,25 +129,23 @@ def _analyze_detector(
                 gps_ends.append(int(parts[2]))
             except ValueError:
                 continue
-    
+
     if gps_starts:
         g_start = min(gps_starts)
         g_end = max(gps_ends)
         n_specs = len(png_files)
         duration_hours = round((g_end - g_start) / 3600, 1)
-        
-        # Formula: (n_spectrograms * 32) / (duration_hours * 3600) * 100
-        if duration_hours > 0:
-            duty_cycle = round((n_specs * 32) / (duration_hours * 3600) * 100, 1)
-        else:
-            duty_cycle = 0.0
-            
+        duty_cycle = (
+            round((n_specs * 32) / (duration_hours * 3600) * 100, 1)
+            if duration_hours > 0
+            else 0.0
+        )
         det_report["session_summary"] = {
             "n_spectrograms": n_specs,
             "gps_start": g_start,
             "gps_end": g_end,
             "duration_hours": duration_hours,
-            "duty_cycle_percent": duty_cycle
+            "duty_cycle_percent": duty_cycle,
         }
     else:
         det_report["session_summary"] = {
@@ -111,72 +153,117 @@ def _analyze_detector(
             "gps_start": 0,
             "gps_end": 0,
             "duration_hours": 0.0,
-            "duty_cycle_percent": 0.0
+            "duty_cycle_percent": 0.0,
         }
 
+    # ------------------------------------------------------------------ #
+    # Step 0: Encode  (GPU — serialised via gpu_lock)                     #
+    # ------------------------------------------------------------------ #
+    output_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{det.lower()}.npy"
+    step_start = datetime.now(timezone.utc).isoformat()
+    embeddings: np.ndarray | None = None
+    metadata: dict | None = None
+
     try:
-        # Step 0: Encode
-        output_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{det.lower()}.npy"
-        
-        step_start = datetime.now(timezone.utc).isoformat()
         if not output_path.exists():
             logger.info("%s[%s]%s Step 0: Encoding spectrograms...", color, det, reset)
-            encoder = DINOv2Encoder(batch_size=batch_size)
-            encoder.extract_dataset(input_dir, output_path, batch_size)
+            _lock = gpu_lock if gpu_lock is not None else _gpu_lock
+            with _lock:
+                encoder_enc = DINOv2Encoder(batch_size=batch_size)
+                encoder_enc.extract_dataset(input_dir, output_path, batch_size)
             det_report["steps"]["encode"] = {"status": "OK", "timestamp": step_start}
         else:
             logger.info("%s[%s]%s Step 0: Embeddings already exist. Skipping encode.", color, det, reset)
             det_report["steps"]["encode"] = {"status": "SKIPPED", "timestamp": step_start}
 
-        # Load embeddings and metadata
+        # Load embeddings + metadata (required by all downstream steps)
         embeddings = np.load(output_path)
         json_path = output_path.with_suffix(".json")
-        with open(json_path, "r", encoding="utf-8") as f:
-            metadata = json.load(f)
+        with open(json_path, "r", encoding="utf-8") as fh:
+            metadata = json.load(fh)
 
-        # Step 1: Cluster
+    except Exception as exc:
+        logger.error(
+            "%s[%s]%s Step 0 FAILED: %s", color, det, reset, exc, exc_info=True
+        )
+        det_report["steps"]["encode"] = {
+            "status": "FAILED",
+            "timestamp": step_start,
+            "error": str(exc),
+        }
+        det_report["status"] = "FAILED"
+        det_report["error"] = f"Encode failed: {exc}"
+        return det, det_report, _save_detector_report(det_report, run, session_id, det)
+
+    # ------------------------------------------------------------------ #
+    # Step 1: Cluster  (CPU)                                              #
+    # ------------------------------------------------------------------ #
+    step_start = datetime.now(timezone.utc).isoformat()
+    result: dict | None = None
+
+    try:
         logger.info("%s[%s]%s Step 1: Clustering...", color, det, reset)
-        step_start = datetime.now(timezone.utc).isoformat()
         cluster_cfg = cfg["clustering"]
         cluster_dir = session_path(run, session_id) / "clusters" / det.lower()
-        
+
         result = run_full_pipeline(embeddings, cluster_cfg)
         save_cluster_report(result, metadata, cluster_dir, detector=det)
         print_summary(result, detector=det)
-        
+
         det_report["steps"]["cluster"] = {
             "status": "OK",
             "timestamp": step_start,
             "n_clusters": result["hdbscan_stats"]["n_clusters"],
             "n_noise": result["hdbscan_stats"]["n_noise"],
             "pca_variance": result["pca_variance"],
-            "anomalous_clusters": result["anomalous_clusters"]
+            "anomalous_clusters": result["anomalous_clusters"],
         }
 
-        # Step 2: Morphcheck
+    except Exception as exc:
+        logger.error(
+            "%s[%s]%s Step 1 FAILED: %s", color, det, reset, exc, exc_info=True
+        )
+        det_report["steps"]["cluster"] = {
+            "status": "FAILED",
+            "timestamp": step_start,
+            "error": str(exc),
+        }
+        det_report["status"] = "FAILED"
+        det_report["error"] = f"Cluster failed: {exc}"
+        return det, det_report, _save_detector_report(det_report, run, session_id, det)
+
+    # ------------------------------------------------------------------ #
+    # Step 2: Morphcheck  (CPU)                                           #
+    # Failure is non-fatal: we log and continue to ablation/stability.   #
+    # ------------------------------------------------------------------ #
+    step_start = datetime.now(timezone.utc).isoformat()
+    cluster_dir = session_path(run, session_id) / "clusters" / det.lower()
+    all_files: list = metadata["files"]
+    cluster_cfg = cfg["clustering"]
+
+    try:
         logger.info("%s[%s]%s Step 2: Morphological cross-check...", color, det, reset)
-        step_start = datetime.now(timezone.utc).isoformat()
         morph_report_path = cluster_dir / "morphcheck_report.json"
-        
-        # Prepare anomalous data for morphcheck
-        all_files = metadata["files"]
-        anomalous_indices = []
-        anomalous_files = []
-        anomalous_cluster_ids = []
-        
-        for cid_str, cluster in result["hdbscan_stats"]["cluster_sizes"].items():
+
+        anomalous_indices: list[int] = []
+        anomalous_files: list = []
+        anomalous_cluster_ids: list[int] = []
+
+        for cid_str in result["hdbscan_stats"]["cluster_sizes"]:
             cid = int(cid_str)
             if cid in result["anomalous_clusters"]:
                 mask = result["labels"] == cid
-                indices = np.where(mask)[0]
-                for idx in indices:
+                for idx in np.where(mask)[0]:
                     anomalous_indices.append(idx)
                     anomalous_files.append(all_files[idx])
                     anomalous_cluster_ids.append(cid)
-        
+
         if not anomalous_indices:
-            logger.info("%s[%s]%s No anomalous clusters found. Running morphcheck with empty list to generate report.", color, det, reset)
-        
+            logger.info(
+                "%s[%s]%s No anomalous clusters found. Running morphcheck with empty list.",
+                color, det, reset,
+            )
+
         anomalous_embeddings = embeddings[anomalous_indices]
         sim_cfg = cfg.get("similarity", {})
         morph_summary = run_morphological_crosscheck(
@@ -187,7 +274,7 @@ def _analyze_detector(
             morph_report_path,
             k=sim_cfg.get("k_neighbors", 5),
             novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
-            consensus_threshold=sim_cfg.get("consensus_threshold", 0.60)
+            consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
         )
         print_morphological_summary(morph_summary, detector=det)
         det_report["steps"]["morphcheck"] = {
@@ -195,44 +282,84 @@ def _analyze_detector(
             "timestamp": step_start,
             "novel": morph_summary["novel"],
             "known": morph_summary["known"],
-            "ambiguous": morph_summary["ambiguous"]
+            "ambiguous": morph_summary["ambiguous"],
         }
 
-        # Step 3: Ablation
-        logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
-        step_start = datetime.now(timezone.utc).isoformat()
-        ablation_dir = session_path(run, session_id) / "ablation"
-        
-        image_paths = [input_dir / Path(f).name for f in all_files]
-        encoder = DINOv2Encoder(batch_size=batch_size)
-        
-        run_ablation_study(
-            original_labels=result["labels"],
-            image_paths=image_paths,
-            encoder=encoder,
-            cluster_cfg=cluster_cfg,
-            output_dir=ablation_dir,
-            session_id=session_id,
-            detector=det
+    except Exception as exc:
+        logger.error(
+            "%s[%s]%s Step 2 (morphcheck) FAILED — continuing: %s",
+            color, det, reset, exc, exc_info=True,
         )
-        
-        # Read back ablation report
+        det_report["steps"]["morphcheck"] = {
+            "status": "FAILED",
+            "timestamp": step_start,
+            "error": str(exc),
+        }
+
+    # ------------------------------------------------------------------ #
+    # Step 3: Ablation  (GPU — serialised via gpu_lock)                  #
+    # Independent of morphcheck; failure does NOT abort stability.        #
+    # ------------------------------------------------------------------ #
+    step_start = datetime.now(timezone.utc).isoformat()
+    ablation_dir = session_path(run, session_id) / "ablation"
+    image_paths = [input_dir / Path(f).name for f in all_files]
+
+    try:
+        logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
+        _lock = gpu_lock if gpu_lock is not None else _gpu_lock
+        with _lock:
+            logger.info(
+                "%s[%s]%s GPU lock acquired for ablation.", color, det, reset
+            )
+            encoder_abl = DINOv2Encoder(batch_size=batch_size)
+            run_ablation_study(
+                original_labels=result["labels"],
+                image_paths=image_paths,
+                encoder=encoder_abl,
+                cluster_cfg=cluster_cfg,
+                output_dir=ablation_dir,
+                session_id=session_id,
+                detector=det,
+            )
+            logger.info(
+                "%s[%s]%s GPU lock released after ablation.", color, det, reset
+            )
+
         ablation_report_file = ablation_dir / f"ablation_report_{det}.json"
         if ablation_report_file.exists():
-            with open(ablation_report_file, "r") as f:
-                ablation_data = json.load(f)
+            with open(ablation_report_file, "r", encoding="utf-8") as fh:
+                ablation_data = json.load(fh)
             det_report["steps"]["ablation"] = {
                 "status": "OK",
                 "timestamp": step_start,
-                "results": {k: v["ari"] for k, v in ablation_data["results"].items()}
+                "results": {k: v["ari"] for k, v in ablation_data["results"].items()},
             }
         else:
-            det_report["steps"]["ablation"] = {"status": "FAILED", "timestamp": step_start, "error": "Report not found"}
+            det_report["steps"]["ablation"] = {
+                "status": "FAILED",
+                "timestamp": step_start,
+                "error": "Report file not found after run",
+            }
 
-        # Step 4: Stability
+    except Exception as exc:
+        logger.error(
+            "%s[%s]%s Step 3 (ablation) FAILED — continuing to stability: %s",
+            color, det, reset, exc, exc_info=True,
+        )
+        det_report["steps"]["ablation"] = {
+            "status": "FAILED",
+            "timestamp": step_start,
+            "error": str(exc),
+        }
+
+    # ------------------------------------------------------------------ #
+    # Step 4: Stability  (CPU — fully parallel-safe)                     #
+    # Independent of ablation; always attempted if embeddings are valid. #
+    # ------------------------------------------------------------------ #
+    step_start = datetime.now(timezone.utc).isoformat()
+
+    try:
         logger.info("%s[%s]%s Step 4: Stability analysis...", color, det, reset)
-        step_start = datetime.now(timezone.utc).isoformat()
-        
         run_stability_analysis(
             embeddings=embeddings,
             cluster_cfg=cluster_cfg,
@@ -241,36 +368,56 @@ def _analyze_detector(
             detector=det,
             run=run,
         )
-        
-        # Read back stability report
-        stability_report_file = session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
+
+        stability_report_file = (
+            session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
+        )
         if stability_report_file.exists():
-            with open(stability_report_file, "r") as f:
-                stability_data = json.load(f)
+            with open(stability_report_file, "r", encoding="utf-8") as fh:
+                stability_data = json.load(fh)
             det_report["steps"]["stability"] = {
                 "status": "OK",
                 "timestamp": step_start,
                 "mean_ari": stability_data["ari_stats"]["mean"],
-                "stable_anomalous_clusters": stability_data["stable_anomalous_clusters_baseline_ids"]
+                "stable_anomalous_clusters": stability_data[
+                    "stable_anomalous_clusters_baseline_ids"
+                ],
             }
         else:
-            det_report["steps"]["stability"] = {"status": "FAILED", "timestamp": step_start, "error": "Report not found"}
+            det_report["steps"]["stability"] = {
+                "status": "FAILED",
+                "timestamp": step_start,
+                "error": "Report file not found after run",
+            }
 
-    except Exception as e:
-        logger.error("Error during full analysis for %s: %s", det, str(e), exc_info=True)
-        det_report["status"] = "FAILED"
-        det_report["error"] = str(e)
+    except Exception as exc:
+        logger.error(
+            "%s[%s]%s Step 4 (stability) FAILED: %s",
+            color, det, reset, exc, exc_info=True,
+        )
+        det_report["steps"]["stability"] = {
+            "status": "FAILED",
+            "timestamp": step_start,
+            "error": str(exc),
+        }
+
+    # ------------------------------------------------------------------ #
+    # Aggregate overall status                                            #
+    # ------------------------------------------------------------------ #
+    failed_steps = [s for s, v in det_report["steps"].items() if v.get("status") == "FAILED"]
+    if failed_steps:
+        det_report["status"] = "PARTIAL"
+        det_report["failed_steps"] = failed_steps
+        logger.warning(
+            "%s[%s]%s Completed with failures in: %s",
+            color, det, reset, failed_steps,
+        )
     else:
         det_report["status"] = "OK"
+        logger.info("%s[%s]%s All steps completed successfully.%s", color, det, reset, reset)
 
-    # Save unified report for this detector
-    report_dir = session_path(run, session_id) / "reports"
-    report_dir.mkdir(parents=True, exist_ok=True)
-    report_path = report_dir / f"{det}_full_report.json"
-    with open(report_path, "w") as f:
-        json.dump(det_report, f, indent=2)
-    
-    return det, det_report, report_path
+    return det, det_report, _save_detector_report(det_report, run, session_id, det)
+
 
 def run_full_analysis(
     session_id: str,
@@ -283,117 +430,152 @@ def run_full_analysis(
     sequential: bool = False,
 ) -> dict:
     """Run the full analysis pipeline for one or more detectors.
-    
+
     Args:
         session_id: The session ID to analyze.
-        detectors: List of detectors (e.g. ['H1', 'L1']). If None, auto-discovers from directories.
+        detectors: List of detectors (e.g. ['H1', 'L1']). If None, auto-discovers.
         run: Observing run (O2, O3a, O3b, O4a).
         skip_timeslide: If True, skips the timeslide analysis.
         n_runs: Number of runs for stability analysis.
         reference_path: Path to the morphological reference index.
         batch_size: Batch size for encoding and ablation.
         sequential: If True, executes detectors in sequence. Default: False (parallel).
-        
+
     Returns:
-        A dictionary containing the status and report paths for each detector and timeslide.
+        A dictionary containing the status and report paths for each detector
+        and timeslide.
+
+    Notes on parallelism
+    --------------------
+    When ``sequential=False`` each detector runs in its own thread.
+    GPU-heavy steps (encode, ablation) share a single ``threading.Lock``
+    (``_gpu_lock``) so they never execute concurrently even across threads.
+    CPU-only steps (cluster, morphcheck, stability) run fully in parallel.
     """
     run_lower = run.lower()
     cfg = load_config()
-    
+
     # 1. Discovery
     if not detectors:
         spec_dir = session_path(run, session_id) / "spectrograms"
         if not spec_dir.exists():
             logger.error("Session directory not found: %s", spec_dir)
             return {"status": "FAILED", "error": "Session directory not found"}
-        
-        detectors = [d.name for d in spec_dir.iterdir() if d.is_dir() and d.name.upper() in ["H1", "L1", "V1"]]
+
+        detectors = [
+            d.name
+            for d in spec_dir.iterdir()
+            if d.is_dir() and d.name.upper() in ("H1", "L1", "V1")
+        ]
         logger.info("Auto-discovered detectors: %s", detectors)
-        
+
     if not detectors:
         logger.error("No detectors found for session %s", session_id)
         return {"status": "FAILED", "error": "No detectors found"}
 
-    overall_status = {}
-    reports = {}
-    
+    overall_status: dict[str, str] = {}
+    reports: dict[str, Path] = {}
+
     # 2. Per-detector analysis
     if sequential or len(detectors) == 1:
-        # Sequential execution
+        # Sequential execution — no parallelism, gpu_lock still passed for consistency
         for det in detectors:
             det_name, det_report, report_path = _analyze_detector(
-                det, session_id, run, run_lower, cfg, n_runs, reference_path, batch_size
+                det, session_id, run, run_lower, cfg, n_runs, reference_path, batch_size,
+                gpu_lock=_gpu_lock,
             )
             reports[det_name] = report_path
             overall_status[det_name] = det_report["status"]
     else:
-        # Parallel execution
-        logger.info("Starting parallel analysis for detectors: %s", detectors)
+        # Parallel execution.
+        # All threads share the same _gpu_lock so GPU-heavy operations
+        # (encode, ablation) are serialised while CPU steps run in parallel.
+        logger.info(
+            "Starting parallel analysis for detectors: %s "
+            "(GPU steps serialised via _gpu_lock)",
+            detectors,
+        )
         with ThreadPoolExecutor(max_workers=len(detectors)) as executor:
             futures = {
                 executor.submit(
-                    _analyze_detector, 
-                    det, session_id, run, run_lower, cfg, n_runs, reference_path, batch_size
-                ): det for det in detectors
+                    _analyze_detector,
+                    det, session_id, run, run_lower, cfg, n_runs, reference_path, batch_size,
+                    _gpu_lock,      # shared lock — passed explicitly
+                ): det
+                for det in detectors
             }
             for future in as_completed(futures):
+                det = futures[future]
                 try:
                     det_name, det_report, report_path = future.result()
                     reports[det_name] = report_path
                     overall_status[det_name] = det_report["status"]
-                except Exception as e:
-                    det = futures[future]
-                    logger.error("Parallel analysis failed for %s: %s", det, str(e))
+                    logger.info(
+                        "Detector %s finished with status: %s",
+                        det_name, det_report["status"],
+                    )
+                except Exception as exc:
+                    logger.error(
+                        "Parallel analysis raised an unhandled exception for %s: %s",
+                        det, exc, exc_info=True,
+                    )
                     overall_status[det.upper()] = "FAILED"
 
-    # 3. Timeslide (if H1 and L1 are both OK)
+    # 3. Timeslide (if H1 and L1 are both OK or PARTIAL)
+    h1_ok = overall_status.get("H1") in ("OK", "PARTIAL")
+    l1_ok = overall_status.get("L1") in ("OK", "PARTIAL")
+
     if not skip_timeslide and "H1" in overall_status and "L1" in overall_status:
-        if overall_status["H1"] == "OK" and overall_status["L1"] == "OK":
+        if h1_ok and l1_ok:
             ts_color = _get_det_color("TIMESLIDE")
             reset = _reset_color()
             logger.info("%s=== Starting Timeslide Analysis (H1 + L1) ===%s", ts_color, reset)
             step_start = datetime.now(timezone.utc).isoformat()
-            
+
             try:
                 meta_h1 = session_path(run, session_id) / "embeddings" / f"{run_lower}_h1.json"
                 rep_h1 = session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
                 meta_l1 = session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
                 rep_l1 = session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
                 output_dir = session_path(run, session_id) / "timeslide"
-                
+
+                ts_cfg = cfg.get("timeslide", {})
+                ts_iterations: int = ts_cfg.get("iterations", 100)
+                ts_window: int = ts_cfg.get("window", 32)
+
                 ts_report = run_timeslide(
                     meta_h1=meta_h1,
                     rep_h1=rep_h1,
                     meta_l1=meta_l1,
                     rep_l1=rep_l1,
                     output_dir=output_dir,
-                    iterations=50,
-                    window=32
+                    iterations=ts_iterations,
+                    window=ts_window,
                 )
-                
+
                 reports["timeslide"] = output_dir / "timeslide_report_H1_L1.json"
                 overall_status["timeslide"] = "OK"
-                
-                # Update unified reports with timeslide info
-                for det in ["H1", "L1"]:
+
+                # Annotate each detector's report with timeslide results
+                for det in ("H1", "L1"):
                     r_path = reports.get(det)
                     if r_path and r_path.exists():
-                        with open(r_path, "r") as f:
-                            r_data = json.load(f)
+                        with open(r_path, "r", encoding="utf-8") as fh:
+                            r_data = json.load(fh)
                         r_data["steps"]["timeslide"] = {
                             "status": "OK",
                             "timestamp": step_start,
                             "p_value": ts_report["p_value"],
-                            "z_score": ts_report["z_score"]
+                            "z_score": ts_report["z_score"],
                         }
-                        with open(r_path, "w") as f:
-                            json.dump(r_data, f, indent=2)
-                        
-            except Exception as e:
-                logger.error("Error during timeslide analysis: %s", str(e))
+                        with open(r_path, "w", encoding="utf-8") as fh:
+                            json.dump(r_data, fh, indent=2)
+
+            except Exception as exc:
+                logger.error("Error during timeslide analysis: %s", exc, exc_info=True)
                 overall_status["timeslide"] = "FAILED"
         else:
-            logger.info("Skipping timeslide: H1 or L1 analysis failed.")
+            logger.info("Skipping timeslide: H1 or L1 analysis did not complete.")
             overall_status["timeslide"] = "SKIPPED (dependencies failed)"
     else:
         overall_status["timeslide"] = "SKIPPED"
@@ -403,5 +585,5 @@ def run_full_analysis(
         "run": run,
         "detectors": detectors,
         "status": overall_status,
-        "reports": {k: str(v) for k, v in reports.items()}
+        "reports": {k: str(v) for k, v in reports.items()},
     }

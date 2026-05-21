@@ -304,24 +304,29 @@ Incrocia i cluster anomali del JSON col set reale di LIGO tramite query remote v
 - `--output`: Path in cui redigere un resoconto.
 
 ### 13. `timeslide`
-Stima il p-value empirico di coincidenza tra anomalie `H1` e `L1` tramite 50 time-shift casuali. L'output è salvato automaticamente.
+Stima il p-value empirico di coincidenza tra anomalie `H1` e `L1` tramite time-shift casuali. Supporta sia le anomalie da **cluster HDBSCAN** che le anomalie individuali rilevate da **DPMM** (`anomalous_samples`). L'output è salvato automaticamente.
 
 * **Sotto il cofano (Dettagli di Elaborazione):**
-  1. Estrae i tempi GPS delle anomalie rilevate separatamente per H1 e per L1 nella sessione.
-  2. **Calcolo Zero-lag:** Conta il numero effettivo di coincidenze reali tra H1 e L1. Due anomalie coincidono se i loro GPS differiscono al massimo di una finestra prefissata (default 32 secondi). Ciascun segmento viene accoppiato al massimo una volta.
-  3. **Analisi Time-slide:** Genera un fondo di controllo simulato eseguendo `N` iterazioni (default 50). In ciascuna iterazione:
-     - Applica uno slittamento temporale (*time-slide*) artificiale fisso ai tempi GPS di L1 (scelto casualmente tra multipli di 100 secondi compresi nel range da -5000 a 5000 secondi, escludendo lo zero). Questo distrugge ogni correlazione temporale fisica coerente.
+  1. Estrae i tempi GPS delle anomalie rilevate separatamente per H1 e per L1 nella sessione. La raccolta integra entrambe le sorgenti:
+     - **Cluster anomali (HDBSCAN):** scorre i cluster marcati come anomali nel report e raccoglie i `sample_files` associati.
+     - **Campioni anomali DPMM (`anomalous_samples`):** risolve gli indici salvati nel report contro la lista `files` del metadata JSON prodotto da `encode`.
+  2. **Calcolo Zero-lag:** Conta il numero effettivo di coincidenze reali tra H1 e L1. Due anomalie coincidono se i loro GPS differiscono al massimo di una finestra prefissata (default 32 secondi, configurabile via `--window`). Ciascun segmento viene accoppiato al massimo una volta.
+  3. **Analisi Time-slide:** Genera un fondo di controllo simulato eseguendo `N` iterazioni (default 100, configurabile via `--iterations`). In ciascuna iterazione:
+     - Applica uno slittamento temporale (*time-slide*) artificiale ai tempi GPS di L1 (scelto casualmente tra multipli di 100 secondi nel range da -5000 a 5000 s, escludendo lo zero). Questo distrugge ogni correlazione temporale fisica coerente.
      - Ricalcola il numero di coincidenze casuali ottenute tra la serie H1 originale e la serie L1 shiftata.
      - Memorizza il conteggio per costruire la distribuzione statistica del fondo casuale.
   4. Calcola la media e la deviazione standard della distribuzione del fondo casuale.
   5. Calcola il **p-value empirico** come la frazione di run di time-slide che hanno registrato un numero di coincidenze casuali pari o superiore rispetto alle coincidenze reali (zero-lag). Un `p-value < 0.05` indica che le coincidenze osservate sono statisticamente significative e non imputabili al caso.
   6. Calcola il **z-score** e scrive i risultati in `timeslide_report_H1_L1.json`.
 
-- `--session-id`: ID univoco sessione. 
+- `--session-id`: ID univoco sessione (risolve automaticamente tutti i path). *Alternativa agli argomenti espliciti.*
 - `--run`: Run osservativo. *Default: `O4a`*.
-- `--embeddings-h1` / `--embeddings-l1`: Path a matrice embeddings.
-- `--metadata-h1` / `--metadata-l1`: Path ai metadati base `.json`.
-- `--report-h1` / `--report-l1`: Path ai json finali del cluster.
+- `--metadata-h1` / `--metadata-l1`: Path al JSON dei metadati prodotto da `encode` (override rispetto al session-id).
+- `--report-h1` / `--report-l1`: Path al JSON del cluster report (override rispetto al session-id).
+- `--iterations`: Numero di time-slide per la stima del fondo. *Default: `100`*. Configurabile anche in `config.yaml → timeslide.iterations`.
+- `--window`: Finestra di coincidenza in secondi. *Default: `32`*. Configurabile anche in `config.yaml → timeslide.window`.
+
+> **💡 Nota:** senza `--session-id`, i quattro argomenti `--metadata-h1`, `--metadata-l1`, `--report-h1`, `--report-l1` sono tutti obbligatori. Gli argomenti `--embeddings-*` non sono necessari e sono stati rimossi.
 
 ---
 
