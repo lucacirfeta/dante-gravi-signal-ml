@@ -499,37 +499,32 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     import re
     from concurrent.futures import ThreadPoolExecutor, wait
 
-    hours: float = args.hours
-    base_dir_str: str = args.output_dir
-    segment_duration: int = args.segment_duration
     run = _resolve_run(args)
     cfg = load_config()
+
+    hours: float = args.hours if args.hours is not None else float(cfg.get("run_config", {}).get(run, {}).get("hours_per_detector", 72.0))
+    base_dir_str: str = args.output_dir
+    segment_duration: int = args.segment_duration
 
     base_dir = Path(base_dir_str)
     base_dir.mkdir(parents=True, exist_ok=True)
 
     resume = getattr(args, "resume", True)
     continue_download = getattr(args, "continue_download", False)
-    workers = getattr(args, "workers", None)
+    workers = args.workers
     cache_raw = True
 
-    if workers is not None:
-        if workers == 1 or workers % 2 != 0:
-            logger.error("Errore: --workers deve essere un numero pari maggiore di 1 (es. 2, 4, 6, 8).")
-            sys.exit(1)
-        if workers > 8:
-            logger.error("Errore: il limite massimo è di 4 thread per detector (--workers 8).")
-            sys.exit(1)
-        detectors = ["H1", "L1"]
-        W = workers // 2
-    else:
-        if not args.detector:
-            logger.error("Errore: specificare --detector oppure usare --workers.")
-            sys.exit(1)
-        detectors = [args.detector]
-        W = 1
+    detectors = args.detector if args.detector else ["H1", "L1"]
 
-    current_start = None
+    if workers == 1 or workers % 2 != 0:
+        logger.error("Errore: --workers deve essere un numero pari maggiore di 1 (es. 2, 4, 6, 8).")
+        sys.exit(1)
+    if workers > 8:
+        logger.error("Errore: il limite massimo è di 4 thread per detector (--workers 8).")
+        sys.exit(1)
+    W = max(1, workers // len(detectors))
+
+    current_start = getattr(args, "start_gps", None)
     continue_from_gps = None
 
     if continue_download:
@@ -630,49 +625,32 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
     base_delay = 0.3
 
-    if workers is not None:
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            block_num = 1
-            while current_start < end_gps:
-                futures = []
-                # Prepare batch of size W for each detector
-                for det in detectors:
-                    for i in range(W):
-                        s = current_start + i * segment_duration
-                        e = min(s + segment_duration, end_gps)
-                        if s >= end_gps:
-                            break
-                        futures.append(executor.submit(_fetch_single_block, det, s, e, output_dir, retry_delays, base_delay, cache_raw))
-                
-                # Wait for all to finish
-                wait(futures)
-                
-                # Log results
-                for f in futures:
-                    ok, msg = f.result()
-                    if ok:
-                        logger.info(msg)
-                    else:
-                        logger.error(msg)
-                
-                current_start += W * segment_duration
-                block_num += W
-    else:
-        # Sequential logic
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         block_num = 1
         while current_start < end_gps:
-            current_end = min(current_start + segment_duration, end_gps)
-            print(f"Blocco {block_num}/{total_blocks}: {detectors[0]} da {current_start} a {current_end}...", end=" ", flush=True)
-            ok, msg = _fetch_single_block(detectors[0], current_start, current_end, output_dir, retry_delays, base_delay, cache_raw)
-            if ok:
-                print("OK")
-                logger.info(msg)
-            else:
-                print("ERRORE")
-                logger.error(msg)
+            futures = []
+            # Prepare batch of size W for each detector
+            for det in detectors:
+                for i in range(W):
+                    s = current_start + i * segment_duration
+                    e = min(s + segment_duration, end_gps)
+                    if s >= end_gps:
+                        break
+                    futures.append(executor.submit(_fetch_single_block, det, s, e, output_dir, retry_delays, base_delay, cache_raw))
             
-            current_start = current_end
-            block_num += 1
+            # Wait for all to finish
+            wait(futures)
+            
+            # Log results
+            for f in futures:
+                ok, msg = f.result()
+                if ok:
+                    logger.info(msg)
+                else:
+                    logger.error(msg)
+            
+            current_start += W * segment_duration
+            block_num += W
 
     print("Download completato.")
 
@@ -1864,7 +1842,7 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
         is_failed = True
 
     if is_failed:
-        logger.error("Full analysis failed. Aborting continuous run loop.")
+        logger.error("Full analysis failed.")
         sys.exit(1)
 
     print("\nFull Analysis Complete.")
@@ -1874,16 +1852,6 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
             if det in result["reports"]:
                 print(f"    Report: {result['reports'][det]}")
 
-    if getattr(args, "continue_run", False):
-        max_iterations = getattr(args, "max_iterations", 10)
-        stop_date = getattr(args, "stop_date", None)
-        _run_continue_loop(
-            initial_session_id=session_id,
-            run=run,
-            max_iterations=max_iterations,
-            stop_date_str=stop_date,
-            args=args,
-        )
 
 
 def cmd_calibrate_threshold(args: argparse.Namespace) -> None:
@@ -2139,23 +2107,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Execute detector analysis sequentially instead of in parallel.",
     )
-    p_full.add_argument(
-        "--continue-run",
-        action="store_true",
-        help="Enable continuous run loop after full-analysis.",
-    )
-    p_full.add_argument(
-        "--max-iterations",
-        type=int,
-        default=10,
-        help="Maximum iterations for the continuous run loop. Default: 10.",
-    )
-    p_full.add_argument(
-        "--stop-date",
-        type=str,
-        default=None,
-        help="Stop date (ISO string or GPS time) for the continuous run loop.",
-    )
+
     p_full.add_argument(
         "--algorithm",
         type=str,
@@ -2195,21 +2147,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_fetch_raw.add_argument(
         "--detector",
         type=str,
+        nargs="+",
         default=None,
         choices=["H1", "L1", "V1"],
-        help="Detector identifier. Opzionale se si usa --workers.",
+        help="Detector identifier(s). Default: H1 L1.",
     )
     p_fetch_raw.add_argument(
         "--workers",
         type=int,
-        default=None,
-        help="Numero di worker totali da suddividere tra H1 e L1. Deve essere pari (es. 2, 4, 6, 8).",
+        default=2,
+        help="Numero di worker totali da suddividere tra H1 e L1. Default: 2.",
     )
     p_fetch_raw.add_argument(
         "--hours",
         type=float,
-        default=1.0,
-        help="Total hours to download from the origin or from the resume point. Default: 1.0.",
+        default=None,
+        help="Total hours to download. Default: value from config.yaml for the specific run.",
+    )
+    p_fetch_raw.add_argument(
+        "--start-gps",
+        type=int,
+        default=None,
+        help="Optional GPS start time to override the run start logic.",
     )
     p_fetch_raw.add_argument(
         "--output-dir",

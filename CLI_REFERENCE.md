@@ -143,14 +143,16 @@ Download massivo di dati strain (GWOSC) in formato `.hdf5`.
   5. Salva i file direttamente in `data/raw/<gps_start>/` con nome file `[Detector]_[gps_start]_[gps_end].hdf5`.
   6. Rileva i file parzialmente completati per riprendere in automatico i download interrotti.
 
-- `--detector`: Rivelatore. *Opzionale se si usa --workers*.
-- `--workers`: Numero totale di worker (deve essere pari se senza detector esplicito).
+- `--detector`: Rivelatore(i). *Default: `H1 L1`*.
+- `--workers`: Numero totale di worker. *Default: `2`*.
 - `--run`: Run osservativo base. *Default: `O4a`*.
-- `--hours`: Ore totali da scaricare. *Default: `1.0`*.
+- `--hours`: Ore totali da scaricare. *Default: letto da config.yaml per la run specificata*.
+- `--start-gps`: Sovrascrive il tempo GPS di inizio. *Default: letto da config.yaml per la run specificata*.
 - `--output-dir`: Cartella output cache. *Default: `data/raw`*.
-- `--segment-duration`: Durata chunk in download (in secondi). *Default: `4092`*.
+- `--segment-duration`: Durata chunk in download (in secondi). *Default: `4096`*.
 - `--no-resume`: Flag. Disattiva il resume automatico.
 - `--retry`: Flag. Abilita retry con backoff esponenziale.
+- `--continue`: Flag. Continua il download dall'ultima cartella GPS in data/raw/. *Default: `False`*.
 
 ### 5. `last-gps`
 Restituisce il tempo GPS (end) più avanzato per riprendere run fermati senza invocare server esterni.
@@ -429,9 +431,6 @@ Automatizza l'intero workflow di analisi (Encode, Cluster, Morphcheck, Ablation,
 - `--skip-timeslide`: Flag. Forza l'esclusione del timeslide.
 - `--n-runs`: Numero di run per la stability analysis. *Default: `20`*.
 - `--sequential`: Esecuzione sequenziale dei detector.
-- `--continue-run`: Flag. Attiva il ciclo continuo generando nuove sessioni in loop.
-- `--max-iterations`: Limite iterazioni loop continuo. *Default: `10`*.
-- `--stop-date`: Limite data in cui interrompere il ciclo.
 - `--algorithm`: Algoritmo di clustering (`dpmm`, `hdbscan`). *Default: `dpmm`*.
 
 ---

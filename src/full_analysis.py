@@ -202,22 +202,50 @@ def _analyze_detector(
     result: dict | None = None
 
     try:
-        logger.info("%s[%s]%s Step 1: Clustering...", color, det, reset)
         cluster_cfg = cfg["clustering"]
         cluster_dir = session_path(run, session_id) / "clusters" / det.lower()
+        cluster_report_file = cluster_dir / "cluster_report.json"
 
-        result = run_full_pipeline(embeddings, cluster_cfg)
-        save_cluster_report(result, metadata, cluster_dir, detector=det)
-        print_summary(result, detector=det)
+        if cluster_report_file.exists():
+            logger.info("%s[%s]%s Step 1: Cluster report already exists. Skipping clustering.", color, det, reset)
+            with open(cluster_report_file, "r", encoding="utf-8") as f:
+                rep = json.load(f)
+            
+            # Reconstruct result dict for downstream steps
+            labels = np.full(len(metadata["files"]), -1)
+            file_to_idx = {f: i for i, f in enumerate(metadata["files"])}
+            for cid_str, details in rep.get("results", {}).get("clusters", {}).items():
+                cid = int(cid_str)
+                for sf in details.get("sample_files", []):
+                    if sf in file_to_idx:
+                        labels[file_to_idx[sf]] = cid
+            
+            result = {
+                "labels": labels,
+                "hdbscan_stats": {
+                    "cluster_sizes": {int(k): v for k, v in rep.get("results", {}).get("cluster_sizes", {}).items()},
+                    "n_clusters": rep.get("results", {}).get("n_clusters", 0),
+                    "n_noise": rep.get("results", {}).get("n_noise", 0),
+                },
+                "anomalous_clusters": rep.get("results", {}).get("anomalous_clusters", []),
+                "anomalous_samples": rep.get("results", {}).get("anomalous_samples", []),
+                "pca_variance": rep.get("pipeline", {}).get("pca_variance_explained", 0.0)
+            }
+            det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": step_start}
+        else:
+            logger.info("%s[%s]%s Step 1: Clustering...", color, det, reset)
+            result = run_full_pipeline(embeddings, cluster_cfg)
+            save_cluster_report(result, metadata, cluster_dir, detector=det)
+            print_summary(result, detector=det)
 
-        det_report["steps"]["cluster"] = {
-            "status": "OK",
-            "timestamp": step_start,
-            "n_clusters": result["hdbscan_stats"]["n_clusters"],
-            "n_noise": result["hdbscan_stats"]["n_noise"],
-            "pca_variance": result["pca_variance"],
-            "anomalous_clusters": result["anomalous_clusters"],
-        }
+            det_report["steps"]["cluster"] = {
+                "status": "OK",
+                "timestamp": step_start,
+                "n_clusters": result["hdbscan_stats"]["n_clusters"],
+                "n_noise": result["hdbscan_stats"]["n_noise"],
+                "pca_variance": result["pca_variance"],
+                "anomalous_clusters": result["anomalous_clusters"],
+            }
 
     except Exception as exc:
         logger.error(
@@ -242,48 +270,60 @@ def _analyze_detector(
     cluster_cfg = cfg["clustering"]
 
     try:
-        logger.info("%s[%s]%s Step 2: Morphological cross-check...", color, det, reset)
         morph_report_path = cluster_dir / "morphcheck_report.json"
+        
+        if morph_report_path.exists():
+            logger.info("%s[%s]%s Step 2: Morphcheck report already exists. Skipping.", color, det, reset)
+            with open(morph_report_path, "r", encoding="utf-8") as f:
+                morph_summary = json.load(f)
+            det_report["steps"]["morphcheck"] = {
+                "status": "SKIPPED",
+                "timestamp": step_start,
+                "novel": morph_summary.get("novel", 0),
+                "known": morph_summary.get("known", 0),
+                "ambiguous": morph_summary.get("ambiguous", 0),
+            }
+        else:
+            logger.info("%s[%s]%s Step 2: Morphological cross-check...", color, det, reset)
+            anomalous_indices: list[int] = []
+            anomalous_files: list = []
+            anomalous_cluster_ids: list[int] = []
 
-        anomalous_indices: list[int] = []
-        anomalous_files: list = []
-        anomalous_cluster_ids: list[int] = []
+            for cid_str in result["hdbscan_stats"]["cluster_sizes"]:
+                cid = int(cid_str)
+                if cid in result["anomalous_clusters"]:
+                    mask = result["labels"] == cid
+                    for idx in np.where(mask)[0]:
+                        anomalous_indices.append(idx)
+                        anomalous_files.append(all_files[idx])
+                        anomalous_cluster_ids.append(cid)
 
-        for cid_str in result["hdbscan_stats"]["cluster_sizes"]:
-            cid = int(cid_str)
-            if cid in result["anomalous_clusters"]:
-                mask = result["labels"] == cid
-                for idx in np.where(mask)[0]:
-                    anomalous_indices.append(idx)
-                    anomalous_files.append(all_files[idx])
-                    anomalous_cluster_ids.append(cid)
+            if not anomalous_indices:
+                logger.info(
+                    "%s[%s]%s No anomalous clusters found. Running morphcheck with empty list.",
+                    color, det, reset,
+                )
 
-        if not anomalous_indices:
-            logger.info(
-                "%s[%s]%s No anomalous clusters found. Running morphcheck with empty list.",
-                color, det, reset,
+            anomalous_embeddings = embeddings[anomalous_indices]
+            sim_cfg = cfg.get("similarity", {})
+            morph_summary = run_morphological_crosscheck(
+                anomalous_embeddings,
+                anomalous_files,
+                anomalous_cluster_ids,
+                Path(reference_path),
+                morph_report_path,
+                k=sim_cfg.get("k_neighbors", 5),
+                novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
+                consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
             )
-
-        anomalous_embeddings = embeddings[anomalous_indices]
-        sim_cfg = cfg.get("similarity", {})
-        morph_summary = run_morphological_crosscheck(
-            anomalous_embeddings,
-            anomalous_files,
-            anomalous_cluster_ids,
-            Path(reference_path),
-            morph_report_path,
-            k=sim_cfg.get("k_neighbors", 5),
-            novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
-            consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
-        )
-        print_morphological_summary(morph_summary, detector=det)
-        det_report["steps"]["morphcheck"] = {
-            "status": "OK",
-            "timestamp": step_start,
-            "novel": morph_summary["novel"],
-            "known": morph_summary["known"],
-            "ambiguous": morph_summary["ambiguous"],
-        }
+            print_morphological_summary(morph_summary, detector=det)
+            det_report["steps"]["morphcheck"] = {
+                "status": "OK",
+                "timestamp": step_start,
+                "novel": morph_summary["novel"],
+                "known": morph_summary["known"],
+                "ambiguous": morph_summary["ambiguous"],
+            }
 
     except Exception as exc:
         logger.error(
@@ -305,41 +345,52 @@ def _analyze_detector(
     image_paths = [input_dir / Path(f).name for f in all_files]
 
     try:
-        logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
-        _lock = gpu_lock if gpu_lock is not None else _gpu_lock
-        with _lock:
-            logger.info(
-                "%s[%s]%s GPU lock acquired for ablation.", color, det, reset
-            )
-            encoder_abl = DINOv2Encoder(batch_size=batch_size)
-            run_ablation_study(
-                original_labels=result["labels"],
-                image_paths=image_paths,
-                encoder=encoder_abl,
-                cluster_cfg=cluster_cfg,
-                output_dir=ablation_dir,
-                session_id=session_id,
-                detector=det,
-            )
-            logger.info(
-                "%s[%s]%s GPU lock released after ablation.", color, det, reset
-            )
-
         ablation_report_file = ablation_dir / f"ablation_report_{det}.json"
+
         if ablation_report_file.exists():
+            logger.info("%s[%s]%s Step 3: Ablation report already exists. Skipping.", color, det, reset)
             with open(ablation_report_file, "r", encoding="utf-8") as fh:
                 ablation_data = json.load(fh)
             det_report["steps"]["ablation"] = {
-                "status": "OK",
+                "status": "SKIPPED",
                 "timestamp": step_start,
-                "results": {k: v["ari"] for k, v in ablation_data["results"].items()},
+                "results": {k: v["ari"] for k, v in ablation_data.get("results", {}).items()},
             }
         else:
-            det_report["steps"]["ablation"] = {
-                "status": "FAILED",
-                "timestamp": step_start,
-                "error": "Report file not found after run",
-            }
+            logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
+            _lock = gpu_lock if gpu_lock is not None else _gpu_lock
+            with _lock:
+                logger.info(
+                    "%s[%s]%s GPU lock acquired for ablation.", color, det, reset
+                )
+                encoder_abl = DINOv2Encoder(batch_size=batch_size)
+                run_ablation_study(
+                    original_labels=result["labels"],
+                    image_paths=image_paths,
+                    encoder=encoder_abl,
+                    cluster_cfg=cluster_cfg,
+                    output_dir=ablation_dir,
+                    session_id=session_id,
+                    detector=det,
+                )
+                logger.info(
+                    "%s[%s]%s GPU lock released after ablation.", color, det, reset
+                )
+
+            if ablation_report_file.exists():
+                with open(ablation_report_file, "r", encoding="utf-8") as fh:
+                    ablation_data = json.load(fh)
+                det_report["steps"]["ablation"] = {
+                    "status": "OK",
+                    "timestamp": step_start,
+                    "results": {k: v["ari"] for k, v in ablation_data["results"].items()},
+                }
+            else:
+                det_report["steps"]["ablation"] = {
+                    "status": "FAILED",
+                    "timestamp": step_start,
+                    "error": "Report file not found after run",
+                }
 
     except Exception as exc:
         logger.error(
@@ -359,36 +410,47 @@ def _analyze_detector(
     step_start = datetime.now(timezone.utc).isoformat()
 
     try:
-        logger.info("%s[%s]%s Step 4: Stability analysis...", color, det, reset)
-        run_stability_analysis(
-            embeddings=embeddings,
-            cluster_cfg=cluster_cfg,
-            n_runs=n_runs,
-            session_id=session_id,
-            detector=det,
-            run=run,
-        )
-
         stability_report_file = (
             session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
         )
         if stability_report_file.exists():
+            logger.info("%s[%s]%s Step 4: Stability report already exists. Skipping.", color, det, reset)
             with open(stability_report_file, "r", encoding="utf-8") as fh:
                 stability_data = json.load(fh)
             det_report["steps"]["stability"] = {
-                "status": "OK",
+                "status": "SKIPPED",
                 "timestamp": step_start,
-                "mean_ari": stability_data["ari_stats"]["mean"],
-                "stable_anomalous_clusters": stability_data[
-                    "stable_anomalous_clusters_baseline_ids"
-                ],
+                "mean_ari": stability_data.get("ari_stats", {}).get("mean", 0.0),
+                "stable_anomalous_clusters": stability_data.get("stable_anomalous_clusters_baseline_ids", []),
             }
         else:
-            det_report["steps"]["stability"] = {
-                "status": "FAILED",
-                "timestamp": step_start,
-                "error": "Report file not found after run",
-            }
+            logger.info("%s[%s]%s Step 4: Stability analysis...", color, det, reset)
+            run_stability_analysis(
+                embeddings=embeddings,
+                cluster_cfg=cluster_cfg,
+                n_runs=n_runs,
+                session_id=session_id,
+                detector=det,
+                run=run,
+            )
+
+            if stability_report_file.exists():
+                with open(stability_report_file, "r", encoding="utf-8") as fh:
+                    stability_data = json.load(fh)
+                det_report["steps"]["stability"] = {
+                    "status": "OK",
+                    "timestamp": step_start,
+                    "mean_ari": stability_data["ari_stats"]["mean"],
+                    "stable_anomalous_clusters": stability_data[
+                        "stable_anomalous_clusters_baseline_ids"
+                    ],
+                }
+            else:
+                det_report["steps"]["stability"] = {
+                    "status": "FAILED",
+                    "timestamp": step_start,
+                    "error": "Report file not found after run",
+                }
 
     except Exception as exc:
         logger.error(
@@ -538,22 +600,28 @@ def run_full_analysis(
                 meta_l1 = session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
                 rep_l1 = session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
                 output_dir = session_path(run, session_id) / "timeslide"
+                timeslide_report_path = output_dir / "timeslide_report_H1_L1.json"
 
-                ts_cfg = cfg.get("timeslide", {})
-                ts_iterations: int = ts_cfg.get("iterations", 100)
-                ts_window: int = ts_cfg.get("window", 32)
+                if timeslide_report_path.exists():
+                    logger.info("%s=== Timeslide report already exists. Skipping. ===%s", ts_color, reset)
+                    with open(timeslide_report_path, "r", encoding="utf-8") as fh:
+                        ts_report = json.load(fh)
+                else:
+                    ts_cfg = cfg.get("timeslide", {})
+                    ts_iterations: int = ts_cfg.get("iterations", 100)
+                    ts_window: int = ts_cfg.get("window", 32)
 
-                ts_report = run_timeslide(
-                    meta_h1=meta_h1,
-                    rep_h1=rep_h1,
-                    meta_l1=meta_l1,
-                    rep_l1=rep_l1,
-                    output_dir=output_dir,
-                    iterations=ts_iterations,
-                    window=ts_window,
-                )
+                    ts_report = run_timeslide(
+                        meta_h1=meta_h1,
+                        rep_h1=rep_h1,
+                        meta_l1=meta_l1,
+                        rep_l1=rep_l1,
+                        output_dir=output_dir,
+                        iterations=ts_iterations,
+                        window=ts_window,
+                    )
 
-                reports["timeslide"] = output_dir / "timeslide_report_H1_L1.json"
+                reports["timeslide"] = timeslide_report_path
                 overall_status["timeslide"] = "OK"
 
                 # Annotate each detector's report with timeslide results
