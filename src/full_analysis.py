@@ -78,15 +78,15 @@ def _save_detector_report(det_report: dict, run: str, session_id: str, det: str)
 
 
 def _analyze_detector(
-    det: str,
-    session_id: str,
-    run: str,
-    run_lower: str,
-    cfg: dict,
-    n_runs: int,
-    reference_path: str,
-    batch_size: int,
-    gpu_lock: threading.Lock | None = None,
+        det: str,
+        session_id: str,
+        run: str,
+        run_lower: str,
+        cfg: dict,
+        n_runs: int,
+        reference_path: str,
+        batch_size: int,
+        gpu_lock: threading.Lock | None = None,
 ) -> tuple[str, dict, Path]:
     """Internal helper to run analysis for a single detector.
 
@@ -210,7 +210,7 @@ def _analyze_detector(
             logger.info("%s[%s]%s Step 1: Cluster report already exists. Skipping clustering.", color, det, reset)
             with open(cluster_report_file, "r", encoding="utf-8") as f:
                 rep = json.load(f)
-            
+
             # Reconstruct result dict for downstream steps
             labels = np.full(len(metadata["files"]), -1)
             file_to_idx = {f: i for i, f in enumerate(metadata["files"])}
@@ -219,7 +219,7 @@ def _analyze_detector(
                 for sf in details.get("sample_files", []):
                     if sf in file_to_idx:
                         labels[file_to_idx[sf]] = cid
-            
+
             result = {
                 "labels": labels,
                 "hdbscan_stats": {
@@ -271,7 +271,7 @@ def _analyze_detector(
 
     try:
         morph_report_path = cluster_dir / "morphcheck_report.json"
-        
+
         if morph_report_path.exists():
             logger.info("%s[%s]%s Step 2: Morphcheck report already exists. Skipping.", color, det, reset)
             with open(morph_report_path, "r", encoding="utf-8") as f:
@@ -298,12 +298,31 @@ def _analyze_detector(
                         anomalous_files.append(all_files[idx])
                         anomalous_cluster_ids.append(cid)
 
-            if not anomalous_indices:
-                logger.info(
-                    "%s[%s]%s No anomalous clusters found. Running morphcheck with empty list.",
-                    color, det, reset,
-                )
-
+            # if not anomalous_indices:
+            #     logger.info(
+            #         "%s[%s]%s No anomalous clusters found. Generating empty morphcheck report.",
+            #         color, det, reset,
+            #     )
+            #     morph_summary = {
+            #         "total_checked": 0,
+            #         "novel": 0,
+            #         "known": 0,
+            #         "ambiguous": 0,
+            #         "novel_files": [],
+            #         "details": [],
+            #     }
+            #     morph_report_path.parent.mkdir(parents=True, exist_ok=True)
+            #     with open(morph_report_path, "w", encoding="utf-8") as f:
+            #         json.dump(morph_summary, f, indent=2)
+            #
+            #     det_report["steps"]["morphcheck"] = {
+            #         "status": "OK",
+            #         "timestamp": step_start,
+            #         "novel": 0,
+            #         "known": 0,
+            #         "ambiguous": 0,
+            #     }
+            # else:
             anomalous_embeddings = embeddings[anomalous_indices]
             sim_cfg = cfg.get("similarity", {})
             morph_summary = run_morphological_crosscheck(
@@ -411,7 +430,7 @@ def _analyze_detector(
 
     try:
         stability_report_file = (
-            session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
+                session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
         )
         if stability_report_file.exists():
             logger.info("%s[%s]%s Step 4: Stability report already exists. Skipping.", color, det, reset)
@@ -482,14 +501,14 @@ def _analyze_detector(
 
 
 def run_full_analysis(
-    session_id: str,
-    detectors: list[str] | None = None,
-    run: str = "O4a",
-    skip_timeslide: bool = False,
-    n_runs: int = 20,
-    reference_path: str = "data/reference/indomain_index.npz",
-    batch_size: int = 32,
-    sequential: bool = False,
+        session_id: str,
+        detectors: list[str] | None = None,
+        run: str = "O4a",
+        skip_timeslide: bool = False,
+        n_runs: int = 20,
+        reference_path: str = "data/reference/indomain_index.npz",
+        batch_size: int = 32,
+        sequential: bool = False,
 ) -> dict:
     """Run the full analysis pipeline for one or more detectors.
 
@@ -562,7 +581,7 @@ def run_full_analysis(
                 executor.submit(
                     _analyze_detector,
                     det, session_id, run, run_lower, cfg, n_runs, reference_path, batch_size,
-                    _gpu_lock,      # shared lock — passed explicitly
+                    _gpu_lock,  # shared lock — passed explicitly
                 ): det
                 for det in detectors
             }
@@ -647,6 +666,210 @@ def run_full_analysis(
             overall_status["timeslide"] = "SKIPPED (dependencies failed)"
     else:
         overall_status["timeslide"] = "SKIPPED"
+
+    return {
+        "session_id": session_id,
+        "run": run,
+        "detectors": detectors,
+        "status": overall_status,
+        "reports": {k: str(v) for k, v in reports.items()},
+    }
+
+
+def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
+    """Re-generate the final summary reports by parsing individual step reports.
+
+    This function does not execute any computational steps (e.g. clustering or
+    ablation). It only aggregates existing reports.
+    """
+    run_lower = run.lower()
+    session_dir = session_path(run, session_id)
+    
+    if not session_dir.exists():
+        logger.error("Session directory not found: %s", session_dir)
+        return {"status": "FAILED", "error": "Session directory not found"}
+
+    # Discover detectors
+    detectors = []
+    clusters_dir = session_dir / "clusters"
+    if clusters_dir.exists():
+        detectors = [d.name.upper() for d in clusters_dir.iterdir() if d.is_dir() and d.name.upper() in ("H1", "L1", "V1")]
+    if not detectors:
+        spec_dir = session_dir / "spectrograms"
+        if spec_dir.exists():
+            detectors = [d.name.upper() for d in spec_dir.iterdir() if d.is_dir() and d.name.upper() in ("H1", "L1", "V1")]
+            
+    if not detectors:
+        logger.error("No detectors found for session %s", session_id)
+        return {"status": "FAILED", "error": "No detectors found"}
+
+    overall_status = {}
+    reports = {}
+    ts_report_data = None
+    
+    # Read timeslide if available
+    timeslide_path = session_dir / "timeslide" / "timeslide_report_H1_L1.json"
+    if timeslide_path.exists():
+        try:
+            with open(timeslide_path, "r", encoding="utf-8") as fh:
+                ts_report_data = json.load(fh)
+            overall_status["timeslide"] = "OK"
+            reports["timeslide"] = timeslide_path
+        except Exception as exc:
+            logger.warning("Could not read timeslide report: %s", exc)
+            overall_status["timeslide"] = "FAILED"
+    else:
+        overall_status["timeslide"] = "SKIPPED"
+
+    for det in detectors:
+        det_lower = det.lower()
+        color = _get_det_color(det)
+        reset = _reset_color()
+        logger.info("%s=== Generating Full Report for %s ===%s", color, det, reset)
+        
+        det_report: dict = {
+            "session_id": session_id,
+            "detector": det,
+            "run": run,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "steps": {},
+        }
+        
+        # Spectrogram statistics
+        input_dir = session_dir / "spectrograms" / det
+        if input_dir.exists():
+            png_files = list(input_dir.glob(f"{det}_*.png"))
+            gps_starts, gps_ends = [], []
+            for f in png_files:
+                parts = f.stem.split("_")
+                if len(parts) >= 3:
+                    try:
+                        gps_starts.append(int(parts[1]))
+                        gps_ends.append(int(parts[2]))
+                    except ValueError:
+                        continue
+            if gps_starts:
+                g_start, g_end = min(gps_starts), max(gps_ends)
+                n_specs = len(png_files)
+                duration_hours = round((g_end - g_start) / 3600, 1)
+                duty_cycle = round((n_specs * 32) / (duration_hours * 3600) * 100, 1) if duration_hours > 0 else 0.0
+                det_report["session_summary"] = {
+                    "n_spectrograms": n_specs, "gps_start": g_start, "gps_end": g_end,
+                    "duration_hours": duration_hours, "duty_cycle_percent": duty_cycle,
+                }
+            else:
+                det_report["session_summary"] = {"n_spectrograms": 0, "gps_start": 0, "gps_end": 0, "duration_hours": 0.0, "duty_cycle_percent": 0.0}
+        else:
+            det_report["session_summary"] = {"n_spectrograms": 0, "gps_start": 0, "gps_end": 0, "duration_hours": 0.0, "duty_cycle_percent": 0.0}
+
+        # Embeddings
+        embed_json = session_dir / "embeddings" / f"{run_lower}_{det_lower}.json"
+        if embed_json.exists():
+            det_report["steps"]["encode"] = {"status": "OK", "timestamp": datetime.fromtimestamp(embed_json.stat().st_mtime, timezone.utc).isoformat()}
+        else:
+            det_report["steps"]["encode"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
+
+        # Cluster
+        cluster_rep_path = session_dir / "clusters" / det_lower / "cluster_report.json"
+        if cluster_rep_path.exists():
+            try:
+                with open(cluster_rep_path, "r", encoding="utf-8") as fh:
+                    cl_data = json.load(fh)
+                det_report["steps"]["cluster"] = {
+                    "status": "OK",
+                    "timestamp": cl_data.get("timestamp", datetime.fromtimestamp(cluster_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "n_clusters": cl_data.get("n_clusters", 0),
+                    "n_noise": cl_data.get("n_noise", 0),
+                    "pca_variance": cl_data.get("pca_variance", 0.0),
+                    "anomalous_clusters": cl_data.get("anomalous_clusters", []),
+                }
+            except Exception as e:
+                det_report["steps"]["cluster"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+        else:
+            det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
+
+        # Morphcheck
+        morph_rep_path = session_dir / "clusters" / det_lower / "morphological_crosscheck_indomain.json"
+        if morph_rep_path.exists():
+            try:
+                with open(morph_rep_path, "r", encoding="utf-8") as fh:
+                    m_data = json.load(fh)
+                det_report["steps"]["morphcheck"] = {
+                    "status": "OK",
+                    "timestamp": m_data.get("timestamp", datetime.fromtimestamp(morph_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "novel": m_data.get("summary", {}).get("NOVEL", 0),
+                    "known": m_data.get("summary", {}).get("KNOWN", 0),
+                    "ambiguous": m_data.get("summary", {}).get("AMBIGUOUS", 0),
+                }
+            except Exception as e:
+                det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+        else:
+            det_report["steps"]["morphcheck"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
+
+        # Ablation
+        ablation_rep_path = session_dir / "clusters" / det_lower / "ablation_report.json"
+        if ablation_rep_path.exists():
+            try:
+                with open(ablation_rep_path, "r", encoding="utf-8") as fh:
+                    a_data = json.load(fh)
+                det_report["steps"]["ablation"] = {
+                    "status": "OK",
+                    "timestamp": a_data.get("timestamp", datetime.fromtimestamp(ablation_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "results": {
+                        "grayscale": a_data.get("scores", {}).get("grayscale", 0),
+                        "inverted": a_data.get("scores", {}).get("inverted", 0),
+                        "shuffled-intensity": a_data.get("scores", {}).get("shuffled-intensity", 0),
+                        "random-baseline": a_data.get("scores", {}).get("random-baseline", 0),
+                    }
+                }
+            except Exception as e:
+                det_report["steps"]["ablation"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+        else:
+            det_report["steps"]["ablation"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
+
+        # Stability
+        stability_rep_path = session_dir / "clusters" / det_lower / "stability_report.json"
+        if stability_rep_path.exists():
+            try:
+                with open(stability_rep_path, "r", encoding="utf-8") as fh:
+                    s_data = json.load(fh)
+                det_report["steps"]["stability"] = {
+                    "status": "OK",
+                    "timestamp": s_data.get("timestamp", datetime.fromtimestamp(stability_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "mean_ari": s_data.get("mean_ari", 0),
+                    "stable_anomalous_clusters": s_data.get("stable_anomalous_clusters", []),
+                }
+            except Exception as e:
+                det_report["steps"]["stability"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+        else:
+            det_report["steps"]["stability"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
+
+        # Timeslide mapping
+        if ts_report_data:
+            det_report["steps"]["timeslide"] = {
+                "status": "OK",
+                "timestamp": ts_report_data.get("timestamp", det_report["timestamp"]),
+                "p_value": ts_report_data.get("p_value", 1.0),
+                "z_score": ts_report_data.get("z_score", 0.0),
+            }
+        else:
+            det_report["steps"]["timeslide"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
+
+        # Finalize Status
+        failed_steps = [s for s, v in det_report["steps"].items() if v.get("status") == "FAILED"]
+        skipped_steps = [s for s, v in det_report["steps"].items() if v.get("status") == "SKIPPED"]
+        if failed_steps:
+            det_report["status"] = "FAILED"
+            det_report["failed_steps"] = failed_steps
+        elif skipped_steps:
+            det_report["status"] = "PARTIAL"
+            det_report["skipped_steps"] = skipped_steps
+        else:
+            det_report["status"] = "OK"
+
+        report_path = _save_detector_report(det_report, run, session_id, det)
+        overall_status[det] = det_report["status"]
+        reports[det] = report_path
 
     return {
         "session_id": session_id,

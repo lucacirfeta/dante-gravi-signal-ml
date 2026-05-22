@@ -1813,6 +1813,38 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_full_analysis_report(args: argparse.Namespace) -> None:
+    """Generate final summary reports from existing step reports without running analysis."""
+    from src.full_analysis import generate_reports_only
+
+    session_id = _resolve_session_id(args)
+    if not session_id:
+        logger.error("--session-id is required for full-analysis-report.")
+        sys.exit(1)
+        
+    run = _resolve_run(args)
+    _log_run_header(run, "AUTO", session_id)
+
+    result = generate_reports_only(session_id=session_id, run=run)
+
+    status_val = result.get("status")
+    is_failed = False
+    if status_val == "FAILED":
+        is_failed = True
+    elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
+        is_failed = True
+
+    if is_failed:
+        logger.error("Report generation failed.")
+        sys.exit(1)
+
+    print("\nReport Generation Complete.")
+    if isinstance(status_val, dict):
+        for det, status in status_val.items():
+            if det in ["H1", "L1", "V1", "timeslide"]:
+                print(f"  - {det}: {status}")
+
+
 def cmd_full_analysis(args: argparse.Namespace) -> None:
     """Automate the full analysis pipeline for one or more detectors."""
     from src.full_analysis import run_full_analysis
@@ -2117,6 +2149,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_run_argument(p_full)
     p_full.set_defaults(func=cmd_full_analysis)
+
+    # --- full-analysis-report ---
+    p_full_report = subparsers.add_parser(
+        "full-analysis-report",
+        help="Generate final summary reports from existing step reports without running analysis.",
+    )
+    p_full_report.add_argument(
+        "--session-id",
+        type=str,
+        required=True,
+        help="Session identifier to analyze.",
+    )
+    _add_run_argument(p_full_report)
+    p_full_report.set_defaults(func=cmd_full_analysis_report)
 
     # --- last-gps ---
     p_last_gps = subparsers.add_parser(

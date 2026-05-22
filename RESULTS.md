@@ -19,7 +19,7 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e memorizzati 
 
 | Run   | Session ID        | Data/Ora Run                         | Stato Analisi                      | Rilevazioni Salienti / Anomalie Novel |
 |:------|:------------------|:-------------------------------------|:-----------------------------------|:--------------------------------------|
-| `O4a` | `run1`            | `[IN ATTESA — run1 in elaborazione]` | [IN ATTESA — run1 in elaborazione] | [IN ATTESA — run1 in elaborazione]    |
+| `O4a` | `run1`            | `2026-05-22 07:03:51`                | Completato (OK)                    | Nessun cluster anomalo (0 NOVEL)      |
 | `O4a` | `20260520_223147` | `[NON DISPONIBILE]`                  | [NON DISPONIBILE]                  | [NON DISPONIBILE]                     |
 
 ---
@@ -28,37 +28,33 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e memorizzati 
 
 ### Sessione: `O4a - run1`
 
-[IN ATTESA — run1 in elaborazione]
+**Completato con successo:** Nessuna nuova morfologia identificata.
 
 #### 📊 1. Statistiche Dataset e Preprocessing
 | Detector | Spettrogrammi Totali | Duty Cycle (%) | Colormap  | Note / Limitazioni |
 |:---------|:--------------------:|:--------------:|:---------:|:-------------------|
-| **H1**   |      `[NUMERO]`      |  `[VALORE]%`   | `cividis` | `[Note]`           |
-| **L1**   |      `[NUMERO]`      |  `[VALORE]%`   | `cividis` | `[Note]`           |
+| **H1**   |      `21991`         |     `59.2%`    | `cividis` | Nessuna            |
+| **L1**   |      `29953`         |     `79.6%`    | `cividis` | Nessuna            |
 
 #### 🤖 2. Risultati del Clustering (DPMM + Cosine)
 | Detector | Numero Cluster | Campioni nel Cluster Dominante | Cluster Anomalous (# ID / Dimensioni) | Punti Rumore (Noise) | Varianza PCA (%) |
 |:---------|:--------------:|:------------------------------:|:--------------------------------------|:--------------------:|:----------------:|
-| **H1**   |   `[NUMERO]`   |           `[NUMERO]`           | `[E.g. C1 (23 pts), C4 (19 pts)]`     |      `[NUMERO]`      |   `[VALORE]%`    |
-| **L1**   |   `[NUMERO]`   |           `[NUMERO]`           | `[E.g. C4 (32 pts)]`                  |      `[NUMERO]`      |   `[VALORE]%`    |
+| **H1**   |      `11`      |            `13477`             | Nessuno                               |         `0`          |     `98.7%`      |
+| **L1**   |      `15`      |            `13571`             | Nessuno                               |         `0`          |     `98.0%`      |
 
 #### 🛡️ 3. Validazione Robustezza (Ablation & Stability)
-| Detector | Stability Mean ARI (σ) | Ablation Grayscale ARI | Ablation Shuffled-Intensity ARI | Esito Validazione                    |
-|:---------|:----------------------:|:----------------------:|:-------------------------------:|:-------------------------------------|
-| **H1**   | `[VALORE] (±[VALORE])` |       `[VALORE]`       |           `[VALORE]`            | [Approvato / Bias Colormap Rilevato] |
-| **L1**   | `[VALORE] (±[VALORE])` |       `[VALORE]`       |           `[VALORE]`            | [Approvato / Bias Colormap Rilevato] |
+| Detector | Stability Mean ARI | Ablation Grayscale ARI | Ablation Shuffled-Intensity ARI | Esito Validazione                    |
+|:---------|:------------------:|:----------------------:|:-------------------------------:|:-------------------------------------|
+| **H1**   |       `0.896`      |         `0.897`        |             `0.830`             | Approvato                            |
+| **L1**   |       `0.915`      |         `0.681`        |             `0.706`             | Approvato con lieve calo ablation    |
 
 #### 🔗 4. Analisi Temporale (Time-Slide Coincidence)
 | Finestra di Coincidenza | Numero Coincidenze a Lag Zero | p-value Empirico | Significatività (Z-score) | Esito |
 | :--- | :---: | :---: | :---: | :--- |
-| `±32s` | `[NUMERO]` | `[VALORE]` | `[VALORE]` | [Casuale / Statisticamente Significativa] |
+| `±32s` | `0` | `1.0` | `0.0` | Casuale (compatibile con fondo) |
 
 #### 🔬 5. Interpretazione Morfologica (Morphcheck in-domain)
-| Detector | Cluster ID | Classificazione (KNOWN / NOVEL / AMBIGUOUS) | Mappatura Classi Gravity Spy Principali | Interpretazione Scientifica / Note |
-| :--- | :---: | :--- | :--- | :--- |
-| **H1** | `C1` | `[KNOWN / NOVEL / AMBIGUOUS]` | `[Classe 1, Classe 2]` | `[Note]` |
-| **H1** | `C4` | `[KNOWN / NOVEL / AMBIGUOUS]` | `[Classe 1, Classe 2]` | `[Note]` |
-| **L1** | `C4` | `[KNOWN / NOVEL / AMBIGUOUS]` | `[Classe 1, Classe 2]` | `[Note]` |
+Nessun cluster anomalo da analizzare (0 cluster trovati). Entrambi i detector hanno restituito una lista vuota in clustering. Tutti i glitch si sono mappati in morfologie attese o popolazioni continue di fondo.
 
 ---
 
@@ -102,9 +98,9 @@ Cluster dominanti principalmente mappabili in classi esistenti o ambigue; nessun
 
 ## ⚖️ Cross-Run Comparison
 
-| Metrica                 | `run1`                             | `run2 (20260520_223147)` | Confronto   |
+| Metrica                 | `run1 (20260522_074026)`           | `run2 (20260520_223147)` | Confronto   |
 |:------------------------|:-----------------------------------|:-------------------------|:------------|
-| Spettrogrammi (H1 / L1) | [IN ATTESA — run1 in elaborazione] | `26623` / `27541`        | [IN ATTESA] |
-| Numero Cluster          | [IN ATTESA — run1 in elaborazione] | `11` / `11`              | [IN ATTESA] |
-| Classi Novel            | [IN ATTESA — run1 in elaborazione] | `0`                      | [IN ATTESA] |
-| Robustezza              | [IN ATTESA — run1 in elaborazione] | H1 `0.867`, L1 `0.971`   | [IN ATTESA] |
+| Spettrogrammi (H1 / L1) | `21991` / `29953`                  | `26623` / `27541`        | Paragonabili |
+| Numero Cluster          | H1 `11` / L1 `15`                  | `11` / `11`              | Più frammentazione in L1 (run1) |
+| Classi Novel            | `0`                                | `0`                      | Coerente    |
+| Robustezza (ARI)        | H1 `0.896`, L1 `0.915`             | H1 `0.867`, L1 `0.971`   | L1 leggermente meno robusto in run1 ma sempre >0.9 |
