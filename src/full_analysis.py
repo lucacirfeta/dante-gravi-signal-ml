@@ -807,7 +807,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
             det_report["steps"]["morphcheck"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
         # Ablation
-        ablation_rep_path = session_dir / "clusters" / det_lower / "ablation_report.json"
+        ablation_rep_path = session_dir / "ablation" / f"ablation_report_{det}.json"
         if ablation_rep_path.exists():
             try:
                 with open(ablation_rep_path, "r", encoding="utf-8") as fh:
@@ -815,12 +815,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                 det_report["steps"]["ablation"] = {
                     "status": "OK",
                     "timestamp": a_data.get("timestamp", datetime.fromtimestamp(ablation_rep_path.stat().st_mtime, timezone.utc).isoformat()),
-                    "results": {
-                        "grayscale": a_data.get("scores", {}).get("grayscale", 0),
-                        "inverted": a_data.get("scores", {}).get("inverted", 0),
-                        "shuffled-intensity": a_data.get("scores", {}).get("shuffled-intensity", 0),
-                        "random-baseline": a_data.get("scores", {}).get("random-baseline", 0),
-                    }
+                    "results": {k: v.get("ari", 0.0) for k, v in a_data.get("results", {}).items()},
                 }
             except Exception as e:
                 det_report["steps"]["ablation"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
@@ -828,7 +823,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
             det_report["steps"]["ablation"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
         # Stability
-        stability_rep_path = session_dir / "clusters" / det_lower / "stability_report.json"
+        stability_rep_path = session_dir / "stability" / f"stability_report_{det}.json"
         if stability_rep_path.exists():
             try:
                 with open(stability_rep_path, "r", encoding="utf-8") as fh:
@@ -836,8 +831,8 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                 det_report["steps"]["stability"] = {
                     "status": "OK",
                     "timestamp": s_data.get("timestamp", datetime.fromtimestamp(stability_rep_path.stat().st_mtime, timezone.utc).isoformat()),
-                    "mean_ari": s_data.get("mean_ari", 0),
-                    "stable_anomalous_clusters": s_data.get("stable_anomalous_clusters", []),
+                    "mean_ari": s_data.get("ari_stats", {}).get("mean", 0.0),
+                    "stable_anomalous_clusters": s_data.get("stable_anomalous_clusters_baseline_ids", []),
                 }
             except Exception as e:
                 det_report["steps"]["stability"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
