@@ -778,10 +778,10 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                 det_report["steps"]["cluster"] = {
                     "status": "OK",
                     "timestamp": cl_data.get("timestamp", datetime.fromtimestamp(cluster_rep_path.stat().st_mtime, timezone.utc).isoformat()),
-                    "n_clusters": cl_data.get("n_clusters", 0),
-                    "n_noise": cl_data.get("n_noise", 0),
-                    "pca_variance": cl_data.get("pca_variance", 0.0),
-                    "anomalous_clusters": cl_data.get("anomalous_clusters", []),
+                    "n_clusters": cl_data.get("results", {}).get("n_clusters", 0),
+                    "n_noise": cl_data.get("results", {}).get("n_noise", 0),
+                    "pca_variance": cl_data.get("pipeline", {}).get("pca_variance_explained", 0.0),
+                    "anomalous_clusters": cl_data.get("results", {}).get("anomalous_clusters", []),
                 }
             except Exception as e:
                 det_report["steps"]["cluster"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
