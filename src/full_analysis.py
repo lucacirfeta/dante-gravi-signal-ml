@@ -797,9 +797,9 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                 det_report["steps"]["morphcheck"] = {
                     "status": "OK",
                     "timestamp": m_data.get("timestamp", datetime.fromtimestamp(morph_rep_path.stat().st_mtime, timezone.utc).isoformat()),
-                    "novel": m_data.get("summary", {}).get("NOVEL", 0),
-                    "known": m_data.get("summary", {}).get("KNOWN", 0),
-                    "ambiguous": m_data.get("summary", {}).get("AMBIGUOUS", 0),
+                    "novel": m_data.get("novel", 0),
+                    "known": m_data.get("known", 0),
+                    "ambiguous": m_data.get("ambiguous", 0),
                 }
             except Exception as e:
                 det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
