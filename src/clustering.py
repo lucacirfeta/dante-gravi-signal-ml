@@ -316,8 +316,8 @@ def run_full_pipeline(
 
         min_cluster_size = hdbscan_cfg.get("min_cluster_size", 15)
 
-        raw_anomaly = config.get("anomaly_threshold", 10)
-        anomaly_threshold = (
+        raw_anomaly = hdbscan_cfg.get("small_cluster_threshold", "auto")
+        small_cluster_threshold = (
             max(10, int(n * 0.01))
             if raw_anomaly == "auto"
             else raw_anomaly
@@ -326,7 +326,7 @@ def run_full_pipeline(
         logger.info(
             f"HDBSCAN params (N={n}): "
             f"min_cluster_size={min_cluster_size}, "
-            f"anomaly_threshold={anomaly_threshold}"
+            f"small_cluster_threshold={small_cluster_threshold}"
         )
 
         labels, cluster_stats = run_hdbscan(
@@ -340,7 +340,7 @@ def run_full_pipeline(
         anomalous_clusters = identify_anomalous_clusters(
             labels,
             cluster_stats,
-            small_cluster_threshold=anomaly_threshold,
+            small_cluster_threshold=small_cluster_threshold,
         )
         anomalous_samples = []
 

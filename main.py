@@ -80,8 +80,7 @@ def _resolve_run(args: argparse.Namespace) -> str:
 def _run_start_gps(run: str, cfg: dict | None = None) -> int:
     """Compute the GPS start time for a given observing run.
 
-    Uses ``run_config[run].start_date`` from config.yaml and adds a
-    6-hour offset to avoid the exact beginning of the run.
+    Uses ``run_config[run].start_date`` from config.yaml.
     """
     if cfg is None:
         cfg = load_config()
@@ -90,7 +89,7 @@ def _run_start_gps(run: str, cfg: dict | None = None) -> int:
         raise ValueError(f"Unknown run '{run}'. Valid runs: {VALID_RUNS}")
     start_date = run_cfg[run]["start_date"]
     gps = int(Time(start_date, format="iso", scale="utc").gps)
-    return gps + 6 * 3600  # +6h offset
+    return gps
 
 
 def _log_run_header(run: str, detector: str | None, session_id: str) -> None:

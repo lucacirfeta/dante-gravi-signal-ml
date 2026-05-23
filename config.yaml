@@ -26,6 +26,7 @@ reference_events:
 
 # O4a observing run window (GPS times)
 # May 24, 2023 00:00:00 UTC → Jan 16, 2024 16:00:00 UTC
+# Defines the hard limits for the O4a run, while run_config provides defaults for scans.
 o4a_window:
   gps_start: 1369598418
   gps_start_H1: 1369598418
@@ -33,20 +34,17 @@ o4a_window:
   gps_end: 1390060818
 
 # Multi-run configuration — observing run start dates and scan defaults
-# GPS start is computed at runtime as to_gps(start_date) + 6*3600
-# (offset 6h to avoid the exact beginning of the run)
+# GPS start is computed at runtime as to_gps(start_date).
 run_config:
   O2:  {start_date: "2016-11-30 16:00:00", hours_per_detector: 72}
   O3a: {start_date: "2019-04-01 15:00:00", hours_per_detector: 72}
   O3b: {start_date: "2019-11-01 15:00:00", hours_per_detector: 72}
   O4a: {start_date: "2023-05-24 15:00:00", hours_per_detector: 72}
 
-# Extended scan parameters (Phase 3.1)
+# Extended scan parameters
 scan_extended:
   hours_per_detector: 72
   detectors: ["H1", "L1"]
-  h1_offset_hours: 6
-  l1_offset_hours: 0
 
 # Preprocessing parameters
 preprocessing:
@@ -58,23 +56,23 @@ preprocessing:
   output_size: [256, 256]
   colormap: cividis            # perceptually uniform; safe under grayscale conversion
 
-# Self-supervised encoder (Phase 2) — DINOv2 with Registers
+# Self-supervised encoder — DINOv2 with Registers
 encoder:
   model: "dinov2_vits14_reg"
   embedding_dim: 384
   input_size: 518
   batch_size: 32
 
-# Similarity Check (Phase 3.3)
+# Similarity Check
 similarity:
   k_neighbors: 5
-  novelty_threshold: 0.85    # cosine sim below this → NOVEL
+  novelty_threshold: 0.85    # cosine sim below this → NOVEL (coexists with DPMM log-likelihood)
   consensus_threshold: 0.60  # label agreement below this → AMBIGUOUS
   training_set_zenodo: "10.5281/zenodo/1476551"
   max_per_class: 50
   duration: 1.0              # spectrogram window used for reference
 
-# In-Domain Reference Index (Phase 3.4)
+# In-Domain Reference Index
 # Eliminates domain gap by using our own pipeline on labeled GPS timestamps
 indomain_reference:
   zenodo_doi: "10.5281/zenodo.5649212"
@@ -85,7 +83,7 @@ indomain_reference:
   excluded_labels: ["None_of_the_Above"]
   segment_duration: 32.0
 
-# Unsupervised clustering (Phase 3)
+# Unsupervised clustering
 clustering:
   algorithm: dpmm            # Set DPMM as the default algorithm
   pca_components: 50
@@ -108,11 +106,11 @@ clustering:
     min_cluster_size: 15
     min_samples: 10
     cluster_selection_method: eom
-  anomaly_threshold: auto   # calcolato come 1% di N
+    small_cluster_threshold: auto   # calcolato come 1% di N
 
-# Performance & Parallelization (Phase 3.2)
+# Performance & Parallelization
 performance:
-  default_workers: 1          # sequential, works on any hardware
+  default_workers: 2          # sequential, works on any hardware; può essere aumentato a 6 su CPU multi-core (es. Ryzen 7800X3D)
   recommended_workers: auto   # printed in --help, not auto-applied
   gwosc_fetch_threads: 4      # hard cap, do not exceed (rate limit)
   queue_buffer_multiplier: 2  # queue maxsize = workers * this
