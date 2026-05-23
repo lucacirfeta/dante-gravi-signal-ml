@@ -1,0 +1,92 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+
+title: "gravi-signal-ml"
+abstract: >
+  An open-source Python pipeline for unsupervised morphological
+  characterization of LIGO/Virgo O4a gravitational-wave glitch data.
+  The pipeline applies DINOv2-Reg frozen feature extraction, PCA
+  dimensionality reduction, UMAP manifold learning, and Dirichlet
+  Process Mixture Model (DPMM) clustering to identify morphologically
+  distinct groups of detector noise transients without labeled training
+  data. Includes ablation study, stability analysis, time-slide
+  background estimation, and in-domain morphological cross-check
+  validated with GW150914 (Chirp@0.997).
+
+authors:
+  - family-names: "Cirfeta"
+    given-names: "Luca"
+    orcid: "https://orcid.org/0009-0000-1235-3186"
+    affiliation: "Capgemini / Independent Researcher"
+    city: "Rome"
+    country: "IT"
+
+version: "1.0.0"
+date-released: "2026-05-01"
+
+doi: "10.5281/zenodo.20121859"
+url: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
+repository-code: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
+
+license: "Apache-2.0"
+
+keywords:
+  - gravitational waves
+  - LIGO
+  - Virgo
+  - glitch characterization
+  - unsupervised learning
+  - DINOv2
+  - DPMM
+  - detector characterization
+  - open science
+  - machine learning
+  - O4a
+
+references:
+  - type: article
+    title: "DINOv2: Learning Robust Visual Features without Supervision"
+    authors:
+      - family-names: "Oquab"
+        given-names: "Maxime"
+    year: 2023
+    url: "https://arxiv.org/abs/2304.07193"
+
+  - type: article
+    title: "Vision Transformers Need Registers"
+    authors:
+      - family-names: "Darcet"
+        given-names: "Timothée"
+    year: 2023
+    url: "https://arxiv.org/abs/2309.16588"
+
+  - type: article
+    title: >
+      Gravity Spy: Integrating Advanced LIGO Detector Characterization,
+      Machine Learning, and Citizen Science
+    authors:
+      - family-names: "Zevin"
+        given-names: "Michael"
+    year: 2017
+    journal: "Classical and Quantum Gravity"
+    url: "https://doi.org/10.1088/1361-6382/aa5cea"
+
+  - type: article
+    title: >
+      LIGO Detector Characterization in the first half of the
+      fourth Observing run
+    authors:
+      - family-names: "Soni"
+        given-names: "Siddharth"
+    year: 2025
+    url: "https://arxiv.org/abs/2409.02831"
+
+  - type: software
+    title: "gwpy: A Python package for gravitational-wave astrophysics"
+    url: "https://gwpy.github.io"
+
+  - type: dataset
+    title: "Gravity Spy ML Classifications O3b"
+    url: "https://zenodo.org/records/5649212"
+    doi: "10.5281/zenodo.5649212"
