@@ -27,9 +27,8 @@ import logging
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
-
 import numpy as np
-
+import torch
 from src.clustering import run_full_pipeline
 from src.reporter import save_cluster_report, print_summary
 from src.similarity_checker import run_morphological_crosscheck, print_morphological_summary
@@ -171,6 +170,9 @@ def _analyze_detector(
             with _lock:
                 encoder_enc = DINOv2Encoder(batch_size=batch_size)
                 encoder_enc.extract_dataset(input_dir, output_path, batch_size)
+                del encoder_enc
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
             det_report["steps"]["encode"] = {"status": "OK", "timestamp": step_start}
         else:
             logger.info("%s[%s]%s Step 0: Embeddings already exist. Skipping encode.", color, det, reset)
@@ -426,24 +428,17 @@ def _analyze_detector(
             }
         else:
             logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
-            _lock = gpu_lock if gpu_lock is not None else _gpu_lock
-            with _lock:
-                logger.info(
-                    "%s[%s]%s GPU lock acquired for ablation.", color, det, reset
-                )
-                encoder_abl = DINOv2Encoder(batch_size=batch_size)
-                run_ablation_study(
-                    original_labels=result["labels"],
-                    image_paths=image_paths,
-                    encoder=encoder_abl,
-                    cluster_cfg=cluster_cfg,
-                    output_dir=ablation_dir,
-                    session_id=session_id,
-                    detector=det,
-                )
-                logger.info(
-                    "%s[%s]%s GPU lock released after ablation.", color, det, reset
-                )
+            run_ablation_study(
+                original_labels=result["labels"],
+                image_paths=image_paths,
+                cluster_cfg=cluster_cfg,
+                output_dir=ablation_dir,
+                session_id=session_id,
+                detector=det,
+                gpu_lock=gpu_lock,
+                batch_size=batch_size,
+            )
+
 
             if ablation_report_file.exists():
                 with open(ablation_report_file, "r", encoding="utf-8") as fh:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -89,22 +90,24 @@ def extract_perturbed_embeddings(
 def run_ablation_study(
     original_labels: np.ndarray,
     image_paths: list[Path],
-    encoder: DINOv2Encoder,
     cluster_cfg: dict,
     output_dir: Path,
     session_id: str,
     detector: str = "H1",
+    gpu_lock: threading.Lock | None = None,
+    batch_size: int = 32,
 ) -> None:
     """Run ablation study across different conditions and compare with baseline.
     
     Args:
         original_labels: HDBSCAN labels of the original embeddings.
         image_paths: List of paths to the original spectrogram PNGs.
-        encoder: Initialized DINOv2Encoder instance.
         cluster_cfg: Dictionary with clustering configuration.
         output_dir: Directory to save the ablation report.
         session_id: Session identifier.
         detector: Detector identifier (e.g. H1).
+        gpu_lock: Optional threading.Lock to serialize GPU usage.
+        batch_size: Batch size for DINOv2Encoder.
     """
     conditions = ["grayscale", "inverted", "shuffled-intensity", "random-baseline"]
     
@@ -120,21 +123,32 @@ def run_ablation_study(
     
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    embeddings_dict = {}
+    
+    _lock = gpu_lock if gpu_lock is not None else threading.Lock()
+    with _lock:
+        logger.info("Acquiring GPU for ablation embeddings extraction...")
+        encoder = DINOv2Encoder(batch_size=batch_size)
+        for method in conditions:
+            if method == "random-baseline":
+                # Generate random standard normal embeddings, and normalize them like DINOv2
+                random_emb = np.random.normal(loc=0.0, scale=1.0, size=(n_samples, 384)).astype(np.float32)
+                norms = np.linalg.norm(random_emb, axis=1, keepdims=True)
+                embeddings_dict[method] = random_emb / np.maximum(norms, 1e-8)
+            else:
+                embeddings_dict[method] = extract_perturbed_embeddings(
+                    encoder=encoder,
+                    image_paths=image_paths,
+                    method=method,
+                    batch_size=batch_size,
+                )
+        del encoder
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            
     for method in conditions:
         logger.info("--- Ablation Condition: %s ---", method)
-        
-        if method == "random-baseline":
-            # Generate random standard normal embeddings, and normalize them like DINOv2
-            random_emb = np.random.normal(loc=0.0, scale=1.0, size=(n_samples, 384)).astype(np.float32)
-            norms = np.linalg.norm(random_emb, axis=1, keepdims=True)
-            embeddings = random_emb / np.maximum(norms, 1e-8)
-        else:
-            embeddings = extract_perturbed_embeddings(
-                encoder=encoder,
-                image_paths=image_paths,
-                method=method,
-                batch_size=encoder.batch_size,
-            )
+        embeddings = embeddings_dict[method]
             
         # Run full clustering pipeline
         logger.info("Clustering '%s' embeddings...", method)
