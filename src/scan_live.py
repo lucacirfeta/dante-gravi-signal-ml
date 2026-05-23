@@ -390,6 +390,32 @@ def run_scan_live(
     reference_path = Path(reference_path)
     cfg = load_config()
 
+    # ---- 0. Auto-build Reference Index if missing ---------------------
+    reference_path = Path(reference_path)
+    if not reference_path.exists():
+        logger.info("Reference index %s not found — building automatically...", reference_path)
+        from src.indomain_reference_builder import (
+            build_indomain_reference,
+            download_gs_classifications_csv,
+            select_reference_events,
+        )
+        # We default to O3b as it's the standard for GravitySpy training sets
+        csv_path = download_gs_classifications_csv(
+            reference_path.parent, run="O3b", detector=detector
+        )
+        events_df = select_reference_events(
+            csv_path,
+            detector=detector,
+            min_confidence=0.95,
+            max_per_class=30,
+        )
+        if events_df.empty:
+            logger.error("No events passed filters for reference builder.")
+            return {"status": "NO_REFERENCE_EVENTS"}
+
+        build_indomain_reference(events_df, reference_path, workers=workers)
+        logger.info("In-domain reference successfully built at %s", reference_path)
+
     # ---- 1. Thresholds ------------------------------------------------
     thresholds_path = Path(thresholds_path)
     if not thresholds_path.exists():
