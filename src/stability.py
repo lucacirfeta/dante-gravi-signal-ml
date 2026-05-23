@@ -34,6 +34,7 @@ def run_stability_analysis(
     session_id: str = "default",
     detector: str = "H1",
     run: str = "O4a",
+    anomaly_criterion: str = "likelihood",
 ) -> None:
     """Run stability analysis and save report.
 
@@ -93,6 +94,32 @@ def run_stability_analysis(
             n_components=dpmm_cfg.get("n_components", 25),
             anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
         )
+        if anomaly_criterion == "likelihood":
+            from sklearn.mixture import BayesianGaussianMixture
+            bgm = BayesianGaussianMixture(
+                n_components=dpmm_cfg.get("n_components", 25),
+                weight_concentration_prior_type="dirichlet_process",
+                weight_concentration_prior=1.0 / dpmm_cfg.get("n_components", 25),
+                random_state=42,
+                n_init=5,
+            )
+            bgm.fit(base_umap)
+            base_log_likelihoods = bgm.score_samples(base_umap).tolist()
+            
+            anomalous_set = set(base_anomalous)
+            anomalous_clusters_set = set()
+            for cid in set(base_labels):
+                if cid == -1: continue
+                members = np.where(base_labels == cid)[0]
+                if len(members) == 0: continue
+                below_thresh = sum(1 for m in members if m in anomalous_set)
+                if below_thresh / len(members) > 0.5:
+                    anomalous_clusters_set.add(int(cid))
+            base_anomalous_to_save = sorted(list(anomalous_clusters_set))
+            base_log_likelihoods_to_save = base_log_likelihoods
+        else:
+            base_anomalous_to_save = base_anomalous
+            base_log_likelihoods_to_save = None
     else:
         base_labels, base_stats = run_hdbscan(
             base_umap,
@@ -103,25 +130,32 @@ def run_stability_analysis(
         base_anomalous = identify_anomalous_clusters(
             base_labels, base_stats, small_cluster_threshold=anomaly_threshold
         )
+        base_anomalous_to_save = base_anomalous
+        base_log_likelihoods_to_save = None
 
     # Add baseline to results
     run_labels.append(base_labels)
-    run_metadata.append(
-        {
-            "run": 0,
-            "type": "baseline",
-            "umap_seed": 42,
-            "n_neighbors": base_n_neighbors,
-            "min_cluster_size": base_min_cluster_size,
-            "n_clusters": base_stats["n_clusters"],
-            "anomalous_clusters": base_anomalous,
-        }
-    )
+    base_run_meta = {
+        "run": 0,
+        "type": "baseline",
+        "umap_seed": 42,
+        "n_neighbors": base_n_neighbors,
+        "min_cluster_size": base_min_cluster_size,
+        "n_clusters": base_stats["n_clusters"],
+        "anomalous_clusters": base_anomalous_to_save,
+    }
+    if base_log_likelihoods_to_save is not None:
+        base_run_meta["log_likelihoods"] = base_log_likelihoods_to_save
+    run_metadata.append(base_run_meta)
 
     if algorithm == "dpmm":
-        sample_anomaly_counts[base_anomalous] += 1
+        if anomaly_criterion == "likelihood":
+            for cid in base_anomalous_to_save:
+                sample_anomaly_counts[base_labels == cid] += 1
+        else:
+            sample_anomaly_counts[base_anomalous] += 1
     else:
-        for cid in base_anomalous:
+        for cid in base_anomalous_to_save:
             sample_anomaly_counts[base_labels == cid] += 1
 
     # 4. Perturbed runs
@@ -156,6 +190,32 @@ def run_stability_analysis(
                 anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
                 random_state=seed,
             )
+            if anomaly_criterion == "likelihood":
+                from sklearn.mixture import BayesianGaussianMixture
+                bgm = BayesianGaussianMixture(
+                    n_components=dpmm_cfg.get("n_components", 25),
+                    weight_concentration_prior_type="dirichlet_process",
+                    weight_concentration_prior=1.0 / dpmm_cfg.get("n_components", 25),
+                    random_state=seed,
+                    n_init=5,
+                )
+                bgm.fit(p_umap)
+                p_log_likelihoods = bgm.score_samples(p_umap).tolist()
+                
+                anomalous_set = set(p_anomalous)
+                anomalous_clusters_set = set()
+                for cid in set(p_labels):
+                    if cid == -1: continue
+                    members = np.where(p_labels == cid)[0]
+                    if len(members) == 0: continue
+                    below_thresh = sum(1 for m in members if m in anomalous_set)
+                    if below_thresh / len(members) > 0.5:
+                        anomalous_clusters_set.add(int(cid))
+                p_anomalous_to_save = sorted(list(anomalous_clusters_set))
+                p_log_likelihoods_to_save = p_log_likelihoods
+            else:
+                p_anomalous_to_save = p_anomalous
+                p_log_likelihoods_to_save = None
         else:
             p_labels, p_stats = run_hdbscan(
                 p_umap,
@@ -166,24 +226,31 @@ def run_stability_analysis(
             p_anomalous = identify_anomalous_clusters(
                 p_labels, p_stats, small_cluster_threshold=anomaly_threshold
             )
+            p_anomalous_to_save = p_anomalous
+            p_log_likelihoods_to_save = None
 
         run_labels.append(p_labels)
-        run_metadata.append(
-            {
-                "run": i,
-                "type": "perturbed",
-                "umap_seed": seed,
-                "n_neighbors": p_n_neighbors,
-                "min_cluster_size": p_min_cluster,
-                "n_clusters": p_stats["n_clusters"],
-                "anomalous_clusters": p_anomalous,
-            }
-        )
+        p_run_meta = {
+            "run": i,
+            "type": "perturbed",
+            "umap_seed": seed,
+            "n_neighbors": p_n_neighbors,
+            "min_cluster_size": p_min_cluster,
+            "n_clusters": p_stats["n_clusters"],
+            "anomalous_clusters": p_anomalous_to_save,
+        }
+        if p_log_likelihoods_to_save is not None:
+            p_run_meta["log_likelihoods"] = p_log_likelihoods_to_save
+        run_metadata.append(p_run_meta)
 
         if algorithm == "dpmm":
-            sample_anomaly_counts[p_anomalous] += 1
+            if anomaly_criterion == "likelihood":
+                for cid in p_anomalous_to_save:
+                    sample_anomaly_counts[p_labels == cid] += 1
+            else:
+                sample_anomaly_counts[p_anomalous] += 1
         else:
-            for cid in p_anomalous:
+            for cid in p_anomalous_to_save:
                 sample_anomaly_counts[p_labels == cid] += 1
 
     # 5. Calculate ARI matrix
@@ -238,6 +305,7 @@ def run_stability_analysis(
         "detector": detector,
         "n_samples": n_samples,
         "n_runs_total": total_runs,
+        "anomaly_criterion_used": anomaly_criterion,
         "ari_stats": {
             "mean": mean_ari,
             "std": std_ari,

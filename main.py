@@ -1318,6 +1318,7 @@ def cmd_stability(args: argparse.Namespace) -> None:
         session_id=session_id,
         detector=detector,
         run=run,
+        anomaly_criterion=getattr(args, "anomaly_criterion", "likelihood"),
     )
 
 
@@ -2485,6 +2486,13 @@ def build_parser() -> argparse.ArgumentParser:
         default="H1",
         choices=["H1", "L1", "V1"],
         help="Detector identifier. Default: H1.",
+    )
+    p_stability.add_argument(
+        "--anomaly-criterion",
+        type=str,
+        choices=["size", "likelihood"],
+        default="likelihood",
+        help="Criterion to use for anomaly detection. Default: likelihood.",
     )
     p_stability.set_defaults(func=cmd_stability)
     _add_run_argument(p_stability)
