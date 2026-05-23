@@ -162,6 +162,13 @@ pip install -r requirements.txt
 
 Per l'elenco completo di tutti i comandi disponibili, opzioni e subcommand, consultare **[CLI_REFERENCE.md](CLI_REFERENCE.md)**.
 
+### 🧙‍♂️ Wizard Interattivo
+Puoi avviare il tool in modalità interattiva semplicemente lanciando il comando base senza parametri:
+```bash
+python main.py
+```
+Il wizard rileverà automaticamente tutti i comandi implementati (anche quelli futuri), fornendo aiuti contestuali e suggerimenti intelligenti (Smart Defaults) per la configurazione dei run.
+
 ### Esempio di utilizzo End-to-End
 1. **Generazione In-Domain Reference:**
    ```bash

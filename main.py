@@ -2859,6 +2859,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     """Parse arguments and dispatch to the appropriate subcommand."""
     parser = build_parser()
+    
+    if len(sys.argv) == 1:
+        from src.wizard import run_wizard
+        run_wizard(parser)
+        sys.exit(0)
+        
     args = parser.parse_args()
 
     # If the subcommand supports session-id, wrap execution in session-specific logging

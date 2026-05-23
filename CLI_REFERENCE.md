@@ -4,6 +4,8 @@ Questa guida fornisce un elenco completo e aggiornato di tutti i comandi disponi
 
 > **💡 Interfaccia Grafica:** È disponibile un'interfaccia grafica (Gooey). Puoi avviarla eseguendo `python gui.py`. Tutte le opzioni CLI elencate qui sotto saranno configurabili anche visivamente tramite la GUI.
 
+> **🪄 Wizard Interattivo:** È disponibile un wizard testuale passo-passo nella CLI. Per avviarlo, esegui semplicemente `python main.py` senza alcun parametro. Il wizard rileva automaticamente tutti i comandi (inclusi eventuali nuovi comandi futuri) e ti guida nell'inserimento dei parametri con suggerimenti intelligenti (Smart Defaults).
+
 ---
 
 ## Quick Reference (Comandi Più Usati)
