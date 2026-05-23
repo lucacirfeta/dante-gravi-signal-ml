@@ -125,11 +125,20 @@ def run_wizard(parser: argparse.ArgumentParser):
                 elif isinstance(action, argparse._StoreFalseAction) and not val:
                     args_list.append(name)
             else:
+                type_func = action.type
+                choices_list = action.choices
+                
                 prompt_text = f"{name}"
                 if is_required:
                     prompt_text += " (Obbligatorio)"
                 if default is not None:
                     prompt_text += f" [default: {default}]"
+                    
+                if choices_list:
+                    prompt_text += f" [Scelte: {', '.join(map(str, choices_list))}]"
+                elif type_func:
+                    type_name = getattr(type_func, '__name__', str(type_func))
+                    prompt_text += f" [Tipo: {type_name}]"
                     
                 prompt_text += f"\n  Descrizione: {desc}\n  > "
                 
@@ -146,6 +155,20 @@ def run_wizard(parser: argparse.ArgumentParser):
                             # Not required, no default -> just skip
                             break
                     else:
+                        # Validate choices
+                        if choices_list and val not in [str(c) for c in choices_list]:
+                            print(f"  [!] Valore non valido. Scelte permesse: {', '.join(map(str, choices_list))}")
+                            continue
+                        
+                        # Validate type
+                        if type_func:
+                            try:
+                                type_func(val)
+                            except Exception:
+                                type_name = getattr(type_func, '__name__', str(type_func))
+                                print(f"  [!] Errore: il valore deve essere di tipo {type_name}.")
+                                continue
+
                         if action.option_strings:
                             args_list.extend([name, val])
                         else:

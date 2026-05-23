@@ -1,17 +1,20 @@
 """Unsupervised clustering pipeline — Phase 3.
 
-Implements PCA → UMAP → HDBSCAN for discovering novel glitch classes in
+Implements PCA → UMAP → HDBSCAN/DPMM for discovering novel glitch classes in
 O4a gravitational-wave data.
 
 Pipeline:
     1. PCA(50) — reduce 384-dim DINOv2 embeddings to 50 principal components
     2. UMAP (Pass A) — 50D → 10D clustering-optimized (min_dist=0.0, cosine)
-    3. HDBSCAN — density-based clustering on 10D UMAP space
-    4. UMAP (Pass B) — 50D → 2D visualization-only (min_dist=0.1, cosine)
-    5. Anomaly identification — flag small clusters as novel candidates
+    3. Clustering — HDBSCAN (density-based) or DPMM (probabilistic)
+    4. Anomaly identification:
+       - HDBSCAN: flag small clusters (≤ threshold) as novel candidates
+       - DPMM: compute per-sample log-likelihood; clusters where >50%
+         of members fall below the 5th percentile are anomalous
+    5. UMAP (Pass B) — 50D → 2D visualization-only (min_dist=0.1, cosine)
 
 Two UMAP passes are required because min_dist=0.0 packs points tightly
-for optimal HDBSCAN density detection, but produces poor visualizations.
+for optimal density detection, but produces poor visualizations.
 Pass B with min_dist=0.1 generates a readable 2D scatter plot.
 """
 
@@ -270,7 +273,25 @@ def run_full_pipeline(
             n_components=dpmm_cfg.get("n_components", 25),
             anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
         )
+
+        # --- Step 4: Aggregate per-sample anomalies to cluster level ---
+        # A cluster is anomalous if >50% of its members have log-likelihood
+        # below the 5th percentile (matching the criterion in stability.py).
+        anomalous_set = set(anomalous_samples)
         anomalous_clusters = []
+        for cid in sorted(cluster_stats["cluster_sizes"].keys()):
+            members = np.where(labels == cid)[0]
+            if len(members) == 0:
+                continue
+            below_thresh = sum(1 for m in members if m in anomalous_set)
+            if below_thresh / len(members) > 0.5:
+                anomalous_clusters.append(int(cid))
+
+        if anomalous_clusters:
+            logger.info(
+                "DPMM anomalous clusters (>50%% low-likelihood members): %s",
+                anomalous_clusters,
+            )
     else:
         # --- Step 3: HDBSCAN ---
         hdbscan_cfg = config.get("hdbscan", {})

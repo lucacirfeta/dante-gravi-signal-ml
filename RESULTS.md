@@ -19,8 +19,8 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e analizzati:
 
 | Run   | Session ID        | Data/Ora Run          | Stato Analisi   | Rilevazioni Salienti (NOVEL)     |
 |:------|:------------------|:----------------------|:----------------|:---------------------------------|
-| `O4a` | `20260520_223147` | `2026-05-22 18:41:47` | Completato (OK) | Nessun cluster anomalo (0 NOVEL) |
-| `O4a` | `20260522_074026` | `2026-05-22 07:03:51` | Completato (OK) | Nessun cluster anomalo (0 NOVEL) |
+| `O4a` | `20260520_223147` | `2026-05-22 18:41:47` | Completato (OK) | Da rieseguire con nuovo criterio log-likelihood |
+| `O4a` | `20260522_074026` | `2026-05-22 07:03:51` | Completato (OK) | Da rieseguire con nuovo criterio log-likelihood |
 
 ---
 
@@ -35,6 +35,10 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e analizzati:
 | **L1**   |       `27541`        |    `81.5%`     | `cividis` | Nessuna            |
 
 #### 🤖 2. Risultati del Clustering (DPMM + Cosine)
+
+> [!WARNING]
+> I cluster anomali sotto riportati sono stati identificati con il **vecchio criterio a dimensione** (≤ soglia). Il criterio corrente usa la **log-likelihood** (cluster con >50% dei membri sotto il 5° percentile). Rieseguire `cluster` per aggiornare.
+
 | Detector | Numero Cluster | Campioni nel Cluster Dominante | Cluster Anomalous (# ID / Dimensioni)             | Punti Rumore (Noise) | Varianza PCA (%) |
 |:---------|:--------------:|:------------------------------:|:--------------------------------------------------|:--------------------:|:----------------:|
 | **H1**   |      `11`      |             `8033`             | `C1 (2 pts), C5 (2 pts), C7 (1 pts), C10 (1 pts)` |         `0`          |     `98.7%`      |
@@ -65,6 +69,10 @@ I glitch si sono mappati in morfologie attese o popolazioni continue di fondo. N
 | **L1**   |       `29953`        |    `79.6%`     | `cividis` | Nessuna            |
 
 #### 🤖 2. Risultati del Clustering (DPMM + Cosine)
+
+> [!WARNING]
+> I cluster anomali sotto riportati sono stati identificati con il **vecchio criterio a dimensione** (≤ soglia). Il criterio corrente usa la **log-likelihood** (cluster con >50% dei membri sotto il 5° percentile). Rieseguire `cluster` per aggiornare. Risultati attesi dalla stability analysis: H1: `[4]`, L1: `[0, 9]`.
+
 | Detector | Numero Cluster | Campioni nel Cluster Dominante | Cluster Anomalous (# ID / Dimensioni) | Punti Rumore (Noise) | Varianza PCA (%) |
 |:---------|:--------------:|:------------------------------:|:--------------------------------------|:--------------------:|:----------------:|
 | **H1**   |      `11`      |            `13477`             | `C10 (1 pts)`                         |         `0`          |     `98.7%`      |
