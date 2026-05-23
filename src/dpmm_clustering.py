@@ -21,6 +21,7 @@ def run_dpmm(
     n_components: int = 25,
     anomaly_percentile: float = 5.0,
     random_state: int = 42,
+    anomaly_threshold: float | None = None,
 ) -> tuple[np.ndarray, dict, list[int]]:
     """Cluster embeddings using a Dirichlet Process Mixture Model.
 
@@ -29,8 +30,13 @@ def run_dpmm(
         n_components: Maximum number of clusters (default 25). The DPMM
             will zero out weights for unneeded components.
         anomaly_percentile: The percentile of lowest log-likelihood scores
-            to flag as anomalies (default 5.0).
+            to flag as anomalies (default 5.0).  Ignored when
+            *anomaly_threshold* is provided.
         random_state: Random seed for reproducibility.
+        anomaly_threshold: If a ``float``, use this fixed log-likelihood
+            value as the anomaly threshold instead of computing the
+            *anomaly_percentile* on the current run.  ``None`` (default)
+            preserves the legacy per-run percentile behaviour.
 
     Returns:
         Tuple of (labels, stats, anomalous_samples):
@@ -70,13 +76,23 @@ def run_dpmm(
     }
     
     # Identify anomalies based on lowest log-likelihood
-    threshold = np.percentile(log_likelihoods, anomaly_percentile)
+    if anomaly_threshold is not None:
+        threshold = anomaly_threshold
+        logger.info(
+            "DPMM: using calibrated anomaly threshold: %.2f", threshold
+        )
+    else:
+        threshold = np.percentile(log_likelihoods, anomaly_percentile)
     anomalous_indices = np.where(log_likelihoods <= threshold)[0]
     anomalous_samples = sorted(anomalous_indices.tolist())
     
     logger.info(
-        "DPMM: %d active clusters found. Flagged %d anomalous samples (%.1f%% percentile).",
-        n_clusters, len(anomalous_samples), anomaly_percentile
+        "DPMM: %d active clusters found. Flagged %d anomalous samples "
+        "(threshold=%.2f%s).",
+        n_clusters,
+        len(anomalous_samples),
+        threshold,
+        "" if anomaly_threshold is not None else f", p{anomaly_percentile}",
     )
     
     return labels, stats, anomalous_samples

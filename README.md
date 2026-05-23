@@ -89,6 +89,8 @@ Raw Strain Data (GWOSC O2–O4a)
 │   threshold_calibrator.py — Per-class threshold     │
 │                              calibration from       │
 │                              intra-class cosine sim │
+│   loglikelihood_calibrator.py — DPMM anomaly        │
+│                              threshold calibration  │
 │   scan_live.py            — Producer-consumer live  │
 │                              scanner (4096s chunks) │
 │                              classification via     │
@@ -182,12 +184,16 @@ Il wizard rileverà automaticamente tutti i comandi implementati (anche quelli f
    ```
    > I risultati verranno salvati in `data/runs/o4a/<SESSION_ID>/reports/`.
 
-### Autopilot: Scansione Live con Classificazione Automatica
-1. **Calibrazione soglie per-classe:**
+### Autopilot & Threshold Calibration
+1. **Calibrazione soglie log-likelihood (Clustering):**
+   ```bash
+   python main.py calibrate-loglikelihood --reference data/reference/indomain_index.npz --percentile 5
+   ```
+2. **Calibrazione soglie per-classe (Scan Live):**
    ```bash
    python main.py calibrate-threshold --reference data/reference/indomain_index.npz --percentile 5
    ```
-2. **Scan live con classificazione KNOWN/NOVEL:**
+3. **Scan live con classificazione KNOWN/NOVEL:**
    ```bash
    python main.py scan-live --detector H1 --run O4a --workers 4
    ```

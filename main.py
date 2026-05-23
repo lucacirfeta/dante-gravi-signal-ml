@@ -17,6 +17,7 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
     benchmark-clustering     — Validate unsupervised clustering using ground truth labels
     full-analysis            — Automated end-to-end analysis (Cluster, Morph, Ablation, Stability, Timeslide)
     calibrate-threshold      — Calibrate per-class cosine similarity thresholds (Autopilot)
+    calibrate-loglikelihood  — Calibrate DPMM log-likelihood anomaly threshold
     scan-live                — Autopilot live scanner: classify spectrograms as KNOWN/NOVEL
 
 Usage:
@@ -1902,6 +1903,24 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
                 print(f"    Report: {result['reports'][det]}")
 
 
+def cmd_calibrate_loglikelihood(args: argparse.Namespace) -> None:
+    """Calibrate the DPMM log-likelihood anomaly threshold from the reference."""
+    from src.loglikelihood_calibrator import calibrate_loglikelihood_threshold
+
+    result = calibrate_loglikelihood_threshold(
+        reference_path=args.reference,
+        percentile=args.percentile,
+        output_path=args.output,
+    )
+    threshold = result["threshold"]
+    print(
+        f"\n[OK] Log-likelihood threshold calibrated: {result['threshold']} -> {args.output}\n"
+        f"\nTo use this threshold, update config.yaml:\n"
+        f"  clustering:\n"
+        f"    dpmm:\n"
+        f"      anomaly_threshold: {threshold}\n"
+    )
+
 
 def cmd_calibrate_threshold(args: argparse.Namespace) -> None:
     """Calibrate per-class cosine similarity thresholds from the reference index."""
@@ -2825,6 +2844,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output JSON path. Default: data/autopilot/reference/thresholds.json.",
     )
     p_cal.set_defaults(func=cmd_calibrate_threshold)
+
+    # --- calibrate-loglikelihood (DPMM anomaly threshold) ---
+    p_cal_ll = subparsers.add_parser(
+        "calibrate-loglikelihood",
+        help="Calibrate DPMM log-likelihood anomaly threshold from in-domain reference.",
+    )
+    p_cal_ll.add_argument(
+        "--reference",
+        type=str,
+        default="data/reference/indomain_index.npz",
+        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+    )
+    p_cal_ll.add_argument(
+        "--percentile",
+        type=float,
+        default=5.0,
+        help="Percentile for log-likelihood threshold. Default: 5.0.",
+    )
+    p_cal_ll.add_argument(
+        "--output",
+        type=str,
+        default="data/autopilot/reference/loglikelihood_threshold.json",
+        help="Output JSON path. Default: data/autopilot/reference/loglikelihood_threshold.json.",
+    )
+    p_cal_ll.set_defaults(func=cmd_calibrate_loglikelihood)
 
     # --- scan-live (Autopilot) ---
     p_live = subparsers.add_parser(

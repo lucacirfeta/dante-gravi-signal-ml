@@ -268,10 +268,27 @@ def run_full_pipeline(
     if algorithm == "dpmm":
         # --- Step 3: DPMM ---
         dpmm_cfg = config.get("dpmm", {})
+
+        # Resolve anomaly threshold: 'auto' or missing → auto-calibrate if possible
+        raw_at = dpmm_cfg.get("anomaly_threshold", "auto")
+        if raw_at == "auto":
+            logger.warning("DPMM anomaly_threshold non disponibile (impostato su 'auto').")
+            logger.warning("Avvio calibrazione automatica dal riferimento in-domain...")
+            try:
+                from src.loglikelihood_calibrator import calibrate_loglikelihood_threshold
+                calib_res = calibrate_loglikelihood_threshold()
+                dpmm_anomaly_threshold: float | None = calib_res["threshold"]
+            except Exception as e:
+                logger.error("Calibrazione fallita: %s. Fallback su soglia 'auto' (percentile on run).", e)
+                dpmm_anomaly_threshold = None
+        else:
+            dpmm_anomaly_threshold = float(raw_at)
+
         labels, cluster_stats, anomalous_samples = run_dpmm(
             umap_10d,
             n_components=dpmm_cfg.get("n_components", 25),
             anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
+            anomaly_threshold=dpmm_anomaly_threshold,
         )
 
         # --- Step 4: Aggregate per-sample anomalies to cluster level ---

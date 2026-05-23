@@ -71,9 +71,10 @@ La pipeline supporta l'analisi di diversi run osservativi di LIGO/Virgo. I run a
 5. **Automazione End-to-End**
     - [`full-analysis`](#19-full-analysis) — Pipeline automatizzata completa
 
-6. **Autopilot**
+6. **Autopilot & Thresholds**
     - [`calibrate-threshold`](#20-calibrate-threshold) — Calibra soglie di similarità per-classe
-    - [`scan-live`](#21-scan-live) — Scanner live: classifica spettrogrammi come KNOWN/NOVEL
+    - [`calibrate-loglikelihood`](#21-calibrate-loglikelihood) — Calibra soglie log-likelihood per cluster DPMM
+    - [`scan-live`](#22-scan-live) — Scanner live: classifica spettrogrammi come KNOWN/NOVEL
 
 ---
 
@@ -492,7 +493,36 @@ Formato output (`thresholds.json`):
 }
 ```
 
-### 21. `scan-live`
+### 21. `calibrate-loglikelihood`
+Calibra la soglia di anomalia per la log-likelihood usata dal clustering DPMM, ricavandola dall'indice di riferimento in-domain. Questo garantisce che la soglia sia consistente tra le varie esecuzioni.
+
+* **Sotto il cofano (Dettagli di Elaborazione):**
+  1. Carica l'indice reference `.npz` contenente gli embedding.
+  2. Esegue PCA (50D) e UMAP (10D) usando la stessa pipeline del clustering.
+  3. Fitta un Bayesian Gaussian Mixture (DPMM) con 25 componenti.
+  4. Calcola la log-likelihood per ogni campione, e determina la soglia in base al percentile fornito.
+  5. Salva la soglia risultante in un file JSON. Questo valore andrà poi riportato in `config.yaml` sotto `dpmm.anomaly_threshold`.
+
+```bash
+python main.py calibrate-loglikelihood --reference data/reference/indomain_index.npz --percentile 5 --output data/autopilot/reference/loglikelihood_threshold.json
+```
+
+- `--reference`: Path all'indice reference `.npz`. *Default: `data/reference/indomain_index.npz`*.
+- `--percentile`: Percentile per la log-likelihood (più basso = più restrittivo). *Default: `5`*.
+- `--output`: Path JSON di destinazione. *Default: `data/autopilot/reference/loglikelihood_threshold.json`*.
+
+Formato output (`loglikelihood_threshold.json`):
+```json
+{
+  "threshold": -148.32,
+  "percentile": 5.0,
+  "reference": "data/reference/indomain_index.npz",
+  "n_samples": 528,
+  "calibrated_at": "2026-05-23T23:10:00+00:00"
+}
+```
+
+### 22. `scan-live`
 Scanner autopilot con architettura producer-consumer. Lavora a blocchi di 4096s in cui un producer scarica l'HDF5 di 4096s in `tmp/`, processa internamente 128 segmenti da 32s ciascuno (`whiten -> bandpass -> q-transform`), ed il consumer le valuta classificando ogni spettrogramma come KNOWN/AMBIGUOUS/NOVEL usando DINOv2 + soglie per-classe. Cancella temporanei HDF5 e PNG in tempo reale ad eccezione dei NOVEL.
 
 * **Sotto il cofano (Dettagli di Elaborazione):**

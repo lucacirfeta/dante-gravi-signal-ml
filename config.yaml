@@ -92,6 +92,8 @@ clustering:
   dpmm:
     n_components: 25
     anomaly_percentile: 5.0
+    anomaly_threshold: 4.0191   # calibrated fixed threshold
+                              # float  = calibrated fixed threshold
   umap_clustering:
     n_components: 10
     n_neighbors: 30

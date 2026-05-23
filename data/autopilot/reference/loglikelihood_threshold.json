@@ -1,0 +1,7 @@
+{
+  "threshold": 4.0191,
+  "percentile": 5.0,
+  "reference": "data\\reference\\indomain_index.npz",
+  "n_samples": 528,
+  "calibrated_at": "2026-05-23T21:29:07.969604+00:00"
+}

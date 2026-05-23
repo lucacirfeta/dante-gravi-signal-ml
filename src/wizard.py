@@ -52,7 +52,7 @@ def run_wizard(parser: argparse.ArgumentParser):
         "Acquisizione": ["fetch", "scan", "scan-extended", "fetch-raw", "scan-live"],
         "Pipeline ML": ["reprocess-spectrograms", "encode", "cluster", "report", "full-analysis", "full-analysis-report"],
         "Analisi": ["crosscheck", "morphcheck", "timeslide", "stability", "ablation", "benchmark-clustering", "last-gps"],
-        "Riferimento": ["build-reference", "build-indomain-reference", "validate-reference", "calibrate-threshold"]
+        "Riferimento": ["build-reference", "build-indomain-reference", "validate-reference", "calibrate-threshold", "calibrate-loglikelihood"]
     }
 
     # Flatten categories to maintain order
