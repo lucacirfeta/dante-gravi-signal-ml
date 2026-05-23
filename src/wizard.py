@@ -101,6 +101,32 @@ def run_wizard(parser: argparse.ArgumentParser):
         print("-" * 40)
         
         args_list = []
+        smart_defaults = {}
+        if selected_cmd == "morphcheck":
+            print("\n  [Smart Default] Compilazione automatica dei path per morphcheck.")
+            if prompt_bool("  Vuoi usare una session_id per generare in automatico i percorsi?"):
+                if recent_sessions:
+                    print("  Suggerimenti recenti per session_id:")
+                    for i, s in enumerate(recent_sessions[:5], 1):
+                        print(f"    {i}) {s}")
+                sess_input = input("  > session_id (numero o stringa): ").strip()
+                if sess_input.isdigit() and 1 <= int(sess_input) <= min(5, len(recent_sessions)):
+                    sess_id = recent_sessions[int(sess_input) - 1]
+                else:
+                    sess_id = sess_input
+                det = input("  > detector (es. h1): ").strip().lower()
+                run_opt = input("  > run (es. o4a) [default: o4a]: ").strip().lower() or "o4a"
+                
+                if sess_id and det:
+                    base_path = f"data/runs/{run_opt}/{sess_id}"
+                    smart_defaults = {
+                        "embeddings": f"{base_path}/embeddings/{run_opt}_{det}.npy",
+                        "report": f"{base_path}/clusters/{det}/cluster_report.json",
+                        "reference": "data/reference/indomain_index.npz",
+                        "output": f"{base_path}/clusters/{det}/morphological_crosscheck_indomain.json",
+                        "run": run_opt.capitalize() if run_opt[0].isalpha() else run_opt
+                    }
+
         for action in subparser._actions:
             if action.dest == 'help':
                 continue
@@ -109,11 +135,11 @@ def run_wizard(parser: argparse.ArgumentParser):
             desc = action.help or ""
             is_bool = isinstance(action, (argparse._StoreTrueAction, argparse._StoreFalseAction))
             is_required = action.required
-            default = action.default
+            default = smart_defaults.get(action.dest, action.default)
             
-            # Smart defaults injection in description
-            if name == "--session-id" and recent_sessions:
-                desc += f" (Suggerimenti recenti: {', '.join(recent_sessions[:3])})"
+            is_bool = isinstance(action, (argparse._StoreTrueAction, argparse._StoreFalseAction))
+            is_required = action.required
+            default = smart_defaults.get(action.dest, action.default)
             
             # Show default clearly for boolean
             if is_bool:
@@ -129,23 +155,46 @@ def run_wizard(parser: argparse.ArgumentParser):
                 choices_list = action.choices
                 
                 prompt_text = f"{name}"
-                if is_required:
+                if is_required and action.dest not in smart_defaults:
                     prompt_text += " (Obbligatorio)"
                 if default is not None:
                     prompt_text += f" [default: {default}]"
                     
                 if choices_list:
-                    prompt_text += f" [Scelte: {', '.join(map(str, choices_list))}]"
+                    prompt_text += f"\n  Scelte disponibili:\n"
+                    for i, c in enumerate(choices_list, 1):
+                        prompt_text += f"    {i}) {c}\n"
                 elif type_func:
                     type_name = getattr(type_func, '__name__', str(type_func))
                     prompt_text += f" [Tipo: {type_name}]"
                     
-                prompt_text += f"\n  Descrizione: {desc}\n  > "
+                if name == "--session-id" and recent_sessions:
+                    prompt_text += f"\n  Suggerimenti recenti:\n"
+                    for i, s in enumerate(recent_sessions[:5], 1):
+                        prompt_text += f"    {i}) {s}\n"
+                    
+                prompt_text += f"  Descrizione: {desc}\n  > "
                 
                 while True:
                     val = input(prompt_text).strip()
+                    
+                    if name == "--session-id" and recent_sessions and val.isdigit():
+                        idx = int(val)
+                        if 1 <= idx <= min(5, len(recent_sessions)):
+                            val = recent_sessions[idx - 1]
+                            
+                    if choices_list and val.isdigit():
+                        idx = int(val)
+                        if 1 <= idx <= len(choices_list):
+                            val = str(choices_list[idx - 1])
                     if not val:
-                        if default is not None:
+                        if action.dest in smart_defaults:
+                            if action.option_strings:
+                                args_list.extend([name, str(default)])
+                            else:
+                                args_list.append(str(default))
+                            break
+                        elif default is not None:
                             # Not provided, but has default -> argparse will handle it
                             break
                         elif is_required:
@@ -157,7 +206,7 @@ def run_wizard(parser: argparse.ArgumentParser):
                     else:
                         # Validate choices
                         if choices_list and val not in [str(c) for c in choices_list]:
-                            print(f"  [!] Valore non valido. Scelte permesse: {', '.join(map(str, choices_list))}")
+                            print(f"  [!] Valore non valido. Inserisci un numero da 1 a {len(choices_list)} oppure il nome esatto.")
                             continue
                         
                         # Validate type
