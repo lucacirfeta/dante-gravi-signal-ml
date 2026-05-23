@@ -17,10 +17,10 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e analizzati:
 
 ## 📅 Indice Cronologico delle Sessioni
 
-| Run   | Session ID        | Data/Ora Run          | Stato Analisi   | Rilevazioni Salienti (NOVEL)     |
-|:------|:------------------|:----------------------|:----------------|:---------------------------------|
-| `O4a` | `20260520_223147` | `2026-05-22 18:41:47` | Completato (OK) | Da rieseguire con nuovo criterio log-likelihood |
-| `O4a` | `20260522_074026` | `2026-05-22 07:03:51` | Completato (OK) | Da rieseguire con nuovo criterio log-likelihood |
+| Run   | Session ID        | Data/Ora Run          | Stato Analisi   | Rilevazioni Salienti (NOVEL)                |
+|:------|:------------------|:----------------------|:----------------|:--------------------------------------------|
+| `O4a` | `20260520_223147` | `2026-05-23 22:39:28` | Completato (OK) | (22 cluster potenziale NOVEL da similarity) |
+| `O4a` | `20260522_074026` | `2026-05-23 22:39:07` | Completato (OK) | (26 cluster potenziale NOVEL da similarity) |
 
 ---
 
@@ -35,20 +35,16 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e analizzati:
 | **L1**   |       `27541`        |    `81.5%`     | `cividis` | Nessuna            |
 
 #### 🤖 2. Risultati del Clustering (DPMM + Cosine)
-
-> [!WARNING]
-> I cluster anomali sotto riportati sono stati identificati con il **vecchio criterio a dimensione** (≤ soglia). Il criterio corrente usa la **log-likelihood** (cluster con >50% dei membri sotto il 5° percentile). Rieseguire `cluster` per aggiornare.
-
-| Detector | Numero Cluster | Campioni nel Cluster Dominante | Cluster Anomalous (# ID / Dimensioni)             | Punti Rumore (Noise) | Varianza PCA (%) |
-|:---------|:--------------:|:------------------------------:|:--------------------------------------------------|:--------------------:|:----------------:|
-| **H1**   |      `11`      |             `8033`             | `C1 (2 pts), C5 (2 pts), C7 (1 pts), C10 (1 pts)` |         `0`          |     `98.7%`      |
-| **L1**   |      `11`      |             `6997`             | `C17 (1 pts)`                                     |         `0`          |     `98.7%`      |
+| Detector | Numero Cluster | Campioni nel Cluster Dominante | Cluster Anomalous (# ID / Dimensioni) | Punti Rumore (Noise) | Varianza PCA (%) |
+|:---------|:--------------:|:------------------------------:|:--------------------------------------|:--------------------:|:----------------:|
+| **H1**   |      `11`      |             `8033`             | `C1, C5, C7, C10`                     |         `0`          |     `98.7%`      |
+| **L1**   |      `11`      |             `6997`             | `C17`                                 |         `0`          |     `98.7%`      |
 
 #### 🛡️ 3. Validazione Robustezza (Ablation & Stability)
 | Detector | Stability Mean ARI | Ablation Grayscale ARI | Ablation Shuffled-Intensity ARI | Esito Validazione        |
 |:---------|:------------------:|:----------------------:|:-------------------------------:|:-------------------------|
-| **H1**   |      `0.867`       |        `0.620`         |             `0.866`             | Approvato con lieve calo |
-| **L1**   |      `0.971`       |        `0.966`         |             `0.945`             | Approvato                |
+| **H1**   |      `0.859`       |        `0.620`         |             `0.866`             | Approvato con lieve calo |
+| **L1**   |      `0.967`       |        `0.966`         |             `0.945`             | Approvato                |
 
 #### 🔗 4. Analisi Temporale (Time-Slide Coincidence)
 | Finestra di Coincidenza | Numero Coincidenze a Lag Zero | p-value Empirico | Significatività (Z-score) | Esito                           |
@@ -56,7 +52,13 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e analizzati:
 | `±32s`                  |              `0`              |      `1.0`       |           `0.0`           | Casuale (compatibile con fondo) |
 
 #### 🔬 5. Interpretazione Morfologica (Morphcheck in-domain)
-I glitch si sono mappati in morfologie attese o popolazioni continue di fondo. Nessuna nuova morfologia identificata.
+I glitch si sono mappati in morfologie attese o popolazioni continue di fondo.
+
+
+#### 📊 6. Analisi Similarità Sottovarianti (Analyze-Similarity)
+| Detector | Cluster ID | Campioni | Interpretazione                 | Top-1 Classe (Similitudine)    |
+|:---------|:----------:|:--------:|:--------------------------------|:-------------------------------|
+
 
 ---
 
@@ -69,20 +71,16 @@ I glitch si sono mappati in morfologie attese o popolazioni continue di fondo. N
 | **L1**   |       `29953`        |    `79.6%`     | `cividis` | Nessuna            |
 
 #### 🤖 2. Risultati del Clustering (DPMM + Cosine)
-
-> [!WARNING]
-> I cluster anomali sotto riportati sono stati identificati con il **vecchio criterio a dimensione** (≤ soglia). Il criterio corrente usa la **log-likelihood** (cluster con >50% dei membri sotto il 5° percentile). Rieseguire `cluster` per aggiornare. Risultati attesi dalla stability analysis: H1: `[4]`, L1: `[0, 9]`.
-
 | Detector | Numero Cluster | Campioni nel Cluster Dominante | Cluster Anomalous (# ID / Dimensioni) | Punti Rumore (Noise) | Varianza PCA (%) |
 |:---------|:--------------:|:------------------------------:|:--------------------------------------|:--------------------:|:----------------:|
-| **H1**   |      `11`      |            `13477`             | `C10 (1 pts)`                         |         `0`          |     `98.7%`      |
-| **L1**   |      `15`      |            `13571`             | `C10 (1 pts)`                         |         `0`          |     `98.0%`      |
+| **H1**   |      `11`      |            `13477`             | `C7, C10, C11`                        |         `0`          |     `98.7%`      |
+| **L1**   |      `15`      |            `13571`             | `C3, C6, C10, C13, C14, C17`          |         `0`          |     `98.0%`      |
 
 #### 🛡️ 3. Validazione Robustezza (Ablation & Stability)
 | Detector | Stability Mean ARI | Ablation Grayscale ARI | Ablation Shuffled-Intensity ARI | Esito Validazione        |
 |:---------|:------------------:|:----------------------:|:-------------------------------:|:-------------------------|
-| **H1**   |      `0.896`       |        `0.897`         |             `0.830`             | Approvato con lieve calo |
-| **L1**   |      `0.915`       |        `0.681`         |             `0.706`             | Approvato                |
+| **H1**   |      `0.889`       |        `0.897`         |             `0.830`             | Approvato con lieve calo |
+| **L1**   |      `0.910`       |        `0.681`         |             `0.706`             | Approvato                |
 
 #### 🔗 4. Analisi Temporale (Time-Slide Coincidence)
 | Finestra di Coincidenza | Numero Coincidenze a Lag Zero | p-value Empirico | Significatività (Z-score) | Esito                           |
@@ -90,7 +88,12 @@ I glitch si sono mappati in morfologie attese o popolazioni continue di fondo. N
 | `±32s`                  |              `0`              |      `1.0`       |           `0.0`           | Casuale (compatibile con fondo) |
 
 #### 🔬 5. Interpretazione Morfologica (Morphcheck in-domain)
-I glitch si sono mappati in morfologie attese o popolazioni continue di fondo. Nessuna nuova morfologia identificata.
+I glitch si sono mappati in morfologie attese o popolazioni continue di fondo.
+
+
+#### 📊 6. Analisi Similarità Sottovarianti (Analyze-Similarity)
+| Detector | Cluster ID | Campioni | Interpretazione                 | Top-1 Classe (Similitudine)    |
+|:---------|:----------:|:--------:|:--------------------------------|:-------------------------------|
 
 ---
 
@@ -100,4 +103,4 @@ I glitch si sono mappati in morfologie attese o popolazioni continue di fondo. N
 |:-------------------------|:------------------|:------------------|:--------------|
 | Spettrogrammi (H1 / L1)  | `26623` / `27541` | `21991` / `29953` | Paragonabili  |
 | Numero Cluster (H1 / L1) | `11` / `11`       | `11` / `15`       | Coerente      |
-| Robustezza (ARI H1 / L1) | `0.867` / `0.971` | `0.896` / `0.915` | Sempre > 0.85 |
+| Robustezza (ARI H1 / L1) | `0.859` / `0.967` | `0.889` / `0.910` | Sempre > 0.85 |

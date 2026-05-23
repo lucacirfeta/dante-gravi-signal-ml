@@ -367,9 +367,17 @@ def _analyze_detector(
 
         if similarity_report_file.exists():
             logger.info("%s[%s]%s Step 2b: Similarity analysis report already exists. Skipping.", color, det, reset)
+            with open(similarity_report_file, "r", encoding="utf-8") as fh:
+                sim_data = json.load(fh)
+            
+            novel_count = sum(1 for c in sim_data if "NOVEL" in c.get("interpretation", ""))
+            
             det_report["steps"]["similarity_analysis"] = {
                 "status": "SKIPPED",
                 "timestamp": step_start,
+                "total_clusters_analyzed": len(sim_data),
+                "potential_novel_clusters": novel_count,
+                "results": sim_data,
             }
         else:
             if det_report["steps"].get("morphcheck", {}).get("status") in ("OK", "SKIPPED"):
@@ -383,9 +391,19 @@ def _analyze_detector(
                     reference_path=reference_path
                 )
                 
+                sim_data = []
+                if similarity_report_file.exists():
+                    with open(similarity_report_file, "r", encoding="utf-8") as fh:
+                        sim_data = json.load(fh)
+                        
+                novel_count = sum(1 for c in sim_data if "NOVEL" in c.get("interpretation", ""))
+                
                 det_report["steps"]["similarity_analysis"] = {
                     "status": "OK",
                     "timestamp": step_start,
+                    "total_clusters_analyzed": len(sim_data),
+                    "potential_novel_clusters": novel_count,
+                    "results": sim_data,
                 }
             else:
                 logger.info("%s[%s]%s Step 2b: Skipping similarity analysis because morphcheck failed.", color, det, reset)
@@ -854,9 +872,17 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
         sim_rep_path = session_dir / "analysis" / f"{det}_similarity_analysis.json"
         if sim_rep_path.exists():
             try:
+                with open(sim_rep_path, "r", encoding="utf-8") as fh:
+                    sim_data = json.load(fh)
+                    
+                novel_count = sum(1 for c in sim_data if "NOVEL" in c.get("interpretation", ""))
+                
                 det_report["steps"]["similarity_analysis"] = {
                     "status": "OK",
                     "timestamp": datetime.fromtimestamp(sim_rep_path.stat().st_mtime, timezone.utc).isoformat(),
+                    "total_clusters_analyzed": len(sim_data),
+                    "potential_novel_clusters": novel_count,
+                    "results": sim_data,
                 }
             except Exception as e:
                 det_report["steps"]["similarity_analysis"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
