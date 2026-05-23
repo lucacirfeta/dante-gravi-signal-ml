@@ -291,7 +291,7 @@ def _analyze_detector(
 
             for cid_str in result["hdbscan_stats"]["cluster_sizes"]:
                 cid = int(cid_str)
-                if cid in result["anomalous_clusters"]:
+                if cid >= 0:
                     mask = result["labels"] == cid
                     for idx in np.where(mask)[0]:
                         anomalous_indices.append(idx)
@@ -350,6 +350,55 @@ def _analyze_detector(
             color, det, reset, exc, exc_info=True,
         )
         det_report["steps"]["morphcheck"] = {
+            "status": "FAILED",
+            "timestamp": step_start,
+            "error": str(exc),
+        }
+
+    # ------------------------------------------------------------------ #
+    # Step 2b: Similarity Analysis  (CPU)                                 #
+    # ------------------------------------------------------------------ #
+    step_start = datetime.now(timezone.utc).isoformat()
+    try:
+        analysis_dir = session_path(run, session_id) / "analysis"
+        similarity_report_file = analysis_dir / f"{det}_similarity_analysis.json"
+
+        if similarity_report_file.exists():
+            logger.info("%s[%s]%s Step 2b: Similarity analysis report already exists. Skipping.", color, det, reset)
+            det_report["steps"]["similarity_analysis"] = {
+                "status": "SKIPPED",
+                "timestamp": step_start,
+            }
+        else:
+            if det_report["steps"].get("morphcheck", {}).get("status") in ("OK", "SKIPPED"):
+                logger.info("%s[%s]%s Step 2b: Similarity analysis...", color, det, reset)
+                from src.similarity_analysis import analyze_similarity
+                
+                analyze_similarity(
+                    session_id=session_id,
+                    detector=det,
+                    run=run,
+                    reference_path=reference_path
+                )
+                
+                det_report["steps"]["similarity_analysis"] = {
+                    "status": "OK",
+                    "timestamp": step_start,
+                }
+            else:
+                logger.info("%s[%s]%s Step 2b: Skipping similarity analysis because morphcheck failed.", color, det, reset)
+                det_report["steps"]["similarity_analysis"] = {
+                    "status": "SKIPPED",
+                    "timestamp": step_start,
+                    "reason": "morphcheck failed"
+                }
+
+    except Exception as exc:
+        logger.error(
+            "%s[%s]%s Step 2b (similarity_analysis) FAILED — continuing: %s",
+            color, det, reset, exc, exc_info=True,
+        )
+        det_report["steps"]["similarity_analysis"] = {
             "status": "FAILED",
             "timestamp": step_start,
             "error": str(exc),
@@ -805,6 +854,19 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                 det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
         else:
             det_report["steps"]["morphcheck"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
+
+        # Similarity Analysis
+        sim_rep_path = session_dir / "analysis" / f"{det}_similarity_analysis.json"
+        if sim_rep_path.exists():
+            try:
+                det_report["steps"]["similarity_analysis"] = {
+                    "status": "OK",
+                    "timestamp": datetime.fromtimestamp(sim_rep_path.stat().st_mtime, timezone.utc).isoformat(),
+                }
+            except Exception as e:
+                det_report["steps"]["similarity_analysis"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+        else:
+            det_report["steps"]["similarity_analysis"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
         # Ablation
         ablation_rep_path = session_dir / "ablation" / f"ablation_report_{det}.json"

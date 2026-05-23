@@ -59,6 +59,7 @@ La pipeline supporta l'analisi di diversi run osservativi di LIGO/Virgo. I run a
    - [`ablation`](#11-ablation) — Studio ablazione perturbazioni
    - [`crosscheck`](#12-crosscheck) — Verifica cross-check Gravity Spy
    - [`timeslide`](#13-timeslide) — Analisi coincidenze e p-value
+   - [`analyze-similarity`](#13b-analyze-similarity) — Analisi similarità sottovarianti
 
 4. **Reference Index**
    - [`build-reference`](#14-build-reference) — Costruisce indice base
@@ -331,6 +332,21 @@ Stima il p-value empirico di coincidenza tra anomalie `H1` e `L1` tramite time-s
 - `--window`: Finestra di coincidenza in secondi. *Default: `32`*. Configurabile anche in `config.yaml → timeslide.window`.
 
 > **💡 Nota:** senza `--session-id`, i quattro argomenti `--metadata-h1`, `--metadata-l1`, `--report-h1`, `--report-l1` sono tutti obbligatori. Gli argomenti `--embeddings-*` non sono necessari e sono stati rimossi.
+
+### 13b. `analyze-similarity`
+Analizza la distribuzione delle similarità coseno per ogni cluster rispetto alle classi del riferimento in-domain.
+Utile per determinare se un cluster anomalo è genuinamente equidistante da molte classi (indicatore potenziale NOVEL) oppure è una sottovariante di una classe nota (similarità sistematicamente più alta verso quella classe).
+
+* **Sotto il cofano (Dettagli di Elaborazione):**
+  1. Carica il morphcheck report e il cluster_report.
+  2. Per ogni cluster, estrae i campioni e le loro similarità verso le top-5 classi del riferimento.
+  3. Calcola similarità media, deviazione standard, e rapporto tra top-1 e top-2.
+  4. Produce un resoconto indicante l'interpretazione (Equidistante vs Sottovariante) per l'eventuale NOVEL candidate.
+
+- `--session-id` **(Richiesto)**: ID univoco sessione.
+- `--detector` **(Richiesto)**: Rivelatore usato (es. `H1`).
+- `--run`: Run osservativo (es. `O4a`).
+- `--reference`: Path al reference index `.npz`.
 
 ---
 

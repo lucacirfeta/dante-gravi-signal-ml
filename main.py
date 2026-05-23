@@ -1080,6 +1080,22 @@ def cmd_encode(args: argparse.Namespace) -> None:
     print("Phase 2 complete. Embeddings ready for Phase 3 clustering.")
 
 
+def cmd_analyze_similarity(args: argparse.Namespace) -> None:
+    """Analyze the distribution of cosine similarities for each cluster."""
+    from src.similarity_analysis import analyze_similarity
+    
+    run = _resolve_run(args)
+    session_id = _resolve_session_id(args)
+    
+    logger.info("=== ANALYZE-SIMILARITY: %s [%s] ===", args.detector, run)
+    analyze_similarity(
+        session_id=session_id,
+        detector=args.detector,
+        run=run,
+        reference_path=args.reference
+    )
+
+
 def cmd_cluster(args: argparse.Namespace) -> None:
     """Cluster embeddings to discover novel glitch classes."""
     session_id = getattr(args, "session_id", None) or None
@@ -2852,6 +2868,33 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_run_argument(p_live)
     p_live.set_defaults(func=cmd_scan_live)
+
+    # --- analyze-similarity ---
+    p_sim = subparsers.add_parser(
+        "analyze-similarity",
+        help="Analyze the distribution of cosine similarities for each cluster.",
+    )
+    p_sim.add_argument(
+        "--session-id",
+        type=str,
+        required=True,
+        help="Session identifier.",
+    )
+    p_sim.add_argument(
+        "--detector",
+        type=str,
+        required=True,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier.",
+    )
+    _add_run_argument(p_sim)
+    p_sim.add_argument(
+        "--reference",
+        type=str,
+        default="data/reference/indomain_index.npz",
+        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+    )
+    p_sim.set_defaults(func=cmd_analyze_similarity)
 
     return parser
 

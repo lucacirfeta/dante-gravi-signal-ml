@@ -70,6 +70,7 @@ Raw Strain Data (GWOSC O2–O4a)
 │   Validation & Cross-Check                          │
 │                                                     │
 │   similarity_checker.py  — KNN cosine morphcheck    │
+│   similarity_analysis.py — Subvariant similarity    │
 │   ablation.py            — ARI vs perturbations     │
 │   stability.py           — ARI across hyperparams   │
 │   timeslide.py           — H1-L1 coincidence p-val  │
