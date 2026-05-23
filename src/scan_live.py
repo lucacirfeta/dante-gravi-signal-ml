@@ -362,6 +362,8 @@ def run_scan_live(
     min_novel: int = 10,
     reference_path: str | Path = "data/reference/indomain_index.npz",
     hours: float | None = None,
+    percentile: int = 5,
+    thresholds_path: str | Path = "data/autopilot/reference/thresholds.json",
 ) -> dict:
     """Run the autopilot live scan pipeline.
 
@@ -389,12 +391,12 @@ def run_scan_live(
     cfg = load_config()
 
     # ---- 1. Thresholds ------------------------------------------------
-    thresholds_path = Path("data/autopilot/reference/thresholds.json")
+    thresholds_path = Path(thresholds_path)
     if not thresholds_path.exists():
         logger.info("Thresholds not found — running calibration...")
         calibrate_thresholds(
             reference_path=reference_path,
-            percentile=5,
+            percentile=percentile,
             output_path=thresholds_path,
         )
 

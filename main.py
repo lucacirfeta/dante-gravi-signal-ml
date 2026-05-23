@@ -6,14 +6,14 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
 
     fetch                    — Download and process a known reference event (PoC)
     scan                     — Batch-scan segments for a detector
-    scan-extended            — Extended scan of H1 + L1 (Phase 3.1)
+    scan-extended            — Extended scan of H1 + L1 detectors
     reprocess-spectrograms   — Re-render existing spectrograms with updated colormap
-    encode                   — Extract embeddings from spectrograms (Phase 2)
-    cluster                  — Cluster embeddings to discover novel classes (Phase 3)
+    encode                   — Extract DINOv2-Reg embeddings from spectrograms
+    cluster                  — Cluster embeddings to discover novel glitch classes
     report                   — Regenerate UMAP and cluster gallery from existing outputs
-    crosscheck               — Gravity Spy cross-check of anomalous clusters (Phase 3.1)
-    build-indomain-reference — Build in-domain reference from labeled GPS (Phase 3.4)
-    validate-reference       — Validate reference with GW150914 sanity check (Phase 3.4)
+    crosscheck               — Cross-check anomalous clusters against Gravity Spy
+    build-indomain-reference — Build in-domain reference from labeled GPS timestamps
+    validate-reference       — Validate reference index with a known event
     benchmark-clustering     — Validate unsupervised clustering using ground truth labels
     full-analysis            — Automated end-to-end analysis (Cluster, Morph, Ablation, Stability, Timeslide)
     calibrate-threshold      — Calibrate per-class cosine similarity thresholds (Autopilot)
@@ -1932,6 +1932,8 @@ def cmd_scan_live(args: argparse.Namespace) -> None:
         min_novel=args.min_novel,
         reference_path=args.reference,
         hours=hours,
+        percentile=args.percentile,
+        thresholds_path=args.thresholds_path,
     )
 
 
@@ -2028,10 +2030,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_scan.set_defaults(func=cmd_scan)
     _add_run_argument(p_scan)
 
-    # --- scan-extended (Phase 3.1) ---
+    # --- scan-extended ---
     p_scan_ext = subparsers.add_parser(
         "scan-extended",
-        help="[Phase 3.1] Extended 48h scan of H1 + L1 detectors.",
+        help="Extended scan of H1 + L1 detectors.",
     )
     p_scan_ext.add_argument(
         "--workers",
@@ -2333,7 +2335,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- encode (Phase 2) ---
     p_encode = subparsers.add_parser(
         "encode",
-        help="[Phase 2] Extract DINOv2-Reg embeddings from spectrograms.",
+        help="Extract DINOv2-Reg embeddings from spectrograms.",
     )
     p_encode.add_argument(
         "--input-dir",
@@ -2381,7 +2383,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- cluster (Phase 3) ---
     p_cluster = subparsers.add_parser(
         "cluster",
-        help="[Phase 3] Cluster embeddings to discover novel glitch classes.",
+        help="Cluster embeddings to discover novel glitch classes.",
     )
     p_cluster.add_argument(
         "--input",
@@ -2561,7 +2563,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- crosscheck (Phase 3.1) ---
     p_cross = subparsers.add_parser(
         "crosscheck",
-        help="[Phase 3.1] Cross-check anomalous clusters against Gravity Spy.",
+        help="Cross-check anomalous clusters against Gravity Spy.",
     )
     p_cross.add_argument(
         "--report",
@@ -2593,7 +2595,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- build-reference (Phase 3.3) ---
     p_build = subparsers.add_parser(
         "build-reference",
-        help="[Phase 3.3] Build a reference index from Gravity Spy training set.",
+        help="Build a reference index from Gravity Spy training set.",
     )
     p_build.add_argument(
         "--output",
@@ -2618,7 +2620,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- morphcheck (Phase 3.3 / 3.4) ---
     p_morph = subparsers.add_parser(
         "morphcheck",
-        help="[Phase 3.3/3.4] Run morphological similarity cross-check.",
+        help="Run morphological similarity cross-check.",
     )
     p_morph.add_argument(
         "--embeddings",
@@ -2638,8 +2640,8 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help=(
             "Path to reference index .npz. Accepts either: "
-            "(1) Gravity Spy training set index (Phase 3.3, build-reference), or "
-            "(2) In-domain reference index (Phase 3.4, build-indomain-reference, recommended)."
+            "(1) Gravity Spy training set index (build-reference), or "
+            "(2) In-domain reference index (build-indomain-reference, recommended)."
         ),
     )
     p_morph.add_argument(
@@ -2707,7 +2709,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- build-indomain-reference (Phase 3.4) ---
     p_indomain = subparsers.add_parser(
         "build-indomain-reference",
-        help="[Phase 3.4] Build in-domain reference from labeled GPS timestamps.",
+        help="Build in-domain reference from labeled GPS timestamps.",
     )
     p_indomain.add_argument(
         "--output",
@@ -2751,7 +2753,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- validate-reference (Phase 3.4) ---
     p_validate = subparsers.add_parser(
         "validate-reference",
-        help="[Phase 3.4] Validate reference index with a known event.",
+        help="Validate reference index with a known event.",
     )
     p_validate.add_argument(
         "--reference",
@@ -2865,6 +2867,18 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=None,
         help="Override scan duration in hours. Default: from run_config.",
+    )
+    p_live.add_argument(
+        "--percentile",
+        type=int,
+        default=5,
+        help="Percentile for threshold calibration if not found. Default: 5.",
+    )
+    p_live.add_argument(
+        "--thresholds-path",
+        type=str,
+        default="data/autopilot/reference/thresholds.json",
+        help="Path to thresholds.json. Default: data/autopilot/reference/thresholds.json.",
     )
     _add_run_argument(p_live)
     p_live.set_defaults(func=cmd_scan_live)
