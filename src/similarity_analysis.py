@@ -88,8 +88,12 @@ def analyze_similarity(
             
         std_top5 = round(float(np.std(mean_sim_top5)), 4) if mean_sim_top5 else 0.0
         
-        if ratio_top1_top2 is not None and ratio_top1_top2 < 1.05:
-            interpretation = "Equidistante — potenziale NOVEL"
+        if mean_sim_top1 > 0.95:
+            interpretation = "KNOWN — alta similarità verso classi note"
+        elif mean_sim_top1 <= 0.85:
+            interpretation = "NOVEL candidate — bassa similarità verso tutte le classi note"
+        elif ratio_top1_top2 is not None and ratio_top1_top2 < 1.05:
+            interpretation = "AMBIGUOUS — equidistante tra classi note"
         else:
             top_class = top5_classes[0] if top5_classes else "Unknown"
             interpretation = f"Sottovariante di {top_class}"
