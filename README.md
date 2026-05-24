@@ -207,10 +207,10 @@ Tutti i risultati scientifici, validazioni e benchmark prodotti dalla pipeline s
 
 1. **UMAP distortion:** UMAP distorce le distanze globali per preservare la struttura locale. Cluster anomali separati da UMAP potrebbero riflettere artefatti di preprocessing piuttosto che morfologie fisicamente distinte. L'Ablation study (ARI > 0.999) aiuta a validarne la robustezza.
 2. **Domain transfer assumption:** DINOv2 è addestrato su immagini naturali. Il transfer learning su spettrogrammi GW è basato su euristiche e validato sul campo tramite *morphcheck*.
-4. **Single Q-transform window:** L'utilizzo fisso dei parametri standard (qrange=[4,64], finestra di 32s) può oscurare strutture transienti ad alta frequenza o broadband lenti.
-5. **Divergenza dal Ground Truth:** Il clustering non supervisionato raggiunge un ARI relativamente basso rispetto alle label manuali (Gravity Spy). Questo indica che la similarità morfologica visiva (DINOv2) cattura caratteristiche intrinseche diverse dalle convenzioni classiche umane.
-6. **No GPU acceleration:** Essendo CPU-only, il task di scaling per l'intero O4a può richiedere ore/giorni se eseguito in modalità incrementale (vedi opzione `--continue-run` in `CLI_REFERENCE.md`).
-7. **GUI dependency:** Il pacchetto `Gooey` per l'interfaccia `gui.py` è opzionale e va installato manualmente se necessario.
+3. **Single Q-transform window:** L'utilizzo fisso dei parametri standard (qrange=[4,64], finestra di 32s) può oscurare strutture transienti ad alta frequenza o broadband lenti.
+4. **Divergenza dal Ground Truth:** Il clustering non supervisionato raggiunge un ARI relativamente basso rispetto alle label manuali (Gravity Spy). Questo indica che la similarità morfologica visiva (DINOv2) cattura caratteristiche intrinseche diverse dalle convenzioni classiche umane.
+5. **No GPU acceleration:** Essendo CPU-only, il task di scaling per l'intero O4a può richiedere ore/giorni se eseguito in modalità incrementale (vedi opzione `--continue-run` in `CLI_REFERENCE.md`).
+6. **GUI dependency:** Il pacchetto `Gooey` per l'interfaccia `gui.py` è opzionale e va installato manualmente se necessario.
 
 ---
 

@@ -67,9 +67,11 @@ La pipeline supporta l'analisi di diversi run osservativi di LIGO/Virgo. I run a
    - [`validate-reference`](#16-validate-reference) — Valida indice con un evento reale
    - [`morphcheck`](#17-morphcheck) — Confronta anomalie con indice reference
    - [`benchmark-clustering`](#18-benchmark-clustering) — Valida pipeline non supervisionata con etichette ground truth
+   - [`benchmark-methods`](#18b-benchmark-methods) — Genera report comparativo tra vari metodi di clustering
 
 5. **Automazione End-to-End**
     - [`full-analysis`](#19-full-analysis) — Pipeline automatizzata completa
+    - [`full-analysis-report`](#19b-full-analysis-report) — Rigenera solo i JSON finali della full analysis
 
 6. **Autopilot & Thresholds**
     - [`calibrate-threshold`](#20-calibrate-threshold) — Calibra soglie di similarità per-classe
@@ -427,6 +429,18 @@ Esegue un benchmark della pipeline di clustering non supervisionata usando un re
 - `--output`: Path in cui salvare il JSON di report del benchmark. *Default: `data/reference/benchmark_report.json`*.
 - `--algorithm`: Algoritmo di clustering da usare. *Default: `dpmm`*.
 
+### 18b. `benchmark-methods`
+Esegue un benchmark comparativo tra diverse combinazioni di metodi (es. DINOv2+DPMM, DINOv2+HDBSCAN, baseline PCA+tSNE) calcolando metriche globali (ARI, AMI) contro un ground truth di riferimento.
+
+* **Sotto il cofano (Dettagli di Elaborazione):**
+  1. Estrae dall'indice `.npz` di riferimento gli embedding e le classi note.
+  2. Elabora iterativamente i dati usando configurazioni hardcoded di vari algoritmi e pipeline riduttive (es. PCA, t-SNE, UMAP).
+  3. Calcola metriche ARI e AMI per ogni configurazione.
+  4. Salva un report riepilogativo per facilitare il confronto metodologico.
+
+- `--reference`: Path all'indice reference `.npz`. *Default: `data/reference/indomain_index.npz`*.
+- `--output`: Path JSON di destinazione. *Default: `data/reference/benchmark_methods.json`*.
+
 ---
 
 ## Automazione End-to-End
@@ -451,6 +465,16 @@ Automatizza l'intero workflow di analisi (Encode, Cluster, Morphcheck, Ablation,
 - `--n-runs`: Numero di run per la stability analysis. *Default: `20`*.
 - `--sequential`: Esecuzione sequenziale dei detector.
 - `--algorithm`: Algoritmo di clustering (`dpmm`, `hdbscan`). *Default: `dpmm`*.
+
+### 19b. `full-analysis-report`
+Rigenera solo i JSON finali della full-analysis aggregando le informazioni dei file JSON dei vari step (clustering, ablation, ecc.) per i detector nella sessione corrente.
+
+* **Sotto il cofano (Dettagli di Elaborazione):**
+  1. Identifica le cartelle di report dei detector specificati.
+  2. Rilegge e compila `cluster_report.json`, `ablation_report`, `stability_report`, ecc. in un unico file `[detector]_full_report.json`.
+
+- `--session-id` **(Richiesto)**: ID della sessione.
+- `--run`: Run osservativo. *Default: `O4a`*.
 
 ---
 
