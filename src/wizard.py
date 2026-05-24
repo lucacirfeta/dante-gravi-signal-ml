@@ -123,7 +123,7 @@ def run_wizard(parser: argparse.ArgumentParser):
                         "embeddings": f"{base_path}/embeddings/{run_opt}_{det}.npy",
                         "report": f"{base_path}/clusters/{det}/cluster_report.json",
                         "reference": "data/reference/indomain_index.npz",
-                        "output": f"{base_path}/clusters/{det}/morphological_crosscheck_indomain.json",
+                        "output": f"{base_path}/clusters/{det}/morphcheck_report.json",
                         "run": run_opt.capitalize() if run_opt[0].isalpha() else run_opt
                     }
 

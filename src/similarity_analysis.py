@@ -21,7 +21,7 @@ def analyze_similarity(
     clusters_dir = base_dir / "clusters" / detector
     analysis_dir = base_dir / "analysis"
     
-    morphcheck_path = clusters_dir / "morphological_crosscheck_indomain.json"
+    morphcheck_path = clusters_dir / "morphcheck_report.json"
     cluster_report_path = clusters_dir / "cluster_report.json"
     
     if not morphcheck_path.exists():

@@ -851,7 +851,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
             det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
         # Morphcheck
-        morph_rep_path = session_dir / "clusters" / det_lower / "morphological_crosscheck_indomain.json"
+        morph_rep_path = session_dir / "clusters" / det_lower / "morphcheck_report.json"
         if morph_rep_path.exists():
             try:
                 with open(morph_rep_path, "r", encoding="utf-8") as fh:
