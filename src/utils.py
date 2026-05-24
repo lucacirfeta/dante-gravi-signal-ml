@@ -52,6 +52,11 @@ def get_device(verbose: bool = True) -> torch.device:
                     capability[0],
                     capability[1],
                 )
+            
+            # Attivazione dell'auto-tuner cuDNN per massima efficienza sulle convoluzioni 
+            # (i tensori del DINOv2 hanno sempre dimensione fissa 256x256).
+            torch.backends.cudnn.benchmark = True
+            
             return torch.device("cuda:0")
 
         except RuntimeError as e:

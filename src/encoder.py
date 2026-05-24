@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
+import concurrent.futures
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -150,7 +152,7 @@ class DINOv2Encoder:
         img = Image.open(image_path)
         tensor = self.transform(img).unsqueeze(0).to(self.device)
 
-        with torch.no_grad():
+        with torch.inference_mode():
             cls_token: torch.Tensor = self.model(tensor)
 
         # L2-normalize
@@ -165,12 +167,14 @@ class DINOv2Encoder:
         self,
         image_paths: list[Path],
         batch_size: int | None = None,
+        gpu_lock: threading.Lock | None = None,
     ) -> np.ndarray:
         """Extract L2-normalized embeddings for a list of images.
 
         Args:
             image_paths: Ordered list of spectrogram PNG paths.
             batch_size: Override the instance default if provided.
+            gpu_lock: Optional lock for safe parallel execution.
 
         Returns:
             ``float32`` numpy array of shape ``(N, 384)``.
@@ -181,19 +185,32 @@ class DINOv2Encoder:
         """
         bs: int = batch_size or self.batch_size
         all_embeddings: list[np.ndarray] = []
+        _lock = gpu_lock if gpu_lock is not None else threading.Lock()
 
         for start in tqdm(
             range(0, len(image_paths), bs),
             desc="Extracting embeddings",
         ):
             batch_paths = image_paths[start : start + bs]
-            tensors = torch.stack(
-                [self.transform(Image.open(p)) for p in batch_paths]
-            ).to(self.device)
+            # CPU-bound Image loading and transforms happen OUTSIDE the lock
+            def _load_img(p: Path) -> torch.Tensor:
+                return self.transform(Image.open(p))
+                
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                tensors_list = list(executor.map(_load_img, batch_paths))
+            tensors_cpu = torch.stack(tensors_list)
 
             try:
-                with torch.no_grad():
-                    cls_tokens: torch.Tensor = self.model(tensors)
+                with _lock:
+                    tensors_cuda = tensors_cpu.to(self.device)
+                    with torch.inference_mode():
+                        cls_tokens: torch.Tensor = self.model(tensors_cuda)
+                    # L2-normalize the whole batch on GPU
+                    cls_tokens = torch.nn.functional.normalize(cls_tokens, p=2, dim=1)
+                    # CRUCIAL: Immediately move to host memory before exiting lock
+                    cls_tokens_cpu = cls_tokens.cpu()
+                    del tensors_cuda
+                    del cls_tokens
             except RuntimeError as exc:
                 if "out of memory" not in str(exc):
                     raise
@@ -210,14 +227,23 @@ class DINOv2Encoder:
                 sub_embeddings: list[torch.Tensor] = []
                 for sub_start in range(0, len(batch_paths), retry_bs):
                     sub_batch = batch_paths[sub_start : sub_start + retry_bs]
-                    sub_tensors = torch.stack(
-                        [self.transform(Image.open(p)) for p in sub_batch]
-                    ).to(self.device)
+                    # CPU-bound
+                    def _load_sub_img(p: Path) -> torch.Tensor:
+                        return self.transform(Image.open(p))
+                        
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        sub_tensors_list = list(executor.map(_load_sub_img, sub_batch))
+                    sub_tensors_cpu = torch.stack(sub_tensors_list)
 
                     try:
-                        with torch.no_grad():
-                            sub_cls: torch.Tensor = self.model(sub_tensors)
-                        sub_embeddings.append(sub_cls)
+                        with _lock:
+                            sub_tensors_cuda = sub_tensors_cpu.to(self.device)
+                            with torch.inference_mode():
+                                sub_cls: torch.Tensor = self.model(sub_tensors_cuda)
+                            sub_cls_cpu = sub_cls.cpu()
+                            del sub_tensors_cuda
+                            del sub_cls
+                        sub_embeddings.append(sub_cls_cpu)
                     except RuntimeError as retry_exc:
                         if "out of memory" not in str(retry_exc):
                             raise
@@ -226,11 +252,10 @@ class DINOv2Encoder:
                             f"Reduce --batch-size or use CPU."
                         ) from retry_exc
 
-                cls_tokens = torch.cat(sub_embeddings, dim=0)
+                cls_tokens_cpu = torch.cat(sub_embeddings, dim=0)
+                cls_tokens_cpu = torch.nn.functional.normalize(cls_tokens_cpu, p=2, dim=1)
 
-            # L2-normalize the whole batch
-            cls_tokens = torch.nn.functional.normalize(cls_tokens, p=2, dim=1)
-            all_embeddings.append(cls_tokens.cpu().numpy().astype(np.float32))
+            all_embeddings.append(cls_tokens_cpu.numpy().astype(np.float32))
 
         return np.concatenate(all_embeddings, axis=0)
 
@@ -243,6 +268,7 @@ class DINOv2Encoder:
         input_dir: Path,
         output_path: Path,
         batch_size: int = 32,
+        gpu_lock: threading.Lock | None = None,
     ) -> None:
         """Scan a directory for PNGs, extract embeddings, and save.
 
@@ -268,7 +294,7 @@ class DINOv2Encoder:
             )
 
         embeddings: np.ndarray = self.extract_batch(
-            sorted_paths, batch_size=batch_size
+            sorted_paths, batch_size=batch_size, gpu_lock=gpu_lock
         )
 
         # Ensure output directory exists

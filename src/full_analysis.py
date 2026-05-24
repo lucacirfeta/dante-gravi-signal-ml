@@ -167,12 +167,11 @@ def _analyze_detector(
         if not output_path.exists():
             logger.info("%s[%s]%s Step 0: Encoding spectrograms...", color, det, reset)
             _lock = gpu_lock if gpu_lock is not None else _gpu_lock
-            with _lock:
-                encoder_enc = DINOv2Encoder(batch_size=batch_size)
-                encoder_enc.extract_dataset(input_dir, output_path, batch_size)
-                del encoder_enc
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
+            encoder_enc = DINOv2Encoder(batch_size=batch_size)
+            encoder_enc.extract_dataset(input_dir, output_path, batch_size, gpu_lock=_lock)
+            del encoder_enc
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
             det_report["steps"]["encode"] = {"status": "OK", "timestamp": step_start}
         else:
             logger.info("%s[%s]%s Step 0: Embeddings already exist. Skipping encode.", color, det, reset)

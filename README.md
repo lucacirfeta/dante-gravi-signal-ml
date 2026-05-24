@@ -19,7 +19,8 @@
 
 This pipeline performs **unsupervised morphological characterization** of glitch
 activity in [O2–O4a gravitational-wave data](https://gwosc.org/) — without
-labeled training data and without GPU.
+labeled training data and with native hardware acceleration (CUDA/MPS) for
+lightning-fast inference.
 
 It clusters glitch spectrograms by visual morphology using frozen DINOv2 features,
 identifies statistically anomalous clusters, and cross-checks them against
@@ -104,6 +105,7 @@ Raw Strain Data (GWOSC O2–O4a)
 - **DPMM vs HDBSCAN**: L'algoritmo di default è DPMM (Dirichlet Process Mixture Model) con metrica Cosine. HDBSCAN causava un enorme bias di densità (unendo >80% dei campioni in un mega-cluster) guidato dall'intensità luminosa (colormap). DPMM risolve questo problema catturando forme geometriche su uno spazio UMAP 10D con metrica coseno. Per l'identificazione dei cluster anomali, DPMM calcola la log-likelihood di ogni campione rispetto alla miscela: i cluster in cui >50% dei membri hanno log-likelihood sotto il 5° percentile vengono marcati come anomali. Questo criterio è coerente con l'analisi di stabilità.
 - **Due Pass di UMAP**: UMAP 10D + Cosine per il clustering (mantiene la topologia multidimensionale adatta a Gaussian Mixture), seguito da UMAP 2D per la pura visualizzazione scatterplot.
 - **Colormap `cividis`**: Sostituisce `viridis` per garantire un'uniformità percettiva e ridurre bias artefatti nel rendering geometrico.
+- **Hardware Acceleration & Pipelined Execution**: Pieno supporto nativo per NVIDIA CUDA (con cuDNN auto-tuner attivato per `inference_mode`) e Apple MPS. Sfrutta un approccio avanzato di *Micro-Locking* a livello di batch: la lettura e decodifica delle immagini avviene in modo asincrono multi-thread su CPU, mentre la GPU esegue inferenza matematica pura con lock millisecondi e svuotamento istantaneo della VRAM.
 - **Isolamento per Session ID**: Qualsiasi run (scan o analisi) genera un ID univoco basato sul timestamp. Ogni step intermedio (spettrogrammi, embeddings, json) è salvato isolatamente per evitare sovrascritture incrociate.
 
 ---

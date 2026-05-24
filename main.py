@@ -2391,8 +2391,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_encode.add_argument(
         "--batch-size",
         type=int,
-        default=32,
-        help="Batch size for inference. Default: 32.",
+        default=None,
+        help="Batch size for inference. Default: auto-detect.",
     )
     p_encode.add_argument(
         "--session-id",
@@ -2587,8 +2587,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_ablation.add_argument(
         "--batch-size",
         type=int,
-        default=32,
-        help="Batch size for DINOv2 inference.",
+        default=None,
+        help="Batch size for DINOv2 inference. Default: auto-detect.",
     )
     p_ablation.set_defaults(func=cmd_ablation)
     _add_run_argument(p_ablation)

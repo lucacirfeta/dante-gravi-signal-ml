@@ -211,7 +211,7 @@ Usa il modello DINOv2-Reg preaddestrato per mappare gli spettrogrammi in vettori
 - `--run`: Run osservativo. *Default: `O4a`*.
 - `--input-dir`: Cartella diretta file `.png`.
 - `--output`: File di arrivo (`.npy`).
-- `--batch-size`: Batch inference size PyTorch. *Default: `32`*.
+- `--batch-size`: Batch inference size PyTorch. *Default: `auto-detect` (CUDA=64, MPS=32, CPU=16).*
 
 ### 8. `cluster`
 Raggruppa dinamicamente i dati (DPMM o HDBSCAN), trovando eventuali classi di glitch e anomalie.
@@ -294,7 +294,7 @@ Valuta l'impatto pre-processuale mutando le immagini e analizzando l'accuratezza
 - `--embeddings`: Path baseline embedding `.npy`.
 - `--spectrogram-dir`: Percorso agli spettrogrammi `.png`.
 - `--output-dir`: Cartella di destinazione.
-- `--batch-size`: Batch size per DINOv2. *Default: `32`*.
+- `--batch-size`: Batch size per DINOv2. *Default: `auto-detect`.*
 
 ### 12. `crosscheck`
 Incrocia i cluster anomali del JSON col set reale di LIGO tramite query remote via API in Gravity Spy.

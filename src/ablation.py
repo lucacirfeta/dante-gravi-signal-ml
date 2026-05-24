@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import threading
+import concurrent.futures
 from pathlib import Path
 
 import numpy as np
@@ -53,30 +54,41 @@ def extract_perturbed_embeddings(
     image_paths: list[Path],
     method: str,
     batch_size: int = 32,
+    gpu_lock: threading.Lock | None = None,
 ) -> np.ndarray:
     """Extract DINOv2 embeddings for perturbed images."""
     all_embeddings = []
+    
+    _lock = gpu_lock if gpu_lock is not None else threading.Lock()
     
     for start in tqdm(
         range(0, len(image_paths), batch_size),
         desc=f"Extracting '{method}' embeddings",
     ):
         batch_paths = image_paths[start : start + batch_size]
-        tensors = []
-        for p in batch_paths:
+        def _process_image(p: Path) -> torch.Tensor:
             img = Image.open(p)
             perturbed_img = apply_perturbation(img, method)
             # The encoder transform already ensures it's RGB and normalizes it.
-            tensors.append(encoder.transform(perturbed_img))
+            return encoder.transform(perturbed_img)
             
-        tensors_stack = torch.stack(tensors).to(encoder.device)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            tensors = list(executor.map(_process_image, batch_paths))
+            
+        tensors_stack_cpu = torch.stack(tensors)
         
         try:
-            with torch.no_grad():
-                cls_tokens = encoder.model(tensors_stack)
+            with _lock:
+                tensors_stack_cuda = tensors_stack_cpu.to(encoder.device)
+                with torch.inference_mode():
+                    cls_tokens = encoder.model(tensors_stack_cuda)
                 # L2 normalize
                 cls_tokens = torch.nn.functional.normalize(cls_tokens, p=2, dim=1)
-                all_embeddings.append(cls_tokens.cpu().numpy().astype(np.float32))
+                cls_tokens_cpu = cls_tokens.cpu()
+                del tensors_stack_cuda
+                del cls_tokens
+            
+            all_embeddings.append(cls_tokens_cpu.numpy().astype(np.float32))
         except RuntimeError as exc:
             if "out of memory" not in str(exc):
                 raise
@@ -125,26 +137,25 @@ def run_ablation_study(
     
     embeddings_dict = {}
     
-    _lock = gpu_lock if gpu_lock is not None else threading.Lock()
-    with _lock:
-        logger.info("Acquiring GPU for ablation embeddings extraction...")
-        encoder = DINOv2Encoder(batch_size=batch_size)
-        for method in conditions:
-            if method == "random-baseline":
-                # Generate random standard normal embeddings, and normalize them like DINOv2
-                random_emb = np.random.normal(loc=0.0, scale=1.0, size=(n_samples, 384)).astype(np.float32)
-                norms = np.linalg.norm(random_emb, axis=1, keepdims=True)
-                embeddings_dict[method] = random_emb / np.maximum(norms, 1e-8)
-            else:
-                embeddings_dict[method] = extract_perturbed_embeddings(
-                    encoder=encoder,
-                    image_paths=image_paths,
-                    method=method,
-                    batch_size=batch_size,
-                )
-        del encoder
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+    logger.info("Instantiating encoder for ablation embeddings extraction...")
+    encoder = DINOv2Encoder(batch_size=batch_size)
+    for method in conditions:
+        if method == "random-baseline":
+            # Generate random standard normal embeddings, and normalize them like DINOv2
+            random_emb = np.random.normal(loc=0.0, scale=1.0, size=(n_samples, 384)).astype(np.float32)
+            norms = np.linalg.norm(random_emb, axis=1, keepdims=True)
+            embeddings_dict[method] = random_emb / np.maximum(norms, 1e-8)
+        else:
+            embeddings_dict[method] = extract_perturbed_embeddings(
+                encoder=encoder,
+                image_paths=image_paths,
+                method=method,
+                batch_size=batch_size,
+                gpu_lock=gpu_lock,
+            )
+    del encoder
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
             
     for method in conditions:
         logger.info("--- Ablation Condition: %s ---", method)
