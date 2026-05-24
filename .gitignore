@@ -271,3 +271,5 @@ embeddings/
 !.gitignore
 data/reference/indomain_index.json
 data/reference/
+new_results.md
+scratch_gen_results.py
