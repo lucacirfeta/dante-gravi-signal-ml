@@ -137,7 +137,7 @@ def _produce_spectrogram_chunk(
     with semaphore:
         try:
             hdf5_path = download_gwosc_4096s(detector, gps_start, gps_end, tmp_dir)
-            ts = TimeSeries.read(hdf5_path)
+            ts = TimeSeries.read(hdf5_path, format='hdf5.gwosc')
             
             chunk_size = 32
             pngs = []

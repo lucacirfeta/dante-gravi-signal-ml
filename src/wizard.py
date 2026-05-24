@@ -137,18 +137,10 @@ def run_wizard(parser: argparse.ArgumentParser):
             is_required = action.required
             default = smart_defaults.get(action.dest, action.default)
             
-            is_bool = isinstance(action, (argparse._StoreTrueAction, argparse._StoreFalseAction))
-            is_required = action.required
-            default = smart_defaults.get(action.dest, action.default)
-            
             # Show default clearly for boolean
             if is_bool:
-                # If it's StoreTrueAction, default is False. If StoreFalseAction, default is True.
-                default_str = "N" if isinstance(action, argparse._StoreTrueAction) else "Y"
                 val = prompt_bool(f"{name} ({desc})")
-                if isinstance(action, argparse._StoreTrueAction) and val:
-                    args_list.append(name)
-                elif isinstance(action, argparse._StoreFalseAction) and not val:
+                if val:
                     args_list.append(name)
             else:
                 type_func = action.type
