@@ -15,6 +15,7 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
     build-indomain-reference — Build in-domain reference from labeled GPS timestamps
     validate-reference       — Validate reference index with a known event
     benchmark-clustering     — Validate unsupervised clustering using ground truth labels
+    benchmark-methods        — Benchmark comparative analysis of clustering methods
     full-analysis            — Automated end-to-end analysis (Cluster, Morph, Ablation, Stability, Timeslide)
     calibrate-threshold      — Calibrate per-class cosine similarity thresholds (Autopilot)
     calibrate-loglikelihood  — Calibrate DPMM log-likelihood anomaly threshold
@@ -1730,6 +1731,12 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
     print(f"{'='*60}\n")
 
 
+def cmd_benchmark_methods(args: argparse.Namespace) -> None:
+    """Benchmark comparative analysis of clustering methods."""
+    from src.benchmark_methods import run_method_benchmark
+    run_method_benchmark(args.reference, args.output)
+
+
 def cmd_benchmark_clustering(args: argparse.Namespace) -> None:
     """Run benchmark of the clustering pipeline against a reference index."""
     from src.benchmark import run_benchmark
@@ -2818,6 +2825,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Clustering algorithm to use. Default: dpmm.",
     )
     p_benchmark.set_defaults(func=cmd_benchmark_clustering)
+
+    # --- benchmark-methods ---
+    p_bench_methods = subparsers.add_parser(
+        "benchmark-methods",
+        help="Benchmark comparative analysis of clustering methods.",
+    )
+    p_bench_methods.add_argument(
+        "--reference",
+        type=str,
+        default="data/reference/indomain_index.npz",
+        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+    )
+    p_bench_methods.add_argument(
+        "--output",
+        type=str,
+        default="data/reference/benchmark_methods.json",
+        help="Output JSON path for benchmark report. Default: data/reference/benchmark_methods.json.",
+    )
+    p_bench_methods.set_defaults(func=cmd_benchmark_methods)
 
     # --- calibrate-threshold (Autopilot) ---
     p_cal = subparsers.add_parser(

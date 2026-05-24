@@ -353,6 +353,20 @@ def run_full_pipeline(
         min_dist=umap_viz_cfg.get("min_dist", 0.1),
     )
 
+    # --- Step 6: Clustering Quality Metrics ---
+    from sklearn.metrics import davies_bouldin_score, silhouette_score
+
+    valid_mask = labels != -1
+    valid_labels = labels[valid_mask]
+
+    if len(set(valid_labels)) > 1:
+        sil_umap = float(silhouette_score(umap_10d[valid_mask], valid_labels))
+        db_umap = float(davies_bouldin_score(umap_10d[valid_mask], valid_labels))
+        sil_pca = float(silhouette_score(pca_reduced[valid_mask], valid_labels))
+        db_pca = float(davies_bouldin_score(pca_reduced[valid_mask], valid_labels))
+    else:
+        sil_umap, db_umap, sil_pca, db_pca = None, None, None, None
+
     return {
         "labels": labels,
         "umap_2d": umap_2d,
@@ -362,4 +376,8 @@ def run_full_pipeline(
         "cluster_stats": cluster_stats,  # alias for agnostic reporting
         "anomalous_clusters": anomalous_clusters,
         "anomalous_samples": anomalous_samples,
+        "silhouette_umap": sil_umap,
+        "silhouette_pca": sil_pca,
+        "davies_bouldin_umap": db_umap,
+        "davies_bouldin_pca": db_pca,
     }
