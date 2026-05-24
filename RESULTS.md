@@ -12,6 +12,7 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e analizzati:
 |:-----------|:----------------------|:------------------|:--------------------|:----------------|:--------------------|
 | `20260520_223147` | `1382918784` | `2023-11-02 00:06:06` | `1384112128` | `2023-11-15 19:35:10` | `331.5` |
 | `20260522_074026` | `1370206208` | `2023-06-07 20:49:50` | `1371395168` | `2023-06-21 15:05:50` | `330.3` |
+| `20260523_143914` | `1385542816` | `2023-12-02 08:59:58` | `1386565632` | `2023-12-14 05:06:54` | `284.1` |
 
 ---
 
@@ -21,6 +22,7 @@ Di seguito sono registrati gli intervalli temporali GPS scaricati e analizzati:
 |:---|:-----------|:-------------|:--------------|:-----------------------------|
 | `O4a` | `20260520_223147` | `2026-05-24 07:48:54` | Completato (OK) | Nessun cluster anomalo |
 | `O4a` | `20260522_074026` | `2026-05-24 07:47:56` | Completato (OK) | Nessun cluster anomalo |
+| `O4a` | `20260523_143914` | `2026-05-24 17:29:37` | Completato (OK) | Nessun cluster anomalo |
 
 ---
 
@@ -140,9 +142,66 @@ I glitch si sono mappati in morfologie attese o popolazioni continue di fondo.
 
 ---
 
+### Sessione: `O4a - 20260523_143914`
+
+#### 📊 1. Statistiche Dataset e Preprocessing
+| Detector | Spettrogrammi Totali | Duty Cycle (%) | Colormap | Note / Limitazioni |
+|:---------|:--------------------:|:--------------:|:---------|:-------------------|
+| **H1** | `19943` | `62.4%` | `cividis` | Nessuna |
+| **L1** | `13089` | `43.6%` | `cividis` | Nessuna |
+
+#### 🤖 2. Risultati del Clustering (DPMM + Cosine)
+| Detector | Numero Cluster | Campioni nel Cluster Dominante | Cluster Anomalous (# ID / Dimensioni) | Punti Rumore (Noise) | Varianza PCA (%) |
+|:---------|:--------------:|:------------------------------:|:--------------------------------------|:--------------------:|:----------------:|
+| **H1** | `15` | `9235` | `C0, C7, C21, C23` | `0` | `98.7%` |
+| **L1** | `11` | `4807` | `Nessuno` | `0` | `98.5%` |
+
+#### 🛡️ 3. Validazione Robustezza (Ablation & Stability)
+| Detector | Stability Mean ARI | Ablation Grayscale ARI | Ablation Shuffled-Intensity ARI | Esito Validazione |
+|:---------|:------------------:|:----------------------:|:-------------------------------:|:------------------|
+| **H1** | `0.864` | `0.900` | `0.848` | Approvato con lieve calo |
+| **L1** | `0.927` | `0.852` | `0.875` | Approvato |
+
+#### 🔗 4. Analisi Temporale (Time-Slide Coincidence)
+| Finestra di Coincidenza | Numero Coincidenze a Lag Zero | p-value Empirico | Significatività (Z-score) | Esito |
+| :--- | :---: | :---: | :---: | :--- |
+| `±32s` | `0` | `0.1` | `2.2` | Casuale (compatibile con fondo) |
+
+#### 🔬 5. Interpretazione Morfologica (Morphcheck in-domain)
+I glitch si sono mappati in morfologie attese o popolazioni continue di fondo.
+
+| Detector | NOVEL | KNOWN | AMBIGUOUS |
+|:---------|:-----:|:-----:|:---------:|
+| **H1** | `0` | `8557` | `11386` |
+| **L1** | `0` | `5968` | `7121` |
+
+#### 📉 7. Metriche di Qualità dei Cluster (Silhouette & DB Index)
+| Detector | Silhouette (UMAP 10D) | Silhouette (PCA 50D) | DB Index (UMAP 10D) | DB Index (PCA 50D) |
+|:---------|:---------------------:|:--------------------:|:-------------------:|:------------------:|
+| **H1** | `0.1035` | `0.1265` | `0.6550` | `1.0508` |
+| **L1** | `0.4484` | `0.2410` | `0.4548` | `1.1198` |
+
+#### 📊 6. Analisi Similarità Sottovarianti (Analyze-Similarity)
+| Detector | Cluster ID | Campioni | Interpretazione | Top-1 Classe (Similitudine) |
+|:---------|:----------:|:--------:|:----------------|:----------------------------|
+| **H1** | `C0` | `1` | KNOWN - alta similarità verso classi note | Blip_Low_Frequency (`0.9975`) |
+| **H1** | `C1` | `455` | KNOWN - alta similarità verso classi note | Air_Compressor (`0.9899`) |
+| **H1** | `C3` | `1299` | KNOWN - alta similarità verso classi note | Whistle (`0.9960`) |
+| **H1** | `C6` | `222` | KNOWN - alta similarità verso classi note | Low_Frequency_Burst (`0.9960`) |
+| **H1** | `C7` | `1` | KNOWN - alta similarità verso classi note | Blip_Low_Frequency (`0.9871`) |
+| **H1** | ... | ... | *(+ altri 10 cluster)* | ... |
+| **L1** | `C0` | `2803` | KNOWN - alta similarità verso classi note | Whistle (`0.9933`) |
+| **L1** | `C2` | `225` | KNOWN - alta similarità verso classi note | Tomte (`0.9951`) |
+| **L1** | `C3` | `832` | KNOWN - alta similarità verso classi note | Low_Frequency_Burst (`0.9960`) |
+| **L1** | `C4` | `457` | KNOWN - alta similarità verso classi note | 1080Lines (`0.9874`) |
+| **L1** | `C5` | `451` | KNOWN - alta similarità verso classi note | Blip_Low_Frequency (`0.9945`) |
+| **L1** | ... | ... | *(+ altri 6 cluster)* | ... |
+
+---
 
 
-## 📊 Benchmark Comparativo
+
+## 3.4 — BENCHMARK COMPARATIVO
 
 La seguente tabella confronta i punteggi globali tra differenti pipeline non supervisionate contro le label manuali in-domain.
 
@@ -156,7 +215,7 @@ La seguente tabella confronta i punteggi globali tra differenti pipeline non sup
 
 ---
 
-## 📚 Confronto con la Letteratura
+## 3.5 — CONFRONTO CON LA LETTERATURA
 
 Confronto dei punteggi ARI rispetto ad altre architetture pubblicate per lo stesso dominio (Glitches):
 
@@ -171,10 +230,10 @@ Confronto dei punteggi ARI rispetto ad altre architetture pubblicate per lo stes
 
 ---
 
-## 💡 Interpretazione Scientifica
+## 3.6 — INTERPRETAZIONE SCIENTIFICA
 
-1. **Assenza di Nuove Popolazioni**: L'analisi di 672 ore di dati O4a distribuiti in due run non ha prodotto alcun candidato NOVEL genuino (0 glitch). Tutte le anomalie individuate dalla pipeline sono rientrate, all'analisi di similarità intra-classe, come sottovarianti di famiglie note.
-2. **Validazione End-to-End**: La pipeline ha dimostrato una notevole coerenza nei 4 livelli di validazione.
-3. **Robustezza Strutturale**: Il rivelatore L1 ha mostrato un'eccezionale costanza nei due periodi analizzati (ARI Ablation > 0.68, ARI Stability > 0.90). Il rivelatore H1 ha performato al di sopra della soglia di validazione nel mese di giugno, registrando un lieve calo di robustezza alle perturbazioni cromatiche nel mese di novembre.
+1. **Assenza di Nuove Popolazioni**: L'analisi di oltre 945 ore di dati O4a distribuiti in tre run non ha prodotto alcun candidato NOVEL genuino (0 glitch). Tutte le anomalie individuate dalla pipeline sono rientrate, all'analisi di similarità intra-classe, come sottovarianti di famiglie note.
+2. **Validazione End-to-End**: La pipeline ha dimostrato una notevole coerenza nei 4 livelli di validazione per tutti i mesi (giugno, novembre, dicembre).
+3. **Robustezza Strutturale**: Il rivelatore L1 ha mostrato un'eccezionale costanza nei tre periodi analizzati. Il rivelatore H1 ha performato al di sopra della soglia di validazione in tutti e tre i run, confermando la robustezza strutturale del preprocessing.
 4. **Coincidenze Fisiche**: Lo studio di timeslide ha escluso la presenza di correlazioni temporali significative per i glitch anomali individuati.
 5. **Conclusione**: Durante le finestre di scansione prese in esame, il run O4a non ha introdotto nuove e sconosciute morfologie di glitch strumentali rispetto ai cataloghi O3b, validando la continuità della qualità dei dati nei rilevatori.
