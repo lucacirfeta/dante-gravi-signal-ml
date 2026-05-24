@@ -156,8 +156,9 @@ export GWPY_CACHE=1         # Linux/macOS
 pip install -r requirements.txt
 ```
 
-> **Note on GPU:** The pipeline runs fully on CPU. Encoding ~7000 spectrograms
-> takes ~25 min on CPU — acceptable for batch workloads. Attualmente, le GPU RTX 5070 Blackwell sm_120 non sono supportate da PyTorch stable.
+> **Note on GPU:** The pipeline automatically detects and uses the best available
+> accelerator (CUDA → MPS → CPU). See [Hardware & Performance](#-hardware--performance)
+> below for device compatibility.
 
 ---
 
@@ -203,13 +204,41 @@ Tutti i risultati scientifici, validazioni e benchmark prodotti dalla pipeline s
 
 ---
 
+## ⚡ Hardware & Performance
+
+The pipeline automatically detects the best available hardware accelerator at startup:
+
+| Device Target | Support Status | Notes |
+|:---|:---|:---|
+| **CUDA** (RTX 30XX / 40XX) | ✅ Full Native Support | Auto-detected and allocated. |
+| **CUDA** (RTX 50XX / Blackwell sm_120) | ⚠️ Requires Nightly Build | Requires cu128 toolkit (see below). |
+| **Apple MPS** (Silicon M1/M2/M3/M4) | ✅ Full Native Support | Auto-allocated via Metal Framework. |
+| **CPU** (x86_64 / ARM) | ✅ Safe Fallback | Always active when no accelerator is available. |
+
+Batch sizes are auto-tuned per device type (CUDA=64, MPS=32, CPU=16) and configurable in `config.yaml`.
+
+### Configuration for Blackwell GPUs (RTX 5070)
+
+PyTorch stable does not yet include pre-compiled kernels for `sm_120` architecture.
+To unlock GPU acceleration on Blackwell hardware:
+
+```bash
+pip uninstall torch torchvision -y
+pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu128
+```
+
+The pipeline will automatically detect Blackwell GPUs and fall back to CPU with a
+WARNING log if the nightly build is not installed.
+
+---
+
 ## ⚠️ Known Limitations
 
 1. **UMAP distortion:** UMAP distorce le distanze globali per preservare la struttura locale. Cluster anomali separati da UMAP potrebbero riflettere artefatti di preprocessing piuttosto che morfologie fisicamente distinte. L'Ablation study (ARI > 0.999) aiuta a validarne la robustezza.
 2. **Domain transfer assumption:** DINOv2 è addestrato su immagini naturali. Il transfer learning su spettrogrammi GW è basato su euristiche e validato sul campo tramite *morphcheck*.
 3. **Single Q-transform window:** L'utilizzo fisso dei parametri standard (qrange=[4,64], finestra di 32s) può oscurare strutture transienti ad alta frequenza o broadband lenti.
 4. **Divergenza dal Ground Truth:** Il clustering non supervisionato raggiunge un ARI relativamente basso rispetto alle label manuali (Gravity Spy). Questo indica che la similarità morfologica visiva (DINOv2) cattura caratteristiche intrinseche diverse dalle convenzioni classiche umane.
-5. **No GPU acceleration:** Essendo CPU-only, il task di scaling per l'intero O4a può richiedere ore/giorni se eseguito in modalità incrementale (vedi opzione `--continue-run` in `CLI_REFERENCE.md`).
+5. **Blackwell GPU (sm_120):** PyTorch stable non include ancora i kernel per sm_120. Usare la build nightly cu128 per accelerazione hardware su RTX 5070. Il fallback su CPU è automatico.
 6. **GUI dependency:** Il pacchetto `Gooey` per l'interfaccia `gui.py` è opzionale e va installato manualmente se necessario.
 
 ---

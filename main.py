@@ -1881,6 +1881,10 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
 
     _log_run_header(run, str(detectors) if detectors else "AUTO", session_id)
 
+    # Hardware diagnostics — log active device at startup
+    from src.utils import get_device
+    active_device = get_device(verbose=True)
+
     result = run_full_analysis(
         session_id=session_id,
         detectors=detectors,
@@ -1948,6 +1952,10 @@ def cmd_scan_live(args: argparse.Namespace) -> None:
     run = _resolve_run(args)
     session_id = getattr(args, "session_id", None)
     hours = getattr(args, "hours", None)
+
+    # Hardware diagnostics — log active device at startup
+    from src.utils import get_device
+    active_device = get_device(verbose=True)
 
     run_scan_live(
         detector=args.detector,

@@ -22,20 +22,71 @@ from astropy.time import Time
 # ---------------------------------------------------------------------------
 
 
-def get_device() -> str:
-    """Return the best available compute device: ``'cuda'``, ``'mps'``, or ``'cpu'``.
+def get_device(verbose: bool = True) -> torch.device:
+    """Detect the optimal compute device available.
 
-    Used by :class:`~src.encoder.DINOv2Encoder` to automatically select
-    hardware acceleration when available.
+    Priority: CUDA (with compute validation) → MPS → CPU.
+    Gracefully handles PyTorch stable limitations for Blackwell
+    (sm_120) GPUs by catching missing-kernel errors at runtime.
+
+    Args:
+        verbose: If ``True``, log the selected device at INFO level.
 
     Returns:
-        Device string compatible with ``torch.device()``.
+        A :class:`torch.device` pointing to the best usable accelerator.
     """
+    _logger = logging.getLogger("antigravity")
+
+    # 1. Test CUDA — run a real compute op to catch missing sm_120 kernels
     if torch.cuda.is_available():
-        return "cuda"
-    if torch.backends.mps.is_available():
-        return "mps"
-    return "cpu"
+        try:
+            test_tensor = torch.tensor([1.0, 2.0, 3.0]).cuda()
+            _ = test_tensor * 2.0
+
+            device_name = torch.cuda.get_device_name(0)
+            capability = torch.cuda.get_device_capability(0)
+            if verbose:
+                _logger.info(
+                    "GPU Acceleration Active: %s (sm_%d%d)",
+                    device_name,
+                    capability[0],
+                    capability[1],
+                )
+            return torch.device("cuda:0")
+
+        except RuntimeError as e:
+            err_msg = str(e)
+            if "no kernel image" in err_msg or "sm_120" in err_msg:
+                device_name = torch.cuda.get_device_name(0)
+                capability = torch.cuda.get_device_capability(0)
+                _logger.warning(
+                    "\u26a0\ufe0f GPU %s (sm_%d%d) detected but NOT supported "
+                    "by current PyTorch Stable.\n"
+                    "Falling back smoothly to CPU to prevent crash.\n"
+                    "To enable full GPU acceleration on Blackwell, run:\n"
+                    "  pip install --pre torch torchvision "
+                    "--index-url https://download.pytorch.org/whl/nightly/cu128",
+                    device_name,
+                    capability[0],
+                    capability[1],
+                )
+            else:
+                _logger.warning(
+                    "CUDA initialization failed (%s). Falling back to CPU.", e
+                )
+
+    # 2. Test Apple Silicon MPS
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        if verbose:
+            _logger.info("Apple MPS Acceleration Active (Metal Framework)")
+        return torch.device("mps")
+
+    # 3. Fallback
+    if verbose:
+        _logger.info(
+            "No hardware accelerator usable. Running on native CPU execution."
+        )
+    return torch.device("cpu")
 
 
 # ---------------------------------------------------------------------------

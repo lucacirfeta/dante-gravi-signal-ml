@@ -27,9 +27,33 @@ from sklearn.cluster import HDBSCAN
 from sklearn.decomposition import PCA
 
 from src.dpmm_clustering import run_dpmm
-from src.utils import setup_logger
+import torch
+from src.utils import get_device, setup_logger
 
 logger: logging.Logger = setup_logger(__name__)
+
+
+def _gpu_l2_normalize(embeddings: np.ndarray) -> np.ndarray:
+    """L2-normalize embeddings on GPU when available, else NumPy fallback.
+
+    Args:
+        embeddings: Array of shape ``(N, D)``.
+
+    Returns:
+        L2-normalized array of the same shape (float32).
+    """
+    device = get_device(verbose=False)
+    if device.type in ("cuda", "mps"):
+        with torch.no_grad():
+            t = torch.from_numpy(embeddings).to(device).float()
+            t = torch.nn.functional.normalize(t, p=2, dim=1)
+            result = t.cpu().numpy()
+        logger.info("L2 normalization executed on %s", device)
+        return result
+    # CPU fallback
+    norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+    norms = np.where(norms == 0, 1.0, norms)
+    return (embeddings / norms).astype(np.float32)
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +272,9 @@ def run_full_pipeline(
         - ``hdbscan_stats``: statistics dict from HDBSCAN
         - ``anomalous_clusters``: list of anomalous cluster IDs
     """
+    # --- Step 0: Ensure L2-normalized embeddings (GPU-accelerated) ---
+    embeddings = _gpu_l2_normalize(embeddings)
+
     # --- Step 1: PCA ---
     pca_reduced, pca_variance = run_pca(
         embeddings,

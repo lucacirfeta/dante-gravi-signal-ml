@@ -119,3 +119,17 @@ performance:
 timeslide:
   iterations: 100   # number of random time-shift trials
   window: 32        # coincidence window in seconds (= segment duration)
+
+# Hardware acceleration
+hardware:
+  # Compute target selector: "auto" (recommended), "cuda", "mps", "cpu"
+  device: "auto"
+
+  # Batch sizes for DINOv2 inference per device type (prevent OOM)
+  cuda_batch_size: 64
+  mps_batch_size: 32
+  cpu_batch_size: 16
+
+  # Note: RTX 5070 (Blackwell sm_120) requires PyTorch nightly (cu128+).
+  # If device is "auto", the system falls back to CPU when sm_120 kernels
+  # are not available in the installed PyTorch build.

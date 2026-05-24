@@ -8,6 +8,7 @@ from collections import Counter
 from pathlib import Path
 
 import numpy as np
+import torch
 
 from src.utils import setup_logger
 
@@ -18,28 +19,64 @@ def cosine_knn_search(
     reference_embeddings: np.ndarray,
     reference_labels: np.ndarray,
     k: int = 5,
+    device: torch.device | None = None,
 ) -> list[dict]:
-    """Perform KNN search using cosine similarity."""
-    # Assuming embeddings are already L2-normalized
-    similarities = query_embeddings @ reference_embeddings.T
-    
+    """Perform KNN search using cosine similarity (GPU-accelerated).
+
+    Uses PyTorch tensor algebra on the best available device for the
+    matrix multiplication and top-K extraction.  Embeddings are assumed
+    to be L2-normalized so that ``dot(q, r) == cosine_similarity(q, r)``.
+
+    Args:
+        query_embeddings: Query array of shape ``(Q, D)``.
+        reference_embeddings: Reference array of shape ``(R, D)``.
+        reference_labels: Label array of shape ``(R,)``.
+        k: Number of nearest neighbours to retrieve.
+        device: Compute device override.  Defaults to auto-detection.
+
+    Returns:
+        List of dicts, one per query, with keys ``query_idx``,
+        ``neighbors``, ``top_label``, ``top_similarity``,
+        ``label_distribution``.
+    """
+    from src.utils import get_device
+
+    if device is None:
+        device = get_device(verbose=False)
+
+    # Transfer to accelerator in FP32
+    q_tensor = torch.from_numpy(query_embeddings).to(device).float()
+    r_tensor = torch.from_numpy(reference_embeddings).to(device).float()
+
+    with torch.no_grad():
+        # Cosine similarity via dot product on L2-normalised vectors
+        similarity_matrix = torch.mm(q_tensor, r_tensor.T)
+
+        # Top-K extraction on device
+        topk_values, topk_indices = torch.topk(
+            similarity_matrix, k=min(k, r_tensor.shape[0]), dim=1
+        )
+
+        # Move to host only for final result construction
+        sim_values = topk_values.cpu().numpy()
+        idx_nearest = topk_indices.cpu().numpy()
+
     results = []
-    for i, sim_row in enumerate(similarities):
-        # Get indices of top-K largest similarities
-        top_indices = np.argsort(sim_row)[-k:][::-1]
-        
+    for i in range(len(query_embeddings)):
         neighbors = []
         labels_in_top_k = []
-        for rank, idx in enumerate(top_indices):
-            label = str(reference_labels[idx])
-            sim = float(sim_row[idx])
-            neighbors.append({"label": label, "similarity": sim, "rank": rank + 1})
+        for rank_idx in range(sim_values.shape[1]):
+            label = str(reference_labels[idx_nearest[i, rank_idx]])
+            sim = float(sim_values[i, rank_idx])
+            neighbors.append(
+                {"label": label, "similarity": sim, "rank": rank_idx + 1}
+            )
             labels_in_top_k.append(label)
-            
+
         label_distribution = dict(Counter(labels_in_top_k))
         top_label = max(label_distribution.items(), key=lambda x: x[1])[0]
         top_similarity = neighbors[0]["similarity"]
-        
+
         results.append({
             "query_idx": i,
             "neighbors": neighbors,
@@ -47,7 +84,7 @@ def cosine_knn_search(
             "top_similarity": top_similarity,
             "label_distribution": label_distribution,
         })
-        
+
     return results
 
 def assess_novelty(

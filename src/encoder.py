@@ -28,7 +28,7 @@ from PIL import Image
 from torchvision import transforms
 from tqdm import tqdm
 
-from src.utils import get_device, setup_logger
+from src.utils import get_device, load_config, setup_logger
 
 logger: logging.Logger = setup_logger(__name__)
 
@@ -79,19 +79,36 @@ class DINOv2Encoder:
     UMAP + HDBSCAN clustering.
 
     Args:
-        device: Compute device.  Defaults to auto-detection
-            (``cuda`` / ``mps`` / ``cpu``).
+        device: Compute device.  Defaults to auto-detection via
+            :func:`~src.utils.get_device` (CUDA → MPS → CPU).
         batch_size: Default batch size for :meth:`extract_batch`.
-            Default **32**.
+            When ``None`` (default), auto-selects based on device
+            type using values from ``config.yaml`` hardware section
+            (CUDA=64, MPS=32, CPU=16).
     """
 
     def __init__(
         self,
-        device: str | None = None,
-        batch_size: int = 32,
+        device: str | torch.device | None = None,
+        batch_size: int | None = None,
     ) -> None:
-        self.device: str = device or get_device()
-        self.batch_size: int = batch_size
+        if device is not None:
+            self.device: torch.device = torch.device(device) if isinstance(device, str) else device
+        else:
+            self.device = get_device()
+
+        # Adaptive batch sizing from config — overridden by explicit param
+        if batch_size is not None:
+            self.batch_size: int = batch_size
+        else:
+            cfg = load_config()
+            hw_cfg = cfg.get("hardware", {})
+            _batch_defaults = {
+                "cuda": hw_cfg.get("cuda_batch_size", 64),
+                "mps": hw_cfg.get("mps_batch_size", 32),
+                "cpu": hw_cfg.get("cpu_batch_size", 16),
+            }
+            self.batch_size = _batch_defaults.get(self.device.type, 16)
 
         # Load DINOv2-Reg ViT-S/14 via torch.hub
         self.model: torch.nn.Module = torch.hub.load(
@@ -110,8 +127,9 @@ class DINOv2Encoder:
         self.transform: transforms.Compose = build_dinov2_transform()
 
         logger.info(
-            "DINOv2-Reg ViT-S/14 loaded on %s (frozen, eval mode)",
+            "DINOv2 Encoder initialized on %s with batch_size=%d",
             self.device,
+            self.batch_size,
         )
 
     # ------------------------------------------------------------------
@@ -265,7 +283,7 @@ class DINOv2Encoder:
             "n_samples": len(sorted_paths),
             "shape": list(embeddings.shape),
             "files": [str(p) for p in sorted_paths],
-            "device": self.device,
+            "device": str(self.device),
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         json_path = output_path.with_suffix(".json")
