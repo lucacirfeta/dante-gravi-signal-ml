@@ -99,26 +99,26 @@ Raw Strain Data (GWOSC O2–O4a)
 └─────────────────────────────────────────────────────┘
 ```
 
-### Critical Design Choices (Context per LLM/Sviluppatori)
+### Critical Design Choices (Context for LLMs/Developers)
 
-- **DINOv2 with Registers (`dinov2_vits14_reg`)**: Usiamo la variante con "register tokens". Senza questi token, i Vision Transformer tendono ad allocare feature globali in patch spaziali arbitrarie (causando artefatti). I register tokens ripuliscono l'embedding, rendendo il clustering geometricamente più coerente.
-- **DPMM vs HDBSCAN**: L'algoritmo di default è DPMM (Dirichlet Process Mixture Model) con metrica Cosine. HDBSCAN causava un enorme bias di densità (unendo >80% dei campioni in un mega-cluster) guidato dall'intensità luminosa (colormap). DPMM risolve questo problema catturando forme geometriche su uno spazio UMAP 10D con metrica coseno. Per l'identificazione dei cluster anomali, DPMM calcola la log-likelihood di ogni campione rispetto alla miscela: i cluster in cui >50% dei membri hanno log-likelihood sotto il 5° percentile vengono marcati come anomali. Questo criterio è coerente con l'analisi di stabilità.
-- **Due Pass di UMAP**: UMAP 10D + Cosine per il clustering (mantiene la topologia multidimensionale adatta a Gaussian Mixture), seguito da UMAP 2D per la pura visualizzazione scatterplot.
-- **Colormap `cividis`**: Sostituisce `viridis` per garantire un'uniformità percettiva e ridurre bias artefatti nel rendering geometrico.
-- **Hardware Acceleration & Pipelined Execution**: Pieno supporto nativo per NVIDIA CUDA (con cuDNN auto-tuner attivato per `inference_mode`) e Apple MPS. Sfrutta un approccio avanzato di *Micro-Locking* a livello di batch: la lettura e decodifica delle immagini avviene in modo asincrono multi-thread su CPU, mentre la GPU esegue inferenza matematica pura con lock millisecondi e svuotamento istantaneo della VRAM.
-- **Isolamento per Session ID**: Qualsiasi run (scan o analisi) genera un ID univoco basato sul timestamp. Ogni step intermedio (spettrogrammi, embeddings, json) è salvato isolatamente per evitare sovrascritture incrociate.
+- **DINOv2 with Registers (`dinov2_vits14_reg`)**: We use the variant with "register tokens". Without these tokens, Vision Transformers tend to allocate global features in arbitrary spatial patches (causing artifacts). Register tokens clean up the embedding, making the clustering geometrically more coherent.
+- **DPMM vs HDBSCAN**: The default algorithm is DPMM (Dirichlet Process Mixture Model) with Cosine metric. HDBSCAN caused a huge density bias (merging >80% of samples in a mega-cluster) driven by luminous intensity (colormap). DPMM solves this issue by capturing geometric shapes on a 10D UMAP space with cosine metric. For anomalous cluster identification, DPMM computes the log-likelihood of each sample relative to the mixture: clusters where >50% of the members have log-likelihood under the 5th percentile are marked as anomalous. This criterion is consistent with the stability analysis.
+- **Two UMAP Passes**: UMAP 10D + Cosine for clustering (maintains multidimensional topology suitable for Gaussian Mixture), followed by UMAP 2D purely for scatterplot visualization.
+- **Colormap `cividis`**: Replaces `viridis` to guarantee perceptual uniformity and reduce artifact bias in geometric rendering.
+- **Hardware Acceleration & Pipelined Execution**: Full native support for NVIDIA CUDA (with cuDNN auto-tuner enabled for `inference_mode`) and Apple MPS. Leverages an advanced *Micro-Locking* approach at the batch level: image reading and decoding happens asynchronously via multi-threading on the CPU, while the GPU executes pure mathematical inference with millisecond locks and instantaneous VRAM flushing.
+- **Session ID Isolation**: Any run (scan or analysis) generates a unique ID based on the timestamp. Each intermediate step (spectrograms, embeddings, json) is saved in isolation to prevent cross-overwrites.
 
 ---
 
 ## 📂 Project Structure & Naming Conventions
 
-Tutti gli output generati dalla pipeline seguono rigorosamente questa convenzione di path `data/runs/<run>/<session_id>/...`.
+All pipeline-generated outputs strictly follow this path convention: `data/runs/<run>/<session_id>/...`.
 ```text
 gravi-signal-ml/
 ├── data/                             # Git-ignored data artifacts
 │   ├── raw/                          # .hdf5 strain downloads
-│   ├── runs/<run>/<session_id>/      # Isolamento completo delle sessioni (es. O4a/20260510_143022)
-│   │   ├── spectrograms/             # Q-transform PNGs (es. h1, l1)
+│   ├── runs/<run>/<session_id>/      # Complete session isolation (e.g. O4a/20260510_143022)
+│   │   ├── spectrograms/             # Q-transform PNGs (e.g. h1, l1)
 │   │   ├── embeddings/               # DINOv2 .npy arrays + .json metadata
 │   │   ├── clusters/                 # Cluster reports, galleries, morphcheck
 │   │   ├── reports/                  # Unified full-analysis reports
@@ -126,14 +126,14 @@ gravi-signal-ml/
 │   │   ├── stability/                # Robustness analysis (ARI metrics)
 │   │   ├── timeslide/                # Time-slide background estimation
 │   │   └── logs/                     # Session-specific log files
-│   └── reference/                    # Static — reference indexes (es. indomain_index.npz)
-├── src/                              # Source code python (moduli core)
+│   └── reference/                    # Static — reference indexes (e.g. indomain_index.npz)
+├── src/                              # Python source code (core modules)
 ├── tests/                            # Pytest suite
-├── docs/                             # Documentazione aggiuntiva
-├── main.py                           # CLI entry point principale
-├── config.yaml                       # Configurazione globale (parametri clustering, UMAP, scan)
-├── CLI_REFERENCE.md                  # Manuale completo dei comandi CLI
-└── RESULTS.md                        # Documento contenente i risultati scientifici e benchmark
+├── docs/                             # Additional documentation
+├── main.py                           # Main CLI entry point
+├── config.yaml                       # Global configuration (clustering, UMAP, scan params)
+├── CLI_REFERENCE.md                  # Complete CLI commands manual
+└── RESULTS.md                        # Document containing scientific results and benchmarks
 ```
 
 ---
@@ -166,43 +166,43 @@ pip install -r requirements.txt
 
 ## 🚀 Usage & Quick Start
 
-Per l'elenco completo di tutti i comandi disponibili, opzioni e subcommand, consultare **[CLI_REFERENCE.md](CLI_REFERENCE.md)**.
+For the complete list of all available commands, options, and subcommands, consult **[CLI_REFERENCE.md](CLI_REFERENCE.md)**.
 
-### 🧙‍♂️ Wizard Interattivo
-Puoi avviare il tool in modalità interattiva semplicemente lanciando il comando base senza parametri:
+### 🧙‍♂️ Interactive Wizard
+You can start the tool in interactive mode simply by running the base command without parameters:
 ```bash
 python main.py
 ```
-Il wizard rileverà automaticamente tutti i comandi implementati (anche quelli futuri), fornendo aiuti contestuali e suggerimenti intelligenti (Smart Defaults) per la configurazione dei run.
+The wizard will automatically detect all implemented commands (including future ones), providing contextual help and smart suggestions (Smart Defaults) for run configuration.
 
-### Esempio di utilizzo End-to-End
-1. **Generazione In-Domain Reference:**
+### End-to-End Usage Example
+1. **In-Domain Reference Generation:**
    ```bash
    python main.py build-indomain-reference --output data/reference/indomain_index.npz --detector H1 --run O3b
    ```
-2. **Scan Automatico + Analisi Completa:**
-   Effettua lo scan su H1 e L1 sincronizzati e invoca l'intero loop ML.
+2. **Automatic Scan + Full Analysis:**
+   Performs the scan on synchronized H1 and L1 and invokes the entire ML loop.
    ```bash
    python main.py scan-extended --workers 6 --run O4a --full-analysis True
    ```
-   > I risultati verranno salvati in `data/runs/o4a/<SESSION_ID>/reports/`.
+   > The results will be saved in `data/runs/o4a/<SESSION_ID>/reports/`.
 
 ### Autopilot & Threshold Calibration
-1. **Calibrazione soglie log-likelihood (Clustering):**
+1. **Log-likelihood Threshold Calibration (Clustering):**
    ```bash
    python main.py calibrate-loglikelihood --reference data/reference/indomain_index.npz --percentile 5
    ```
-2. **Calibrazione soglie per-classe (Scan Live):**
+2. **Per-class Threshold Calibration (Scan Live):**
    ```bash
    python main.py calibrate-threshold --reference data/reference/indomain_index.npz --percentile 5
    ```
-3. **Scan live con classificazione KNOWN/NOVEL:**
+3. **Live Scan with KNOWN/NOVEL Classification:**
    ```bash
    python main.py scan-live --detector H1 --run O4a --workers 4
    ```
-   > I risultati verranno salvati in `data/autopilot/<SESSION_ID>/`. Se il numero di NOVEL supera `--min-novel`, il comando suggerirà di usare la pipeline standard per il clustering.
+   > The results will be saved in `data/autopilot/<SESSION_ID>/`. If the NOVEL count exceeds `--min-novel`, the command will suggest using the standard pipeline for clustering.
 
-Tutti i risultati scientifici, validazioni e benchmark prodotti dalla pipeline sono disponibili in **[RESULTS.md](RESULTS.md)**.
+All scientific results, validations, and benchmarks produced by the pipeline are available in **[RESULTS.md](RESULTS.md)**.
 
 ---
 
@@ -236,12 +236,12 @@ WARNING log if the nightly build is not installed.
 
 ## ⚠️ Known Limitations
 
-1. **UMAP distortion:** UMAP distorce le distanze globali per preservare la struttura locale. Cluster anomali separati da UMAP potrebbero riflettere artefatti di preprocessing piuttosto che morfologie fisicamente distinte. L'Ablation study (ARI > 0.999) aiuta a validarne la robustezza.
-2. **Domain transfer assumption:** DINOv2 è addestrato su immagini naturali. Il transfer learning su spettrogrammi GW è basato su euristiche e validato sul campo tramite *morphcheck*.
-3. **Single Q-transform window:** L'utilizzo fisso dei parametri standard (qrange=[4,64], finestra di 32s) può oscurare strutture transienti ad alta frequenza o broadband lenti.
-4. **Divergenza dal Ground Truth:** Il clustering non supervisionato raggiunge un ARI relativamente basso rispetto alle label manuali (Gravity Spy). Questo indica che la similarità morfologica visiva (DINOv2) cattura caratteristiche intrinseche diverse dalle convenzioni classiche umane.
-5. **Blackwell GPU (sm_120):** PyTorch stable non include ancora i kernel per sm_120. Usare la build nightly cu128 per accelerazione hardware su RTX 5070. Il fallback su CPU è automatico.
-6. **GUI dependency:** Il pacchetto `Gooey` per l'interfaccia `gui.py` è opzionale e va installato manualmente se necessario.
+1. **UMAP distortion:** UMAP distorts global distances to preserve local structure. Anomalous clusters separated by UMAP might reflect preprocessing artifacts rather than physically distinct morphologies. The Ablation study (ARI > 0.999) helps validate its robustness.
+2. **Domain transfer assumption:** DINOv2 is trained on natural images. Transfer learning on GW spectrograms is based on heuristics and field-validated through *morphcheck*.
+3. **Single Q-transform window:** The fixed use of standard parameters (qrange=[4,64], 32s window) may obscure high-frequency transient structures or slow broadbands.
+4. **Ground Truth Divergence:** Unsupervised clustering achieves a relatively low ARI compared to manual labels (Gravity Spy). This indicates that visual morphological similarity (DINOv2) captures intrinsic features different from classical human conventions.
+5. **Blackwell GPU (sm_120):** Stable PyTorch does not yet include kernels for sm_120. Use the cu128 nightly build for hardware acceleration on RTX 5070. The CPU fallback is automatic.
+6. **GUI dependency:** The `Gooey` package for the `gui.py` interface is optional and must be installed manually if required.
 
 ---
 
@@ -259,4 +259,4 @@ pytest tests/ -v --cov=src --cov-report=term-missing
 Contributions are welcome. This project is open-source under the **Apache License 2.0**.
 See [LICENSE](LICENSE) for details.
 
-Per le citazioni, fare riferimento al file `CITATION.cff` o al README sorgente.
+For citations, please refer to the `CITATION.cff` file or the source README.
