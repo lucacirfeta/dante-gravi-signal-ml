@@ -53,9 +53,12 @@ def get_device(verbose: bool = True) -> torch.device:
                     capability[1],
                 )
             
-            # Attivazione dell'auto-tuner cuDNN per massima efficienza sulle convoluzioni 
-            # (i tensori del DINOv2 hanno sempre dimensione fissa 256x256).
-            torch.backends.cudnn.benchmark = True
+            # L'auto-tuner cuDNN esaurisce la memoria durante l'ablation se i tensori cambiano.
+            # Lo abilitiamo solo se l'utente lo richiede esplicitamente.
+            if "--cudnn-autotune" in sys.argv:
+                torch.backends.cudnn.benchmark = True
+            else:
+                torch.backends.cudnn.benchmark = False
             
             return torch.device("cuda:0")
 

@@ -168,6 +168,7 @@ class DINOv2Encoder:
         image_paths: list[Path],
         batch_size: int | None = None,
         gpu_lock: threading.Lock | None = None,
+        num_workers: int | None = None,
     ) -> np.ndarray:
         """Extract L2-normalized embeddings for a list of images.
 
@@ -196,7 +197,7 @@ class DINOv2Encoder:
             def _load_img(p: Path) -> torch.Tensor:
                 return self.transform(Image.open(p))
                 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
                 tensors_list = list(executor.map(_load_img, batch_paths))
             tensors_cpu = torch.stack(tensors_list)
 
@@ -231,7 +232,7 @@ class DINOv2Encoder:
                     def _load_sub_img(p: Path) -> torch.Tensor:
                         return self.transform(Image.open(p))
                         
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
                         sub_tensors_list = list(executor.map(_load_sub_img, sub_batch))
                     sub_tensors_cpu = torch.stack(sub_tensors_list)
 
@@ -269,6 +270,7 @@ class DINOv2Encoder:
         output_path: Path,
         batch_size: int = 32,
         gpu_lock: threading.Lock | None = None,
+        num_workers: int | None = None,
     ) -> None:
         """Scan a directory for PNGs, extract embeddings, and save.
 
@@ -294,7 +296,7 @@ class DINOv2Encoder:
             )
 
         embeddings: np.ndarray = self.extract_batch(
-            sorted_paths, batch_size=batch_size, gpu_lock=gpu_lock
+            sorted_paths, batch_size=batch_size, gpu_lock=gpu_lock, num_workers=num_workers
         )
 
         # Ensure output directory exists

@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
 import json
 import logging
+import gc
 import threading
 import concurrent.futures
 from pathlib import Path
@@ -71,9 +77,8 @@ def extract_perturbed_embeddings(
             perturbed_img = apply_perturbation(img, method)
             # The encoder transform already ensures it's RGB and normalizes it.
             return encoder.transform(perturbed_img)
-            
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            tensors = list(executor.map(_process_image, batch_paths))
+        # Rimosso ThreadPoolExecutor per evitare il deadlock GPU
+        tensors = [_process_image(p) for p in batch_paths]
             
         tensors_stack_cpu = torch.stack(tensors)
         
@@ -159,6 +164,11 @@ def run_ablation_study(
             
     for method in conditions:
         logger.info("--- Ablation Condition: %s ---", method)
+        
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
         embeddings = embeddings_dict[method]
             
         # Run full clustering pipeline

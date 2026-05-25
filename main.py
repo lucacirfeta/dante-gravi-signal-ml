@@ -1421,19 +1421,16 @@ def cmd_ablation(args: argparse.Namespace) -> None:
     baseline_result = run_full_pipeline(embeddings, cluster_cfg)
     original_labels = baseline_result["labels"]
     
-    # 3. Initialize Encoder once
-    encoder = DINOv2Encoder(batch_size=args.batch_size)
-    
     # 4. Run Ablation
     actual_session_id = session_id or "default_session"
     run_ablation_study(
         original_labels=original_labels,
         image_paths=image_paths,
-        encoder=encoder,
         cluster_cfg=cluster_cfg,
         output_dir=output_dir,
         session_id=actual_session_id,
-        detector=detector or "H1"
+        detector=detector or "H1",
+        batch_size=args.batch_size
     )
 
 
@@ -1995,6 +1992,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    
+    parser.add_argument(
+        "--cudnn-autotune",
+        action="store_true",
+        help="Enable cuDNN auto-tuner for max convolution efficiency (may increase GPU memory usage).",
+    )
+    
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # --- fetch ---

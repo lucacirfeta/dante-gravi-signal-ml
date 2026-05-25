@@ -39,8 +39,7 @@ def test_cmd_fetch_raw_fresh(
         "--detector", "H1",
         "--hours", "1.0",
         "--output-dir", str(temp_raw_dir),
-        "--segment-duration", "4096",
-        "--no-cache-raw", "False"
+        "--segment-duration", "4096"
     ])
 
     cmd_fetch_raw(args)
@@ -82,7 +81,6 @@ def test_cmd_fetch_raw_continue(
         "--hours", "2.28",  # 2.28 hours is 8208 seconds
         "--output-dir", str(temp_raw_dir),
         "--segment-duration", "4096",
-        "--no-cache-raw", "False",
         "--continue"
     ])
 

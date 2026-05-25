@@ -21,16 +21,15 @@ class TestContinueRunCLIArgs:
     def parser(self):
         return build_parser()
 
-    def test_full_analysis_accepts_continue_run_defaults(self, parser):
-        args = parser.parse_args(["full-analysis", "--session-id", "20260510_143022"])
+    def test_scan_extended_accepts_continue_run_defaults(self, parser):
+        args = parser.parse_args(["scan-extended"])
         assert args.continue_run is False
         assert args.max_iterations == 10
         assert args.stop_date is None
 
-    def test_full_analysis_accepts_continue_run_explicit(self, parser):
+    def test_scan_extended_accepts_continue_run_explicit(self, parser):
         args = parser.parse_args([
-            "full-analysis",
-            "--session-id", "20260510_143022",
+            "scan-extended",
             "--continue-run",
             "--max-iterations", "5",
             "--stop-date", "2023-06-01 12:00:00"
