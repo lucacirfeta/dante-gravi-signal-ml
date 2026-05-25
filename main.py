@@ -1256,6 +1256,7 @@ def cmd_report(args: argparse.Namespace) -> None:
         "cluster_sizes": {int(k): v for k, v in results.get("cluster_sizes", {}).items()},
     }
     anomalous = results.get("anomalous_clusters", [])
+    anomalous_samples = results.get("anomalous_samples", [])
     
     detector_val = detector or cluster_report.get("detector", "H1")
 
@@ -1270,8 +1271,7 @@ def cmd_report(args: argparse.Namespace) -> None:
         pca_reduced,
         n_components=umap_clust_cfg.get("n_components", 10),
         n_neighbors=umap_clust_cfg.get("n_neighbors", 20),
-        min_dist=umap_clust_cfg.get("min_dist", 0.0),
-        metric=umap_clust_cfg.get("metric", "cosine"),
+        min_dist=umap_clust_cfg.get("min_dist", 0.0)
     )
 
     umap_viz_cfg = cluster_cfg.get("umap_viz", {})
@@ -1279,13 +1279,12 @@ def cmd_report(args: argparse.Namespace) -> None:
         pca_reduced,
         n_components=umap_viz_cfg.get("n_components", 2),
         n_neighbors=umap_viz_cfg.get("n_neighbors", 20),
-        min_dist=umap_viz_cfg.get("min_dist", 0.1),
-        metric=umap_viz_cfg.get("metric", "cosine"),
+        min_dist=umap_viz_cfg.get("min_dist", 0.1)
     )
 
     # 3. Regenerate plots
-    _save_umap_plot(umap_2d, labels, stats, anomalous, output_dir, detector=detector_val)
-    _save_cluster_gallery(labels, umap_10d, stats, anomalous, metadata, output_dir)
+    _save_umap_plot(umap_2d, labels, stats, anomalous, anomalous_samples, output_dir, detector=detector_val)
+    _save_cluster_gallery(labels, umap_10d, stats, anomalous, anomalous_samples, metadata, output_dir)
 
     print(f"Report generation complete. Outputs updated in {output_dir}")
 
