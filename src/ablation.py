@@ -144,6 +144,7 @@ def run_ablation_study(
     
     logger.info("Instantiating encoder for ablation embeddings extraction...")
     encoder = DINOv2Encoder(batch_size=batch_size)
+    resolved_batch_size = encoder.batch_size
     for method in conditions:
         if method == "random-baseline":
             # Generate random standard normal embeddings, and normalize them like DINOv2
@@ -155,7 +156,7 @@ def run_ablation_study(
                 encoder=encoder,
                 image_paths=image_paths,
                 method=method,
-                batch_size=batch_size,
+                batch_size=resolved_batch_size,
                 gpu_lock=gpu_lock,
             )
     del encoder
