@@ -53,22 +53,25 @@ def download_gs_classifications_csv(
     output_dir: Path,
     run: str = "O3b",
     detector: str = "H1",
+    local_csv: Path | None = None,
 ) -> Path:
     """Download the Gravity Spy ML classifications CSV from Zenodo.
 
     Tries multiple URL patterns (Zenodo filenames vary by version).
     Caches the file locally to avoid re-downloading.
+    If download fails and `local_csv` is provided, copies the local file.
 
     Args:
         output_dir: Directory to save the downloaded CSV.
         run: Observing run identifier (e.g. ``"O3b"``).
         detector: Detector identifier (e.g. ``"H1"``).
+        local_csv: Optional local path to fallback to if download fails.
 
     Returns:
         Path to the downloaded (or cached) CSV file.
 
     Raises:
-        FileNotFoundError: If all download attempts fail.
+        FileNotFoundError: If all download attempts fail and no valid local_csv is provided.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -104,6 +107,18 @@ def download_gs_classifications_csv(
             # Clean up partial download
             if csv_path.exists():
                 csv_path.unlink()
+
+    if local_csv is not None:
+        local_csv_path = Path(local_csv)
+        if local_csv_path.exists():
+            import shutil
+            logger.info("Download failed. Using local CSV fallback: %s", local_csv_path)
+            shutil.copy(local_csv_path, csv_path)
+            df = pd.read_csv(csv_path)
+            logger.info("Loaded %d classified glitches from local fallback", len(df))
+            return csv_path
+        else:
+            logger.warning("Local CSV fallback specified but not found: %s", local_csv_path)
 
     raise FileNotFoundError(
         f"Download failed. Please manually download the CSV from:\n"

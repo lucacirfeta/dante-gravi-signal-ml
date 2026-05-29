@@ -81,9 +81,8 @@ def _analyze_detector(
         session_id: str,
         run: str,
         run_lower: str,
-        cfg: dict,
         n_runs: int,
-        reference_path: str,
+        reference_path: str | None,
         batch_size: int,
         gpu_lock: threading.Lock | None = None,
 ) -> tuple[str, dict, Path]:
@@ -271,19 +270,47 @@ def _analyze_detector(
     cluster_cfg = cfg["clustering"]
 
     try:
-        morph_report_path = cluster_dir / "morphcheck_report.json"
+        from src.utils import discover_references
+        if reference_path is not None:
+            references = [Path(reference_path)]
+            auto_discovery = False
+            morph_report_path = cluster_dir / "morphcheck_report.json"
+        else:
+            references = discover_references()
+            auto_discovery = True
+            morph_report_path = cluster_dir / "morphcheck_summary.json"
 
         if morph_report_path.exists():
             logger.info("%s[%s]%s Step 2: Morphcheck report already exists. Skipping.", color, det, reset)
             with open(morph_report_path, "r", encoding="utf-8") as f:
                 morph_summary = json.load(f)
-            det_report["steps"]["morphcheck"] = {
-                "status": "SKIPPED",
-                "timestamp": step_start,
-                "novel": morph_summary.get("novel", 0),
-                "known": morph_summary.get("known", 0),
-                "ambiguous": morph_summary.get("ambiguous", 0),
-            }
+                
+            if auto_discovery:
+                # Get stats from the last reference in the summary_results
+                res = morph_summary.get("results", {})
+                if res:
+                    last_ref = list(res.values())[-1]
+                    det_report["steps"]["morphcheck"] = {
+                        "status": "SKIPPED",
+                        "timestamp": step_start,
+                        "novel": last_ref.get("novel", 0),
+                        "known": last_ref.get("known", 0),
+                        "ambiguous": last_ref.get("ambiguous", 0),
+                    }
+                else:
+                    det_report["steps"]["morphcheck"] = {
+                        "status": "SKIPPED",
+                        "timestamp": step_start,
+                        "novel": 0, "known": 0, "ambiguous": 0
+                    }
+            else:
+                det_report["steps"]["morphcheck"] = {
+                    "status": "SKIPPED",
+                    "timestamp": step_start,
+                    "novel": morph_summary.get("novel", 0),
+                    "known": morph_summary.get("known", 0),
+                    "ambiguous": morph_summary.get("ambiguous", 0),
+                }
         else:
             logger.info("%s[%s]%s Step 2: Morphological cross-check...", color, det, reset)
             anomalous_indices: list[int] = []
@@ -326,24 +353,93 @@ def _analyze_detector(
             # else:
             anomalous_embeddings = embeddings[anomalous_indices]
             sim_cfg = cfg.get("similarity", {})
-            morph_summary = run_morphological_crosscheck(
-                anomalous_embeddings,
-                anomalous_files,
-                anomalous_cluster_ids,
-                Path(reference_path),
-                morph_report_path,
-                k=sim_cfg.get("k_neighbors", 5),
-                novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
-                consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
-            )
-            print_morphological_summary(morph_summary, detector=det)
-            det_report["steps"]["morphcheck"] = {
-                "status": "OK",
-                "timestamp": step_start,
-                "novel": morph_summary["novel"],
-                "known": morph_summary["known"],
-                "ambiguous": morph_summary["ambiguous"],
-            }
+            
+            summary_results = {}
+            all_details = {}
+
+            for ref_path in references:
+                ref_name = ref_path.name
+                
+                if auto_discovery:
+                    current_morph_path = morph_report_path.parent / "morphcheck" / f"{ref_path.stem}.json"
+                else:
+                    current_morph_path = morph_report_path
+
+                morph_summary = run_morphological_crosscheck(
+                    anomalous_embeddings,
+                    anomalous_files,
+                    anomalous_cluster_ids,
+                    ref_path,
+                    current_morph_path,
+                    k=sim_cfg.get("k_neighbors", 5),
+                    novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
+                    consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
+                )
+                print_morphological_summary(morph_summary, detector=det)
+                
+                summary_results[ref_name] = {
+                    "novel": morph_summary["novel"],
+                    "known": morph_summary["known"],
+                    "ambiguous": morph_summary["ambiguous"]
+                }
+                all_details[ref_name] = {d["file"]: d["novelty_status"] for d in morph_summary["details"]}
+            
+            if auto_discovery:
+                newly_resolved = 0
+                still_ambiguous = 0
+                still_novel = 0
+
+                if len(references) == 2:
+                    ref1 = references[0].name
+                    ref2 = references[1].name
+                    
+                    for file_name, status1 in all_details[ref1].items():
+                        status2 = all_details[ref2].get(file_name)
+                        if status1 in ["NOVEL", "AMBIGUOUS"] and status2 == "KNOWN":
+                            newly_resolved += 1
+                        elif status2 == "AMBIGUOUS":
+                            still_ambiguous += 1
+                        elif status2 == "NOVEL":
+                            still_novel += 1
+                elif len(references) > 0:
+                    last_ref = references[-1].name
+                    for file_name, status in all_details[last_ref].items():
+                        if status == "AMBIGUOUS":
+                            still_ambiguous += 1
+                        elif status == "NOVEL":
+                            still_novel += 1
+
+                summary_report = {
+                    "session_id": session_id,
+                    "detector": det,
+                    "references_used": [r.name for r in references],
+                    "results": summary_results,
+                    "comparison": {
+                        "newly_resolved": newly_resolved,
+                        "still_ambiguous": still_ambiguous,
+                        "still_novel": still_novel
+                    }
+                }
+                with open(morph_report_path, "w", encoding="utf-8") as f:
+                    json.dump(summary_report, f, indent=2)
+                
+                if len(references) > 0:
+                    last_ref = references[-1].name
+                    det_report["steps"]["morphcheck"] = {
+                        "status": "OK",
+                        "timestamp": step_start,
+                        "novel": summary_results[last_ref]["novel"],
+                        "known": summary_results[last_ref]["known"],
+                        "ambiguous": summary_results[last_ref]["ambiguous"],
+                    }
+            else:
+                det_report["steps"]["morphcheck"] = {
+                    "status": "OK",
+                    "timestamp": step_start,
+                    "novel": morph_summary["novel"],
+                    "known": morph_summary["known"],
+                    "ambiguous": morph_summary["ambiguous"],
+                }
 
     except Exception as exc:
         logger.error(
@@ -567,7 +663,7 @@ def run_full_analysis(
         run: str = "O4a",
         skip_timeslide: bool = False,
         n_runs: int = 20,
-        reference_path: str = "data/reference/indomain_index.npz",
+        reference_path: str | None = None,
         batch_size: int = 32,
         sequential: bool = False,
 ) -> dict:

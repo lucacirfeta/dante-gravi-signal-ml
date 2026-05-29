@@ -383,6 +383,7 @@ Creates the reference index using real in-domain events processed by our pipelin
 - `--max-per-class`: Samples limitation per class. *Default: `30`*.
 - `--min-confidence`: Minimum accuracy to include glitches. *Default: `0.95`*.
 - `--workers`: Number of Threads. *Default: `1`*.
+- `--local-csv`: Local fallback path for Gravity Spy classifications CSV (useful if Zenodo download fails).
 
 ### 16. `validate-reference`
 On-the-fly validation via test event.
@@ -400,7 +401,7 @@ On-the-fly validation via test event.
 Uses a reference index (in-domain or standard) to evaluate the identified clusters, labeling each anomaly as NOVEL or KNOWN.
 
 * **Under the Hood (Processing Details):**
-  1. Loads the embedding matrix and the `.npz` reference index.
+  1. Loads the embedding matrix and the `.npz` reference index (or auto-discovers all indexes in `data/reference` if not explicitly provided).
   2. **Cosine KNN Search:** For each sample in the anomalous clusters, computes the matrix product of embeddings (already normalized to norm 1.0) with reference embeddings, obtaining a cosine similarity matrix. Identifies the `K` nearest neighbors (default K=5).
   3. **Novelty Evaluation:**
      - If the maximum cosine similarity with the nearest neighbor is below the novelty threshold (`novelty_threshold`, default 0.85), the sample is classified as **NOVEL** (indicates an anomalous waveform not present in the reference catalog).
@@ -410,7 +411,7 @@ Uses a reference index (in-domain or standard) to evaluate the identified cluste
 
 - `--embeddings` **(Required)**: Path to Numpy base array file.
 - `--report` **(Required)**: Path to cluster report JSON.
-- `--reference` **(Required)**: `.npz` index for comparison.
+- `--reference`: `.npz` index for comparison. If omitted, runs auto-discovery across all references in `data/reference`.
 - `--output` **(Required)**: Path for the outgoing JSON file.
 - `--run`: Associated run. *Default: `O4a`*.
 

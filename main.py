@@ -1529,11 +1529,23 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
         run_morphological_crosscheck,
         print_morphological_summary,
     )
+    from src.utils import discover_references
 
     embeddings_path = Path(args.embeddings)
     report_path = Path(args.report)
-    reference_path = Path(args.reference)
+    reference_path_arg = getattr(args, "reference", None)
     output_path = Path(args.output)
+
+    if reference_path_arg:
+        references = [Path(reference_path_arg)]
+        auto_discovery = False
+    else:
+        references = discover_references()
+        if not references:
+            logger.error("No references found during auto-discovery in data/reference")
+            return
+        logger.info("Auto-discovered %d references: %s", len(references), [r.name for r in references])
+        auto_discovery = True
 
     logger.info("=== MORPHCHECK ===")
 
@@ -1548,21 +1560,16 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
     anomalous_indices = []
 
     # Map files to their indices in the embeddings array
-    # We need the companion metadata for the embeddings to know which row corresponds to which file
     metadata_path = embeddings_path.with_suffix(".json")
     with open(metadata_path, "r", encoding="utf-8") as f:
         embedding_metadata = json.load(f)
         
     all_files = embedding_metadata["files"]
-    # Be robust against path string representations
     file_to_idx = {str(Path(f).name): i for i, f in enumerate(all_files)}
 
     # Collect anomalous samples
-    # The user request mentioned checking all 42 anomalous H1 spectrograms.
-    # We check clusters > 0, which are typically valid. If noise (-1) is not considered, we skip it.
-    for cluster_id_str, cluster in cluster_report["results"]["clusters"].items():
+    for cluster_id_str, cluster in cluster_report.get("results", {}).get("clusters", {}).items():
         cluster_id = int(cluster_id_str)
-        # If it's a valid cluster, we check it
         if cluster_id >= 0:
             for sample_file in cluster.get("sample_files", []):
                 file_name = Path(sample_file).name
@@ -1584,20 +1591,92 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
     novelty_threshold = sim_cfg.get("novelty_threshold", 0.85)
     consensus_threshold = sim_cfg.get("consensus_threshold", 0.60)
 
-    # Run check
-    summary = run_morphological_crosscheck(
-        anomalous_embeddings,
-        anomalous_files,
-        anomalous_cluster_ids,
-        reference_path,
-        output_path,
-        k=k,
-        novelty_threshold=novelty_threshold,
-        consensus_threshold=consensus_threshold,
-    )
+    summary_results = {}
+    all_details = {}
 
-    print_morphological_summary(summary)
-    print(f"Morphological check complete. {summary['novel']} novel candidates.")
+    for ref_path in references:
+        ref_name = ref_path.name
+        logger.info("Running morphcheck against reference: %s", ref_name)
+        
+        if auto_discovery:
+            current_output_path = output_path.parent / "morphcheck" / f"{ref_path.stem}.json"
+        else:
+            current_output_path = output_path
+
+        summary = run_morphological_crosscheck(
+            anomalous_embeddings,
+            anomalous_files,
+            anomalous_cluster_ids,
+            ref_path,
+            current_output_path,
+            k=k,
+            novelty_threshold=novelty_threshold,
+            consensus_threshold=consensus_threshold,
+        )
+
+        print_morphological_summary(summary)
+        print(f"Morphological check complete against {ref_name}. {summary['novel']} novel candidates.")
+        
+        summary_results[ref_name] = {
+            "novel": summary["novel"],
+            "known": summary["known"],
+            "ambiguous": summary["ambiguous"]
+        }
+        all_details[ref_name] = {d["file"]: d["novelty_status"] for d in summary["details"]}
+
+    if auto_discovery:
+        detector = "Unknown"
+        parts = output_path.parts
+        if "clusters" in parts:
+            idx = parts.index("clusters")
+            if idx + 1 < len(parts):
+                detector = parts[idx + 1].upper()
+                
+        session_id = "Unknown"
+        if "runs" in parts:
+            idx = parts.index("runs")
+            if idx + 2 < len(parts):
+                session_id = parts[idx + 2]
+
+        newly_resolved = 0
+        still_ambiguous = 0
+        still_novel = 0
+
+        if len(references) == 2:
+            ref1 = references[0].name
+            ref2 = references[1].name
+            
+            for file_name, status1 in all_details[ref1].items():
+                status2 = all_details[ref2].get(file_name)
+                if status1 in ["NOVEL", "AMBIGUOUS"] and status2 == "KNOWN":
+                    newly_resolved += 1
+                elif status2 == "AMBIGUOUS":
+                    still_ambiguous += 1
+                elif status2 == "NOVEL":
+                    still_novel += 1
+        elif len(references) > 0:
+            last_ref = references[-1].name
+            for file_name, status in all_details[last_ref].items():
+                if status == "AMBIGUOUS":
+                    still_ambiguous += 1
+                elif status == "NOVEL":
+                    still_novel += 1
+
+        summary_report = {
+            "session_id": session_id,
+            "detector": detector,
+            "references_used": [r.name for r in references],
+            "results": summary_results,
+            "comparison": {
+                "newly_resolved": newly_resolved,
+                "still_ambiguous": still_ambiguous,
+                "still_novel": still_novel
+            }
+        }
+        summary_path = output_path.parent / "morphcheck_summary.json"
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump(summary_report, f, indent=2)
+        logger.info("Saved morphcheck summary to %s", summary_path)
 
 
 def cmd_build_indomain_reference(args: argparse.Namespace) -> None:
@@ -1614,12 +1693,13 @@ def cmd_build_indomain_reference(args: argparse.Namespace) -> None:
     max_per_class: int = args.max_per_class
     min_confidence: float = args.min_confidence
     workers: int = args.workers
+    local_csv: Path | None = Path(args.local_csv) if getattr(args, "local_csv", None) else None
 
     logger.info("=== BUILD-INDOMAIN-REFERENCE ===")
 
     # Step 1: Download GPS classifications CSV from Zenodo
     csv_path = download_gs_classifications_csv(
-        output_path.parent, run=run, detector=detector
+        output_path.parent, run=run, detector=detector, local_csv=local_csv
     )
 
     # Step 2: Select high-confidence events
@@ -2673,11 +2753,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_morph.add_argument(
         "--reference",
         type=str,
-        required=True,
+        default=None,
         help=(
             "Path to reference index .npz. Accepts either: "
             "(1) Gravity Spy training set index (build-reference), or "
-            "(2) In-domain reference index (build-indomain-reference, recommended)."
+            "(2) In-domain reference index (build-indomain-reference, recommended). "
+            "If omitted, runs auto-discovery across all references in data/reference."
         ),
     )
     p_morph.add_argument(
@@ -2783,6 +2864,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=1,
         help="Number of parallel workers for GWOSC fetch. Default: 1.",
+    )
+    p_indomain.add_argument(
+        "--local-csv",
+        type=str,
+        default=None,
+        help="Local fallback path for Gravity Spy classifications CSV.",
     )
     p_indomain.set_defaults(func=cmd_build_indomain_reference)
 

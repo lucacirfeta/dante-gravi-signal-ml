@@ -316,3 +316,9 @@ def close_session_log() -> None:
         _SESSION_LOG_HANDLER = None
     _SESSION_LOG_FILE = None
 
+
+def discover_references(reference_dir: Path = Path("data/reference")) -> list[Path]:
+    """Find all indomain*.npz reference files in reference_dir."""
+    if not reference_dir.exists():
+        return []
+    return sorted(reference_dir.glob("indomain*.npz"))
