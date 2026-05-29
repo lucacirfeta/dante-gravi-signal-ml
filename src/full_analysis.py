@@ -298,7 +298,7 @@ def _analyze_detector(
 
     try:
         if auto_discovery:
-            morph_report_path = cluster_dir / "morphcheck_summary.json"
+            morph_report_path = session_path(run, session_id) / f"morphcheck_summary_{det}.json"
         else:
             morph_report_path = cluster_dir / "morphcheck_report.json"
 
@@ -386,7 +386,7 @@ def _analyze_detector(
                 ref_name = ref_path.name
                 
                 if auto_discovery:
-                    current_morph_path = morph_report_path.parent / "morphcheck" / f"{ref_path.stem}.json"
+                    current_morph_path = morph_report_path.parent / "morphcheck" / det / f"{ref_path.stem}.json"
                 else:
                     current_morph_path = morph_report_path
 
@@ -988,7 +988,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
 
         # Morphcheck
         morph_rep_path = session_dir / "clusters" / det_lower / "morphcheck_report.json"
-        morph_sum_path = session_dir / "clusters" / det_lower / "morphcheck_summary.json"
+        morph_sum_path = session_dir / f"morphcheck_summary_{det}.json"
         
         if morph_sum_path.exists():
             try:

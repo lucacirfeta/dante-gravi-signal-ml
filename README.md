@@ -133,7 +133,8 @@ gravi-signal-ml/
 │   ├── runs/<run>/<session_id>/      # Complete session isolation (e.g. O4a/20260510_143022)
 │   │   ├── spectrograms/             # Q-transform PNGs (e.g. h1, l1)
 │   │   ├── embeddings/               # DINOv2 .npy arrays + .json metadata
-│   │   ├── clusters/                 # Cluster reports, galleries, morphcheck
+│   │   ├── clusters/                 # Cluster reports, UMAP scatter plots and HTML galleries
+│   │   ├── morphcheck/               # Individual morphcheck reference reports
 │   │   ├── reports/                  # Unified full-analysis reports
 │   │   ├── ablation/                 # Ablation study results
 │   │   ├── stability/                # Robustness analysis (ARI metrics)

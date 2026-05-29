@@ -114,7 +114,7 @@ def test_cmd_morphcheck_autodiscovery(mock_print, mock_run, tmp_path):
         
     assert mock_run.call_count == 2
     
-    summary_path = out_dir / "morphcheck_summary.json"
+    summary_path = out_dir / "morphcheck_summary_H1.json"
     assert summary_path.exists()
     
     with open(summary_path, "r") as f:
@@ -174,3 +174,4 @@ def test_cmd_morphcheck_explicit_reference(mock_print, mock_run, tmp_path):
     
     # In explicit mode, no morphcheck_summary.json is created. Output goes directly to out_path.
     assert not (out_dir / "morphcheck_summary.json").exists()
+    assert not (out_dir / "morphcheck_summary_H1.json").exists()

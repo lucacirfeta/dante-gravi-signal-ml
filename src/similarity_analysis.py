@@ -25,8 +25,18 @@ def analyze_similarity(
     cluster_report_path = clusters_dir / "cluster_report.json"
     
     if not morphcheck_path.exists():
-        logger.error("Morphological crosscheck report not found at %s", morphcheck_path)
-        raise FileNotFoundError(f"Missing morphological crosscheck report at {morphcheck_path}")
+        ref_name = Path(reference_path).stem
+        morphcheck_path = base_dir / "morphcheck" / detector / f"{ref_name}.json"
+        if not morphcheck_path.exists():
+            auto_dir = base_dir / "morphcheck" / detector
+            if auto_dir.exists():
+                reports = list(auto_dir.glob("*.json"))
+                if reports:
+                    morphcheck_path = sorted(reports)[-1]
+    
+    if not morphcheck_path.exists():
+        logger.error("Morphological crosscheck report not found for %s", detector)
+        raise FileNotFoundError(f"Missing morphological crosscheck report for {detector}")
     if not cluster_report_path.exists():
         logger.error("Cluster report not found at %s", cluster_report_path)
         raise FileNotFoundError(f"Missing cluster report at {cluster_report_path}")

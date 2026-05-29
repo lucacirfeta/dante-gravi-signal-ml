@@ -1611,9 +1611,9 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
     elif session_id and detector:
         if auto_discovery:
             # output_path.parent will be session_path, so morphcheck/ goes inside session
-            output_path = session_path(run, session_id) / "morphcheck.json"
+            output_path = session_path(run, session_id) / f"morphcheck_summary_{detector}.json"
         else:
-            output_path = session_path(run, session_id) / "morphcheck" / f"{references[0].stem}.json"
+            output_path = session_path(run, session_id) / "morphcheck" / detector / f"{references[0].stem}.json"
             output_path.parent.mkdir(parents=True, exist_ok=True)
     else:
         logger.error("Either --output or both --session-id and --detector are required.")
@@ -1674,7 +1674,15 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
         logger.info("Running morphcheck against reference: %s", ref_name)
         
         if auto_discovery:
-            current_output_path = output_path.parent / "morphcheck" / f"{ref_path.stem}.json"
+            det_val = detector
+            if not det_val:
+                det_val = "UNKNOWN"
+                parts = report_path.parts
+                if "clusters" in parts:
+                    idx = parts.index("clusters")
+                    if idx + 1 < len(parts):
+                        det_val = parts[idx + 1].upper()
+            current_output_path = output_path.parent / "morphcheck" / det_val / f"{ref_path.stem}.json"
         else:
             current_output_path = output_path
 
@@ -1704,18 +1712,23 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
             continue
 
     if auto_discovery:
-        detector = "Unknown"
-        parts = output_path.parts
-        if "clusters" in parts:
-            idx = parts.index("clusters")
-            if idx + 1 < len(parts):
-                detector = parts[idx + 1].upper()
+        det_val = detector
+        if not det_val:
+            det_val = "Unknown"
+            parts = report_path.parts
+            if "clusters" in parts:
+                idx = parts.index("clusters")
+                if idx + 1 < len(parts):
+                    det_val = parts[idx + 1].upper()
                 
-        session_id = "Unknown"
-        if "runs" in parts:
-            idx = parts.index("runs")
-            if idx + 2 < len(parts):
-                session_id = parts[idx + 2]
+        session_val = session_id
+        if not session_val:
+            session_val = "Unknown"
+            parts = output_path.parts
+            if "runs" in parts:
+                idx = parts.index("runs")
+                if idx + 2 < len(parts):
+                    session_val = parts[idx + 2]
 
         newly_resolved = 0
         still_ambiguous = 0
@@ -1743,8 +1756,8 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
                     still_novel += 1
 
         summary_report = {
-            "session_id": session_id,
-            "detector": detector,
+            "session_id": session_val,
+            "detector": det_val,
             "references_used": [r.name for r in references],
             "results": summary_results,
             "comparison": {
@@ -1753,7 +1766,12 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
                 "still_novel": still_novel
             }
         }
-        summary_path = output_path.parent / "morphcheck_summary.json"
+        
+        if getattr(args, "output", None):
+            summary_path = output_path.parent / f"morphcheck_summary_{det_val}.json"
+        else:
+            summary_path = output_path
+            
         with open(summary_path, "w", encoding="utf-8") as f:
             json.dump(summary_report, f, indent=2)
         logger.info("Saved morphcheck summary to %s", summary_path)

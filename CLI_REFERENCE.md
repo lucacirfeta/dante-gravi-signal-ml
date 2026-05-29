@@ -425,10 +425,12 @@ Uses a reference index (in-domain or standard) to evaluate the identified cluste
      - In other cases, the event is cataloged as **AMBIGUOUS**.
   4. Generates a final JSON with classification details for each single analyzed glitch.
 
-- `--embeddings` **(Required)**: Path to Numpy base array file.
-- `--report` **(Required)**: Path to cluster report JSON.
-- `--reference`: `.npz` index for comparison. If omitted, runs auto-discovery across all references in `data/reference`.
-- `--output` **(Required)**: Path for the outgoing JSON file.
+- `--embeddings`: Path to Numpy base array file. Required if not using `--session-id`.
+- `--report`: Path to cluster report JSON. Required if not using `--session-id`.
+- `--reference`: `.npz` index for comparison. If omitted, runs auto-discovery across all references in `data/reference/`.
+- `--output`: Path for the outgoing JSON file. Required if not using `--session-id` and not using auto-discovery.
+- `--session-id`: Session identifier to resolve paths automatically. Requires `--detector`.
+- `--detector`: Associated detector. Required if using `--session-id`.
 - `--run`: Associated run. *Default: `O4a`*.
 
 ### 18. `benchmark-clustering`
