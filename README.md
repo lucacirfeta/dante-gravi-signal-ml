@@ -10,8 +10,21 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![GWOSC O4a](https://img.shields.io/badge/data-GWOSC%20O4a-orange.svg)](https://gwosc.org/)
+[![arXiv](https://img.shields.io/badge/arXiv-2605.28572-B31B1B.svg)](https://arxiv.org/abs/2605.28572)
 
 </div>
+
+---
+
+## 📢 News
+
+**26 May 2026** – The LIGO-Virgo-KAGRA Collaboration released the **GWTC-5.0 catalog** 
+([press release](https://www.ligo.org/news/)), reporting 161 new gravitational-wave events 
+and bringing the total number of detections to 390. Our pipeline `gravi-signal-ml` provides 
+a ready‑to‑use, open‑source tool for glitch characterization in O4a data, complementing 
+these new observations.
+
+**28 May 2026** – Our preprint is now available on arXiv: **[2605.28572](https://arxiv.org/abs/2605.28572)**.
 
 ---
 
@@ -259,4 +272,21 @@ pytest tests/ -v --cov=src --cov-report=term-missing
 Contributions are welcome. This project is open-source under the **Apache License 2.0**.
 See [LICENSE](LICENSE) for details.
 
-For citations, please refer to the `CITATION.cff` file or the source README.
+## 📝 Citation
+
+If you use this software in your research, please cite our preprint:
+
+```bibtex
+@software{gravi_signal_ml_arxiv,
+  title  = {Unsupervised Morphological Characterization of Gravitational-Wave Glitches in LIGO O4a Using Frozen DINOv2 Features},
+  author = {Cirfeta, Luca},
+  year   = {2026},
+  eprint = {2605.28572},
+  archivePrefix = {arXiv},
+  primaryClass = {astro-ph.IM},
+  doi    = {10.48550/arXiv.2605.28572},
+  url    = {https://arxiv.org/abs/2605.28572}
+}
+```
+
+For more details, please refer to the `CITATION.cff` file.
