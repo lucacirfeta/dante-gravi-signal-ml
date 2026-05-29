@@ -1721,9 +1721,10 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
         still_ambiguous = 0
         still_novel = 0
 
-        if len(references) == 2:
-            ref1 = references[0].name
-            ref2 = references[1].name
+        successful_refs = [r.name for r in references if r.name in all_details]
+        if len(successful_refs) >= 2:
+            ref1 = successful_refs[0]
+            ref2 = successful_refs[1]
             
             for file_name, status1 in all_details[ref1].items():
                 status2 = all_details[ref2].get(file_name)
@@ -1733,8 +1734,8 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
                     still_ambiguous += 1
                 elif status2 == "NOVEL":
                     still_novel += 1
-        elif len(references) > 0:
-            last_ref = references[-1].name
+        elif len(successful_refs) > 0:
+            last_ref = successful_refs[-1]
             for file_name, status in all_details[last_ref].items():
                 if status == "AMBIGUOUS":
                     still_ambiguous += 1

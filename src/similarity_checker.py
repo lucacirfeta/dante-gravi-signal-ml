@@ -4,6 +4,7 @@ against the Gravity Spy training set reference index."""
 from __future__ import annotations
 
 import json
+import logging
 from collections import Counter
 from pathlib import Path
 
