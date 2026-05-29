@@ -47,6 +47,7 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+import astropy.utils.data
 from astropy.time import Time
 
 from src.data_loader import fetch_o4a_segments, fetch_strain_data
@@ -444,6 +445,13 @@ def cmd_scan(args: argparse.Namespace) -> None:
         )
 
     total_duration = sum(end - start for start, end in segments)
+
+    try:
+        astropy.utils.data.clear_download_cache()
+        logger.info("Cleaned astropy download cache.")
+    except Exception:
+        pass
+
     logger.info(
         "Scan complete: %d processed, %d skipped, %.1f h scanned",
         processed_count,
@@ -761,6 +769,13 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     )
 
     total_duration = sum(end - start for start, end in segments)
+
+    try:
+        astropy.utils.data.clear_download_cache()
+        logger.info("Cleaned astropy download cache.")
+    except Exception:
+        pass
+
     logger.info(
         "Extended scan complete: %d saved, %d skipped, %.1f h scanned per detector",
         processed_count,
