@@ -1572,10 +1572,28 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
     )
     from src.utils import discover_references
 
-    embeddings_path = Path(args.embeddings)
-    report_path = Path(args.report)
+    session_id = getattr(args, "session_id", None) or None
+    detector = getattr(args, "detector", None)
+    run = _resolve_run(args)
+    run_lower = run.lower()
+
+    if getattr(args, "embeddings", None):
+        embeddings_path = Path(args.embeddings)
+    elif session_id and detector:
+        embeddings_path = session_path(run, session_id) / "embeddings" / f"{run_lower}_{detector.lower()}.npy"
+    else:
+        logger.error("Either --embeddings or both --session-id and --detector are required.")
+        sys.exit(1)
+
+    if getattr(args, "report", None):
+        report_path = Path(args.report)
+    elif session_id and detector:
+        report_path = session_path(run, session_id) / "clusters" / detector.lower() / "cluster_report.json"
+    else:
+        logger.error("Either --report or both --session-id and --detector are required.")
+        sys.exit(1)
+
     reference_path_arg = getattr(args, "reference", None)
-    output_path = Path(args.output)
 
     if reference_path_arg:
         references = [Path(reference_path_arg)]
@@ -1587,6 +1605,22 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
             return
         logger.info("Auto-discovered %d references: %s", len(references), [r.name for r in references])
         auto_discovery = True
+
+    if getattr(args, "output", None):
+        output_path = Path(args.output)
+    elif session_id and detector:
+        if auto_discovery:
+            # output_path.parent will be session_path, so morphcheck/ goes inside session
+            output_path = session_path(run, session_id) / "morphcheck.json"
+        else:
+            output_path = session_path(run, session_id) / "morphcheck" / f"{references[0].stem}.json"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        logger.error("Either --output or both --session-id and --detector are required.")
+        sys.exit(1)
+
+    if session_id:
+        _log_run_header(run, detector, session_id)
 
     logger.info("=== MORPHCHECK ===")
 
@@ -2900,14 +2934,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_morph.add_argument(
         "--embeddings",
         type=str,
-        required=True,
-        help="Path to embeddings .npy.",
+        default=None,
+        help="Path to embeddings .npy. Required if not using --session-id.",
     )
     p_morph.add_argument(
         "--report",
         type=str,
-        required=True,
-        help="Path to cluster_report.json.",
+        default=None,
+        help="Path to cluster_report.json. Required if not using --session-id.",
     )
     p_morph.add_argument(
         "--reference",
@@ -2923,8 +2957,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_morph.add_argument(
         "--output",
         type=str,
-        required=True,
-        help="Output JSON path for morphcheck results.",
+        default=None,
+        help="Output JSON path for morphcheck results. Required if not using --session-id.",
+    )
+    p_morph.add_argument(
+        "--session-id",
+        type=str,
+        default=None,
+        help="Session identifier to resolve paths automatically. Requires --detector.",
+    )
+    p_morph.add_argument(
+        "--detector",
+        type=str,
+        default=None,
+        choices=["H1", "L1", "V1"],
+        help="Detector identifier. Required when using --session-id.",
     )
     p_morph.set_defaults(func=cmd_morphcheck)
     _add_run_argument(p_morph)
