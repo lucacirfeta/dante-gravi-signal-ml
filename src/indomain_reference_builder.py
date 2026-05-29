@@ -226,7 +226,8 @@ def build_indomain_reference(
     """
 
     output_path = Path(output_path)
-    images_dir = output_path.parent / "indomain_images"
+    # Isolate temporary images by run/detector using the filename stem
+    images_dir = output_path.parent / "build" / output_path.stem.replace("indomain_", "")
     images_dir.mkdir(parents=True, exist_ok=True)
 
     half_dur = segment_duration / 2.0

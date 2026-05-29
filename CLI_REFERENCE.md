@@ -15,7 +15,7 @@ This guide provides a complete and updated list of all available commands in the
 - **Resume an Interrupted Run:**
   `python main.py scan-extended --session-id <SESSION_ID> --workers 6 --continue-run`
 - **Generate Reference Index:**
-  `python main.py build-indomain-reference --output data/reference/indomain_index.npz`
+  `python main.py build-indomain-reference --run O3b --detector H1`
 - **Visualize and Update UMAP Report:**
   `python main.py report --session-id <SESSION_ID> --detector H1`
 
@@ -64,6 +64,7 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
 4. **Reference Index**
    - [`build-reference`](#14-build-reference) — Build base index
    - [`build-indomain-reference`](#15-build-indomain-reference) — Build in-domain index
+   - [`download-all-references`](#15b-download-all-references) — Batch download and build all in-domain indexes
    - [`validate-reference`](#16-validate-reference) — Validate index with a real event
    - [`morphcheck`](#17-morphcheck) — Compare anomalies with reference index
    - [`benchmark-clustering`](#18-benchmark-clustering) — Validate unsupervised pipeline with ground truth labels
@@ -377,13 +378,28 @@ Creates the reference index using real in-domain events processed by our pipelin
   3. Limits the number of samples for each class (default 30) to keep the index balanced.
   4. Generates and saves the normalized DINOv2 embeddings and corresponding class labels in an `.npz` file.
 
-- `--output` **(Required)**: Final path to the `.npz` index.
+- `--output`: Final path to the `.npz` index. *Optional* — when omitted, the file is auto-generated as `data/reference/indomain_{run}_{detector}.npz`.
 - `--detector`: Associated detector. *Default: `H1`*.
 - `--run`: Observational run. *Default: `O3b`*.
 - `--max-per-class`: Samples limitation per class. *Default: `30`*.
 - `--min-confidence`: Minimum accuracy to include glitches. *Default: `0.95`*.
 - `--workers`: Number of Threads. *Default: `1`*.
 - `--local-csv`: Local fallback path for Gravity Spy classifications CSV (useful if Zenodo download fails).
+
+### 15b. `download-all-references`
+Batch-downloads Gravity Spy classification CSVs from Zenodo and builds in-domain reference indexes for each run/detector combination. Files are saved with the naming convention `indomain_{run}_{detector}.npz` in `data/reference/`. Existing files are skipped (resume support). Downloads are sequential to respect Zenodo rate limits.
+
+```bash
+python main.py download-all-references --run O4a --detector H1 L1 V1
+python main.py download-all-references --all --detector H1 L1
+```
+
+- `--run`: Observing run (e.g. `O4a`). *Required unless `--all` is used.*
+- `--all`: Download all available runs (`O2`, `O3a`, `O3b`, `O4a`).
+- `--detector`: Detectors to build references for. *Default: `H1 L1 V1`*.
+- `--min-confidence`: Minimum `ml_confidence` threshold. *Default: `0.95`*.
+- `--max-per-class`: Maximum samples per class. *Default: `30`*.
+- `--workers`: Number of parallel workers for GWOSC fetch. *Default: `1`*.
 
 ### 16. `validate-reference`
 On-the-fly validation via test event.

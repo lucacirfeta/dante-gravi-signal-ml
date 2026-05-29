@@ -250,6 +250,7 @@ results/figures/**
 !results/figures/clusters/*.png
 
 docs/
+runs/
 
 # Raw HDF5 strain data downloads
 raw/
@@ -275,3 +276,5 @@ new_results.md
 scratch_gen_results.py
 scratch_gen_final_results.py
 scratch/
+verify_morphcheck.py
+verify.py

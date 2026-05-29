@@ -20,6 +20,7 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
     calibrate-threshold      — Calibrate per-class cosine similarity thresholds (Autopilot)
     calibrate-loglikelihood  — Calibrate DPMM log-likelihood anomaly threshold
     scan-live                — Autopilot live scanner: classify spectrograms as KNOWN/NOVEL
+    download-all-references  — Download and build in-domain references for multiple runs/detectors
 
 Usage:
     python main.py fetch                    --event GW150914
@@ -1687,9 +1688,18 @@ def cmd_build_indomain_reference(args: argparse.Namespace) -> None:
         select_reference_events,
     )
 
-    output_path = Path(args.output)
+    from src.utils import generate_reference_filename
+
     detector: str = args.detector
     run: str = args.run
+
+    if args.output:
+        output_path = Path(args.output)
+    else:
+        ref_dir = Path("data/reference")
+        ref_dir.mkdir(parents=True, exist_ok=True)
+        output_path = ref_dir / generate_reference_filename(run, detector)
+        logger.info("Auto-generated output path: %s", output_path)
     max_per_class: int = args.max_per_class
     min_confidence: float = args.min_confidence
     workers: int = args.workers
@@ -1722,6 +1732,111 @@ def cmd_build_indomain_reference(args: argparse.Namespace) -> None:
     print(
         f"In-domain reference ready: {meta['n_samples']} samples, "
         f"{meta['n_classes']} classes → {output_path}"
+    )
+
+def cmd_download_all_references(args: argparse.Namespace) -> None:
+    """Download and build in-domain references for multiple run/detector combos.
+
+    For each run/detector pair:
+      1. Download the Gravity Spy classifications CSV from Zenodo
+      2. Select high-confidence events
+      3. Build the in-domain reference index with the naming convention
+
+    Downloads are sequential to respect Zenodo rate limits.
+    """
+    from src.indomain_reference_builder import (
+        build_indomain_reference,
+        download_gs_classifications_csv,
+        select_reference_events,
+    )
+    from src.utils import generate_reference_filename
+
+    # Resolve which runs to process
+    if args.all_runs:
+        runs = list(VALID_RUNS)
+    elif args.run:
+        if args.run not in VALID_RUNS:
+            logger.error("Unknown run '%s'. Valid runs: %s", args.run, VALID_RUNS)
+            sys.exit(1)
+        runs = [args.run]
+    else:
+        logger.error("Either --run or --all is required.")
+        sys.exit(1)
+
+    detectors: list[str] = args.detector
+    min_confidence: float = args.min_confidence
+    max_per_class: int = args.max_per_class
+    workers: int = args.workers
+    ref_dir = Path("data/reference")
+    ref_dir.mkdir(parents=True, exist_ok=True)
+
+    logger.info("=== DOWNLOAD-ALL-REFERENCES ===")
+    logger.info("Runs: %s | Detectors: %s", runs, detectors)
+    logger.info("min_confidence=%.2f, max_per_class=%d", min_confidence, max_per_class)
+
+    built = 0
+    skipped = 0
+    failed = 0
+
+    for run in runs:
+        for det in detectors:
+            ref_name = generate_reference_filename(run, det)
+            output_path = ref_dir / ref_name
+
+            # Skip if already exists (resume support)
+            if output_path.exists():
+                logger.info(
+                    "[%s/%s] Reference already exists: %s — skipping.",
+                    run, det, output_path,
+                )
+                skipped += 1
+                continue
+
+            logger.info("[%s/%s] Building reference: %s", run, det, ref_name)
+
+            try:
+                # Step 1: Download CSV
+                csv_path = download_gs_classifications_csv(
+                    ref_dir, run=run, detector=det,
+                )
+
+                # Step 2: Select events
+                events_df = select_reference_events(
+                    csv_path,
+                    detector=det,
+                    min_confidence=min_confidence,
+                    max_per_class=max_per_class,
+                )
+
+                if events_df.empty:
+                    logger.warning(
+                        "[%s/%s] No events passed filters. "
+                        "This detector may not have data for this run.",
+                        run, det,
+                    )
+                    failed += 1
+                    continue
+
+                # Step 3: Build reference
+                meta = build_indomain_reference(
+                    events_df, output_path, workers=workers,
+                )
+                logger.info(
+                    "[%s/%s] Reference built: %d samples, %d classes → %s",
+                    run, det, meta["n_samples"], meta["n_classes"], output_path,
+                )
+                built += 1
+
+            except Exception as exc:
+                logger.warning(
+                    "[%s/%s] Failed to build reference: %s — continuing.",
+                    run, det, exc,
+                )
+                failed += 1
+
+    print(
+        f"\ndownload-all-references complete: "
+        f"{built} built, {skipped} skipped, {failed} failed."
     )
 
 
@@ -2831,8 +2946,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_indomain.add_argument(
         "--output",
         type=str,
-        required=True,
-        help="Path to save the .npz index (e.g. data/reference/indomain_index.npz).",
+        default=None,
+        help=(
+            "Path to save the .npz index. If omitted, auto-generates as "
+            "data/reference/indomain_{run}_{detector}.npz."
+        ),
     )
     p_indomain.add_argument(
         "--detector",
@@ -2872,6 +2990,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="Local fallback path for Gravity Spy classifications CSV.",
     )
     p_indomain.set_defaults(func=cmd_build_indomain_reference)
+
+    # --- download-all-references ---
+    p_dl = subparsers.add_parser(
+        "download-all-references",
+        help="Download and build in-domain references for one or more run/detector combos.",
+    )
+    p_dl.add_argument(
+        "--run",
+        type=str,
+        default=None,
+        help="Observing run (e.g. O4a). Use --all for all runs.",
+    )
+    p_dl.add_argument(
+        "--all",
+        action="store_true",
+        dest="all_runs",
+        help="Download all available runs (%s)." % ", ".join(VALID_RUNS),
+    )
+    p_dl.add_argument(
+        "--detector",
+        nargs="+",
+        default=["H1", "L1", "V1"],
+        choices=["H1", "L1", "V1"],
+        help="Detectors to build references for. Default: H1 L1 V1.",
+    )
+    p_dl.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.95,
+        help="Minimum ml_confidence threshold. Default: 0.95.",
+    )
+    p_dl.add_argument(
+        "--max-per-class",
+        type=int,
+        default=30,
+        help="Maximum samples per class. Default: 30.",
+    )
+    p_dl.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of parallel workers for GWOSC fetch. Default: 1.",
+    )
+    p_dl.set_defaults(func=cmd_download_all_references)
 
     # --- validate-reference (Phase 3.4) ---
     p_validate = subparsers.add_parser(

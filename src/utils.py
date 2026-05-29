@@ -317,6 +317,28 @@ def close_session_log() -> None:
     _SESSION_LOG_FILE = None
 
 
+def generate_reference_filename(run: str, detector: str) -> str:
+    """Generate a standardized reference index filename.
+
+    Format: ``indomain_{run_lower}_{detector_lower}.npz``
+
+    Examples::
+
+        >>> generate_reference_filename("O4a", "H1")
+        'indomain_o4a_h1.npz'
+        >>> generate_reference_filename("O3b", "L1")
+        'indomain_o3b_l1.npz'
+
+    Args:
+        run: Observing run identifier (e.g. ``"O4a"``).
+        detector: Detector identifier (e.g. ``"H1"``).
+
+    Returns:
+        Filename string in the canonical format.
+    """
+    return f"indomain_{run.lower()}_{detector.lower()}.npz"
+
+
 def discover_references(reference_dir: Path = Path("data/reference")) -> list[Path]:
     """Find all indomain*.npz reference files in reference_dir."""
     if not reference_dir.exists():

@@ -139,7 +139,7 @@ gravi-signal-ml/
 │   │   ├── stability/                # Robustness analysis (ARI metrics)
 │   │   ├── timeslide/                # Time-slide background estimation
 │   │   └── logs/                     # Session-specific log files
-│   └── reference/                    # Static — reference indexes (e.g. indomain_index.npz)
+│   └── reference/                    # Static — reference indexes (e.g. indomain_O3b_H1.npz)
 ├── src/                              # Python source code (core modules)
 ├── tests/                            # Pytest suite
 ├── docs/                             # Additional documentation
@@ -191,7 +191,7 @@ The wizard will automatically detect all implemented commands (including future 
 ### End-to-End Usage Example
 1. **In-Domain Reference Generation:**
    ```bash
-   python main.py build-indomain-reference --output data/reference/indomain_index.npz --detector H1 --run O3b
+   python main.py build-indomain-reference --detector H1 --run O3b
    ```
 2. **Automatic Scan + Full Analysis:**
    Performs the scan on synchronized H1 and L1 and invokes the entire ML loop.
@@ -199,6 +199,15 @@ The wizard will automatically detect all implemented commands (including future 
    python main.py scan-extended --workers 6 --run O4a --full-analysis True
    ```
    > The results will be saved in `data/runs/o4a/<SESSION_ID>/reports/`.
+
+### Reference Files & Auto-Discovery
+Reference indexes follow the naming convention `indomain_{run}_{detector}.npz` (e.g. `indomain_O3b_H1.npz`) and are stored in `data/reference/`. To batch-download and build all indexes at once:
+```bash
+python main.py download-all-references --all --detector H1 L1
+```
+This downloads Gravity Spy CSVs from Zenodo and builds one `.npz` per run/detector pair. Existing files are skipped automatically.
+
+When `--reference` is omitted in `morphcheck` or `full-analysis`, the pipeline **auto-discovers** all `indomain_*.npz` files in `data/reference/` and evaluates against every matching index.
 
 ### Autopilot & Threshold Calibration
 1. **Log-likelihood Threshold Calibration (Clustering):**
