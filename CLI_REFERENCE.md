@@ -441,7 +441,7 @@ Benchmarks the unsupervised clustering pipeline using a reference index as groun
   4. Computes formal metrics for partition comparison: **Adjusted Rand Index (ARI)** and **Adjusted Mutual Information (AMI)**.
   5. Saves scores in a JSON report, useful for validating modifications or optimizations made to the clustering code.
 
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_index.npz`*.
+- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
 - `--min-samples-per-class`: Removes classes with less than specified samples. *Default: `10`*.
 - `--output`: Path to save the benchmark report JSON. *Default: `data/reference/benchmark_report.json`*.
 - `--algorithm`: Clustering algorithm to use. *Default: `dpmm`*.
@@ -455,7 +455,7 @@ Executes a comparative benchmark among different combinations of methods (e.g. D
   3. Computes ARI and AMI metrics for each configuration.
   4. Saves a summary report to facilitate methodological comparison.
 
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_index.npz`*.
+- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
 - `--output`: Destination JSON path. *Default: `data/reference/benchmark_methods.json`*.
 
 ---
@@ -511,10 +511,10 @@ Calibrates per-class cosine similarity thresholds from the in-domain reference i
   3. Saves the resulting map of custom thresholds into `thresholds.json` to be used in the real-time Autopilot scanner.
 
 ```bash
-python main.py calibrate-threshold --reference data/reference/indomain_index.npz --percentile 5 --output data/autopilot/reference/thresholds.json
+python main.py calibrate-threshold --reference data/reference/indomain_O4a_H1.npz --percentile 5 --output data/autopilot/reference/thresholds.json
 ```
 
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_index.npz`*.
+- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
 - `--percentile`: Percentile for intra-class threshold (lower = more restrictive). *Default: `5`*.
 - `--output`: Destination JSON path. *Default: `data/autopilot/reference/thresholds.json`*.
 
@@ -522,7 +522,7 @@ Output format (`thresholds.json`):
 ```json
 {
   "metadata": {
-    "reference": "data/reference/indomain_index.npz",
+    "reference": "data/reference/indomain_O4a_H1.npz",
     "percentile": 5,
     "calibrated_at": "2026-05-16T12:00:00",
     "n_classes": 22
@@ -545,10 +545,10 @@ Calibrates the anomaly threshold for log-likelihood used by DPMM clustering, der
   5. Saves the resulting threshold into a JSON file. This value should then be reported in `config.yaml` under `dpmm.anomaly_threshold`.
 
 ```bash
-python main.py calibrate-loglikelihood --reference data/reference/indomain_index.npz --percentile 5 --output data/autopilot/reference/loglikelihood_threshold.json
+python main.py calibrate-loglikelihood --reference data/reference/indomain_O4a_H1.npz --percentile 5 --output data/autopilot/reference/loglikelihood_threshold.json
 ```
 
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_index.npz`*.
+- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
 - `--percentile`: Percentile for log-likelihood (lower = more restrictive). *Default: `5`*.
 - `--output`: Destination JSON path. *Default: `data/autopilot/reference/loglikelihood_threshold.json`*.
 
@@ -557,7 +557,7 @@ Output format (`loglikelihood_threshold.json`):
 {
   "threshold": -148.32,
   "percentile": 5.0,
-  "reference": "data/reference/indomain_index.npz",
+  "reference": "data/reference/indomain_O4a_H1.npz",
   "n_samples": 528,
   "calibrated_at": "2026-05-23T23:10:00+00:00"
 }
@@ -586,7 +586,7 @@ python main.py scan-live --detector H1 --run O4a --session-id autopilot_20260516
 - `--workers`: Parallel producer threads for GWOSC fetch. *Default: `4`*.
 - `--session-id`: Session ID. *Default: `autopilot_{timestamp}`*.
 - `--min-novel`: Minimum NOVEL threshold to suggest clustering. *Default: `10`*.
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_index.npz`*.
+- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
 - `--hours`: Scan duration override in hours. *Default: from `run_config`*.
 
 Output structure:

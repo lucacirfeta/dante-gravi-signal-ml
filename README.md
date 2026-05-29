@@ -212,11 +212,11 @@ When `--reference` is omitted in `morphcheck` or `full-analysis`, the pipeline *
 ### Autopilot & Threshold Calibration
 1. **Log-likelihood Threshold Calibration (Clustering):**
    ```bash
-   python main.py calibrate-loglikelihood --reference data/reference/indomain_index.npz --percentile 5
+   python main.py calibrate-loglikelihood --reference data/reference/indomain_O4a_H1.npz --percentile 5
    ```
 2. **Per-class Threshold Calibration (Scan Live):**
    ```bash
-   python main.py calibrate-threshold --reference data/reference/indomain_index.npz --percentile 5
+   python main.py calibrate-threshold --reference data/reference/indomain_O4a_H1.npz --percentile 5
    ```
 3. **Live Scan with KNOWN/NOVEL Classification:**
    ```bash

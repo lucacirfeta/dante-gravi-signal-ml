@@ -25,7 +25,6 @@ data/embeddings/
 data/clusters/
 data/reference/indomain_images/
 data/reference/training_images/
-data/reference/*.npz
 data/reference/*.csv
 data/reference/*.tar.gz
 

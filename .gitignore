@@ -270,7 +270,8 @@ embeddings/
 
 # Keep this .gitignore
 !.gitignore
-data/reference/indomain_index.json
+!data/reference/*.json
+!data/reference/*.npz
 data/reference/
 new_results.md
 scratch_gen_results.py

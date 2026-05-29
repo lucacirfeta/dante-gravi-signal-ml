@@ -114,6 +114,24 @@ def _analyze_detector(
     }
 
     # ------------------------------------------------------------------ #
+    # Fail-fast check for references (BUG 2 FIX)                          #
+    # ------------------------------------------------------------------ #
+    from src.utils import discover_references
+    if reference_path is not None:
+        references = [Path(reference_path)]
+        auto_discovery = False
+    else:
+        references = discover_references()
+        auto_discovery = True
+        
+    if not references:
+        error_msg = "Nessun file indomain_*.npz trovato in data/reference/. Eseguire download-all-references prima di morphcheck."
+        logger.error("%s[%s]%s %s", color, det, reset, error_msg)
+        det_report["status"] = "FAILED"
+        det_report["error"] = error_msg
+        return det, det_report, _save_detector_report(det_report, run, session_id, det)
+
+    # ------------------------------------------------------------------ #
     # Descriptive statistics from spectrogram filenames                   #
     # ------------------------------------------------------------------ #
     input_dir = session_path(run, session_id) / "spectrograms" / det
@@ -270,15 +288,10 @@ def _analyze_detector(
     cluster_cfg = cfg["clustering"]
 
     try:
-        from src.utils import discover_references
-        if reference_path is not None:
-            references = [Path(reference_path)]
-            auto_discovery = False
-            morph_report_path = cluster_dir / "morphcheck_report.json"
-        else:
-            references = discover_references()
-            auto_discovery = True
+        if auto_discovery:
             morph_report_path = cluster_dir / "morphcheck_summary.json"
+        else:
+            morph_report_path = cluster_dir / "morphcheck_report.json"
 
         if morph_report_path.exists():
             logger.info("%s[%s]%s Step 2: Morphcheck report already exists. Skipping.", color, det, reset)
@@ -365,24 +378,28 @@ def _analyze_detector(
                 else:
                     current_morph_path = morph_report_path
 
-                morph_summary = run_morphological_crosscheck(
-                    anomalous_embeddings,
-                    anomalous_files,
-                    anomalous_cluster_ids,
-                    ref_path,
-                    current_morph_path,
-                    k=sim_cfg.get("k_neighbors", 5),
-                    novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
-                    consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
-                )
-                print_morphological_summary(morph_summary, detector=det)
-                
-                summary_results[ref_name] = {
-                    "novel": morph_summary["novel"],
-                    "known": morph_summary["known"],
-                    "ambiguous": morph_summary["ambiguous"]
-                }
-                all_details[ref_name] = {d["file"]: d["novelty_status"] for d in morph_summary["details"]}
+                try:
+                    morph_summary = run_morphological_crosscheck(
+                        anomalous_embeddings,
+                        anomalous_files,
+                        anomalous_cluster_ids,
+                        ref_path,
+                        current_morph_path,
+                        k=sim_cfg.get("k_neighbors", 5),
+                        novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
+                        consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
+                    )
+                    print_morphological_summary(morph_summary, detector=det)
+                    
+                    summary_results[ref_name] = {
+                        "novel": morph_summary["novel"],
+                        "known": morph_summary["known"],
+                        "ambiguous": morph_summary["ambiguous"]
+                    }
+                    all_details[ref_name] = {d["file"]: d["novelty_status"] for d in morph_summary["details"]}
+                except Exception as e:
+                    logger.error("%s[%s]%s Morphcheck failed for reference %s: %s", color, det, reset, ref_name, e, exc_info=True)
+                    continue
             
             if auto_discovery:
                 newly_resolved = 0
@@ -423,14 +440,13 @@ def _analyze_detector(
                 with open(morph_report_path, "w", encoding="utf-8") as f:
                     json.dump(summary_report, f, indent=2)
                 
-                if len(references) > 0:
-                    last_ref = references[-1].name
+                if len(references) > 0 and len(summary_results) > 0:
                     det_report["steps"]["morphcheck"] = {
                         "status": "OK",
                         "timestamp": step_start,
-                        "novel": summary_results[last_ref]["novel"],
-                        "known": summary_results[last_ref]["known"],
-                        "ambiguous": summary_results[last_ref]["ambiguous"],
+                        "references_used": summary_report["references_used"],
+                        "results": summary_report["results"],
+                        "comparison": summary_report["comparison"],
                     }
             else:
                 det_report["steps"]["morphcheck"] = {

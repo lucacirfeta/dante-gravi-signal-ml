@@ -1619,26 +1619,30 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
         else:
             current_output_path = output_path
 
-        summary = run_morphological_crosscheck(
-            anomalous_embeddings,
-            anomalous_files,
-            anomalous_cluster_ids,
-            ref_path,
-            current_output_path,
-            k=k,
-            novelty_threshold=novelty_threshold,
-            consensus_threshold=consensus_threshold,
-        )
+        try:
+            summary = run_morphological_crosscheck(
+                anomalous_embeddings,
+                anomalous_files,
+                anomalous_cluster_ids,
+                ref_path,
+                current_output_path,
+                k=k,
+                novelty_threshold=novelty_threshold,
+                consensus_threshold=consensus_threshold,
+            )
 
-        print_morphological_summary(summary)
-        print(f"Morphological check complete against {ref_name}. {summary['novel']} novel candidates.")
-        
-        summary_results[ref_name] = {
-            "novel": summary["novel"],
-            "known": summary["known"],
-            "ambiguous": summary["ambiguous"]
-        }
-        all_details[ref_name] = {d["file"]: d["novelty_status"] for d in summary["details"]}
+            print_morphological_summary(summary)
+            print(f"Morphological check complete against {ref_name}. {summary['novel']} novel candidates.")
+            
+            summary_results[ref_name] = {
+                "novel": summary["novel"],
+                "known": summary["known"],
+                "ambiguous": summary["ambiguous"]
+            }
+            all_details[ref_name] = {d["file"]: d["novelty_status"] for d in summary["details"]}
+        except Exception as e:
+            logger.error("Morphcheck failed for reference %s: %s", ref_name, e, exc_info=True)
+            continue
 
     if auto_discovery:
         detector = "Unknown"
