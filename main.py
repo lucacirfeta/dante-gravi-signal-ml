@@ -40,11 +40,12 @@ Usage:
 """
 
 from __future__ import annotations
+from pathlib import Path
 
 import argparse
 import sys
 from datetime import datetime
-from pathlib import Path
+
 
 import numpy as np
 import astropy.utils.data
@@ -353,6 +354,11 @@ def cmd_scan(args: argparse.Namespace) -> None:
     session_id = _resolve_session_id(args)
     cfg = load_config()
 
+    from src.logging_utils import PhaseTracker
+    from src.utils import setup_logger
+    cmd_logger = setup_logger("main.scan", log_file=Path("logs/gravi-signal-ml.log"), session_id=session_id, run=run, detector=detector)
+    tracker = PhaseTracker(cmd_logger, "scan", session_id, run, detector)
+
     _log_run_header(run, detector, session_id)
 
     # --- Incremental logic ---------------------------------------------------
@@ -370,7 +376,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         
     if raw_path:
         import re
-        from pathlib import Path
+        
         raw_path = Path(raw_path)
         logger.info("Using raw session: %s", raw_path)
         segment_length = 4096
@@ -420,6 +426,8 @@ def cmd_scan(args: argparse.Namespace) -> None:
             end_gps = start_gps + int(hours * 3600)
             logger.info("=== SCAN: %s [%s], %.1f hours ===", detector, run, hours)
 
+    tracker.start(gps_start=start_gps)
+
     segments = generate_segments_from_gps_range(start_gps, end_gps, segment_length=segment_length)
 
     if not segments:
@@ -458,6 +466,8 @@ def cmd_scan(args: argparse.Namespace) -> None:
         len(segments) - processed_count,
         total_duration / 3600,
     )
+    
+    tracker.end(gps_end=end_gps, n_processed=processed_count, n_total=len(segments))
 
 
 def _fetch_single_block(detector: str, start: int, end: int, output_dir: Path, retry_delays: list[int], base_delay: float, cache_raw: bool) -> tuple[bool, str]:
@@ -687,6 +697,12 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
     explicit_session = hasattr(args, "session_id") and args.session_id
 
+    from src.logging_utils import PhaseTracker
+    from src.utils import setup_logger
+    det_str = ",".join(detectors)
+    cmd_logger = setup_logger("main.scan_extended", log_file=Path("logs/gravi-signal-ml.log"), session_id=session_id, run=run, detector=det_str)
+    tracker = PhaseTracker(cmd_logger, "scan_extended", session_id, run, det_str)
+
     _log_run_header(run, None, session_id)
     logger.info("=== SCAN-EXTENDED: %s [%s], %d h per detector ===", detectors, run, hours)
 
@@ -717,7 +733,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         
     if raw_path:
         import re
-        from pathlib import Path
+        
         raw_path = Path(raw_path)
         logger.info("Using raw session: %s", raw_path)
         segment_length = 4096
@@ -753,6 +769,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         if start_gps is None:
             start_gps = _run_start_gps(run, cfg)
         end_gps = start_gps + int(hours * 3600)
+        
+    tracker.start(gps_start=start_gps)
 
     segments = generate_segments_from_gps_range(start_gps, end_gps, segment_length=segment_length)
 
@@ -783,6 +801,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         total_duration / 3600,
     )
     print(f"Extended scan complete: {processed_count} saved, {skipped} skipped.")
+    
+    tracker.end(gps_end=end_gps, n_processed=processed_count, n_total=len(segments))
 
     # --- Automatic full analysis trigger ---
     if getattr(args, "full_analysis", False):

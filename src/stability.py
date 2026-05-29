@@ -35,7 +35,8 @@ def run_stability_analysis(
     detector: str = "H1",
     run: str = "O4a",
     anomaly_criterion: str = "likelihood",
-) -> None:
+
+    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> None:
     """Run stability analysis and save report.
 
     Args:
@@ -45,7 +46,9 @@ def run_stability_analysis(
         session_id: Current session identifier
         detector: Detector identifier (e.g. H1)
     """
-    logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
+    
+    logger = logger or logging.getLogger(__name__)
+logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
 
     n_samples = len(embeddings)
 

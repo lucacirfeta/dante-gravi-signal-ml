@@ -197,6 +197,9 @@ def setup_logger(
     name: str,
     log_file: Path | None = None,
     level: int = logging.INFO,
+    session_id: str | None = None,
+    run: str | None = None,
+    detector: str | None = None,
 ) -> logging.Logger:
     """Create a structured logger with file and console handlers.
 
@@ -209,12 +212,16 @@ def setup_logger(
         log_file: Optional path to a log file.  Parent directories are
             created automatically.
         level: Logging level (default: ``logging.INFO``).
+        session_id: Optional session identifier for structured logging.
+        run: Optional observing run identifier.
+        detector: Optional detector identifier.
 
     Returns:
         Configured :class:`logging.Logger` instance.
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)
+    logger.propagate = False
 
     # Prevent duplicate handlers on repeated calls
     if logger.handlers:
@@ -233,13 +240,38 @@ def setup_logger(
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # File handler — only when a path is provided
+    # Legacy File handler — only when a path is provided
     if log_file is not None:
         log_file.parent.mkdir(parents=True, exist_ok=True)
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
+
+    # Structured JSON Lines File Handler
+    if session_id and run:
+        from src.logging_utils import StructuredFormatter
+        # The prompt requires: data/runs/<run>/<session_id>/logs/pipeline.log
+        pipeline_log_path = Path(f"data/runs/{run.lower()}/{session_id}/logs/pipeline.log")
+        pipeline_log_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        json_handler = logging.FileHandler(pipeline_log_path, encoding="utf-8")
+        json_handler.setLevel(level)
+        json_handler.setFormatter(StructuredFormatter())
+        
+        # Add metadata filter to ensure structured data gets logged with this context
+        class ContextFilter(logging.Filter):
+            def filter(self, record: logging.LogRecord) -> bool:
+                if not hasattr(record, "session_id"):
+                    record.session_id = session_id
+                if not hasattr(record, "run"):
+                    record.run = run
+                if detector and not hasattr(record, "detector"):
+                    record.detector = detector
+                return True
+                
+        json_handler.addFilter(ContextFilter())
+        logger.addHandler(json_handler)
 
     return logger
 

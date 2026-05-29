@@ -144,7 +144,8 @@ def run_timeslide(
     output_dir: Path,
     iterations: int = 100,
     window: int = 32,
-) -> dict:
+
+    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> dict:
     """Run time-slide analysis and save report.
 
     Estimates the background coincidence rate between H1 and L1 by
@@ -164,7 +165,9 @@ def run_timeslide(
         Dictionary with zero-lag count, background distribution,
         p-value, z-score, and interpretation.
     """
-    logger.info("Extracting H1 anomalous GPS times...")
+    
+    logger = logger or logging.getLogger(__name__)
+logger.info("Extracting H1 anomalous GPS times...")
     h1_gps = extract_anomalous_gps(meta_h1, rep_h1)
 
     logger.info("Extracting L1 anomalous GPS times...")

@@ -122,9 +122,12 @@ def run_morphological_crosscheck(
     k: int = 5,
     novelty_threshold: float = 0.85,
     consensus_threshold: float = 0.6,
-) -> dict:
+
+    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> dict:
     """Orchestrate full morphological crosscheck."""
-    from src.reference_builder import load_reference_index
+    
+    logger = logger or logging.getLogger(__name__)
+from src.reference_builder import load_reference_index
     
     ref_embeddings, ref_labels = load_reference_index(reference_index_path)
     

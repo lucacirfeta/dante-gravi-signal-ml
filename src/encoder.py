@@ -93,6 +93,7 @@ class DINOv2Encoder:
         self,
         device: str | torch.device | None = None,
         batch_size: int | None = None,
+        logger: logging.Logger | logging.LoggerAdapter | None = None,
     ) -> None:
         if device is not None:
             self.device: torch.device = torch.device(device) if isinstance(device, str) else device
@@ -111,6 +112,7 @@ class DINOv2Encoder:
                 "cpu": hw_cfg.get("cpu_batch_size", 16),
             }
             self.batch_size = _batch_defaults.get(self.device.type, 16)
+        self.logger = logger or logging.getLogger(__name__)
 
         # Load DINOv2-Reg ViT-S/14 via torch.hub
         self.model: torch.nn.Module = torch.hub.load(
@@ -128,7 +130,7 @@ class DINOv2Encoder:
         # Pre-built transform (grayscale PNG → 3×518×518 tensor)
         self.transform: transforms.Compose = build_dinov2_transform()
 
-        logger.info(
+        self.logger.info(
             "DINOv2 Encoder initialized on %s with batch_size=%d",
             self.device,
             self.batch_size,
@@ -218,7 +220,7 @@ class DINOv2Encoder:
 
                 # OOM guard — halve batch size and retry once
                 retry_bs = max(1, bs // 2)
-                logger.warning(
+                self.logger.warning(
                     "OOM with batch_size=%d — retrying with %d",
                     bs,
                     retry_bs,
@@ -318,7 +320,7 @@ class DINOv2Encoder:
         with open(json_path, "w", encoding="utf-8") as fh:
             json.dump(metadata, fh, indent=2)
 
-        logger.info(
+        self.logger.info(
             "Saved %d embeddings → %s + .json",
             len(sorted_paths),
             output_path,

@@ -113,7 +113,8 @@ def run_ablation_study(
     detector: str = "H1",
     gpu_lock: threading.Lock | None = None,
     batch_size: int = 32,
-) -> None:
+
+    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> None:
     """Run ablation study across different conditions and compare with baseline.
     
     Args:
@@ -126,7 +127,9 @@ def run_ablation_study(
         gpu_lock: Optional threading.Lock to serialize GPU usage.
         batch_size: Batch size for DINOv2Encoder.
     """
-    conditions = ["grayscale", "inverted", "shuffled-intensity", "random-baseline"]
+    
+    logger = logger or logging.getLogger(__name__)
+conditions = ["grayscale", "inverted", "shuffled-intensity", "random-baseline"]
     
     n_samples = len(image_paths)
     

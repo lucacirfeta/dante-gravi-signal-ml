@@ -254,7 +254,8 @@ def identify_anomalous_clusters(
 def run_full_pipeline(
     embeddings: np.ndarray,
     config: dict,
-) -> dict:
+
+    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> dict:
     """Orchestrate the full clustering pipeline.
 
     Sequence: PCA → UMAP(clustering) → HDBSCAN → anomaly ID → UMAP(viz)
@@ -272,7 +273,9 @@ def run_full_pipeline(
         - ``hdbscan_stats``: statistics dict from HDBSCAN
         - ``anomalous_clusters``: list of anomalous cluster IDs
     """
-    # --- Step 0: Ensure L2-normalized embeddings (GPU-accelerated) ---
+    
+    logger = logger or logging.getLogger(__name__)
+# --- Step 0: Ensure L2-normalized embeddings (GPU-accelerated) ---
     embeddings = _gpu_l2_normalize(embeddings)
 
     # --- Step 1: PCA ---

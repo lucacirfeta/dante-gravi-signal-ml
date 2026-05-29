@@ -37,6 +37,7 @@ from src.stability import run_stability_analysis
 from src.timeslide import run_timeslide
 from src.encoder import DINOv2Encoder
 from src.utils import load_config, setup_logger, session_path
+from src.logging_utils import PhaseTracker, get_phase_logger
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -183,12 +184,16 @@ def _analyze_detector(
     try:
         if not output_path.exists():
             logger.info("%s[%s]%s Step 0: Encoding spectrograms...", color, det, reset)
+            enc_logger = get_phase_logger(__name__, session_id, run, det, "encode")
+            tracker_enc = PhaseTracker(enc_logger, "encode", session_id, run, det)
+            tracker_enc.start()
             _lock = gpu_lock if gpu_lock is not None else _gpu_lock
-            encoder_enc = DINOv2Encoder(batch_size=batch_size)
+            encoder_enc = DINOv2Encoder(batch_size=batch_size, logger=enc_logger)
             encoder_enc.extract_dataset(input_dir, output_path, batch_size, gpu_lock=_lock)
             del encoder_enc
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
+            tracker_enc.end()
             det_report["steps"]["encode"] = {"status": "OK", "timestamp": step_start}
         else:
             logger.info("%s[%s]%s Step 0: Embeddings already exist. Skipping encode.", color, det, reset)
@@ -252,9 +257,13 @@ def _analyze_detector(
             det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": step_start}
         else:
             logger.info("%s[%s]%s Step 1: Clustering...", color, det, reset)
-            result = run_full_pipeline(embeddings, cluster_cfg)
+            clus_logger = get_phase_logger(__name__, session_id, run, det, "cluster")
+            tracker_clus = PhaseTracker(clus_logger, "cluster", session_id, run, det)
+            tracker_clus.start()
+            result = run_full_pipeline(embeddings, cluster_cfg, logger=clus_logger)
             save_cluster_report(result, metadata, cluster_dir, detector=det)
             print_summary(result, detector=det)
+            tracker_clus.end(n_processed=len(embeddings))
 
             det_report["steps"]["cluster"] = {
                 "status": "OK",
@@ -326,6 +335,9 @@ def _analyze_detector(
                 }
         else:
             logger.info("%s[%s]%s Step 2: Morphological cross-check...", color, det, reset)
+            morph_logger = get_phase_logger(__name__, session_id, run, det, "morphcheck")
+            tracker_morph = PhaseTracker(morph_logger, "morphcheck", session_id, run, det)
+            tracker_morph.start()
             anomalous_indices: list[int] = []
             anomalous_files: list = []
             anomalous_cluster_ids: list[int] = []
@@ -388,6 +400,7 @@ def _analyze_detector(
                         k=sim_cfg.get("k_neighbors", 5),
                         novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
                         consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
+                        logger=morph_logger,
                     )
                     print_morphological_summary(morph_summary, detector=det)
                     
@@ -441,7 +454,8 @@ def _analyze_detector(
                     json.dump(summary_report, f, indent=2)
                 
                 if len(references) > 0 and len(summary_results) > 0:
-                    det_report["steps"]["morphcheck"] = {
+                    tracker_morph.end(n_processed=len(anomalous_embeddings))
+                det_report["steps"]["morphcheck"] = {
                         "status": "OK",
                         "timestamp": step_start,
                         "references_used": summary_report["references_used"],
@@ -449,6 +463,7 @@ def _analyze_detector(
                         "comparison": summary_report["comparison"],
                     }
             else:
+                tracker_morph.end(n_processed=len(anomalous_embeddings))
                 det_report["steps"]["morphcheck"] = {
                     "status": "OK",
                     "timestamp": step_start,
@@ -557,6 +572,9 @@ def _analyze_detector(
             }
         else:
             logger.info("%s[%s]%s Step 3: Ablation study...", color, det, reset)
+            abl_logger = get_phase_logger(__name__, session_id, run, det, "ablation")
+            tracker_abl = PhaseTracker(abl_logger, "ablation", session_id, run, det)
+            tracker_abl.start()
             run_ablation_study(
                 original_labels=result["labels"],
                 image_paths=image_paths,
@@ -566,12 +584,14 @@ def _analyze_detector(
                 detector=det,
                 gpu_lock=gpu_lock,
                 batch_size=batch_size,
+                logger=abl_logger,
             )
 
 
             if ablation_report_file.exists():
                 with open(ablation_report_file, "r", encoding="utf-8") as fh:
                     ablation_data = json.load(fh)
+                tracker_abl.end()
                 det_report["steps"]["ablation"] = {
                     "status": "OK",
                     "timestamp": step_start,
@@ -617,6 +637,9 @@ def _analyze_detector(
             }
         else:
             logger.info("%s[%s]%s Step 4: Stability analysis...", color, det, reset)
+            stab_logger = get_phase_logger(__name__, session_id, run, det, "stability")
+            tracker_stab = PhaseTracker(stab_logger, "stability", session_id, run, det)
+            tracker_stab.start()
             run_stability_analysis(
                 embeddings=embeddings,
                 cluster_cfg=cluster_cfg,
@@ -624,11 +647,13 @@ def _analyze_detector(
                 session_id=session_id,
                 detector=det,
                 run=run,
+                logger=stab_logger,
             )
 
             if stability_report_file.exists():
                 with open(stability_report_file, "r", encoding="utf-8") as fh:
                     stability_data = json.load(fh)
+                tracker_stab.end()
                 det_report["steps"]["stability"] = {
                     "status": "OK",
                     "timestamp": step_start,
@@ -963,7 +988,22 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
 
         # Morphcheck
         morph_rep_path = session_dir / "clusters" / det_lower / "morphcheck_report.json"
-        if morph_rep_path.exists():
+        morph_sum_path = session_dir / "clusters" / det_lower / "morphcheck_summary.json"
+        
+        if morph_sum_path.exists():
+            try:
+                with open(morph_sum_path, "r", encoding="utf-8") as fh:
+                    m_data = json.load(fh)
+                det_report["steps"]["morphcheck"] = {
+                    "status": "OK",
+                    "timestamp": datetime.fromtimestamp(morph_sum_path.stat().st_mtime, timezone.utc).isoformat(),
+                    "references_used": m_data.get("references_used", []),
+                    "results": m_data.get("results", {}),
+                    "comparison": m_data.get("comparison", {}),
+                }
+            except Exception as e:
+                det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+        elif morph_rep_path.exists():
             try:
                 with open(morph_rep_path, "r", encoding="utf-8") as fh:
                     m_data = json.load(fh)
