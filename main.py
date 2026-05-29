@@ -348,11 +348,15 @@ def cmd_scan(args: argparse.Namespace) -> None:
     from src.data_loader import generate_segments_from_gps_range
 
     detector: str = args.detector
-    hours: float = args.hours
     run = _resolve_run(args)
     run_lower = run.lower()
     session_id = _resolve_session_id(args)
     cfg = load_config()
+
+    hours = getattr(args, "hours", None)
+    if hours is None:
+        run_cfg = cfg.get("run_config", {}).get(run, {})
+        hours = float(run_cfg.get("hours_per_detector", 72.0))
 
     from src.logging_utils import PhaseTracker
     from src.utils import setup_logger
@@ -691,7 +695,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     run_lower = run.lower()
     session_id = _resolve_session_id(args)
 
-    hours = getattr(args, "hours", None) or scan_cfg["hours_per_detector"]
+    run_cfg = cfg.get("run_config", {}).get(run, {})
+    hours = getattr(args, "hours", None) or run_cfg.get("hours_per_detector", scan_cfg.get("hours_per_detector", 72))
     detectors = scan_cfg["detectors"]
     workers: int = args.workers
     fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
@@ -2262,8 +2267,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_scan.add_argument(
         "--hours",
         type=float,
-        default=1.0,
-        help="Duration to scan from run start (hours). Default: 1.0",
+        default=None,
+        help="Duration to scan from run start (hours). Default: value from config.yaml.",
     )
     p_scan.add_argument(
         "--workers",

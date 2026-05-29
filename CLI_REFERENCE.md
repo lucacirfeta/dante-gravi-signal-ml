@@ -107,7 +107,7 @@ Scans segments for a **single detector** in a defined period. By including an ex
 
 - `--detector` **(Required)**: Detector to use. Choices: `H1`, `L1`, `V1`.
 - `--run`: Reference observational run. Choices: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
-- `--hours`: Hours of scan duration (only for new scans). *Default: `1.0`*.
+- `--hours`: Hours of scan duration (only for new scans). *Default: from config.yaml*.
 - `--workers`: Threads in parallel. 1 = sequential. *Default: `1`*.
 - `--session-id`: Unique session ID (e.g., `20260510_143022`). *Default: auto-generated*.
 - `--no-cache-raw`: Boolean flag. Disables saving raw HDF5 files in the `data/raw` folder. *Default: `True`* (does not save). Set to `False` to enable saving.
