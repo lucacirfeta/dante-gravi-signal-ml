@@ -127,7 +127,7 @@ def run_morphological_crosscheck(
     """Orchestrate full morphological crosscheck."""
     
     logger = logger or logging.getLogger(__name__)
-from src.reference_builder import load_reference_index
+    from src.reference_builder import load_reference_index
     
     ref_embeddings, ref_labels = load_reference_index(reference_index_path)
     
