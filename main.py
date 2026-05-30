@@ -726,6 +726,45 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     last_gps = None
     if explicit_session and any(g > 0 for g in last_gps_list):
         last_gps = min(g for g in last_gps_list if g > 0)
+        
+        orig_start = start_gps if start_gps is not None else _run_start_gps(run, cfg)
+        expected_end_gps = orig_start + int(hours * 3600)
+        raw_path = getattr(args, "raw_path", None)
+        segment_duration = 4096 if raw_path else 32
+        
+        if last_gps >= expected_end_gps - (segment_duration * 2):
+            logger.info("Scan already complete for session %s. Skipping to full-analysis.", session_id)
+            if getattr(args, "full_analysis", False):
+                from src.full_analysis import run_full_analysis
+                logger.info("Triggering automatic full analysis...")
+                result = run_full_analysis(
+                    session_id=session_id,
+                    detectors=detectors,
+                    run=run,
+                    skip_timeslide=getattr(args, "skip_timeslide", False),
+                    n_runs=getattr(args, "n_runs", 20),
+                    sequential=getattr(args, "sequential", False)
+                )
+                
+                status_val = result.get("status")
+                is_failed = False
+                if status_val == "FAILED":
+                    is_failed = True
+                elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
+                    is_failed = True
+
+                if not is_failed and getattr(args, "continue_run", False):
+                    max_iterations = getattr(args, "max_iterations", 10)
+                    stop_date = getattr(args, "stop_date", None)
+                    _run_continue_loop(
+                        initial_session_id=session_id,
+                        run=run,
+                        max_iterations=max_iterations,
+                        stop_date_str=stop_date,
+                        args=args,
+                    )
+            return
+
         logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, last_gps)
         if start_gps is None:
             start_gps = last_gps

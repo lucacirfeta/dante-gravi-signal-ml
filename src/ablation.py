@@ -129,7 +129,7 @@ def run_ablation_study(
     """
     
     logger = logger or logging.getLogger(__name__)
-conditions = ["grayscale", "inverted", "shuffled-intensity", "random-baseline"]
+    conditions = ["grayscale", "inverted", "shuffled-intensity", "random-baseline"]
     
     n_samples = len(image_paths)
     
