@@ -24,10 +24,10 @@ logger: logging.Logger = setup_logger(__name__)
 
 
 def run_benchmark(
-    reference_path: str | Path = "data/reference/indomain_index.npz",
-    min_samples_per_class: int = 10,
-    output_path: str | Path | None = "data/reference/benchmark_report.json",
-    algorithm: str = "hdbscan",
+        reference_path: str | Path = "data/reference/indomain_index.npz",
+        min_samples_per_class: int = 10,
+        output_path: str | Path | None = "data/reference/benchmark_report.json",
+        algorithm: str = "hdbscan",
 ) -> dict:
     """Run benchmark of clustering pipeline using Ground Truth labels.
 
@@ -51,31 +51,31 @@ def run_benchmark(
     # Filter out classes with too few samples
     unique_labels, counts = np.unique(labels, return_counts=True)
     valid_classes = unique_labels[counts >= min_samples_per_class]
-    
+
     logger.info(
-        "Filtering classes with >= %d samples (kept %d/%d classes)", 
+        "Filtering classes with >= %d samples (kept %d/%d classes)",
         min_samples_per_class, len(valid_classes), len(unique_labels)
     )
-    
+
     mask = np.isin(labels, valid_classes)
     filtered_embeddings = embeddings[mask]
     filtered_labels = labels[mask]
-    
+
     n_samples = len(filtered_labels)
     logger.info("Proceeding with %d samples after filtering.", n_samples)
-    
+
     if n_samples == 0:
         raise ValueError("No samples left after filtering.")
-    
+
     # Run clustering pipeline
     logger.info("Running unsupervised clustering pipeline...")
     cfg = load_config()
     clustering_cfg = cfg.get("clustering", {})
     clustering_cfg["algorithm"] = algorithm
-    
+
     results = run_full_pipeline(filtered_embeddings, clustering_cfg)
     pred_labels = results["labels"]
-    
+
     # Calculate metrics
     # Note: HDBSCAN labels noise points as -1. We exclude them from ARI/AMI
     # calculations because noise points do not form a coherent semantic cluster.
@@ -84,19 +84,19 @@ def run_benchmark(
         valid_mask = pred_labels != -1
     else:
         valid_mask = np.ones(len(pred_labels), dtype=bool)
-        
+
     clean_true_labels = filtered_labels[valid_mask]
     clean_pred_labels = pred_labels[valid_mask]
-    
+
     n_noise = int(np.sum(~valid_mask))
     noise_ratio = n_noise / n_samples if n_samples > 0 else 0.0
-    
+
     if n_noise > 0:
         logger.info(
-            "Excluding %d noise points (%.1f%%) for metric calculations.", 
+            "Excluding %d noise points (%.1f%%) for metric calculations.",
             n_noise, noise_ratio * 100
         )
-    
+
     if len(clean_true_labels) > 0:
         ari = float(adjusted_rand_score(clean_true_labels, clean_pred_labels))
         ami = float(adjusted_mutual_info_score(clean_true_labels, clean_pred_labels))
@@ -104,7 +104,7 @@ def run_benchmark(
         logger.warning("No points were clustered (all noise). Metrics are undefined.")
         ari = 0.0
         ami = 0.0
-        
+
     # Generate contingency matrix
     # We use pandas crosstab for a nice DataFrame representation
     # Include noise points (-1) in the contingency matrix for completeness
@@ -112,11 +112,11 @@ def run_benchmark(
         pd.Series(filtered_labels, name="True Class"),
         pd.Series(pred_labels, name="Predicted Cluster")
     )
-    
+
     # Convert column names to int/str for JSON serialization
     crosstab_df.columns = [str(c) for c in crosstab_df.columns]
     contingency_dict = crosstab_df.to_dict(orient="index")
-    
+
     report = {
         "metrics": {
             "adjusted_rand_index": ari,
@@ -136,7 +136,7 @@ def run_benchmark(
             "reference_file": str(ref_path),
         }
     }
-    
+
     # Save report
     if output_path:
         out_path = Path(output_path)
@@ -144,7 +144,7 @@ def run_benchmark(
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=4)
         logger.info("Benchmark report saved to %s", out_path)
-        
+
     # Print formatted summary to terminal
     print("\n" + "=" * 60)
     print(" CLUSTERING BENCHMARK RESULTS".center(60))
@@ -155,7 +155,7 @@ def run_benchmark(
     print(f" Clusters Found : {report['clustering_stats']['n_clusters_found']}")
     print(f" Total Samples  : {n_samples}")
     if algorithm == "hdbscan":
-        print(f" Noise Points   : {n_noise} ({noise_ratio*100:.1f}%)")
+        print(f" Noise Points   : {n_noise} ({noise_ratio * 100:.1f}%)")
     print("-" * 60)
     print(f" Adjusted Rand Index (ARI)       : {ari:.4f}")
     print(f" Adjusted Mutual Info (AMI)      : {ami:.4f}")

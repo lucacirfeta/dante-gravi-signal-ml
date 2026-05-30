@@ -19,21 +19,22 @@ class StructuredFormatter(logging.Formatter):
     Produces one JSON object per log line, injecting UTC timestamp,
     level, message, and any extra context parameters attached to the record.
     """
-    
+
     def format(self, record: logging.LogRecord) -> str:
         log_obj: dict[str, Any] = {
             "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
             "level": record.levelname,
             "message": record.getMessage()
         }
-        
+
         # Add context metadata if present in record
-        for key in ["session_id", "run", "detector", "phase", "gps_start", "gps_end", "n_processed", "n_total", "elapsed_seconds"]:
+        for key in ["session_id", "run", "detector", "phase", "gps_start", "gps_end", "n_processed", "n_total",
+                    "elapsed_seconds"]:
             if hasattr(record, key):
                 val = getattr(record, key)
                 if val is not None:
                     log_obj[key] = val
-                    
+
         return json.dumps(log_obj)
 
 
@@ -47,14 +48,14 @@ class PhaseTracker:
         run: Observing run (e.g. 'O4a').
         detector: Detector identifier (e.g. 'H1').
     """
-    
+
     def __init__(
-        self,
-        logger: logging.Logger | logging.LoggerAdapter,
-        phase: str,
-        session_id: str | None = None,
-        run: str | None = None,
-        detector: str | None = None,
+            self,
+            logger: logging.Logger | logging.LoggerAdapter,
+            phase: str,
+            session_id: str | None = None,
+            run: str | None = None,
+            detector: str | None = None,
     ) -> None:
         self.logger = logger
         self.phase = phase
@@ -86,11 +87,11 @@ class PhaseTracker:
         self.start_time = time.time()
         self.gps_start = gps_start
         extra = self._get_extra()
-        
+
         msg = f"Phase '{self.phase}' started."
         if gps_start is not None:
             msg += f" GPS start: {gps_start}"
-            
+
         self.logger.info(msg, extra=extra)
 
     def end(self, gps_end: int | None = None, n_processed: int | None = None, n_total: int | None = None) -> None:
@@ -103,7 +104,7 @@ class PhaseTracker:
         """
         elapsed = time.time() - self.start_time if self.start_time else 0.0
         extra = self._get_extra()
-        
+
         # Add end specific metrics to extra for JSON structure
         if gps_end is not None:
             extra["gps_end"] = gps_end
@@ -112,22 +113,23 @@ class PhaseTracker:
         if n_total is not None:
             extra["n_total"] = n_total
         extra["elapsed_seconds"] = elapsed
-            
+
         parts = [f"Phase '{self.phase}' completed in {elapsed:.1f}s."]
-        
+
         if n_processed is not None:
             parts.append(f"Processed: {n_processed}")
             if n_total is not None:
                 parts.append(f"/ {n_total}")
-                
+
         if self.gps_start is not None and gps_end is not None:
             parts.append(f"GPS window: {self.gps_start} - {gps_end}")
-            
+
         self.logger.info(" ".join(parts), extra=extra)
 
 
 class ContextLoggerAdapter(logging.LoggerAdapter):
     """Adapter to automatically inject context parameters into log records."""
+
     def process(self, msg: Any, kwargs: dict[str, Any]) -> tuple[Any, dict[str, Any]]:
         if "extra" not in kwargs:
             kwargs["extra"] = {}
@@ -139,11 +141,11 @@ class ContextLoggerAdapter(logging.LoggerAdapter):
 
 
 def get_phase_logger(
-    name: str,
-    session_id: str | None = None,
-    run: str | None = None,
-    detector: str | None = None,
-    phase: str | None = None,
+        name: str,
+        session_id: str | None = None,
+        run: str | None = None,
+        detector: str | None = None,
+        phase: str | None = None,
 ) -> logging.LoggerAdapter:
     """Get a logger wrapped with the standard pipeline context.
     
@@ -167,5 +169,5 @@ def get_phase_logger(
         extra["detector"] = detector
     if phase:
         extra["phase"] = phase
-        
+
     return ContextLoggerAdapter(logger, extra)

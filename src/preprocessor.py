@@ -66,9 +66,9 @@ def whiten(ts: TimeSeries) -> TimeSeries:
 
 
 def bandpass(
-    ts: TimeSeries,
-    f_low: float = _PREPROC["f_low"],
-    f_high: float = _PREPROC["f_high"],
+        ts: TimeSeries,
+        f_low: float = _PREPROC["f_low"],
+        f_high: float = _PREPROC["f_high"],
 ) -> TimeSeries:
     """Apply a Butterworth bandpass filter to isolate the sensitive band.
 
@@ -103,12 +103,12 @@ def bandpass(
 
 
 def generate_qtransform(
-    ts: TimeSeries,
-    qrange: tuple[int, int] = tuple(_PREPROC["qrange"]),  # type: ignore[arg-type]
-    frange: tuple[int, int] = tuple(_PREPROC["frange"]),  # type: ignore[arg-type]
-    output_size: tuple[int, int] = tuple(_PREPROC["output_size"]),  # type: ignore[arg-type]
-    save_path: Path | None = None,
-    cmap: str | None = None,
+        ts: TimeSeries,
+        qrange: tuple[int, int] = tuple(_PREPROC["qrange"]),  # type: ignore[arg-type]
+        frange: tuple[int, int] = tuple(_PREPROC["frange"]),  # type: ignore[arg-type]
+        output_size: tuple[int, int] = tuple(_PREPROC["output_size"]),  # type: ignore[arg-type]
+        save_path: Path | None = None,
+        cmap: str | None = None,
 ) -> np.ndarray:
     """Compute a constant-Q transform spectrogram from a time series.
 
@@ -193,9 +193,9 @@ def generate_qtransform(
 
 
 def batch_process(
-    segment_list: list[tuple[int, int]],
-    detector: str,
-    output_dir: Path,
+        segment_list: list[tuple[int, int]],
+        detector: str,
+        output_dir: Path,
 ) -> list[Path]:
     """Run the full preprocessing pipeline on a list of O4a segments.
 
@@ -224,7 +224,7 @@ def batch_process(
     )
 
     for gps_start, gps_end in tqdm(
-        segment_list, desc=f"Processing {detector}", unit="seg"
+            segment_list, desc=f"Processing {detector}", unit="seg"
     ):
         try:
             segment_duration = gps_end - gps_start
@@ -258,7 +258,8 @@ def batch_process(
                         generate_qtransform(ts_bp, save_path=save_path)
                         saved.append(save_path)
                     except Exception:
-                        logger.warning("Skipping chunk [%d, %d]: processing failed", chunk_start, chunk_end, exc_info=True)
+                        logger.warning("Skipping chunk [%d, %d]: processing failed", chunk_start, chunk_end,
+                                       exc_info=True)
                         skipped += 1
             else:
                 filename = f"{detector}_{gps_start}_{gps_end}.png"

@@ -22,8 +22,8 @@ logger = setup_logger(__name__)
 
 
 def run_method_benchmark(
-    reference_path: str = "data/reference/indomain_index.npz",
-    output_path: str = "data/reference/benchmark_methods.json",
+        reference_path: str = "data/reference/indomain_index.npz",
+        output_path: str = "data/reference/benchmark_methods.json",
 ) -> None:
     """Compare clustering methods against ground truth labels.
 

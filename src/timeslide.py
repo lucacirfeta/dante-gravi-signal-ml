@@ -139,13 +139,13 @@ def count_coincidences(h1_gps: set[int], l1_gps: set[int], window: int = 32) -> 
 
 
 def run_timeslide(
-    meta_h1: Path, rep_h1: Path,
-    meta_l1: Path, rep_l1: Path,
-    output_dir: Path,
-    iterations: int = 100,
-    window: int = 32,
+        meta_h1: Path, rep_h1: Path,
+        meta_l1: Path, rep_l1: Path,
+        output_dir: Path,
+        iterations: int = 100,
+        window: int = 32,
 
-    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> dict:
+        logger: logging.Logger | logging.LoggerAdapter | None = None, ) -> dict:
     """Run time-slide analysis and save report.
 
     Estimates the background coincidence rate between H1 and L1 by
@@ -165,90 +165,92 @@ def run_timeslide(
         Dictionary with zero-lag count, background distribution,
         p-value, z-score, and interpretation.
     """
-    
+
     logger = logger or logging.getLogger(__name__)
+
+
 logger.info("Extracting H1 anomalous GPS times...")
-    h1_gps = extract_anomalous_gps(meta_h1, rep_h1)
+h1_gps = extract_anomalous_gps(meta_h1, rep_h1)
 
-    logger.info("Extracting L1 anomalous GPS times...")
-    l1_gps = extract_anomalous_gps(meta_l1, rep_l1)
+logger.info("Extracting L1 anomalous GPS times...")
+l1_gps = extract_anomalous_gps(meta_l1, rep_l1)
 
-    logger.info("H1 anomalous segments: %d", len(h1_gps))
-    logger.info("L1 anomalous segments: %d", len(l1_gps))
+logger.info("H1 anomalous segments: %d", len(h1_gps))
+logger.info("L1 anomalous segments: %d", len(l1_gps))
 
-    if len(h1_gps) == 0 or len(l1_gps) == 0:
-        logger.warning(
-            "One or both detectors have 0 anomalous GPS times. "
-            "Timeslide will produce a trivial result."
-        )
-
-    # Zero-lag coincidence count
-    zero_lag_coinc = count_coincidences(h1_gps, l1_gps, window)
-
-    # Time-slide background estimation
-    background: list[int] = []
-
-    # Shifts: multiples of 100 s between ±5000 s, excluding 0
-    possible_shifts = [x for x in range(-5000, 5001, 100) if x != 0]
-
-    if iterations > len(possible_shifts):
-        logger.warning(
-            "Requested %d iterations but only %d available non-zero shifts. Capping.",
-            iterations, len(possible_shifts),
-        )
-        iterations = len(possible_shifts)
-
-    shifts = random.sample(possible_shifts, iterations)
-
-    logger.info("Running %d time-slide iterations (window=%ds)...", iterations, window)
-    for shift in shifts:
-        shifted_l1 = {t + shift for t in l1_gps}
-        c = count_coincidences(h1_gps, shifted_l1, window)
-        background.append(c)
-
-    # Background statistics
-    bg_mean = float(np.mean(background)) if background else 0.0
-    bg_std = float(np.std(background)) if background else 0.0
-
-    # Empirical p-value: fraction of background trials >= zero-lag
-    p_value = (
-        sum(1 for c in background if c >= zero_lag_coinc) / iterations
-        if iterations > 0 else 1.0
+if len(h1_gps) == 0 or len(l1_gps) == 0:
+    logger.warning(
+        "One or both detectors have 0 anomalous GPS times. "
+        "Timeslide will produce a trivial result."
     )
 
-    # z-score
-    z_score = (zero_lag_coinc - bg_mean) / bg_std if bg_std > 0 else 0.0
+# Zero-lag coincidence count
+zero_lag_coinc = count_coincidences(h1_gps, l1_gps, window)
 
-    interpretation = "significativo" if p_value < 0.05 else "compatibile con fondo"
+# Time-slide background estimation
+background: list[int] = []
 
-    logger.info(
-        "Time-slide: zero-lag=%d coincidences, background mean=%.2f±%.2f, "
-        "p-value=%.4f, z-score=%.2f",
-        zero_lag_coinc, bg_mean, bg_std, p_value, z_score,
+# Shifts: multiples of 100 s between ±5000 s, excluding 0
+possible_shifts = [x for x in range(-5000, 5001, 100) if x != 0]
+
+if iterations > len(possible_shifts):
+    logger.warning(
+        "Requested %d iterations but only %d available non-zero shifts. Capping.",
+        iterations, len(possible_shifts),
     )
+    iterations = len(possible_shifts)
 
-    report = {
-        "zero_lag_coincidences": zero_lag_coinc,
-        "h1_anomalous_gps_count": len(h1_gps),
-        "l1_anomalous_gps_count": len(l1_gps),
-        "iterations": iterations,
-        "window_seconds": window,
-        "background_distribution": background,
-        "background_mean": bg_mean,
-        "background_std": bg_std,
-        "p_value": p_value,
-        "z_score": z_score,
-        "interpretation": (
-            f"p < 0.05 = significativo, altrimenti coincidenza compatibile con fondo. "
-            f"Risultato: {interpretation}"
-        ),
-    }
+shifts = random.sample(possible_shifts, iterations)
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    out_file = output_dir / "timeslide_report_H1_L1.json"
-    with open(out_file, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=4)
+logger.info("Running %d time-slide iterations (window=%ds)...", iterations, window)
+for shift in shifts:
+    shifted_l1 = {t + shift for t in l1_gps}
+    c = count_coincidences(h1_gps, shifted_l1, window)
+    background.append(c)
 
-    logger.info("Timeslide report saved to %s", out_file)
+# Background statistics
+bg_mean = float(np.mean(background)) if background else 0.0
+bg_std = float(np.std(background)) if background else 0.0
 
-    return report
+# Empirical p-value: fraction of background trials >= zero-lag
+p_value = (
+    sum(1 for c in background if c >= zero_lag_coinc) / iterations
+    if iterations > 0 else 1.0
+)
+
+# z-score
+z_score = (zero_lag_coinc - bg_mean) / bg_std if bg_std > 0 else 0.0
+
+interpretation = "significativo" if p_value < 0.05 else "compatibile con fondo"
+
+logger.info(
+    "Time-slide: zero-lag=%d coincidences, background mean=%.2f±%.2f, "
+    "p-value=%.4f, z-score=%.2f",
+    zero_lag_coinc, bg_mean, bg_std, p_value, z_score,
+)
+
+report = {
+    "zero_lag_coincidences": zero_lag_coinc,
+    "h1_anomalous_gps_count": len(h1_gps),
+    "l1_anomalous_gps_count": len(l1_gps),
+    "iterations": iterations,
+    "window_seconds": window,
+    "background_distribution": background,
+    "background_mean": bg_mean,
+    "background_std": bg_std,
+    "p_value": p_value,
+    "z_score": z_score,
+    "interpretation": (
+        f"p < 0.05 = significativo, altrimenti coincidenza compatibile con fondo. "
+        f"Risultato: {interpretation}"
+    ),
+}
+
+output_dir.mkdir(parents=True, exist_ok=True)
+out_file = output_dir / "timeslide_report_H1_L1.json"
+with open(out_file, "w", encoding="utf-8") as f:
+    json.dump(report, f, indent=4)
+
+logger.info("Timeslide report saved to %s", out_file)
+
+return report

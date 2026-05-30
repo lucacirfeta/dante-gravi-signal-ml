@@ -50,10 +50,10 @@ _URL_PATTERNS = [
 
 
 def download_gs_classifications_csv(
-    output_dir: Path,
-    run: str = "O3b",
-    detector: str = "H1",
-    local_csv: Path | None = None,
+        output_dir: Path,
+        run: str = "O3b",
+        detector: str = "H1",
+        local_csv: Path | None = None,
 ) -> Path:
     """Download the Gravity Spy ML classifications CSV from Zenodo.
 
@@ -128,11 +128,11 @@ def download_gs_classifications_csv(
 
 
 def select_reference_events(
-    csv_path: Path,
-    detector: str = "H1",
-    min_confidence: float = 0.95,
-    max_per_class: int = 30,
-    excluded_labels: list[str] | None = None,
+        csv_path: Path,
+        detector: str = "H1",
+        min_confidence: float = 0.95,
+        max_per_class: int = 30,
+        excluded_labels: list[str] | None = None,
 ) -> pd.DataFrame:
     """Load the classifications CSV, apply quality filters, and sample per class.
 
@@ -195,11 +195,11 @@ def select_reference_events(
 
 
 def build_indomain_reference(
-    events_df: pd.DataFrame,
-    output_path: Path,
-    segment_duration: float = 32.0,
-    batch_size: int = 32,
-    workers: int = 1,
+        events_df: pd.DataFrame,
+        output_path: Path,
+        segment_duration: float = 32.0,
+        batch_size: int = 32,
+        workers: int = 1,
 ) -> dict:
     """Build an in-domain reference index by fetching and preprocessing each event.
 
@@ -237,9 +237,9 @@ def build_indomain_reference(
     skipped = 0
 
     for idx, row in tqdm(
-        events_df.iterrows(),
-        total=len(events_df),
-        desc="Building in-domain reference",
+            events_df.iterrows(),
+            total=len(events_df),
+            desc="Building in-domain reference",
     ):
         event_time = float(row["event_time"])
         label = str(row["ml_label"])

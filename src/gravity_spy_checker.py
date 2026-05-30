@@ -24,9 +24,9 @@ logger: logging.Logger = setup_logger(__name__)
 
 
 def get_anomalous_gps_windows(
-    cluster_report_path: Path,
-    anomalous_cluster_ids: list[int],
-    metadata_path: Path,
+        cluster_report_path: Path,
+        anomalous_cluster_ids: list[int],
+        metadata_path: Path,
 ) -> list[dict]:
     """Extract GPS time windows for spectrograms in anomalous clusters.
 
@@ -104,10 +104,10 @@ def _extract_gps_from_filename(filepath: str) -> tuple[int | None, int | None]:
 
 
 def query_gravity_spy(
-    gps_start: int,
-    gps_end: int,
-    detector: str = "H1",
-    snr_threshold: float = 7.5,
+        gps_start: int,
+        gps_end: int,
+        detector: str = "H1",
+        snr_threshold: float = 7.5,
 ) -> list[dict]:
     """Query the Gravity Spy glitch database for a given GPS window.
 
@@ -179,10 +179,10 @@ def query_gravity_spy(
 
 
 def cross_check_anomalous_clusters(
-    cluster_report_path: Path,
-    metadata_path: Path,
-    detector: str = "H1",
-    output_path: Path | None = None,
+        cluster_report_path: Path,
+        metadata_path: Path,
+        detector: str = "H1",
+        output_path: Path | None = None,
 ) -> dict:
     """Orchestrate a full Gravity Spy cross-check of anomalous clusters.
 

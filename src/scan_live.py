@@ -82,11 +82,11 @@ def _append_metadata(metadata_path: Path, record: dict) -> None:
 
 
 def _classify_status(
-    top_similarity: float,
-    top_label: str,
-    label_distribution: dict[str, int],
-    thresholds: dict[str, float],
-    consensus_threshold: float = 0.6,
+        top_similarity: float,
+        top_label: str,
+        label_distribution: dict[str, int],
+        thresholds: dict[str, float],
+        consensus_threshold: float = 0.6,
 ) -> tuple[str, float]:
     """Classify a spectrogram as KNOWN, AMBIGUOUS, or NOVEL.
 
@@ -118,11 +118,11 @@ def _classify_status(
 
 
 def _produce_spectrogram_chunk(
-    gps_start: int,
-    gps_end: int,
-    detector: str,
-    tmp_dir: Path,
-    semaphore: threading.Semaphore,
+        gps_start: int,
+        gps_end: int,
+        detector: str,
+        tmp_dir: Path,
+        semaphore: threading.Semaphore,
 ) -> tuple[list[tuple[Path, int, int]], Path, int, int, str] | None:
     """Fetch 4096s chunk, preprocess 128 32s segments, and save PNGs.
 
@@ -138,14 +138,14 @@ def _produce_spectrogram_chunk(
         try:
             hdf5_path = download_gwosc_4096s(detector, gps_start, gps_end, tmp_dir)
             ts = TimeSeries.read(hdf5_path, format='hdf5.gwosc')
-            
+
             chunk_size = 32
             pngs = []
-            
+
             for c_start in range(gps_start, gps_end, chunk_size):
                 c_end = c_start + chunk_size
                 save_path = tmp_dir / f"{detector}_{c_start}_{c_end}.png"
-                
+
                 try:
                     ts_chunk = ts.crop(c_start, c_end)
                     ts_white = whiten(ts_chunk)
@@ -155,7 +155,7 @@ def _produce_spectrogram_chunk(
                         pngs.append((save_path, c_start, c_end))
                 except Exception as exc:
                     logger.warning("Producer failed on chunk [%d, %d]: %s", c_start, c_end, exc)
-                    
+
             return (pngs, hdf5_path, gps_start, gps_end, detector)
 
         except Exception as exc:
@@ -174,14 +174,14 @@ def _produce_spectrogram_chunk(
 
 
 def _consumer_loop(
-    q: queue.Queue,
-    encoder,
-    ref_embeddings: np.ndarray,
-    ref_labels: np.ndarray,
-    thresholds: dict[str, float],
-    session_dir: Path,
-    metadata_path: Path,
-    k: int = 5,
+        q: queue.Queue,
+        encoder,
+        ref_embeddings: np.ndarray,
+        ref_labels: np.ndarray,
+        thresholds: dict[str, float],
+        session_dir: Path,
+        metadata_path: Path,
+        k: int = 5,
 ) -> dict:
     """Consumer thread: encode, search, classify, and record results.
 
@@ -271,9 +271,10 @@ def _consumer_loop(
                     exc,
                 )
                 counts["ERROR"] += 1
-                
-        logger.info("[%s] Chunk %d-%d | %d NOVEL / %d segments", detector, chunk_gps_start, chunk_gps_end, novel_count, len(pngs))
-        
+
+        logger.info("[%s] Chunk %d-%d | %d NOVEL / %d segments", detector, chunk_gps_start, chunk_gps_end, novel_count,
+                    len(pngs))
+
         # Cleanup HDF5 after processing chunk
         try:
             hdf5_path.unlink()
@@ -295,13 +296,13 @@ def _consumer_loop(
 
 
 def _generate_report(
-    consumer_result: dict,
-    session_dir: Path,
-    run: str,
-    detector: str,
-    session_id: str,
-    segments_total: int,
-    time_span_seconds: int,
+        consumer_result: dict,
+        session_dir: Path,
+        run: str,
+        detector: str,
+        session_id: str,
+        segments_total: int,
+        time_span_seconds: int,
 ) -> dict:
     """Generate and save the final report.json."""
     counts = consumer_result["counts"]
@@ -355,15 +356,15 @@ def _generate_report(
 
 
 def run_scan_live(
-    detector: str,
-    run: str,
-    workers: int = 4,
-    session_id: str | None = None,
-    min_novel: int = 10,
-    reference_path: str | Path = "data/reference/indomain_index.npz",
-    hours: float | None = None,
-    percentile: int = 5,
-    thresholds_path: str | Path = "data/autopilot/reference/thresholds.json",
+        detector: str,
+        run: str,
+        workers: int = 4,
+        session_id: str | None = None,
+        min_novel: int = 10,
+        reference_path: str | Path = "data/reference/indomain_index.npz",
+        hours: float | None = None,
+        percentile: int = 5,
+        thresholds_path: str | Path = "data/autopilot/reference/thresholds.json",
 ) -> dict:
     """Run the autopilot live scan pipeline.
 

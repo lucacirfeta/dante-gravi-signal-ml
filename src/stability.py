@@ -28,15 +28,15 @@ logger: logging.Logger = setup_logger(__name__)
 
 
 def run_stability_analysis(
-    embeddings: np.ndarray,
-    cluster_cfg: dict,
-    n_runs: int = 20,
-    session_id: str = "default",
-    detector: str = "H1",
-    run: str = "O4a",
-    anomaly_criterion: str = "likelihood",
+        embeddings: np.ndarray,
+        cluster_cfg: dict,
+        n_runs: int = 20,
+        session_id: str = "default",
+        detector: str = "H1",
+        run: str = "O4a",
+        anomaly_criterion: str = "likelihood",
 
-    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> None:
+        logger: logging.Logger | logging.LoggerAdapter | None = None, ) -> None:
     """Run stability analysis and save report.
 
     Args:
@@ -46,9 +46,9 @@ def run_stability_analysis(
         session_id: Current session identifier
         detector: Detector identifier (e.g. H1)
     """
-    
+
     logger = logger or logging.getLogger(__name__)
-logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
+    logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
 
     n_samples = len(embeddings)
 
@@ -89,7 +89,7 @@ logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
         min_dist=umap_clust_cfg.get("min_dist", 0.0),
     )
     algorithm = cluster_cfg.get("algorithm", "dpmm")
-    
+
     if algorithm == "dpmm":
         dpmm_cfg = cluster_cfg.get("dpmm", {})
 
@@ -125,7 +125,7 @@ logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
             )
             bgm.fit(base_umap)
             base_log_likelihoods = bgm.score_samples(base_umap).tolist()
-            
+
             anomalous_set = set(base_anomalous)
             anomalous_clusters_set = set()
             for cid in set(base_labels):
@@ -181,11 +181,11 @@ logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
     # 4. Perturbed runs
     for i in range(1, n_runs + 1):
         seed = random.randint(0, 100000)
-        
+
         # Perturb parameters by random factor in [0.8, 1.2]
         factor_umap = random.uniform(0.8, 1.2)
         factor_hdbscan = random.uniform(0.8, 1.2)
-        
+
         p_n_neighbors = max(2, int(round(base_n_neighbors * factor_umap)))
         p_min_cluster = max(2, int(round(base_min_cluster_size * factor_hdbscan)))
 
@@ -222,7 +222,7 @@ logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
                 )
                 bgm.fit(p_umap)
                 p_log_likelihoods = bgm.score_samples(p_umap).tolist()
-                
+
                 anomalous_set = set(p_anomalous)
                 anomalous_clusters_set = set()
                 for cid in set(p_labels):
@@ -303,14 +303,14 @@ logger.info("=== STABILITY ANALYSIS: %d runs ===", n_runs)
     # 7. Consistently anomalous clusters (>= 80% of runs)
     threshold_count = int(total_runs * 0.8)
     consistently_anomalous_samples = np.where(sample_anomaly_counts >= threshold_count)[0]
-    
+
     # Map back to baseline cluster IDs
     stable_anomalous_clusters = set()
     for idx in consistently_anomalous_samples:
         cid = base_labels[idx]
         if cid != -1:
             stable_anomalous_clusters.add(int(cid))
-    
+
     stable_anomalous_list = sorted(list(stable_anomalous_clusters))
 
     # 8. Save report

@@ -33,9 +33,9 @@ logger: logging.Logger = setup_logger(__name__)
 
 
 def calibrate_loglikelihood_threshold(
-    reference_path: str | Path = "data/reference/indomain_index.npz",
-    percentile: float = 5.0,
-    output_path: str | Path = "data/autopilot/reference/loglikelihood_threshold.json",
+        reference_path: str | Path = "data/reference/indomain_index.npz",
+        percentile: float = 5.0,
+        output_path: str | Path = "data/autopilot/reference/loglikelihood_threshold.json",
 ) -> dict:
     """Calibrate the DPMM log-likelihood anomaly threshold on the reference.
 
@@ -134,10 +134,10 @@ def calibrate_loglikelihood_threshold(
         try:
             with open(config_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             pattern = re.compile(r'(dpmm:\s*\n(?:\s+.*?\n)*?\s+anomaly_threshold:\s*)[^\n]+')
             new_content = pattern.sub(fr"\g<1>{round(threshold, 4)}   # calibrated fixed threshold", content)
-            
+
             with open(config_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
             logger.info("config.yaml updated with new anomaly_threshold: %.2f", threshold)

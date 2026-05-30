@@ -62,9 +62,9 @@ def _gpu_l2_normalize(embeddings: np.ndarray) -> np.ndarray:
 
 
 def run_pca(
-    embeddings: np.ndarray,
-    n_components: int = 50,
-    random_state: int = 42,
+        embeddings: np.ndarray,
+        n_components: int = 50,
+        random_state: int = 42,
 ) -> tuple[np.ndarray, float]:
     """Reduce embedding dimensionality via Principal Component Analysis.
 
@@ -98,11 +98,11 @@ def run_pca(
 
 
 def run_umap(
-    embeddings: np.ndarray,
-    n_components: int = 10,
-    n_neighbors: int = 30,
-    min_dist: float = 0.0,
-    random_state: int = 42,
+        embeddings: np.ndarray,
+        n_components: int = 10,
+        n_neighbors: int = 30,
+        min_dist: float = 0.0,
+        random_state: int = 42,
 ) -> np.ndarray:
     """Reduce dimensionality via Uniform Manifold Approximation and Projection.
 
@@ -143,10 +143,10 @@ def run_umap(
 
 
 def run_hdbscan(
-    embeddings: np.ndarray,
-    min_cluster_size: int = 15,
-    min_samples: int = 10,
-    cluster_selection_method: str = "eom",
+        embeddings: np.ndarray,
+        min_cluster_size: int = 15,
+        min_samples: int = 10,
+        cluster_selection_method: str = "eom",
 ) -> tuple[np.ndarray, dict]:
     """Cluster embeddings using HDBSCAN (sklearn implementation).
 
@@ -208,9 +208,9 @@ def run_hdbscan(
 
 
 def identify_anomalous_clusters(
-    labels: np.ndarray,
-    stats: dict,
-    small_cluster_threshold: int = 10,
+        labels: np.ndarray,
+        stats: dict,
+        small_cluster_threshold: int = 10,
 ) -> list[int]:
     """Identify anomalous (small) clusters as novel glitch candidates.
 
@@ -252,10 +252,10 @@ def identify_anomalous_clusters(
 
 
 def run_full_pipeline(
-    embeddings: np.ndarray,
-    config: dict,
+        embeddings: np.ndarray,
+        config: dict,
 
-    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> dict:
+        logger: logging.Logger | logging.LoggerAdapter | None = None, ) -> dict:
     """Orchestrate the full clustering pipeline.
 
     Sequence: PCA → UMAP(clustering) → HDBSCAN → anomaly ID → UMAP(viz)
@@ -273,9 +273,9 @@ def run_full_pipeline(
         - ``hdbscan_stats``: statistics dict from HDBSCAN
         - ``anomalous_clusters``: list of anomalous cluster IDs
     """
-    
+
     logger = logger or logging.getLogger(__name__)
-# --- Step 0: Ensure L2-normalized embeddings (GPU-accelerated) ---
+    # --- Step 0: Ensure L2-normalized embeddings (GPU-accelerated) ---
     embeddings = _gpu_l2_normalize(embeddings)
 
     # --- Step 1: PCA ---
@@ -294,7 +294,7 @@ def run_full_pipeline(
     )
 
     algorithm = config.get("algorithm", "dpmm")
-    
+
     if algorithm == "dpmm":
         # --- Step 3: DPMM ---
         dpmm_cfg = config.get("dpmm", {})

@@ -38,11 +38,11 @@ _SAMPLE_RATE: int = _CFG["preprocessing"]["sample_rate"]
 
 
 def fetch_strain_data(
-    detector: DetectorID,
-    gps_start: int,
-    gps_end: int,
-    sample_rate: int = _SAMPLE_RATE,
-    cache_raw: bool = False,
+        detector: DetectorID,
+        gps_start: int,
+        gps_end: int,
+        sample_rate: int = _SAMPLE_RATE,
+        cache_raw: bool = False,
 ) -> TimeSeries:
     """Fetch open strain data from GWOSC for a given detector and time range.
 
@@ -155,10 +155,10 @@ def fetch_strain_data(
 
 
 def fetch_o4a_segments(
-    detector: DetectorID,
-    duration_hours: float = 1.0,
-    segment_length: int = 32,
-    gps_offset_hours: float = 0.0,
+        detector: DetectorID,
+        duration_hours: float = 1.0,
+        segment_length: int = 32,
+        gps_offset_hours: float = 0.0,
 ) -> list[tuple[int, int]]:
     """Query GWOSC for valid science-mode segments within the O4a window.
 
@@ -191,12 +191,12 @@ def fetch_o4a_segments(
 
     offset_seconds = int(gps_offset_hours * 3600)
     scan_start = _O4A_START + offset_seconds
-    
+
     # Allineiamo lo start al multiplo del segment_length per garantire che
     # nessun segmento scavalchi i confini dei file GWOSC (multipli di 4096).
     # (Poiché 4096 è multiplo di 32, allineando a 32 evitiamo il bug).
     scan_start = ((scan_start + segment_length - 1) // segment_length) * segment_length
-    
+
     total_seconds = int(duration_hours * 3600)
     scan_end = min(scan_start + total_seconds, _O4A_END)
 
@@ -219,9 +219,9 @@ def fetch_o4a_segments(
 
 
 def generate_segments_from_gps_range(
-    gps_start: int,
-    gps_end: int,
-    segment_length: int = 32,
+        gps_start: int,
+        gps_end: int,
+        segment_length: int = 32,
 ) -> list[tuple[int, int]]:
     """Generate fixed-length segments from an explicit GPS range.
 
@@ -248,7 +248,7 @@ def generate_segments_from_gps_range(
     segments: list[tuple[int, int]] = []
     # Allineiamo il primo segmento per non attraversare i confini di 4096s
     current = ((gps_start + segment_length - 1) // segment_length) * segment_length
-    
+
     while current + segment_length <= gps_end:
         segments.append((current, current + segment_length))
         current += segment_length
@@ -274,7 +274,7 @@ def _find_latest_raw_session() -> Path | None:
     raw_dir = Path("data/raw")
     if not raw_dir.exists():
         return None
-    
+
     max_gps = -1
     latest_path = None
     for d in raw_dir.iterdir():
@@ -299,10 +299,10 @@ def download_gwosc_4096s(detector: str, gps_start: int, gps_end: int, output_dir
     import time
     from requests.adapters import HTTPAdapter
     from urllib3.util.retry import Retry
-    
+
     filename = f"{detector}_{gps_start}_{gps_end}.hdf5"
     output_path = output_dir / filename
-    
+
     if output_path.exists():
         logger.info("Found cached GWOSC HDF5: %s", output_path)
         return output_path
@@ -310,18 +310,18 @@ def download_gwosc_4096s(detector: str, gps_start: int, gps_end: int, output_dir
     urls = get_urls(detector, gps_start, gps_end)
     if not urls:
         raise RuntimeError(f"No GWOSC URLs found for {detector} [{gps_start}, {gps_end}]")
-        
+
     hdf5_urls = [u for u in urls if u.endswith('.hdf5')]
     if not hdf5_urls:
         raise RuntimeError(f"No HDF5 URLs found for {detector} [{gps_start}, {gps_end}]")
-        
+
     url = hdf5_urls[-1]
-    
+
     logger.info("Downloading %s from %s", filename, url)
-    
+
     global _GWOSC_BASE_DELAY
     base_delay = _GWOSC_BASE_DELAY
-    
+
     for attempt in range(5):
         try:
             time.sleep(base_delay)
@@ -331,7 +331,7 @@ def download_gwosc_4096s(detector: str, gps_start: int, gps_end: int, output_dir
             adapter = HTTPAdapter(max_retries=retry)
             session.mount('http://', adapter)
             session.mount('https://', adapter)
-            
+
             with session.get(url, stream=True, timeout=30) as r:
                 r.raise_for_status()
                 with open(output_path, "wb") as f:
@@ -349,7 +349,7 @@ def download_gwosc_4096s(detector: str, gps_start: int, gps_end: int, output_dir
             if attempt == 4:
                 raise RuntimeError(f"Failed to download {url}: {e}")
             time.sleep(2.0)
-            
+
     return output_path
 
 

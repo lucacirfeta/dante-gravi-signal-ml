@@ -27,10 +27,10 @@ logger: logging.Logger = setup_logger(__name__)
 
 
 def save_cluster_report(
-    result: dict,
-    metadata: dict,
-    output_dir: Path,
-    detector: str = "H1",
+        result: dict,
+        metadata: dict,
+        output_dir: Path,
+        detector: str = "H1",
 ) -> None:
     """Save a full cluster report: JSON, UMAP plot, and spectrogram gallery.
 
@@ -75,14 +75,14 @@ def save_cluster_report(
 
 
 def _save_json_report(
-    result: dict,
-    metadata: dict,
-    stats: dict,
-    anomalous_clusters: list[int],
-    anomalous_samples: list[int],
-    labels: np.ndarray,
-    output_dir: Path,
-    detector: str = "H1",
+        result: dict,
+        metadata: dict,
+        stats: dict,
+        anomalous_clusters: list[int],
+        anomalous_samples: list[int],
+        labels: np.ndarray,
+        output_dir: Path,
+        detector: str = "H1",
 ) -> None:
     """Write cluster_report.json."""
     files = metadata.get("files", [])
@@ -155,13 +155,13 @@ def _save_json_report(
 
 
 def _save_umap_plot(
-    umap_2d: np.ndarray,
-    labels: np.ndarray,
-    stats: dict,
-    anomalous_clusters: list[int],
-    anomalous_samples: list[int],
-    output_dir: Path,
-    detector: str = "H1",
+        umap_2d: np.ndarray,
+        labels: np.ndarray,
+        stats: dict,
+        anomalous_clusters: list[int],
+        anomalous_samples: list[int],
+        output_dir: Path,
+        detector: str = "H1",
 ) -> None:
     """Create and save the 2D UMAP scatter plot."""
     fig, ax = plt.subplots(figsize=(12, 8))
@@ -251,13 +251,13 @@ def _save_umap_plot(
 
 
 def _save_cluster_gallery(
-    labels: np.ndarray,
-    umap_10d: np.ndarray,
-    stats: dict,
-    anomalous_clusters: list[int],
-    anomalous_samples: list[int],
-    metadata: dict,
-    output_dir: Path,
+        labels: np.ndarray,
+        umap_10d: np.ndarray,
+        stats: dict,
+        anomalous_clusters: list[int],
+        anomalous_samples: list[int],
+        metadata: dict,
+        output_dir: Path,
 ) -> None:
     """Create per-cluster gallery folders with contact sheets."""
     files = metadata.get("files", [])
@@ -308,11 +308,11 @@ def _save_cluster_gallery(
     if anomalous_samples:
         anomaly_dir = output_dir / "Anomalie_Morfologiche_Rilevate"
         anomaly_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Pick top 9 most anomalous samples (already sorted by lowest log-likelihood)
         top_anomalies = anomalous_samples[:9]
         copied_paths = []
-        
+
         for idx in top_anomalies:
             if idx < len(files):
                 src_path = Path(files[idx])
@@ -320,7 +320,7 @@ def _save_cluster_gallery(
                     dst_path = anomaly_dir / src_path.name
                     shutil.copy2(src_path, dst_path)
                     copied_paths.append(dst_path)
-                    
+
         if copied_paths:
             _make_contact_sheet(
                 copied_paths,
@@ -332,11 +332,11 @@ def _save_cluster_gallery(
 
 
 def _make_contact_sheet(
-    image_paths: list[Path],
-    cluster_dir: Path,
-    cluster_id: int,
-    cluster_size: int,
-    is_anomalous: bool,
+        image_paths: list[Path],
+        cluster_dir: Path,
+        cluster_id: int,
+        cluster_size: int,
+        is_anomalous: bool,
 ) -> None:
     """Create a 3×3 contact sheet from representative spectrograms."""
     n_images = len(image_paths)

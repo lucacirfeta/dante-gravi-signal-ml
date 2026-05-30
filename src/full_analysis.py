@@ -124,7 +124,7 @@ def _analyze_detector(
     else:
         references = discover_references()
         auto_discovery = True
-        
+
     if not references:
         error_msg = "Nessun file indomain_*.npz trovato in data/reference/. Eseguire download-all-references prima di morphcheck."
         logger.error("%s[%s]%s %s", color, det, reset, error_msg)
@@ -306,7 +306,7 @@ def _analyze_detector(
             logger.info("%s[%s]%s Step 2: Morphcheck report already exists. Skipping.", color, det, reset)
             with open(morph_report_path, "r", encoding="utf-8") as f:
                 morph_summary = json.load(f)
-                
+
             if auto_discovery:
                 # Get stats from the last reference in the summary_results
                 res = morph_summary.get("results", {})
@@ -378,13 +378,13 @@ def _analyze_detector(
             # else:
             anomalous_embeddings = embeddings[anomalous_indices]
             sim_cfg = cfg.get("similarity", {})
-            
+
             summary_results = {}
             all_details = {}
 
             for ref_path in references:
                 ref_name = ref_path.name
-                
+
                 if auto_discovery:
                     current_morph_path = morph_report_path.parent / "morphcheck" / det / f"{ref_path.stem}.json"
                 else:
@@ -403,7 +403,7 @@ def _analyze_detector(
                         logger=morph_logger,
                     )
                     print_morphological_summary(morph_summary, detector=det)
-                    
+
                     summary_results[ref_name] = {
                         "novel": morph_summary["novel"],
                         "known": morph_summary["known"],
@@ -411,9 +411,10 @@ def _analyze_detector(
                     }
                     all_details[ref_name] = {d["file"]: d["novelty_status"] for d in morph_summary["details"]}
                 except Exception as e:
-                    logger.error("%s[%s]%s Morphcheck failed for reference %s: %s", color, det, reset, ref_name, e, exc_info=True)
+                    logger.error("%s[%s]%s Morphcheck failed for reference %s: %s", color, det, reset, ref_name, e,
+                                 exc_info=True)
                     continue
-            
+
             if auto_discovery:
                 newly_resolved = 0
                 still_ambiguous = 0
@@ -422,7 +423,7 @@ def _analyze_detector(
                 if len(references) == 2:
                     ref1 = references[0].name
                     ref2 = references[1].name
-                    
+
                     for file_name, status1 in all_details[ref1].items():
                         status2 = all_details[ref2].get(file_name)
                         if status1 in ["NOVEL", "AMBIGUOUS"] and status2 == "KNOWN":
@@ -452,16 +453,16 @@ def _analyze_detector(
                 }
                 with open(morph_report_path, "w", encoding="utf-8") as f:
                     json.dump(summary_report, f, indent=2)
-                
+
                 if len(references) > 0 and len(summary_results) > 0:
                     tracker_morph.end(n_processed=len(anomalous_embeddings))
                 det_report["steps"]["morphcheck"] = {
-                        "status": "OK",
-                        "timestamp": step_start,
-                        "references_used": summary_report["references_used"],
-                        "results": summary_report["results"],
-                        "comparison": summary_report["comparison"],
-                    }
+                    "status": "OK",
+                    "timestamp": step_start,
+                    "references_used": summary_report["references_used"],
+                    "results": summary_report["results"],
+                    "comparison": summary_report["comparison"],
+                }
             else:
                 tracker_morph.end(n_processed=len(anomalous_embeddings))
                 det_report["steps"]["morphcheck"] = {
@@ -495,9 +496,9 @@ def _analyze_detector(
             logger.info("%s[%s]%s Step 2b: Similarity analysis report already exists. Skipping.", color, det, reset)
             with open(similarity_report_file, "r", encoding="utf-8") as fh:
                 sim_data = json.load(fh)
-            
+
             novel_count = sum(1 for c in sim_data if "NOVEL" in c.get("interpretation", ""))
-            
+
             det_report["steps"]["similarity_analysis"] = {
                 "status": "SKIPPED",
                 "timestamp": step_start,
@@ -509,21 +510,21 @@ def _analyze_detector(
             if det_report["steps"].get("morphcheck", {}).get("status") in ("OK", "SKIPPED"):
                 logger.info("%s[%s]%s Step 2b: Similarity analysis...", color, det, reset)
                 from src.similarity_analysis import analyze_similarity
-                
+
                 analyze_similarity(
                     session_id=session_id,
                     detector=det,
                     run=run,
                     reference_path=reference_path
                 )
-                
+
                 sim_data = []
                 if similarity_report_file.exists():
                     with open(similarity_report_file, "r", encoding="utf-8") as fh:
                         sim_data = json.load(fh)
-                        
+
                 novel_count = sum(1 for c in sim_data if "NOVEL" in c.get("interpretation", ""))
-                
+
                 det_report["steps"]["similarity_analysis"] = {
                     "status": "OK",
                     "timestamp": step_start,
@@ -532,7 +533,8 @@ def _analyze_detector(
                     "results": sim_data,
                 }
             else:
-                logger.info("%s[%s]%s Step 2b: Skipping similarity analysis because morphcheck failed.", color, det, reset)
+                logger.info("%s[%s]%s Step 2b: Skipping similarity analysis because morphcheck failed.", color, det,
+                            reset)
                 det_report["steps"]["similarity_analysis"] = {
                     "status": "SKIPPED",
                     "timestamp": step_start,
@@ -586,7 +588,6 @@ def _analyze_detector(
                 batch_size=batch_size,
                 logger=abl_logger,
             )
-
 
             if ablation_report_file.exists():
                 with open(ablation_report_file, "r", encoding="utf-8") as fh:
@@ -882,7 +883,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
     """
     run_lower = run.lower()
     session_dir = session_path(run, session_id)
-    
+
     if not session_dir.exists():
         logger.error("Session directory not found: %s", session_dir)
         return {"status": "FAILED", "error": "Session directory not found"}
@@ -891,12 +892,14 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
     detectors = []
     clusters_dir = session_dir / "clusters"
     if clusters_dir.exists():
-        detectors = [d.name.upper() for d in clusters_dir.iterdir() if d.is_dir() and d.name.upper() in ("H1", "L1", "V1")]
+        detectors = [d.name.upper() for d in clusters_dir.iterdir() if
+                     d.is_dir() and d.name.upper() in ("H1", "L1", "V1")]
     if not detectors:
         spec_dir = session_dir / "spectrograms"
         if spec_dir.exists():
-            detectors = [d.name.upper() for d in spec_dir.iterdir() if d.is_dir() and d.name.upper() in ("H1", "L1", "V1")]
-            
+            detectors = [d.name.upper() for d in spec_dir.iterdir() if
+                         d.is_dir() and d.name.upper() in ("H1", "L1", "V1")]
+
     if not detectors:
         logger.error("No detectors found for session %s", session_id)
         return {"status": "FAILED", "error": "No detectors found"}
@@ -904,7 +907,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
     overall_status = {}
     reports = {}
     ts_report_data = None
-    
+
     # Read timeslide if available
     timeslide_path = session_dir / "timeslide" / "timeslide_report_H1_L1.json"
     if timeslide_path.exists():
@@ -924,7 +927,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
         color = _get_det_color(det)
         reset = _reset_color()
         logger.info("%s=== Generating Full Report for %s ===%s", color, det, reset)
-        
+
         det_report: dict = {
             "session_id": session_id,
             "detector": det,
@@ -932,7 +935,7 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "steps": {},
         }
-        
+
         # Spectrogram statistics
         input_dir = session_dir / "spectrograms" / det
         if input_dir.exists():
@@ -956,14 +959,18 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     "duration_hours": duration_hours, "duty_cycle_percent": duty_cycle,
                 }
             else:
-                det_report["session_summary"] = {"n_spectrograms": 0, "gps_start": 0, "gps_end": 0, "duration_hours": 0.0, "duty_cycle_percent": 0.0}
+                det_report["session_summary"] = {"n_spectrograms": 0, "gps_start": 0, "gps_end": 0,
+                                                 "duration_hours": 0.0, "duty_cycle_percent": 0.0}
         else:
-            det_report["session_summary"] = {"n_spectrograms": 0, "gps_start": 0, "gps_end": 0, "duration_hours": 0.0, "duty_cycle_percent": 0.0}
+            det_report["session_summary"] = {"n_spectrograms": 0, "gps_start": 0, "gps_end": 0, "duration_hours": 0.0,
+                                             "duty_cycle_percent": 0.0}
 
         # Embeddings
         embed_json = session_dir / "embeddings" / f"{run_lower}_{det_lower}.json"
         if embed_json.exists():
-            det_report["steps"]["encode"] = {"status": "OK", "timestamp": datetime.fromtimestamp(embed_json.stat().st_mtime, timezone.utc).isoformat()}
+            det_report["steps"]["encode"] = {"status": "OK",
+                                             "timestamp": datetime.fromtimestamp(embed_json.stat().st_mtime,
+                                                                                 timezone.utc).isoformat()}
         else:
             det_report["steps"]["encode"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
@@ -975,21 +982,23 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     cl_data = json.load(fh)
                 det_report["steps"]["cluster"] = {
                     "status": "OK",
-                    "timestamp": cl_data.get("timestamp", datetime.fromtimestamp(cluster_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "timestamp": cl_data.get("timestamp", datetime.fromtimestamp(cluster_rep_path.stat().st_mtime,
+                                                                                 timezone.utc).isoformat()),
                     "n_clusters": cl_data.get("results", {}).get("n_clusters", 0),
                     "n_noise": cl_data.get("results", {}).get("n_noise", 0),
                     "pca_variance": cl_data.get("pipeline", {}).get("pca_variance_explained", 0.0),
                     "anomalous_clusters": cl_data.get("results", {}).get("anomalous_clusters", []),
                 }
             except Exception as e:
-                det_report["steps"]["cluster"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+                det_report["steps"]["cluster"] = {"status": "FAILED", "error": str(e),
+                                                  "timestamp": det_report["timestamp"]}
         else:
             det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
         # Morphcheck
         morph_rep_path = session_dir / "clusters" / det_lower / "morphcheck_report.json"
         morph_sum_path = session_dir / f"morphcheck_summary_{det}.json"
-        
+
         if morph_sum_path.exists():
             try:
                 with open(morph_sum_path, "r", encoding="utf-8") as fh:
@@ -1002,20 +1011,23 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     "comparison": m_data.get("comparison", {}),
                 }
             except Exception as e:
-                det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+                det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e),
+                                                     "timestamp": det_report["timestamp"]}
         elif morph_rep_path.exists():
             try:
                 with open(morph_rep_path, "r", encoding="utf-8") as fh:
                     m_data = json.load(fh)
                 det_report["steps"]["morphcheck"] = {
                     "status": "OK",
-                    "timestamp": m_data.get("timestamp", datetime.fromtimestamp(morph_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "timestamp": m_data.get("timestamp", datetime.fromtimestamp(morph_rep_path.stat().st_mtime,
+                                                                                timezone.utc).isoformat()),
                     "novel": m_data.get("novel", 0),
                     "known": m_data.get("known", 0),
                     "ambiguous": m_data.get("ambiguous", 0),
                 }
             except Exception as e:
-                det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+                det_report["steps"]["morphcheck"] = {"status": "FAILED", "error": str(e),
+                                                     "timestamp": det_report["timestamp"]}
         else:
             det_report["steps"]["morphcheck"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
@@ -1025,9 +1037,9 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
             try:
                 with open(sim_rep_path, "r", encoding="utf-8") as fh:
                     sim_data = json.load(fh)
-                    
+
                 novel_count = sum(1 for c in sim_data if "NOVEL" in c.get("interpretation", ""))
-                
+
                 det_report["steps"]["similarity_analysis"] = {
                     "status": "OK",
                     "timestamp": datetime.fromtimestamp(sim_rep_path.stat().st_mtime, timezone.utc).isoformat(),
@@ -1036,7 +1048,8 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     "results": sim_data,
                 }
             except Exception as e:
-                det_report["steps"]["similarity_analysis"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+                det_report["steps"]["similarity_analysis"] = {"status": "FAILED", "error": str(e),
+                                                              "timestamp": det_report["timestamp"]}
         else:
             det_report["steps"]["similarity_analysis"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
@@ -1048,11 +1061,13 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     a_data = json.load(fh)
                 det_report["steps"]["ablation"] = {
                     "status": "OK",
-                    "timestamp": a_data.get("timestamp", datetime.fromtimestamp(ablation_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "timestamp": a_data.get("timestamp", datetime.fromtimestamp(ablation_rep_path.stat().st_mtime,
+                                                                                timezone.utc).isoformat()),
                     "results": {k: v.get("ari", 0.0) for k, v in a_data.get("results", {}).items()},
                 }
             except Exception as e:
-                det_report["steps"]["ablation"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+                det_report["steps"]["ablation"] = {"status": "FAILED", "error": str(e),
+                                                   "timestamp": det_report["timestamp"]}
         else:
             det_report["steps"]["ablation"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
@@ -1064,12 +1079,14 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     s_data = json.load(fh)
                 det_report["steps"]["stability"] = {
                     "status": "OK",
-                    "timestamp": s_data.get("timestamp", datetime.fromtimestamp(stability_rep_path.stat().st_mtime, timezone.utc).isoformat()),
+                    "timestamp": s_data.get("timestamp", datetime.fromtimestamp(stability_rep_path.stat().st_mtime,
+                                                                                timezone.utc).isoformat()),
                     "mean_ari": s_data.get("ari_stats", {}).get("mean", 0.0),
                     "stable_anomalous_clusters": s_data.get("stable_anomalous_clusters_baseline_ids", []),
                 }
             except Exception as e:
-                det_report["steps"]["stability"] = {"status": "FAILED", "error": str(e), "timestamp": det_report["timestamp"]}
+                det_report["steps"]["stability"] = {"status": "FAILED", "error": str(e),
+                                                    "timestamp": det_report["timestamp"]}
         else:
             det_report["steps"]["stability"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 

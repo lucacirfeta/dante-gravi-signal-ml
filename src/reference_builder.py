@@ -17,9 +17,10 @@ from src.utils import setup_logger
 
 logger = setup_logger(__name__)
 
+
 def download_training_set_metadata(
-    output_dir: Path,
-    zenodo_url: str = "https://zenodo.org/records/1476551/files/trainingset_v1d1_metadata.csv",
+        output_dir: Path,
+        zenodo_url: str = "https://zenodo.org/records/1476551/files/trainingset_v1d1_metadata.csv",
 ) -> pd.DataFrame:
     """Download and load Gravity Spy training set metadata CSV."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -43,70 +44,71 @@ def download_training_set_metadata(
     n_samples = len(df)
     n_classes = df["label"].nunique()
     logger.info("Loaded metadata: %d samples across %d classes", n_samples, n_classes)
-    
+
     return df
 
+
 def extract_from_tar(
-    tar_path: Path,
-    output_dir: Path,
-    metadata: pd.DataFrame,
-    max_per_class: int = 50,
-    sample_type: str = "train",
-    duration: str = "1.0",
+        tar_path: Path,
+        output_dir: Path,
+        metadata: pd.DataFrame,
+        max_per_class: int = 50,
+        sample_type: str = "train",
+        duration: str = "1.0",
 ) -> tuple[list[Path], list[str]]:
     """Extracts PNG images from tar.gz directly to disk."""
     if not tar_path.exists():
         raise FileNotFoundError(f"Training set tar.gz not found: {tar_path}")
 
     logger.info("Extracting from tar.gz: %s (this may take a few minutes)", tar_path)
-    
+
     df_filtered = metadata[metadata["sample_type"] == sample_type]
     id_to_label = dict(zip(df_filtered["gravityspy_id"], df_filtered["label"]))
-    
+
     all_labels = df_filtered["label"].unique()
     class_counts = {label: 0 for label in all_labels}
-    
+
     list_of_paths = []
     list_of_labels = []
-    
+
     training_images_dir = output_dir / "training_images"
     training_images_dir.mkdir(parents=True, exist_ok=True)
-    
+
     with tarfile.open(tar_path, "r:gz") as tar:
         members_processed = 0
         for member in tar:
             members_processed += 1
             if members_processed % 500 == 0:
                 logger.info("Processed %d tar members...", members_processed)
-                
+
             if not member.isfile() or not member.name.endswith(".png"):
                 continue
-                
+
             p = PurePosixPath(member.name)
             filename = p.name
-            
+
             parts = filename.replace(".png", "").split("_")
             if len(parts) >= 4 and parts[-2] == "spectrogram":
                 gs_id = "_".join(parts[1:-2])
                 dur = parts[-1]
             else:
                 continue
-                
+
             if dur != duration:
                 continue
-                
+
             if gs_id not in id_to_label:
                 continue
-                
+
             label = id_to_label[gs_id]
-            
+
             if class_counts[label] >= max_per_class:
                 continue
-                
+
             label_dir = training_images_dir / label
             label_dir.mkdir(parents=True, exist_ok=True)
             dest_path = label_dir / filename
-            
+
             try:
                 f_in = tar.extractfile(member)
                 if f_in:
@@ -115,31 +117,32 @@ def extract_from_tar(
             except tarfile.TarError as e:
                 logger.warning("Failed to extract %s: %s", filename, e)
                 continue
-                
+
             class_counts[label] += 1
             list_of_paths.append(dest_path)
             list_of_labels.append(label)
-            
+
     for label, count in class_counts.items():
         if count == 0:
             logger.warning("Class %s has 0 samples after extraction.", label)
-            
+
     n_images = len(list_of_paths)
     n_classes = sum(1 for count in class_counts.values() if count > 0)
     logger.info("Extracted %d images across %d classes", n_images, n_classes)
-    
+
     return list_of_paths, list_of_labels
 
+
 def build_reference_index_from_paths(
-    image_paths: list[Path],
-    labels: list[str],
-    output_path: Path,
-    batch_size: int = 32,
+        image_paths: list[Path],
+        labels: list[str],
+        output_path: Path,
+        batch_size: int = 32,
 ) -> dict:
     """Build a DINOv2 embedding reference index from extracted PNG paths."""
     from skimage import io
     import warnings
-    
+
     logger.info("Applying crop to %d images...", len(image_paths))
     for path in image_paths:
         with warnings.catch_warnings():
@@ -151,17 +154,17 @@ def build_reference_index_from_paths(
                 else:
                     arr = arr[66:532, 105:671]
                 io.imsave(path, arr)
-                
+
     logger.info("Extracting embeddings for %d images...", len(image_paths))
     encoder = DINOv2Encoder()
     embeddings = encoder.extract_batch(image_paths, batch_size=batch_size)
-    
+
     label_array = np.array(labels, dtype=str)
     path_array = np.array([str(p) for p in image_paths], dtype=str)
-    
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez(output_path, embeddings=embeddings, labels=label_array, image_paths=path_array)
-    
+
     unique_classes = sorted(list(set(labels)))
     meta = {
         "n_samples": len(embeddings),
@@ -173,8 +176,9 @@ def build_reference_index_from_paths(
     }
     with open(output_path.with_suffix(".json"), "w") as f:
         json.dump(meta, f, indent=2)
-        
+
     return meta
+
 
 def load_reference_index(index_path: Path) -> tuple[np.ndarray, np.ndarray]:
     """Load reference embeddings and labels."""

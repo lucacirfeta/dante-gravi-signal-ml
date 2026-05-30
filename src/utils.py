@@ -52,14 +52,14 @@ def get_device(verbose: bool = True) -> torch.device:
                     capability[0],
                     capability[1],
                 )
-            
+
             # L'auto-tuner cuDNN esaurisce la memoria durante l'ablation se i tensori cambiano.
             # Lo abilitiamo solo se l'utente lo richiede esplicitamente.
             if "--cudnn-autotune" in sys.argv:
                 torch.backends.cudnn.benchmark = True
             else:
                 torch.backends.cudnn.benchmark = False
-            
+
             return torch.device("cuda:0")
 
         except RuntimeError as e:
@@ -188,18 +188,19 @@ def enable_ansi_colors() -> None:
             # Fallback: if it fails, colors might just not show up
             pass
 
+
 # ---------------------------------------------------------------------------
 # Structured logging
 # ---------------------------------------------------------------------------
 
 
 def setup_logger(
-    name: str,
-    log_file: Path | None = None,
-    level: int = logging.INFO,
-    session_id: str | None = None,
-    run: str | None = None,
-    detector: str | None = None,
+        name: str,
+        log_file: Path | None = None,
+        level: int = logging.INFO,
+        session_id: str | None = None,
+        run: str | None = None,
+        detector: str | None = None,
 ) -> logging.Logger:
     """Create a structured logger with file and console handlers.
 
@@ -254,11 +255,11 @@ def setup_logger(
         # The prompt requires: data/runs/<run>/<session_id>/logs/pipeline.log
         pipeline_log_path = Path(f"data/runs/{run.lower()}/{session_id}/logs/pipeline.log")
         pipeline_log_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         json_handler = logging.FileHandler(pipeline_log_path, encoding="utf-8")
         json_handler.setLevel(level)
         json_handler.setFormatter(StructuredFormatter())
-        
+
         # Add metadata filter to ensure structured data gets logged with this context
         class ContextFilter(logging.Filter):
             def filter(self, record: logging.LogRecord) -> bool:
@@ -269,7 +270,7 @@ def setup_logger(
                 if detector and not hasattr(record, "detector"):
                     record.detector = detector
                 return True
-                
+
         json_handler.addFilter(ContextFilter())
         logger.addHandler(json_handler)
 
@@ -299,6 +300,7 @@ _SESSION_LOG_HANDLER: logging.FileHandler | None = None
 
 class SessionLogFilter(logging.Filter):
     """Filter that only permits logs with level >= WARNING or having session_key = True."""
+
     def filter(self, record: logging.LogRecord) -> bool:
         if record.levelno >= logging.WARNING:
             return True
@@ -308,25 +310,25 @@ class SessionLogFilter(logging.Filter):
 def set_session_log_file(log_file: Path) -> None:
     """Set the session-specific log file and add its handler to the root logger."""
     global _SESSION_LOG_FILE, _SESSION_LOG_HANDLER
-    
+
     # Clean up any existing handler first
     close_session_log()
-    
+
     _SESSION_LOG_FILE = log_file
     log_file.parent.mkdir(parents=True, exist_ok=True)
-    
+
     formatter = logging.Formatter(
         fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    
+
     handler = logging.FileHandler(log_file, encoding="utf-8")
     handler.setLevel(logging.INFO)  # Capture both INFO boundaries and WARNING/ERROR
     handler.setFormatter(formatter)
     handler.addFilter(SessionLogFilter())
-    
+
     _SESSION_LOG_HANDLER = handler
-    
+
     # Add to root logger only to prevent duplication through propagation
     root_logger = logging.getLogger()
     if handler not in root_logger.handlers:
@@ -338,12 +340,12 @@ def close_session_log() -> None:
     global _SESSION_LOG_FILE, _SESSION_LOG_HANDLER
     if _SESSION_LOG_HANDLER is not None:
         handler = _SESSION_LOG_HANDLER
-        
+
         # Remove from root logger only
         root_logger = logging.getLogger()
         if handler in root_logger.handlers:
             root_logger.removeHandler(handler)
-            
+
         handler.close()
         _SESSION_LOG_HANDLER = None
     _SESSION_LOG_FILE = None

@@ -1,26 +1,6 @@
 import sys
 from unittest.mock import MagicMock
-sys.modules['astropy'] = MagicMock()
-sys.modules['astropy.time'] = MagicMock()
-sys.modules['gwpy'] = MagicMock()
-sys.modules['gwpy.timeseries'] = MagicMock()
-sys.modules['PIL'] = MagicMock()
-sys.modules['torchvision'] = MagicMock()
-sys.modules['torchvision.transforms'] = MagicMock()
-sys.modules['torchaudio'] = MagicMock()
-sys.modules['tqdm'] = MagicMock()
-sys.modules['hdbscan'] = MagicMock()
-sys.modules['sklearn'] = MagicMock()
-sys.modules['sklearn.mixture'] = MagicMock()
-sys.modules['sklearn.metrics'] = MagicMock()
-sys.modules['umap'] = MagicMock()
-sys.modules['matplotlib'] = MagicMock()
-sys.modules['matplotlib.pyplot'] = MagicMock()
-sys.modules['matplotlib.colors'] = MagicMock()
-sys.modules['matplotlib.cm'] = MagicMock()
-sys.modules['scipy'] = MagicMock()
-sys.modules['scipy.spatial'] = MagicMock()
-sys.modules['scipy.spatial.distance'] = MagicMock()
+
 
 import pytest
 from pathlib import Path

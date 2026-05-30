@@ -36,9 +36,9 @@ logger: logging.Logger = setup_logger(__name__)
 
 
 def calibrate_thresholds(
-    reference_path: str | Path,
-    percentile: int = 5,
-    output_path: str | Path = "data/autopilot/reference/thresholds.json",
+        reference_path: str | Path,
+        percentile: int = 5,
+        output_path: str | Path = "data/autopilot/reference/thresholds.json",
 ) -> dict:
     """Calibrate per-class cosine similarity thresholds.
 
@@ -73,7 +73,7 @@ def calibrate_thresholds(
     # Load reference embeddings and labels
     data = np.load(reference_path)
     embeddings: np.ndarray = data["embeddings"]  # (N, 384), L2-normalised
-    labels: np.ndarray = data["labels"]           # (N,) str
+    labels: np.ndarray = data["labels"]  # (N,) str
 
     unique_classes = sorted(set(labels))
     logger.info(

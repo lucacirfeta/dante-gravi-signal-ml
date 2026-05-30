@@ -15,12 +15,13 @@ from src.utils import setup_logger
 
 logger = setup_logger(__name__)
 
+
 def cosine_knn_search(
-    query_embeddings: np.ndarray,
-    reference_embeddings: np.ndarray,
-    reference_labels: np.ndarray,
-    k: int = 5,
-    device: torch.device | None = None,
+        query_embeddings: np.ndarray,
+        reference_embeddings: np.ndarray,
+        reference_labels: np.ndarray,
+        k: int = 5,
+        device: torch.device | None = None,
 ) -> list[dict]:
     """Perform KNN search using cosine similarity (GPU-accelerated).
 
@@ -88,10 +89,11 @@ def cosine_knn_search(
 
     return results
 
+
 def assess_novelty(
-    knn_results: list[dict],
-    novelty_threshold: float = 0.85,
-    consensus_threshold: float = 0.6,
+        knn_results: list[dict],
+        novelty_threshold: float = 0.85,
+        consensus_threshold: float = 0.6,
 ) -> list[dict]:
     """Assess novelty status based on KNN results."""
     enriched_results = []
@@ -101,53 +103,54 @@ def assess_novelty(
         top_label = result["top_label"]
         total_k = sum(result["label_distribution"].values())
         agreement = result["label_distribution"][top_label] / total_k
-        
+
         if top_sim < novelty_threshold:
             status = "NOVEL"
         elif agreement >= consensus_threshold:
             status = "KNOWN"
         else:
             status = "AMBIGUOUS"
-            
+
         result["novelty_status"] = status
         enriched_results.append(result)
-        
+
     return enriched_results
 
-def run_morphological_crosscheck(
-    anomalous_embeddings: np.ndarray,
-    anomalous_files: list[str],
-    anomalous_cluster_ids: list[int],
-    reference_index_path: Path,
-    output_path: Path,
-    k: int = 5,
-    novelty_threshold: float = 0.85,
-    consensus_threshold: float = 0.6,
 
-    logger: logging.Logger | logging.LoggerAdapter | None = None,) -> dict:
+def run_morphological_crosscheck(
+        anomalous_embeddings: np.ndarray,
+        anomalous_files: list[str],
+        anomalous_cluster_ids: list[int],
+        reference_index_path: Path,
+        output_path: Path,
+        k: int = 5,
+        novelty_threshold: float = 0.85,
+        consensus_threshold: float = 0.6,
+
+        logger: logging.Logger | logging.LoggerAdapter | None = None, ) -> dict:
     """Orchestrate full morphological crosscheck."""
-    
+
     logger = logger or logging.getLogger(__name__)
     from src.reference_builder import load_reference_index
-    
+
     ref_embeddings, ref_labels = load_reference_index(reference_index_path)
-    
-    logger.info("Running cosine KNN search for %d queries against %d references", 
+
+    logger.info("Running cosine KNN search for %d queries against %d references",
                 len(anomalous_embeddings), len(ref_embeddings))
-                
+
     knn_results = cosine_knn_search(anomalous_embeddings, ref_embeddings, ref_labels, k=k)
     enriched_results = assess_novelty(
-        knn_results, 
-        novelty_threshold=novelty_threshold, 
+        knn_results,
+        novelty_threshold=novelty_threshold,
         consensus_threshold=consensus_threshold
     )
-    
+
     novel_count = 0
     known_count = 0
     ambiguous_count = 0
     novel_files = []
     details = []
-    
+
     for i, r in enumerate(enriched_results):
         status = r["novelty_status"]
         if status == "NOVEL":
@@ -157,7 +160,7 @@ def run_morphological_crosscheck(
             known_count += 1
         else:
             ambiguous_count += 1
-            
+
         details.append({
             "file": anomalous_files[i],
             "cluster_id": anomalous_cluster_ids[i],
@@ -167,7 +170,7 @@ def run_morphological_crosscheck(
             "label_distribution": r["label_distribution"],
             "neighbors": r["neighbors"],
         })
-        
+
     summary = {
         "total_checked": len(enriched_results),
         "novel": novel_count,
@@ -176,12 +179,13 @@ def run_morphological_crosscheck(
         "novel_files": novel_files,
         "details": details,
     }
-    
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
-        
+
     return summary
+
 
 def print_morphological_summary(summary: dict, detector: str | None = None) -> None:
     """Print human-readable table of crosscheck results."""
@@ -194,18 +198,18 @@ def print_morphological_summary(summary: dict, detector: str | None = None) -> N
     reset = "\033[0m" if color else ""
 
     det_str = f" ({detector})" if detector else ""
-    print(f"\n{color}{'='*80}")
+    print(f"\n{color}{'=' * 80}")
     print(f"{'MORPHOLOGICAL CROSSCHECK SUMMARY' + det_str:^80}")
-    print(f"{'='*80}{reset}")
-    
+    print(f"{'=' * 80}{reset}")
+
     header = f"{'File':<30} {'Cluster':<8} {'Status':<12} {'Nearest Class':<20} {'Sim':<5}"
     print(header)
     print("-" * 80)
-    
+
     for d in summary["details"]:
         file_base = Path(d['file']).name[:28]
         status = d['novelty_status']
-        
+
         # ANSI colors
         color_start = ""
         color_end = ""
@@ -218,10 +222,10 @@ def print_morphological_summary(summary: dict, detector: str | None = None) -> N
         elif status == "AMBIGUOUS":
             color_start = "\033[93m"  # Yellow
             color_end = "\033[0m"
-            
+
         row = f"{file_base:<30} {d['cluster_id']:<8} {color_start}{status:<12}{color_end} {d['top_label']:<20} {d['top_similarity']:.2f}"
         print(row)
-        
+
     print("-" * 80)
     print(f"Total checked: {summary['total_checked']}")
     print(f"  NOVEL:     {summary['novel']}")
