@@ -82,6 +82,7 @@ def _analyze_detector(
         session_id: str,
         run: str,
         run_lower: str,
+        cfg: dict,
         n_runs: int,
         reference_path: str | None,
         batch_size: int,
