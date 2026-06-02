@@ -37,9 +37,9 @@ o4a_window:
 # GPS start is computed at runtime as to_gps(start_date).
 run_config:
   O2:  {start_date: "2016-11-30 16:00:00", hours_per_detector: 72}
-  O3a: {start_date: "2019-04-01 15:00:00", hours_per_detector: 72}
-  O3b: {start_date: "2019-11-01 15:00:00", hours_per_detector: 72}
-  O4a: {start_date: "2023-05-24 15:00:00", hours_per_detector: 72}
+  O3a: {start_date: "2019-04-01 15:00:00", hours_per_detector: 144}
+  O3b: {start_date: "2019-11-01 15:00:00", hours_per_detector: 144}
+  O4a: {start_date: "2023-05-24 15:00:00", hours_per_detector: 144}
 
 # Extended scan parameters
 scan_extended:

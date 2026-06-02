@@ -25,8 +25,9 @@ def analyze_similarity(
     cluster_report_path = clusters_dir / "cluster_report.json"
 
     if not morphcheck_path.exists():
-        ref_name = Path(reference_path).stem
-        morphcheck_path = base_dir / "morphcheck" / detector / f"{ref_name}.json"
+        if reference_path is not None:
+            ref_name = Path(reference_path).stem
+            morphcheck_path = base_dir / "morphcheck" / detector / f"{ref_name}.json"
         if not morphcheck_path.exists():
             auto_dir = base_dir / "morphcheck" / detector
             if auto_dir.exists():
