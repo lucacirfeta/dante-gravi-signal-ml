@@ -352,127 +352,127 @@ def _analyze_detector(
                         anomalous_files.append(all_files[idx])
                         anomalous_cluster_ids.append(cid)
 
-            # if not anomalous_indices:
-            #     logger.info(
-            #         "%s[%s]%s No anomalous clusters found. Generating empty morphcheck report.",
-            #         color, det, reset,
-            #     )
-            #     morph_summary = {
-            #         "total_checked": 0,
-            #         "novel": 0,
-            #         "known": 0,
-            #         "ambiguous": 0,
-            #         "novel_files": [],
-            #         "details": [],
-            #     }
-            #     morph_report_path.parent.mkdir(parents=True, exist_ok=True)
-            #     with open(morph_report_path, "w", encoding="utf-8") as f:
-            #         json.dump(morph_summary, f, indent=2)
-            #
-            #     det_report["steps"]["morphcheck"] = {
-            #         "status": "OK",
-            #         "timestamp": step_start,
-            #         "novel": 0,
-            #         "known": 0,
-            #         "ambiguous": 0,
-            #     }
-            # else:
-            anomalous_embeddings = embeddings[anomalous_indices]
-            sim_cfg = cfg.get("similarity", {})
-
-            summary_results = {}
-            all_details = {}
-
-            for ref_path in references:
-                ref_name = ref_path.name
-
-                if auto_discovery:
-                    current_morph_path = morph_report_path.parent / "morphcheck" / det / f"{ref_path.stem}.json"
-                else:
-                    current_morph_path = morph_report_path
-
-                try:
-                    morph_summary = run_morphological_crosscheck(
-                        anomalous_embeddings,
-                        anomalous_files,
-                        anomalous_cluster_ids,
-                        ref_path,
-                        current_morph_path,
-                        k=sim_cfg.get("k_neighbors", 5),
-                        novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
-                        consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
-                        logger=morph_logger,
-                    )
-                    print_morphological_summary(morph_summary, detector=det)
-
-                    summary_results[ref_name] = {
-                        "novel": morph_summary["novel"],
-                        "known": morph_summary["known"],
-                        "ambiguous": morph_summary["ambiguous"]
-                    }
-                    all_details[ref_name] = {d["file"]: d["novelty_status"] for d in morph_summary["details"]}
-                except Exception as e:
-                    logger.error("%s[%s]%s Morphcheck failed for reference %s: %s", color, det, reset, ref_name, e,
-                                 exc_info=True)
-                    continue
-
-            if auto_discovery:
-                newly_resolved = 0
-                still_ambiguous = 0
-                still_novel = 0
-
-                if len(references) == 2:
-                    ref1 = references[0].name
-                    ref2 = references[1].name
-
-                    for file_name, status1 in all_details[ref1].items():
-                        status2 = all_details[ref2].get(file_name)
-                        if status1 in ["NOVEL", "AMBIGUOUS"] and status2 == "KNOWN":
-                            newly_resolved += 1
-                        elif status2 == "AMBIGUOUS":
-                            still_ambiguous += 1
-                        elif status2 == "NOVEL":
-                            still_novel += 1
-                elif len(references) > 0:
-                    last_ref = references[-1].name
-                    for file_name, status in all_details[last_ref].items():
-                        if status == "AMBIGUOUS":
-                            still_ambiguous += 1
-                        elif status == "NOVEL":
-                            still_novel += 1
-
-                summary_report = {
-                    "session_id": session_id,
-                    "detector": det,
-                    "references_used": [r.name for r in references],
-                    "results": summary_results,
-                    "comparison": {
-                        "newly_resolved": newly_resolved,
-                        "still_ambiguous": still_ambiguous,
-                        "still_novel": still_novel
-                    }
+            if not anomalous_indices:
+                logger.info(
+                    "%s[%s]%s No anomalous clusters found. Generating empty morphcheck report.",
+                    color, det, reset,
+                )
+                morph_summary = {
+                    "total_checked": 0,
+                    "novel": 0,
+                    "known": 0,
+                    "ambiguous": 0,
+                    "novel_files": [],
+                    "details": [],
                 }
+                morph_report_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(morph_report_path, "w", encoding="utf-8") as f:
-                    json.dump(summary_report, f, indent=2)
+                    json.dump(morph_summary, f, indent=2)
 
-                if len(references) > 0 and len(summary_results) > 0:
-                    tracker_morph.end(n_processed=len(anomalous_embeddings))
                 det_report["steps"]["morphcheck"] = {
                     "status": "OK",
                     "timestamp": step_start,
-                    "references_used": summary_report["references_used"],
-                    "results": summary_report["results"],
-                    "comparison": summary_report["comparison"],
+                    "novel": 0,
+                    "known": 0,
+                    "ambiguous": 0,
                 }
             else:
-                tracker_morph.end(n_processed=len(anomalous_embeddings))
-                det_report["steps"]["morphcheck"] = {
-                    "status": "OK",
-                    "timestamp": step_start,
-                    "novel": morph_summary["novel"],
-                    "known": morph_summary["known"],
-                    "ambiguous": morph_summary["ambiguous"],
-                }
+                anomalous_embeddings = embeddings[anomalous_indices]
+                sim_cfg = cfg.get("similarity", {})
+    
+                summary_results = {}
+                all_details = {}
+    
+                for ref_path in references:
+                    ref_name = ref_path.name
+    
+                    if auto_discovery:
+                        current_morph_path = morph_report_path.parent / "morphcheck" / det / f"{ref_path.stem}.json"
+                    else:
+                        current_morph_path = morph_report_path
+    
+                    try:
+                        morph_summary = run_morphological_crosscheck(
+                            anomalous_embeddings,
+                            anomalous_files,
+                            anomalous_cluster_ids,
+                            ref_path,
+                            current_morph_path,
+                            k=sim_cfg.get("k_neighbors", 5),
+                            novelty_threshold=sim_cfg.get("novelty_threshold", 0.85),
+                            consensus_threshold=sim_cfg.get("consensus_threshold", 0.60),
+                            logger=morph_logger,
+                        )
+                        print_morphological_summary(morph_summary, detector=det)
+    
+                        summary_results[ref_name] = {
+                            "novel": morph_summary["novel"],
+                            "known": morph_summary["known"],
+                            "ambiguous": morph_summary["ambiguous"]
+                        }
+                        all_details[ref_name] = {d["file"]: d["novelty_status"] for d in morph_summary["details"]}
+                    except Exception as e:
+                        logger.error("%s[%s]%s Morphcheck failed for reference %s: %s", color, det, reset, ref_name, e,
+                                     exc_info=True)
+                        continue
+    
+                if auto_discovery:
+                    newly_resolved = 0
+                    still_ambiguous = 0
+                    still_novel = 0
+    
+                    if len(references) == 2:
+                        ref1 = references[0].name
+                        ref2 = references[1].name
+    
+                        for file_name, status1 in all_details[ref1].items():
+                            status2 = all_details[ref2].get(file_name)
+                            if status1 in ["NOVEL", "AMBIGUOUS"] and status2 == "KNOWN":
+                                newly_resolved += 1
+                            elif status2 == "AMBIGUOUS":
+                                still_ambiguous += 1
+                            elif status2 == "NOVEL":
+                                still_novel += 1
+                    elif len(references) > 0:
+                        last_ref = references[-1].name
+                        for file_name, status in all_details[last_ref].items():
+                            if status == "AMBIGUOUS":
+                                still_ambiguous += 1
+                            elif status == "NOVEL":
+                                still_novel += 1
+    
+                    summary_report = {
+                        "session_id": session_id,
+                        "detector": det,
+                        "references_used": [r.name for r in references],
+                        "results": summary_results,
+                        "comparison": {
+                            "newly_resolved": newly_resolved,
+                            "still_ambiguous": still_ambiguous,
+                            "still_novel": still_novel
+                        }
+                    }
+                    with open(morph_report_path, "w", encoding="utf-8") as f:
+                        json.dump(summary_report, f, indent=2)
+    
+                    if len(references) > 0 and len(summary_results) > 0:
+                        tracker_morph.end(n_processed=len(anomalous_embeddings))
+                    det_report["steps"]["morphcheck"] = {
+                        "status": "OK",
+                        "timestamp": step_start,
+                        "references_used": summary_report["references_used"],
+                        "results": summary_report["results"],
+                        "comparison": summary_report["comparison"],
+                    }
+                else:
+                    tracker_morph.end(n_processed=len(anomalous_embeddings))
+                    det_report["steps"]["morphcheck"] = {
+                        "status": "OK",
+                        "timestamp": step_start,
+                        "novel": morph_summary["novel"],
+                        "known": morph_summary["known"],
+                        "ambiguous": morph_summary["ambiguous"],
+                    }
 
     except Exception as exc:
         logger.error(

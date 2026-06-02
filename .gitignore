@@ -285,3 +285,10 @@ verify.py
 knowledge/
 reports/
 scripts/
+
+.env.example
+memorix.yml
+.env
+.agent/
+package-lock.json
+.gemini/

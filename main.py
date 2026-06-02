@@ -190,26 +190,24 @@ def _run_continue_loop(
     hours = run_cfg[run]["hours_per_detector"]
     logger.info("Iteration scan duration: %d hours per detector", hours)
 
-    for iteration in range(1, max_iterations + 1):
-        logger.info("--- Continuous Run Loop: Iteration %d / %d ---", iteration, max_iterations)
-        
-        # 1. Cerca l'ultimo GPS processato per H1 e L1 nella sessione corrente
-        ultimo_H1 = _find_last_gps(current_session_id, "H1", run=run)
-        ultimo_L1 = _find_last_gps(current_session_id, "L1", run=run)
-        
-        if ultimo_H1 is None or ultimo_L1 is None:
-            logger.error(
-                "Could not find processed spectrograms for both H1 and L1 in current session %s. "
-                "Aborting continuous run loop.", current_session_id
-            )
-            break
-            
-        # 2. Calcola il GPS sincronizzato = min(ultimo_H1, ultimo_L1)
+    # Determina il GPS sincronizzato iniziale
+    ultimo_H1 = _find_last_gps(current_session_id, "H1", run=run)
+    ultimo_L1 = _find_last_gps(current_session_id, "L1", run=run)
+    
+    if ultimo_H1 is None or ultimo_L1 is None:
+        gps_sincronizzato = getattr(args, "start_gps", None)
+        if gps_sincronizzato is None:
+            gps_sincronizzato = _run_start_gps(run, cfg)
+        logger.info("Initial session %s empty. Synchronized GPS = %d", current_session_id, gps_sincronizzato)
+    else:
         gps_sincronizzato = min(ultimo_H1, ultimo_L1)
         logger.info(
-            "Current session %s ends: H1=%s, L1=%s. Synchronized GPS = %d",
+            "Initial session %s ends: H1=%s, L1=%s. Synchronized GPS = %d",
             current_session_id, ultimo_H1, ultimo_L1, gps_sincronizzato
         )
+
+    for iteration in range(1, max_iterations + 1):
+        logger.info("--- Continuous Run Loop: Iteration %d / %d ---", iteration, max_iterations)
         
         next_start_gps = gps_sincronizzato + 1
         logger.info("Next iteration start GPS: %d", next_start_gps)
@@ -281,10 +279,18 @@ def _run_continue_loop(
 
             if is_failed:
                 logger.error("full-analysis failed in iteration %d: %s", iteration, result.get("error"))
-                break
+                # Non interrompere il ciclo, prosegui alla prossima iterazione
         except Exception as e:
             logger.error("full-analysis failed in iteration %d: %s", iteration, e, exc_info=True)
-            break
+            # Non interrompere il ciclo, prosegui alla prossima iterazione
+            
+        # Update gps_sincronizzato per la prossima iterazione
+        u_H1 = _find_last_gps(new_session_id, "H1", run=run)
+        u_L1 = _find_last_gps(new_session_id, "L1", run=run)
+        if u_H1 is None or u_L1 is None:
+            gps_sincronizzato = next_start_gps + int(hours * 3600)
+        else:
+            gps_sincronizzato = min(u_H1, u_L1)
             
         # Advance to the new session
         current_session_id = new_session_id
@@ -835,8 +841,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     try:
         astropy.utils.data.clear_download_cache()
         logger.info("Cleaned astropy download cache.")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to clean astropy download cache: %s", e)
 
     logger.info(
         "Extended scan complete: %d saved, %d skipped, %.1f h scanned per detector",
