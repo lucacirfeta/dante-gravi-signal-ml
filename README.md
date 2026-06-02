@@ -35,10 +35,10 @@ activity in [O2–O4a gravitational-wave data](https://gwosc.org/) — without
 labeled training data and with native hardware acceleration (CUDA/MPS) for
 lightning-fast inference.
 
-It clusters glitch spectrograms by visual morphology using frozen DINOv2 features,
-identifies statistically anomalous clusters, and cross-checks them against
-known Gravity Spy classes to assess whether they represent known or potentially
-uncharacterized glitch morphologies.
+It clusters glitch spectrograms by visual morphology within a latent space using frozen DINOv2 features.
+It identifies anomaly clusters through novelty detection, and cross-checks them against
+an in-domain Gravity Spy O3b reference index to assess whether they represent known or potentially
+uncharacterized glitch morphologies. Robustness validation is ensured through stability and ablation testing, and temporal background is estimated via time-slide coincidence analysis.
 
 > **Note on Virgo (V1):** Virgo did not participate in O4a due to a commissioning
 > issue. It rejoined the network in O4b. This pipeline therefore targets H1
@@ -74,9 +74,9 @@ Raw Strain Data (GWOSC O2–O4a)
          │
          ▼
 ┌─────────────────────┐
-│   Clustering        │  PCA(50D) → UMAP(10D, cosine, min_dist=0.0)
-│   (clustering.py)   │  → DPMM (default, Dirichlet Process Mixture Model)
-│   (reporter.py)     │    or HDBSCAN; UMAP(2D) for visualization
+│   Clustering        │  PCA(50D) dimensionality reduction → UMAP(10D, cosine, min_dist=0.0)
+│   (clustering.py)   │  latent manifold projection → DPMM (Dirichlet Process Mixture Model)
+│   (reporter.py)     │  or HDBSCAN; UMAP(2D) for visualization
 └────────┬────────────┘
          │
          ▼
@@ -91,7 +91,7 @@ Raw Strain Data (GWOSC O2–O4a)
 │   full_analysis.py       — End-to-end orchestrator  │
 │                                                     │
 │   indomain_reference_    — In-domain reference from │
-│     builder.py             labeled GPS              │
+│     builder.py             labeled O3b GPS          │
 │   reference_builder.py   — Gravity Spy tar.gz index │
 │   gravity_spy_checker.py — GPS-based DB query       │
 └─────────────────────────────────────────────────────┘
@@ -120,6 +120,23 @@ Raw Strain Data (GWOSC O2–O4a)
 - **Colormap `cividis`**: Replaces `viridis` to guarantee perceptual uniformity and reduce artifact bias in geometric rendering.
 - **Hardware Acceleration & Pipelined Execution**: Full native support for NVIDIA CUDA (with cuDNN auto-tuner enabled for `inference_mode`) and Apple MPS. Leverages an advanced *Micro-Locking* approach at the batch level: image reading and decoding happens asynchronously via multi-threading on the CPU, while the GPU executes pure mathematical inference with millisecond locks and instantaneous VRAM flushing.
 - **Session ID Isolation**: Any run (scan or analysis) generates a unique ID based on the timestamp. Each intermediate step (spectrograms, embeddings, json) is saved in isolation to prevent cross-overwrites.
+
+---
+
+## 🔬 Scientific Scope
+
+This pipeline evaluates the **morphology** of instrumental noise transients in the latent space constructed by frozen DINOv2 embeddings. It is specifically designed for unsupervised anomaly clustering and novelty detection.
+
+**Within the DINOv2 latent representation and validation framework used in this study, no robust morphologically novel candidates were identified in the analyzed O4a data.** All identified anomaly clusters mapped to known Gravity Spy classes with a high degree of visual similarity.
+
+The pipeline establishes a reproducible baseline for zero-shot glitch morphology characterization but **cannot** definitively conclude the absence of new physical glitch mechanisms. It solely addresses the *visual morphological similarity* of glitches as represented by standard Q-transform spectrograms.
+
+## ⚠️ Limitations
+
+1. **Dependence on DINOv2 Embeddings:** DINOv2 is a foundation model trained on natural images. While empirical tests show effective transfer learning to spectrograms, its feature extraction heuristics are not physically motivated by gravitational-wave mechanics.
+2. **UMAP Geometry Distortions:** UMAP distorts global distances to preserve local structure. Anomalous clusters separated by UMAP might reflect preprocessing artifacts rather than physically distinct morphologies.
+3. **Absence of Auxiliary Channel Validation:** This tool operates entirely on primary strain data (H1/L1). It does not cross-reference environmental or instrumental auxiliary channels to confirm the physical origin of the anomalies.
+4. **Physically Distinct but Visually Similar Glitches:** The pipeline has an inability to exclude physically distinct glitch classes if they produce visually similar spectrogram morphologies. Ground-truth physical novelty may exist undetected within existing clusters.
 
 ---
 
@@ -213,11 +230,11 @@ When `--reference` is omitted in `morphcheck` or `full-analysis`, the pipeline *
 ### Autopilot & Threshold Calibration
 1. **Log-likelihood Threshold Calibration (Clustering):**
    ```bash
-   python main.py calibrate-loglikelihood --reference data/reference/indomain_O4a_H1.npz --percentile 5
+   python main.py calibrate-loglikelihood --reference data/reference/indomain_O3b_H1.npz --percentile 5
    ```
 2. **Per-class Threshold Calibration (Scan Live):**
    ```bash
-   python main.py calibrate-threshold --reference data/reference/indomain_O4a_H1.npz --percentile 5
+   python main.py calibrate-threshold --reference data/reference/indomain_O3b_H1.npz --percentile 5
    ```
 3. **Live Scan with KNOWN/NOVEL Classification:**
    ```bash
@@ -257,17 +274,6 @@ WARNING log if the nightly build is not installed.
 
 ---
 
-## ⚠️ Known Limitations
-
-1. **UMAP distortion:** UMAP distorts global distances to preserve local structure. Anomalous clusters separated by UMAP might reflect preprocessing artifacts rather than physically distinct morphologies. The Ablation study (ARI > 0.999) helps validate its robustness.
-2. **Domain transfer assumption:** DINOv2 is trained on natural images. Transfer learning on GW spectrograms is based on heuristics and field-validated through *morphcheck*.
-3. **Single Q-transform window:** The fixed use of standard parameters (qrange=[4,64], 32s window) may obscure high-frequency transient structures or slow broadbands.
-4. **Ground Truth Divergence:** Unsupervised clustering achieves a relatively low ARI compared to manual labels (Gravity Spy). This indicates that visual morphological similarity (DINOv2) captures intrinsic features different from classical human conventions.
-5. **Blackwell GPU (sm_120):** Stable PyTorch does not yet include kernels for sm_120. Use the cu128 nightly build for hardware acceleration on RTX 5070. The CPU fallback is automatic.
-6. **GUI dependency:** The `Gooey` package for the `gui.py` interface is optional and must be installed manually if required.
-
----
-
 ## 🧪 Running Tests
 
 ```bash
@@ -294,7 +300,7 @@ If you use this software in your research, please cite our preprint:
   eprint = {2605.28572},
   archivePrefix = {arXiv},
   primaryClass = {astro-ph.IM},
-  doi    = {10.48550/arXiv.2605.28572},
+  doi    = {10.5281/zenodo.20121860},
   url    = {https://arxiv.org/abs/2605.28572}
 }
 ```
