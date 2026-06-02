@@ -279,3 +279,11 @@ scratch_gen_final_results.py
 scratch/
 verify_morphcheck.py
 verify.py
+
+# Local workspace memory structure
+project_memory/
+experiments/
+knowledge/
+prompts/
+reports/
+scripts/
