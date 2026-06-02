@@ -87,6 +87,9 @@ indomain_reference:
 clustering:
   algorithm: dpmm            # Set DPMM as the default algorithm
   pca_components: 50
+  # Global random seed — propagated to PCA, both UMAP passes, and DPMM.
+  # Fix this value to guarantee exact reproducibility across sessions.
+  random_state: 42
   dpmm:
     n_components: 25
     anomaly_percentile: 5.0

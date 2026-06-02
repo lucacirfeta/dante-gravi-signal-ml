@@ -226,6 +226,7 @@ data/raw/
 data/spectrograms/
 data/embeddings/
 data/clusters/
+data/stability/
 data/reference/indomain_images/
 data/reference/training_images/
 data/reference/*.npz
@@ -281,9 +282,6 @@ verify_morphcheck.py
 verify.py
 
 # Local workspace memory structure
-project_memory/
-experiments/
 knowledge/
-prompts/
 reports/
 scripts/

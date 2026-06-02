@@ -278,10 +278,14 @@ def run_full_pipeline(
     # --- Step 0: Ensure L2-normalized embeddings (GPU-accelerated) ---
     embeddings = _gpu_l2_normalize(embeddings)
 
+    # Read global random seed — single source of truth from config
+    random_state: int = int(config.get("random_state", 42))
+
     # --- Step 1: PCA ---
     pca_reduced, pca_variance = run_pca(
         embeddings,
         n_components=config.get("pca_components", 50),
+        random_state=random_state,
     )
 
     # --- Step 2: UMAP Pass A — clustering (10D, min_dist=0.0) ---
@@ -291,6 +295,7 @@ def run_full_pipeline(
         n_components=umap_clust_cfg.get("n_components", 10),
         n_neighbors=umap_clust_cfg.get("n_neighbors", 30),
         min_dist=umap_clust_cfg.get("min_dist", 0.0),
+        random_state=random_state,
     )
 
     algorithm = config.get("algorithm", "dpmm")
@@ -319,6 +324,7 @@ def run_full_pipeline(
             n_components=dpmm_cfg.get("n_components", 25),
             anomaly_percentile=dpmm_cfg.get("anomaly_percentile", 5.0),
             anomaly_threshold=dpmm_anomaly_threshold,
+            random_state=random_state,
         )
 
         # --- Step 4: Aggregate per-sample anomalies to cluster level ---
@@ -381,6 +387,7 @@ def run_full_pipeline(
         n_components=umap_viz_cfg.get("n_components", 2),
         n_neighbors=umap_viz_cfg.get("n_neighbors", 30),
         min_dist=umap_viz_cfg.get("min_dist", 0.1),
+        random_state=random_state,
     )
 
     # --- Step 6: Clustering Quality Metrics ---
