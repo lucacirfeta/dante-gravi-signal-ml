@@ -9,6 +9,7 @@ so that long-running O4a batch scans can survive transient failures.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Literal
 
 from gwpy.timeseries import TimeSeries
@@ -65,8 +66,6 @@ def fetch_strain_data(
         RuntimeError: If the GWOSC fetch fails after retries (network
             timeout, missing data, rate limits).
     """
-    from pathlib import Path
-
     _validate_detector(detector)
 
     utc_start = gps_to_utc(gps_start)
@@ -277,7 +276,6 @@ def generate_segments_from_gps_range(
 
 def _find_latest_raw_session() -> Path | None:
     """Scans data/raw/ and returns the path to the folder with the highest GPS name."""
-    from pathlib import Path
     raw_dir = Path("data/raw")
     if not raw_dir.exists():
         return None

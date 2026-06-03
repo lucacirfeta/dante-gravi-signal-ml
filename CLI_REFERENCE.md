@@ -123,7 +123,7 @@ Automated extended scan of **H1 and L1** simultaneously (Phase 4). Synchronizes 
 
 * **Under the Hood (Processing Details):**
   1. Identifies the spectrogram folders for H1 and L1 for the specified session. In case of resume, it finds the last recorded GPS for each detector and selects the *least common minimum* between them. This ensures both detectors restart exactly from the same GPS second, avoiding temporal misalignments.
-  2. If `--raw-path` is specified (or automatically derived from the latest download), it parses the `.hdf5` files to determine the total time interval (`min_start` and `max_end`), forcing the scan start and end to the physical limits of the local files and excluding the need to configure `--hours`.
+  2. If `--raw-path` is specified explicitly, it parses the `.hdf5` files to determine the total time interval (`min_start` and `max_end`), forcing the scan start and end to the physical limits of the local files and excluding the need to configure `--hours`. If automatically derived, it simply uses the local files to speed up segments that intersect its range without altering the configured start GPS.
   3. Divides the workload in parallel using a `ProcessPoolExecutor` (on Windows with `spawn` multiprocessing), equally dividing the total number of workers between H1 and L1 to optimize the CPU-bound calculation of the Q-transform.
   4. For each 32-second segment, extracts the strain, executes preprocessing (whiten, bandpass, Q-transform), and writes the PNG.
   5. If `--full-analysis` is True, automatically runs the entire embedding, clustering, and validation pipeline on the newly processed data.
