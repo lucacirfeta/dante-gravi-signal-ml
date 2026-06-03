@@ -256,33 +256,34 @@ def _run_continue_loop(
             logger.error("scan-extended failed in iteration %d: %s", iteration, e, exc_info=True)
             break
             
-        # 5. Al termine dello scan, rilancia automaticamente full-analysis sulla nuova sessione
-        logger.info("Launching full-analysis on session %s...", new_session_id)
-        from src.full_analysis import run_full_analysis
-        
-        try:
-            result = run_full_analysis(
-                session_id=new_session_id,
-                detectors=["H1", "L1"],
-                run=run,
-                skip_timeslide=scan_args.skip_timeslide,
-                n_runs=scan_args.n_runs,
-                sequential=scan_args.sequential,
-            )
+        if getattr(args, "full_analysis", False):
+            # 5. Al termine dello scan, rilancia automaticamente full-analysis sulla nuova sessione
+            logger.info("Launching full-analysis on session %s...", new_session_id)
+            from src.full_analysis import run_full_analysis
             
-            status_val = result.get("status")
-            is_failed = False
-            if status_val == "FAILED":
-                is_failed = True
-            elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
-                is_failed = True
-
-            if is_failed:
-                logger.error("full-analysis failed in iteration %d: %s", iteration, result.get("error"))
+            try:
+                result = run_full_analysis(
+                    session_id=new_session_id,
+                    detectors=["H1", "L1"],
+                    run=run,
+                    skip_timeslide=scan_args.skip_timeslide,
+                    n_runs=scan_args.n_runs,
+                    sequential=scan_args.sequential,
+                )
+                
+                status_val = result.get("status")
+                is_failed = False
+                if status_val == "FAILED":
+                    is_failed = True
+                elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
+                    is_failed = True
+    
+                if is_failed:
+                    logger.error("full-analysis failed in iteration %d: %s", iteration, result.get("error"))
+                    # Non interrompere il ciclo, prosegui alla prossima iterazione
+            except Exception as e:
+                logger.error("full-analysis failed in iteration %d: %s", iteration, e, exc_info=True)
                 # Non interrompere il ciclo, prosegui alla prossima iterazione
-        except Exception as e:
-            logger.error("full-analysis failed in iteration %d: %s", iteration, e, exc_info=True)
-            # Non interrompere il ciclo, prosegui alla prossima iterazione
             
         # Update gps_sincronizzato per la prossima iterazione
         u_H1 = _find_last_gps(new_session_id, "H1", run=run)
@@ -740,6 +741,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         
         if last_gps >= expected_end_gps - (segment_duration * 2):
             logger.info("Scan already complete for session %s. Skipping to full-analysis.", session_id)
+            is_failed = False
             if getattr(args, "full_analysis", False):
                 from src.full_analysis import run_full_analysis
                 logger.info("Triggering automatic full analysis...")
@@ -753,22 +755,21 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                 )
                 
                 status_val = result.get("status")
-                is_failed = False
                 if status_val == "FAILED":
                     is_failed = True
                 elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
                     is_failed = True
 
-                if not is_failed and getattr(args, "continue_run", False):
-                    max_iterations = getattr(args, "max_iterations", 10)
-                    stop_date = getattr(args, "stop_date", None)
-                    _run_continue_loop(
-                        initial_session_id=session_id,
-                        run=run,
-                        max_iterations=max_iterations,
-                        stop_date_str=stop_date,
-                        args=args,
-                    )
+            if not is_failed and getattr(args, "continue_run", False):
+                max_iterations = getattr(args, "max_iterations", 10)
+                stop_date = getattr(args, "stop_date", None)
+                _run_continue_loop(
+                    initial_session_id=session_id,
+                    run=run,
+                    max_iterations=max_iterations,
+                    stop_date_str=stop_date,
+                    args=args,
+                )
             return
 
         logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, last_gps)
@@ -855,6 +856,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     tracker.end(gps_end=end_gps, n_processed=processed_count, n_total=len(segments))
 
     # --- Automatic full analysis trigger ---
+    is_failed = False
     if getattr(args, "full_analysis", False):
         from src.full_analysis import run_full_analysis
         logger.info("Triggering automatic full analysis...")
@@ -868,22 +870,21 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         )
         
         status_val = result.get("status")
-        is_failed = False
         if status_val == "FAILED":
             is_failed = True
         elif isinstance(status_val, dict) and any(v == "FAILED" for v in status_val.values()):
             is_failed = True
 
-        if not is_failed and getattr(args, "continue_run", False):
-            max_iterations = getattr(args, "max_iterations", 10)
-            stop_date = getattr(args, "stop_date", None)
-            _run_continue_loop(
-                initial_session_id=session_id,
-                run=run,
-                max_iterations=max_iterations,
-                stop_date_str=stop_date,
-                args=args,
-            )
+    if not is_failed and getattr(args, "continue_run", False):
+        max_iterations = getattr(args, "max_iterations", 10)
+        stop_date = getattr(args, "stop_date", None)
+        _run_continue_loop(
+            initial_session_id=session_id,
+            run=run,
+            max_iterations=max_iterations,
+            stop_date_str=stop_date,
+            args=args,
+        )
 
 
 def cmd_last_gps(args: argparse.Namespace) -> None:
