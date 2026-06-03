@@ -265,3 +265,28 @@ Glitches mapped to expected morphologies or continuous background populations.
 | Spectrograms (H1 / L1) | `26623` / `27541` | `21991` / `29953` | `19943` / `13089` | `27017` / `21985` | Comparable |
 | Number of Clusters (H1 / L1) | `11` / `11` | `11` / `15` | `15` / `11` | `16` / `10` | Consistent |
 | Robustness (ARI H1 / L1) | `0.859` / `0.967` | `0.889` / `0.910` | `0.864` / `0.927` | `0.835` / `0.986` | Always > 0.85 |
+
+---
+
+## 🚨 MDC Validation & OOD Blindness Alert
+
+Following the latest Mock Data Challenge (MDC) pipeline execution with 1000 NULL segment injections to validate the False Positive Rate, a critical **Out-Of-Distribution (OOD) Blindness** phenomenon was discovered.
+
+### 1. Robustness Against False Positives
+The test on background segments yielded a **0.00% False Positive Rate**. The pipeline robustly avoids flagging standard stationary noise as anomalous.
+
+### 2. Representation Collapse (False Negatives)
+Despite the excellent FPR, the pipeline exhibited a **100% False Negative Rate** for 3 out of 5 synthetic morphologies:
+
+| Glitch Type | SNR_50 | Max Recall |
+|-------------|--------|------------|
+| SpiralBurst | Diverging (>2600) | 0.00 |
+| StepLadder | Diverging (>4200) | 0.00 |
+| NoiseBlob | Diverging (>3200) | 0.00 |
+| Butterfly | 80.13 | 1.00 |
+| ZSweep | 109.19 | 1.00 |
+
+*See plots: [Sensitivity Curve](results/mdc/sensitivity_curve.png) and [Confusion Matrix](results/mdc/confusion_matrix.png).*
+
+**Scientific Implication:** 
+The DINOv2 frozen encoder suffers from *representation collapse* on spectrograms, squashing certain unknown topologies (`SpiralBurst`, `StepLadder`) into the latent space of `KNOWN` classes. Therefore, the "Null Result" obtained on the O4a dataset (zero anomalous clusters) **cannot** be scientifically interpreted as a definitive absence of physical anomalies. The detector is fundamentally blind to a subset of anomalous topologies. A contrastive fine-tuning phase and a recalibration of the `novelty_threshold` are mandatory to unlock true discovery capabilities.

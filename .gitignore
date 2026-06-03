@@ -292,3 +292,8 @@ memorix.yml
 .agent/
 package-lock.json
 .gemini/
+prompts
+generate_report_only.py
+results
+scratch_reaggregate_mdc.py
+gemini_utils

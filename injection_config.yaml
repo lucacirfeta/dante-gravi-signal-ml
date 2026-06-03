@@ -1,0 +1,13 @@
+n_injections_per_type: 50
+amplitude_grid_start: -22.0
+amplitude_grid_end: -20.7
+amplitude_grid_steps: 10
+glitch_types:
+  - ZSweep
+  - SpiralBurst
+  - StepLadder
+  - Butterfly
+  - NoiseBlob
+detector: "L1"
+target_session: "20260520_223147"
+seed: 42

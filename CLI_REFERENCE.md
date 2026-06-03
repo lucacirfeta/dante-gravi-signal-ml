@@ -127,7 +127,7 @@ Automated extended scan of **H1 and L1** simultaneously (Phase 4). Synchronizes 
   3. Divides the workload in parallel using a `ProcessPoolExecutor` (on Windows with `spawn` multiprocessing), equally dividing the total number of workers between H1 and L1 to optimize the CPU-bound calculation of the Q-transform.
   4. For each 32-second segment, extracts the strain, executes preprocessing (whiten, bandpass, Q-transform), and writes the PNG.
   5. If `--full-analysis` is True, automatically runs the entire embedding, clustering, and validation pipeline on the newly processed data.
-  6. If `--continue-run` is enabled, enters an infinite loop (until `--max-iterations` or the reaching of `--stop-date`) alternating between incremental scanning phases and automatic clustering/validation phases.
+  6. If `--continue-run` is enabled, enters a continuous loop (until `--max-iterations` or the reaching of `--stop-date`) to perform incremental scanning phases. If `--full-analysis` is also True, it alternates between incremental scanning and automatic clustering/validation phases.
 
 - `--run`: Observational run. Choices: `O2`, `O3a`, `O3b`, `O4a`. *Default: `O4a`*.
 - `--hours`: Override hours per detector relative to yaml config (only for new scans).

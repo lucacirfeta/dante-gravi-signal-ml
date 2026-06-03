@@ -2306,6 +2306,66 @@ def cmd_scan_live(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_run_injection(args: argparse.Namespace) -> None:
+    """Run Mock Data Challenge with synthetic glitch injection."""
+    from src.injection import run_mdc
+    from src.plot_mdc import plot_sensitivity_curve, plot_confusion_matrix, generate_mdc_report
+    import yaml
+    import pandas as pd
+    
+    config_path = Path(args.config)
+    if not config_path.exists():
+        logger.error(f"Injection config not found: {config_path}")
+        sys.exit(1)
+        
+    with open(config_path, "r", encoding="utf-8") as f:
+        cfg = yaml.safe_load(f)
+        
+    n_injections = cfg.get("n_injections_per_type", 50)
+    grid_start = cfg.get("amplitude_grid_start", -22.0)
+    grid_end = cfg.get("amplitude_grid_end", -20.7)
+    grid_steps = cfg.get("amplitude_grid_steps", 10)
+    
+    amplitude_grid = np.logspace(grid_start, grid_end, grid_steps)
+    
+    glitch_types = cfg.get("glitch_types", ["ZSweep", "SpiralBurst", "StepLadder", "Butterfly", "NoiseBlob"])
+    detector = cfg.get("detector", "L1")
+    seed = cfg.get("seed", 42)
+    
+    run = _resolve_run(args)
+    global_cfg = load_config()
+    start_gps = _run_start_gps(run, global_cfg)
+    
+    # We'll run over 4 hours of data starting 1 week into the run
+    session_gps_start = start_gps + 3600 * 24 * 7
+    session_gps_end = session_gps_start + 3600 * 4
+    
+    output_dir = Path("results/mdc")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    logger.info("=== MOCK DATA CHALLENGE ===")
+    logger.info("Injecting into %s data from %d to %d", detector, session_gps_start, session_gps_end)
+    
+    summary_df = run_mdc(
+        session_gps_start=session_gps_start,
+        session_gps_end=session_gps_end,
+        detector=detector,
+        glitch_types=glitch_types,
+        n_injections_per_type=n_injections,
+        amplitude_grid=amplitude_grid,
+        output_dir=output_dir,
+        seed=seed
+    )
+    
+    raw_df = pd.read_csv(output_dir / "mdc_raw_results.csv", keep_default_na=False)
+    
+    snr_50_dict = plot_sensitivity_curve(summary_df, output_dir)
+    plot_confusion_matrix(raw_df, output_dir)
+    generate_mdc_report(summary_df, raw_df, snr_50_dict, output_dir)
+    
+    logger.info("MDC complete. Results in %s", output_dir)
+
+
 def _add_run_argument(parser: argparse.ArgumentParser) -> None:
     """Add the ``--run`` argument to a subparser."""
     parser.add_argument(
@@ -2349,9 +2409,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--event",
         type=str,
         required=True,
-        help="Reference event name (e.g. GW150914, GW170817, GW231123).",
+        help="Event name (e.g., GW150914). Must be in config.yaml.",
     )
     p_fetch.set_defaults(func=cmd_fetch)
+
+    # --- run-injection ---
+    p_injection = subparsers.add_parser(
+        "run-injection",
+        help="Run Mock Data Challenge with synthetic glitch injection.",
+    )
+    p_injection.add_argument(
+        "--config",
+        type=str,
+        default="injection_config.yaml",
+        help="Path to injection config. Default: injection_config.yaml",
+    )
+    _add_run_argument(p_injection)
+    p_injection.set_defaults(func=cmd_run_injection)
+
 
     # --- scan ---
     p_scan = subparsers.add_parser(

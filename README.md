@@ -137,6 +137,7 @@ The pipeline establishes a reproducible baseline for zero-shot glitch morphology
 2. **UMAP Geometry Distortions:** UMAP distorts global distances to preserve local structure. Anomalous clusters separated by UMAP might reflect preprocessing artifacts rather than physically distinct morphologies.
 3. **Absence of Auxiliary Channel Validation:** This tool operates entirely on primary strain data (H1/L1). It does not cross-reference environmental or instrumental auxiliary channels to confirm the physical origin of the anomalies.
 4. **Physically Distinct but Visually Similar Glitches:** The pipeline has an inability to exclude physically distinct glitch classes if they produce visually similar spectrogram morphologies. Ground-truth physical novelty may exist undetected within existing clusters.
+5. **Out-Of-Distribution (OOD) Blindness / Representation Collapse:** Recent Mock Data Challenge (MDC) tests revealed that DINOv2 completely fails to recognize certain synthetic anomalous morphologies (e.g., `SpiralBurst`, `StepLadder`, `NoiseBlob`), mapping them to known classes even at extremely high SNRs (Max Recall = 0.00). Consequently, a "Null Result" (zero novel classes found) does not guarantee the absence of all anomalies, but rather reflects the pipeline's blindness to specific Out-Of-Distribution shapes. Contrastive fine-tuning or threshold calibration is required to mitigate this.
 
 ---
 
