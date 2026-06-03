@@ -68,13 +68,53 @@ def _reset_color() -> str:
 
 
 def _save_detector_report(det_report: dict, run: str, session_id: str, det: str) -> Path:
-    """Persist the per-detector unified report and return its path."""
-    report_dir = session_path(run, session_id) / "reports"
-    report_dir.mkdir(parents=True, exist_ok=True)
-    report_path = report_dir / f"{det}_full_report.json"
+    """Persist the per-detector unified report in the session root and return its path.
+
+    The full report is saved as ``{session_id}/{det}_full_report.json`` — it is the
+    single source of truth and sits at the session root, NOT inside reports/.
+    """
+    session_dir = session_path(run, session_id)
+    session_dir.mkdir(parents=True, exist_ok=True)
+    report_path = session_dir / f"{det}_full_report.json"
     with open(report_path, "w", encoding="utf-8") as fh:
         json.dump(det_report, fh, indent=2)
     return report_path
+
+
+def _update_cluster_morphcheck_resolution(
+        det_report: dict,
+        sim_data: list,
+        sim_threshold: float = 0.98,
+) -> None:
+    """Populate anomalous_resolved_by_morphcheck and anomalous_unresolved in the cluster step.
+
+    Clusters that were flagged as anomalous by log-likelihood (pre-morphcheck) but have
+    mean_sim_top1 > sim_threshold in the similarity_analysis are considered resolved by
+    morphcheck (i.e. they turned out to be known glitch classes).
+    The remaining anomalous clusters are truly unresolved.
+
+    This function mutates det_report in place.
+    """
+    cluster_step = det_report.get("steps", {}).get("cluster", {})
+    anomalous_clusters: list = cluster_step.get("anomalous_clusters", [])
+    if not anomalous_clusters:
+        cluster_step["anomalous_resolved_by_morphcheck"] = []
+        cluster_step["anomalous_unresolved"] = []
+        return
+
+    # Build a map: cluster_id -> mean_sim_top1 from similarity_analysis results
+    sim_map: dict[int, float] = {}
+    for entry in sim_data:
+        cid = entry.get("cluster_id")
+        sim = entry.get("mean_sim_top1", 0.0)
+        if cid is not None:
+            sim_map[cid] = sim
+
+    resolved = [cid for cid in anomalous_clusters if sim_map.get(cid, 0.0) > sim_threshold]
+    unresolved = [cid for cid in anomalous_clusters if sim_map.get(cid, 0.0) <= sim_threshold]
+
+    cluster_step["anomalous_resolved_by_morphcheck"] = sorted(resolved)
+    cluster_step["anomalous_unresolved"] = sorted(unresolved)
 
 
 def _analyze_detector(
@@ -106,6 +146,10 @@ def _analyze_detector(
     reset = _reset_color()
 
     logger.info("%s=== Starting Full Analysis for %s ===%s", color, det, reset)
+
+    # Unified reports/ directory — all JSON outputs go here
+    reports_dir = session_path(run, session_id) / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
 
     det_report: dict = {
         "session_id": session_id,
@@ -228,7 +272,12 @@ def _analyze_detector(
     try:
         cluster_cfg = cfg["clustering"]
         cluster_dir = session_path(run, session_id) / "clusters" / det.lower()
-        cluster_report_file = cluster_dir / "cluster_report.json"
+        # Prefer new reports/ path, fall back to legacy clusters/{det}/
+        cluster_report_file = reports_dir / f"cluster_report_{det}.json"
+        if not cluster_report_file.exists():
+            legacy = cluster_dir / "cluster_report.json"
+            if legacy.exists():
+                cluster_report_file = legacy
 
         if cluster_report_file.exists():
             logger.info("%s[%s]%s Step 1: Cluster report already exists. Skipping clustering.", color, det, reset)
@@ -255,14 +304,16 @@ def _analyze_detector(
                 "anomalous_samples": rep.get("results", {}).get("anomalous_samples", []),
                 "pca_variance": rep.get("pipeline", {}).get("pca_variance_explained", 0.0)
             }
-            det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": step_start}
+            det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": step_start,
+                                              "n_clusters": result["hdbscan_stats"]["n_clusters"],
+                                              "anomalous_clusters": result["anomalous_clusters"]}
         else:
             logger.info("%s[%s]%s Step 1: Clustering...", color, det, reset)
             clus_logger = get_phase_logger(__name__, session_id, run, det, "cluster")
             tracker_clus = PhaseTracker(clus_logger, "cluster", session_id, run, det)
             tracker_clus.start()
             result = run_full_pipeline(embeddings, cluster_cfg, logger=clus_logger)
-            save_cluster_report(result, metadata, cluster_dir, detector=det)
+            save_cluster_report(result, metadata, cluster_dir, detector=det, reports_dir=reports_dir)
             print_summary(result, detector=det)
             tracker_clus.end(n_processed=len(embeddings))
 
@@ -273,6 +324,9 @@ def _analyze_detector(
                 "n_noise": result["hdbscan_stats"]["n_noise"],
                 "pca_variance": result["pca_variance"],
                 "anomalous_clusters": result["anomalous_clusters"],
+                # PROBLEMA 2: campi aggiornati dopo similarity_analysis (popolati in Step 2b)
+                "anomalous_resolved_by_morphcheck": [],
+                "anomalous_unresolved": result["anomalous_clusters"][:],
             }
 
     except Exception as exc:
@@ -299,7 +353,12 @@ def _analyze_detector(
 
     try:
         if auto_discovery:
-            morph_report_path = session_path(run, session_id) / f"morphcheck_summary_{det}.json"
+            # morphcheck_summary saved in reports/ (new) or morphcheck/ (legacy)
+            morph_report_path = reports_dir / f"morphcheck_summary_{det}.json"
+            if not morph_report_path.exists():
+                legacy_morph = session_path(run, session_id) / "morphcheck" / f"morphcheck_summary_{det}.json"
+                if legacy_morph.exists():
+                    morph_report_path = legacy_morph
         else:
             morph_report_path = cluster_dir / "morphcheck_report.json"
 
@@ -490,8 +549,12 @@ def _analyze_detector(
     # ------------------------------------------------------------------ #
     step_start = datetime.now(timezone.utc).isoformat()
     try:
-        analysis_dir = session_path(run, session_id) / "analysis"
-        similarity_report_file = analysis_dir / f"{det}_similarity_analysis.json"
+        # Prefer new reports/ path, fall back to legacy analysis/
+        similarity_report_file = reports_dir / f"{det}_similarity_analysis.json"
+        if not similarity_report_file.exists():
+            legacy_sim = session_path(run, session_id) / "analysis" / f"{det}_similarity_analysis.json"
+            if legacy_sim.exists():
+                similarity_report_file = legacy_sim
 
         if similarity_report_file.exists():
             logger.info("%s[%s]%s Step 2b: Similarity analysis report already exists. Skipping.", color, det, reset)
@@ -507,6 +570,9 @@ def _analyze_detector(
                 "potential_novel_clusters": novel_count,
                 "results": sim_data,
             }
+
+            # PROBLEMA 2 FIX: aggiorna cluster step con resolved/unresolved
+            _update_cluster_morphcheck_resolution(det_report, sim_data)
         else:
             if det_report["steps"].get("morphcheck", {}).get("status") in ("OK", "SKIPPED"):
                 logger.info("%s[%s]%s Step 2b: Similarity analysis...", color, det, reset)
@@ -516,13 +582,21 @@ def _analyze_detector(
                     session_id=session_id,
                     detector=det,
                     run=run,
-                    reference_path=reference_path
+                    reference_path=reference_path,
+                    reports_dir=reports_dir,
                 )
 
                 sim_data = []
                 if similarity_report_file.exists():
                     with open(similarity_report_file, "r", encoding="utf-8") as fh:
                         sim_data = json.load(fh)
+                else:
+                    # Check new path (analyze_similarity writes to reports_dir)
+                    new_sim = reports_dir / f"{det}_similarity_analysis.json"
+                    if new_sim.exists():
+                        similarity_report_file = new_sim
+                        with open(similarity_report_file, "r", encoding="utf-8") as fh:
+                            sim_data = json.load(fh)
 
                 novel_count = sum(1 for c in sim_data if "NOVEL" in c.get("interpretation", ""))
 
@@ -533,6 +607,9 @@ def _analyze_detector(
                     "potential_novel_clusters": novel_count,
                     "results": sim_data,
                 }
+
+                # PROBLEMA 2 FIX: aggiorna cluster step con resolved/unresolved
+                _update_cluster_morphcheck_resolution(det_report, sim_data)
             else:
                 logger.info("%s[%s]%s Step 2b: Skipping similarity analysis because morphcheck failed.", color, det,
                             reset)
@@ -562,7 +639,12 @@ def _analyze_detector(
     image_paths = [input_dir / Path(f).name for f in all_files]
 
     try:
-        ablation_report_file = ablation_dir / f"ablation_report_{det}.json"
+        # Prefer new reports/ path, fall back to legacy ablation/
+        ablation_report_file = reports_dir / f"ablation_report_{det}.json"
+        if not ablation_report_file.exists():
+            legacy_abl = ablation_dir / f"ablation_report_{det}.json"
+            if legacy_abl.exists():
+                ablation_report_file = legacy_abl
 
         if ablation_report_file.exists():
             logger.info("%s[%s]%s Step 3: Ablation report already exists. Skipping.", color, det, reset)
@@ -587,13 +669,16 @@ def _analyze_detector(
                 detector=det,
                 gpu_lock=gpu_lock,
                 batch_size=batch_size,
+                reports_dir=reports_dir,
                 logger=abl_logger,
             )
-
-            if ablation_report_file.exists():
-                with open(ablation_report_file, "r", encoding="utf-8") as fh:
+            effective_abl_path = reports_dir / f"ablation_report_{det}.json"
+            if not effective_abl_path.exists():
+                effective_abl_path = ablation_dir / f"ablation_report_{det}.json"
+            tracker_abl.end()
+            if effective_abl_path.exists():
+                with open(effective_abl_path, "r", encoding="utf-8") as fh:
                     ablation_data = json.load(fh)
-                tracker_abl.end()
                 det_report["steps"]["ablation"] = {
                     "status": "OK",
                     "timestamp": step_start,
@@ -624,9 +709,12 @@ def _analyze_detector(
     step_start = datetime.now(timezone.utc).isoformat()
 
     try:
-        stability_report_file = (
-                session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
-        )
+        # Prefer new reports/ path, fall back to legacy stability/
+        stability_report_file = reports_dir / f"stability_report_{det}.json"
+        if not stability_report_file.exists():
+            legacy_stab = session_path(run, session_id) / "stability" / f"stability_report_{det}.json"
+            if legacy_stab.exists():
+                stability_report_file = legacy_stab
         if stability_report_file.exists():
             logger.info("%s[%s]%s Step 4: Stability report already exists. Skipping.", color, det, reset)
             with open(stability_report_file, "r", encoding="utf-8") as fh:
@@ -649,13 +737,21 @@ def _analyze_detector(
                 session_id=session_id,
                 detector=det,
                 run=run,
+                reports_dir=reports_dir,
                 logger=stab_logger,
             )
 
-            if stability_report_file.exists():
-                with open(stability_report_file, "r", encoding="utf-8") as fh:
+            # After run, report should be in reports_dir
+            effective_stab = reports_dir / f"stability_report_{det}.json"
+            if not effective_stab.exists():
+                effective_stab = (
+                    session_path(run, session_id) / "stability"
+                    / f"stability_report_{det}.json"
+                )
+            tracker_stab.end()
+            if effective_stab.exists():
+                with open(effective_stab, "r", encoding="utf-8") as fh:
                     stability_data = json.load(fh)
-                tracker_stab.end()
                 det_report["steps"]["stability"] = {
                     "status": "OK",
                     "timestamp": step_start,
@@ -815,10 +911,16 @@ def run_full_analysis(
 
             try:
                 meta_h1 = session_path(run, session_id) / "embeddings" / f"{run_lower}_h1.json"
-                rep_h1 = session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
+                # Prefer new reports/ path, fall back to legacy clusters/{det}/
+                _reports_dir = session_path(run, session_id) / "reports"
+                rep_h1 = _reports_dir / "cluster_report_H1.json"
+                if not rep_h1.exists():
+                    rep_h1 = session_path(run, session_id) / "clusters" / "h1" / "cluster_report.json"
                 meta_l1 = session_path(run, session_id) / "embeddings" / f"{run_lower}_l1.json"
-                rep_l1 = session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
-                output_dir = session_path(run, session_id) / "timeslide"
+                rep_l1 = _reports_dir / "cluster_report_L1.json"
+                if not rep_l1.exists():
+                    rep_l1 = session_path(run, session_id) / "clusters" / "l1" / "cluster_report.json"
+                output_dir = _reports_dir
                 timeslide_report_path = output_dir / "timeslide_report_H1_L1.json"
 
                 if timeslide_report_path.exists():
@@ -908,9 +1010,12 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
     overall_status = {}
     reports = {}
     ts_report_data = None
+    reports_dir = session_dir / "reports"
 
-    # Read timeslide if available
-    timeslide_path = session_dir / "timeslide" / "timeslide_report_H1_L1.json"
+    # Read timeslide — check reports/ first, then legacy timeslide/
+    timeslide_path = reports_dir / "timeslide_report_H1_L1.json"
+    if not timeslide_path.exists():
+        timeslide_path = session_dir / "timeslide" / "timeslide_report_H1_L1.json"
     if timeslide_path.exists():
         try:
             with open(timeslide_path, "r", encoding="utf-8") as fh:
@@ -975,8 +1080,12 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
         else:
             det_report["steps"]["encode"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
-        # Cluster
-        cluster_rep_path = session_dir / "clusters" / det_lower / "cluster_report.json"
+        # Cluster — check reports/ first, then legacy clusters/{det}/
+        cluster_rep_path = reports_dir / f"cluster_report_{det}.json"
+        if not cluster_rep_path.exists():
+            legacy_cr = session_dir / "clusters" / det_lower / "cluster_report.json"
+            if legacy_cr.exists():
+                cluster_rep_path = legacy_cr
         if cluster_rep_path.exists():
             try:
                 with open(cluster_rep_path, "r", encoding="utf-8") as fh:
@@ -989,6 +1098,9 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     "n_noise": cl_data.get("results", {}).get("n_noise", 0),
                     "pca_variance": cl_data.get("pipeline", {}).get("pca_variance_explained", 0.0),
                     "anomalous_clusters": cl_data.get("results", {}).get("anomalous_clusters", []),
+                    # PROBLEMA 2: pre-populated, will be updated after similarity_analysis is read
+                    "anomalous_resolved_by_morphcheck": [],
+                    "anomalous_unresolved": cl_data.get("results", {}).get("anomalous_clusters", [])[:],
                 }
             except Exception as e:
                 det_report["steps"]["cluster"] = {"status": "FAILED", "error": str(e),
@@ -996,9 +1108,13 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
         else:
             det_report["steps"]["cluster"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
-        # Morphcheck
+        # Morphcheck — check reports/ first, then morphcheck/, then session root (legacy)
+        morph_sum_path = reports_dir / f"morphcheck_summary_{det}.json"
+        if not morph_sum_path.exists():
+            morph_sum_path = session_dir / "morphcheck" / f"morphcheck_summary_{det}.json"
+        if not morph_sum_path.exists():
+            morph_sum_path = session_dir / f"morphcheck_summary_{det}.json"
         morph_rep_path = session_dir / "clusters" / det_lower / "morphcheck_report.json"
-        morph_sum_path = session_dir / f"morphcheck_summary_{det}.json"
 
         if morph_sum_path.exists():
             try:
@@ -1032,8 +1148,10 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
         else:
             det_report["steps"]["morphcheck"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
-        # Similarity Analysis
-        sim_rep_path = session_dir / "analysis" / f"{det}_similarity_analysis.json"
+        # Similarity Analysis — check reports/ first, then legacy analysis/
+        sim_rep_path = reports_dir / f"{det}_similarity_analysis.json"
+        if not sim_rep_path.exists():
+            sim_rep_path = session_dir / "analysis" / f"{det}_similarity_analysis.json"
         if sim_rep_path.exists():
             try:
                 with open(sim_rep_path, "r", encoding="utf-8") as fh:
@@ -1048,14 +1166,20 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
                     "potential_novel_clusters": novel_count,
                     "results": sim_data,
                 }
+
+                # PROBLEMA 2 FIX: aggiorna cluster step con resolved/unresolved
+                _update_cluster_morphcheck_resolution(det_report, sim_data)
+
             except Exception as e:
                 det_report["steps"]["similarity_analysis"] = {"status": "FAILED", "error": str(e),
                                                               "timestamp": det_report["timestamp"]}
         else:
             det_report["steps"]["similarity_analysis"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
-        # Ablation
-        ablation_rep_path = session_dir / "ablation" / f"ablation_report_{det}.json"
+        # Ablation — check reports/ first, then legacy ablation/
+        ablation_rep_path = reports_dir / f"ablation_report_{det}.json"
+        if not ablation_rep_path.exists():
+            ablation_rep_path = session_dir / "ablation" / f"ablation_report_{det}.json"
         if ablation_rep_path.exists():
             try:
                 with open(ablation_rep_path, "r", encoding="utf-8") as fh:
@@ -1072,8 +1196,10 @@ def generate_reports_only(session_id: str, run: str = "O4a") -> dict:
         else:
             det_report["steps"]["ablation"] = {"status": "SKIPPED", "timestamp": det_report["timestamp"]}
 
-        # Stability
-        stability_rep_path = session_dir / "stability" / f"stability_report_{det}.json"
+        # Stability — check reports/ first, then legacy stability/
+        stability_rep_path = reports_dir / f"stability_report_{det}.json"
+        if not stability_rep_path.exists():
+            stability_rep_path = session_dir / "stability" / f"stability_report_{det}.json"
         if stability_rep_path.exists():
             try:
                 with open(stability_rep_path, "r", encoding="utf-8") as fh:

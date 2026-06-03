@@ -147,14 +147,25 @@
 
 ```
 data/runs/<run>/<session_id>/          # Es: data/runs/o4a/20260520_223147/
+│
+├── H1_full_report.json                # ← UNICA fonte di verità per H1 (root sessione)
+├── L1_full_report.json                # ← UNICA fonte di verità per L1 (root sessione)
+│
+├── reports/                           # Output grezzi di ogni fase (read-only)
+│   ├── cluster_report_H1.json
+│   ├── cluster_report_L1.json
+│   ├── ablation_report_H1.json
+│   ├── ablation_report_L1.json
+│   ├── morphcheck_summary_H1.json
+│   ├── morphcheck_summary_L1.json
+│   ├── H1_similarity_analysis.json
+│   ├── L1_similarity_analysis.json
+│   ├── stability_report_H1.json
+│   ├── stability_report_L1.json
+│   └── timeslide_report_H1_L1.json
+│
 ├── spectrograms/<detector>/           # PNG 256×256 cividis
 ├── embeddings/                        # <run>_<det>.npy (N, 384) + metadata.json
-├── clusters/<detector>/               # cluster_report.json, umap_*.png, gallery.html
-├── morphcheck/                        # morphcheck_*.json per cluster anomalo
-├── reports/                           # full_analysis_report.json unificato
-├── ablation/                          # ablation_results.json
-├── stability/                         # stability_results.json (ARI bootstrap)
-├── timeslide/                         # timeslide_results.json (p-value)
 └── logs/                              # session.log
 
 data/reference/                        # STATICO — NON versionato in git

@@ -116,7 +116,7 @@ def run_ablation_study(
         detector: str = "H1",
         gpu_lock: threading.Lock | None = None,
         batch_size: int = 32,
-
+        reports_dir: Path | None = None,
         logger: logging.Logger | logging.LoggerAdapter | None = None, ) -> None:
     """Run ablation study across different conditions and compare with baseline.
     
@@ -124,11 +124,12 @@ def run_ablation_study(
         original_labels: HDBSCAN labels of the original embeddings.
         image_paths: List of paths to the original spectrogram PNGs.
         cluster_cfg: Dictionary with clustering configuration.
-        output_dir: Directory to save the ablation report.
+        output_dir: Directory to save intermediate ablation data.
         session_id: Session identifier.
         detector: Detector identifier (e.g. H1).
         gpu_lock: Optional threading.Lock to serialize GPU usage.
         batch_size: Batch size for DINOv2Encoder.
+        reports_dir: If provided, write the JSON report here instead of output_dir.
     """
 
     logger = logger or logging.getLogger(__name__)
@@ -207,8 +208,10 @@ def run_ablation_study(
 
     report["interpretation"] = interpretation
 
-    # Save report
-    report_path = output_dir / f"ablation_report_{detector}.json"
+    # Save report — prefer reports_dir if provided (unified reports/ layout)
+    _report_dir = Path(reports_dir) if reports_dir is not None else output_dir
+    _report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = _report_dir / f"ablation_report_{detector}.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
 

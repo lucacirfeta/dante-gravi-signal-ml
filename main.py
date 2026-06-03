@@ -1842,8 +1842,9 @@ def cmd_build_indomain_reference(args: argparse.Namespace) -> None:
         ref_dir.mkdir(parents=True, exist_ok=True)
         output_path = ref_dir / generate_reference_filename(run, detector)
         logger.info("Auto-generated output path: %s", output_path)
-    max_per_class: int = args.max_per_class
-    min_confidence: float = args.min_confidence
+    cfg = load_config()
+    max_per_class: int = args.max_per_class if args.max_per_class is not None else cfg.get("indomain_reference", {}).get("max_per_class", 30)
+    min_confidence: float = args.min_confidence if args.min_confidence is not None else cfg.get("indomain_reference", {}).get("min_confidence", 0.95)
     workers: int = args.workers
     local_csv: Path | None = Path(args.local_csv) if getattr(args, "local_csv", None) else None
 
@@ -1906,8 +1907,9 @@ def cmd_download_all_references(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     detectors: list[str] = args.detector
-    min_confidence: float = args.min_confidence
-    max_per_class: int = args.max_per_class
+    cfg = load_config()
+    min_confidence: float = args.min_confidence if args.min_confidence is not None else cfg.get("indomain_reference", {}).get("min_confidence", 0.95)
+    max_per_class: int = args.max_per_class if args.max_per_class is not None else cfg.get("indomain_reference", {}).get("max_per_class", 30)
     workers: int = args.workers
     ref_dir = Path("data/reference")
     ref_dir.mkdir(parents=True, exist_ok=True)
@@ -1988,11 +1990,10 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
     from src.reference_builder import load_reference_index
 
     reference_path = Path(args.reference)
-    test_event: str = args.test_event
+    cfg = load_config()
+    test_event: str = args.test_event if args.test_event is not None else next(iter(cfg.get("reference_events", {"GW150914": {}})))
 
     logger.info("=== VALIDATE-REFERENCE: %s ===", test_event)
-
-    cfg = load_config()
 
     if test_event not in cfg["reference_events"]:
         available = ", ".join(cfg["reference_events"].keys())
@@ -2097,8 +2098,9 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
 
     logger.info("=== TIMESLIDE ===")
 
-    iterations: int = getattr(args, "iterations", 100)
-    window: int = getattr(args, "window", 32)
+    cfg = load_config()
+    iterations: int = getattr(args, "iterations", None) or cfg.get("timeslide", {}).get("iterations", 100)
+    window: int = getattr(args, "window", None) or cfg.get("timeslide", {}).get("window", 32)
 
     # Check if we have explicit inputs or session-id
     session_id = getattr(args, "session_id", None)
@@ -3081,14 +3083,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_ts.add_argument(
         "--iterations",
         type=int,
-        default=100,
-        help="Number of time-slide iterations for background estimation. Default: 100.",
+        default=None,
+        help="Number of time-slide iterations for background estimation. Default: from config.yaml.",
     )
     p_ts.add_argument(
         "--window",
         type=int,
-        default=32,
-        help="Coincidence window in seconds. Default: 32.",
+        default=None,
+        help="Coincidence window in seconds. Default: from config.yaml.",
     )
     p_ts.set_defaults(func=cmd_timeslide)
     _add_run_argument(p_ts)
@@ -3123,14 +3125,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_indomain.add_argument(
         "--max-per-class",
         type=int,
-        default=30,
-        help="Maximum samples per class. Default: 30.",
+        default=None,
+        help="Maximum samples per class. Default: from config.yaml.",
     )
     p_indomain.add_argument(
         "--min-confidence",
         type=float,
-        default=0.95,
-        help="Minimum ml_confidence threshold. Default: 0.95.",
+        default=None,
+        help="Minimum ml_confidence threshold. Default: from config.yaml.",
     )
     p_indomain.add_argument(
         "--workers",
@@ -3173,14 +3175,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_dl.add_argument(
         "--min-confidence",
         type=float,
-        default=0.95,
-        help="Minimum ml_confidence threshold. Default: 0.95.",
+        default=None,
+        help="Minimum ml_confidence threshold. Default: from config.yaml.",
     )
     p_dl.add_argument(
         "--max-per-class",
         type=int,
-        default=30,
-        help="Maximum samples per class. Default: 30.",
+        default=None,
+        help="Maximum samples per class. Default: from config.yaml.",
     )
     p_dl.add_argument(
         "--workers",
@@ -3204,8 +3206,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument(
         "--test-event",
         type=str,
-        default="GW150914",
-        help="Known event to test against (default: GW150914).",
+        default=None,
+        help="Known event to test against (default: first from config.yaml).",
     )
     p_validate.set_defaults(func=cmd_validate_reference)
 
@@ -3217,8 +3219,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_benchmark.add_argument(
         "--reference",
         type=str,
-        default="data/reference/indomain_index.npz",
-        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+        default=None,
+        help="Path to reference index .npz. Default: dynamically resolved.",
     )
     p_benchmark.add_argument(
         "--min-samples-per-class",
@@ -3249,8 +3251,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_bench_methods.add_argument(
         "--reference",
         type=str,
-        default="data/reference/indomain_index.npz",
-        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+        default=None,
+        help="Path to reference index .npz. Default: dynamically resolved.",
     )
     p_bench_methods.add_argument(
         "--output",
@@ -3268,14 +3270,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_cal.add_argument(
         "--reference",
         type=str,
-        default="data/reference/indomain_index.npz",
-        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+        default=None,
+        help="Path to reference index .npz. Default: dynamically resolved.",
     )
     p_cal.add_argument(
         "--percentile",
         type=int,
-        default=5,
-        help="Percentile for intra-class similarity threshold. Default: 5.",
+        default=None,
+        help="Percentile for intra-class similarity threshold. Default: from config.",
     )
     p_cal.add_argument(
         "--output",
@@ -3293,14 +3295,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_cal_ll.add_argument(
         "--reference",
         type=str,
-        default="data/reference/indomain_index.npz",
-        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+        default=None,
+        help="Path to reference index .npz. Default: dynamically resolved.",
     )
     p_cal_ll.add_argument(
         "--percentile",
         type=float,
-        default=5.0,
-        help="Percentile for log-likelihood threshold. Default: 5.0.",
+        default=None,
+        help="Percentile for log-likelihood threshold. Default: from config.",
     )
     p_cal_ll.add_argument(
         "--output",
@@ -3343,8 +3345,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_live.add_argument(
         "--reference",
         type=str,
-        default="data/reference/indomain_index.npz",
-        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+        default=None,
+        help="Path to reference index .npz. Default: dynamically resolved.",
     )
     p_live.add_argument(
         "--hours",
@@ -3355,8 +3357,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_live.add_argument(
         "--percentile",
         type=int,
-        default=5,
-        help="Percentile for threshold calibration if not found. Default: 5.",
+        default=None,
+        help="Percentile for threshold calibration if not found. Default: from config.",
     )
     p_live.add_argument(
         "--thresholds-path",
@@ -3389,8 +3391,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_sim.add_argument(
         "--reference",
         type=str,
-        default="data/reference/indomain_index.npz",
-        help="Path to reference index .npz. Default: data/reference/indomain_index.npz.",
+        default=None,
+        help="Path to reference index .npz. Default: dynamically resolved.",
     )
     p_sim.set_defaults(func=cmd_analyze_similarity)
 

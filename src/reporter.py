@@ -31,23 +31,32 @@ def save_cluster_report(
         metadata: dict,
         output_dir: Path,
         detector: str = "H1",
+        reports_dir: Path | None = None,
 ) -> None:
     """Save a full cluster report: JSON, UMAP plot, and spectrogram gallery.
 
     Creates ``output_dir`` if it doesn't exist and writes:
 
-    - ``cluster_report.json`` — structured pipeline + results report
-    - ``umap_visualization.png`` — 2D UMAP scatter colored by cluster
-    - ``cluster_gallery/cluster_{id}/`` — contact sheets per cluster
+    - ``reports/cluster_report_{detector}.json`` — structured pipeline + results report
+    - ``cluster_{det}/umap_visualization.png`` — 2D UMAP scatter colored by cluster
+    - ``cluster_{det}/cluster_gallery/cluster_{id}/`` — contact sheets per cluster
 
     Args:
         result: Dict returned by :func:`~src.clustering.run_full_pipeline`.
         metadata: Dict loaded from the companion ``.json`` file produced
             by the encoder (contains ``files``, ``model``, etc.).
-        output_dir: Directory to write all outputs into.
+        output_dir: Directory to write visual outputs (UMAP, gallery) into.
+        detector: Detector name (e.g. 'H1'). Used in the JSON filename.
+        reports_dir: If provided, write the JSON report here as
+            ``cluster_report_{detector}.json``. If None, falls back to
+            writing inside ``output_dir`` (backward compatibility).
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Determine where to write the JSON report
+    _json_dir = Path(reports_dir) if reports_dir is not None else output_dir
+    _json_dir.mkdir(parents=True, exist_ok=True)
 
     labels = result["labels"]
     umap_2d = result["umap_2d"]
@@ -56,9 +65,9 @@ def save_cluster_report(
     anomalous_clusters = result.get("anomalous_clusters", [])
     anomalous_samples = result.get("anomalous_samples", [])
 
-    # --- A) cluster_report.json ---
+    # --- A) cluster_report_{detector}.json ---
     _save_json_report(
-        result, metadata, stats, anomalous_clusters, anomalous_samples, labels, output_dir, detector=detector
+        result, metadata, stats, anomalous_clusters, anomalous_samples, labels, _json_dir, detector=detector
     )
 
     # --- B) umap_visualization.png ---
@@ -147,7 +156,7 @@ def _save_json_report(
         },
     }
 
-    json_path = output_dir / "cluster_report.json"
+    json_path = output_dir / f"cluster_report_{detector}.json"
     with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=2, default=str)
 

@@ -35,7 +35,7 @@ def run_stability_analysis(
         detector: str = "H1",
         run: str = "O4a",
         anomaly_criterion: str = "likelihood",
-
+        reports_dir: Path | None = None,
         logger: logging.Logger | logging.LoggerAdapter | None = None, ) -> None:
     """Run stability analysis and save report.
 
@@ -45,6 +45,7 @@ def run_stability_analysis(
         n_runs: Number of perturbed runs to perform
         session_id: Current session identifier
         detector: Detector identifier (e.g. H1)
+        reports_dir: If provided, write stability_report_{detector}.json here.
     """
 
     logger = logger or logging.getLogger(__name__)
@@ -314,7 +315,9 @@ def run_stability_analysis(
     stable_anomalous_list = sorted(list(stable_anomalous_clusters))
 
     # 8. Save report
-    if session_id == "default":
+    if reports_dir is not None:
+        output_dir = Path(reports_dir)
+    elif session_id == "default":
         output_dir = Path("data/stability")
     else:
         output_dir = session_path(run, session_id) / "stability"

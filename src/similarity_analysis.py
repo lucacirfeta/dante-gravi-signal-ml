@@ -14,11 +14,22 @@ def analyze_similarity(
         session_id: str,
         detector: str,
         run: str = "O4a",
-        reference_path: str = "data/reference/indomain_index.npz"
+        reference_path: str = "data/reference/indomain_index.npz",
+        reports_dir: Path | str | None = None,
 ) -> None:
-    """Analyze cosine similarity distributions for clusters."""
+    """Analyze cosine similarity distributions for clusters.
+
+    Args:
+        session_id: Session identifier.
+        detector: Detector name (e.g. 'H1').
+        run: Observing run (e.g. 'O4a').
+        reference_path: Path to the morphological reference index.
+        reports_dir: If provided, write {detector}_similarity_analysis.json here
+            instead of the legacy analysis/ subdirectory.
+    """
     base_dir = Path(f"data/runs/{run}/{session_id}")
     clusters_dir = base_dir / "clusters" / detector
+    # Legacy output dir (backward compat)
     analysis_dir = base_dir / "analysis"
 
     morphcheck_path = clusters_dir / "morphcheck_report.json"
@@ -134,8 +145,13 @@ def analyze_similarity(
 
     print(f"{'=' * 80}\n")
 
-    analysis_dir.mkdir(parents=True, exist_ok=True)
-    output_path = analysis_dir / f"{detector}_similarity_analysis.json"
+    # Write output — prefer reports_dir (unified layout), fall back to analysis/
+    if reports_dir is not None:
+        output_dir = Path(reports_dir)
+    else:
+        output_dir = analysis_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"{detector}_similarity_analysis.json"
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)

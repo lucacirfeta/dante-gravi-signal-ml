@@ -27,7 +27,12 @@ This guide provides a complete and updated list of all available commands in the
 Each analytical run is automatically isolated with a unique session identifier (timestamp-based), for example, `20260510_143022`.
 All generated files are stored following this structure:
 `data/runs/<run>/<session_id>/`
-Inside you will find subfolders for: `spectrograms`, `embeddings`, `clusters`, `reports`, `ablation`, `stability`, `timeslide` and `logs`. 
+
+Inside the session folder:
+- `{det}_full_report.json` — **single source of truth** per detector (session root)
+- `reports/` — raw step outputs (`cluster_report_{det}.json`, `ablation_report_{det}.json`, `stability_report_{det}.json`, `morphcheck_summary_{det}.json`, `{det}_similarity_analysis.json`, `timeslide_report_H1_L1.json`)
+- `spectrograms/`, `embeddings/`, `clusters/`, `logs/` — as before
+
 By using the `--session-id` flag, the CLI will automatically infer read/write paths without having to specify them manually.
 
 ### Multi-Run Support
@@ -489,8 +494,8 @@ Automates the entire analysis workflow (Encode, Cluster, Morphcheck, Ablation, S
 Regenerates only the final JSONs of the full-analysis by aggregating information from JSON files of various steps (clustering, ablation, etc.) for the detectors in the current session.
 
 * **Under the Hood (Processing Details):**
-  1. Identifies report folders of specified detectors.
-  2. Re-reads and compiles `cluster_report.json`, `ablation_report`, `stability_report`, etc. into a single `[detector]_full_report.json` file.
+  1. Identifies report files for the specified detectors inside `reports/` (with automatic fallback to legacy sub-folders for backward compatibility).
+  2. Re-reads and compiles `cluster_report_{det}.json`, `ablation_report_{det}.json`, `stability_report_{det}.json`, `morphcheck_summary_{det}.json`, etc. into a single `{det}_full_report.json` at the **session root**.
 
 - `--session-id` **(Required)**: Session ID.
 - `--run`: Observational run. *Default: `O4a`*.

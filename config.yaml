@@ -43,7 +43,7 @@ run_config:
 
 # Extended scan parameters
 scan_extended:
-  hours_per_detector: 72
+  hours_per_detector: 144
   detectors: ["H1", "L1"]
 
 # Preprocessing parameters
