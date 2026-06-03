@@ -778,6 +778,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
 
     # --- Raw Path Logic ---
     raw_path = getattr(args, "raw_path", None)
+    explicit_raw_path = raw_path is not None
     if not raw_path:
         from src.data_loader import _find_latest_raw_session
         raw_path = _find_latest_raw_session()
@@ -802,7 +803,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                     max_end = max(max_end, int(m.group(2)))
                     
         if min_start < float('inf') and max_end > 0:
-            if start_gps is None:
+            if start_gps is None and explicit_raw_path:
                 start_gps = min_start
                 logger.info("Auto-detected start GPS da raw_path: %d", start_gps)
             if start_gps >= max_end:

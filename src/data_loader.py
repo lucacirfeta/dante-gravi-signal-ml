@@ -109,6 +109,7 @@ def fetch_strain_data(
 
     global _GWOSC_BASE_DELAY
     try:
+        retries = 0
         while True:
             time.sleep(_GWOSC_BASE_DELAY)
             try:
@@ -124,9 +125,15 @@ def fetch_strain_data(
             except Exception as inner_exc:
                 err_str = str(inner_exc)
                 if "429" in err_str or "Too Many Requests" in err_str:
-                    logger.warning("GWOSC 429 Too Many Requests. Increasing base delay by 300ms and retrying in 1s...")
+                    retries += 1
+                    if retries > 10:
+                        logger.error("Max retries exceeded for GWOSC 429 Too Many Requests.")
+                        raise inner_exc
+                    logger.warning("GWOSC 429 Too Many Requests. Increasing base delay by 300ms and retrying in 1s (attempt %d)...", retries)
                     _GWOSC_BASE_DELAY += 0.3
-                    time.sleep(1.0)
+                    if _GWOSC_BASE_DELAY > 5.0:
+                        _GWOSC_BASE_DELAY = 5.0
+                    time.sleep(1.0 + retries * 0.5)
                 else:
                     raise inner_exc
     except Exception as exc:
