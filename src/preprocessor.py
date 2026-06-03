@@ -146,6 +146,7 @@ def generate_qtransform(
         qrange=qrange,
         frange=frange,
         logf=True,
+        whiten=False,
     )
 
     # Convert to a 2-D numpy array and resize to the target output size
