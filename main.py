@@ -425,7 +425,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
                 end_gps = start_gps + int(hours * 3600)
                 logger.info("=== SCAN: %s [%s], %.1f hours ===", detector, run, hours)
     else:
-        segment_length = 32
+        segment_length = 4096
         if last_gps is not None:
             resume_hours = cfg["run_config"][run]["hours_per_detector"]
             start_gps = last_gps
@@ -815,7 +815,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                 start_gps = _run_start_gps(run, cfg)
             end_gps = start_gps + int(hours * 3600)
     else:
-        segment_length = 32
+        segment_length = 4096
         if start_gps is None:
             start_gps = _run_start_gps(run, cfg)
         end_gps = start_gps + int(hours * 3600)

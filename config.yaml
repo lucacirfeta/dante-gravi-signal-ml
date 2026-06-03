@@ -120,7 +120,7 @@ performance:
 
 # Time-slide background estimation
 timeslide:
-  iterations: 100   # number of random time-shift trials
+  iterations: 50   # number of random time-shift trials
   window: 32        # coincidence window in seconds (= segment duration)
 
 # Hardware acceleration
