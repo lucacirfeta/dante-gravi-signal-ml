@@ -122,6 +122,8 @@ def batch_process_parallel(
         workers: int = 1,
         fetch_workers: int = 4,
         cache_raw: bool = False,
+        initial_completed: int = 0,
+        total_expected: int = None,
 ) -> tuple[int, int]:
     output_dir = Path(output_dir)
 
@@ -183,9 +185,11 @@ def batch_process_parallel(
 
         from tqdm import tqdm
         det_str = "+".join(detectors)
+        total_bar = total_expected if total_expected is not None else len(futures) + initial_completed
         for future in tqdm(
                 as_completed(futures),
-                total=len(futures),
+                total=total_bar,
+                initial=initial_completed,
                 desc=f"Processing {det_str}",
                 unit="seg"
         ):

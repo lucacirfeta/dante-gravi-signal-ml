@@ -808,7 +808,13 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                 )
             return
 
-        logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, last_gps)
+        from src.utils import gps_to_utc
+        logger.info(
+            "Ripresa sessione %s dal GPS %d fino a %d (%d ore rimanenti su %d totali previste)",
+            session_id, last_gps, target_end_gps,
+            (target_end_gps - last_gps) // 3600,
+            hours
+        )
         start_gps = last_gps
     else:
         start_gps = intended_start_gps
@@ -865,9 +871,16 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     output_dir_base = session_path(run, session_id) / "spectrograms"
     logger.info("Output dir base: %s", output_dir_base)
 
+    expected_segments_per_det = max(0, (target_end_gps - intended_start_gps)) // segment_length
+    completed_segments_per_det = max(0, (start_gps - intended_start_gps)) // segment_length
+    total_expected = expected_segments_per_det * len(detectors)
+    initial_completed = completed_segments_per_det * len(detectors)
+
     from src.parallel_processor import batch_process_parallel
     processed_count, skipped = batch_process_parallel(
-        segments, detectors, output_dir_base, cfg, workers=workers, fetch_workers=fetch_workers, cache_raw=not args.no_cache_raw
+        segments, detectors, output_dir_base, cfg, 
+        workers=workers, fetch_workers=fetch_workers, cache_raw=not args.no_cache_raw,
+        initial_completed=initial_completed, total_expected=total_expected
     )
 
     total_duration = sum(end - start for start, end in segments)
