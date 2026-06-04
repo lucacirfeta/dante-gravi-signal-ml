@@ -112,6 +112,21 @@ def str2bool(v: str | bool) -> bool:
         return False
     else:
         raise argparse.ArgumentTypeError("Boolean value expected.")
+def _find_first_gps(session_id: str, detector: str, run: str = "O4a") -> int | None:
+    """Scan existing PNGs and return the lowest GPS start-time, or None."""
+    import re
+    spec_dir = session_path(run, session_id) / "spectrograms" / detector
+    if not spec_dir.exists():
+        return None
+    pattern = re.compile(r"^[A-Z]\d_(\d+)_(\d+)\.png$")
+    min_gps = float('inf')
+    for png_file in spec_dir.glob("*.png"):
+        m = pattern.match(png_file.name)
+        if m:
+            start_gps = int(m.group(1))
+            if start_gps < min_gps:
+                min_gps = start_gps
+    return int(min_gps) if min_gps < float('inf') else None
 
 
 def _find_last_gps(session_id: str, detector: str, run: str = "O4a") -> int | None:
@@ -722,24 +737,45 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         logger.error("Errore: per scan-extended parallelo --workers deve essere un numero pari maggiore di 1 (es. 2, 4, 6, 8).")
         sys.exit(1)
 
-    # Trova il min max_gps tra i detector per un resume condiviso
+    # Trova il min start_gps e max_gps tra i detector per un resume condiviso
     last_gps_list = []
+    first_gps_list = []
     if explicit_session:
         for det in detectors:
             lgps = _find_last_gps(session_id, det, run=run)
             last_gps_list.append(lgps if lgps is not None else 0)
+            fgps = _find_first_gps(session_id, det, run=run)
+            first_gps_list.append(fgps if fgps is not None else float('inf'))
 
-    start_gps = getattr(args, "start_gps", None)
+    start_gps_arg = getattr(args, "start_gps", None)
+    
     last_gps = None
     if explicit_session and any(g > 0 for g in last_gps_list):
         last_gps = min(g for g in last_gps_list if g > 0)
-        
-        orig_start = start_gps if start_gps is not None else _run_start_gps(run, cfg)
-        expected_end_gps = orig_start + int(hours * 3600)
+
+    first_gps = None
+    if explicit_session and any(g < float('inf') for g in first_gps_list):
+        first_gps = min(g for g in first_gps_list if g < float('inf'))
+
+    # 1. Determine the Intended Original Start GPS
+    if start_gps_arg is not None:
+        intended_start_gps = start_gps_arg
+    elif first_gps is not None:
+        intended_start_gps = first_gps
+    else:
+        intended_start_gps = _run_start_gps(run, cfg)
+
+    # 2. Determine the Target End GPS
+    target_end_gps = intended_start_gps + int(hours * 3600)
+    
+    from src.utils import gps_to_utc
+    logger.info("Target session window: %s to %s (GPS %d - %d)", gps_to_utc(intended_start_gps), gps_to_utc(target_end_gps), intended_start_gps, target_end_gps)
+
+    if explicit_session and last_gps is not None:
         raw_path = getattr(args, "raw_path", None)
         segment_duration = 4096 if raw_path else 32
         
-        if last_gps >= expected_end_gps - (segment_duration * 2):
+        if last_gps >= target_end_gps - (segment_duration * 2):
             logger.info("Scan already complete for session %s. Skipping to full-analysis.", session_id)
             is_failed = False
             if getattr(args, "full_analysis", False):
@@ -773,8 +809,9 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             return
 
         logger.info("Ripresa contemporanea session %s da GPS %d (minimo tra i detector attivi)", session_id, last_gps)
-        if start_gps is None:
-            start_gps = last_gps
+        start_gps = last_gps
+    else:
+        start_gps = intended_start_gps
 
     # --- Raw Path Logic ---
     raw_path = getattr(args, "raw_path", None)
@@ -783,12 +820,14 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         from src.data_loader import _find_latest_raw_session
         raw_path = _find_latest_raw_session()
         
+    end_gps = target_end_gps
+    segment_length = 4096
+
     if raw_path:
         import re
         
         raw_path = Path(raw_path)
         logger.info("Using raw session: %s", raw_path)
-        segment_length = 4096
         
         # Auto-detect boundaries from raw HDF5 files for all requested detectors
         min_start = float('inf')
@@ -804,7 +843,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                     
         if min_start < float('inf') and max_end > 0:
             if explicit_raw_path:
-                if start_gps is None:
+                if start_gps_arg is None and last_gps is None:
                     start_gps = min_start
                     logger.info("Auto-detected start GPS da raw_path: %d", start_gps)
                 if start_gps >= max_end:
@@ -812,20 +851,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                     sys.exit(0)
                 end_gps = max_end
                 logger.info("Auto-detected end GPS da raw_path: %d", end_gps)
-            else:
-                if start_gps is None:
-                    start_gps = _run_start_gps(run, cfg)
-                end_gps = start_gps + int(hours * 3600)
         else:
             logger.warning("Nessun file HDF5 valido in %s. Fallback a config standard.", raw_path)
-            if start_gps is None:
-                start_gps = _run_start_gps(run, cfg)
-            end_gps = start_gps + int(hours * 3600)
-    else:
-        segment_length = 4096
-        if start_gps is None:
-            start_gps = _run_start_gps(run, cfg)
-        end_gps = start_gps + int(hours * 3600)
         
     tracker.start(gps_start=start_gps)
 
