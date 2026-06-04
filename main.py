@@ -803,14 +803,19 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                     max_end = max(max_end, int(m.group(2)))
                     
         if min_start < float('inf') and max_end > 0:
-            if start_gps is None and explicit_raw_path:
-                start_gps = min_start
-                logger.info("Auto-detected start GPS da raw_path: %d", start_gps)
-            if start_gps >= max_end:
-                logger.info("I dati in raw_path terminano al GPS %d, ma la sessione è già al GPS %d. Scan completato.", max_end, start_gps)
-                sys.exit(0)
-            end_gps = max_end
-            logger.info("Auto-detected end GPS da raw_path: %d", end_gps)
+            if explicit_raw_path:
+                if start_gps is None:
+                    start_gps = min_start
+                    logger.info("Auto-detected start GPS da raw_path: %d", start_gps)
+                if start_gps >= max_end:
+                    logger.info("I dati in raw_path terminano al GPS %d, ma la sessione è già al GPS %d. Scan completato.", max_end, start_gps)
+                    sys.exit(0)
+                end_gps = max_end
+                logger.info("Auto-detected end GPS da raw_path: %d", end_gps)
+            else:
+                if start_gps is None:
+                    start_gps = _run_start_gps(run, cfg)
+                end_gps = start_gps + int(hours * 3600)
         else:
             logger.warning("Nessun file HDF5 valido in %s. Fallback a config standard.", raw_path)
             if start_gps is None:

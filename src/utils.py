@@ -222,7 +222,7 @@ def setup_logger(
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    logger.propagate = False
+    logger.propagate = True
 
     # Prevent duplicate handlers on repeated calls
     if logger.handlers:
@@ -299,10 +299,10 @@ _SESSION_LOG_HANDLER: logging.FileHandler | None = None
 
 
 class SessionLogFilter(logging.Filter):
-    """Filter that only permits logs with level >= WARNING or having session_key = True."""
+    """Filter that permits logs with level >= INFO or having session_key = True."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        if record.levelno >= logging.WARNING:
+        if record.levelno >= logging.INFO:
             return True
         return getattr(record, "session_key", False)
 

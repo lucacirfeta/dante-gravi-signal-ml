@@ -234,7 +234,50 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 
 ---
 
-## 9. Esperimenti Pianificati (TODO)
+## 9. Esperimenti MDC (Mock Data Challenge)
+
+### EXP-MDC-01 — MDC Run completo (pre-fix) — 2026-06-03
+- **Script:** `src/injection.py` → `run_mdc()`, avviato tramite `main.py run-injection`
+- **Detector:** L1, O4a (sessione 2023-06-07)
+- **Glitch types:** SpiralBurst, StepLadder, NoiseBlob, Butterfly, ZSweep (+ NULL)
+- **Amplitudini:** 10 livelli log-spaced [1e-22, 2e-21], 50 iniezioni/tipo/ampiezza
+- **Risultato:** Recall=0.00 per SpiralBurst, StepLadder, NoiseBlob. Butterfly e ZSweep mostrano recall crescente con l'ampiezza (Butterfly max recall=1.0 a 2e-21, ZSweep max recall=0.97).
+- **Esito:** **FAILURE** — run eseguita con double-whitening bug attivo e soglia globale fissa 0.85.
+- **File:** `results/mdc/mdc_results.csv`
+
+### EXP-MDC-02 — Baseline Noise Variance Test — 2026-06-04
+- **Script:** `scratch/baseline_variance_test.py`
+- **Detector:** L1, O4a (GPS 1369598418 + 1 week offset)
+- **Metodo:** 30 segmenti consecutivi puro rumore (NULL), 4s Q-transform window, DINOv2 ViT-S/14, cosine similarity vs in-domain reference index
+- **Risultato:**
+  | Metrica | Valore |
+  |---------|--------|
+  | N campioni | 30 |
+  | Mean max_sim | 0.9403 |
+  | Std max_sim | 0.0210 |
+  | Min | 0.9082 |
+  | Max | 0.9844 |
+  | Soglia dinamica (k=2.5) | **0.888** |
+  | Drop segnale / std | **2.9 sigma** |
+- **Conclusione chiave:** `std=0.021 < 0.03` → il dynamic threshold è statisticamente viable. Un drop di 0.06 (tipico per glitch sintetici post-whitening) corrisponde a 2.9σ dalla baseline.
+- **Esito:** ✅ **SUCCESS** — conferma la feasibility del metodo.
+
+### EXP-MDC-03 — Sanity Check Singolo Glitch — 2026-06-04
+- **Script:** `scratch/sanity_check.py`
+- **Glitch:** SpiralBurst, ampiezza 1e-21 (SNR=134.8), iniettato su L1 raw strain (GPS 1370205138)
+- **Whitening:** Fisicamente corretto (raw strain → whiten → bandpass)
+- **Risultato per finestra temporale:**
+  | Window | Top Label | Top Sim | Status con threshold=0.85 | Status con dynamic (k=2.5) |
+  |--------|-----------|---------|--------------------------|---------------------------|
+  | 1.0s | Scattered_Light | 0.8623 | KNOWN (>0.85) | **NOVEL** (-3.7σ) |
+  | 2.0s | Violin_Mode | 0.9006 | KNOWN | KNOWN (-1.9σ) |
+  | 4.0s | Koi_Fish | 0.9238 | KNOWN | KNOWN (-0.8σ) |
+- **Conclusione chiave:** La finestra 1s è ottimale per il dynamic threshold. Il multi-scale windowing aumenta la similarità (peggiora), non la abbassa.
+- **Esito:** ✅ **SUCCESS** — dimostra che la finestra 1s è la scelta corretta con dynamic thresholding.
+
+---
+
+## 10. Esperimenti Pianificati (TODO)
 
 | ID | Esperimento | Dipendenze | Stato |
 |----|-------------|-----------|-------|
@@ -245,3 +288,6 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 | EXP-05 | Confronto con CTSAE (stesso dataset, ARI/NMI) | Nessuno | [TODO] |
 | EXP-06 | Scan O4b data (GWTC-5.0, post-2024) | Accesso dati | [TODO] |
 | EXP-07 | Embedding blocchi intermedi DINOv2 (Grad-CAM) | Nessuno | [TODO] |
+| EXP-MDC-04 | **MDC re-run completo con Dynamic Thresholding** (k=2.5, 1s window, 50 iniezioni/tipo) | D-10 implementato | **[READY]** |
+| EXP-MDC-05 | **Baseline H1 noise variance test** (misurare `mean`, `std` per H1 O4a) | Nessuno | **[READY]** |
+| EXP-MDC-06 | ROC Curve sul MDC: sweep k_sigma [1.5, 2.0, 2.5, 3.0, 3.5] per AUC | EXP-MDC-04 | [TODO] |

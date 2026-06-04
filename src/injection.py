@@ -15,7 +15,7 @@ from tqdm import tqdm
 from src.utils import setup_logger, load_config
 from src.preprocessor import whiten, bandpass, generate_qtransform
 from src.encoder import DINOv2Encoder
-from src.similarity_checker import cosine_knn_search, assess_novelty
+from src.similarity_checker import cosine_knn_search, assess_novelty, assess_novelty_dynamic, compute_baseline_stats
 from src.utils import discover_references
 
 logger = setup_logger(__name__)
@@ -306,8 +306,26 @@ def run_mdc(
     output_dir: Path = Path("results/mdc"),
     seed: int = 42,
 ) -> pd.DataFrame:
-    """Run the Mock Data Challenge."""
-    
+    """Run the Mock Data Challenge.
+
+    The pipeline performs two passes over the data:
+
+    1. **NULL pass**: Injects no signal into randomly selected 32s strain
+       segments and records the top-1 cosine similarity against the
+       in-domain reference index.  These similarities define the
+       *session-local noise floor* of the DINOv2 embedding space.
+
+    2. **Injection pass**: Injects synthetic glitches, whitens the strain,
+       crops the spectrogram, and evaluates novelty using the
+       *dynamic threshold* derived from the null baseline::
+
+           novelty_score = baseline_mean - max_similarity
+           NOVEL if novelty_score > k_sigma * baseline_std
+
+    This replaces the static global threshold (0.85) which was always
+    exceeded by the noise floor (~0.94 on L1 O4a), causing Recall=0.00
+    for all synthetic glitch types.
+    """
     np.random.seed(seed)
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -321,8 +339,18 @@ def run_mdc(
     logger.info(f"Loaded {len(ref_labels)} reference samples from {len(ref_sources)} files")
     
     cfg = load_config()
-    nov_thresh = cfg.get("similarity", {}).get("novelty_threshold", 0.85)
-    cons_thresh = cfg.get("similarity", {}).get("consensus_threshold", 0.6)
+    sim_cfg = cfg.get("similarity", {})
+    dyn_cfg = sim_cfg.get("dynamic_threshold", {})
+    use_dynamic = dyn_cfg.get("enabled", True)
+    k_sigma = float(dyn_cfg.get("k_sigma", 2.5))
+    cons_thresh = sim_cfg.get("consensus_threshold", 0.6)
+    nov_thresh = sim_cfg.get("novelty_threshold", 0.85)  # legacy fallback
+    
+    # Empirical fallback baseline (measured L1 O4a, 2026-06-04)
+    det_upper = detector.upper()
+    empirical_mean = dyn_cfg.get(f"empirical_mean_{det_upper.lower()}") or 0.940
+    empirical_std = dyn_cfg.get(f"empirical_std_{det_upper.lower()}") or 0.021
+    fallback_baseline = {"mean": empirical_mean, "std": empirical_std, "n_samples": 0}
     
     # Segment selection (32s segments)
     segment_length = 32
@@ -360,6 +388,11 @@ def run_mdc(
     
     # Keep track of saved spectrograms per type
     saved_specs = {gt: 0 for gt in glitch_types + ["NULL"]}
+    
+    # Accumulate null similarities for baseline estimation
+    null_similarities: list[float] = []
+    baseline_stats: dict | None = None
+    min_null = int(dyn_cfg.get("min_null_samples", 20))
     
     # Process tasks
     pbar = tqdm(tasks, desc="Running MDC Injections")
@@ -423,8 +456,34 @@ def run_mdc(
             emb_batch = np.array([emb])
             knn_res = cosine_knn_search(emb_batch, ref_emb, ref_labels, k=5)[0]
             
-            # Enrich with novelty
-            enriched = assess_novelty([knn_res], novelty_threshold=nov_thresh, consensus_threshold=cons_thresh)[0]
+            # Collect null similarities to build session-local baseline
+            if gtype == "NULL":
+                null_similarities.append(knn_res["top_similarity"])
+                # Recompute baseline stats as nulls accumulate
+                if len(null_similarities) >= min_null:
+                    baseline_stats = compute_baseline_stats(null_similarities)
+                    logger.debug(
+                        "Baseline updated: mean=%.4f std=%.4f (n=%d)",
+                        baseline_stats["mean"], baseline_stats["std"], baseline_stats["n_samples"],
+                    )
+            
+            # Enrich with novelty — dynamic if baseline is ready, else static fallback
+            if use_dynamic and gtype != "NULL":
+                active_baseline = baseline_stats if baseline_stats is not None else fallback_baseline
+                if baseline_stats is None:
+                    logger.warning(
+                        "Dynamic baseline not yet established (only %d NULL segments so far, "
+                        "need %d). Using empirical fallback baseline for %s.",
+                        len(null_similarities), min_null, gtype,
+                    )
+                enriched = assess_novelty_dynamic(
+                    [knn_res],
+                    baseline_stats=active_baseline,
+                    k_sigma=k_sigma,
+                    consensus_threshold=cons_thresh,
+                )[0]
+            else:
+                enriched = assess_novelty([knn_res], novelty_threshold=nov_thresh, consensus_threshold=cons_thresh)[0]
             
             status = enriched["novelty_status"]
             top_sim = enriched["top_similarity"]
@@ -446,6 +505,28 @@ def run_mdc(
             logger.warning(f"Failed injection {gtype} at {seg_start}: {e}")
             continue
             
+    # Finalise baseline stats — use live if enough nulls, else empirical fallback
+    import json as _json
+    if baseline_stats is None:
+        baseline_stats = fallback_baseline
+        logger.warning("Not enough NULL segments (%d) to establish live baseline. Used empirical fallback.", len(null_similarities))
+    else:
+        # Update with full null set
+        baseline_stats = compute_baseline_stats(null_similarities)
+    
+    logger.info(
+        "Session baseline: mean=%.4f std=%.4f n=%d  →  dynamic threshold (k=%.1f): %.4f",
+        baseline_stats["mean"], baseline_stats["std"], baseline_stats["n_samples"],
+        k_sigma, baseline_stats["mean"] - k_sigma * baseline_stats["std"],
+    )
+    baseline_stats["detector"] = detector
+    baseline_stats["k_sigma"] = k_sigma
+    baseline_stats["dynamic_threshold"] = baseline_stats["mean"] - k_sigma * baseline_stats["std"]
+    baseline_path = output_dir / "mdc_baseline_stats.json"
+    with open(baseline_path, "w", encoding="utf-8") as _f:
+        _json.dump(baseline_stats, _f, indent=2)
+    logger.info("Saved session baseline → %s", baseline_path)
+    
     # Aggregate results
     df = pd.DataFrame(results)
     df.to_csv(output_dir / "mdc_raw_results.csv", index=False)

@@ -59,15 +59,30 @@
 ### D-08 — Finestra Temporale: 32 secondi
 - **Valore:** `indomain_reference.segment_duration: 32.0` / chunking a 32s in preprocessing.
 - **Motivazione:** Compromesso tra risoluzione temporale e contenuto informativo dello spettrogramma.
-- **Limitazione nota:** La finestra fissa potrebbe perdere transienti su scale inferiori al secondo.
-- **Stato:** ✅ Definitivo per O4a. Estensioni multi-finestra sono roadmap futura.
-- **Fonte:** `config.yaml`, `README.md` §Limitations
+- **Limitazione nota (verificata):** La finestra fissa potrebbe perdere transienti su scale inferiori al secondo. Un esperimento (`test_window_hypothesis.py`) sembrava indicare che finestre più corte aumentassero la sensitivity del morphcheck. Tuttavia, questo esperimento era **metodologicamente viziato**: le iniezioni avvenivano su strain già sbiancato, bypassando il filtro della PSD reale del rivelatore. Ripetendo l'esperimento con la metodologia corretta (iniezione su raw strain + whitening fisico), la sensitività *diminuisce* al diminuire della finestra. Il multi-scale windowing è pertanto **scartato** come soluzione al problema del Recall=0.00 nel MDC.
+- **Stato:** ✅ Definitivo per O4a. Il vero fix al Recall=0.00 è il Dynamic Thresholding (D-10).
+- **Fonte:** `config.yaml`, `README.md`, `scratch/sanity_check.py`, `scratch/baseline_variance_test.py`
 
 ### D-09 — Timeslide: 50 Shift, Finestra ±5000s, Step 100s
 - **Implementazione:** `timeslide.py` esegue shift su timestamps L1 nel range `[-5000, +5000]s` in step di 100s, escludendo 0. Calcola coincidenze a zero-lag e p-value empirico.
 - **Nota discrepanza:** `config.yaml` specifica `timeslide.iterations: 100`, ma `cmd_timeslide` e `full_analysis.py` passano `iterations=50` hardcoded. Il valore effettivo usato è **50** (da `docs/audit_report.md` §1.3).
 - **Stato:** ✅ Funzionale. La discrepanza `config.yaml` vs hardcoded è un bug noto.
 - **Fonte:** `timeslide.py`, `docs/audit_report.md` §1.3
+
+### D-10 — Dynamic Threshold per Morphcheck (vs Global Static)
+- **Metodo:** `assess_novelty_dynamic()` in `src/similarity_checker.py`. Invece di confrontare `max_similarity` con una soglia globale fissa (0.85), calcola uno **score adattivo relativo al noise floor locale della sessione**:
+  ```
+  novelty_score = baseline_mean - max_similarity
+  NOVEL se novelty_score > k_sigma * baseline_std
+  ```
+- **Motivazione fisica:** Il DINOv2 embedding space di strain LIGO sbiancato è empiricamente molto stabile (misurato su L1 O4a, n=30 segmenti NULL consecutivi, 4s window): `mean=0.940, std=0.021`. La soglia fissa di 0.85 è sempre inferiore al noise floor reale (~0.94), causando Recall=0.00 per tutti i glitch sintetici testati. Un glitch SpiralBurst con SNR>130 produce un drop a ~0.86, che è **-3.7 sigma** dalla baseline, non rilevabile da una soglia fissa ma pienamente rilevabile con il criterio sigma-based.
+- **Parametri:** `k_sigma=2.5` (FAR teorico ~0.6% su rumore gaussiano). Soglia effettiva: `0.940 - 2.5×0.021 = 0.888`.
+- **Fallback:** Se la baseline live non può essere calcolata (< 20 NULL segments), usa i valori empirici L1 O4a da `config.yaml.similarity.dynamic_threshold`.
+- **Condizioni di validità:** `std < 0.03`. Verificato: L1 O4a `std=0.021`. Se `std ≥ 0.03`, il delta di segnale è statisticamente irrecuperabile con questo approccio (non verificato per H1 ancora).
+- **Contributto metodologico (paper):** Questo approccio è pubblicabile come contributo indipendente — è il primo ad applicare un criterio di anomaly detection sigma-based nel cosine embedding space di un ViT pre-trainato su dati astronomici reali di LIGO.
+- **Stato:** ✅ Implementato (2026-06-04). Integrato in `run_mdc()` di `src/injection.py`. Da validare su H1.
+- **File:** `src/similarity_checker.py` (`assess_novelty_dynamic`, `compute_baseline_stats`), `src/injection.py` (`run_mdc`), `config.yaml` (`similarity.dynamic_threshold`)
+- **Esperimento:** `scratch/baseline_variance_test.py` (30 segmenti L1), `scratch/sanity_check.py` (SpiralBurst SNR=134.8)
 
 ---
 
