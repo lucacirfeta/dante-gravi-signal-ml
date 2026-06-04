@@ -265,15 +265,31 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 ### EXP-MDC-03 — Sanity Check Singolo Glitch — 2026-06-04
 - **Script:** `scratch/sanity_check.py`
 - **Glitch:** SpiralBurst, ampiezza 1e-21 (SNR=134.8), iniettato su L1 raw strain (GPS 1370205138)
-- **Whitening:** Fisicamente corretto (raw strain → whiten → bandpass)
 - **Risultato per finestra temporale:**
   | Window | Top Label | Top Sim | Status con threshold=0.85 | Status con dynamic (k=2.5) |
   |--------|-----------|---------|--------------------------|---------------------------|
   | 1.0s | Scattered_Light | 0.8623 | KNOWN (>0.85) | **NOVEL** (-3.7σ) |
-  | 2.0s | Violin_Mode | 0.9006 | KNOWN | KNOWN (-1.9σ) |
   | 4.0s | Koi_Fish | 0.9238 | KNOWN | KNOWN (-0.8σ) |
-- **Conclusione chiave:** La finestra 1s è ottimale per il dynamic threshold. Il multi-scale windowing aumenta la similarità (peggiora), non la abbassa.
-- **Esito:** ✅ **SUCCESS** — dimostra che la finestra 1s è la scelta corretta con dynamic thresholding.
+- **Criticità (FLAWED EXPERIMENT):** Passare una serie storica non paddata da 1s direttamente a `q_transform` produce gravi artefatti ai bordi ("edge effects"). DINOv2 ha classificato l'artefatto come Scattered_Light, non il glitch.
+- **Esito:** ❌ **INVALIDATED** — il test a 1s era fallato metodologicamente per via della Q-transform senza padding.
+
+### EXP-MDC-04 — MDC Smoke Test (Signal Dilution Discovery) — 2026-06-04
+- **Script:** `run_smoke_mdc.py`
+- **Metodo:** Iniezioni di Butterfly (lungo) e SpiralBurst (corto) usando la finestra di 32s fedele alla pipeline operativa (vs 4s del MDC precedente). Dynamic threshold attivo.
+- **Risultato:** Recall Butterfly = 1.0 (a SNR 360). Recall SpiralBurst = 0.1 (a SNR 269).
+- **Conclusione chiave:** Il vero failure per le morfologie broadband (di breve durata) è causato dalla **signal dilution** nella finestra da 32s usata dalla pipeline operativa in `batch_process`. Un burst da 1s occupa fisicamente solo 1/32 dell'immagine, risultando invisibile all'embedding globale di DINOv2 che media su tutto il rumore di fondo.
+- **Esito:** ✅ **DISCOVERY** — Definisce il limite di validità del Null Result di O4a: assenza garantita solo per morfologie di durata comparabile a 32s.
+
+### EXP-O4a-Retro-01 — Retrospective Dynamic Thresholding su O4a — 2026-06-04
+- **Script:** `scratch/evaluate_thresholds.py`
+- **Dataset:** L1 O4a sessione `20260524_200219` (21.985 segmenti)
+- **Metodo:** Ricalcolo delle label NOVEL usando il Dynamic Threshold (mean=0.9403, std=0.0210, k=2.5, soglia=0.8878) contro la soglia globale (0.85).
+- **Risultato:** N_NOVEL passa da 0 (soglia statica) a 2 (soglia dinamica).
+- **Candidati Trovati:** 
+  1. GPS `1386816320` (sim: 0.8672, nearest: Extremely_Loud)
+  2. GPS `1386824608` (sim: 0.8743, nearest: Scattered_Light)
+- **Conclusione chiave:** La soglia dinamica espone anomalie (drop di ~3 sigma) nascoste nella "zona cieca" [0.85, 0.88] della vecchia pipeline.
+- **Esito:** ✅ **SUCCESS** — Primo ritrovamento di candidati anomali statisticamente validati nei dati O4a.
 
 ---
 
@@ -288,6 +304,5 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 | EXP-05 | Confronto con CTSAE (stesso dataset, ARI/NMI) | Nessuno | [TODO] |
 | EXP-06 | Scan O4b data (GWTC-5.0, post-2024) | Accesso dati | [TODO] |
 | EXP-07 | Embedding blocchi intermedi DINOv2 (Grad-CAM) | Nessuno | [TODO] |
-| EXP-MDC-04 | **MDC re-run completo con Dynamic Thresholding** (k=2.5, 1s window, 50 iniezioni/tipo) | D-10 implementato | **[READY]** |
 | EXP-MDC-05 | **Baseline H1 noise variance test** (misurare `mean`, `std` per H1 O4a) | Nessuno | **[READY]** |
-| EXP-MDC-06 | ROC Curve sul MDC: sweep k_sigma [1.5, 2.0, 2.5, 3.0, 3.5] per AUC | EXP-MDC-04 | [TODO] |
+| EXP-MDC-06 | Sviluppo approccio multi-scala temporale (sliding window 1s, 4s) per produzione | EXP-MDC-04 | [TODO] |

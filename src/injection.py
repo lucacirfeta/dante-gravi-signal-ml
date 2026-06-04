@@ -50,6 +50,12 @@ class SyntheticGlitchGenerator:
             sig = self._generate_butterfly(t, f_low, f_high)
         elif glitch_type == "NoiseBlob":
             sig = self._generate_noise_blob(t)
+        elif glitch_type == "NarrowChirp":
+            sig = self._generate_narrow_chirp(t)
+        elif glitch_type == "HarmonicComb":
+            sig = self._generate_harmonic_comb(t)
+        elif glitch_type == "AsymBlip":
+            sig = self._generate_asym_blip(t)
         else:
             raise ValueError(f"Unknown glitch_type: {glitch_type}")
             
@@ -158,6 +164,76 @@ class SyntheticGlitchGenerator:
         
         window = signal.windows.tukey(n, alpha=0.5)
         return colored_noise * window
+
+    def _generate_narrow_chirp(self, t: np.ndarray) -> np.ndarray:
+        """Narrow-band chirp: 150→300 Hz in 0.5s (simulates scattered light velocity).
+
+        Physically motivated: a scattering arm length change drives a frequency-velocity
+        coupling that sweeps a narrowband feature across this range at optical frequencies.
+        The short sweep duration (0.5s) makes it visible even in 32s windows at high SNR.
+        """
+        duration = t[-1]
+        f_start, f_end = 150.0, 300.0
+        # Only chirp for 0.5s, centered in the duration
+        t_center = duration / 2.0
+        t_chirp_start = t_center - 0.25
+        t_chirp_end   = t_center + 0.25
+
+        f = np.where(
+            (t >= t_chirp_start) & (t <= t_chirp_end),
+            np.interp(t, [t_chirp_start, t_chirp_end], [f_start, f_end]),
+            0.0,
+        )
+        phase = 2 * np.pi * np.cumsum(f) / self.sample_rate
+        sig = np.sin(phase) * (f > 0)
+
+        # Smooth onset/offset
+        window = signal.windows.tukey(len(sig), alpha=0.3)
+        return sig * window
+
+    def _generate_harmonic_comb(self, t: np.ndarray, f0: float = 100.0, n_harmonics: int = 7) -> np.ndarray:
+        """Harmonic comb at f0, 2f0, ..., n_harmonics*f0 (simulates violin mode coupling).
+
+        Physically motivated: a mirror suspension violin mode at 100 Hz creates a ladder
+        of coupled harmonics across the detector band, visible in the Q-transform as a
+        multi-line comb pattern persistent over the full 32s window.
+        """
+        sig = np.zeros_like(t)
+        for k in range(1, n_harmonics + 1):
+            fk = k * f0
+            if fk < self.sample_rate / 2.0:
+                # Slight random phase per harmonic for realism
+                phi = np.random.uniform(0, 2 * np.pi)
+                # Amplitude falls off with harmonic number
+                ak = 1.0 / k
+                sig += ak * np.sin(2 * np.pi * fk * t + phi)
+
+        window = signal.windows.tukey(len(sig), alpha=0.05)
+        return sig * window
+
+    def _generate_asym_blip(self, t: np.ndarray) -> np.ndarray:
+        """Asymmetric blip: fast rise (10 ms) slow decay (300 ms), broadband (simulates impulsive noise).
+
+        Physically motivated: mechanical impulsive noise (e.g., scattered-light scattering off
+        a fast-moving optic) generates broadband transients with sub-millisecond onset and
+        a decaying ring-down determined by the Q-factor of the mechanical resonance.
+        """
+        duration = t[-1]
+        t_peak = duration / 2.0
+        tau_rise = 0.010   # 10 ms
+        tau_decay = 0.300  # 300 ms
+
+        envelope = np.where(
+            t <= t_peak,
+            np.exp(-((t - t_peak) ** 2) / (2 * tau_rise ** 2)),
+            np.exp(-(t - t_peak) / tau_decay),
+        )
+
+        # Broadband carrier: white noise under the envelope
+        carrier = np.random.randn(len(t))
+        sig = carrier * envelope
+
+        return sig
 
 
 class InjectionEngine:
@@ -305,6 +381,8 @@ def run_mdc(
     amplitude_grid: np.ndarray = None,
     output_dir: Path = Path("results/mdc"),
     seed: int = 42,
+    novelty_threshold_override: float | None = None,
+    use_dynamic_override: bool | None = None,
 ) -> pd.DataFrame:
     """Run the Mock Data Challenge.
 
@@ -345,7 +423,15 @@ def run_mdc(
     k_sigma = float(dyn_cfg.get("k_sigma", 2.5))
     cons_thresh = sim_cfg.get("consensus_threshold", 0.6)
     nov_thresh = sim_cfg.get("novelty_threshold", 0.85)  # legacy fallback
-    
+
+    # Allow caller to override threshold and dynamic mode directly
+    if novelty_threshold_override is not None:
+        nov_thresh = novelty_threshold_override
+        logger.info(f"novelty_threshold overridden by caller: {nov_thresh}")
+    if use_dynamic_override is not None:
+        use_dynamic = use_dynamic_override
+        logger.info(f"use_dynamic overridden by caller: {use_dynamic}")
+
     # Empirical fallback baseline (measured L1 O4a, 2026-06-04)
     det_upper = detector.upper()
     empirical_mean = dyn_cfg.get(f"empirical_mean_{det_upper.lower()}") or 0.940
@@ -373,7 +459,8 @@ def run_mdc(
     tasks = []
     
     # Add NULL injections
-    n_null_injections = 1000
+    n_null_injections = min(n_injections_per_type * 4, 1000) # scale NULLs based on run size
+    if n_null_injections < 20: n_null_injections = 20
     for i in range(n_null_injections):
         tasks.append(("NULL", 0.0, i))
         
@@ -421,11 +508,12 @@ def run_mdc(
             ts_white = whiten(ts_injected)
             ts_bp = bandpass(ts_white)
             
-            # Crop to 4 seconds around injection for Q-transform
-            # We want to mimic the pipeline, which does spectrograms on chunks
-            # Or maybe just 4s to match standard Gravity Spy
-            ts_crop = ts_bp.crop(t_inject - 2.0, t_inject + 2.0)
-            
+            # Use the full 32s segment — this matches the operational pipeline
+            # (batch_process in full_analysis.py generates Q-transforms on full 32s chunks).
+            # A 4s crop was previously used here, but created an inconsistency: MDC
+            # sensitivity measured at 4s ≠ sensitivity of the operational O4a analysis.
+            ts_crop = ts_bp.crop(seg_start, seg_end)
+
             save_spec_path = None
             if saved_specs[gtype] < 5:
                 # Save 5 spectrograms per type

@@ -223,8 +223,8 @@ def assess_novelty_dynamic(
         baseline_std = 0.021  # empirical fallback from L1 O4a measurements
 
     dynamic_threshold = baseline_mean - k_sigma * baseline_std
-    logger.debug(
-        "Dynamic threshold: %.4f  (baseline_mean=%.4f, std=%.4f, k=%.1f)",
+    logger.info(
+        "Dynamic threshold: NOVEL if sim < %.4f  (baseline_mean=%.4f, std=%.4f, k=%.1f)",
         dynamic_threshold, baseline_mean, baseline_std, k_sigma,
     )
 
