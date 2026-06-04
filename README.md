@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌊 gravi-signal-ml [![DOI](https://zenodo.org/badge/1231613598.svg)](https://doi.org/10.5281/zenodo.20121859)
+# 🌊 gravi-signal-ml [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20543811.svg)](https://doi.org/10.5281/zenodo.20543811)
 
 **Unsupervised Morphological Characterization of Gravitational-Wave Glitches**
 
@@ -301,7 +301,7 @@ If you use this software in your research, please cite our preprint:
   eprint = {2605.28572},
   archivePrefix = {arXiv},
   primaryClass = {astro-ph.IM},
-  doi    = {10.5281/zenodo.20121860},
+  doi    = {10.5281/zenodo.20543811},
   url    = {https://arxiv.org/abs/2605.28572}
 }
 ```
