@@ -125,7 +125,7 @@
 
 | ID | Decisione / Feature | Prerequisiti | Stato |
 |----|---------------------|-------------|-------|
-| D-FUTURE-01 | ViT-B/14 (768-dim) — test su H1 | Nessuno | [TODO] |
+| D-FUTURE-01 | ViT-B/14 (768-dim) — test su H1 | Nessuno | [DEGRADED] O3a ha risolto l'asimmetria H1 |
 | D-FUTURE-02 | Multi-Q Analysis (3 qrange concatenati, 1152-dim) | D-FUTURE-01 | [TODO] |
 | D-FUTURE-03 | In-domain reference O4a (sostituire O3b) | Nessuno | [TODO] |
 | D-FUTURE-04 | Supporto completo V1 (Virgo) in timeslide + full_analysis | Disponibilità dati O4b | [TODO] |

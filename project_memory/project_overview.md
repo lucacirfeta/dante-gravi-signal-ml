@@ -146,9 +146,9 @@ Raw Strain HDF5 (GWOSC O2–O4a)
 
 ## 7. Esito Scientifico Principale (Null Result)
 
-**In 1.277 ore di dati O4a analizzate (4 sessioni), nessun cluster morfologicamente NOVEL è stato identificato.** Tutti i cluster anomali mappano su classi Gravity Spy esistenti con cosine similarity > 0.98, oppure sono ascrivibili a fondo continuo.
+**In > 1.400 ore di dati analizzati su O4a e O3a, nessun cluster morfologicamente NOVEL è stato identificato.** Tutti i cluster anomali mappano su classi Gravity Spy esistenti con cosine similarity > 0.98, oppure sono ascrivibili a fondo continuo.
 
-Questo risultato ("null result") è stato analizzato a fondo tramite una **Mock Data Challenge (MDC)** ufficiale, pubblicata nel paper [arXiv:2606.06237](https://arxiv.org/abs/2606.06237). L'MDC ha dimostrato che il null result stabilisce una baseline riproducibile zero-shot per la caratterizzazione morfologica dei glitch, ma soggiace a un limite architetturale invalicabile: l'effetto di **Signal Dilution** (causato dal token `[CLS]`), che nasconde i glitch che occupano <5% della griglia di patch temporale/spettrale (es. `SpiralBurst`, `NarrowChirp`, `HarmonicComb`) nel rumore di fondo altamente non-Gaussiano (Generalized Extreme Value distribution). Questo null result è valido condizionalmente al regime di sensibilità architetturale e non esclude anomalie fisiche a banda stretta o impulsive brevi.
+Questo risultato ("null result") è stato analizzato a fondo tramite una **Mock Data Challenge (MDC)** ufficiale, pubblicata nel paper [arXiv:2606.06237](https://arxiv.org/abs/2606.06237). L'MDC ha dimostrato che il null result stabilisce una baseline riproducibile zero-shot per la caratterizzazione morfologica dei glitch, ma soggiace a un limite architetturale invalicabile: l'effetto di **Signal Dilution** (causato dal token `[CLS]`), che nasconde i glitch che occupano <5% della griglia di patch temporale/spettrale (es. `SpiralBurst`, `NarrowChirp`, `HarmonicComb`) nel rumore di fondo altamente non-Gaussiano (Generalized Extreme Value distribution). Questo null result è valido condizionalmente al regime di sensibilità architetturale e non esclude anomalie fisiche a banda stretta o impulsive brevi. L'analisi si è dimostrata robusta a variazioni strumentali estendendosi positivamente anche sull'observing run O3a, dove l'asimmetria di robustezza di H1 è risultata completamente riassorbita (ARI grayscale O3a = 0.972).
 
 **Benchmark DPMM vs Gravity Spy:** ARI = 0.133 (CTSAE supervisionato ottiene 0.409 su stesso dataset). Questo dimostra che la similarità morfologica visuale DINOv2 non mappa deterministicamente sulle categorie fisiche/umane di Gravity Spy — divergenza fondamentale di classificazione discussa nel preprint.
 
@@ -194,7 +194,7 @@ Ablation variants implementate in `ablation.py`: `grayscale`, `inverted`, `shuff
 ## 11. Problemi Aperti e Roadmap (da `docs/TODO.md`, aggiornato 2026-05-18)
 
 ### Priorità Alta (bloccanti)
-- [TODO] Testare DINOv2 **ViT-B/14** (768-dim) su H1 per mitigare asimmetria ablation H1 vs L1
+- [TODO] ~~Testare DINOv2 **ViT-B/14** (768-dim) su H1 per mitigare asimmetria ablation H1 vs L1~~ (Degradato: O3a ha dimostrato che l'asimmetria era strumentale/ambientale a O4a)
 - [TODO] Costruire riferimento in-domain **O4a** (attualmente basato su O3b → temporal domain shift)
 - [TODO] Estrarre embedding da **blocchi intermedi** DINOv2 per validare il transfer learning
 

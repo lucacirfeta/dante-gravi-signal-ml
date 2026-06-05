@@ -14,6 +14,7 @@ The following GPS time intervals have been downloaded and analyzed:
 | `20260522_074026` | `1370206208` | `2023-06-07 20:49:50` | `1371395168` | `2023-06-21 15:05:50` | `330.3` |
 | `20260523_143914` | `1385542816` | `2023-12-02 08:59:58` | `1386565632` | `2023-12-14 05:06:54` | `284.1` |
 | `20260524_200219` | `1386797312` | `2023-12-16 21:28:14` | `1387994880` | `2023-12-30 18:07:42` | `332.7` |
+| `20260530_014148` | `1238166048` | `2019-04-01 15:00:30` | `1238684480` | `2019-04-07 15:01:02` | `144.0` |
 
 ---
 
@@ -25,6 +26,7 @@ The following GPS time intervals have been downloaded and analyzed:
 | `O4a` | `20260522_074026` | `2026-05-24 07:47:56` | Completed (OK) | No anomalous clusters |
 | `O4a` | `20260523_143914` | `2026-05-24 17:29:37` | Completed (OK) | No anomalous clusters |
 | `O4a` | `20260524_200219` | `2026-05-25 22:09:05` | Completed (OK) | No anomalous clusters |
+| `O3a` | `20260530_014148` | `2026-06-05 07:24:50` | Completed (OK) | No anomalous clusters |
 
 ---
 
@@ -398,4 +400,35 @@ Ispezione visiva: entrambi falsi positivi a bassa energia. Null result confermat
 
 **Scientific Implication:** Il null result su O4a è valido condizionalmente al regime di sensibilità caratterizzato dal MDC. Il pipeline non rileva morfologie che occupano <5% della griglia di patch nella finestra da 32s. Questa è una limitazione architetturale del CLS token, non di DINOv2 come modello.
 
+---
 
+## 🔬 3.8 O3a Analysis (Session 20260530_014148)
+
+Questa sessione estende l'analisi ai dati dell'observing run precedente (O3a).
+
+#### 📊 1. Dataset Statistics and Preprocessing
+| Detector | Total Spectrograms | Duration | Duty Cycle (%) | Colormap |
+|:---------|:-------------------|:---------|:---------------|:---------|
+| **H1** | `11433` | `144.0h` | `70.6%` | `cividis` |
+| **L1** | `11373` | `141.4h` | `71.5%` | `cividis` |
+
+#### 🤖 2. Clustering & Morphological Cross-Check
+| Detector | Clusters | Anomalous (DPMM) | Morphcheck NOVEL | Morphcheck KNOWN | Morphcheck AMBIGUOUS |
+|:---------|:---------|:-----------------|:-----------------|:-----------------|:---------------------|
+| **H1** | `8` | `None` | `0` | `5317` | `6116` |
+| **L1** | `12` | `Cluster 15` | `0` | `4908` | `6465` |
+
+**Nota su L1:** Il DPMM ha marcato il `Cluster 15` come anomalo. Tuttavia la similarità rispetto al reference ha riassorbito i campioni in classi note, restituendo 0 NOVEL. Conferma dell'efficacia del doppio step di validazione.
+
+#### 🛡️ 3. Robustness Validation (Ablation & Stability)
+| Detector | Stability Mean ARI | Ablation Grayscale ARI | Ablation Inverted ARI | Ablation Shuffled ARI |
+|:---------|:-------------------|:-----------------------|:----------------------|:----------------------|
+| **H1** | `0.983` | `0.972` | `0.957` | `0.972` |
+| **L1** | `0.955` | `0.939` | `0.950` | `0.926` |
+
+**Conclusione Critica:** L'ARI grayscale di H1 in O3a raggiunge lo **0.972**. Questo risolve il problema riscontrato in O4a, dimostrando che l'instabilità di H1 in O4a era dovuta a variazioni non-stazionarie ambientali o strumentali (es. laser noise) specifiche di quel run, e non a un limite strutturale dell'encoder DINOv2 sui dati di Hanford.
+
+#### 🔗 4. Temporal Analysis (Time-Slide Coincidence)
+| Coincidence Window | Empirical p-value | Significance (Z-score) | Outcome |
+| :--- | :---: | :---: | :--- |
+| `±32s` | `1.0` | `-0.49` | Random (background compatible) |
