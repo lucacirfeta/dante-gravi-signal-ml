@@ -106,40 +106,39 @@ def fetch_strain_data(
                 except Exception:
                     pass
 
-    global _GWOSC_BASE_DELAY
-    try:
-        retries = 0
-        while True:
-            time.sleep(_GWOSC_BASE_DELAY)
-            try:
-                ts: TimeSeries = TimeSeries.fetch_open_data(
-                    detector,
-                    gps_start,
-                    gps_end,
-                    sample_rate=sample_rate,
-                    verbose=False,
-                    cache=True,
+    max_retries = 3
+    base_delay = 5.0
+    import random
+
+    for attempt in range(max_retries):
+        try:
+            # Aggiungiamo un piccolo delay random per non colpire il server tutti i worker assieme
+            time.sleep(random.uniform(1.0, 3.0))
+            
+            ts: TimeSeries = TimeSeries.fetch_open_data(
+                detector,
+                gps_start,
+                gps_end,
+                sample_rate=sample_rate,
+                verbose=False,
+                cache=True,
+            )
+            break  # Success
+        except Exception as exc:
+            err_str = str(exc)
+            if attempt < max_retries - 1:
+                sleep_time = base_delay * (2 ** attempt) + random.uniform(0, 2)
+                logger.warning(
+                    "Fetch error %s [%d-%d]: %s. "
+                    "Retrying in %.1fs (Attempt %d/%d)",
+                    detector, gps_start, gps_end, err_str, sleep_time, attempt+1, max_retries
                 )
-                break
-            except Exception as inner_exc:
-                err_str = str(inner_exc)
-                if "429" in err_str or "Too Many Requests" in err_str:
-                    retries += 1
-                    if retries > 10:
-                        logger.error("Max retries exceeded for GWOSC 429 Too Many Requests.")
-                        raise inner_exc
-                    logger.warning("GWOSC 429 Too Many Requests. Increasing base delay by 300ms and retrying in 1s (attempt %d)...", retries)
-                    _GWOSC_BASE_DELAY += 0.3
-                    if _GWOSC_BASE_DELAY > 5.0:
-                        _GWOSC_BASE_DELAY = 5.0
-                    time.sleep(1.0 + retries * 0.5)
-                else:
-                    raise inner_exc
-    except Exception as exc:
-        raise RuntimeError(
-            f"Failed to fetch strain data for {detector} "
-            f"[{gps_start}, {gps_end}]: {exc}"
-        ) from exc
+                time.sleep(sleep_time)
+            else:
+                raise RuntimeError(
+                    f"Failed to fetch strain data for {detector} "
+                    f"[{gps_start}, {gps_end}] after {max_retries} attempts: {exc}"
+                ) from exc
 
     if cache_raw:
         try:

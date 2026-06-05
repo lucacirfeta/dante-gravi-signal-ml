@@ -91,7 +91,7 @@ class TestSaveJsonReport:
 
         _save_json_report(result, metadata, stats, [], [], labels, tmp_path, detector="H1")
 
-        report_path = tmp_path / "cluster_report.json"
+        report_path = tmp_path / "cluster_report_H1.json"
         assert report_path.exists()
         report = json.loads(report_path.read_text(encoding="utf-8"))
         assert "timestamp" in report
@@ -108,7 +108,7 @@ class TestSaveJsonReport:
 
         _save_json_report(result, metadata, stats, [], [], labels, tmp_path, detector="H1")
 
-        report = json.loads((tmp_path / "cluster_report.json").read_text(encoding="utf-8"))
+        report = json.loads((tmp_path / "cluster_report_H1.json").read_text(encoding="utf-8"))
         pipeline = report["pipeline"]
 
         # Verify config keys are present (values come from actual config.yaml)
@@ -127,7 +127,7 @@ class TestSaveJsonReport:
 
         _save_json_report(result, metadata, stats, [1], [], labels, tmp_path, detector="L1")
 
-        report = json.loads((tmp_path / "cluster_report.json").read_text(encoding="utf-8"))
+        report = json.loads((tmp_path / "cluster_report_L1.json").read_text(encoding="utf-8"))
         assert report["results"]["anomalous_clusters"] == [1]
 
     def test_n_samples_correct(self, tmp_path: Path) -> None:
@@ -140,7 +140,7 @@ class TestSaveJsonReport:
 
         _save_json_report(result, metadata, stats, [], [], labels, tmp_path, detector="H1")
 
-        report = json.loads((tmp_path / "cluster_report.json").read_text(encoding="utf-8"))
+        report = json.loads((tmp_path / "cluster_report_H1.json").read_text(encoding="utf-8"))
         assert report["n_samples"] == n
 
 

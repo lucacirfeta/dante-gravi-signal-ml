@@ -39,6 +39,7 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
     segment_id = f"{detector}_{gps_start}_{gps_end}"
 
     try:
+        import urllib.error
         # Import inside function to avoid pickling issues
         from src.data_loader import fetch_strain_data
         from src.preprocessor import whiten, bandpass, generate_qtransform
@@ -78,10 +79,14 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
                     generate_qtransform(ts_bp, save_path=save_path,
                                         cmap=config.get('colormap', 'cividis'))
                 except Exception as exc:
-                    print(f"Worker Error on {filename}: {exc}")
+                    err_str = str(exc)
+                    if "404" in err_str:
+                        print(f"Worker Error on {filename}: GWOSC Data Not Published (404)")
+                    else:
+                        print(f"Worker Error on {filename}: {exc}")
                     all_success = False
 
-            return (segment_id, all_success)
+            return (segment_id, all_success, "OK" if all_success else "Errors encountered")
         else:
             filename = f"{detector}_{gps_start}_{gps_end}.png"
             save_path = output_dir / filename
@@ -101,17 +106,29 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
             import numpy as np
             if not np.isfinite(ts_bp.value).all():
                 print(f"Skipping segment {segment_id}: contains NaN/Inf after processing")
-                return (segment_id, False)
+                return (segment_id, False, "NaN/Inf")
 
             # Save PNG
-            generate_qtransform(ts_bp, save_path=save_path,
-                                cmap=config.get('colormap', 'cividis'))
+            try:
+                generate_qtransform(ts_bp, save_path=save_path,
+                                    cmap=config.get('colormap', 'cividis'))
+            except Exception as exc:
+                err_str = str(exc)
+                if "404" in err_str:
+                    print(f"Worker Error on {filename}: GWOSC Data Not Published (404)")
+                else:
+                    print(f"Worker Error on {filename}: {exc}")
+                return (segment_id, False, err_str)
 
-            return (segment_id, True)
+            return (segment_id, True, "OK")
 
     except Exception as exc:
-        print(f"Worker Error on global {segment_id}: {exc}")
-        return (segment_id, False)
+        err_str = str(exc)
+        if "404" in err_str:
+            print(f"Worker Error on global {segment_id}: GWOSC Data Not Published (404)")
+        else:
+            print(f"Worker Error on global {segment_id}: {exc}")
+        return (segment_id, False, err_str)
 
 
 def batch_process_parallel(
@@ -194,11 +211,19 @@ def batch_process_parallel(
                 unit="seg"
         ):
             try:
-                segment_id, success = future.result(timeout=120)
+                res = future.result(timeout=120)
+                if len(res) == 3:
+                    segment_id, success, msg = res
+                else:
+                    segment_id, success = res
+                    msg = ""
+                    
                 if success:
                     saved += 1
                 else:
                     skipped += 1
+                    if "404" in msg:
+                        logger.debug("Segment %s skipped (404 Not Found).", segment_id)
             except Exception:
                 skipped += 1
 
