@@ -145,12 +145,17 @@ def run_ablation_study(
         "results": {}
     }
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if reports_dir is None:
+        output_dir.mkdir(parents=True, exist_ok=True)
 
     embeddings_dict = {}
 
     logger.info("Instantiating encoder for ablation embeddings extraction...")
-    encoder = DINOv2Encoder(batch_size=batch_size)
+    if gpu_lock is not None:
+        with gpu_lock:
+            encoder = DINOv2Encoder(batch_size=batch_size)
+    else:
+        encoder = DINOv2Encoder(batch_size=batch_size)
     resolved_batch_size = encoder.batch_size
     for method in conditions:
         if method == "random-baseline":

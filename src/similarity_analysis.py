@@ -32,11 +32,20 @@ def analyze_similarity(
     # Legacy output dir (backward compat)
     analysis_dir = base_dir / "analysis"
 
-    morphcheck_path = clusters_dir / "morphcheck_report.json"
-    cluster_report_path = clusters_dir / "cluster_report.json"
+    if reports_dir is not None:
+        rdir = Path(reports_dir)
+        morphcheck_path = rdir / f"morphcheck_summary_{detector}.json"
+        cluster_report_path = rdir / f"cluster_report_{detector}.json"
+    else:
+        morphcheck_path = clusters_dir / "morphcheck_report.json"
+        cluster_report_path = clusters_dir / "cluster_report.json"
 
     if not morphcheck_path.exists():
-        if reference_path is not None:
+        # Fallback to legacy morphcheck paths
+        legacy_morphcheck_path = clusters_dir / "morphcheck_report.json"
+        if legacy_morphcheck_path.exists():
+            morphcheck_path = legacy_morphcheck_path
+        elif reference_path is not None:
             ref_name = Path(reference_path).stem
             morphcheck_path = base_dir / "morphcheck" / detector / f"{ref_name}.json"
         if not morphcheck_path.exists():
@@ -45,6 +54,11 @@ def analyze_similarity(
                 reports = list(auto_dir.glob("*.json"))
                 if reports:
                     morphcheck_path = sorted(reports)[-1]
+                    
+    if not cluster_report_path.exists():
+        legacy_cluster_report = clusters_dir / "cluster_report.json"
+        if legacy_cluster_report.exists():
+            cluster_report_path = legacy_cluster_report
 
     if not morphcheck_path.exists():
         logger.error("Morphological crosscheck report not found for %s", detector)

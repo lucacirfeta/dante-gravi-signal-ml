@@ -233,7 +233,8 @@ def _analyze_detector(
             tracker_enc = PhaseTracker(enc_logger, "encode", session_id, run, det)
             tracker_enc.start()
             _lock = gpu_lock if gpu_lock is not None else _gpu_lock
-            encoder_enc = DINOv2Encoder(batch_size=batch_size, logger=enc_logger)
+            with _lock:
+                encoder_enc = DINOv2Encoder(batch_size=batch_size, logger=enc_logger)
             encoder_enc.extract_dataset(input_dir, output_path, batch_size, gpu_lock=_lock)
             del encoder_enc
             if torch.cuda.is_available():
