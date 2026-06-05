@@ -18,13 +18,15 @@
 
 ## 📢 News
 
+**05 June 2026** – Our new Mock Data Challenge (MDC) paper is available on arXiv: **[2606.06237](https://arxiv.org/abs/2606.06237)**. It formally details the sensitivity limits of the pipeline and the Signal Dilution effect.
+
 **26 May 2026** – The LIGO-Virgo-KAGRA Collaboration released the **GWTC-5.0 catalog** 
 ([press release](https://www.ligo.org/news/)), reporting 161 new gravitational-wave events 
 and bringing the total number of detections to 390. Our pipeline `gravi-signal-ml` provides 
 a ready‑to‑use, open‑source tool for glitch characterization in O4a data, complementing 
 these new observations.
 
-**28 May 2026** – Our preprint is now available on arXiv: **[2605.28572](https://arxiv.org/abs/2605.28572)**.
+**28 May 2026** – Our pipeline method preprint is available on arXiv: **[2605.28572](https://arxiv.org/abs/2605.28572)**.
 
 ---
 
@@ -88,6 +90,7 @@ Raw Strain Data (GWOSC O2–O4a)
 │   ablation.py            — ARI vs perturbations     │
 │   stability.py           — ARI across hyperparams   │
 │   timeslide.py           — H1-L1 coincidence p-val  │
+│   run_injection.py       — Mock Data Challenge      │
 │   full_analysis.py       — End-to-end orchestrator  │
 │                                                     │
 │   indomain_reference_    — In-domain reference from │
@@ -137,7 +140,7 @@ The pipeline establishes a reproducible baseline for zero-shot glitch morphology
 2. **UMAP Geometry Distortions:** UMAP distorts global distances to preserve local structure. Anomalous clusters separated by UMAP might reflect preprocessing artifacts rather than physically distinct morphologies.
 3. **Absence of Auxiliary Channel Validation:** This tool operates entirely on primary strain data (H1/L1). It does not cross-reference environmental or instrumental auxiliary channels to confirm the physical origin of the anomalies.
 4. **Physically Distinct but Visually Similar Glitches:** The pipeline has an inability to exclude physically distinct glitch classes if they produce visually similar spectrogram morphologies. Ground-truth physical novelty may exist undetected within existing clusters.
-5. **Out-Of-Distribution (OOD) Blindness / Signal Dilution:** Recent Mock Data Challenge (MDC) tests on both short-duration broadband (`SpiralBurst`, `StepLadder`) and long-duration narrowband (`HarmonicComb`, `NarrowChirp`) morphologies revealed that the pipeline completely fails to recognize them as `NOVEL`, even at extreme SNRs up to $\approx 369$ (Max Recall = 0.00). This is caused by the global average pooling of DINOv2's `[CLS]` token over 32s windows, which dilutes highly localized signals (temporally or spectrally) with background noise. Using a statistically rigorous empirical threshold calibrated on $N = 188,142$ segments ($\tau_\mathrm{op} = 0.874$ for $\mathrm{FPR} < 0.01\%$), the pipeline establishes a fundamental architectural detection floor. Thus, the O4a "Null Result" reflects ViT spatial pooling limitations rather than the definitive absence of physics anomalies.
+5. **Out-Of-Distribution (OOD) Blindness / Signal Dilution:** Mock Data Challenge (MDC) tests on both short-duration broadband (`SpiralBurst`, `StepLadder`) and long-duration narrowband (`HarmonicComb`, `NarrowChirp`) morphologies revealed that the pipeline completely fails to recognize them as `NOVEL`, even at extreme SNRs up to $\approx 430$ (Max Recall = 0.00). As formally demonstrated in **[Cirfeta (2026b), arXiv:2606.06237](https://arxiv.org/abs/2606.06237)**, this is caused by the *Signal Dilution Effect* induced by the global average pooling of DINOv2's `[CLS]` token over 32s windows, which attenuates highly localized signals with background noise. Coupled with an extremely non-Gaussian background (GEV distribution) that requires a strict empirical operational threshold ($\tau_\mathrm{op} = 0.874$ for $\mathrm{FPR} < 0.01\%$), the pipeline establishes a fundamental architectural detection floor. Thus, the O4a "Null Result" reflects ViT spatial pooling limitations rather than the definitive absence of physical anomalies.
 
 ---
 

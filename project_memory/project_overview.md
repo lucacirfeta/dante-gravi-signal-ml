@@ -148,7 +148,7 @@ Raw Strain HDF5 (GWOSC O2–O4a)
 
 **In 1.277 ore di dati O4a analizzate (4 sessioni), nessun cluster morfologicamente NOVEL è stato identificato.** Tutti i cluster anomali mappano su classi Gravity Spy esistenti con cosine similarity > 0.98, oppure sono ascrivibili a fondo continuo.
 
-Questo è un risultato scientifico valido ("null result"), non un fallimento tecnico. Stabilisce una baseline riproducibile zero-shot per la caratterizzazione morfologica dei glitch.
+Questo risultato ("null result") è stato analizzato a fondo tramite una **Mock Data Challenge (MDC)** ufficiale, pubblicata nel paper [arXiv:2606.06237](https://arxiv.org/abs/2606.06237). L'MDC ha dimostrato che il null result stabilisce una baseline riproducibile zero-shot per la caratterizzazione morfologica dei glitch, ma soggiace a un limite architetturale invalicabile: l'effetto di **Signal Dilution** (causato dal token `[CLS]`), che nasconde i glitch che occupano <5% della griglia di patch temporale/spettrale (es. `SpiralBurst`, `NarrowChirp`, `HarmonicComb`) nel rumore di fondo altamente non-Gaussiano (Generalized Extreme Value distribution). Questo null result è valido condizionalmente al regime di sensibilità architetturale e non esclude anomalie fisiche a banda stretta o impulsive brevi.
 
 **Benchmark DPMM vs Gravity Spy:** ARI = 0.133 (CTSAE supervisionato ottiene 0.409 su stesso dataset). Questo dimostra che la similarità morfologica visuale DINOv2 non mappa deterministicamente sulle categorie fisiche/umane di Gravity Spy — divergenza fondamentale di classificazione discussa nel preprint.
 
@@ -187,6 +187,7 @@ Ablation variants implementate in `ablation.py`: `grayscale`, `inverted`, `shuff
 2. **UMAP distorsione globale:** Preserva struttura locale, distorce distanze globali. Cluster anomali potrebbero riflettere artefatti di preprocessing.
 3. **Assenza canali ausiliari:** Solo strain H1/L1. Nessun incrocio con canali ambientali/strumentali per confermare l'origine fisica delle anomalie.
 4. **Morfologie fisicamente distinte ma visivamente simili:** Classi fisicamente diverse ma spettrogrammaticamente simili non verrebbero distinte.
+5. **OOD Blindness / Signal Dilution:** Come dimostrato in [arXiv:2606.06237](https://arxiv.org/abs/2606.06237), il global average pooling del token `[CLS]` di DINOv2 diluisce i segnali localizzati (occupanti <5% della griglia). Le morfologie a banda molto stretta o durata impulsiva non possono superare le rigorose soglie empiriche (es. $\tau_\mathrm{op} = 0.874$), rendendo la pipeline ceca verso di esse indipendentemente dal loro SNR (massimo Recall = 0). L'assunzione Gaussiana (soglie $k-\sigma$) è matematicamente scorretta per questo task poiché la coda di distribuzione è governata da una Generalized Extreme Value (GEV).
 
 ---
 

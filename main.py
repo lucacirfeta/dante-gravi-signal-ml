@@ -367,6 +367,10 @@ def cmd_scan(args: argparse.Namespace) -> None:
         If ``--session-id`` is provided but the directory is empty, the
         scan starts from ``run_config[run].start_date + 6h``.
     """
+    if getattr(args, "reprocess", False):
+        _reprocess_spectrograms(args)
+        return
+
     from src.data_loader import generate_segments_from_gps_range
 
     detector: str = args.detector
@@ -702,6 +706,10 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
 
 
 def cmd_scan_extended(args: argparse.Namespace) -> None:
+    """Orchestrate automatic scan on H1 and L1 in parallel."""
+    if getattr(args, "reprocess", False):
+        _reprocess_spectrograms(args)
+        return
     """Run an extended scan of H1 + L1 contemporaneously.
 
     Incremental mode (automatic):
@@ -1036,7 +1044,7 @@ def _reprocess_single_png(
         return (filename, False, str(exc))
 
 
-def cmd_reprocess_spectrograms(args: argparse.Namespace) -> None:
+def _reprocess_spectrograms(args: argparse.Namespace) -> None:
     """Re-render existing spectrograms with the current colormap from config.
 
     For each PNG in the target directory, parse the GPS range from the
@@ -1214,20 +1222,26 @@ def cmd_encode(args: argparse.Namespace) -> None:
     print("Phase 2 complete. Embeddings ready for Phase 3 clustering.")
 
 
-def cmd_analyze_similarity(args: argparse.Namespace) -> None:
+def cmd_cluster_similarity(args: argparse.Namespace) -> None:
     """Analyze the distribution of cosine similarities for each cluster."""
-    from src.similarity_analysis import analyze_similarity
+    from src.similarity_analysis import cluster_similarity
     
     run = _resolve_run(args)
     session_id = _resolve_session_id(args)
     
     logger.info("=== ANALYZE-SIMILARITY: %s [%s] ===", args.detector, run)
-    analyze_similarity(
+    cluster_similarity(
         session_id=session_id,
         detector=args.detector,
         run=run,
         reference_path=args.reference
     )
+
+
+def cmd_explain(args: argparse.Namespace) -> None:
+    """[STUB] Generate attention maps for anomaly explainability."""
+    logger.info("=== EXPLAIN (Attention Maps) ===")
+    logger.warning("Feature not yet implemented. Stub for Phase 2: DINOv2 Explainability.")
 
 
 def cmd_cluster(args: argparse.Namespace) -> None:
@@ -1597,6 +1611,15 @@ def cmd_crosscheck(args: argparse.Namespace) -> None:
 
 
 def cmd_build_reference(args: argparse.Namespace) -> None:
+    """Dispatch to the correct reference builder based on domain."""
+    domain = getattr(args, "domain", "in-domain")
+    if domain == "in-domain":
+        _build_indomain_reference(args)
+    else:
+        _build_reference(args)
+
+
+def _build_reference(args: argparse.Namespace) -> None:
     """Build a DINOv2 embedding reference index from the Gravity Spy training set."""
     from src.reference_builder import (
         download_training_set_metadata,
@@ -1869,8 +1892,8 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
         logger.info("Saved morphcheck summary to %s", summary_path)
 
 
-def cmd_build_indomain_reference(args: argparse.Namespace) -> None:
-    """Build an in-domain DINOv2 reference index from Gravity Spy labeled GPS times."""
+def _build_indomain_reference(args: argparse.Namespace) -> None:
+    """Build an in-domain DINOv2 reference index from labeled O3b spectrograms."""
     from src.indomain_reference_builder import (
         build_indomain_reference,
         download_gs_classifications_csv,
@@ -2112,12 +2135,6 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
     print(f"{'='*60}\n")
 
 
-def cmd_benchmark_methods(args: argparse.Namespace) -> None:
-    """Benchmark comparative analysis of clustering methods."""
-    from src.benchmark_methods import run_method_benchmark
-    run_method_benchmark(args.reference, args.output)
-
-
 def cmd_benchmark_clustering(args: argparse.Namespace) -> None:
     """Run benchmark of the clustering pipeline against a reference index."""
     from src.benchmark import run_benchmark
@@ -2295,7 +2312,18 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
                 print(f"    Report: {result['reports'][det]}")
 
 
-def cmd_calibrate_loglikelihood(args: argparse.Namespace) -> None:
+def cmd_calibrate(args: argparse.Namespace) -> None:
+    """Dispatch to the correct calibration method."""
+    method = getattr(args, "method", "cosine")
+    if method == "cosine":
+        _calibrate_threshold(args)
+    elif method == "loglikelihood":
+        _calibrate_loglikelihood(args)
+    else:
+        logger.error("Unknown calibration method: %s", method)
+
+
+def _calibrate_loglikelihood(args: argparse.Namespace) -> None:
     """Calibrate the DPMM log-likelihood anomaly threshold from the reference."""
     from src.loglikelihood_calibrator import calibrate_loglikelihood_threshold
 
@@ -2314,7 +2342,7 @@ def cmd_calibrate_loglikelihood(args: argparse.Namespace) -> None:
     )
 
 
-def cmd_calibrate_threshold(args: argparse.Namespace) -> None:
+def _calibrate_threshold(args: argparse.Namespace) -> None:
     """Calibrate per-class cosine similarity thresholds from the reference index."""
     from src.threshold_calibrator import calibrate_thresholds
 
@@ -2426,6 +2454,16 @@ def _add_run_argument(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_mode_argument(parser: argparse.ArgumentParser) -> None:
+    """Add the ``--mode`` argument to a subparser."""
+    parser.add_argument(
+        "--mode",
+        choices=["global", "patch"],
+        default="global",
+        help="Specifica il paradigma architetturale: 'global' (pool [CLS] standard) o 'patch' (Multi-Instance Learning)"
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -2471,6 +2509,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to injection config. Default: injection_config.yaml",
     )
     _add_run_argument(p_injection)
+    _add_mode_argument(p_injection)
     p_injection.set_defaults(func=cmd_run_injection)
 
 
@@ -2523,6 +2562,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Manual path to a specific raw session (e.g., data/raw/1369211232). If omitted, the latest folder is used.",
+    )
+    p_scan.add_argument(
+        "--reprocess",
+        action="store_true",
+        help="Re-render existing spectrograms with the current colormap.",
     )
     p_scan.set_defaults(func=cmd_scan)
     _add_run_argument(p_scan)
@@ -2618,6 +2662,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Manual path to a specific raw session (e.g., data/raw/1369211232). If omitted, the latest folder is used.",
     )
+    p_scan_ext.add_argument(
+        "--reprocess",
+        action="store_true",
+        help="Re-render existing spectrograms with the current colormap.",
+    )
     p_scan_ext.set_defaults(func=cmd_scan_extended)
     _add_run_argument(p_scan_ext)
 
@@ -2664,6 +2713,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Clustering algorithm to use. Default: dpmm.",
     )
     _add_run_argument(p_full)
+    _add_mode_argument(p_full)
     p_full.set_defaults(func=cmd_full_analysis)
 
     # --- full-analysis-report ---
@@ -2678,6 +2728,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Session identifier to analyze.",
     )
     _add_run_argument(p_full_report)
+    _add_mode_argument(p_full_report)
     p_full_report.set_defaults(func=cmd_full_analysis_report)
 
     # --- last-gps ---
@@ -2766,69 +2817,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_fetch_raw.set_defaults(func=cmd_fetch_raw)
     _add_run_argument(p_fetch_raw)
 
-    # --- reprocess-spectrograms ---
-    p_reprocess = subparsers.add_parser(
-        "reprocess-spectrograms",
-        help="Re-render existing spectrograms with the current colormap from config.",
-    )
-    p_reprocess.add_argument(
-        "--session-id",
-        type=str,
-        default=None,
-        help="Session identifier to locate the spectrogram directory.",
-    )
-    p_reprocess.add_argument(
-        "--detector",
-        type=str,
-        default=None,
-        choices=["H1", "L1", "V1"],
-        help="Detector identifier. Required when using --session-id.",
-    )
-    p_reprocess.add_argument(
-        "--input-dir",
-        type=str,
-        default=None,
-        help=(
-            "Explicit path to the spectrogram directory. "
-            "Overrides --session-id + --detector."
-        ),
-    )
-    p_reprocess.add_argument(
-        "--workers",
-        type=int,
-        default=1,
-        help=(
-            "Number of parallel workers. Use 1 (default) for sequential. "
-            "Use cpu_count-2 for max speed on multi-core systems."
-        ),
-    )
-    p_reprocess.add_argument(
-        "--backup",
-        action="store_true",
-        default=False,
-        help=(
-            "Create a .viridis.bak.png backup of each PNG before overwriting. "
-            "Off by default."
-        ),
-    )
-    p_reprocess.add_argument(
-        "--dry-run",
-        action="store_true",
-        default=False,
-        help="Report how many PNGs would be reprocessed, without doing it.",
-    )
-    p_reprocess.add_argument(
-        "--use-cache",
-        action="store_true",
-        default=False,
-        help=(
-            "Check data/raw/ for local HDF5 strain files before fetching "
-            "from GWOSC. File pattern: <detector>_<start>_<end>.hdf5."
-        ),
-    )
-    p_reprocess.set_defaults(func=cmd_reprocess_spectrograms)
-    _add_run_argument(p_reprocess)
-
     # --- encode (Phase 2) ---
     p_encode = subparsers.add_parser(
         "encode",
@@ -2877,6 +2865,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_encode.set_defaults(func=cmd_encode)
     _add_run_argument(p_encode)
 
+    # --- explain ---
+    p_explain = subparsers.add_parser(
+        "explain",
+        help="[STUB] Generate attention maps for anomaly explainability.",
+    )
+    p_explain.set_defaults(func=cmd_explain)
+
     # --- cluster (Phase 3) ---
     p_cluster = subparsers.add_parser(
         "cluster",
@@ -2923,6 +2918,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="dpmm",
         help="Clustering algorithm to use. Default: dpmm.",
     )
+    _add_mode_argument(p_cluster)
     p_cluster.set_defaults(func=cmd_cluster)
     _add_run_argument(p_cluster)
 
@@ -3009,6 +3005,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="likelihood",
         help="Criterion to use for anomaly detection. Default: likelihood.",
     )
+    _add_mode_argument(p_stability)
     p_stability.set_defaults(func=cmd_stability)
     _add_run_argument(p_stability)
 
@@ -3054,40 +3051,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Batch size for DINOv2 inference. Default: auto-detect.",
     )
+    _add_mode_argument(p_ablation)
     p_ablation.set_defaults(func=cmd_ablation)
     _add_run_argument(p_ablation)
-
-    # --- crosscheck (Phase 3.1) ---
-    p_cross = subparsers.add_parser(
-        "crosscheck",
-        help="Cross-check anomalous clusters against Gravity Spy.",
-    )
-    p_cross.add_argument(
-        "--report",
-        type=str,
-        required=True,
-        help="Path to cluster_report.json.",
-    )
-    p_cross.add_argument(
-        "--metadata",
-        type=str,
-        required=True,
-        help="Path to encoder metadata JSON (e.g. data/embeddings/o4a_h1_6h.json).",
-    )
-    p_cross.add_argument(
-        "--detector",
-        type=str,
-        default="H1",
-        choices=["H1", "L1", "V1"],
-        help="Detector for Gravity Spy queries. Default: H1.",
-    )
-    p_cross.add_argument(
-        "--output",
-        type=str,
-        default=None,
-        help="Output JSON path for cross-check results.",
-    )
-    p_cross.set_defaults(func=cmd_crosscheck)
 
     # --- build-reference (Phase 3.3) ---
     p_build = subparsers.add_parser(
@@ -3214,61 +3180,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Coincidence window in seconds. Default: from config.yaml.",
     )
+    _add_mode_argument(p_ts)
     p_ts.set_defaults(func=cmd_timeslide)
     _add_run_argument(p_ts)
-
-    # --- build-indomain-reference (Phase 3.4) ---
-    p_indomain = subparsers.add_parser(
-        "build-indomain-reference",
-        help="Build in-domain reference from labeled GPS timestamps.",
-    )
-    p_indomain.add_argument(
-        "--output",
-        type=str,
-        default=None,
-        help=(
-            "Path to save the .npz index. If omitted, auto-generates as "
-            "data/reference/indomain_{run}_{detector}.npz."
-        ),
-    )
-    p_indomain.add_argument(
-        "--detector",
-        type=str,
-        default="H1",
-        choices=["H1", "L1", "V1"],
-        help="Detector to filter on. Default: H1.",
-    )
-    p_indomain.add_argument(
-        "--run",
-        type=str,
-        default="O3b",
-        help="Observing run (e.g. O3b). Default: O3b.",
-    )
-    p_indomain.add_argument(
-        "--max-per-class",
-        type=int,
-        default=None,
-        help="Maximum samples per class. Default: from config.yaml.",
-    )
-    p_indomain.add_argument(
-        "--min-confidence",
-        type=float,
-        default=None,
-        help="Minimum ml_confidence threshold. Default: from config.yaml.",
-    )
-    p_indomain.add_argument(
-        "--workers",
-        type=int,
-        default=1,
-        help="Number of parallel workers for GWOSC fetch. Default: 1.",
-    )
-    p_indomain.add_argument(
-        "--local-csv",
-        type=str,
-        default=None,
-        help="Local fallback path for Gravity Spy classifications CSV.",
-    )
-    p_indomain.set_defaults(func=cmd_build_indomain_reference)
 
     # --- download-all-references ---
     p_dl = subparsers.add_parser(
@@ -3363,31 +3277,18 @@ def build_parser() -> argparse.ArgumentParser:
         default="dpmm",
         help="Clustering algorithm to use. Default: dpmm.",
     )
+    _add_mode_argument(p_benchmark)
     p_benchmark.set_defaults(func=cmd_benchmark_clustering)
-
-    # --- benchmark-methods ---
-    p_bench_methods = subparsers.add_parser(
-        "benchmark-methods",
-        help="Benchmark comparative analysis of clustering methods.",
-    )
-    p_bench_methods.add_argument(
-        "--reference",
-        type=str,
-        default=None,
-        help="Path to reference index .npz. Default: dynamically resolved.",
-    )
-    p_bench_methods.add_argument(
-        "--output",
-        type=str,
-        default="data/reference/benchmark_methods.json",
-        help="Output JSON path for benchmark report. Default: data/reference/benchmark_methods.json.",
-    )
-    p_bench_methods.set_defaults(func=cmd_benchmark_methods)
-
-    # --- calibrate-threshold (Autopilot) ---
+    # --- calibrate (Autopilot) ---
     p_cal = subparsers.add_parser(
-        "calibrate-threshold",
-        help="[Autopilot] Calibrate per-class cosine similarity thresholds.",
+        "calibrate",
+        help="[Autopilot] Calibrate thresholds (cosine or loglikelihood).",
+    )
+    p_cal.add_argument(
+        "--method",
+        choices=["cosine", "loglikelihood"],
+        required=True,
+        help="Method to calibrate.",
     )
     p_cal.add_argument(
         "--reference",
@@ -3397,9 +3298,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_cal.add_argument(
         "--percentile",
-        type=int,
-        default=None,
-        help="Percentile for intra-class similarity threshold. Default: from config.",
+        type=float,
+        default=5,
+        help="Percentile threshold. Default: 5.",
     )
     p_cal.add_argument(
         "--output",
@@ -3407,32 +3308,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="data/autopilot/reference/thresholds.json",
         help="Output JSON path. Default: data/autopilot/reference/thresholds.json.",
     )
-    p_cal.set_defaults(func=cmd_calibrate_threshold)
-
-    # --- calibrate-loglikelihood (DPMM anomaly threshold) ---
-    p_cal_ll = subparsers.add_parser(
-        "calibrate-loglikelihood",
-        help="Calibrate DPMM log-likelihood anomaly threshold from in-domain reference.",
-    )
-    p_cal_ll.add_argument(
-        "--reference",
-        type=str,
-        default=None,
-        help="Path to reference index .npz. Default: dynamically resolved.",
-    )
-    p_cal_ll.add_argument(
-        "--percentile",
-        type=float,
-        default=None,
-        help="Percentile for log-likelihood threshold. Default: from config.",
-    )
-    p_cal_ll.add_argument(
-        "--output",
-        type=str,
-        default="data/autopilot/reference/loglikelihood_threshold.json",
-        help="Output JSON path. Default: data/autopilot/reference/loglikelihood_threshold.json.",
-    )
-    p_cal_ll.set_defaults(func=cmd_calibrate_loglikelihood)
+    p_cal.set_defaults(func=cmd_calibrate)
 
     # --- scan-live (Autopilot) ---
     p_live = subparsers.add_parser(
@@ -3489,11 +3365,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to thresholds.json. Default: data/autopilot/reference/thresholds.json.",
     )
     _add_run_argument(p_live)
+    _add_mode_argument(p_live)
     p_live.set_defaults(func=cmd_scan_live)
 
     # --- analyze-similarity ---
     p_sim = subparsers.add_parser(
-        "analyze-similarity",
+        "cluster-similarity",
         help="Analyze the distribution of cosine similarities for each cluster.",
     )
     p_sim.add_argument(
@@ -3516,7 +3393,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Path to reference index .npz. Default: dynamically resolved.",
     )
-    p_sim.set_defaults(func=cmd_analyze_similarity)
+    p_sim.set_defaults(func=cmd_cluster_similarity)
 
     return parser
 

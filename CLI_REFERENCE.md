@@ -54,26 +54,24 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
    - [`last-gps`](#5-last-gps) — Retrieve last GPS time
 
 2. **ML Pipeline (Phases 2 and 3)**
-   - [`reprocess-spectrograms`](#6-reprocess-spectrograms) — Reprocess spectrograms
-   - [`encode`](#7-encode) — Extract DINOv2 embeddings
+   - [`encode`](#6-encode) — Extract DINOv2 embeddings
+   - [`explain`](#7-explain) — Generate attention maps for anomaly explainability
    - [`cluster`](#8-cluster) — Execute DPMM or HDBSCAN clustering
    - [`report`](#9-report) — Regenerate UMAP/gallery plots
 
 3. **Analysis & Validation**
    - [`stability`](#10-stability) — Clustering stability analysis
    - [`ablation`](#11-ablation) — Perturbation ablation study
-   - [`crosscheck`](#12-crosscheck) — Gravity Spy cross-check verification
    - [`timeslide`](#13-timeslide) — Coincidences and p-value analysis
-   - [`analyze-similarity`](#13b-analyze-similarity) — Subvariant similarity analysis
+   - [`cluster-similarity`](#13b-cluster-similarity) — Subvariant similarity analysis
+   - [`run-injection`](#13c-run-injection) — Execute Mock Data Challenge (MDC) injections
 
 4. **Reference Index**
-   - [`build-reference`](#14-build-reference) — Build base index
-   - [`build-indomain-reference`](#15-build-indomain-reference) — Build in-domain index
+   - [`build-reference`](#14-build-reference) — Build base or in-domain reference index
    - [`download-all-references`](#15b-download-all-references) — Batch download and build all in-domain indexes
    - [`validate-reference`](#16-validate-reference) — Validate index with a real event
    - [`morphcheck`](#17-morphcheck) — Compare anomalies with reference index
    - [`benchmark-clustering`](#18-benchmark-clustering) — Validate unsupervised pipeline with ground truth labels
-   - [`benchmark-methods`](#18b-benchmark-methods) — Generate comparative report among various clustering methods
 
 5. **End-to-End Automation**
     - [`full-analysis`](#19-full-analysis) — Complete automated pipeline
@@ -115,6 +113,7 @@ Scans segments for a **single detector** in a defined period. By including an ex
 - `--hours`: Hours of scan duration (only for new scans). *Default: from config.yaml*.
 - `--workers`: Threads in parallel. 1 = sequential. *Default: `1`*.
 - `--session-id`: Unique session ID (e.g., `20260510_143022`). *Default: auto-generated*.
+- `--reprocess`: Re-render existing spectrograms with current colormap.
 - `--no-cache-raw`: Boolean flag. Disables saving raw HDF5 files in the `data/raw` folder. *Default: `True`* (does not save). Set to `False` to enable saving.
 - `--raw-path`: Manual path to a specific raw session. If not specified, it will use the latest available folder in `data/raw/` with the highest GPS.
 
@@ -133,6 +132,7 @@ Automated extended scan of **H1 and L1** simultaneously (Phase 4). Synchronizes 
 - `--hours`: Override hours per detector relative to yaml config (only for new scans).
 - `--workers`: Number of workers (must be an **even number**, e.g. 2, 4, 6, 8). Workers are equally divided between H1 and L1. *Default: `1`*.
 - `--session-id`: Session ID. *Default: auto-generated*.
+- `--reprocess`: Re-render existing spectrograms with current colormap.
 - `--no-cache-raw`: Boolean flag. Disables HDF5 saving. *Default: `True`*.
 - `--full-analysis`: Boolean flag. If set to `True`, automatically starts `full-analysis` at the end. *Default: `False`*.
 - `--skip-timeslide`: Flag. Skips timeslide analysis in full analysis.
@@ -183,25 +183,7 @@ Returns the most advanced (end) GPS time to resume stopped runs without invoking
 
 ## ML Pipeline
 
-### 6. `reprocess-spectrograms`
-Re-renders existing PNG files by applying the current visual settings from config.yaml.
-
-* **Under the Hood (Processing Details):**
-  1. Reads the list of existing PNG files in the session.
-  2. Searches the local HDF5 cache (`data/raw/`) for the original time series for the same frame's GPS interval.
-  3. If the raw data is present, it reprocesses it applying the new configuration (e.g. change of colormap like `viridis`, `plasma` or `cividis`, or changes to the `frange` frequency interval or Q-transform scaling factors).
-  4. If `--backup` is enabled, it moves the old PNG image into a backup folder before overwriting it.
-
-- `--session-id`: Session ID.
-- `--detector`: Detector.
-- `--run`: Observational run in use. *Default: `O4a`*.
-- `--input-dir`: Explicit path to spectrograms.
-- `--workers`: Number of threads. *Default: `1`*.
-- `--backup`: Flag. Saves a backup file before overwriting.
-- `--dry-run`: Flag. Analyzes and prints the planned tasks to video.
-- `--use-cache`: Flag. Checks the local HDF5 cache first.
-
-### 7. `encode`
+### 6. `encode`
 Uses the pre-trained DINOv2-Reg model to map spectrograms into high-dimensionality embedding vectors.
 
 * **Under the Hood (Processing Details):**
@@ -218,6 +200,9 @@ Uses the pre-trained DINOv2-Reg model to map spectrograms into high-dimensionali
 - `--input-dir`: Direct folder of `.png` files.
 - `--output`: Destination file (`.npy`).
 - `--batch-size`: PyTorch batch inference size. *Default: `auto-detect` (CUDA=64, MPS=32, CPU=16).*
+
+### 7. `explain`
+[STUB] Generate attention maps for anomaly explainability. (Feature not yet implemented. Stub for Phase 2: DINOv2 Explainability).
 
 ### 8. `cluster`
 Dynamically clusters the data (DPMM or HDBSCAN), finding any glitch classes and anomalies.
@@ -302,22 +287,8 @@ Evaluates the pre-processing impact by mutating images and analyzing the ARI acc
 - `--output-dir`: Destination folder.
 - `--batch-size`: Batch size for DINOv2. *Default: `auto-detect`.*
 
-### 12. `crosscheck`
-Crosses the anomalous clusters from JSON with LIGO's real set via remote API queries in Gravity Spy.
-
-* **Under the Hood (Processing Details):**
-  1. Loads the report JSON containing the list of glitches classified as anomalies or morphological novelties.
-  2. Extracts the GPS time intervals associated with those transients.
-  3. Queries public Gravity Spy APIs sending the GPS times and the origin detector.
-  4. Retrieves the official labels assigned to those events by Gravity Spy algorithms and community volunteers (e.g. Blip, Whistle, Scratch).
-  5. Compares and calculates matches between clusters generated by our unsupervised model and known classes, writing a final report.
-
-- `--report` **(Required)**: Path to the cluster JSON output.
-- `--metadata` **(Required)**: Path to JSON metadata provided by `encode`.
-- `--detector`: Used detector. *Default: `H1`*.
-- `--output`: Path to draft a report.
-
 ### 13. `timeslide`
+
 Estimates the empirical p-value of coincidence between `H1` and `L1` anomalies via random time-shifts. Supports both anomalies from **HDBSCAN clusters** and individual anomalies detected by **DPMM** (`anomalous_samples`). Output is saved automatically.
 
 * **Under the Hood (Processing Details):**
@@ -342,7 +313,7 @@ Estimates the empirical p-value of coincidence between `H1` and `L1` anomalies v
 
 > **💡 Note:** without `--session-id`, the four arguments `--metadata-h1`, `--metadata-l1`, `--report-h1`, `--report-l1` are all required. The `--embeddings-*` arguments are not necessary and have been removed.
 
-### 13b. `analyze-similarity`
+### 13b. `cluster-similarity`
 Analyzes the distribution of cosine similarities for each cluster compared to the in-domain reference classes.
 Useful to determine if an anomalous cluster is genuinely equidistant from many classes (potential NOVEL indicator) or is a subvariant of a known class (systematically higher similarity towards that class).
 
@@ -357,39 +328,45 @@ Useful to determine if an anomalous cluster is genuinely equidistant from many c
 - `--run`: Observational run (e.g. `O4a`).
 - `--reference`: Path to the `.npz` reference index.
 
+### 13c. `run-injection`
+Executes the Mock Data Challenge (MDC) by injecting synthetic transient waveforms directly into the strain data to evaluate the pipeline's detection capability (Recall) at varying Signal-to-Noise Ratios (SNR).
+
+* **Under the Hood (Processing Details):**
+  1. Loads background noise segments (null-segments) from the configured session.
+  2. Generates or loads synthetic strain waveforms based on specified morphologies (e.g., SineGaussian, Ringdown, SpiralBurst).
+  3. Scales the amplitude of the synthetic signal to match the requested matched-filter SNR against the background noise PSD.
+  4. Injects the signal into the center of the 32s analysis window.
+  5. Processes the injected data through the standard pipeline (whitening, bandpass, Q-transform, DINOv2 embedding).
+  6. Compares the resulting embeddings against the `novelty_threshold` to calculate the detection Recall.
+
+- `--session-id` **(Required)**: Unique session ID for background data.
+- `--run`: Observational run. *Default: `O4a`*.
+- `--detector`: Target detector. *Default: `H1`*.
+- `--morphology` **(Required)**: Synthetic morphology to inject.
+- `--snr-range`: Range of SNRs to evaluate.
+
 ---
 
 ## Reference Index
 
 ### 14. `build-reference`
-Starts the builder by extracting an embeddings index from the Gravity Spy archive.
+Starts the builder by extracting an embeddings index from the Gravity Spy archive or from labeled GPS timestamps (in-domain).
 
 * **Under the Hood (Processing Details):**
-  1. Looks locally for the compressed `.tar.gz` file containing the Gravity Spy dataset (organized in sub-folders corresponding to known glitch classes).
-  2. Extracts up to a maximum set number (default 50) of samples for each glitch class.
+  1. (Out-of-Domain) Looks locally for the compressed `.tar.gz` file containing the Gravity Spy dataset. Extracts up to a maximum set number of samples for each glitch class.
+  2. (In-Domain) Loads spectrogram files and model predictions for selected sessions, filtering events with classification probability above the critical threshold (default 0.95).
   3. Pre-processes the extracted images and passes them to the DINOv2 encoder to compute 384-dimensional embeddings.
-  4. Collects all embedding vectors and the relative textual class labels, saving them in a single compressed NumPy file `.npz` (`data/reference/`).
+  4. Collects all embedding vectors and relative textual class labels, saving them in a single compressed NumPy file `.npz` (`data/reference/`).
 
-- `--output` **(Required)**: Final destination for `.npz`.
-- `--max-per-class`: Samples extracted from each class. *Default: `50`*.
-- `--tar-path`: Path to local .tar.gz. *Default: `data/reference/trainingsetv1d1.tar.gz`*.
-
-### 15. `build-indomain-reference`
-Creates the reference index using real in-domain events processed by our pipeline, reducing the domain gap.
-
-* **Under the Hood (Processing Details):**
-  1. Loads the spectrogram files and model predictions for the selected sessions.
-  2. Filters events keeping only those with a classification probability above the critical threshold (default 0.95), to ensure absolute class purity.
-  3. Limits the number of samples for each class (default 30) to keep the index balanced.
-  4. Generates and saves the normalized DINOv2 embeddings and corresponding class labels in an `.npz` file.
-
-- `--output`: Final path to the `.npz` index. *Optional* — when omitted, the file is auto-generated as `data/reference/indomain_{run}_{detector}.npz`.
-- `--detector`: Associated detector. *Default: `H1`*.
-- `--run`: Observational run. *Default: `O3b`*.
-- `--max-per-class`: Samples limitation per class. *Default: `30`*.
-- `--min-confidence`: Minimum accuracy to include glitches. *Default: `0.95`*.
-- `--workers`: Number of Threads. *Default: `1`*.
-- `--local-csv`: Local fallback path for Gravity Spy classifications CSV (useful if Zenodo download fails).
+- `--domain` **(Required)**: Choose `in-domain` or `out-of-domain`.
+- `--output`: Final destination for `.npz`. Auto-generated for in-domain if omitted.
+- `--max-per-class`: Samples extracted from each class. *Default: 50 (OOD), 30 (In-domain)*.
+- `--tar-path`: Path to local .tar.gz (for out-of-domain).
+- `--detector`: Associated detector (for in-domain). *Default: `H1`*.
+- `--run`: Observational run (for in-domain). *Default: `O3b`*.
+- `--min-confidence`: Minimum accuracy to include glitches (for in-domain). *Default: `0.95`*.
+- `--workers`: Number of Threads (for in-domain). *Default: `1`*.
+- `--local-csv`: Local fallback path for Gravity Spy classifications CSV.
 
 ### 15b. `download-all-references`
 Batch-downloads Gravity Spy classification CSVs from Zenodo and builds in-domain reference indexes for each run/detector combination. Files are saved with the naming convention `indomain_{run}_{detector}.npz` in `data/reference/`. Existing files are skipped (resume support). Downloads are sequential to respect Zenodo rate limits.
@@ -453,18 +430,6 @@ Benchmarks the unsupervised clustering pipeline using a reference index as groun
 - `--output`: Path to save the benchmark report JSON. *Default: `data/reference/benchmark_report.json`*.
 - `--algorithm`: Clustering algorithm to use. *Default: `dpmm`*.
 
-### 18b. `benchmark-methods`
-Executes a comparative benchmark among different combinations of methods (e.g. DINOv2+DPMM, DINOv2+HDBSCAN, PCA+tSNE baseline) computing global metrics (ARI, AMI) against a reference ground truth.
-
-* **Under the Hood (Processing Details):**
-  1. Extracts embeddings and known classes from the `.npz` reference index.
-  2. Iteratively processes data using hardcoded configurations of various algorithms and reductive pipelines (e.g. PCA, t-SNE, UMAP).
-  3. Computes ARI and AMI metrics for each configuration.
-  4. Saves a summary report to facilitate methodological comparison.
-
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
-- `--output`: Destination JSON path. *Default: `data/reference/benchmark_methods.json`*.
-
 ---
 
 ## End-to-End Automation
@@ -506,69 +471,22 @@ Regenerates only the final JSONs of the full-analysis by aggregating information
 
 The Autopilot commands operate in a **completely separate** way from the standard pipeline (`data/runs/`). All outputs are written to `data/autopilot/`.
 
-### 20. `calibrate-threshold`
-Calibrates per-class cosine similarity thresholds from the in-domain reference index. For each class, samples up to 200 intra-class pairs, computes cosine similarity, and saves the N-th percentile as threshold.
+### 20. `calibrate`
+Calibrates anomaly thresholds (either `cosine` per-class similarity thresholds or `loglikelihood` DPMM anomaly threshold) from the in-domain reference index.
 
 * **Under the Hood (Processing Details):**
-  1. Loads the `.npz` reference index and maps vectors associated with each glitch class.
-  2. For each class:
-     - Computes cosine similarity for all possible pairs formed by samples belonging to that same class (up to a limit of 200 randomly sampled pairs).
-     - Sorts the obtained similarities and identifies the value corresponding to the requested percentile (e.g. the lowest 5%, set with `--percentile 5`).
-     - This intra-class cosine similarity value represents the minimum limit below which a sample, although close to that class, deviates too much from its standard variability and must be considered potentially extraneous.
-  3. Saves the resulting map of custom thresholds into `thresholds.json` to be used in the real-time Autopilot scanner.
+  - **Cosine**: Samples up to 200 intra-class pairs, computes cosine similarity, and saves the N-th percentile as the minimum limit.
+  - **Loglikelihood**: Executes PCA and UMAP, fits a Bayesian Gaussian Mixture (DPMM) with 25 components, computes log-likelihood for each sample, and sets threshold based on the requested percentile.
 
 ```bash
-python main.py calibrate-threshold --reference data/reference/indomain_O4a_H1.npz --percentile 5 --output data/autopilot/reference/thresholds.json
+python main.py calibrate --method cosine --reference data/reference/indomain_O4a_H1.npz --percentile 5
+python main.py calibrate --method loglikelihood --reference data/reference/indomain_O4a_H1.npz --percentile 5
 ```
 
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
-- `--percentile`: Percentile for intra-class threshold (lower = more restrictive). *Default: `5`*.
-- `--output`: Destination JSON path. *Default: `data/autopilot/reference/thresholds.json`*.
-
-Output format (`thresholds.json`):
-```json
-{
-  "metadata": {
-    "reference": "data/reference/indomain_O4a_H1.npz",
-    "percentile": 5,
-    "calibrated_at": "2026-05-16T12:00:00",
-    "n_classes": 22
-  },
-  "thresholds": {
-    "Blip": 0.847,
-    "Low_Frequency_Lines": 0.812
-  }
-}
-```
-
-### 21. `calibrate-loglikelihood`
-Calibrates the anomaly threshold for log-likelihood used by DPMM clustering, deriving it from the in-domain reference index. This ensures the threshold is consistent across different executions.
-
-* **Under the Hood (Processing Details):**
-  1. Loads the `.npz` reference index containing embeddings.
-  2. Executes PCA (50D) and UMAP (10D) using the same pipeline as clustering.
-  3. Fits a Bayesian Gaussian Mixture (DPMM) with 25 components.
-  4. Computes log-likelihood for each sample, and determines the threshold based on the provided percentile.
-  5. Saves the resulting threshold into a JSON file. This value should then be reported in `config.yaml` under `dpmm.anomaly_threshold`.
-
-```bash
-python main.py calibrate-loglikelihood --reference data/reference/indomain_O4a_H1.npz --percentile 5 --output data/autopilot/reference/loglikelihood_threshold.json
-```
-
-- `--reference`: Path to `.npz` reference index. *Default: `data/reference/indomain_O4a_H1.npz`*.
-- `--percentile`: Percentile for log-likelihood (lower = more restrictive). *Default: `5`*.
-- `--output`: Destination JSON path. *Default: `data/autopilot/reference/loglikelihood_threshold.json`*.
-
-Output format (`loglikelihood_threshold.json`):
-```json
-{
-  "threshold": -148.32,
-  "percentile": 5.0,
-  "reference": "data/reference/indomain_O4a_H1.npz",
-  "n_samples": 528,
-  "calibrated_at": "2026-05-23T23:10:00+00:00"
-}
-```
+- `--method` **(Required)**: Method to calibrate. Choices: `cosine`, `loglikelihood`.
+- `--reference`: Path to `.npz` reference index. *Default: auto-resolved*.
+- `--percentile`: Percentile threshold. *Default: 5*.
+- `--output`: Destination JSON path.
 
 ### 22. `scan-live`
 Autopilot scanner with producer-consumer architecture. Works in 4096s blocks where a producer downloads the 4096s HDF5 to `tmp/`, internally processes 128 segments of 32s each (`whiten -> bandpass -> q-transform`), and the consumer evaluates them by classifying each spectrogram as KNOWN/AMBIGUOUS/NOVEL using DINOv2 + per-class thresholds. Deletes temporary HDF5s and PNGs in real time except for NOVELs.

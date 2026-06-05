@@ -271,6 +271,7 @@ Glitches mapped to expected morphologies or continuous background populations.
 ## 🚨 3.6 Mock Data Challenge (MDC)
 
 > **Status:** Three MDC runs completed. All results verified against raw CSV files.
+> **Publication Note:** The methodology, formal results, and interpretations of this Mock Data Challenge are formally published in **[Cirfeta (2026b), arXiv:2606.06237](https://arxiv.org/abs/2606.06237)**.
 
 ### 3.6.1 Design
 
