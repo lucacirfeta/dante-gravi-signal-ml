@@ -46,15 +46,6 @@ scan_extended:
   hours_per_detector: 144
   detectors: ["H1", "L1"]
 
-# Blacklist of dead/hanging GWOSC segments
-# Each entry requires detector, gps_start, and gps_end
-blacklisted_segments:
-  - detector: "L1"
-    gps_start: 1369038848
-    gps_end: 1369042944
-  - detector: "H1"
-    gps_start: 1369038848
-    gps_end: 1369042944
 
 # Preprocessing parameters
 preprocessing:

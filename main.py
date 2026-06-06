@@ -500,20 +500,28 @@ def cmd_scan(args: argparse.Namespace) -> None:
     tracker.end(gps_end=end_gps, n_processed=processed_count, n_total=len(segments))
 
 
+def _gwosc_download_worker(detector: str, start: int, end: int, filepath: Path, cache_raw: bool):
+    """Standalone worker to fetch GWOSC data in a separate process to enforce hard timeouts."""
+    import warnings
+    warnings.filterwarnings("ignore")
+    from gwpy.timeseries import TimeSeries
+    ts = TimeSeries.fetch_open_data(
+        detector,
+        start,
+        end,
+        verbose=False,
+        cache=True,
+    )
+    if cache_raw:
+        ts.write(filepath, format="hdf5")
+
+
 def _fetch_single_block(detector: str, start: int, end: int, output_dir: Path, retry_delays: list[int], base_delay: float, cache_raw: bool) -> tuple[bool, str]:
     import time
     from gwpy.timeseries import TimeSeries
 
     filename = f"{detector}_{start}_{end}.hdf5"
     filepath = output_dir / filename
-
-    # === BLACKLIST GWOSC DEAD SEGMENTS ===
-    from src.utils import load_config
-    cfg = load_config()
-    blacklisted = cfg.get("blacklisted_segments", [])
-    for b in blacklisted:
-        if detector == b.get("detector") and start >= b.get("gps_start") and end <= b.get("gps_end"):
-            return False, f"Blacklisted GWOSC hanging segment: {filename}"
 
     if cache_raw and filepath.exists():
         return True, f"File {filename} already exists. Skipping."
@@ -523,25 +531,28 @@ def _fetch_single_block(detector: str, start: int, end: int, output_dir: Path, r
         try:
             while True:
                 time.sleep(base_delay)
-                try:
-                    ts = TimeSeries.fetch_open_data(
-                        detector,
-                        start,
-                        end,
-                        verbose=False,
-                        cache=True,
-                    )
-                    break
-                except Exception as inner_e:
-                    err_str = str(inner_e)
-                    if "429" in err_str or "Too Many Requests" in err_str:
-                        base_delay += 0.3
-                        time.sleep(1.0)
-                    else:
-                        raise inner_e
+                import multiprocessing
+                p = multiprocessing.Process(
+                    target=_gwosc_download_worker,
+                    args=(detector, start, end, filepath, cache_raw)
+                )
+                p.start()
+                # GWOSC 4096s block usually downloads in 20-40 seconds. 
+                # If the server is broken, it hangs forever. So timeout at 180s.
+                p.join(180)
+                if p.is_alive():
+                    p.terminate()
+                    p.join()
+                    # Aggiungiamo un ritardo in caso di timeout per non floodare
+                    base_delay += 0.3
+                    time.sleep(2.0)
+                    raise TimeoutError(f"GWOSC server hanging/timeout after 180s")
+                
+                if p.exitcode != 0:
+                    raise RuntimeError(f"Download worker failed with exit code {p.exitcode}")
+                
+                break # success
 
-            if cache_raw:
-                ts.write(filepath, format="hdf5")
             success = True
             return True, f"Saved {filename}" if cache_raw else f"Fetched {filename} (cache disabled)"
         except Exception as e:

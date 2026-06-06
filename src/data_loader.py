@@ -112,11 +112,6 @@ def fetch_strain_data(
                 except Exception:
                     pass
 
-    # === BLACKLIST GWOSC DEAD SEGMENTS ===
-    blacklisted = _CFG.get("blacklisted_segments", [])
-    for b in blacklisted:
-        if detector == b.get("detector") and gps_start >= b.get("gps_start") and gps_end <= b.get("gps_end"):
-            raise RuntimeError(f"Blacklisted GWOSC hanging segment: {detector} [{gps_start}, {gps_end}]")
 
     # === LOCAL ONLY MODE ===
     if local_only:
