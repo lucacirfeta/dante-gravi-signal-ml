@@ -95,8 +95,8 @@ def run_micro_mdc(
     for gtype in glitch_types:
         current_ks = k_map.get(gtype, k_values)
         for idx, amp in enumerate(amplitudes):
-            # 2. Sample size adattiva (n=50 per bassi SNR, n=20 per alti SNR)
-            current_n_inj = 50 if idx < 4 else 20
+            # Ripristinato n=20 fisso per ora per sfruttare la cache locale
+            current_n_inj = 20
             logger.info(f"Injecting {gtype} at amp={amp:.2e} (n={current_n_inj})")
             
             inj_starts = np.random.choice(available_starts, size=current_n_inj, replace=False)
