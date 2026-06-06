@@ -52,7 +52,7 @@ def run_micro_mdc(
         for seg_start in tqdm(null_starts, desc=f"Baseline pass k={k}"):
             seg_end = seg_start + segment_length
             try:
-                ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True)
+                ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True, local_only=True)
                 ts_white = whiten(ts_clean)
                 ts_bp = bandpass(ts_white)
                 
@@ -93,7 +93,7 @@ def run_micro_mdc(
                     
                     try:
                         # 1. Scarica strain reale
-                        ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True)
+                        ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True, local_only=True)
                         # 2. Inietta glitch sintetico
                         glitch = glitch_gen.generate(gtype, amp, duration=1.0)
                         ts_injected = injector.inject(ts_clean, glitch, t_inject)
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     
     # Default parameters based on user instructions if config missing
     glitch_types = mdc_cfg.get("glitch_types", ["AsymBlip", "SpiralBurst"])
-    n_injections = mdc_cfg.get("n_injections", 20)
+    n_injections = mdc_cfg.get("n_injections", 100)
     n_amplitudes = mdc_cfg.get("n_amplitudes", 8)
     amp_min = mdc_cfg.get("amplitude_min", 1e-22)
     amp_max = mdc_cfg.get("amplitude_max", 1e-21)
@@ -165,14 +165,9 @@ if __name__ == '__main__':
     k_values = patch_cfg.get("k_sweep", [15, 37, 68])
     device = patch_cfg.get("device", "cuda")
     
-    # Load reference index 
-    ref_emb, ref_labels, _ = _load_all_references()
-    logger.info(f"Loaded {len(ref_emb)} reference embeddings to use as patch-level proxies.")
-    
-    # Initialize the novelty detector
+    # Initialize the patch-level novelty detector
     detector = PatchLevelNoveltyDetector(
-        reference_embeddings=ref_emb,
-        reference_labels=ref_labels,
+        index_path="data/reference/patch_compressed_index.npz",
         device=device
     )
     

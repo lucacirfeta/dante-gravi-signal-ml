@@ -2469,6 +2469,21 @@ def _add_mode_argument(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def cmd_build_patch_reference(args: argparse.Namespace) -> None:
+    """Build a compressed patch-level reference index from an images directory."""
+    from src.index_builder import PatchIndexBuilder
+    
+    images_dir = Path(args.images_dir)
+    output_npz = Path(args.output)
+    
+    logger.info("=== BUILD PATCH REFERENCE ===")
+    logger.info("Images Dir: %s", images_dir)
+    logger.info("Output: %s", output_npz)
+    
+    builder = PatchIndexBuilder()
+    builder.build_index(images_dir, output_npz)
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -3084,6 +3099,25 @@ def build_parser() -> argparse.ArgumentParser:
              "(default: data/reference/trainingsetv1d1.tar.gz)"
     )
     p_build.set_defaults(func=cmd_build_reference)
+
+    # --- build-patch-reference (Phase 2) ---
+    p_patch_build = subparsers.add_parser(
+        "build-patch-reference",
+        help="Build a compressed reference index at patch-level.",
+    )
+    p_patch_build.add_argument(
+        "--images-dir",
+        type=str,
+        required=True,
+        help="Path to the directory containing reference images organized by class (e.g. data/reference/build/o3b_h1/).",
+    )
+    p_patch_build.add_argument(
+        "--output",
+        type=str,
+        default="data/reference/patch_compressed_index.npz",
+        help="Path to save the compressed .npz index.",
+    )
+    p_patch_build.set_defaults(func=cmd_build_patch_reference)
 
     # --- morphcheck (Phase 3.3 / 3.4) ---
     p_morph = subparsers.add_parser(

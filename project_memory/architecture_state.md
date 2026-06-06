@@ -21,6 +21,7 @@
 | `stability.py` | Bootstrap ARI su variazioni hyperparameter | clustering, sklearn | ✅ Stabile ✅ test_stability.py |
 | `timeslide.py` | H1-L1 coincidence p-value empirico (shift range ±5000s step 100s) | — | ✅ Stabile ✅ test_timeslide.py |
 | `full_analysis.py` | Orchestratore end-to-end: encode → cluster → morphcheck → ablation → stability → timeslide | Tutti i moduli | ✅ Stabile ✅ test_full_analysis.py |
+| `index_builder.py` | Costruisce patch-level dictionary con MiniBatchKMeans adattivo e Spherical K-Means approx | encoder | ✅ Nuovo (Fase 2) |
 | `indomain_reference_builder.py` | Scarica GPS O3b da Zenodo, processa con nostra pipeline → .npz | encoder, preprocessor | ✅ Stabile |
 | `reference_builder.py` | Gravity Spy tar.gz → indice .npz out-of-domain (legacy) | — | ✅ Stabile (sconsigliato per morphcheck) |
 | `gravity_spy_checker.py` | Query GPS-based su DB Gravity Spy per crosscheck | sqlalchemy | ✅ Stabile |
@@ -34,7 +35,7 @@
 | `wizard.py` | CLI wizard interattivo (avvio senza args) | — | ✅ Stabile |
 | `__init__.py` | Package init | — | ✅ Stabile |
 
-**Totale moduli in `src/`:** 25 file Python.
+**Totale moduli in `src/`:** 26 file Python.
 
 ---
 

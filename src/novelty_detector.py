@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class PatchLevelNoveltyDetector:
     """Detects anomalies using Patch-Level Multiple Instance Learning on DINOv2 tokens."""
     
-    def __init__(self, reference_embeddings: np.ndarray, reference_labels: np.ndarray = None, device='cuda'):
+    def __init__(self, index_path: str = "data/reference/patch_compressed_index.npz", device='cuda'):
         if device == 'cuda' and not torch.cuda.is_available():
             logger.warning("CUDA not available, falling back to CPU")
             device = 'cpu'
@@ -19,11 +19,19 @@ class PatchLevelNoveltyDetector:
         # Initialize the underlying encoder to get transforms and model
         self.encoder = DINOv2Encoder(device=device)
         
-        # Load reference CLS embeddings onto GPU for fast similarity search
+        # Load reference Patch embeddings onto GPU for fast similarity search
+        try:
+            data = np.load(index_path)
+            embeddings = data['embeddings']
+            self.reference_labels = data['labels']
+            logger.info(f"Loaded {len(embeddings)} patch centroids from {index_path}")
+        except Exception as e:
+            logger.error(f"Failed to load patch index from {index_path}: {e}")
+            raise
+            
         self.reference_embeddings = torch.tensor(
-            reference_embeddings, dtype=torch.float32, device=self.device
+            embeddings, dtype=torch.float32, device=self.device
         )
-        self.reference_labels = reference_labels
 
     def extract_patch_tokens(self, spectrogram_path) -> torch.Tensor:
         """Extracts and normalizes the 1369 patch tokens from a spectrogram.

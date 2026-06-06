@@ -90,6 +90,12 @@
 - **Stato:** ✅ Pubblicato su arXiv:2606.06237 come standard di calibrazione riproducibile per anomaly detection ViT-based.
 - **Fonte:** Paper arXiv:2606.06237, `README.md`, `project_overview.md`
 
+### D-12 — Reference Index a Patch-Level (Vector Quantization)
+- **Implementazione:** `src/index_builder.py` usa `MiniBatchKMeans` con K adattivo ($K = \min(64, \max(8, N//2))$) su `x_norm_patchtokens` (384-dim) normalizzati in L2 per approssimare la Spherical Cosine Distance.
+- **Motivazione:** Il pooling `[CLS]` globale causa signal dilution per glitch deboli (SpiralBurst). L'astrazione a livello di patch cattura le morfologie locali. La Vector Quantization previene l'esplosione dimensionale (KNN), comprimendo tutto il dizionario O3b in soli 281 centroidi prototipali pur mantenendo una copertura superiore all'80% della struttura (95° percentile error < 0.20).
+- **Stato:** ✅ Implementato (2026-06-06). Il vecchio indice globale `[CLS]` è obsoleto per anomaly detection locale.
+- **Fonte:** `src/index_builder.py`, Logs di run, `walkthrough.md`
+
 ---
 
 ## 2. Decisioni Aperte / Bug Noti

@@ -16,6 +16,11 @@ from gwpy.timeseries import TimeSeries
 
 from src.utils import gps_to_utc, load_config, setup_logger
 import time
+import socket
+
+# Imposta un timeout globale di 60 secondi per evitare che gwpy/requests
+# rimangano appesi all'infinito in caso di network stall dal server GWOSC
+socket.setdefaulttimeout(60.0)
 
 logger: logging.Logger = setup_logger(__name__)
 
@@ -44,6 +49,7 @@ def fetch_strain_data(
         gps_end: int,
         sample_rate: int = _SAMPLE_RATE,
         cache_raw: bool = False,
+        local_only: bool = False,
 ) -> TimeSeries:
     """Fetch open strain data from GWOSC for a given detector and time range.
 
@@ -106,7 +112,11 @@ def fetch_strain_data(
                 except Exception:
                     pass
 
-    max_retries = 1 # Ridotto a 1 per saltare velocemente i segmenti GWOSC inesistenti durante il re-run
+    # === LOCAL ONLY MODE ===
+    if local_only:
+        raise RuntimeError(f"Local cache miss per {detector} [{gps_start}, {gps_end}]. GWOSC download disabilitato per velocizzare la run.")
+
+    max_retries = 3
     base_delay = 5.0
     import random
 
