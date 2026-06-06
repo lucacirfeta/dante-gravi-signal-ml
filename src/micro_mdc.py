@@ -3,6 +3,7 @@ import argparse
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import scipy.stats as stats
 from tqdm import tqdm
 
 from src.injection import SyntheticGlitchGenerator, InjectionEngine, _load_all_references
@@ -40,11 +41,21 @@ def run_micro_mdc(
     
     results = []
     
-    for k in k_values:
-        logger.info(f"=== Starting Micro-MDC for k={k} ===")
+    # 1. Mappa K specifici per classe
+    k_map = {
+        'AsymBlip': [1, 3, 5, 10],
+        'SpiralBurst': [37, 68]
+    }
+    
+    # Raccogli tutti i k univoci per calcolare le baseline una sola volta
+    all_ks = set()
+    for gtype in glitch_types:
+        all_ks.update(k_map.get(gtype, k_values))
         
-        # --- Background Baseline Pass ---
-        # 1. Estrai 100 segmenti casuali di puro background (senza iniezioni)
+    baseline_cache = {}
+    
+    # --- Background Baseline Pass ---
+    for k in sorted(list(all_ks)):
         logger.info(f"Extracting 100 NULL segments for baseline (k={k})...")
         null_starts = np.random.choice(available_starts, size=min(100, len(available_starts)), replace=False)
         null_scores = []
@@ -59,8 +70,6 @@ def run_micro_mdc(
                 temp_path = spec_dir / f"null_{seg_start}.png"
                 generate_qtransform(ts_bp, save_path=temp_path)
                 
-                # 2. Passali in detector.classify()
-                # Use a dummy threshold for now since we just need the score
                 res = detector.classify(temp_path, k=k, threshold=0.0) 
                 null_scores.append(res['novelty_score'])
                 
@@ -70,71 +79,89 @@ def run_micro_mdc(
                 logger.warning(f"Failed baseline segment {seg_start}: {e}")
                 
         if not null_scores:
-            raise RuntimeError("Failed to compute baseline scores!")
+            raise RuntimeError(f"Failed to compute baseline scores for k={k}!")
             
-        # 3. Calcola mean e std
         mu_hybrid = np.mean(null_scores)
         sigma_hybrid = np.std(null_scores)
-        
-        # 4. dynamic_threshold
-        # As determined, anomalous patches have higher (less negative) scores.
         dynamic_threshold = mu_hybrid + (4 * sigma_hybrid)
-        logger.info(f"Baseline for k={k}: mu={mu_hybrid:.4f}, sigma={sigma_hybrid:.4f} -> dynamic_threshold={dynamic_threshold:.4f}")
+        logger.info(f"Baseline for k={k}: mu={mu_hybrid:.4f}, sigma={sigma_hybrid:.4f} -> threshold={dynamic_threshold:.4f}")
         
-        # --- Injection Pass ---
-        for gtype in glitch_types:
-            for amp in amplitudes:
-                logger.info(f"Injecting {gtype} at amp={amp:.2e}")
-                inj_starts = np.random.choice(available_starts, size=n_injections, replace=False)
+        baseline_cache[k] = {
+            'null_scores': null_scores,
+            'dynamic_threshold': dynamic_threshold
+        }
+        
+    # --- Injection Pass ---
+    for gtype in glitch_types:
+        current_ks = k_map.get(gtype, k_values)
+        for idx, amp in enumerate(amplitudes):
+            # 2. Sample size adattiva (n=50 per bassi SNR, n=20 per alti SNR)
+            current_n_inj = 50 if idx < 4 else 20
+            logger.info(f"Injecting {gtype} at amp={amp:.2e} (n={current_n_inj})")
+            
+            inj_starts = np.random.choice(available_starts, size=current_n_inj, replace=False)
+            
+            for seg_start in tqdm(inj_starts, desc=f"Injections {gtype} amp={amp:.1e}"):
+                seg_end = seg_start + segment_length
+                t_inject = seg_start + segment_length / 2.0
                 
-                for seg_start in tqdm(inj_starts, desc=f"Injections {gtype} amp={amp:.1e}"):
-                    seg_end = seg_start + segment_length
-                    t_inject = seg_start + segment_length / 2.0
+                try:
+                    ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True, local_only=True)
+                    glitch = glitch_gen.generate(gtype, amp, duration=1.0)
+                    ts_injected = injector.inject(ts_clean, glitch, t_inject)
+                    snr = injector.compute_snr(ts_clean, glitch)
                     
-                    try:
-                        # 1. Scarica strain reale
-                        ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True, local_only=True)
-                        # 2. Inietta glitch sintetico
-                        glitch = glitch_gen.generate(gtype, amp, duration=1.0)
-                        ts_injected = injector.inject(ts_clean, glitch, t_inject)
-                        snr = injector.compute_snr(ts_clean, glitch)
+                    ts_white = whiten(ts_injected)
+                    ts_bp = bandpass(ts_white)
+                    temp_path = spec_dir / f"inj_{gtype}_{seg_start}.png"
+                    generate_qtransform(ts_bp, save_path=temp_path)
+                    
+                    # Esegui il calcolo contemporaneamente per tutti i K della classe per abbattere i tempi I/O
+                    for k in current_ks:
+                        dyn_thresh = baseline_cache[k]['dynamic_threshold']
+                        res = detector.classify(temp_path, k=k, threshold=dyn_thresh)
                         
-                        # 3. Applica whitening + bandpass + Q-transform
-                        ts_white = whiten(ts_injected)
-                        ts_bp = bandpass(ts_white)
-                        temp_path = spec_dir / f"inj_{gtype}_{seg_start}.png"
-                        # 4. Salva spettrogramma temporaneo
-                        generate_qtransform(ts_bp, save_path=temp_path)
-                        
-                        # 5. detector.classify
-                        res = detector.classify(temp_path, k=k, threshold=dynamic_threshold)
-                        
-                        # 6. Registra i risultati
                         results.append({
                             "k": k,
                             "glitch_type": gtype,
                             "amplitude": amp,
                             "snr": snr,
-                            "dynamic_threshold": dynamic_threshold,
+                            "dynamic_threshold": dyn_thresh,
                             "novelty_score": res["novelty_score"],
                             "novelty_status": res["novelty_status"]
                         })
                         
-                        if temp_path.exists():
-                            temp_path.unlink()
-                    except Exception as e:
-                        logger.warning(f"Failed injection {gtype} at {seg_start}: {e}")
+                    if temp_path.exists():
+                        temp_path.unlink()
+                except Exception as e:
+                    logger.warning(f"Failed injection {gtype} at {seg_start}: {e}")
 
     df = pd.DataFrame(results)
+    
+    # 3. Integrazione Test KS (Kolmogorov-Smirnov)
+    df["ks_statistic"] = np.nan
+    df["ks_pvalue"] = np.nan
+    
+    # Raggruppa i risultati per calcolare il KS test cella per cella
+    for (k, gtype, amp), group in df.groupby(["k", "glitch_type", "amplitude"]):
+        bg_scores = baseline_cache[k]['null_scores']
+        inj_scores = group["novelty_score"].values
+        if len(inj_scores) > 0 and len(bg_scores) > 0:
+            ks_res = stats.ks_2samp(bg_scores, inj_scores, alternative='greater')
+            df.loc[group.index, "ks_statistic"] = ks_res.statistic
+            df.loc[group.index, "ks_pvalue"] = ks_res.pvalue
+            
     df.to_csv(output_dir / "micro_mdc_results.csv", index=False)
     
-    # Calculate summary statistics to evaluate recall
+    # Calcola il summary esteso con i risultati KS
     summary = df.groupby(["k", "glitch_type", "amplitude"]).apply(
         lambda x: pd.Series({
             "snr_mean": x["snr"].mean(),
             "recall": (x["novelty_status"] == "NOVEL").mean(),
             "n_novel": (x["novelty_status"] == "NOVEL").sum(),
-            "n_total": len(x)
+            "n_total": len(x),
+            "ks_statistic": x["ks_statistic"].iloc[0] if not x.empty else np.nan,
+            "ks_pvalue": x["ks_pvalue"].iloc[0] if not x.empty else np.nan
         })
     ).reset_index()
     summary.to_csv(output_dir / "micro_mdc_summary.csv", index=False)
