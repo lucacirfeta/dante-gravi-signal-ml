@@ -512,7 +512,7 @@ def _fetch_single_block(detector: str, start: int, end: int, output_dir: Path, r
     cfg = load_config()
     blacklisted = cfg.get("blacklisted_segments", [])
     for b in blacklisted:
-        if detector == b.get("detector") and start == b.get("gps_start") and end == b.get("gps_end"):
+        if detector == b.get("detector") and start >= b.get("gps_start") and end <= b.get("gps_end"):
             return False, f"Blacklisted GWOSC hanging segment: {filename}"
 
     if cache_raw and filepath.exists():

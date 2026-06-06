@@ -52,6 +52,9 @@ blacklisted_segments:
   - detector: "L1"
     gps_start: 1369038848
     gps_end: 1369042944
+  - detector: "H1"
+    gps_start: 1369038848
+    gps_end: 1369042944
 
 # Preprocessing parameters
 preprocessing:
