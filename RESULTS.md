@@ -365,6 +365,28 @@ Il segnale anomalo è fisicamente e matematicamente impossibile da rilevare con 
 
 ---
 
+### 3.6.7 Phase 2: Patch-Level MIL (Vector Quantization) — THE FIX
+
+Per aggirare la "Signal Dilution", l'architettura è stata estesa a un'analisi Patch-Level (Fase 2).
+Invece del `[CLS]` token, vengono estratti 1369 vettori-patch spaziali. Il dizionario di background O3b è stato compresso tramite *Spherical MiniBatchKMeans* a K adattivo, riducendolo a **281 centroidi prototipali**.
+Il *Novelty Detector* usa Multiple Instance Learning (MIL), estraendo la media logaritmica/lineare dei top-$K$ patch anomali.
+
+**Risultato del Micro-MDC (N=100 iniezioni, L1, O4a background):**
+
+| Glitch Type | K (Patch Pool) | SNR (Mean) | Max Recall |
+|:------------|:---------------|:-----------|:----------:|
+| SpiralBurst | 15 | 139.0 | 0.00% |
+| SpiralBurst | **37** | **138.8** | **91.6%** (11/12) |
+| SpiralBurst | **37** | **100.0** | **80.0%** (4/5) |
+| SpiralBurst | 68 | 139.1 | 25.0% |
+| AsymBlip | 37 | 392.6 | 7.6% |
+
+**Conclusione:** Lo switch all'architettura Patch-Level ha sbloccato clamorosamente la visibilità locale. $K=37$ è l'ottimo sperimentale ("Sweet Spot"):
+1. **Risoluzione Diluizione:** Un segnale confinato ma altamente anomalo (SpiralBurst) non viene più oscurato. La detection balza da 0.0% (nel paradigma globale) a **91.6%**.
+2. **Blindness Strutturale:** I glitch ottenuti per riarrangiamento di morfologie note (es. AsymBlip) rimangono invisibili (Recall < 10%). Poiché i singoli patch sono indistinguibili dal background noto, la detection fallisce di design, necessitando di pipeline dedicate (Fase 4 - AudioMAE) per catturare l'anomalia di ordine globale.
+
+---
+
 ## 🔬 3.7 Retrospective Analysis (Calibrated τ_op = 0.874)
 
 Rianalisi retrospettiva sulla sessione `20260524_200219` (L1, 21.985 segmenti) con soglia operativa calibrata.

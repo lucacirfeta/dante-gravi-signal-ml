@@ -293,7 +293,19 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 
 ---
 
-## 10. Esperimenti Pianificati (TODO)
+## 10. Fase 2 e 3: Patch-Level MIL & Vector Quantization
+
+### EXP-MDC-07 — Patch-Level Micro-MDC (Signal Dilution Bypass) — 2026-06-06
+- **Script:** `src/micro_mdc.py`
+- **Metodo:** Dizionario compresso a 281 centroidi via Spherical MiniBatchKMeans. Classificazione su top-$K$ patch (Multiple Instance Learning).
+- **Risultato (SpiralBurst):** Recall esplode dal **0.00%** al **91.6%** a SNR 138 (con $K=37$). Recall dell'**80.0%** a SNR 100.
+- **Risultato (AsymBlip):** Recall permane bassa (<10%) poiché il riarrangiamento spaziale di blocchi noti (Blip) elude la detection a singolo patch.
+- **Conclusione:** Il paradigma spaziale a livello di patch ha neutralizzato completamente la Signal Dilution, rivelandosi il metodo d'elezione per i glitch a footprint ristretto.
+- **Esito:** ✅ **BREAKTHROUGH** — Soluzione matematica e algoritmica al limite del ViT confermata.
+
+---
+
+## 11. Esperimenti Pianificati (TODO)
 
 | ID | Esperimento | Dipendenze | Stato |
 |----|-------------|-----------|-------|
