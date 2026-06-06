@@ -106,7 +106,7 @@ def fetch_strain_data(
                 except Exception:
                     pass
 
-    max_retries = 3
+    max_retries = 1 # Ridotto a 1 per saltare velocemente i segmenti GWOSC inesistenti durante il re-run
     base_delay = 5.0
     import random
 

@@ -266,11 +266,11 @@ Batch sizes are auto-tuned per device type (CUDA=64, MPS=32, CPU=16) and configu
 ### Configuration for Blackwell GPUs (RTX 5070)
 
 PyTorch stable does not yet include pre-compiled kernels for `sm_120` architecture.
-To unlock GPU acceleration on Blackwell hardware:
+To unlock GPU acceleration on Blackwell hardware (RTX 5070):
 
 ```bash
-pip uninstall torch torchvision -y
-pip install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu128
+pip uninstall torch torchvision torchaudio -y
+pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 ```
 
 The pipeline will automatically detect Blackwell GPUs and fall back to CPU with a

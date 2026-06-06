@@ -148,3 +148,22 @@ hardware:
   # Note: RTX 5070 (Blackwell sm_120) requires PyTorch nightly (cu128+).
   # If device is "auto", the system falls back to CPU when sm_120 kernels
   # are not available in the installed PyTorch build.
+
+# Patch-Level Novelty Detection
+patch_novelty:
+  enabled: true
+  k_baseline: 37
+  k_sweep: [15, 37, 68]
+  device: cuda
+
+# Micro-MDC Configuration
+micro_mdc:
+  glitch_types: [AsymBlip, SpiralBurst]
+  n_injections: 20
+  n_amplitudes: 8
+  amplitude_min: 1.0e-22
+  amplitude_max: 1.0e-21
+  session: '20260524'
+  detector: L1
+  seed: 42
+  output_dir: results/micro_mdc/
