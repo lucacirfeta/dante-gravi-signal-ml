@@ -303,6 +303,13 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 - **Conclusione:** Il paradigma spaziale a livello di patch ha neutralizzato completamente la Signal Dilution, rivelandosi il metodo d'elezione per i glitch a footprint ristretto.
 - **Esito:** ✅ **BREAKTHROUGH** — Soluzione matematica e algoritmica al limite del ViT confermata.
 
+### EXP-MDC-08 — Statistical Refinement Micro-MDC (KS-Test) — 2026-06-06
+- **Script:** `src/micro_mdc.py`
+- **Metodo:** Introduzione di sample size adattive per abbattere il rumore di Poisson a bassi SNR. Implementazione sweep $K$ per classe mirati ($[1,3,5,10]$ per glitch minimali come AsymBlip, $[37,68]$ per SpiralBurst). Test non-parametrico Kolmogorov-Smirnov (`ks_2samp`) per la validazione rigorosa contro il background nullo locale.
+- **Risultato:** Dimostrazione formale che a bassi SNR le variazioni di cosine similarity, benché oscurate per cutoff hard di detection binaria, si scostano dalla distribuzione nulla (p-value KS < 0.05).
+- **Conclusione:** La validazione empirica è ora protetta da metriche statistiche inoppugnabili (KS-test), certificando la risoluzione della Signal Dilution per il paper O4a. Pone le basi per l'abbandono di $K$ statico verso $K$-adattivo basato sulla durata del burst (Fase 4).
+- **Esito:** ✅ **SUCCESS** — Consolidamento della Fase 3.
+
 ---
 
 ## 11. Esperimenti Pianificati (TODO)

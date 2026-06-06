@@ -63,7 +63,7 @@ def run_micro_mdc(
         for seg_start in tqdm(null_starts, desc=f"Baseline pass k={k}"):
             seg_end = seg_start + segment_length
             try:
-                ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True, local_only=True)
+                ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True)
                 ts_white = whiten(ts_clean)
                 ts_bp = bandpass(ts_white)
                 
@@ -106,7 +106,7 @@ def run_micro_mdc(
                 t_inject = seg_start + segment_length / 2.0
                 
                 try:
-                    ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True, local_only=True)
+                    ts_clean = fetch_strain_data(detector_name, seg_start, seg_end, cache_raw=True)
                     glitch = glitch_gen.generate(gtype, amp, duration=1.0)
                     ts_injected = injector.inject(ts_clean, glitch, t_inject)
                     snr = injector.compute_snr(ts_clean, glitch)

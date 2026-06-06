@@ -507,6 +507,14 @@ def _fetch_single_block(detector: str, start: int, end: int, output_dir: Path, r
     filename = f"{detector}_{start}_{end}.hdf5"
     filepath = output_dir / filename
 
+    # === BLACKLIST GWOSC DEAD SEGMENTS ===
+    from src.utils import load_config
+    cfg = load_config()
+    blacklisted = cfg.get("blacklisted_segments", [])
+    for b in blacklisted:
+        if detector == b.get("detector") and start == b.get("gps_start") and end == b.get("gps_end"):
+            return False, f"Blacklisted GWOSC hanging segment: {filename}"
+
     if cache_raw and filepath.exists():
         return True, f"File {filename} already exists. Skipping."
 

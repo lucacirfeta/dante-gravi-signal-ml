@@ -112,12 +112,18 @@ def fetch_strain_data(
                 except Exception:
                     pass
 
+    # === BLACKLIST GWOSC DEAD SEGMENTS ===
+    blacklisted = _CFG.get("blacklisted_segments", [])
+    for b in blacklisted:
+        if detector == b.get("detector") and gps_start == b.get("gps_start") and gps_end == b.get("gps_end"):
+            raise RuntimeError(f"Blacklisted GWOSC hanging segment: {detector} [{gps_start}, {gps_end}]")
+
     # === LOCAL ONLY MODE ===
     if local_only:
         raise RuntimeError(f"Local cache miss per {detector} [{gps_start}, {gps_end}]. GWOSC download disabilitato per velocizzare la run.")
 
-    max_retries = 3
-    base_delay = 5.0
+    max_retries = 1
+    base_delay = 1.0
     import random
 
     for attempt in range(max_retries):
