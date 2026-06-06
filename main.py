@@ -702,6 +702,11 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
             current_start += W * segment_duration
             block_num += W
 
+            try:
+                astropy.utils.data.clear_download_cache()
+            except Exception:
+                pass
+
     print("Download completato.")
 
 
