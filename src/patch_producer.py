@@ -60,6 +60,7 @@ class PatchProducer:
         self.sample_rate = sample_rate
         self.workers = workers
         self.batch_size = batch_size
+        self.resume_gps = None
         
         if not self.data_dir.exists():
             raise FileNotFoundError(f"Data directory not found: {self.data_dir}")
@@ -93,6 +94,20 @@ class PatchProducer:
             img_batch = []
             
             for file_path in self.hdf5_files:
+                if self.resume_gps is not None:
+                    # Skip entire file if it ends before or exactly at resume_gps
+                    import os
+                    basename = os.path.basename(file_path).replace(".hdf5", "")
+                    parts = basename.split('_')
+                    if len(parts) >= 3:
+                        try:
+                            file_end = float(parts[-1])
+                            if file_end <= self.resume_gps:
+                                logger.debug(f"Skipping already processed file: {file_path}")
+                                continue
+                        except ValueError:
+                            pass
+                
                 logger.debug(f"Reading file: {file_path}")
                 try:
                     channel_name = f"{self.detector}:GWOSC-16KHZ_R1_STRAIN"
@@ -112,6 +127,10 @@ class PatchProducer:
                     
                     current_start = start_time
                     while current_start + self.segment_duration <= end_time:
+                        if self.resume_gps is not None and current_start <= self.resume_gps:
+                            current_start += self.segment_duration
+                            continue
+                            
                         current_end = current_start + self.segment_duration
                         
                         ts_seg = ts_full.crop(current_start, current_end)
