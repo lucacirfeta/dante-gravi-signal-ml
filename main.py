@@ -2495,6 +2495,116 @@ def cmd_build_patch_reference(args: argparse.Namespace) -> None:
     builder.build_index(images_dir, output_npz)
 
 
+def cmd_patch_production(args: argparse.Namespace) -> None:
+    import time
+    import random
+    from datetime import datetime, timezone
+    from src.patch_producer import PatchProducer
+    from src.patch_scorer import PatchScorer
+    from src.production_writer import ProductionWriter
+
+    data_dir = Path(args.data_dir)
+    detector = args.detector
+    sessions = args.sessions
+    output_dir = Path(args.output_dir)
+    resume = args.resume
+    k = args.k
+    fpr = args.fpr
+    n_background = args.n_background
+    seed = args.seed
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 1. Initialize PatchScorer
+    scorer = PatchScorer(
+        reference_index_path="data/reference/patch_compressed_index.npz",
+        k=k,
+        fpr=fpr,
+        n_background=n_background,
+        seed=seed
+    )
+    
+    if not sessions:
+        logger.warning("No sessions provided, processing all HDF5 in data_dir (not fully structured).")
+        sessions = ["ALL"]
+        
+    for session in sessions:
+        logger.info(f"=== Starting Patch-Level Production for Session {session} ===")
+        writer = ProductionWriter(output_dir, session, detector)
+        
+        session_data_dir = data_dir / session if session != "ALL" else data_dir
+        producer = PatchProducer(session_data_dir, detector)
+        
+        # Calibrate Threshold
+        logger.info("Calibrating threshold...")
+        bg_samples = []
+        rng = random.Random(seed)
+        shuffled_files = list(producer.hdf5_files)
+        rng.shuffle(shuffled_files)
+        
+        calib_producer = PatchProducer(session_data_dir, detector)
+        calib_producer.hdf5_files = shuffled_files
+        
+        for gps, spec in calib_producer:
+            bg_samples.append(spec)
+            if len(bg_samples) >= n_background:
+                break
+                
+        if len(bg_samples) == 0:
+            logger.warning(f"No valid segments found for session {session}. Skipping.")
+            continue
+            
+        threshold = scorer.calibrate_threshold(bg_samples)
+        
+        metadata = {
+            "session_id": session,
+            "detector": detector,
+            "threshold": threshold,
+            "k": k,
+            "reference_md5": scorer.reference_md5,
+            "n_background": len(bg_samples),
+            "timestamp_created": datetime.now(timezone.utc).isoformat()
+        }
+        
+        bg_scores_dummy = np.zeros(len(bg_samples), dtype=np.float32)
+        writer.verify_and_init(metadata, bg_scores_dummy, threshold)
+        
+        last_gps = writer.load_checkpoint() if resume else None
+        if last_gps:
+            logger.info(f"[RESUME] Riprendendo da GPS: {last_gps}")
+            
+        processed = 0
+        novel_count = 0
+        import torch
+        
+        for gps_start, spec in producer:
+            if last_gps and gps_start <= last_gps:
+                continue
+                
+            result_dict = scorer.score_spectrogram(spec, threshold)
+            processed += 1
+            
+            if result_dict["is_novel"]:
+                writer.append_novel(gps_start, result_dict)
+                novel_count += 1
+                
+            writer.save_checkpoint(gps_start)
+            
+            if processed % 500 == 0:
+                mem_mb = torch.cuda.memory_allocated() / (1024 * 1024)
+                rate = (novel_count / processed) * 100
+                logger.info(
+                    "[PROGRESS] Session: %s | Processati: %d | Novel: %d (%.2f%%) | GPU Mem: %.1f MB",
+                    session, processed, novel_count, rate, mem_mb
+                )
+            
+            if processed % 1000 == 0:
+                torch.cuda.empty_cache()
+                
+        logger.info(f"=== Session {session} Complete. Novel found: {novel_count} ===")
+
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -2543,6 +2653,22 @@ def build_parser() -> argparse.ArgumentParser:
     _add_mode_argument(p_injection)
     p_injection.set_defaults(func=cmd_run_injection)
 
+
+    # --- patch-production ---
+    p_patch_production = subparsers.add_parser(
+        "patch-production",
+        help="Run the Phase 4 Patch-Level Production pipeline on raw O4a data.",
+    )
+    p_patch_production.add_argument("--data-dir", type=str, required=True, help="Directory with raw .hdf5 files")
+    p_patch_production.add_argument("--detector", type=str, required=True, choices=["H1", "L1"])
+    p_patch_production.add_argument("--sessions", type=str, nargs="+", default=[], help="List of sessions to process")
+    p_patch_production.add_argument("--output-dir", type=str, default="data/production/")
+    p_patch_production.add_argument("--resume", action="store_true", help="Resume from last checkpoint")
+    p_patch_production.add_argument("--k", type=int, default=68)
+    p_patch_production.add_argument("--fpr", type=float, default=0.01)
+    p_patch_production.add_argument("--n-background", type=int, default=500)
+    p_patch_production.add_argument("--seed", type=int, default=42)
+    p_patch_production.set_defaults(func=cmd_patch_production)
 
     # --- scan ---
     p_scan = subparsers.add_parser(

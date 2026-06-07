@@ -250,6 +250,18 @@ When `--reference` is omitted in `morphcheck` or `full-analysis`, the pipeline *
    ```
    > The results will be saved in `data/autopilot/<SESSION_ID>/`. If the NOVEL count exceeds `--min-novel`, the command will suggest using the standard pipeline for clustering.
 
+4. **Patch-Level Production Pipeline (Phase 4):**
+   ```bash
+   python main.py patch-production \
+                  --data-dir data/raw/o4a/ \
+                  --detector L1 \
+                  --sessions 20260520 20260522 20260523 \
+                  --resume \
+                  --k 68 \
+                  --fpr 0.01
+   ```
+   > Scans raw HDF5 dataset using Patch-Level MIL vectors. Bypasses Signal Dilution Limits. Results are continuously written to SWMR-enabled HDF5 archives.
+
 All scientific results, validations, and benchmarks produced by the pipeline are available in **[RESULTS.md](RESULTS.md)**. Legacy data from Phase 1 is preserved in **[RESULTS_OLD.md](RESULTS_OLD.md)**.
 
 ---
