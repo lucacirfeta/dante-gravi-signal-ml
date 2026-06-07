@@ -13,9 +13,9 @@ class ProductionWriter:
     """Manages continuous, append-only persistence of novelties to HDF5."""
     
     def __init__(self, output_dir: str | Path, session_id: str, detector: str):
-        self.output_dir = Path(output_dir)
         self.session_id = session_id
         self.detector = detector
+        self.output_dir = Path(output_dir) / session_id
         
         # Subdirectories
         self.checkpoints_dir = self.output_dir / "checkpoints"

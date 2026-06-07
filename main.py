@@ -2525,8 +2525,18 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     )
     
     if not sessions:
-        logger.warning("No sessions provided, processing all HDF5 in data_dir (not fully structured).")
-        sessions = ["ALL"]
+        logger.info("Nessuna sessione fornita esplicitamente. Tento l'auto-discovery delle cartelle in data_dir...")
+        discovered_sessions = []
+        for path in data_dir.iterdir():
+            if path.is_dir() and list(path.rglob(f"*{detector}*.hdf5")):
+                discovered_sessions.append(path.name)
+                
+        if discovered_sessions:
+            sessions = sorted(discovered_sessions)
+            logger.info(f"Trovate {len(sessions)} sessioni. Ordine cronologico: {sessions}")
+        else:
+            logger.warning("Nessuna sottocartella valida trovata. Processo data_dir come sessione unica ('ALL').")
+            sessions = ["ALL"]
         
     for session in sessions:
         logger.info(f"=== Starting Patch-Level Production for Session {session} ===")
@@ -2659,7 +2669,7 @@ def build_parser() -> argparse.ArgumentParser:
         "patch-production",
         help="Run the Phase 4 Patch-Level Production pipeline on raw O4a data.",
     )
-    p_patch_production.add_argument("--data-dir", type=str, required=True, help="Directory with raw .hdf5 files")
+    p_patch_production.add_argument("--data-dir", type=str, default="data/raw/o4a/", help="Directory with raw .hdf5 files")
     p_patch_production.add_argument("--detector", type=str, required=True, choices=["H1", "L1"])
     p_patch_production.add_argument("--sessions", type=str, nargs="+", default=[], help="List of sessions to process")
     p_patch_production.add_argument("--output-dir", type=str, default="data/production/")
