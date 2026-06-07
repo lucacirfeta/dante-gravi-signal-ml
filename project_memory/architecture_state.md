@@ -22,6 +22,7 @@
 | `timeslide.py` | H1-L1 coincidence p-value empirico (shift range ±5000s step 100s) | — | ✅ Stabile ✅ test_timeslide.py |
 | `full_analysis.py` | Orchestratore end-to-end: encode → cluster → morphcheck → ablation → stability → timeslide | Tutti i moduli | ✅ Stabile ✅ test_full_analysis.py |
 | `index_builder.py` | Costruisce patch-level dictionary con MiniBatchKMeans adattivo e Spherical K-Means approx | encoder | ✅ Nuovo (Fase 2) |
+| `saliency_map.py` | Genera Topological Saliency Map spaziali (DINOv2 patch similarity vs background locale) | encoder, numpy | ✅ Nuovo (Fase 3) |
 | `indomain_reference_builder.py` | Scarica GPS O3b da Zenodo, processa con nostra pipeline → .npz | encoder, preprocessor | ✅ Stabile |
 | `reference_builder.py` | Gravity Spy tar.gz → indice .npz out-of-domain (legacy) | — | ✅ Stabile (sconsigliato per morphcheck) |
 | `gravity_spy_checker.py` | Query GPS-based su DB Gravity Spy per crosscheck | sqlalchemy | ✅ Stabile |

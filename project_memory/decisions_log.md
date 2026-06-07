@@ -96,6 +96,12 @@
 - **Stato:** ✅ Implementato (2026-06-06). Il vecchio indice globale `[CLS]` è obsoleto per anomaly detection locale.
 - **Fonte:** `src/index_builder.py`, Logs di run, `walkthrough.md`
 
+### D-13 — Topological Saliency Decoupling (Spatial Background Matrix)
+- **Metodo:** `src/saliency_map.py` disaccoppia la generazione della Topologia Spaziale dal Vector Quantized Index (VQ) globale, calcolando l'anomalia visiva *esclusivamente* come distanza coseno contro una Matrice di Mediana Spaziale (1369, 384) precalcolata da segmenti NULL.
+- **Motivazione statistica e fisica:** La Q-Transform non è shift-invariant (il rumore varia con la frequenza e ci sono ringing artifacts ai bordi della griglia ViT 37x37). Un indice VQ globalmente clusterizzato penalizza geometricamente i patch periferici, creando massicci falsi positivi spaziali. Inoltre, le similarità di DINOv2 producono fluttuazioni naturali (max/mean ratio > 5.5 per segmenti di solo rumore). Ciò certifica che la Saliency Map NON può essere usata come rilevatore (discriminatore) sul singolo frame, ma unicamente come visualizzatore morfologico *post-hoc*, ri-confermando che il Global Detection vero e proprio deve poggiare sulla distribuzione GEV e il dizionario VQ (D-11).
+- **Stato:** ✅ Implementato (2026-06-07). Architettura blindata a due layer: Trigger GEV (su VQ index) → Localizzazione (su Spatial Median Matrix).
+- **Fonte:** `src/saliency_map.py`, `scripts/run_saliency_demo.py`, `walkthrough.md`
+
 ---
 
 ## 2. Decisioni Aperte / Bug Noti
