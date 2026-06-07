@@ -2669,8 +2669,6 @@ def cmd_production_cluster(args):
     
     clusterer = H5Clusterer(h5_path=input_file, output_dir=output_dir)
     clusterer.run_clustering()
-
-
 def cmd_patch_analysis(args):
     """Orchestrates the full Phase 4 & 5 pipeline."""
     logger.info("=== Starting Automated Patch-Analysis Pipeline ===")

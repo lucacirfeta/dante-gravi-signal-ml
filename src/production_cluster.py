@@ -109,28 +109,46 @@ class H5Clusterer:
         plt.figure(figsize=(12, 10))
         sns.set_theme(style="darkgrid")
         
-        # We can size the points by novelty score to emphasize higher anomalies
         # Normalize scores for point sizes (min size 20, max 200)
         norm_scores = (scores - scores.min()) / (scores.max() - scores.min() + 1e-9)
         sizes = 20 + 180 * norm_scores
         
+        # Convert labels to strings so they are treated strictly as categorical
+        str_labels = [f"C{lbl}" for lbl in labels]
+        
+        # Determine number of clusters for palette
+        n_clusters = len(np.unique(labels))
+        palette_name = "tab20" if n_clusters <= 20 else "husl"
+        
         scatter = sns.scatterplot(
             x=coords[:, 0], 
             y=coords[:, 1],
-            hue=labels,
-            palette="deep",
+            hue=str_labels,
+            palette=palette_name,
             size=sizes,
             sizes=(20, 200),
-            alpha=0.8,
-            legend="full"
+            alpha=0.8
         )
         
-        plt.title(f"UMAP 2D Projection of Novelties (n={len(labels)})", fontsize=16)
+        plt.title(f"UMAP 2D Projection of Novelties (n={len(labels)}, clusters={n_clusters})", fontsize=16)
         plt.xlabel("UMAP 1")
         plt.ylabel("UMAP 2")
         
-        # Move legend outside
-        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+        # Fix the legend: remove the 'size' numeric values and use multiple columns if too long
+        handles, leg_labels = scatter.get_legend_handles_labels()
+        
+        # Filter out the size markers (which are just floats) and keep only "C..." labels
+        clean_handles = []
+        clean_labels = []
+        for h, l in zip(handles, leg_labels):
+            if str(l).startswith("C"):
+                clean_handles.append(h)
+                clean_labels.append(l)
+                
+        # Split into 2 columns if there are more than 15 clusters
+        ncol = 2 if len(clean_labels) > 15 else 1
+        
+        plt.legend(clean_handles, clean_labels, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, ncol=ncol, title="Clusters")
         
         plot_path = self.output_dir / f"umap_{self.h5_path.stem}.png"
         plt.tight_layout()
