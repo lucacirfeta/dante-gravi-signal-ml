@@ -52,8 +52,8 @@ class ProductionWriter:
         """Loads the threshold from existing HDF5 file if present."""
         if self.hdf5_path.exists():
             with h5py.File(self.hdf5_path, 'r') as f:
-                if "background" in f and "threshold" in f["background"].attrs:
-                    return float(f["background"].attrs["threshold"])
+                if "background_sample" in f and "threshold" in f["background_sample"].attrs:
+                    return float(f["background_sample"].attrs["threshold"])
         return None
 
     def verify_and_init(self, metadata: dict, background_scores: np.ndarray, threshold: float):

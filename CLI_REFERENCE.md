@@ -6,6 +6,8 @@ This guide provides a complete and updated list of all available commands in the
 
 > **🪄 Interactive Wizard:** A step-by-step text wizard is available in the CLI. To launch it, simply run `python main.py` without any parameters. The wizard automatically detects all commands (including any future ones) and guides you through parameter input with smart suggestions (Smart Defaults).
 
+> **📊 Argument Traceability:** All CLI commands automatically print a formatted configuration table displaying the parsed arguments (both user-provided and default values) before execution. This ensures complete traceability of hyper-parameters (e.g., `batch-size`, `k`, `fpr`) in both console output and session `.log` files.
+
 ---
 
 ## Quick Reference (Most Used Commands)

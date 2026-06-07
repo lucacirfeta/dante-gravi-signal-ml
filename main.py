@@ -3650,86 +3650,58 @@ def main() -> None:
         
     args = parser.parse_args()
 
-    # If the subcommand supports session-id, wrap execution in session-specific logging
-    if hasattr(args, "session_id"):
-        # Resolve concrete session ID and run in place so subcommands align
-        session_id = _resolve_session_id(args)
-        args.session_id = session_id
-        run = _resolve_run(args)
-
-        # Setup session logging
-        from src.utils import set_session_log_file, close_session_log
-        log_dir = session_path(run, session_id) / "logs"
-        log_file = log_dir / "session.log"
-        set_session_log_file(log_file)
-
-        # Capture command name and arguments
+    if hasattr(args, "func"):
         cmd_name = sys.argv[1] if len(sys.argv) > 1 else "unknown"
-        # Filter out big or unpicklable command args to keep log tidy
         cmd_args = {k: v for k, v in vars(args).items() if k != "func"}
+        
+        def print_config(extra_kwargs=None):
+            kwargs = extra_kwargs or {}
+            logger.info(f"=== STARTING COMMAND: {cmd_name.upper()} ===", **kwargs)
+            logger.info("Configuration Parameters:", **kwargs)
+            for key, value in cmd_args.items():
+                logger.info(f"  --{key.replace('_', '-')}: {value}", **kwargs)
+            logger.info("=" * 45, **kwargs)
 
-        logger.info(
-            "=== COMMAND START: %s === (Args: %s)",
-            cmd_name,
-            cmd_args,
-            extra={"session_key": True}
-        )
-
-        start_time = datetime.now()
-        try:
+        if hasattr(args, "session_id"):
+            session_id = _resolve_session_id(args)
+            args.session_id = session_id
+            run = _resolve_run(args)
+            
+            from src.utils import set_session_log_file, close_session_log
+            log_dir = session_path(run, session_id) / "logs"
+            log_file = log_dir / "session.log"
+            set_session_log_file(log_file)
+            
+            extra = {"extra": {"session_key": True}}
+            print_config(extra)
+            
+            start_time = datetime.now()
+            try:
+                args.func(args)
+                duration = (datetime.now() - start_time).total_seconds()
+                logger.info("=== COMMAND END: %s (SUCCESS) === (Duration: %.2fs)", cmd_name, duration, **extra)
+            except SystemExit as se:
+                duration = (datetime.now() - start_time).total_seconds()
+                status = "SUCCESS" if se.code in (0, None) else f"FAILED (Exit Code: {se.code})"
+                if se.code in (0, None):
+                    logger.info("=== COMMAND END: %s (%s) === (Duration: %.2fs)", cmd_name, status, duration, **extra)
+                else:
+                    logger.error("=== COMMAND END: %s (%s) === (Duration: %.2fs)", cmd_name, status, duration, **extra)
+                raise se
+            except KeyboardInterrupt as ki:
+                duration = (datetime.now() - start_time).total_seconds()
+                logger.warning("=== COMMAND END: %s (INTERRUPTED) === (Duration: %.2fs)", cmd_name, duration, **extra)
+                raise ki
+            except BaseException as e:
+                duration = (datetime.now() - start_time).total_seconds()
+                logger.error("=== COMMAND END: %s (FAILED) === (Duration: %.2fs, Error: %s)", cmd_name, duration, str(e), exc_info=True, **extra)
+                raise e
+            finally:
+                close_session_log()
+        else:
+            # For global commands without a session
+            print_config()
             args.func(args)
-            duration = (datetime.now() - start_time).total_seconds()
-            logger.info(
-                "=== COMMAND END: %s (SUCCESS) === (Duration: %.2fs)",
-                cmd_name,
-                duration,
-                extra={"session_key": True}
-            )
-        except SystemExit as se:
-            duration = (datetime.now() - start_time).total_seconds()
-            status = "SUCCESS" if se.code == 0 or se.code is None else f"FAILED (Exit Code: {se.code})"
-            if se.code == 0 or se.code is None:
-                logger.info(
-                    "=== COMMAND END: %s (%s) === (Duration: %.2fs)",
-                    cmd_name,
-                    status,
-                    duration,
-                    extra={"session_key": True}
-                )
-            else:
-                logger.error(
-                    "=== COMMAND END: %s (%s) === (Duration: %.2fs)",
-                    cmd_name,
-                    status,
-                    duration,
-                    extra={"session_key": True}
-                )
-            raise se
-        except KeyboardInterrupt as ki:
-            duration = (datetime.now() - start_time).total_seconds()
-            logger.warning(
-                "=== COMMAND END: %s (INTERRUPTED) === (Duration: %.2fs)",
-                cmd_name,
-                duration,
-                extra={"session_key": True}
-            )
-            raise ki
-        except BaseException as e:
-            duration = (datetime.now() - start_time).total_seconds()
-            logger.error(
-                "=== COMMAND END: %s (FAILED) === (Duration: %.2fs, Error: %s)",
-                cmd_name,
-                duration,
-                str(e),
-                extra={"session_key": True},
-                exc_info=True
-            )
-            raise e
-        finally:
-            close_session_log()
-    else:
-        # Standard execution for commands without session context
-        args.func(args)
 
 
 if __name__ == "__main__":
