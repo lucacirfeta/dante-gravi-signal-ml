@@ -83,8 +83,10 @@ class PatchProducer:
         skipped_short = 0
         
         import concurrent.futures
+        import multiprocessing as mp
         
-        with concurrent.futures.ProcessPoolExecutor(max_workers=self.workers) as executor:
+        ctx = mp.get_context('spawn')
+        with concurrent.futures.ProcessPoolExecutor(max_workers=self.workers, mp_context=ctx) as executor:
             futures = []
             
             gps_batch = []
