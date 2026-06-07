@@ -502,18 +502,24 @@ def cmd_scan(args: argparse.Namespace) -> None:
 
 def _gwosc_download_worker(detector: str, start: int, end: int, filepath: Path, cache_raw: bool):
     """Standalone worker to fetch GWOSC data in a separate process to enforce hard timeouts."""
+    import os
+    import tempfile
     import warnings
     warnings.filterwarnings("ignore")
-    from gwpy.timeseries import TimeSeries
-    ts = TimeSeries.fetch_open_data(
-        detector,
-        start,
-        end,
-        verbose=False,
-        cache=True,
-    )
-    if cache_raw:
-        ts.write(filepath, format="hdf5")
+    
+    # Isola completamente la cache di astropy per evitare OSError: file exist in multiprocessing
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.environ["ASTROPY_CACHE_DIR"] = tmpdir
+        from gwpy.timeseries import TimeSeries
+        ts = TimeSeries.fetch_open_data(
+            detector,
+            start,
+            end,
+            verbose=False,
+            cache=False,
+        )
+        if cache_raw:
+            ts.write(filepath, format="hdf5", overwrite=True)
 
 
 def _fetch_single_block(detector: str, start: int, end: int, output_dir: Path, retry_delays: list[int], base_delay: float, cache_raw: bool) -> tuple[bool, str]:
