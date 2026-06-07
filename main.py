@@ -583,6 +583,7 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     max_iterations = getattr(args, "max_iterations", 100)
     workers = args.workers
     cache_raw = True
+    resume = getattr(args, "resume", True)
 
     detectors = args.detector if args.detector else ["H1", "L1"]
 
@@ -592,119 +593,102 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     if workers > 8:
         logger.error("Errore: il limite massimo è di 4 thread per detector (--workers 8).")
         sys.exit(1)
-    W = max(1, workers // len(detectors))
 
-    current_folder_start = getattr(args, "start_gps", None)
-    current_gps_start = None
+    run_start = getattr(args, "start_gps", None)
+    if run_start is None:
+        run_start = _run_start_gps(run, cfg)
+
+    aligned_start = (run_start // 4096) * 4096
+    if aligned_start != run_start:
+        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", run_start, aligned_start)
+        run_start = aligned_start
+
+    run_end = cfg.get(f"{run.lower()}_window", {}).get("gps_end", 9999999999)
+    folder_size = int(hours * 3600)
+    current_folder_start = run_start
 
     if continue_download:
-        # --continue: trova l'ultima cartella GPS in base_dir
-        gps_folders = []
-        for d in base_dir.iterdir():
-            if d.is_dir():
-                try:
-                    gps_folders.append(int(d.name))
-                except ValueError:
-                    continue
+        logger.info("Ricerca prima cartella incompleta a partire da %d...", current_folder_start)
+        while current_folder_start < run_end:
+            folder_path = base_dir / str(current_folder_start)
+            expected_end = current_folder_start + folder_size
+            if expected_end > run_end:
+                expected_end = run_end
+                
+            missing_files = False
+            if not folder_path.exists():
+                missing_files = True
+            else:
+                for det in detectors:
+                    s = current_folder_start
+                    while s < expected_end:
+                        e = min(s + segment_duration, expected_end)
+                        if not (folder_path / f"{det}_{s}_{e}.hdf5").exists():
+                            missing_files = True
+                            break
+                        s += segment_duration
+                    if missing_files:
+                        break
+            
+            if missing_files:
+                logger.info("Trovata cartella da completare: %d", current_folder_start)
+                break
+            
+            current_folder_start += folder_size
 
-        if not gps_folders:
-            logger.error("--continue: nessuna cartella GPS trovata in %s", base_dir)
-            sys.exit(1)
-
-        last_folder_gps = max(gps_folders)
-        last_folder = base_dir / str(last_folder_gps)
-
-        # Trova il max GPS end per ciascun detector nell'ultima cartella
-        max_ends = []
-        for det in detectors:
-            pattern = re.compile(rf"^{det}_(\d+)_(\d+)\.hdf5$")
-            max_end_gps = 0
-            for f in last_folder.glob("*.hdf5"):
-                m = pattern.match(f.name)
-                if m:
-                    file_end = int(m.group(2))
-                    if file_end > max_end_gps:
-                        max_end_gps = file_end
-            max_ends.append(max_end_gps)
-
-        current_folder_start = last_folder_gps
-        if all(m > 0 for m in max_ends) and len(max_ends) > 0:
-            current_gps_start = min(max_ends)
-        elif len(max_ends) == 1 and max_ends[0] > 0:
-            current_gps_start = max_ends[0]
-        else:
-            current_gps_start = current_folder_start
-
-    if current_folder_start is None:
-        # Fresh download from run start
-        current_folder_start = _run_start_gps(run, cfg)
-        logger.info("Nuovo download dall'inizio della run: GPS %d", current_folder_start)
-
-    aligned_start = (current_folder_start // 4096) * 4096
-    if aligned_start != current_folder_start:
-        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", current_folder_start, aligned_start)
-        current_folder_start = aligned_start
-
-    if current_gps_start is None:
-        current_gps_start = current_folder_start
-    else:
-        aligned_gps_start = (current_gps_start // 4096) * 4096
-        if aligned_gps_start != current_gps_start:
-            current_gps_start = aligned_gps_start
-
-    retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
-    base_delay = 0.3
+    if current_folder_start >= run_end:
+        logger.info("Tutti i dati fino a %d sono già stati scaricati o non ci sono più dati da scaricare.", run_end)
+        print("Download completato.")
+        return
 
     iteration = 0
-    while True:
+    while current_folder_start < run_end:
         if iteration >= max_iterations:
             logger.info("Raggiunto il limite massimo di iterazioni (%d). Termino il loop.", max_iterations)
             break
-
-        expected_end_gps = current_folder_start + int(hours * 3600)
-
-        # Se il blocco per questa cartella è già completato, passiamo al blocco successivo
-        if current_gps_start >= expected_end_gps:
-            current_folder_start = expected_end_gps
-            current_gps_start = expected_end_gps
-            expected_end_gps = current_folder_start + int(hours * 3600)
+            
+        expected_end_gps = current_folder_start + folder_size
+        if expected_end_gps > run_end:
+            expected_end_gps = run_end
 
         output_dir = base_dir / str(current_folder_start)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        end_gps = expected_end_gps
-
         logger.info("=== FETCH-RAW: %s [%s] (Loop %d) ===", detectors, run, iteration + 1)
-        logger.info("Interval: %d to %d (%.1f ore nominali per cartella)", current_gps_start, end_gps, hours)
+        logger.info("Interval: %d to %d", current_folder_start, expected_end_gps)
         logger.info("Output dir: %s", output_dir)
         if not cache_raw:
             logger.info("Cache raw disabled: data will be fetched but not saved.")
 
-        total_blocks = (end_gps - current_gps_start + segment_duration - 1) // segment_duration
-        if total_blocks <= 0:
-            logger.info("No data to download for the requested interval.")
-            if not loop_download:
-                break
-            else:
-                current_folder_start = expected_end_gps
-                current_gps_start = expected_end_gps
-                iteration += 1
-                continue
+        # Generiamo i task controllando l'esistenza dei file prima di sottomettere al worker.
+        tasks = []
+        for det in detectors:
+            s = current_folder_start
+            while s < expected_end_gps:
+                e = min(s + segment_duration, expected_end_gps)
+                filepath = output_dir / f"{det}_{s}_{e}.hdf5"
+                if resume and cache_raw and filepath.exists():
+                    pass
+                else:
+                    tasks.append((det, s, e, filepath))
+                s += segment_duration
 
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            block_num = 1
-            while current_gps_start < end_gps:
+        if not tasks:
+            logger.info("Nessun blocco mancante in questa cartella. (Già completata)")
+        else:
+            logger.info("Trovati %d blocchi mancanti da scaricare per la cartella %d", len(tasks), current_folder_start)
+            
+            retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
+            base_delay = 0.3
+
+            # Usiamo ThreadPoolExecutor
+            # Sottomettiamo tutti i task all'executor, lui eseguirà 'workers' thread in parallelo.
+            with ThreadPoolExecutor(max_workers=workers) as executor:
                 futures = []
-                # Prepare batch of size W for each detector
-                for det in detectors:
-                    for i in range(W):
-                        s = current_gps_start + i * segment_duration
-                        e = min(s + segment_duration, end_gps)
-                        if s >= end_gps:
-                            break
-                        futures.append(executor.submit(_fetch_single_block, det, s, e, output_dir, retry_delays, base_delay, cache_raw))
+                for det, s, e, filepath in tasks:
+                    futures.append(executor.submit(_fetch_single_block, det, s, e, output_dir, retry_delays, base_delay, cache_raw))
                 
-                # Wait for all to finish
+                # Attendiamo la fine di tutti i task della cartella
                 wait(futures)
                 
                 # Log results
@@ -715,9 +699,7 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
                     else:
                         logger.error(msg)
                 
-                current_gps_start += W * segment_duration
-                block_num += W
-
+                # Pulizia cache per prevenire errori
                 try:
                     import astropy
                     astropy.utils.data.clear_download_cache()
@@ -727,9 +709,7 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
         if not loop_download:
             break
             
-        # Preparazione per l'iterazione successiva
-        current_folder_start = expected_end_gps
-        current_gps_start = expected_end_gps
+        current_folder_start += folder_size
         iteration += 1
 
     print("Download completato.")

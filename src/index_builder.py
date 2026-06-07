@@ -47,7 +47,7 @@ class PatchIndexBuilder:
 
         for class_dir in sorted(class_dirs):
             class_name = class_dir.name
-            image_paths = list(class_dir.glob("*.png"))
+            image_paths = sorted(list(class_dir.glob("*.png")))
             if not image_paths:
                 continue
                 

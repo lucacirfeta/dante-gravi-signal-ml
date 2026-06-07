@@ -8,6 +8,8 @@ from scipy.stats import genextreme
 import hashlib
 import os
 import stat
+import random
+import torch
 from tqdm import tqdm
 
 from src.injection import SyntheticGlitchGenerator, InjectionEngine, _load_all_references
@@ -31,19 +33,29 @@ def run_micro_mdc(
 ) -> pd.DataFrame:
     """Executes the micro-MDC loop to evaluate the patch-level MIL novelty detector."""
     np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    
+    EXPECTED_MD5 = "1080afa809964011e398c44fb24b73c6"
     
     index_path = "data/reference/patch_compressed_index.npz"
     if os.path.exists(index_path):
         with open(index_path, 'rb') as f:
             md5_hash = hashlib.md5(f.read()).hexdigest()
         logger.info(f"Reference Index MD5 Checksum: {md5_hash}")
+        
+        if md5_hash != EXPECTED_MD5:
+            raise RuntimeError(f"Reference index non riproducibile o sovrascritto. Expected: {EXPECTED_MD5}, Got: {md5_hash}")
+            
         # Forza in sola lettura per proteggere il reference index
         os.chmod(index_path, stat.S_IREAD)
         logger.info(f"Locked {index_path} to read-only mode.")
     else:
         logger.warning(f"Reference index {index_path} not found!")
 
-    output_dir = Path("results/micro_mdc")
+    output_dir = Path("results/micro_mdc/final_run")
     output_dir.mkdir(parents=True, exist_ok=True)
     
     spec_dir = output_dir / "temp_spectrograms"
@@ -58,9 +70,9 @@ def run_micro_mdc(
     results = []
     
     # 1. Mappa K specifici per classe
+    # Removed internal k_map to use exact k_values passed by the user
     k_map = {
-        'AsymBlip': [1, 3, 5, 10],
-        'SpiralBurst': [37, 68]
+        'SpiralBurst': [68]
     }
     
     # Raccogli tutti i k univoci per calcolare le baseline una sola volta
@@ -97,21 +109,31 @@ def run_micro_mdc(
         if not null_scores:
             raise RuntimeError(f"Failed to compute baseline scores for k={k}!")
             
-        c, loc, scale = genextreme.fit(null_scores)
-        dynamic_threshold = genextreme.ppf(0.99, c, loc, scale)
-        logger.info(f"GEV Fit parameters: c={c:.4f}, loc={loc:.4f}, scale={scale:.4f} -> Threshold (FPR 1%): {dynamic_threshold:.4f}")
+        background_scores = np.array(null_scores)
+        bg_mean = float(np.mean(background_scores))
+        bg_std = float(np.std(background_scores))
+        dynamic_threshold = float(np.percentile(background_scores, 99.0))
+        
+        logger.info(f"[RUN CONFIG] reference MD5: {EXPECTED_MD5}")
+        logger.info(f"[RUN CONFIG] background n_samples: {len(background_scores)}")
+        logger.info(f"[RUN CONFIG] threshold method: percentile_99")
+        logger.info(f"[RUN CONFIG] dynamic_threshold: {dynamic_threshold:.6f}")
+        logger.info(f"[RUN CONFIG] background_score mean: {bg_mean:.6f}")
+        logger.info(f"[RUN CONFIG] background_score std: {bg_std:.6f}")
+        logger.info(f"[RUN CONFIG] background_score p99: {dynamic_threshold:.6f}")
         
         baseline_cache[k] = {
             'null_scores': null_scores,
-            'dynamic_threshold': dynamic_threshold
+            'dynamic_threshold': dynamic_threshold,
+            'bg_mean': bg_mean,
+            'bg_p99': dynamic_threshold
         }
         
     # --- Injection Pass ---
     for gtype in glitch_types:
         current_ks = k_map.get(gtype, k_values)
         for idx, amp in enumerate(amplitudes):
-            # Ripristinato n=20 fisso per ora per sfruttare la cache locale
-            current_n_inj = 20
+            current_n_inj = n_injections
             logger.info(f"Injecting {gtype} at amp={amp:.2e} (n={current_n_inj})")
             
             inj_starts = np.random.choice(available_starts, size=current_n_inj, replace=False)
@@ -136,14 +158,21 @@ def run_micro_mdc(
                         dyn_thresh = baseline_cache[k]['dynamic_threshold']
                         res = detector.classify(temp_path, k=k, threshold=dyn_thresh)
                         
+                        patch_scores = np.array(res["patch_anomaly_scores"])
+                        n_novel_patches = int(np.sum(patch_scores > dyn_thresh))
+                        
                         results.append({
-                            "k": k,
                             "glitch_type": gtype,
                             "amplitude": amp,
                             "snr": snr,
-                            "dynamic_threshold": dyn_thresh,
+                            "k": k,
                             "novelty_score": res["novelty_score"],
-                            "novelty_status": res["novelty_status"]
+                            "novelty_status": res["novelty_status"],
+                            "dynamic_threshold": dyn_thresh,
+                            "n_novel_patches": n_novel_patches,
+                            "background_mean": baseline_cache[k]['bg_mean'],
+                            "background_p99": baseline_cache[k]['bg_p99'],
+                            "seed": seed
                         })
                         
                     if temp_path.exists():
@@ -166,7 +195,7 @@ def run_micro_mdc(
             df.loc[group.index, "ks_statistic"] = ks_res.statistic
             df.loc[group.index, "ks_pvalue"] = ks_res.pvalue
             
-    df.to_csv(output_dir / "micro_mdc_results.csv", index=False)
+    df.to_csv(output_dir / "micro_mdc_final_results.csv", index=False)
     
     # Calcola il summary esteso con i risultati KS
     summary = df.groupby(["k", "glitch_type", "amplitude"]).apply(
@@ -179,9 +208,9 @@ def run_micro_mdc(
             "ks_pvalue": x["ks_pvalue"].iloc[0] if not x.empty else np.nan
         })
     ).reset_index()
-    summary.to_csv(output_dir / "micro_mdc_summary.csv", index=False)
+    summary.to_csv(output_dir / "micro_mdc_final_summary.csv", index=False)
     
-    logger.info("Micro-MDC completed. Results saved to results/micro_mdc/")
+    logger.info("Micro-MDC completed. Results saved to results/micro_mdc/final_run/")
     return df
 
 if __name__ == '__main__':
@@ -194,21 +223,21 @@ if __name__ == '__main__':
     mdc_cfg = cfg.get("micro_mdc", {})
     patch_cfg = cfg.get("patch_novelty", {})
     
-    # Temporary overrides for fast SpiralBurst K=68 validation
+    # FINAL RUN PARAMETERS
     glitch_types = ["SpiralBurst"]
-    n_injections = 20
-    n_amplitudes = mdc_cfg.get("n_amplitudes", 8)
-    amp_min = mdc_cfg.get("amplitude_min", 1e-22)
-    amp_max = mdc_cfg.get("amplitude_max", 1e-21)
+    n_injections = 30
+    n_amplitudes = 8
+    amp_min = 1e-22
+    amp_max = 1e-21
     amplitudes = np.logspace(np.log10(amp_min), np.log10(amp_max), n_amplitudes)
-    detector_name = mdc_cfg.get("detector", "L1")
-    seed = mdc_cfg.get("seed", 42)
+    detector_name = "L1"
+    seed = 42
     
     # Mappa K specifica per glitch (override per validazione K=68)
     K_MAP = {
         "SpiralBurst": [68]
     }
-    k_values = patch_cfg.get("k_sweep", [15, 37, 68])
+    k_values = [68]
     device = patch_cfg.get("device", "cuda")
     
     # Initialize the patch-level novelty detector
