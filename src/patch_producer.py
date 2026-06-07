@@ -40,7 +40,7 @@ class PatchProducer:
     def _read_channel_name(self, ts_dict) -> str:
         """Finds the correct strain channel name dynamically."""
         for key in ts_dict.keys():
-            if "STRAIN" in key:
+            if "STRAIN" in key.upper():
                 return key
         # Fallback to the known naming scheme if no dict key was easily extractable
         return f"{self.detector}:GWOSC-16KHZ_R1_STRAIN"
