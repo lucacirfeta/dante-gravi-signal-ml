@@ -2542,6 +2542,14 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         logger.info(f"=== Starting Patch-Level Production for Session {session} ===")
         writer = ProductionWriter(output_dir, session, detector)
         
+        # Setup session logging manually since root wrapper misses list args
+        from src.utils import set_session_log_file, close_session_log
+        log_file = writer.logs_dir / "session.log"
+        set_session_log_file(log_file)
+        
+        import warnings
+        warnings.filterwarnings("ignore", module="gwpy.signal.qtransform")
+        
         session_data_dir = data_dir / session if session != "ALL" else data_dir
         producer = PatchProducer(session_data_dir, detector)
         
@@ -2555,10 +2563,14 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         calib_producer = PatchProducer(session_data_dir, detector)
         calib_producer.hdf5_files = shuffled_files
         
-        for gps, spec in calib_producer:
-            bg_samples.append(spec)
-            if len(bg_samples) >= n_background:
-                break
+        from tqdm import tqdm
+        logger.info(f"Extracting {n_background} background samples for p99 calibration...")
+        with tqdm(total=n_background, desc="Calibrating p99") as pbar:
+            for gps, spec in calib_producer:
+                bg_samples.append(spec)
+                pbar.update(1)
+                if len(bg_samples) >= n_background:
+                    break
                 
         if len(bg_samples) == 0:
             logger.warning(f"No valid segments found for session {session}. Skipping.")
@@ -2612,6 +2624,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 torch.cuda.empty_cache()
                 
         logger.info(f"=== Session {session} Complete. Novel found: {novel_count} ===")
+        close_session_log()
 
 
 
