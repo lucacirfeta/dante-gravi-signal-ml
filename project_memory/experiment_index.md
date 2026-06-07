@@ -312,8 +312,8 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 
 | ID | Esperimento | Dataset | Metodologia | Risultato |
 |:---|:---|:---|:---|:---|
-| EXP-MDC-08 | Micro-MDC Patch-Level Final (KS-Test & K-Sweep) | L1 O4a Background + AsymBlip/SpiralBurst | Implemented KS-test and targeted $K$-sweep ($[1,3,5,10]$ for AsymBlip, $[37,68]$ for SpiralBurst) with n=20. | **SpiralBurst:** Confirmed Patch-Level morphological integration. At $K=68$, KS-test shows near-perfect separation ($KS=0.98$, $p=5 \times 10^{-11}$). **AsymBlip:** No statistically significant separation across any $K$ (max $KS \sim 0.45$, recall 0%), proving topological blindness. |
-| EXP-MDC-09 | Validation of True Recall (99th Percentile Threshold) | L1 O4a + SpiralBurst K=68 | Replaced strict $4\sigma$ multiplier with `np.percentile(99.0)` to guarantee exact 1% FPR on non-Gaussian backgrounds. | **Pending execution:** Quantifying the actual Boolean Recall at SNR=139. Crucial lesson: Never infer recall from KS-test or $\sigma$-multipliers; measure it directly with exact percentiles. |
+| EXP-MDC-08 | Micro-MDC Patch-Level Final (KS-Test & K-Sweep) | L1 O4a Background + AsymBlip/SpiralBurst | Implemented KS-test and targeted $K$-sweep ($[1,3,5,10]$ for AsymBlip, $[37,68]$ for SpiralBurst) with n=30. | **SpiralBurst:** Confirmed Patch-Level morphological integration. At $K=68$, KS-test shows near-perfect separation ($KS \sim 0.905$, $p \sim 3 \times 10^{-17}$). **AsymBlip:** No statistically significant separation across any $K$ (max $KS < 0.45$, recall 0%), proving topological blindness. |
+| EXP-MDC-09 | Validation of True Recall (99th Percentile Threshold) | L1 O4a + SpiralBurst K=68 | Replaced strict $4\sigma$ multiplier/GEV fit with `np.percentile(99.0)` to guarantee exact 1% FPR on non-Gaussian backgrounds. | **Executed:** Measured the actual Boolean Recall at SNR=138. The extreme heavy tails of LIGO O4a background push the 99th percentile guillotine so high that recall collapses to **16.6%**. |
 
 ---
 

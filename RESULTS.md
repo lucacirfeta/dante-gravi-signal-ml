@@ -462,7 +462,7 @@ Questa sessione estende l'analisi ai dati dell'observing run precedente (O3a).
 Validazione finale dell'architettura Patch-Level (Multiple Instance Learning basato su Vector Quantization a 281 centroidi) progettata per risolvere il collasso della Recall ("Signal Dilution") sui transienti lunghi in O4a.
 
 ### 3.9.1 Metodologia
-- **Dataset:** Segmenti di background reali L1 O4a + iniezioni sintetiche (n=20 per livello di ampiezza).
+- **Dataset:** Segmenti di background reali L1 O4a + iniezioni sintetiche (n=30 per livello di ampiezza).
 - **Morfologie:** `SpiralBurst` (transiente esteso a bassa frequenza) e `AsymBlip` (riarrangiamento topologico/fase).
 - **Soglia Operativa:** Calcolata rigorosamente sul **99-esimo percentile** (`np.percentile(null_scores, 99.0)`) della distribuzione log-distance del background, garantendo un FPR esatto dell'1% indipendente dalle non-Gaussianità delle code (GEV).
 
@@ -472,9 +472,9 @@ L'architettura ha rivelato una dicotomia fondamentale dipendente dal neighborhoo
 | Morfologia | K (Patch Pool) | Separazione Statistica (KS-Test) | Recall (SNR 138, 99° Percentile) | Valutazione |
 |:-----------|:---------------|:---------------------------------|:---------------------------------|:------------|
 | `AsymBlip` | $1, 3, 5, 10$ | **Nulla** ($KS < 0.45$, $p > 0.10$) | **0.0%** | Cecità Topologica. Il modello è invariantivo alle permutazioni spaziali dei patch; non rileva alterazioni di fase. |
-| `SpiralBurst`| **$68$** | **Quasi-Perfetta** ($KS = 0.93$, $p = 1.45 \times 10^{-8}$) | **11.1% - 15.3%** | Il KS-test dimostra un'integrazione morfologica riuscita ("bulk" separato). Tuttavia, le code pesanti del rumore distruggono la Recall. |
+| `SpiralBurst`| **$68$** | **Quasi-Perfetta** ($KS \sim 0.905$, $p \sim 3 \times 10^{-17}$) | **16.6%** | Il KS-test dimostra un'integrazione morfologica riuscita ("bulk" separato). Tuttavia, le code pesanti del rumore distruggono la Recall. |
 
-**Esito Finale:** La tua previsione era assolutamente esatta. La validazione empirica ha dimostrato che il Patch-Level Scoring aggira la Signal Dilution separando nettamente le masse delle distribuzioni (come testimoniato dall'eccellente score del KS-test). **Tuttavia**, la presenza di code pesantissime (Extreme Value) nel rumore di background O4a spinge il 99-esimo percentile a valori irraggiungibili per la maggioranza degli `SpiralBurst`. 
-Il risultato finale è brutale: se si impone rigorosamente il tetto dell'1% ai Falsi Positivi, la Recall effettiva crolla miseramente all'**11-15%** anche a SNR stellari ($\sim 138$).
+**Esito Finale:** La previsione era assolutamente esatta. La validazione empirica ha dimostrato che il Patch-Level Scoring aggira la Signal Dilution separando nettamente le masse delle distribuzioni (come testimoniato dall'eccellente score del KS-test). **Tuttavia**, la presenza di code pesantissime (Extreme Value) nel rumore di background O4a spinge il 99-esimo percentile a valori irraggiungibili per la maggioranza degli `SpiralBurst`. 
+Il risultato finale è brutale: se si impone rigorosamente il tetto dell'1% ai Falsi Positivi garantendo un threshold empirico robusto, la Recall effettiva crolla miseramente al **16.6%** anche a SNR stellari ($\sim 138$).
 
-Questo certifica che per superare il muro delle distribuzioni GEV e identificare deviazioni strutturali di fase pure (invisibili alla Vector Quantization) serve un cambio architetturale drastico, imponendo il passaggio ai Masked Autoencoders (AudioMAE) - **Fase 4**.
+Questo certifica che le code pesanti di LIGO limitano intrinsecamente il recupero dei segnali anomali anche se il modello di base è capace di separarne le distribuzioni medie. Invece di iterare verso soluzioni non supervisionate instabili (come Masked Autoencoders, ufficialmente bocciati per rischio di collapse e data leakage sul background stocastico), la strategia si muove verso la **Fase 4 (MIL Clustering):** raggruppare i pochi ma purissimi glitch NOVEL estratti con questa rigorosa soglia p99 tramite VLAD pooling e DPMM, validando se formino nuovi manifold fisici coerenti.
