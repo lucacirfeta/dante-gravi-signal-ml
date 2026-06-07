@@ -10,7 +10,7 @@ from src.production_writer import ProductionWriter
 
 def test_md5_check(tmp_path):
     fake_index = tmp_path / "fake_index.npz"
-    np.savez(fake_index, embeddings=np.random.randn(1216, 384))
+    np.savez(fake_index, embeddings=np.random.randn(281, 384))
     
     with pytest.raises(RuntimeError, match="MD5 mismatch"):
         PatchScorer(reference_index_path=fake_index, device='cpu')

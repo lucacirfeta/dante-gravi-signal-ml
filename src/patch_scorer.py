@@ -41,9 +41,9 @@ class PatchScorer:
         data = np.load(self.reference_index_path)
         centroids_np = data["embeddings"]
         
-        # Expected shape constraint (Correction #1)
-        if centroids_np.shape != (1216, 384):
-            raise RuntimeError(f"Expected reference index shape (1216, 384), got {centroids_np.shape}")
+        # Expected shape constraint
+        if centroids_np.shape != (281, 384):
+            raise RuntimeError(f"Expected reference index shape (281, 384), got {centroids_np.shape}")
             
         self.centroids = torch.tensor(centroids_np, device=self.device, dtype=torch.float32)
         # Explicit L2 normalization
