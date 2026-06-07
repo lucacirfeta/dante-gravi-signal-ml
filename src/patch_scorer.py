@@ -76,15 +76,17 @@ class PatchScorer:
         logger.info(f"Reference MD5 verified: {self.reference_md5}")
 
     @torch.no_grad()
-    def calibrate_threshold(self, background_spectrograms: list[np.ndarray]) -> float:
+    def calibrate_threshold(self, background_spectrograms: list[np.ndarray], batch_size: int = 32) -> float:
         """Calibrates threshold empirically (p99) on background samples."""
-        if len(background_spectrograms) != self.n_background:
+        if len(background_spectrograms) < self.n_background:
             logger.warning(f"Calibration expected {self.n_background} samples, got {len(background_spectrograms)}")
             
         all_novelty_scores = []
-        for spec in background_spectrograms:
-            result = self.score_spectrogram(spec, threshold=1.0) # threshold 1.0 ensures is_novel=False
-            all_novelty_scores.append(result["novelty_score"])
+        for i in range(0, len(background_spectrograms), batch_size):
+            batch = background_spectrograms[i:i+batch_size]
+            results = self.score_spectrogram(batch, threshold=1.0) # threshold 1.0 ensures is_novel=False
+            for res in results:
+                all_novelty_scores.append(res["novelty_score"])
             
         scores_np = np.array(all_novelty_scores)
         
@@ -101,43 +103,55 @@ class PatchScorer:
         return threshold
 
     @torch.no_grad()
-    def score_spectrogram(self, spectrogram_array: np.ndarray, threshold: float) -> dict:
-        """Runs the entire MIL patch-level scoring pipeline on a single image.
+    def score_spectrogram(self, spectrogram_arrays: list[np.ndarray], threshold: float) -> list[dict]:
+        """Runs the entire MIL patch-level scoring pipeline on a batch of images.
         
-        spectrogram_array: (256, 256, 3) uint8 numpy array.
+        spectrogram_arrays: list of (256, 256, 3) uint8 numpy arrays.
         """
-        # Convert to PIL Image (needed by transform)
-        img = Image.fromarray(spectrogram_array)
-        tensor = self.transform(img).unsqueeze(0).to(self.device)
+        # Convert to PIL Images and apply transforms
+        tensors = []
+        for arr in spectrogram_arrays:
+            img = Image.fromarray(arr)
+            tensors.append(self.transform(img))
+            
+        # Stack into (B, 3, 256, 256)
+        batch_tensor = torch.stack(tensors).to(self.device)
         
         # 1. Forward Features
-        features = self.model.forward_features(tensor)
-        patch_tokens = features["x_norm_patchtokens"].squeeze(0) # (1369, 384)
+        features = self.model.forward_features(batch_tensor)
+        patch_tokens = features["x_norm_patchtokens"] # (B, 1369, 384)
         
         # 2. L2 Normalize explicitly
         patch_tokens = F.normalize(patch_tokens, p=2, dim=-1)
         
         # 3. Cosine Similarity vs Background
-        # similarities = (1369, 1216)
+        # similarities = (B, 1369, 281)
         similarities = torch.matmul(patch_tokens, self.centroids.T)
-        max_sims, _ = torch.max(similarities, dim=-1) # (1369,)
+        max_sims, _ = torch.max(similarities, dim=-1) # (B, 1369)
         
         # 4. Anomaly Scores (1 - sim)
-        anomaly_scores = 1.0 - max_sims
+        anomaly_scores = 1.0 - max_sims # (B, 1369)
         
         # 5. Top-K Pooling
-        top_k_scores, top_k_indices = torch.topk(anomaly_scores, self.k)
-        novelty_score = float(top_k_scores.mean().cpu().item())
+        top_k_scores, top_k_indices = torch.topk(anomaly_scores, self.k, dim=-1) # (B, K)
+        novelty_scores = top_k_scores.mean(dim=-1) # (B,)
         
         # 6. MIL Vector Extraction
-        top_k_patches = patch_tokens[top_k_indices] # (K, 384)
-        mil_vector = top_k_patches.mean(dim=0)
-        mil_vector = F.normalize(mil_vector, p=2, dim=-1)
-        
-        return {
-            "novelty_score": novelty_score,
-            "is_novel": novelty_score > threshold,
-            "top_k_indices": top_k_indices.cpu().numpy().astype(np.int32),
-            "mil_vector": mil_vector.cpu().numpy().astype(np.float32),
-            "patch_anomaly_scores": anomaly_scores.cpu().numpy().astype(np.float32)
-        }
+        results = []
+        for i in range(len(spectrogram_arrays)):
+            k_idx = top_k_indices[i] # (K,)
+            top_k_patches = patch_tokens[i][k_idx] # (K, 384)
+            mil_vector = top_k_patches.mean(dim=0)
+            mil_vector = F.normalize(mil_vector, p=2, dim=-1)
+            
+            n_score = float(novelty_scores[i].cpu().item())
+            
+            results.append({
+                "novelty_score": n_score,
+                "is_novel": n_score > threshold,
+                "top_k_indices": k_idx.cpu().numpy().astype(np.int32),
+                "mil_vector": mil_vector.cpu().numpy().astype(np.float32),
+                "patch_anomaly_scores": anomaly_scores[i].cpu().numpy().astype(np.float32)
+            })
+            
+        return results

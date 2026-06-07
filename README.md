@@ -253,14 +253,14 @@ When `--reference` is omitted in `morphcheck` or `full-analysis`, the pipeline *
 4. **Patch-Level Production Pipeline (Phase 4):**
    ```bash
    python main.py patch-production \
-                  --data-dir data/raw/o4a/ \
                   --detector L1 \
-                  --sessions 20260520 20260522 20260523 \
                   --resume \
                   --k 68 \
-                  --fpr 0.01
+                  --fpr 0.01 \
+                  --workers 8 \
+                  --batch-size 32
    ```
-   > Scans raw HDF5 dataset using Patch-Level MIL vectors. Bypasses Signal Dilution Limits. Results are continuously written to SWMR-enabled HDF5 archives.
+   > Scans raw HDF5 dataset using Patch-Level MIL vectors. Bypasses Signal Dilution Limits. Results are continuously written to SWMR-enabled HDF5 archives. Employs Producer-Consumer multiprocessing and Batched GPU inference for extreme performance.
 
 All scientific results, validations, and benchmarks produced by the pipeline are available in **[RESULTS.md](RESULTS.md)**. Legacy data from Phase 1 is preserved in **[RESULTS_OLD.md](RESULTS_OLD.md)**.
 

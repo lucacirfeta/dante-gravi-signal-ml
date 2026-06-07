@@ -2511,7 +2511,9 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     k = args.k
     fpr = args.fpr
     n_background = args.n_background
-    seed = args.seed
+    seed = getattr(args, "seed", 42)
+    workers = getattr(args, "workers", 8)
+    batch_size = getattr(args, "batch_size", 32)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -2551,7 +2553,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         warnings.filterwarnings("ignore", module="gwpy.signal.qtransform")
         
         session_data_dir = data_dir / session if session != "ALL" else data_dir
-        producer = PatchProducer(session_data_dir, detector)
+        producer = PatchProducer(session_data_dir, detector, workers=workers, batch_size=batch_size)
         
         # Calibrate Threshold
         logger.info("Calibrating threshold...")
@@ -2560,17 +2562,20 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         shuffled_files = list(producer.hdf5_files)
         rng.shuffle(shuffled_files)
         
-        calib_producer = PatchProducer(session_data_dir, detector)
+        calib_producer = PatchProducer(session_data_dir, detector, workers=workers, batch_size=batch_size)
         calib_producer.hdf5_files = shuffled_files
         
         from tqdm import tqdm
         logger.info(f"Extracting {n_background} background samples for p99 calibration...")
         with tqdm(total=n_background, desc="Calibrating p99") as pbar:
-            for gps, spec in calib_producer:
-                bg_samples.append(spec)
-                pbar.update(1)
+            for gps_batch, spec_batch in calib_producer:
+                bg_samples.extend(spec_batch)
+                pbar.update(len(spec_batch))
                 if len(bg_samples) >= n_background:
                     break
+        
+        # Trim excess background samples if we overshot due to batch size
+        bg_samples = bg_samples[:n_background]
                 
         if len(bg_samples) == 0:
             logger.warning(f"No valid segments found for session {session}. Skipping.")
@@ -2599,28 +2604,39 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         novel_count = 0
         import torch
         
-        for gps_start, spec in producer:
-            if last_gps and gps_start <= last_gps:
+        for gps_batch, spec_batch in producer:
+            # Filter batch items that are already processed
+            valid_gps = []
+            valid_spec = []
+            for g, s in zip(gps_batch, spec_batch):
+                if not (last_gps and g <= last_gps):
+                    valid_gps.append(g)
+                    valid_spec.append(s)
+                    
+            if not valid_gps:
                 continue
                 
-            result_dict = scorer.score_spectrogram(spec, threshold)
-            processed += 1
+            results = scorer.score_spectrogram(valid_spec, threshold)
+            processed += len(valid_gps)
             
-            if result_dict["is_novel"]:
-                writer.append_novel(gps_start, result_dict)
-                novel_count += 1
+            for gps_start, result_dict in zip(valid_gps, results):
+                if result_dict["is_novel"]:
+                    writer.append_novel(gps_start, result_dict)
+                    novel_count += 1
                 
-            writer.save_checkpoint(gps_start)
+                # We update the checkpoint after every valid item to ensure safe state
+                writer.save_checkpoint(gps_start)
             
-            if processed % 500 == 0:
+            if processed % 500 < len(valid_gps): # Roughly every 500 items
                 mem_mb = torch.cuda.memory_allocated() / (1024 * 1024)
                 rate = (novel_count / processed) * 100
+                estimated_total = len(list(producer.hdf5_files)) * int(4096 / producer.segment_duration)
                 logger.info(
-                    "[PROGRESS] Session: %s | Processati: %d | Novel: %d (%.2f%%) | GPU Mem: %.1f MB",
-                    session, processed, novel_count, rate, mem_mb
+                    "[PROGRESS] Session: %s | Processati: %d / ~%d | Novel: %d (%.2f%%) | GPU Mem: %.1f MB",
+                    session, processed, estimated_total, novel_count, rate, mem_mb
                 )
             
-            if processed % 1000 == 0:
+            if processed % 1000 < len(valid_gps):
                 torch.cuda.empty_cache()
                 
         logger.info(f"=== Session {session} Complete. Novel found: {novel_count} ===")
@@ -2691,6 +2707,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_patch_production.add_argument("--fpr", type=float, default=0.01)
     p_patch_production.add_argument("--n-background", type=int, default=500)
     p_patch_production.add_argument("--seed", type=int, default=42)
+    p_patch_production.add_argument("--workers", type=int, default=8, help="Number of CPU workers for Q-Transform")
+    p_patch_production.add_argument("--batch-size", type=int, default=32, help="Batch size for DINOv2 GPU inference")
     p_patch_production.set_defaults(func=cmd_patch_production)
 
     # --- scan ---
