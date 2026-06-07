@@ -578,8 +578,9 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     base_dir = Path(base_dir_str)
     base_dir.mkdir(parents=True, exist_ok=True)
 
-    resume = getattr(args, "resume", True)
     continue_download = getattr(args, "continue_download", False)
+    loop_download = getattr(args, "loop", False)
+    max_iterations = getattr(args, "max_iterations", 100)
     workers = args.workers
     cache_raw = True
 
@@ -593,8 +594,8 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
         sys.exit(1)
     W = max(1, workers // len(detectors))
 
-    current_start = getattr(args, "start_gps", None)
-    continue_from_gps = None
+    current_folder_start = getattr(args, "start_gps", None)
+    current_gps_start = None
 
     if continue_download:
         # --continue: trova l'ultima cartella GPS in base_dir
@@ -626,105 +627,110 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
                         max_end_gps = file_end
             max_ends.append(max_end_gps)
 
+        current_folder_start = last_folder_gps
         if all(m > 0 for m in max_ends) and len(max_ends) > 0:
-            current_start = min(max_ends)
+            current_gps_start = min(max_ends)
         elif len(max_ends) == 1 and max_ends[0] > 0:
-            current_start = max_ends[0]
+            current_gps_start = max_ends[0]
+        else:
+            current_gps_start = current_folder_start
 
-        if current_start is None or current_start == 0:
-            logger.error("--continue: nessun file HDF5 trovato in %s", last_folder)
-            sys.exit(1)
-
-        continue_from_gps = current_start
-
-    if current_start is None:
+    if current_folder_start is None:
         # Fresh download from run start
-        current_start = _run_start_gps(run, cfg)
-        logger.info("Nuovo download dall'inizio della run: GPS %d", current_start)
+        current_folder_start = _run_start_gps(run, cfg)
+        logger.info("Nuovo download dall'inizio della run: GPS %d", current_folder_start)
 
-    aligned_start = (current_start // 4096) * 4096
-    if aligned_start != current_start:
-        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", current_start, aligned_start)
-        current_start = aligned_start
+    aligned_start = (current_folder_start // 4096) * 4096
+    if aligned_start != current_folder_start:
+        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", current_folder_start, aligned_start)
+        current_folder_start = aligned_start
 
-    # Output directory: data/raw/{gps_start}/
-    output_dir = base_dir / str(current_start)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    if continue_from_gps is not None:
-        logger.info(
-            "Continuing from GPS %d \u2192 new session %s",
-            continue_from_gps, output_dir,
-        )
-
-    # Resume within current folder (skip if --continue, the folder is fresh)
-    if not continue_download and resume and cache_raw:
-        max_ends = []
-        for det in detectors:
-            pattern = re.compile(rf"^{det}_(\d+)_(\d+)\.hdf5$")
-            max_end_gps = 0
-            for f in output_dir.glob("*.hdf5"):
-                m = pattern.match(f.name)
-                if m:
-                    file_end = int(m.group(2))
-                    if file_end > max_end_gps:
-                        max_end_gps = file_end
-            max_ends.append(max_end_gps)
-
-        if all(m > 0 for m in max_ends) and len(max_ends) > 0:
-            current_start = min(max_ends)
-            logger.info("Ripresa contemporanea dal GPS %d (minimo tra i detector)", current_start)
-        elif len(max_ends) == 1 and max_ends[0] > 0:
-            current_start = max_ends[0]
-            logger.info("Ripresa dal GPS %d (ultimo file trovato)", current_start)
-
-    end_gps = current_start + int(hours * 3600)
-
-    logger.info("=== FETCH-RAW: %s [%s] ===", detectors, run)
-    logger.info("Interval: %d to %d (%.1f hours)", current_start, end_gps, hours)
-    logger.info("Output dir: %s", output_dir)
-    if not cache_raw:
-        logger.info("Cache raw disabled: data will be fetched but not saved.")
-
-    total_blocks = (end_gps - current_start + segment_duration - 1) // segment_duration
-    if total_blocks <= 0:
-        logger.info("No data to download for the requested interval.")
-        return
+    if current_gps_start is None:
+        current_gps_start = current_folder_start
+    else:
+        aligned_gps_start = (current_gps_start // 4096) * 4096
+        if aligned_gps_start != current_gps_start:
+            current_gps_start = aligned_gps_start
 
     retry_delays = [5, 10, 20] if getattr(args, "retry", False) else [0]
     base_delay = 0.3
 
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        block_num = 1
-        while current_start < end_gps:
-            futures = []
-            # Prepare batch of size W for each detector
-            for det in detectors:
-                for i in range(W):
-                    s = current_start + i * segment_duration
-                    e = min(s + segment_duration, end_gps)
-                    if s >= end_gps:
-                        break
-                    futures.append(executor.submit(_fetch_single_block, det, s, e, output_dir, retry_delays, base_delay, cache_raw))
-            
-            # Wait for all to finish
-            wait(futures)
-            
-            # Log results
-            for f in futures:
-                ok, msg = f.result()
-                if ok:
-                    logger.info(msg)
-                else:
-                    logger.error(msg)
-            
-            current_start += W * segment_duration
-            block_num += W
+    iteration = 0
+    while True:
+        if iteration >= max_iterations:
+            logger.info("Raggiunto il limite massimo di iterazioni (%d). Termino il loop.", max_iterations)
+            break
 
-            try:
-                astropy.utils.data.clear_download_cache()
-            except Exception:
-                pass
+        expected_end_gps = current_folder_start + int(hours * 3600)
+
+        # Se il blocco per questa cartella è già completato, passiamo al blocco successivo
+        if current_gps_start >= expected_end_gps:
+            current_folder_start = expected_end_gps
+            current_gps_start = expected_end_gps
+            expected_end_gps = current_folder_start + int(hours * 3600)
+
+        output_dir = base_dir / str(current_folder_start)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        end_gps = expected_end_gps
+
+        logger.info("=== FETCH-RAW: %s [%s] (Loop %d) ===", detectors, run, iteration + 1)
+        logger.info("Interval: %d to %d (%.1f ore nominali per cartella)", current_gps_start, end_gps, hours)
+        logger.info("Output dir: %s", output_dir)
+        if not cache_raw:
+            logger.info("Cache raw disabled: data will be fetched but not saved.")
+
+        total_blocks = (end_gps - current_gps_start + segment_duration - 1) // segment_duration
+        if total_blocks <= 0:
+            logger.info("No data to download for the requested interval.")
+            if not loop_download:
+                break
+            else:
+                current_folder_start = expected_end_gps
+                current_gps_start = expected_end_gps
+                iteration += 1
+                continue
+
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            block_num = 1
+            while current_gps_start < end_gps:
+                futures = []
+                # Prepare batch of size W for each detector
+                for det in detectors:
+                    for i in range(W):
+                        s = current_gps_start + i * segment_duration
+                        e = min(s + segment_duration, end_gps)
+                        if s >= end_gps:
+                            break
+                        futures.append(executor.submit(_fetch_single_block, det, s, e, output_dir, retry_delays, base_delay, cache_raw))
+                
+                # Wait for all to finish
+                wait(futures)
+                
+                # Log results
+                for f in futures:
+                    ok, msg = f.result()
+                    if ok:
+                        logger.info(msg)
+                    else:
+                        logger.error(msg)
+                
+                current_gps_start += W * segment_duration
+                block_num += W
+
+                try:
+                    import astropy
+                    astropy.utils.data.clear_download_cache()
+                except Exception:
+                    pass
+
+        if not loop_download:
+            break
+            
+        # Preparazione per l'iterazione successiva
+        current_folder_start = expected_end_gps
+        current_gps_start = expected_end_gps
+        iteration += 1
 
     print("Download completato.")
 
@@ -2852,6 +2858,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=False,
         dest="continue_download",
         help="Continue download from the last GPS folder in data/raw/. Default: False.",
+    )
+    p_fetch_raw.add_argument(
+        "--loop",
+        action="store_true",
+        default=False,
+        help="Loop continuously downloading new blocks until stopped.",
+    )
+    p_fetch_raw.add_argument(
+        "--max-iterations",
+        type=int,
+        default=100,
+        help="Max loop iterations. Default: 100.",
     )
     p_fetch_raw.set_defaults(func=cmd_fetch_raw)
     _add_run_argument(p_fetch_raw)

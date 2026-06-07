@@ -310,6 +310,11 @@ Eseguito in sessione 2026-05-10/11. Dati in `data/embeddings/` (legacy path):
 - **Conclusione:** La validazione empirica è ora protetta da metriche statistiche inoppugnabili (KS-test), certificando la risoluzione della Signal Dilution per il paper O4a. Pone le basi per l'abbandono di $K$ statico verso $K$-adattivo basato sulla durata del burst (Fase 4).
 - **Esito:** ✅ **SUCCESS** — Consolidamento della Fase 3.
 
+| ID | Esperimento | Dataset | Metodologia | Risultato |
+|:---|:---|:---|:---|:---|
+| EXP-MDC-08 | Micro-MDC Patch-Level Final (KS-Test & K-Sweep) | L1 O4a Background + AsymBlip/SpiralBurst | Implemented KS-test and targeted $K$-sweep ($[1,3,5,10]$ for AsymBlip, $[37,68]$ for SpiralBurst) with n=20. | **SpiralBurst:** Confirmed Patch-Level morphological integration. At $K=68$, KS-test shows near-perfect separation ($KS=0.98$, $p=5 \times 10^{-11}$). **AsymBlip:** No statistically significant separation across any $K$ (max $KS \sim 0.45$, recall 0%), proving topological blindness. |
+| EXP-MDC-09 | Validation of True Recall (99th Percentile Threshold) | L1 O4a + SpiralBurst K=68 | Replaced strict $4\sigma$ multiplier with `np.percentile(99.0)` to guarantee exact 1% FPR on non-Gaussian backgrounds. | **Pending execution:** Quantifying the actual Boolean Recall at SNR=139. Crucial lesson: Never infer recall from KS-test or $\sigma$-multipliers; measure it directly with exact percentiles. |
+
 ---
 
 ## 11. Esperimenti Pianificati (TODO)

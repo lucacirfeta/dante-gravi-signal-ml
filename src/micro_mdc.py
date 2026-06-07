@@ -4,6 +4,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+from scipy.stats import genextreme
+import hashlib
+import os
+import stat
 from tqdm import tqdm
 
 from src.injection import SyntheticGlitchGenerator, InjectionEngine, _load_all_references
@@ -27,6 +31,18 @@ def run_micro_mdc(
 ) -> pd.DataFrame:
     """Executes the micro-MDC loop to evaluate the patch-level MIL novelty detector."""
     np.random.seed(seed)
+    
+    index_path = "data/reference/patch_compressed_index.npz"
+    if os.path.exists(index_path):
+        with open(index_path, 'rb') as f:
+            md5_hash = hashlib.md5(f.read()).hexdigest()
+        logger.info(f"Reference Index MD5 Checksum: {md5_hash}")
+        # Forza in sola lettura per proteggere il reference index
+        os.chmod(index_path, stat.S_IREAD)
+        logger.info(f"Locked {index_path} to read-only mode.")
+    else:
+        logger.warning(f"Reference index {index_path} not found!")
+
     output_dir = Path("results/micro_mdc")
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -56,8 +72,8 @@ def run_micro_mdc(
     
     # --- Background Baseline Pass ---
     for k in sorted(list(all_ks)):
-        logger.info(f"Extracting 100 NULL segments for baseline (k={k})...")
-        null_starts = np.random.choice(available_starts, size=min(100, len(available_starts)), replace=False)
+        logger.info(f"Extracting 500 NULL segments for baseline GEV fit (k={k})...")
+        null_starts = np.random.choice(available_starts, size=min(500, len(available_starts)), replace=False)
         null_scores = []
         
         for seg_start in tqdm(null_starts, desc=f"Baseline pass k={k}"):
@@ -81,10 +97,9 @@ def run_micro_mdc(
         if not null_scores:
             raise RuntimeError(f"Failed to compute baseline scores for k={k}!")
             
-        mu_hybrid = np.mean(null_scores)
-        sigma_hybrid = np.std(null_scores)
-        dynamic_threshold = mu_hybrid + (4 * sigma_hybrid)
-        logger.info(f"Baseline for k={k}: mu={mu_hybrid:.4f}, sigma={sigma_hybrid:.4f} -> threshold={dynamic_threshold:.4f}")
+        c, loc, scale = genextreme.fit(null_scores)
+        dynamic_threshold = genextreme.ppf(0.99, c, loc, scale)
+        logger.info(f"GEV Fit parameters: c={c:.4f}, loc={loc:.4f}, scale={scale:.4f} -> Threshold (FPR 1%): {dynamic_threshold:.4f}")
         
         baseline_cache[k] = {
             'null_scores': null_scores,
@@ -179,9 +194,9 @@ if __name__ == '__main__':
     mdc_cfg = cfg.get("micro_mdc", {})
     patch_cfg = cfg.get("patch_novelty", {})
     
-    # Default parameters based on user instructions if config missing
-    glitch_types = mdc_cfg.get("glitch_types", ["AsymBlip", "SpiralBurst"])
-    n_injections = mdc_cfg.get("n_injections", 100)
+    # Temporary overrides for fast SpiralBurst K=68 validation
+    glitch_types = ["SpiralBurst"]
+    n_injections = 20
     n_amplitudes = mdc_cfg.get("n_amplitudes", 8)
     amp_min = mdc_cfg.get("amplitude_min", 1e-22)
     amp_max = mdc_cfg.get("amplitude_max", 1e-21)
@@ -189,6 +204,10 @@ if __name__ == '__main__':
     detector_name = mdc_cfg.get("detector", "L1")
     seed = mdc_cfg.get("seed", 42)
     
+    # Mappa K specifica per glitch (override per validazione K=68)
+    K_MAP = {
+        "SpiralBurst": [68]
+    }
     k_values = patch_cfg.get("k_sweep", [15, 37, 68])
     device = patch_cfg.get("device", "cuda")
     

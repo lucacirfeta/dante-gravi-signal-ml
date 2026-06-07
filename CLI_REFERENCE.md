@@ -153,7 +153,7 @@ Massive download of strain data (GWOSC) in `.hdf5` format.
   3. Contacts GWOSC via the `gwosc.locate.get_urls` utility to get direct download URLs for HDF5 files.
   4. Launches parallel downloads via a `ThreadPoolExecutor` of network workers (limited to a maximum of 4 threads per detector to avoid IP blocking from the GWOSC server).
   5. Saves the files directly to `data/raw/<gps_start>/` with filename `[Detector]_[gps_start]_[gps_end].hdf5`.
-  6. Detects partially completed files to automatically resume interrupted downloads.
+  6. **Smart Resume**: Detects partially completed folders. If `--continue` is used, it will first download the missing hours into the same folder to reach the 144h quota (or `--hours`). If `--loop` is active, it then seamlessly creates the next folders in sequence to download continuously until finished.
 
 - `--detector`: Detector(s). *Default: `H1 L1`*.
 - `--workers`: Total number of workers. *Default: `2`*.
@@ -164,7 +164,9 @@ Massive download of strain data (GWOSC) in `.hdf5` format.
 - `--segment-duration`: Download chunk duration (in seconds). *Default: `4096`*.
 - `--no-resume`: Flag. Disables automatic resume.
 - `--retry`: Flag. Enables retry with exponential backoff.
-- `--continue`: Flag. Continues download from the last GPS folder in data/raw/. *Default: `False`*.
+- `--continue`: Flag. Continues download from the last GPS folder in data/raw/. Completes incomplete folders before starting new ones. *Default: `False`*.
+- `--loop`: Flag. Loops continuously, downloading new blocks (e.g. 144h each) until stopped or `max-iterations` is reached.
+- `--max-iterations`: Max loop iterations. *Default: `100`*.
 
 ### 5. `last-gps`
 Returns the most advanced (end) GPS time to resume stopped runs without invoking external servers.
