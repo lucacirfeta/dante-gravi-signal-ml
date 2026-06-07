@@ -2557,48 +2557,60 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         
         # Calibrate Threshold
         logger.info("Calibrating threshold...")
-        bg_samples = []
-        rng = random.Random(seed)
-        shuffled_files = list(producer.hdf5_files)
-        rng.shuffle(shuffled_files)
+        existing_threshold = writer.load_threshold() if resume else None
         
-        calib_producer = PatchProducer(session_data_dir, detector, workers=workers, batch_size=batch_size)
-        calib_producer.hdf5_files = shuffled_files
-        
-        from tqdm import tqdm
-        logger.info(f"Extracting {n_background} background samples for p99 calibration...")
-        with tqdm(total=n_background, desc="Calibrating p99") as pbar:
-            for gps_batch, spec_batch in calib_producer:
-                bg_samples.extend(spec_batch)
-                pbar.update(len(spec_batch))
-                if len(bg_samples) >= n_background:
-                    break
-        
-        # Trim excess background samples if we overshot due to batch size
-        bg_samples = bg_samples[:n_background]
-                
-        if len(bg_samples) == 0:
-            logger.warning(f"No valid segments found for session {session}. Skipping.")
-            continue
+        if existing_threshold is not None:
+            logger.info(f"Loaded existing calibrated threshold ({existing_threshold:.4f}) from HDF5.")
+            threshold = existing_threshold
             
-        threshold = scorer.calibrate_threshold(bg_samples)
-        
-        metadata = {
-            "session_id": session,
-            "detector": detector,
-            "threshold": threshold,
-            "k": k,
-            "reference_md5": scorer.reference_md5,
-            "n_background": len(bg_samples),
-            "timestamp_created": datetime.now(timezone.utc).isoformat()
-        }
-        
-        bg_scores_dummy = np.zeros(len(bg_samples), dtype=np.float32)
-        writer.verify_and_init(metadata, bg_scores_dummy, threshold)
+            # Verify MD5 without overwriting metadata
+            metadata = {"reference_md5": scorer.reference_md5}
+            writer.verify_and_init(metadata, np.zeros(1), threshold)
+            
+        else:
+            logger.info(f"Extracting {n_background} background samples for p99 calibration...")
+            bg_samples = []
+            rng = random.Random(seed)
+            shuffled_files = list(producer.hdf5_files)
+            rng.shuffle(shuffled_files)
+            
+            calib_producer = PatchProducer(session_data_dir, detector, workers=workers, batch_size=batch_size)
+            calib_producer.hdf5_files = shuffled_files
+            
+            from tqdm import tqdm
+            with tqdm(total=n_background, desc="Calibrating p99") as pbar:
+                for gps_batch, spec_batch in calib_producer:
+                    bg_samples.extend(spec_batch)
+                    pbar.update(len(spec_batch))
+                    if len(bg_samples) >= n_background:
+                        break
+            
+            # Trim excess background samples
+            bg_samples = bg_samples[:n_background]
+                    
+            if len(bg_samples) == 0:
+                logger.warning(f"No valid segments found for session {session}. Skipping.")
+                continue
+                
+            threshold = scorer.calibrate_threshold(bg_samples)
+            
+            metadata = {
+                "session_id": session,
+                "detector": detector,
+                "threshold": float(threshold),
+                "k": k,
+                "reference_md5": scorer.reference_md5,
+                "n_background": len(bg_samples),
+                "timestamp_created": datetime.now(timezone.utc).isoformat()
+            }
+            
+            bg_scores_dummy = np.zeros(len(bg_samples), dtype=np.float32)
+            writer.verify_and_init(metadata, bg_scores_dummy, threshold)
         
         last_gps = writer.load_checkpoint() if resume else None
         if last_gps:
             logger.info(f"[RESUME] Riprendendo da GPS: {last_gps}")
+            producer.resume_gps = last_gps
             
         processed = 0
         novel_count = 0

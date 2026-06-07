@@ -48,6 +48,14 @@ class ProductionWriter:
                 nov_grp.create_dataset("nov_scores", shape=(0,), maxshape=(None,), dtype='float32', chunks=True)
                 nov_grp.create_dataset("top_k_idx", shape=(0, metadata.get('k', 68)), maxshape=(None, metadata.get('k', 68)), dtype='int32', chunks=True)
                 
+    def load_threshold(self):
+        """Loads the threshold from existing HDF5 file if present."""
+        if self.hdf5_path.exists():
+            with h5py.File(self.hdf5_path, 'r') as f:
+                if "background" in f and "threshold" in f["background"].attrs:
+                    return float(f["background"].attrs["threshold"])
+        return None
+
     def verify_and_init(self, metadata: dict, background_scores: np.ndarray, threshold: float):
         """Checks MD5 compatibility if resuming, or initializes new file."""
         if self.hdf5_path.exists():
