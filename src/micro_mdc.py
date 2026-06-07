@@ -69,16 +69,8 @@ def run_micro_mdc(
     
     results = []
     
-    # 1. Mappa K specifici per classe
-    # Removed internal k_map to use exact k_values passed by the user
-    k_map = {
-        'SpiralBurst': [68]
-    }
-    
     # Raccogli tutti i k univoci per calcolare le baseline una sola volta
-    all_ks = set()
-    for gtype in glitch_types:
-        all_ks.update(k_map.get(gtype, k_values))
+    all_ks = set(k_values)
         
     baseline_cache = {}
     
@@ -131,7 +123,7 @@ def run_micro_mdc(
         
     # --- Injection Pass ---
     for gtype in glitch_types:
-        current_ks = k_map.get(gtype, k_values)
+        current_ks = k_values
         for idx, amp in enumerate(amplitudes):
             current_n_inj = n_injections
             logger.info(f"Injecting {gtype} at amp={amp:.2e} (n={current_n_inj})")
@@ -224,7 +216,7 @@ if __name__ == '__main__':
     patch_cfg = cfg.get("patch_novelty", {})
     
     # FINAL RUN PARAMETERS
-    glitch_types = ["SpiralBurst"]
+    glitch_types = ["AsymBlip", "SpiralBurst", "HarmonicComb"]
     n_injections = 30
     n_amplitudes = 8
     amp_min = 1e-22
@@ -234,10 +226,7 @@ if __name__ == '__main__':
     seed = 42
     
     # Mappa K specifica per glitch (override per validazione K=68)
-    K_MAP = {
-        "SpiralBurst": [68]
-    }
-    k_values = [68]
+    k_values = [15, 37, 68, 100]
     device = patch_cfg.get("device", "cuda")
     
     # Initialize the patch-level novelty detector
