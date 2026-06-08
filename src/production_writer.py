@@ -38,6 +38,8 @@ class ProductionWriter:
                 # Background sample group
                 bg_grp = f.create_group("background_sample")
                 bg_grp.create_dataset("novelty_scores", data=background_scores, dtype='float32')
+                if background_gps is not None:
+                    bg_grp.create_dataset("gps_times", data=background_gps, dtype='float64')
                 bg_grp.attrs["threshold"] = threshold
                 bg_grp.attrs["calibration_timestamp"] = datetime.now(timezone.utc).isoformat()
                 
@@ -56,7 +58,7 @@ class ProductionWriter:
                     return float(f["background_sample"].attrs["threshold"])
         return None
 
-    def verify_and_init(self, metadata: dict, background_scores: np.ndarray, threshold: float):
+    def verify_and_init(self, metadata: dict, background_scores: np.ndarray, threshold: float, background_gps: np.ndarray = None):
         """Checks MD5 compatibility if resuming, or initializes new file."""
         if self.hdf5_path.exists():
             with h5py.File(self.hdf5_path, 'r') as f:

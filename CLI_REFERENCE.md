@@ -216,7 +216,22 @@ Automated continuous workflow that safely chains `patch-production` $\to$ `produ
   
 - *Accepts identical arguments as `patch-production`.*
 
-### 5b. `last-gps`
+### 5d. `production-report`
+Executes the final Phase 6 and 7 automated validation pipeline to produce the `full_discovery_report.md`. It performs cross-validation against the Gravity Spy catalog, calculates topological stability metrics, and generates saliency galleries.
+
+* **Under the Hood (Processing Details):**
+  1. Identifies the `novelties.h5` and `cluster_report.json` for the given session.
+  2. Executes internal VQ Cosine Similarity Fallback by normalizing and querying the compressed reference background index to map known classes.
+  3. Projects the 768D Multiple Instance Learning vectors down to an exact 4D space using UMAP (cosine metric) and calculates the Bootstrap Adjusted Rand Index (ARI, N=20).
+  4. Dynamically samples pristine background segments (`Science Mode`) from the GWOSC timeline, and computes the spatial median background.
+  5. Computes Ablation studies by extracting the `global_mean` and evaluating the Signal Dilution effect.
+  6. Renders Topological Saliency maps for the Top-5 clusters and generates the comprehensive Markdown report.
+
+- `--session-id` **(Required)**: Session ID to evaluate.
+- `--detector` **(Required)**: Detector. Choices: `H1`, `L1`.
+- `--run`: Search observational run. *Default: `O4a`*.
+
+### 5e. `last-gps`
 Returns the most advanced (end) GPS time to resume stopped runs without invoking external servers.
 
 * **Under the Hood (Processing Details):**

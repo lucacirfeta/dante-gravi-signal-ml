@@ -76,7 +76,7 @@ class PatchScorer:
         logger.info(f"Reference MD5 verified: {self.reference_md5}")
 
     @torch.no_grad()
-    def calibrate_threshold(self, background_spectrograms: list[np.ndarray], batch_size: int = 32) -> float:
+    def calibrate_threshold(self, background_spectrograms: list[np.ndarray], batch_size: int = 32) -> tuple[float, np.ndarray]:
         """Calibrates threshold empirically (p99) on background samples."""
         if len(background_spectrograms) < self.n_background:
             logger.warning(f"Calibration expected {self.n_background} samples, got {len(background_spectrograms)}")
@@ -88,7 +88,7 @@ class PatchScorer:
             for res in results:
                 all_novelty_scores.append(res["novelty_score"])
             
-        scores_np = np.array(all_novelty_scores)
+        scores_np = np.array(all_novelty_scores, dtype=np.float32)
         
         # Empirical percentile direct computation (Correction #3 implies no GEV)
         percentile_target = (1.0 - self.fpr) * 100.0
@@ -100,7 +100,7 @@ class PatchScorer:
         logger.info("[CALIBRATION] threshold (p%d):    %.4f", int(percentile_target), threshold)
         logger.info("[CALIBRATION] method: empirical_percentile")
         
-        return threshold
+        return threshold, scores_np
 
     @torch.no_grad()
     def score_spectrogram(self, spectrogram_arrays: list[np.ndarray], threshold: float) -> list[dict]:

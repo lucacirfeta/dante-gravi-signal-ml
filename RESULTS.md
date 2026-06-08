@@ -10,7 +10,7 @@ This document tracks the results of the `gravi-signal-ml` pipeline operating in 
 
 | Run | Session ID | GPS Start | GPS End | Duration (Hours) | Status |
 |:----|:-----------|:----------|:--------|:-----------------|:-------|
-| `O4a` | *TBD* | *TBD* | *TBD* | *TBD* | Awaiting Live Scan |
+| `O4a` | `1368973312` | 1368973312 | 1369478368 | ~140.3 | DetChar Validation Completed |
 
 ---
 
@@ -18,7 +18,7 @@ This document tracks the results of the `gravi-signal-ml` pipeline operating in 
 
 | Run | Session ID | Run Date/Time | Analysis Status | Salient Detections (NOVEL) |
 |:---|:-----------|:--------------|:----------------|:---------------------------|
-| - | - | - | - | - |
+| `O4a` | `1368973312` | 2026-06-08 | UMAP-4D DPMM (ARI=0.68) | **0** (183 Instrumental Anomalies / DetChar Transients) |
 
 ---
 
@@ -27,5 +27,3 @@ This document tracks the results of the `gravi-signal-ml` pipeline operating in 
 - **Threshold Calibration:** GEV distribution fitted on the local topological VQ index.
 - **Topological Saliency:** Extracted via pure spatial cosine similarity (no VQ weighting).
 - **Signal Dilution Barrier:** Broken via $K=37$ Top-K Patch Mean Pooling.
-
-*(New results will be populated here as `scan_live.py` executes the Patch-Level production runs).*

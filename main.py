@@ -2570,6 +2570,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         else:
             logger.info(f"Extracting {n_background} background samples for p99 calibration...")
             bg_samples = []
+            bg_gps = []
             rng = random.Random(seed)
             shuffled_files = list(producer.hdf5_files)
             rng.shuffle(shuffled_files)
@@ -2581,18 +2582,21 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             with tqdm(total=n_background, desc="Calibrating p99") as pbar:
                 for gps_batch, spec_batch in calib_producer:
                     bg_samples.extend(spec_batch)
+                    bg_gps.extend(gps_batch)
                     pbar.update(len(spec_batch))
                     if len(bg_samples) >= n_background:
                         break
             
             # Trim excess background samples
             bg_samples = bg_samples[:n_background]
+            bg_gps = bg_gps[:n_background]
                     
             if len(bg_samples) == 0:
                 logger.warning(f"No valid segments found for session {session}. Skipping.")
                 continue
                 
-            threshold = scorer.calibrate_threshold(bg_samples)
+            threshold, bg_scores = scorer.calibrate_threshold(bg_samples)
+            bg_gps_np = np.array(bg_gps, dtype=np.float64)
             
             metadata = {
                 "session_id": session,
@@ -2604,8 +2608,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 "timestamp_created": datetime.now(timezone.utc).isoformat()
             }
             
-            bg_scores_dummy = np.zeros(len(bg_samples), dtype=np.float32)
-            writer.verify_and_init(metadata, bg_scores_dummy, threshold)
+            writer.verify_and_init(metadata, bg_scores, threshold, bg_gps_np)
         
         last_gps = writer.load_checkpoint() if resume else None
         if last_gps:
@@ -2669,6 +2672,14 @@ def cmd_production_cluster(args):
     
     clusterer = H5Clusterer(h5_path=input_file, output_dir=output_dir)
     clusterer.run_clustering()
+def cmd_production_report(args):
+    """Run the Phase 6 production report pipeline."""
+    logger.info("=== Starting Production Report ===")
+    from src.production_report import ValidationReporter
+    reporter = ValidationReporter(session_id=args.session_id, detector=args.detector)
+    reporter.run()
+
+
 def cmd_patch_analysis(args):
     """Orchestrates the full Phase 4 & 5 pipeline."""
     logger.info("=== Starting Automated Patch-Analysis Pipeline ===")
@@ -2697,6 +2708,14 @@ def cmd_patch_analysis(args):
                 c_args.input = str(h5_path)
                 c_args.output_dir = str(output_dir / str(session))
                 cmd_production_cluster(c_args)
+                
+                logger.info(f"STEP 3: Production Report for session {session} ({det})")
+                class ReportArgs:
+                    pass
+                r_args = ReportArgs()
+                r_args.session_id = str(session)
+                r_args.detector = det
+                cmd_production_report(r_args)
             else:
                 logger.warning(f"No production output found at {h5_path}. Skipping clustering.")
 
@@ -3772,6 +3791,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="PyTorch batch size for DINOv2 extraction. Default: 32.",
     )
     p_patch_analysis.set_defaults(func=cmd_patch_analysis)
+
+    # --- production-report ---
+    p_production_report = subparsers.add_parser(
+        "production-report",
+        help="Automated Scientific Validation and Reporting (Phase 6).",
+    )
+    p_production_report.add_argument(
+        "--session-id", type=str, required=True, help="Session ID to report."
+    )
+    p_production_report.add_argument(
+        "--detector", type=str, default="H1", choices=["H1", "L1"]
+    )
+    p_production_report.set_defaults(func=cmd_production_report)
 
     return parser
 
