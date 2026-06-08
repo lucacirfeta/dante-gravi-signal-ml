@@ -213,13 +213,13 @@ Automated continuous workflow that safely chains `patch-production` $\to$ `produ
 * **Under the Hood (Processing Details):**
   1. Intercepts all configuration arguments and logs them globally for absolute traceability.
   2. Spawns the `patch-production` pipeline identically to the standalone command, natively enforcing `--resume`. It maintains state via `checkpoint.txt` and HDF5 SWMR checkpoints.
-  3. **State-Aware Resilience:** If a session's checkpoint is marked as `DONE`, the orchestrator skips the heavy DINOv2 processing instantly. If `full_discovery_report.md` exists, it skips the entire session, ensuring flawless and rapid execution when resuming massive multi-session runs.
+  3. **State-Aware Resilience:** If a session's checkpoint is marked as `DONE`, the orchestrator skips the heavy DINOv2 processing instantly. If `full_discovery_report_{detector}.md` exists, it skips the entire session, ensuring flawless and rapid execution when resuming massive multi-session runs.
   4. Upon conclusion of each step, it autonomously invokes the `production-cluster` and `production-report` commands sequentially.
   
 - *Accepts identical arguments as `patch-production`.*
 
 ### 5d. `production-report`
-Executes the final Phase 6 and 7 automated validation pipeline to produce the `full_discovery_report.md`. It performs cross-validation against the Gravity Spy catalog, calculates topological stability metrics, and generates saliency galleries.
+Executes the final Phase 6 and 7 automated validation pipeline to produce the `full_discovery_report_{detector}.md`. It performs cross-validation against the Gravity Spy catalog, calculates topological stability metrics, and generates saliency galleries.
 
 * **Under the Hood (Processing Details):**
   1. Identifies the `novelties.h5` and `cluster_report.json` for the given session.
