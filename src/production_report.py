@@ -105,7 +105,7 @@ class ValidationReporter:
             if len(segs) > 0:
                 logger.info(f"DQ shading: Using {self.detector}_CBC_CAT1 ({len(segs)} segments).")
                 return segs
-            # Tier 2: L1_DATA (data present)
+            # Tier 2: {self.detector}_DATA (data present)
             segs = get_segments(f"{self.detector}_DATA", start_gps, end_gps)
             if len(segs) > 0:
                 logger.info(f"DQ shading: CBC_CAT1 empty, using {self.detector}_DATA.")
@@ -712,8 +712,9 @@ class ValidationReporter:
             
         # Section IV.C
         md_content += f"## Section IV.C: Morphologically Unclassified Segments — Science Mode Verified ({self.detector}_CBC_CAT1)\n"
-        md_content += "Science mode verification used the L1_CBC_CAT1 flag via gwosc.timeline.get_segments. This is the most restrictive data quality flag publicly available for O4a through the GWOSC API. The LVK-internal flag DMT-ANALYSIS_READY:1 is not exposed in the public GWOSC release for O4a (returns 0 segments). All novel candidates were verified as occurring within L1_CBC_CAT1 active periods. Hardware injection flags (L1_HW_INJ, L1_CBC_INJ, L1_BURST_INJ) were checked with null result.\n\n"
-        md_content += "To further validate these candidates, we perform a strict coincidence check against the H1 detector (`H1_DATA`) and the GWTC-4.0 catalog for each GPS time (±60s window).\n\n"
+        md_content += f"Science mode verification used the {self.detector}_CBC_CAT1 flag via gwosc.timeline.get_segments. This is the most restrictive data quality flag publicly available for O4a through the GWOSC API. The LVK-internal flag DMT-ANALYSIS_READY:1 is not exposed in the public GWOSC release for O4a (returns 0 segments). All novel candidates were verified as occurring within {self.detector}_CBC_CAT1 active periods. Hardware injection flags ({self.detector}_HW_INJ, {self.detector}_CBC_INJ, {self.detector}_BURST_INJ) were checked with null result.\n\n"
+        other_det = "L1" if self.detector == "H1" else "H1"
+        md_content += f"To further validate these candidates, we perform a strict coincidence check against the {other_det} detector (`{other_det}_DATA`) and the GWTC-4.0 catalog for each GPS time (±60s window).\n\n"
         
         novelties = df_out[df_out["status"] == "TRUE_NOVEL_CANDIDATE"] if len(df_out) > 0 else []
         if len(novelties) == 0:
@@ -775,14 +776,15 @@ class ValidationReporter:
                     pass
                 gw_str = f"**GWTC Match:** {', '.join(matches)}" if matches else "**GWTC Match:** None (Not an astrophysical GW)"
                 
-                # Check H1
-                h1_str = "**H1 Coincidence:** Unavailable"
+                # Check other detector coincidence
+                other_det = "L1" if self.detector == "H1" else "H1"
+                cross_str = f"**{other_det} Coincidence:** Unavailable"
                 try:
-                    h1_segs = get_segments("H1_DATA", t, t+32)
-                    if len(h1_segs) > 0:
-                        h1_str = "**H1 Coincidence:** H1_DATA Active, NO corresponding morphological anomaly detected (Local L1 Glitch)"
+                    cross_segs = get_segments(f"{other_det}_DATA", t, t+32)
+                    if len(cross_segs) > 0:
+                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Active, NO corresponding morphological anomaly detected (Local {self.detector} Glitch)"
                     else:
-                        h1_str = "**H1 Coincidence:** H1_DATA Inactive (Unobservable)"
+                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Inactive (Unobservable)"
                 except:
                     pass
                     
@@ -792,7 +794,7 @@ class ValidationReporter:
                 md_content += f"### Candidate at GPS {t} (Cluster {cid})\n"
                 md_content += f"- **DQ status:** {self.detector}_CBC_CAT1 ACTIVE. DMT-ANALYSIS_READY:1 not verifiable via public API for O4a. Classification as astrophysical candidate is tentative pending official LVK DQ release.\n"
                 md_content += f"- {gw_str}\n"
-                md_content += f"- {h1_str}\n\n"
+                md_content += f"- {cross_str}\n\n"
                 if img_path.exists():
                     md_content += f"![{img_md}](saliency_gallery/{img_md})\n\n"
         
