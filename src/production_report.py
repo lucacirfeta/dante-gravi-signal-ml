@@ -652,7 +652,39 @@ class ValidationReporter:
         logger.info("--- Step 6: Full Report Compilation ---")
         import datetime
         import pandas as pd
+        import h5py
+        import numpy as np
         
+        # Calculate Distribution Separation
+        separation = None
+        try:
+            with h5py.File(self.h5_path, 'r') as f:
+                if '/background_sample/novelty_scores' in f and '/novelties/nov_scores' in f:
+                    bg_scores = f['/background_sample/novelty_scores'][:]
+                    novelties = f['/novelties/nov_scores'][:]
+                    if len(novelties) > 0:
+                        bg_mean = np.mean(bg_scores)
+                        bg_std = np.std(bg_scores)
+                        candidate_min = np.min(novelties)
+                        separation = (candidate_min - bg_mean) / bg_std
+                        
+                        logger.info(f"[CALIBRATION] Distribution separation (sigma): {separation:.2f}")
+                        
+                        if separation < 1.0:
+                            warn_msg = (
+                                "[CALIBRATION] Background and candidate distributions overlap significantly. "
+                                f"Separation = {separation:.2f} sigma. "
+                                "Results for this detector/session may not be reliable. "
+                                "Consider per-detector VQ index recalibration."
+                            )
+                            logger.warning(warn_msg)
+                            if "temporal_warning" not in self.status:
+                                self.status["temporal_warning"] = warn_msg
+                            else:
+                                self.status["temporal_warning"] += f"\n\n{warn_msg}"
+        except Exception as e:
+            logger.warning(f"Failed to calculate distribution separation: {e}")
+            
         md_content = f"# Full Discovery Report - Session {self.session_id}\n\n"
         md_content += f"**Detector**: {self.detector}\n"
         md_content += f"**Generated At**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC\n"
@@ -660,6 +692,10 @@ class ValidationReporter:
         
         md_content += "## 1. Executive Summary\n"
         md_content += "This report summarizes the final validation stage of the Gravitational-Wave anomaly detection pipeline. The pipeline operates strictly on the DINOv2 frozen features (384D Multiple Instance Learning vectors) without generative decoding, guaranteeing that the signal dilution limit is respected.\n\n"
+        
+        if separation is not None:
+            md_content += f"- **Distribution Separation**: {separation:.2f} $\\sigma$ (candidate min vs background mean)\n\n"
+
         
         if "temporal_warning" in self.status:
             md_content += f"> [!WARNING]\n> {self.status['temporal_warning']}\n\n"
