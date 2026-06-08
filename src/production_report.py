@@ -800,9 +800,9 @@ class ValidationReporter:
         md_content += "> [!IMPORTANT]\n"
         
         if len(novelties) > 0:
-            md_content += f"> **{len(novelties)} True Novel Candidates found.** All {len(novelties)} events passed the {dq_label} Science Mode gate. No candidates were rejected by DQ criteria.\n\n"
+            md_content += f"> **{len(novelties)} Morphologically Unclassified Segments found.** All {len(novelties)} events passed the {self.detector}_CBC_CAT1 Science Mode gate. No candidates were rejected by DQ criteria.\n\n"
         else:
-            md_content += f"> **Final Null Result**: The pipeline yielded **0 True Novel Candidates** during pristine Science Mode for this session. When rigorous DQ gating is applied, the Unsupervised DINOv2 pipeline produces **zero uncatalogued false positives**, confirming the robustness of both the pipeline and the detector's official Science Mode flag.\n\n"
+            md_content += f"> **Final Null Result**: The pipeline yielded **0 Morphologically Unclassified Segments** during pristine Science Mode for this session. When rigorous DQ gating is applied, the Unsupervised DINOv2 pipeline produces **zero uncatalogued false positives**, confirming the robustness of both the pipeline and the detector's official Science Mode flag.\n\n"
         
         md_content += "\n"
         

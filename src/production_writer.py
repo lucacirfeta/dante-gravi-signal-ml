@@ -118,6 +118,20 @@ class ProductionWriter:
         if self.checkpoint_path.exists():
             with open(self.checkpoint_path, "r") as f:
                 content = f.read().strip()
-                if content:
+                if content and content != "DONE":
                     return int(content)
         return None
+
+    def mark_completed(self):
+        """Marks the session as completely processed."""
+        with open(self.checkpoint_path, "w") as f:
+            f.write("DONE")
+
+    def is_completed(self) -> bool:
+        """Checks if the session is completely processed."""
+        if self.checkpoint_path.exists():
+            with open(self.checkpoint_path, "r") as f:
+                content = f.read().strip()
+                if content == "DONE":
+                    return True
+        return False

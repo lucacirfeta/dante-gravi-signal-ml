@@ -2556,6 +2556,10 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         logger.info(f"=== Starting Patch-Level Production for Session {session} ===")
         writer = ProductionWriter(output_dir, session, detector)
         
+        if resume and writer.is_completed():
+            logger.info(f"[SKIP] Session {session} is already fully parsed (DONE in checkpoint). Skipping Patch Production.")
+            continue
+            
         # Setup session logging manually since root wrapper misses list args
         from src.utils import set_session_log_file, close_session_log
         log_file = writer.logs_dir / "session.log"
@@ -2666,6 +2670,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             if processed % 1000 < len(valid_gps):
                 torch.cuda.empty_cache()
                 
+        writer.mark_completed()
         logger.info(f"=== Session {session} Complete. Novel found: {novel_count} ===")
         close_session_log()
 
@@ -2696,6 +2701,9 @@ def cmd_patch_analysis(args):
     """Orchestrates the full Phase 4 & 5 pipeline."""
     logger.info("=== Starting Automated Patch-Analysis Pipeline ===")
     
+    # Enable resume by default for automated full-pipeline runs
+    args.resume = True
+    
     logger.info("STEP 1: Patch Production")
     cmd_patch_production(args)
     
@@ -2711,6 +2719,12 @@ def cmd_patch_analysis(args):
     
     for session in sessions_to_process:
         for det in detectors:
+            # Check if session is already fully completed (report exists)
+            report_file = output_dir / str(session) / "report" / "full_discovery_report.md"
+            if report_file.exists():
+                logger.info(f"[SKIP] Session {session} ({det}) is already fully analyzed (report exists).")
+                continue
+                
             h5_path = output_dir / str(session) / f"novelties_{session}_{det}.h5"
             if h5_path.exists():
                 logger.info(f"STEP 2: Clustering for session {session} ({det})")
