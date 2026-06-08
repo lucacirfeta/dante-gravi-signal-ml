@@ -2720,7 +2720,7 @@ def cmd_patch_analysis(args):
     for session in sessions_to_process:
         for det in detectors:
             # Check if session is already fully completed (report exists)
-            report_file = output_dir / str(session) / "report" / "full_discovery_report.md"
+            report_file = output_dir / str(session) / "report" / f"full_discovery_report_{det}.md"
             if report_file.exists():
                 logger.info(f"[SKIP] Session {session} ({det}) is already fully analyzed (report exists).")
                 continue

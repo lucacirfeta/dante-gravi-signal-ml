@@ -47,7 +47,7 @@ class ValidationReporter:
         self.saliency_dir = self.report_dir / "saliency_gallery"
         self.saliency_dir.mkdir(parents=True, exist_ok=True)
         
-        self.status_file = self.report_dir / "report_status.json"
+        self.status_file = self.report_dir / f"report_status_{detector}.json"
         self.status = self._load_status()
         self.status["MD5_index"] = "1080afa809964011e398c44fb24b73c6"
         self._save_status()
@@ -287,7 +287,7 @@ class ValidationReporter:
         # We leave them as TRUE_NOVEL_CANDIDATE in the CSV so they get picked up
         # by Section IV.C logic, which we renamed to DetChar.
         
-        out_csv = self.report_dir / "morphcheck_novelties.csv"
+        out_csv = self.report_dir / f"morphcheck_novelties_{self.detector}.csv"
         df_out.to_csv(out_csv, index=False)
         self.status["morphcheck_stats"] = {
             "total_candidates": len(df_out),
@@ -343,7 +343,7 @@ class ValidationReporter:
         ax.set_title("Temporal Distribution of Anomalous Clusters")
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig(self.report_dir / "temporal_distribution.png", dpi=200)
+        plt.savefig(self.report_dir / f"temporal_distribution_{self.detector}.png", dpi=200)
         plt.close()
 
     def step3_stability_metrics(self):
@@ -645,7 +645,7 @@ class ValidationReporter:
         ax.legend()
         
         fig.tight_layout()
-        plt.savefig(self.report_dir / "pooling_comparison.png", dpi=200)
+        plt.savefig(self.report_dir / f"pooling_comparison_{self.detector}.png", dpi=200)
         plt.close()
 
     def step6_compile_report(self):
@@ -673,12 +673,12 @@ class ValidationReporter:
         md_content += f"- **Known (Gravity Spy / VQ Match)**: {stats.get('known', 0)}\n"
         md_content += f"- **Unclassified (Novel Candidates)**: {stats.get('unclassified', 0)}\n"
         md_content += f"- **Instrumental Anomalies (Out of Science Mode)**: {stats.get('instrumental', 0)}\n\n"
-        md_content += "The full list of matches is available in [`morphcheck_novelties.csv`](morphcheck_novelties.csv).\n\n"
+        md_content += f"The full list of matches is available in [`morphcheck_novelties_{self.detector}.csv`](morphcheck_novelties_{self.detector}.csv).\n\n"
         
         # Section IV.A
         md_content += "## Section IV.A: The Signal Dilution Proof\n"
         md_content += "This ablation validates the core premise: Global Pooling fails to identify micro-structural transients because the denominator (1369 patches) mediates the signal with the background noise. Our Multiple Instance Learning approach (Top-68 patches) lifts the signal above the background threshold seamlessly.\n\n"
-        md_content += "![Pooling Comparison](pooling_comparison.png)\n\n"
+        md_content += f"![Pooling Comparison](pooling_comparison_{self.detector}.png)\n\n"
         
         # Section IV.B
         md_content += "## Section IV.B: Unsupervised Morphology Discovery\n"
@@ -702,11 +702,11 @@ class ValidationReporter:
         
         dq_flag = self.status.get('dq_flag_used', 'CBC_CAT1')
         md_content += f"Scatter plot of Cluster IDs over GPS time. The shaded background represents Data Quality (DQ) intervals, filtered using the `{dq_flag}` flag:\n\n"
-        md_content += "![Temporal Distribution](temporal_distribution.png)\n\n"
+        md_content += f"![Temporal Distribution](temporal_distribution_{self.detector}.png)\n\n"
         
         # Read the DataFrame
         df_out = pd.DataFrame()
-        csv_path = self.report_dir / "morphcheck_novelties.csv"
+        csv_path = self.report_dir / f"morphcheck_novelties_{self.detector}.csv"
         if csv_path.exists():
             df_out = pd.read_csv(csv_path)
             
@@ -817,10 +817,10 @@ class ValidationReporter:
         except Exception as e:
             md_content += f"Could not load gallery images: {e}\n"
             
-        with open(self.report_dir / "full_discovery_report.md", "w") as f:
+        with open(self.report_dir / f"full_discovery_report_{self.detector}.md", "w") as f:
             f.write(md_content)
             
-        with open(self.report_dir / "report_status.json", "w") as f:
+        with open(self.status_file, "w") as f:
             json.dump(self.status, f, indent=4)
             
         logger.info("Full Report compiled successfully.")
