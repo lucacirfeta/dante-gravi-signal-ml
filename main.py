@@ -609,10 +609,11 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     if run_start is None:
         run_start = _run_start_gps(run, cfg)
 
-    aligned_start = (run_start // 4096) * 4096
-    if aligned_start != run_start:
-        logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", run_start, aligned_start)
-        run_start = aligned_start
+    if session_id is None and getattr(args, "start_gps", None) is None:
+        aligned_start = (run_start // 4096) * 4096
+        if aligned_start != run_start:
+            logger.warning("GPS di partenza allineato da %d a %d per evitare boundary bug", run_start, aligned_start)
+            run_start = aligned_start
 
     run_end = cfg.get(f"{run.lower()}_window", {}).get("gps_end", 9999999999)
     folder_size = int(hours * 3600)
