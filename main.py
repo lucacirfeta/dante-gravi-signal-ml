@@ -627,31 +627,31 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
         else:
             logger.info("Ricerca prima cartella incompleta a partire da %d...", current_folder_start)
             while current_folder_start < run_end:
-            folder_path = base_dir / str(current_folder_start)
-            expected_end = current_folder_start + folder_size
-            if expected_end > run_end:
-                expected_end = run_end
-                
-            missing_files = False
-            if not folder_path.exists():
-                missing_files = True
-            else:
-                for det in detectors:
-                    s = current_folder_start
-                    while s < expected_end:
-                        e = min(s + segment_duration, expected_end)
-                        if not (folder_path / f"{det}_{s}_{e}.hdf5").exists():
-                            missing_files = True
+                folder_path = base_dir / str(current_folder_start)
+                expected_end = current_folder_start + folder_size
+                if expected_end > run_end:
+                    expected_end = run_end
+                    
+                missing_files = False
+                if not folder_path.exists():
+                    missing_files = True
+                else:
+                    for det in detectors:
+                        s = current_folder_start
+                        while s < expected_end:
+                            e = min(s + segment_duration, expected_end)
+                            if not (folder_path / f"{det}_{s}_{e}.hdf5").exists():
+                                missing_files = True
+                                break
+                            s += segment_duration
+                        if missing_files:
                             break
-                        s += segment_duration
-                    if missing_files:
-                        break
-            
-            if missing_files:
-                logger.info("Trovata cartella da completare: %d", current_folder_start)
-                break
-            
-            current_folder_start += folder_size
+                
+                if missing_files:
+                    logger.info("Trovata cartella da completare: %d", current_folder_start)
+                    break
+                
+                current_folder_start += folder_size
 
     if current_folder_start >= run_end:
         logger.info("Tutti i dati fino a %d sono già stati scaricati o non ci sono più dati da scaricare.", run_end)
