@@ -208,12 +208,13 @@ Clusters the 384D novel anomalies extracted during `patch-production`. This comm
 - `--output-dir`: Output directory for the cluster report and UMAP plots. If omitted, saves alongside the input file.
 
 ### 5c. `patch-analysis` (Meta-Command)
-Automated continuous workflow that safely chains `patch-production` $\to$ `production-cluster` into a zero-click pipeline.
+Automated continuous workflow that safely chains `patch-production` $\to$ `production-cluster` $\to$ `production-report` into a zero-click, state-aware pipeline.
 
 * **Under the Hood (Processing Details):**
   1. Intercepts all configuration arguments and logs them globally for absolute traceability.
-  2. Spawns the `patch-production` pipeline identically to the standalone command, processing all folders or specific sessions, maintaining state via HDF5 SWMR checkpoints.
-  3. Upon conclusion of each session, it natively extracts the generated `novelties.h5` path and autonomously invokes the `production-cluster` command.
+  2. Spawns the `patch-production` pipeline identically to the standalone command, natively enforcing `--resume`. It maintains state via `checkpoint.txt` and HDF5 SWMR checkpoints.
+  3. **State-Aware Resilience:** If a session's checkpoint is marked as `DONE`, the orchestrator skips the heavy DINOv2 processing instantly. If `full_discovery_report.md` exists, it skips the entire session, ensuring flawless and rapid execution when resuming massive multi-session runs.
+  4. Upon conclusion of each step, it autonomously invokes the `production-cluster` and `production-report` commands sequentially.
   
 - *Accepts identical arguments as `patch-production`.*
 
