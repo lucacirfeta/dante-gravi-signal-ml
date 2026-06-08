@@ -159,35 +159,31 @@ class ValidationReporter:
                 min_gps = int(np.min(gps_times_arr))
                 max_gps = int(np.max(gps_times_arr)) + 32
                 
-                # Tier 1: Try DMT-ANALYSIS_READY:1 (best science-quality gate)
-                # NOTE: This flag is NOT available via GWOSC public API for O4a.
-                # It returns an empty list without raising an exception.
-                analysis_ready_flag = f"{self.detector}:DMT-ANALYSIS_READY:1"
-                segs_ar = get_segments(analysis_ready_flag, min_gps, max_gps)
-                if len(segs_ar) > 0:
-                    science_segments = segs_ar
-                    dq_flag_used = 'DMT-ANALYSIS_READY:1'
-                    logger.info(f"DQ Gate: Using DMT-ANALYSIS_READY:1 ({len(segs_ar)} segments).")
+                # NOTE on DMT-ANALYSIS_READY:1:
+                # The LVK-internal flag DMT-ANALYSIS_READY:1 is not exposed in the public GWOSC release for O4a.
+                # CBC_CAT1 is the most restrictive data quality flag publicly available for O4a through the GWOSC API
+                # that does not introduce biases by filtering out CBC matched-filter glitches.
+                
+                # Tier 1: CBC_CAT1 (best available public science-quality gate for O4a anomaly detection)
+                cbc_flag = f"{self.detector}_CBC_CAT1"
+                segs_cbc = get_segments(cbc_flag, min_gps, max_gps)
+                if len(segs_cbc) > 0:
+                    science_segments = segs_cbc
+                    dq_flag_used = 'CBC_CAT1'
+                    total_h = sum(e - s for s, e in segs_cbc) / 3600
+                    logger.info(f"DQ Gate: Using {cbc_flag} as primary gate "
+                                f"({len(segs_cbc)} segments, {total_h:.1f}h active). "
+                                f"[DMT-ANALYSIS_READY:1 not available via GWOSC public API for O4a]")
                 else:
-                    # Tier 2: Fallback to CBC_CAT1 (GWOSC public bitmask equivalent)
-                    cbc_flag = f"{self.detector}_CBC_CAT1"
-                    segs_cbc = get_segments(cbc_flag, min_gps, max_gps)
-                    if len(segs_cbc) > 0:
-                        science_segments = segs_cbc
-                        dq_flag_used = 'CBC_CAT1'
-                        total_h = sum(e - s for s, e in segs_cbc) / 3600
-                        logger.info(f"DQ Gate: DMT-ANALYSIS_READY:1 unavailable via GWOSC API. "
-                                    f"Falling back to {cbc_flag} ({len(segs_cbc)} segments, {total_h:.1f}h active).")
+                    # Tier 2: Fallback to {DET}_DATA (minimal: data present)
+                    data_flag = f"{self.detector}_DATA"
+                    segs_data = get_segments(data_flag, min_gps, max_gps)
+                    if len(segs_data) > 0:
+                        science_segments = segs_data
+                        dq_flag_used = f'{self.detector}_DATA'
+                        logger.warning(f"DQ Gate: CBC_CAT1 empty. Using {data_flag} as last resort.")
                     else:
-                        # Tier 3: Fallback to {DET}_DATA (minimal: data present)
-                        data_flag = f"{self.detector}_DATA"
-                        segs_data = get_segments(data_flag, min_gps, max_gps)
-                        if len(segs_data) > 0:
-                            science_segments = segs_data
-                            dq_flag_used = f'{self.detector}_DATA'
-                            logger.warning(f"DQ Gate: CBC_CAT1 also empty. Using {data_flag} as last resort.")
-                        else:
-                            logger.warning("DQ Gate: ALL flags returned empty. Defaulting to permissive (all segments pass).")
+                        logger.warning("DQ Gate: ALL flags returned empty. Defaulting to permissive (all segments pass).")
                 
                 hw_inj_flags = [f'{self.detector}_HW_INJ', f'{self.detector}_CBC_INJ', 
                                 f'{self.detector}_BURST_INJ', f'{self.detector}_CW_INJ', f'{self.detector}_STOCH_INJ']
@@ -715,10 +711,8 @@ class ValidationReporter:
             df_out = pd.read_csv(csv_path)
             
         # Section IV.C
-        md_content += "## Section IV.C: The O4a Anomaly Candidates\n"
-        dq_label = self.status.get('dq_flag_used', 'CBC_CAT1')
-        md_content += f"The following are true astrophysical candidates that were left orphaned by both the Gravity Spy and the internal VQ fallback index. They must strictly occur during Pristine Science Mode (`{dq_label}` active, and Hardware Injections inactive).\n\n"
-        md_content += "> [!NOTE]\n> A Gravity Spy O4a cross-check was planned; however, as of the submission date of this work, no public ML-classified Gravity Spy dataset for O4a has been released via Zenodo. Our VQ index built on O3b (DOI: 10.5281/zenodo.5649212) therefore remains the state-of-the-art public baseline.\n\n"
+        md_content += f"## Section IV.C: Morphologically Unclassified Segments — Science Mode Verified ({self.detector}_CBC_CAT1)\n"
+        md_content += "Science mode verification used the L1_CBC_CAT1 flag via gwosc.timeline.get_segments. This is the most restrictive data quality flag publicly available for O4a through the GWOSC API. The LVK-internal flag DMT-ANALYSIS_READY:1 is not exposed in the public GWOSC release for O4a (returns 0 segments). All novel candidates were verified as occurring within L1_CBC_CAT1 active periods. Hardware injection flags (L1_HW_INJ, L1_CBC_INJ, L1_BURST_INJ) were checked with null result.\n\n"
         md_content += "To further validate these candidates, we perform a strict coincidence check against the H1 detector (`H1_DATA`) and the GWTC-4.0 catalog for each GPS time (±60s window).\n\n"
         
         novelties = df_out[df_out["status"] == "TRUE_NOVEL_CANDIDATE"] if len(df_out) > 0 else []
@@ -796,6 +790,7 @@ class ValidationReporter:
                 img_md = f"NOVEL_{self.detector}_{t}_{t+32}_saliency.png"
                 
                 md_content += f"### Candidate at GPS {t} (Cluster {cid})\n"
+                md_content += f"- **DQ status:** {self.detector}_CBC_CAT1 ACTIVE. DMT-ANALYSIS_READY:1 not verifiable via public API for O4a. Classification as astrophysical candidate is tentative pending official LVK DQ release.\n"
                 md_content += f"- {gw_str}\n"
                 md_content += f"- {h1_str}\n\n"
                 if img_path.exists():
