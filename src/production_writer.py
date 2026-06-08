@@ -60,13 +60,26 @@ class ProductionWriter:
 
     def verify_and_init(self, metadata: dict, background_scores: np.ndarray, threshold: float, background_gps: np.ndarray = None):
         """Checks MD5 compatibility if resuming, or initializes new file."""
+        is_corrupted = False
         if self.hdf5_path.exists():
-            with h5py.File(self.hdf5_path, 'r') as f:
-                existing_md5 = f["metadata"].attrs.get("reference_md5")
-                if existing_md5 != metadata["reference_md5"]:
-                    raise RuntimeError(f"Cannot resume: existing HDF5 has reference MD5 {existing_md5}, but current is {metadata['reference_md5']}")
-                logger.info(f"Verified existing HDF5 index MD5: {existing_md5}")
-        else:
+            try:
+                with h5py.File(self.hdf5_path, 'r') as f:
+                    if "novelties" not in f or "metadata" not in f:
+                        is_corrupted = True
+                    else:
+                        existing_md5 = f["metadata"].attrs.get("reference_md5")
+                        if existing_md5 != metadata["reference_md5"]:
+                            raise RuntimeError(f"Cannot resume: existing HDF5 has reference MD5 {existing_md5}, but current is {metadata['reference_md5']}")
+                        logger.info(f"Verified existing HDF5 index MD5: {existing_md5}")
+            except Exception as e:
+                is_corrupted = True
+                logger.warning(f"Failed to read HDF5: {e}")
+                
+            if is_corrupted:
+                logger.warning("HDF5 file is corrupted or incomplete. Removing and re-initializing...")
+                self.hdf5_path.unlink()
+                
+        if not self.hdf5_path.exists():
             self._init_hdf5(metadata, background_scores, threshold, background_gps)
             
     def append_novel(self, gps_start: float, result_dict: dict):
