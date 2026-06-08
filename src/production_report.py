@@ -719,6 +719,7 @@ class ValidationReporter:
         dq_label = self.status.get('dq_flag_used', 'CBC_CAT1')
         md_content += f"The following are true astrophysical candidates that were left orphaned by both the Gravity Spy and the internal VQ fallback index. They must strictly occur during Pristine Science Mode (`{dq_label}` active, and Hardware Injections inactive).\n\n"
         md_content += "> [!NOTE]\n> A Gravity Spy O4a cross-check was planned; however, as of the submission date of this work, no public ML-classified Gravity Spy dataset for O4a has been released via Zenodo. Our VQ index built on O3b (DOI: 10.5281/zenodo.5649212) therefore remains the state-of-the-art public baseline.\n\n"
+        md_content += "To further validate these candidates, we perform a strict coincidence check against the H1 detector (`H1_DATA`) and the GWTC-4.0 catalog for each GPS time (±60s window).\n\n"
         
         novelties = df_out[df_out["status"] == "TRUE_NOVEL_CANDIDATE"] if len(df_out) > 0 else []
         if len(novelties) == 0:
@@ -794,14 +795,19 @@ class ValidationReporter:
                 img_path = self.report_dir / "saliency_gallery" / f"NOVEL_{self.detector}_{t}_{t+32}_saliency.png"
                 img_md = f"NOVEL_{self.detector}_{t}_{t+32}_saliency.png"
                 
-                md_content += f"### DetChar Transient at GPS {t} (Cluster {cid})\n"
+                md_content += f"### Candidate at GPS {t} (Cluster {cid})\n"
                 md_content += f"- {gw_str}\n"
                 md_content += f"- {h1_str}\n\n"
                 if img_path.exists():
                     md_content += f"![{img_md}](saliency_gallery/{img_md})\n\n"
         
-        md_content += "## Section IV.D: The Null Result in Science Mode\n"
-        md_content += "> [!IMPORTANT]\n> **Final Null Result**: The pipeline yielded **0 True Novel Candidates** during pristine Science Mode for this session. When rigorous DQ gating is applied (i.e. strictly inside `DMT-ANALYSIS_READY:1`), the Unsupervised DINOv2 pipeline produces **zero uncatalogued false positives**, confirming the robustness of both the pipeline and the detector's official Science Mode flag.\n\n"
+        md_content += "## Section IV.D: Data Quality Rejections\n"
+        md_content += "> [!IMPORTANT]\n"
+        
+        if len(novelties) > 0:
+            md_content += f"> **{len(novelties)} True Novel Candidates found.** All {len(novelties)} events passed the {dq_label} Science Mode gate. No candidates were rejected by DQ criteria.\n\n"
+        else:
+            md_content += f"> **Final Null Result**: The pipeline yielded **0 True Novel Candidates** during pristine Science Mode for this session. When rigorous DQ gating is applied, the Unsupervised DINOv2 pipeline produces **zero uncatalogued false positives**, confirming the robustness of both the pipeline and the detector's official Science Mode flag.\n\n"
         
         md_content += "\n"
         

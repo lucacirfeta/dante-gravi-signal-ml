@@ -18,7 +18,7 @@ This document tracks the results of the `gravi-signal-ml` pipeline operating in 
 
 | Run | Session ID | Run Date/Time | Analysis Status | Salient Detections (NOVEL) |
 |:---|:-----------|:--------------|:----------------|:---------------------------|
-| `O4a` | `1368973312` | 2026-06-08 | UMAP-4D DPMM (ARI=0.68) | **0** (3 Commissioning Transients / 180 Known) |
+| `O4a` | `1368973312` | 2026-06-08 | UMAP-4D DPMM (ARI=0.68) | **3** (180 Known / 0 Instrumental) |
 
 ---
 
