@@ -163,6 +163,7 @@ Massive download of strain data (GWOSC) in `.hdf5` format.
 - `--run`: Base observational run. *Default: `O4a`*.
 - `--hours`: Total hours to download. *Default: read from config.yaml for the specified run*.
 - `--start-gps`: Overrides the start GPS time. *Default: read from config.yaml for the specified run*.
+- `--session-id`: Alias for `--start-gps`. Specifies the exact folder/GPS to resume from. If combined with `--continue`, it forces the download to start exactly here and loop forward.
 - `--output-dir`: Cache output folder. *Default: `data/raw`*.
 - `--segment-duration`: Download chunk duration (in seconds). *Default: `4096`*.
 - `--no-resume`: Flag. Disables automatic resume.

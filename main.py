@@ -600,7 +600,12 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
         logger.error("Errore: il limite massimo è di 4 thread per detector (--workers 8).")
         sys.exit(1)
 
+    session_id = getattr(args, "session_id", None)
     run_start = getattr(args, "start_gps", None)
+    
+    if session_id is not None:
+        run_start = session_id
+
     if run_start is None:
         run_start = _run_start_gps(run, cfg)
 
@@ -614,8 +619,14 @@ def cmd_fetch_raw(args: argparse.Namespace) -> None:
     current_folder_start = run_start
 
     if continue_download:
-        logger.info("Ricerca prima cartella incompleta a partire da %d...", current_folder_start)
-        while current_folder_start < run_end:
+        if session_id is not None:
+            # Se è specificato il session_id e --continue, partiamo esattamente dal session_id 
+            # colmando i buchi e impostiamo il loop per continuare con i successivi.
+            loop_download = True
+            logger.info("Session ID %d specificato con --continue. Il download riprenderà da questa cartella e continuerà in loop.", current_folder_start)
+        else:
+            logger.info("Ricerca prima cartella incompleta a partire da %d...", current_folder_start)
+            while current_folder_start < run_end:
             folder_path = base_dir / str(current_folder_start)
             expected_end = current_folder_start + folder_size
             if expected_end > run_end:
@@ -3056,6 +3067,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help="Optional GPS start time to override the run start logic.",
+    )
+    p_fetch_raw.add_argument(
+        "--session-id",
+        type=int,
+        default=None,
+        help="Alias for --start-gps to resume or start from a specific folder. If --continue is also passed, it will loop forward from this session.",
     )
     p_fetch_raw.add_argument(
         "--output-dir",
