@@ -663,7 +663,7 @@ class ValidationReporter:
         md_content += f"**Reference MD5 (Vector Quantized Index)**: `{self.status.get('MD5_index')}`\n\n"
         
         md_content += "## 1. Executive Summary\n"
-        md_content += "This report summarizes the final validation stage of the Gravitational-Wave anomaly detection pipeline. The pipeline operates strictly on the DINOv2 frozen features (768D Multiple Instance Learning vectors) without generative decoding, guaranteeing that the signal dilution limit is respected.\n\n"
+        md_content += "This report summarizes the final validation stage of the Gravitational-Wave anomaly detection pipeline. The pipeline operates strictly on the DINOv2 frozen features (384D Multiple Instance Learning vectors) without generative decoding, guaranteeing that the signal dilution limit is respected.\n\n"
         
         if "temporal_warning" in self.status:
             md_content += f"> [!WARNING]\n> {self.status['temporal_warning']}\n\n"

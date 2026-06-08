@@ -26,7 +26,7 @@ class ProductionWriter:
         self.hdf5_path = self.output_dir / f"novelties_{self.session_id}_{self.detector}.h5"
         self.checkpoint_path = self.checkpoints_dir / f"last_gps_{self.session_id}_{self.detector}.txt"
         
-    def _init_hdf5(self, metadata: dict, background_scores: np.ndarray, threshold: float):
+    def _init_hdf5(self, metadata: dict, background_scores: np.ndarray, threshold: float, background_gps: np.ndarray = None):
         """Initializes the HDF5 structure if it doesn't exist."""
         if not self.hdf5_path.exists():
             with h5py.File(self.hdf5_path, 'w', libver='latest') as f:
@@ -67,7 +67,7 @@ class ProductionWriter:
                     raise RuntimeError(f"Cannot resume: existing HDF5 has reference MD5 {existing_md5}, but current is {metadata['reference_md5']}")
                 logger.info(f"Verified existing HDF5 index MD5: {existing_md5}")
         else:
-            self._init_hdf5(metadata, background_scores, threshold)
+            self._init_hdf5(metadata, background_scores, threshold, background_gps)
             
     def append_novel(self, gps_start: float, result_dict: dict):
         """Appends a novel segment directly to the HDF5 file using SWMR."""

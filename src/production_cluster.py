@@ -39,12 +39,12 @@ class H5Clusterer:
             logger.warning("No anomalies found. Skipping clustering.")
             return {}
             
-        # 1. Enforce strict L2 normalization mathematically (shape is 768D)
+        # 1. Enforce strict L2 normalization mathematically (shape is 384D)
         # Note: PyTorch tensor conversion is used for speed, then back to numpy
         vectors_t = torch.from_numpy(mil_vectors)
         vectors_norm = F.normalize(vectors_t, p=2, dim=-1).numpy()
         
-        # 2. DPMM Clustering on full 768D space
+        # 2. DPMM Clustering on full 384D space
         # We set n_components high, DPMM will prune unused clusters
         max_components = min(30, n_samples)
         logger.info(f"Running BayesianGaussianMixture on full {vectors_norm.shape[1]}D vectors...")

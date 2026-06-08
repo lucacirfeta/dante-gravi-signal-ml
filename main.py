@@ -3721,7 +3721,7 @@ def build_parser() -> argparse.ArgumentParser:
     # --- production-cluster ---
     p_prod_cluster = subparsers.add_parser(
         "production-cluster",
-        help="Clusters the 768D novel anomalies extracted during patch-production.",
+        help="Clusters the 384D novel anomalies extracted during patch-production.",
     )
     p_prod_cluster.add_argument(
         "--input",
