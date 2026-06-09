@@ -50,8 +50,9 @@ class H5Clusterer:
         logger.info(f"Running BayesianGaussianMixture on full {vectors_norm.shape[1]}D vectors...")
         
         dpmm = BayesianGaussianMixture(
-            n_components=max_components,
+            n_components=min(20, max_components),  # Reduced component count to avoid overfitting
             covariance_type='full',
+            reg_covar=1e-3,  # Added regularization to handle singular covariances
             weight_concentration_prior_type='dirichlet_process',
             weight_concentration_prior=0.01, # Encourage sparsity
             max_iter=500,
