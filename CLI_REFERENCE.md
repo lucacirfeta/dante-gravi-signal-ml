@@ -199,12 +199,12 @@ Run the Phase 4 Patch-Level Production pipeline directly on raw O4a data.
 - `--batch-size`: Number of spectrograms grouped per DINOv2 GPU inference pass. *Default: `32`*.
 
 ### 5b. `production-cluster`
-Clusters the 384D novel anomalies extracted during `patch-production`. This command operates strictly on the HDF5 output of Phase 4 without applying any PCA bottlenecks to preserve DINOv2 non-linear topology.
+Clusters the 384D novel anomalies extracted during `patch-production`. This command applies an Adaptive PCA (preserving 90% variance) to prevent DPMM algebraic collapse on small samples (n < 200), followed by conditional covariance modeling.
 
 * **Under the Hood (Processing Details):**
   1. Opens the `novelties.h5` SWMR archive.
   2. Extracts the `mil_vectors` (384D) and rigorously enforces PyTorch L2-normalization on the entire set.
-  3. Executes the Dirichlet Process Mixture Model (`BayesianGaussianMixture`) directly on the 384D space to calculate the topological likelihood of each segment belonging to a new cluster class.
+  3. Executes the Dirichlet Process Mixture Model (`BayesianGaussianMixture`) on the PCA-reduced space with conditional covariance constraints (`full`, `tied`, `diag`) to calculate the topological likelihood of each segment belonging to a new cluster class.
   4. Projects the 384D space down to 2D using UMAP (cosine metric) strictly for visualization purposes.
   5. Saves a comprehensive JSON `cluster_report` mapped to the physical GPS times and a `umap_novelties.png` scatter plot.
 

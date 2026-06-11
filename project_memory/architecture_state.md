@@ -24,7 +24,7 @@ La repository è organizzata in tre package principali per imporre la Single Res
 | File | Ruolo | Stato |
 |------|-------|-------|
 | `patch_production.py` | DINOv2 inference, Patch-Level MIL (384D), extreme-value thresholding, SWMR HDF5 | ✅ Stabile |
-| `production_cluster.py` | DPMM clustering diretto su 384D, no PCA, conservazione topologia | ✅ Stabile |
+| `production_cluster.py` | Adaptive PCA (90% var), DPMM con Conditional Covariance per fix collapse < 200 samples | ✅ Stabile |
 | `production_report.py` | Generazione report Markdown, UMAP 4D ARI, Saliency Map overlay | ✅ Stabile |
 | `aggregate_report.py` | Cross-session reducer: deduplicazione, Table 3a/3b, Spearman rank test | ✅ Stabile |
 | `live_umap.py` | Dashboard interattiva in tempo reale per exhibition fisica | ✅ Stabile |
@@ -64,8 +64,8 @@ Contiene i moduli sperimentali originali basati su Token CLS globale (768D), PCA
            ▼
        pipeline_v2_production/production_cluster.py
        ┌─────────────────────────────────┐
-       │ NO PCA (Direct 384D Space)      │
-       │ Dirichlet Process Mixture Model │
+       │ Adaptive PCA (90% var / n-1)    │
+       │ DPMM (Conditional Covariance)   │
        │ Output: cluster_report.json     │
        └─────────────────────────────────┘
            │

@@ -168,7 +168,7 @@ gravi-signal-ml/
 │   │   └── wizard.py                        # Interactive CLI wizard
 │   │
 │   ├── pipeline_v2_production/              # RIGID PRODUCTION O4A ENGINE (384D)
-│   │   ├── production_cluster.py            # DPMM + 384D MIL geometry
+│   │   ├── production_cluster.py            # Adaptive PCA + Conditional DPMM
 │   │   ├── production_report.py             # Per-session Markdown report generator
 │   │   ├── aggregate_report.py              # Cross-session deduplicator & Spearman reducer
 │   │   ├── production_writer.py             # SWMR-enabled HDF5 novelty archive writer

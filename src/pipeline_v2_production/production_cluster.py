@@ -74,24 +74,54 @@ class H5Clusterer:
         vectors_t = torch.from_numpy(mil_vectors)
         vectors_norm = F.normalize(vectors_t, p=2, dim=-1).numpy()
         
-        # 2. DPMM Clustering on full 384D space
-        # We set n_components high, DPMM will prune unused clusters
-        max_components = min(30, n_samples)
-        logger.info(f"Running BayesianGaussianMixture on full {vectors_norm.shape[1]}D vectors...")
+        # 2. Adaptive PCA for Dimensionality Reduction
+        from sklearn.decomposition import PCA
         
+        d_input = vectors_norm.shape[1]
+        if n_samples < 10:
+            n_components_pca = n_samples - 1
+        else:
+            n_components_pca = 0.90
+            
+        pca = PCA(n_components=n_components_pca, svd_solver='full', random_state=42)
+        vectors_reduced = pca.fit_transform(vectors_norm)
+        d_output = vectors_reduced.shape[1]
+        variance_retained = float(np.sum(pca.explained_variance_ratio_))
+        
+        logger.info(f"PCA: {d_input}D → {d_output}D (varianza: {variance_retained:.1%})")
+        
+        # 3. Conditional Covariance & Adaptive Regularization for DPMM
+        if n_samples >= 200:
+            cov_type = 'full'
+        elif 50 <= n_samples < 200:
+            cov_type = 'tied'
+        else:
+            cov_type = 'diag'
+            
+        logger.info(f"DPMM covariance_type: {cov_type} (n={n_samples})")
+        
+        if n_samples < 100:
+            reg_covar = 1e-3
+        else:
+            reg_covar = 1e-4
+
+        max_components = 30
+        n_components_dpmm = min(15, n_samples, max_components)
+        
+        logger.info(f"Running BayesianGaussianMixture on {d_output}D vectors...")
         dpmm = BayesianGaussianMixture(
-            n_components=min(20, max_components),  # Reduced component count to avoid overfitting
-            covariance_type='full',
-            reg_covar=1e-3,  # Added regularization to handle singular covariances
+            n_components=n_components_dpmm,
+            covariance_type=cov_type,
+            reg_covar=reg_covar,
             weight_concentration_prior_type='dirichlet_process',
-            weight_concentration_prior=0.01, # Encourage sparsity
+            weight_concentration_prior=0.01,
             max_iter=500,
             n_init=3,
             random_state=42
         )
         
         # Fit and predict labels
-        labels = dpmm.fit_predict(vectors_norm)
+        labels = dpmm.fit_predict(vectors_reduced)
         
         # 3. UMAP for 2D Visualization only
         logger.info("Running UMAP for 2D visualization projection...")
@@ -121,6 +151,10 @@ class H5Clusterer:
             "gps_dedup_validated": True,
             "h5_source": str(self.h5_path),
             "n_active_clusters": int(len(np.unique(labels))),
+            "pca_n_components": int(d_output),
+            "pca_variance_retained": float(variance_retained),
+            "covariance_type_used": cov_type,
+            "n_samples": int(n_samples),
             "clusters": {}
         }
         
