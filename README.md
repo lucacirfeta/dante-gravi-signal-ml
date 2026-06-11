@@ -94,6 +94,7 @@ Raw Strain Data (GWOSC O2–O4a)
 │   timeslide.py           — H1-L1 coincidence p-val  │
 │   run_injection.py       — Mock Data Challenge      │
 │   full_analysis.py       — End-to-end orchestrator  │
+│   aggregate_report.py    — Cross-session aggregation│
 │                                                     │
 │   indomain_reference_    — In-domain reference from │
 │     builder.py             labeled O3b GPS          │
@@ -268,6 +269,12 @@ When `--reference` is omitted in `morphcheck` or `full-analysis`, the pipeline *
    python main.py production-report --detector L1 --session-id <SESSION_ID>
    ```
    > Automatically performs DPMM clustering on the 768D manifold, applies VQ Cosine Similarity Fallback for known classes, projects via 4D UMAP to calculate structural ARI (Bootstrap Stability), and compiles a complete Markdown report with Topological Saliency Galleries.
+
+6. **Cross-Session Aggregation & Dedup:**
+   ```bash
+   python main.py aggregate-report --production-dir data/production/
+   ```
+   > Aggregates all validated production sessions into a master summary, resolving cross-detector coincidences and deduplicating overlapping GPS times. Outputs final peer-review taxonomy tables (Table 3a/3b) and computes Spearman rank correlations for topological stability defense.
 
 All scientific results, validations, and benchmarks produced by the pipeline are available in **[RESULTS.md](RESULTS.md)**. Legacy data from Phase 1 is preserved in **[RESULTS_OLD.md](RESULTS_OLD.md)**.
 

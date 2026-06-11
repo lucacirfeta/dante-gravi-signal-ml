@@ -74,6 +74,90 @@ class ValidationReporter:
             self.step1_morphcheck()
             self._mark_completed("step1_morphcheck")
             
+    def run_only_plots(self):
+        logger.info(f"Starting ONLY-PLOTS Routine for session {self.session_id}")
+        
+        # We need the spatial median for saliency maps
+        spatial_median, global_mean = self._compute_dynamic_background()
+        self.spatial_median = spatial_median
+        
+        # Load cluster report
+        if not self.cluster_json.exists():
+            logger.error(f"Cannot find {self.cluster_json}")
+            return
+            
+        with open(self.cluster_json, "r") as f:
+            data = json.load(f)
+            clusters = data["clusters"]
+            
+        sorted_cids = sorted([c for c in clusters.keys() if not clusters[c].get("is_noise", False)], 
+                             key=lambda c: clusters[c]["size"], reverse=True)[:5]
+                             
+        # Load novelties
+        df_out = pd.DataFrame()
+        csv_path = self.report_dir / f"morphcheck_novelties_{self.session_id}_{self.detector}.csv"
+        if csv_path.exists():
+            df_out = pd.read_csv(csv_path)
+        novelties = df_out[df_out["status"] == "TRUE_NOVEL_CANDIDATE"] if len(df_out) > 0 else pd.DataFrame()
+        
+        try:
+            model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
+        except Exception as e:
+            logger.warning(f"GitHub API failed ({e}), loading from local cache...")
+            cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
+            model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
+        model.eval()
+        model.to(self.device)
+        
+        # Process Clusters
+        for cid in sorted_cids:
+            gps_list = clusters[cid].get("gps_times", [])[:3]
+            for t_start in gps_list:
+                t_start = int(t_start)
+                out_prefix = self.saliency_dir / f"C{cid}_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
+                logger.info(f"Regenerating plot for cluster {cid} GPS {t_start}")
+                try:
+                    ts = fetch_strain_data(self.detector, t_start, t_start + 32)
+                    ts = whiten(ts)
+                    ts = bandpass(ts)
+                    spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
+                    
+                    generate_saliency_map(
+                        spectrogram_matrix=spec_matrix,
+                        background_vector=self.spatial_median,
+                        output_path_prefix=str(out_prefix),
+                        model=model,
+                        k_highlight=68,
+                        device=self.device
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to generate plot for C{cid} {t_start}: {e}")
+                    
+        # Process True Novelties
+        for idx, row in novelties.iterrows():
+            cid = int(row['cluster_id'])
+            t_start = int(row['t_start'])
+            out_prefix = self.saliency_dir / f"NOVEL_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
+            logger.info(f"Regenerating plot for NOVEL candidate GPS {t_start}")
+            try:
+                ts = fetch_strain_data(self.detector, t_start, t_start + 32)
+                ts = whiten(ts)
+                ts = bandpass(ts)
+                spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
+                
+                generate_saliency_map(
+                    spectrogram_matrix=spec_matrix,
+                    background_vector=self.spatial_median,
+                    output_path_prefix=str(out_prefix),
+                    model=model,
+                    k_highlight=68,
+                    device=self.device
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate plot for NOVEL {t_start}: {e}")
+                
+        logger.info("ONLY-PLOTS Routine completed.")
+            
         if "step2_temporal_distribution" not in self.status["steps_completed"]:
             self.step2_temporal_distribution()
             self._mark_completed("step2_temporal_distribution")
@@ -488,10 +572,10 @@ class ValidationReporter:
                 ts = fetch_strain_data(self.detector, t_int, t_int + 32)
                 ts = whiten(ts)
                 ts = bandpass(ts)
-                img_path = self.report_dir / "temp_qtrans.png"
-                generate_qtransform(ts, save_path=img_path)
+                spec_matrix = generate_qtransform(ts, save_path=None)
                 
-                img = Image.open(img_path).convert("RGB")
+                spec_8bit = np.uint8(spec_matrix * 255.0)
+                img = Image.fromarray(spec_8bit).convert("RGB")
                 tensor = transform(img).unsqueeze(0).to(self.device)
                 with torch.inference_mode():
                     feats = model.forward_features(tensor)
@@ -547,20 +631,16 @@ class ValidationReporter:
                 ts = fetch_strain_data(self.detector, t_start, t_start + 32)
                 ts = whiten(ts)
                 ts = bandpass(ts)
-                img_path = self.report_dir / f"temp_saliency_{t_start}.png"
-                generate_qtransform(ts, save_path=img_path)
+                spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
                 
                 res = generate_saliency_map(
-                    spectrogram_path=str(img_path),
+                    spectrogram_matrix=spec_matrix,
                     background_vector=self.spatial_median,
                     output_path_prefix=str(out_prefix),
                     model=model,
                     k_highlight=68,
                     device=self.device
                 )
-                
-                if os.path.exists(img_path):
-                    os.remove(img_path)
                 
                 # Add watermark
                 img_png = str(out_prefix) + "_saliency.png"
@@ -613,10 +693,10 @@ class ValidationReporter:
             ts = fetch_strain_data(self.detector, t_start, t_start + 32)
             ts = whiten(ts)
             ts = bandpass(ts)
-            img_path = self.report_dir / f"temp_ablation_{t_start}.png"
-            generate_qtransform(ts, save_path=img_path)
+            spec_matrix = generate_qtransform(ts, save_path=None)
             
-            img = Image.open(img_path).convert("RGB")
+            spec_8bit = np.uint8(spec_matrix * 255.0)
+            img = Image.fromarray(spec_8bit).convert("RGB")
             tensor = transform(img).unsqueeze(0).to(self.device)
             with torch.inference_mode():
                 feats = model.forward_features(tensor)
@@ -636,9 +716,6 @@ class ValidationReporter:
             top68_scores.append(score_top68)
             global_scores.append(score_global)
             labels.append(f"Proto {idx+1}")
-            
-            if os.path.exists(img_path):
-                os.remove(img_path)
             
         # Plotting
         x = np.arange(len(labels))
@@ -792,18 +869,16 @@ class ValidationReporter:
                         ts = fetch_strain_data(self.detector, t_start, t_start + 32)
                         ts = whiten(ts)
                         ts = bandpass(ts)
-                        img_path = self.report_dir / f"temp_saliency_{t_start}.png"
-                        generate_qtransform(ts, save_path=img_path)
+                        spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
                         
                         generate_saliency_map(
-                            spectrogram_path=str(img_path),
+                            spectrogram_matrix=spec_matrix,
                             background_vector=self.spatial_median,
                             output_path_prefix=str(out_prefix),
                             model=model,
                             k_highlight=68,
                             device=self.device
                         )
-                        if os.path.exists(img_path): os.remove(img_path)
                     except Exception as e:
                         logger.warning(f"Could not generate Saliency for novel candidate {t_start}: {e}")
                 

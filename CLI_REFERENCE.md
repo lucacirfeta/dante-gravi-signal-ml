@@ -232,6 +232,7 @@ Executes the final Phase 6 and 7 automated validation pipeline to produce the `f
 - `--session-id` **(Required)**: Session ID to evaluate.
 - `--detector` **(Required)**: Detector. Choices: `H1`, `L1`.
 - `--run`: Search observational run. *Default: `O4a`*.
+- `--only-plots`: Flag. Runs a lightweight visual regeneration layer to overwrite saliency maps without invoking DPMM clustering or VQ index re-computations.
 
 ### 5e. `validate-reports`
 Validates all generated artifacts, ensures GPS deduplication mathematically, and verifies root metadata injections for the given production run. This runs automatically at the end of `patch-analysis`.

@@ -2694,7 +2694,10 @@ def cmd_production_report(args):
     logger.info("=== Starting Production Report ===")
     from src.production_report import ValidationReporter
     reporter = ValidationReporter(session_id=args.session_id, detector=args.detector)
-    reporter.run()
+    if getattr(args, "only_plots", False):
+        reporter.run_only_plots()
+    else:
+        reporter.run()
 
 
 def cmd_validate_reports(args):
@@ -3929,6 +3932,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_production_report.add_argument(
         "--detector", type=str, default="H1", choices=["H1", "L1"]
+    )
+    p_production_report.add_argument(
+        "--only-plots", action="store_true", help="Only regenerate saliency plots without running clustering or checks."
     )
     p_production_report.set_defaults(func=cmd_production_report)
 
