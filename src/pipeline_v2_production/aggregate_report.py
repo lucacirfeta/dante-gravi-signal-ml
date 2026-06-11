@@ -81,8 +81,13 @@ def _validate_session_json(json_path: Path, expected_det: str) -> Tuple[Optional
         logger.warning(f"Session {json_path.name} excluded: gps_dedup_validated != true")
         return None, "gps_dedup_validated is False"
 
-    # Gate 3: detector matches
-    json_det = data.get("detector", "")
+    # Gate 3: detector matches (auto-inject for legacy O4a)
+    json_det = data.get("detector")
+    if json_det is None or json_det == "":
+        data["detector"] = expected_det
+        json_det = expected_det
+        logger.debug(f"Auto-injected detector={expected_det} for legacy session {json_path.name}")
+
     if json_det != expected_det:
         logger.warning(
             f"Session {json_path.name} excluded: detector mismatch "
