@@ -247,7 +247,21 @@ Validates all generated artifacts, ensures GPS deduplication mathematically, and
 - `--session-id` **(Required)**: Session ID to evaluate.
 - `--detector` **(Required)**: Detector. Choices: `H1`, `L1`.
 
-### 5e. `last-gps`
+### 5f. `aggregate-report`
+Cross-session read-only reducer. Aggregates unique unclassified novel candidates from all validated production sessions, resolves overlapping window duplications, separates detections into peer-review taxonomy tables, and computes per-detector Spearman rank correlation for stability defense.
+
+* **Under the Hood (Processing Details):**
+  1. Scans `data/production/` for all valid 10-digit GPS subdirectories.
+  2. Applies a strict 4-point **Validation Gate** per session: JSON parseable, `gps_dedup_validated == true`, detector match, and `n_samples` consistency. Invalid sessions are excluded entirely (no partial ingestion).
+  3. Ingests morphcheck CSVs, normalizes columns to canonical schema, and resolves cross-detector coincidence status via GWOSC timeline queries.
+  4. Performs chronological cross-session deduplication on exact `gps_start`, keeping the earliest session's claim.
+  5. Separates deduplicated UNCLASSIFIED candidates into **Table 3a** (Confirmed Local Glitches: `ACTIVE_NO_ANOMALY`) and **Table 3b** (Unverifiable Unilateral Detections: `INACTIVE`).
+  6. Computes **Spearman rank correlation** (ρ) between `n_samples_true` and bootstrap ARI **independently per detector** (never mixing H1/L1). Excludes sessions with `n < 100` and requires `≥ 5` eligible sessions.
+  7. Writes `aggregate_summary.json`, `master_candidates.csv`, `Table_3a_*.csv`, `Table_3b_*.csv`, and `stability_synthesis.log` to `data/production/aggregated/`.
+
+- `--production-dir`: Root production directory. *Default: `data/production/`*.
+
+### 5g. `last-gps`
 Returns the most advanced (end) GPS time to resume stopped runs without invoking external servers.
 
 * **Under the Hood (Processing Details):**

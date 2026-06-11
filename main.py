@@ -2771,6 +2771,14 @@ def cmd_validate_reports(args):
         sys.exit(0)
 
 
+def cmd_aggregate_report(args):
+    """Cross-session aggregation, deduplication, and Spearman stability defense."""
+    logger.info("=== Starting Aggregate Report ===")
+    from src.aggregate_report import AggregateReporter
+    reporter = AggregateReporter(production_dir=args.production_dir)
+    reporter.run()
+
+
 def cmd_patch_analysis(args):
     """Orchestrates the full Phase 4 & 5 pipeline."""
     logger.info("=== Starting Automated Patch-Analysis Pipeline ===")
@@ -3936,6 +3944,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--detector", type=str, default="H1", choices=["H1", "L1"]
     )
     p_validate_reports.set_defaults(func=cmd_validate_reports)
+
+    # --- aggregate-report ---
+    p_aggregate = subparsers.add_parser(
+        "aggregate-report",
+        help="Cross-session aggregation, deduplication, and Spearman stability defense.",
+    )
+    p_aggregate.add_argument(
+        "--production-dir",
+        type=str,
+        default="data/production/",
+        help="Root production directory containing all session subdirectories.",
+    )
+    p_aggregate.set_defaults(func=cmd_aggregate_report)
 
     return parser
 
