@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from src.timeslide import (
+from src.pipeline_v1_legacy.timeslide import (
     _gps_from_filename,
     count_coincidences,
     extract_anomalous_gps,

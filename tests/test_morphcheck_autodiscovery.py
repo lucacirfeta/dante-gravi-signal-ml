@@ -9,7 +9,7 @@ import numpy as np
 import argparse
 import json
 
-from src.utils import discover_references
+from src.core.utils import discover_references
 from main import cmd_morphcheck
 
 

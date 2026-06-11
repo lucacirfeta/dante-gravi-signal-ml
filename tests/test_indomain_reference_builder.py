@@ -47,7 +47,7 @@ class TestSelectReferenceEvents:
 
     def test_filters_confidence(self, tmp_path: Path) -> None:
         """Only rows with ml_confidence >= min_confidence are returned."""
-        from src.indomain_reference_builder import select_reference_events
+        from src.pipeline_v1_legacy.indomain_reference_builder import select_reference_events
 
         # Mix of low and high confidence
         df_low = _make_df(n=5, confidence=0.90)
@@ -63,7 +63,7 @@ class TestSelectReferenceEvents:
 
     def test_max_per_class(self, tmp_path: Path) -> None:
         """At most max_per_class samples are returned per label."""
-        from src.indomain_reference_builder import select_reference_events
+        from src.pipeline_v1_legacy.indomain_reference_builder import select_reference_events
 
         df = _make_df(n=50, label="Blip", confidence=0.99)
         csv_path = tmp_path / "test.csv"
@@ -76,7 +76,7 @@ class TestSelectReferenceEvents:
 
     def test_excludes_labels(self, tmp_path: Path) -> None:
         """Entries with excluded labels are removed from results."""
-        from src.indomain_reference_builder import select_reference_events
+        from src.pipeline_v1_legacy.indomain_reference_builder import select_reference_events
 
         df_good = _make_df(n=5, label="Blip")
         df_bad = _make_df(n=5, label="None_of_the_Above", base_gps=1250100000.0)
@@ -91,7 +91,7 @@ class TestSelectReferenceEvents:
 
     def test_filters_snr(self, tmp_path: Path) -> None:
         """Only rows with snr >= 7.5 are returned."""
-        from src.indomain_reference_builder import select_reference_events
+        from src.pipeline_v1_legacy.indomain_reference_builder import select_reference_events
 
         df_low = _make_df(n=3, snr=5.0)
         df_high = _make_df(n=3, snr=10.0, base_gps=1250100000.0)
@@ -128,7 +128,7 @@ class TestBuildIndomainReference:
         tmp_path: Path,
     ) -> None:
         """Failed fetch_strain_data calls are skipped (warning logged, no crash)."""
-        from src.indomain_reference_builder import build_indomain_reference
+        from src.pipeline_v1_legacy.indomain_reference_builder import build_indomain_reference
 
         # 5 events — 2 will fail
         df = _make_df(n=5, label="Blip")
@@ -176,7 +176,7 @@ class TestBuildIndomainReference:
         tmp_path: Path,
     ) -> None:
         """Saved .npz has required keys; companion .json has class_distribution."""
-        from src.indomain_reference_builder import build_indomain_reference
+        from src.pipeline_v1_legacy.indomain_reference_builder import build_indomain_reference
 
         # 4 events: 2 Blip + 2 Koi_Fish
         df_a = _make_df(n=2, label="Blip")

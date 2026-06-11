@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.gravity_spy_checker import (
+from src.pipeline_v1_legacy.gravity_spy_checker import (
     cross_check_anomalous_clusters,
     get_anomalous_gps_windows,
     query_gravity_spy,

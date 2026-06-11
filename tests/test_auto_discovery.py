@@ -1,9 +1,9 @@
-"""Tests for discover_references() from src.utils."""
+"""Tests for discover_references() from src.core.utils."""
 
 import pytest
 from pathlib import Path
 
-from src.utils import discover_references
+from src.core.utils import discover_references
 
 
 class TestDiscoverReferences:

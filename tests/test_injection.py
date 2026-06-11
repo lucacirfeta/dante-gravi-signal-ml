@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 from scipy.stats import entropy
-from src.injection import SyntheticGlitchGenerator
+from src.pipeline_v1_legacy.injection import SyntheticGlitchGenerator
 
 def compute_power_entropy(sig: np.ndarray) -> float:
     """Compute Shannon entropy of the normalized power spectrum."""

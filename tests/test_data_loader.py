@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.data_loader import (
+from src.core.data_loader import (
     _validate_detector,
     fetch_o4a_segments,
     fetch_strain_data,
@@ -116,7 +116,7 @@ class TestFetchO4aSegments:
 
     def test_segments_within_o4a_window(self) -> None:
         """All segments should fall within the O4a GPS window."""
-        from src.data_loader import _O4A_START, _O4A_END
+        from src.core.data_loader import _O4A_START, _O4A_END
 
         segments = fetch_o4a_segments("H1", duration_hours=0.5)
         for start, end in segments:

@@ -48,26 +48,32 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
 
 ## Command Index
 
-1. **Data Acquisition**
+1. **Core & Data Acquisition**
    - [`fetch`](#1-fetch) — Download known event
    - [`scan`](#2-scan) — Batch scan
    - [`scan-extended`](#3-scan-extended) — Extended scan (synchronized)
    - [`fetch-raw`](#4-fetch-raw) — Download raw data in HDF5
-   - [`patch-production`](#5-patch-production) — Phase 4 Patch-Level Production
-   - [`last-gps`](#5b-last-gps) — Retrieve last GPS time
+   - [`last-gps`](#5g-last-gps) — Retrieve last GPS time
 
-2. **ML Pipeline (Phases 2 and 3)**
-   - [`encode`](#6-encode) — Extract DINOv2 embeddings
-   - [`explain`](#7-explain) — Generate attention maps for anomaly explainability
+2. **Pipeline V2 Production (O4a 384D Patch-Level MIL)**
+   - [`patch-production`](#5-patch-production) — Core MIL Extraction & Scoring
+   - [`production-cluster`](#5b-production-cluster) — 384D DPMM Clustering
+   - [`patch-analysis`](#5c-patch-analysis) — Automated continuous workflow
+   - [`production-report`](#5d-production-report) — Generate markdown reports & saliency maps
+   - [`validate-reports`](#5e-validate-reports) — Gatekeeper: Validate 384D geometry and deduplication
+   - [`aggregate-report`](#5f-aggregate-report) — Cross-session reduction and Spearman stability
+   - [`live-umap`](#5h-live-umap) — Realtime interactive dashboard
+
+3. **Pipeline V1 Legacy (768D Exploratory - Frozen)**
+   - [`encode`](#6-encode) — Extract 768D global DINOv2 embeddings
    - [`cluster`](#8-cluster) — Execute DPMM or HDBSCAN clustering
    - [`report`](#9-report) — Regenerate UMAP/gallery plots
-
-3. **Analysis & Validation**
+   - [`full-analysis`](#19-full-analysis) — Complete automated pipeline
    - [`stability`](#10-stability) — Clustering stability analysis
    - [`ablation`](#11-ablation) — Perturbation ablation study
    - [`timeslide`](#13-timeslide) — Coincidences and p-value analysis
    - [`cluster-similarity`](#13b-cluster-similarity) — Subvariant similarity analysis
-   - [`run-injection`](#13c-run-injection) — Execute Mock Data Challenge (MDC) injections
+   - [`run-injection`](#13c-run-injection) — Execute Mock Data Challenge (MDC)
 
 4. **Reference Index**
    - [`build-reference`](#14-build-reference) — Build base or in-domain reference index
@@ -76,18 +82,14 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
    - [`morphcheck`](#17-morphcheck) — Compare anomalies with reference index
    - [`benchmark-clustering`](#18-benchmark-clustering) — Validate unsupervised pipeline with ground truth labels
 
-5. **End-to-End Automation**
-    - [`full-analysis`](#19-full-analysis) — Complete automated pipeline
-    - [`full-analysis-report`](#19b-full-analysis-report) — Regenerate only the final JSONs of the full analysis
-
-6. **Autopilot & Thresholds**
+5. **Autopilot & Live Scanning**
     - [`calibrate-threshold`](#20-calibrate-threshold) — Calibrate per-class similarity thresholds
-    - [`calibrate-loglikelihood`](#21-calibrate-loglikelihood) — Calibrate log-likelihood thresholds for DPMM clusters
-    - [`scan-live`](#22-scan-live) — Live scanner: classifies spectrograms as KNOWN/NOVEL
+    - [`calibrate-loglikelihood`](#21-calibrate-loglikelihood) — Calibrate log-likelihood thresholds
+    - [`scan-live`](#22-scan-live) — Producer-consumer live scanner
 
 ---
 
-## Data Acquisition
+## Core & Data Acquisition
 
 ### 1. `fetch`
 Downloads a known GW event (e.g., GW150914) and extracts a spectrogram. Useful to validate pipeline functionality.
@@ -171,6 +173,8 @@ Massive download of strain data (GWOSC) in `.hdf5` format.
 - `--continue`: Flag. Continues download from the last GPS folder in data/raw/. Completes incomplete folders before starting new ones. *Default: `False`*.
 - `--loop`: Flag. Loops continuously, downloading new blocks (e.g. 144h each) until stopped or `max-iterations` is reached.
 - `--max-iterations`: Max loop iterations. *Default: `100`*.
+
+## Pipeline V2 Production (O4a 384D Patch-Level MIL)
 
 ### 5. `patch-production`
 Run the Phase 4 Patch-Level Production pipeline directly on raw O4a data.
@@ -277,7 +281,7 @@ Returns the most advanced (end) GPS time to resume stopped runs without invoking
 
 ---
 
-## ML Pipeline
+## Pipeline V1 Legacy (768D Exploratory - Frozen)
 
 ### 6. `encode`
 Uses the pre-trained DINOv2-Reg model to map spectrograms into high-dimensionality embedding vectors.
@@ -563,7 +567,7 @@ Regenerates only the final JSONs of the full-analysis by aggregating information
 
 ---
 
-## Autopilot
+## Autopilot & Live Scanning
 
 The Autopilot commands operate in a **completely separate** way from the standard pipeline (`data/runs/`). All outputs are written to `data/autopilot/`.
 

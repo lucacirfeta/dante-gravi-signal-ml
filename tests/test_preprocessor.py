@@ -11,8 +11,8 @@ import numpy as np
 import pytest
 from gwpy.timeseries import TimeSeries
 
-from src.preprocessor import bandpass, whiten
-from src.utils import normalize_spectrogram
+from src.core.preprocessor import bandpass, whiten
+from src.core.utils import normalize_spectrogram
 
 
 # ---------------------------------------------------------------------------

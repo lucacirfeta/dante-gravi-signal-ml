@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 import torch
 
-from src.patch_scorer import PatchScorer
-from src.production_writer import ProductionWriter
+from src.core.patch_scorer import PatchScorer
+from src.pipeline_v2_production.production_writer import ProductionWriter
 
 def test_md5_check(tmp_path):
     fake_index = tmp_path / "fake_index.npz"

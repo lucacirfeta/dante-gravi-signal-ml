@@ -283,6 +283,7 @@ scratch_gen_final_results.py
 scratch/
 verify_morphcheck.py
 verify.py
+tmp_repro_images
 
 # Local workspace memory structure
 knowledge/

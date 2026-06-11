@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from src.reference_builder import extract_from_tar, build_reference_index_from_paths
+from src.pipeline_v1_legacy.reference_builder import extract_from_tar, build_reference_index_from_paths
 
 @pytest.fixture
 def sample_metadata():

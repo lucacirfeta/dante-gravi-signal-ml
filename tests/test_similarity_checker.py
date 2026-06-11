@@ -1,5 +1,5 @@
 import numpy as np
-from src.similarity_checker import (
+from src.pipeline_v1_legacy.similarity_checker import (
     cosine_knn_search,
     assess_novelty,
     run_morphological_crosscheck,

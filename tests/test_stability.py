@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from src.stability import run_stability_analysis
+from src.pipeline_v1_legacy.stability import run_stability_analysis
 
 
 # ---------------------------------------------------------------------------

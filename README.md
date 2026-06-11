@@ -52,70 +52,38 @@ uncharacterized glitch morphologies. Robustness validation is ensured through st
 
 ## 🏗️ Architecture & Core Components
 
+The codebase is organized into **three single-responsibility packages** under `src/`:
+
 ```text
-Raw Strain Data (GWOSC O2–O4a)
-        │
-        ▼
-┌─────────────────────┐
-│   Data Loader       │  gwpy fetch_open_data() or local 4096s raw HDF5
-│   (data_loader.py)  │  Parallel fetch: ThreadPoolExecutor (--workers N)
-└────────┬────────────┘
+ Raw Strain Data (GWOSC O2–O4a)
          │
          ▼
-┌─────────────────────┐
-│   Preprocessor      │  Chunking 4096s into 32s · Whitening → Bandpass → Q-Transform
-│   (preprocessor.py) │  Parallel Q-transform: ProcessPoolExecutor
-│   (parallel_        │  Colormap: cividis (perceptually uniform)
-│    processor.py)    │
-└────────┬────────────┘
-         │  256×256 PNG spectrograms
-         ▼
-┌─────────────────────┐
-│   DINOv2-Reg        │  dinov2_vits14_reg (ViT-S/14 + register tokens)
-│   Encoder           │  Frozen weights — zero training required
-│   (encoder.py)      │  CLS token → 384-dim L2-normalized embeddings
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│   Clustering        │  PCA(50D) dimensionality reduction → UMAP(10D, cosine, min_dist=0.0)
-│   (clustering.py)   │  latent manifold projection → DPMM (Dirichlet Process Mixture Model)
-│   (reporter.py)     │  or HDBSCAN; UMAP(2D) for visualization
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────┐
-│   Validation & Cross-Check                          │
-│                                                     │
-│   similarity_checker.py  — KNN cosine morphcheck    │
-│   similarity_analysis.py — Subvariant similarity    │
-│   ablation.py            — ARI vs perturbations     │
-│   stability.py           — ARI across hyperparams   │
-│   timeslide.py           — H1-L1 coincidence p-val  │
-│   run_injection.py       — Mock Data Challenge      │
-│   full_analysis.py       — End-to-end orchestrator  │
-│   aggregate_report.py    — Cross-session aggregation│
-│                                                     │
-│   indomain_reference_    — In-domain reference from │
-│     builder.py             labeled O3b GPS          │
-│   reference_builder.py   — Gravity Spy tar.gz index │
-│   gravity_spy_checker.py — GPS-based DB query       │
-└─────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────┐
-│   Autopilot (scan-live)                             │
-│                                                     │
-│   threshold_calibrator.py — Per-class threshold     │
-│                              calibration from       │
-│                              intra-class cosine sim │
-│   loglikelihood_calibrator.py — DPMM anomaly        │
-│                              threshold calibration  │
-│   scan_live.py            — Producer-consumer live  │
-│                              scanner (4096s chunks) │
-│                              classification via     │
-│                              DINOv2 + KNN cosine    │
-└─────────────────────────────────────────────────────┘
+ ┌───────────────────────────────────────────────────────────────┐
+ │  src/core/  —  Shared Primitives (Hardware-Agnostic)          │
+ │                                                               │
+ │  data_loader.py         gwpy / local HDF5 fetch              │
+ │  preprocessor.py        Whiten → Bandpass → Q-Transform      │
+ │  parallel_processor.py  ProcessPoolExecutor Q-transform       │
+ │  encoder.py             DINOv2-Reg ViT-S/14 (frozen)         │
+ │  patch_producer.py      Spectrogram → 256×256 RGB batches    │
+ │  patch_scorer.py        Top-K MIL scoring + GEV thresholding │
+ │  utils.py               Config, logging, device selection     │
+ │  logging_utils.py       Structured JSON logging              │
+ │  wizard.py              Interactive CLI wizard               │
+ └───────────────────────┬───────────────────────────────────────┘
+                         │
+          ┌──────────────┴──────────────┐
+          ▼                             ▼
+ ┌────────────────────────┐    ┌────────────────────────────────┐
+ │  pipeline_v2_production│    │  pipeline_v1_legacy (FROZEN)   │
+ │  384D Patch-Level MIL  │    │  768D CLS-Token Exploratory    │
+ │                        │    │                                │
+ │  production_cluster.py │    │  clustering.py    reporter.py  │
+ │  production_report.py  │    │  stability.py     ablation.py  │
+ │  aggregate_report.py   │    │  timeslide.py     injection.py │
+ │  production_writer.py  │    │  full_analysis.py scan_live.py │
+ │  saliency_map.py       │    │  similarity_checker.py  ...    │
+ └────────────────────────┘    └────────────────────────────────┘
 ```
 
 ### Critical Design Choices (Context for LLMs/Developers)
@@ -168,27 +136,60 @@ The Saliency Gallery is the fundamental tool to distinguish real transients from
 All pipeline-generated outputs strictly follow this path convention: `data/runs/<run>/<session_id>/...`.
 ```text
 gravi-signal-ml/
-├── data/                             # Git-ignored data artifacts
-│   ├── raw/                          # .hdf5 strain downloads
-│   ├── runs/<run>/<session_id>/      # Complete session isolation (e.g. O4a/20260510_143022)
-│   │   ├── spectrograms/             # Q-transform PNGs (e.g. h1, l1)
-│   │   ├── embeddings/               # DINOv2 .npy arrays + .json metadata
-│   │   ├── clusters/                 # Cluster reports, UMAP scatter plots and HTML galleries
-│   │   ├── morphcheck/               # Individual morphcheck reference reports
-│   │   ├── reports/                  # Unified full-analysis reports
-│   │   ├── ablation/                 # Ablation study results
-│   │   ├── stability/                # Robustness analysis (ARI metrics)
-│   │   ├── timeslide/                # Time-slide background estimation
-│   │   └── logs/                     # Session-specific log files
-│   └── reference/                    # Static — reference indexes (e.g. indomain_O3b_H1.npz)
-├── src/                              # Python source code (core modules)
-├── tests/                            # Pytest suite
-├── docs/                             # Additional documentation
-├── main.py                           # Main CLI entry point
-├── config.yaml                       # Global configuration (clustering, UMAP, scan params)
-├── CLI_REFERENCE.md                  # Complete CLI commands manual
-├── RESULTS_OLD.md                    # Historical results (Phase 1 Global Pooling)
-└── RESULTS.md                        # Active scientific results (Phase 4 Patch-Level MIL)
+├── data/                                    # Git-ignored data artifacts
+│   ├── raw/                                 # .hdf5 strain downloads from GWOSC
+│   ├── production/                          # Validated V2 session outputs and JSON/CSV reports
+│   │   └── <session_id>/
+│   │       ├── novelties.h5                 # SWMR HDF5 archive (384D MIL vectors)
+│   │       └── report/                      # Cluster reports, saliency galleries, Markdown
+│   ├── runs/<run>/<session_id>/             # V1 Legacy session isolation
+│   │   ├── spectrograms/                    # Q-transform PNGs
+│   │   ├── embeddings/                      # DINOv2 .npy arrays + .json metadata
+│   │   ├── clusters/                        # Cluster reports, UMAP plots, HTML galleries
+│   │   ├── morphcheck/                      # Individual morphcheck reference reports
+│   │   ├── reports/                         # Unified full-analysis reports
+│   │   ├── ablation/                        # Ablation study results
+│   │   ├── stability/                       # Robustness analysis (ARI metrics)
+│   │   ├── timeslide/                       # Time-slide background estimation
+│   │   └── logs/                            # Session-specific log files
+│   └── reference/                           # Static — reference indexes (e.g. indomain_O3b_H1.npz)
+│
+├── src/                                     # Python source packages
+│   ├── __init__.py
+│   ├── core/                                # Shared primitives (data loaders, encoder, utils)
+│   │   ├── data_loader.py
+│   │   ├── encoder.py                       # DINOv2-Reg ViT-S/14 (CLS + Patch tokens)
+│   │   ├── preprocessor.py                  # Whiten → Bandpass → Q-Transform
+│   │   ├── patch_producer.py                # CPU-bound spectrogram batch producer
+│   │   ├── patch_scorer.py                  # Top-K MIL scoring + GEV thresholding
+│   │   ├── parallel_processor.py            # ProcessPoolExecutor Q-transform
+│   │   ├── utils.py                         # Config, logging, device selection
+│   │   ├── logging_utils.py                 # Structured JSON logging
+│   │   └── wizard.py                        # Interactive CLI wizard
+│   │
+│   ├── pipeline_v2_production/              # RIGID PRODUCTION O4A ENGINE (384D)
+│   │   ├── production_cluster.py            # DPMM + 384D MIL geometry
+│   │   ├── production_report.py             # Per-session Markdown report generator
+│   │   ├── aggregate_report.py              # Cross-session deduplicator & Spearman reducer
+│   │   ├── production_writer.py             # SWMR-enabled HDF5 novelty archive writer
+│   │   └── saliency_map.py                  # Three-panel topological saliency map
+│   │
+│   └── pipeline_v1_legacy/                  # FROZEN LEGACY PIPELINE (Read-Only)
+│       ├── clustering.py                    # PCA + UMAP + DPMM/HDBSCAN
+│       ├── stability.py                     # ARI robustness analysis
+│       ├── timeslide.py                     # H1-L1 coincidence p-value
+│       ├── full_analysis.py                 # End-to-end orchestrator
+│       └── ...                              # 18 additional legacy modules
+│
+├── tests/                                   # Pytest suite
+├── tests_and_validation/                    # Production validation gatekeepers
+│   └── validate_reports.py                  # 384D geometry + GPS dedup validator
+├── docs/                                    # Additional documentation
+├── main.py                                  # Unified CLI entry point
+├── config.yaml                              # Global configuration
+├── CLI_REFERENCE.md                         # Complete CLI commands manual
+├── RESULTS_OLD.md                           # Historical results (Phase 1 Global Pooling)
+└── RESULTS.md                               # Active scientific results (Phase 4 Patch-Level MIL)
 ```
 
 ---

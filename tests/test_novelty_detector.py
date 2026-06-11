@@ -5,7 +5,7 @@ import torch
 from pathlib import Path
 from PIL import Image
 
-from src.novelty_detector import PatchLevelNoveltyDetector
+from src.pipeline_v1_legacy.novelty_detector import PatchLevelNoveltyDetector
 
 @pytest.fixture
 def dummy_detector():

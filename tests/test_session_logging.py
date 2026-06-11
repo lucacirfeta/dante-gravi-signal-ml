@@ -12,7 +12,7 @@ import pytest
 # Insert workspace root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.utils import set_session_log_file, close_session_log, setup_logger, session_path
+from src.core.utils import set_session_log_file, close_session_log, setup_logger, session_path
 from main import main
 
 

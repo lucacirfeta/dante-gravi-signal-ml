@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from src.ablation import apply_perturbation, run_ablation_study
+from src.pipeline_v1_legacy.ablation import apply_perturbation, run_ablation_study
 
 
 # ---------------------------------------------------------------------------

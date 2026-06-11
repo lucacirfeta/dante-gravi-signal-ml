@@ -19,7 +19,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from src.reporter import (
+from src.pipeline_v1_legacy.reporter import (
     _make_contact_sheet,
     _save_json_report,
     _save_umap_plot,

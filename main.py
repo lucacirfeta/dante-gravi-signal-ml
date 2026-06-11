@@ -51,10 +51,10 @@ import numpy as np
 import astropy.utils.data
 from astropy.time import Time
 
-from src.data_loader import fetch_o4a_segments, fetch_strain_data
-from src.encoder import DINOv2Encoder
-from src.preprocessor import bandpass, batch_process, generate_qtransform, whiten
-from src.utils import enable_ansi_colors, load_config, setup_logger, session_path
+from src.core.data_loader import fetch_o4a_segments, fetch_strain_data
+from src.core.encoder import DINOv2Encoder
+from src.core.preprocessor import bandpass, batch_process, generate_qtransform, whiten
+from src.core.utils import enable_ansi_colors, load_config, setup_logger, session_path
 
 # Enable ANSI escape sequences for Windows terminal
 enable_ansi_colors()
@@ -238,7 +238,7 @@ def _run_continue_loop(
         logger.info("Generated new session ID: %s", new_session_id)
         
         # Update the active session log file to target the new session directory
-        from src.utils import set_session_log_file
+        from src.core.utils import set_session_log_file
         new_log_dir = session_path(run, new_session_id) / "logs"
         new_log_file = new_log_dir / "session.log"
         set_session_log_file(new_log_file)
@@ -274,7 +274,7 @@ def _run_continue_loop(
         if getattr(args, "full_analysis", False):
             # 5. Al termine dello scan, rilancia automaticamente full-analysis sulla nuova sessione
             logger.info("Launching full-analysis on session %s...", new_session_id)
-            from src.full_analysis import run_full_analysis
+            from src.pipeline_v1_legacy.full_analysis import run_full_analysis
             
             try:
                 result = run_full_analysis(
@@ -371,7 +371,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         _reprocess_spectrograms(args)
         return
 
-    from src.data_loader import generate_segments_from_gps_range
+    from src.core.data_loader import generate_segments_from_gps_range
 
     detector: str = args.detector
     run = _resolve_run(args)
@@ -384,8 +384,8 @@ def cmd_scan(args: argparse.Namespace) -> None:
         run_cfg = cfg.get("run_config", {}).get(run, {})
         hours = float(run_cfg.get("hours_per_detector", 72.0))
 
-    from src.logging_utils import PhaseTracker
-    from src.utils import setup_logger
+    from src.core.logging_utils import PhaseTracker
+    from src.core.utils import setup_logger
     cmd_logger = setup_logger("main.scan", log_file=Path("logs/gravi-signal-ml.log"), session_id=session_id, run=run, detector=detector)
     tracker = PhaseTracker(cmd_logger, "scan", session_id, run, detector)
 
@@ -401,7 +401,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
     # --- Raw Path Logic ---
     raw_path = getattr(args, "raw_path", None)
     if not raw_path:
-        from src.data_loader import _find_latest_raw_session
+        from src.core.data_loader import _find_latest_raw_session
         raw_path = _find_latest_raw_session()
         
     if raw_path:
@@ -475,7 +475,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         saved_paths = batch_process(segments, detector, output_dir)
         processed_count = len(saved_paths)
     else:
-        from src.parallel_processor import batch_process_parallel
+        from src.core.parallel_processor import batch_process_parallel
         cfg = load_config()  # noqa: F841 — needed by batch_process_parallel
         fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
         processed_count, _ = batch_process_parallel(
@@ -745,7 +745,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
         contain spectrograms, the scan resumes from the minimum highest GPS
         end-time found across the detectors to ensure strict alignment.
     """
-    from src.data_loader import generate_segments_from_gps_range
+    from src.core.data_loader import generate_segments_from_gps_range
 
     cfg = load_config()
     scan_cfg = cfg["scan_extended"]
@@ -760,8 +760,8 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     fetch_workers = cfg.get("performance", {}).get("gwosc_fetch_threads", 4)
     explicit_session = hasattr(args, "session_id") and args.session_id
 
-    from src.logging_utils import PhaseTracker
-    from src.utils import setup_logger
+    from src.core.logging_utils import PhaseTracker
+    from src.core.utils import setup_logger
     det_str = ",".join(detectors)
     cmd_logger = setup_logger("main.scan_extended", log_file=Path("logs/gravi-signal-ml.log"), session_id=session_id, run=run, detector=det_str)
     tracker = PhaseTracker(cmd_logger, "scan_extended", session_id, run, det_str)
@@ -804,7 +804,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     # 2. Determine the Target End GPS
     target_end_gps = intended_start_gps + int(hours * 3600)
     
-    from src.utils import gps_to_utc
+    from src.core.utils import gps_to_utc
     logger.info("Target session window: %s to %s (GPS %d - %d)", gps_to_utc(intended_start_gps), gps_to_utc(target_end_gps), intended_start_gps, target_end_gps)
 
     if explicit_session and last_gps is not None:
@@ -815,7 +815,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
             logger.info("Scan already complete for session %s. Skipping to full-analysis.", session_id)
             is_failed = False
             if getattr(args, "full_analysis", False):
-                from src.full_analysis import run_full_analysis
+                from src.pipeline_v1_legacy.full_analysis import run_full_analysis
                 logger.info("Triggering automatic full analysis...")
                 result = run_full_analysis(
                     session_id=session_id,
@@ -844,7 +844,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
                 )
             return
 
-        from src.utils import gps_to_utc
+        from src.core.utils import gps_to_utc
         logger.info(
             "Ripresa sessione %s dal GPS %d fino a %d (%d ore rimanenti su %d totali previste)",
             session_id, last_gps, target_end_gps,
@@ -859,7 +859,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     raw_path = getattr(args, "raw_path", None)
     explicit_raw_path = raw_path is not None
     if not raw_path:
-        from src.data_loader import _find_latest_raw_session
+        from src.core.data_loader import _find_latest_raw_session
         raw_path = _find_latest_raw_session()
         
     end_gps = target_end_gps
@@ -912,7 +912,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     total_expected = expected_segments_per_det * len(detectors)
     initial_completed = completed_segments_per_det * len(detectors)
 
-    from src.parallel_processor import batch_process_parallel
+    from src.core.parallel_processor import batch_process_parallel
     processed_count, skipped = batch_process_parallel(
         segments, detectors, output_dir_base, cfg, 
         workers=workers, fetch_workers=fetch_workers, cache_raw=not args.no_cache_raw,
@@ -940,7 +940,7 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     # --- Automatic full analysis trigger ---
     is_failed = False
     if getattr(args, "full_analysis", False):
-        from src.full_analysis import run_full_analysis
+        from src.pipeline_v1_legacy.full_analysis import run_full_analysis
         logger.info("Triggering automatic full analysis...")
         result = run_full_analysis(
             session_id=session_id,
@@ -1058,10 +1058,10 @@ def _reprocess_single_png(
                 print(f"  Cache hit: {cache_file.name}")
 
         if ts is None:
-            from src.data_loader import fetch_strain_data
+            from src.core.data_loader import fetch_strain_data
             ts = fetch_strain_data(detector, gps_start, gps_end)
 
-        from src.preprocessor import whiten, bandpass, generate_qtransform
+        from src.core.preprocessor import whiten, bandpass, generate_qtransform
         ts_w = whiten(ts)
         ts_bp = bandpass(ts_w)
         generate_qtransform(ts_bp, save_path=save_path, cmap=cmap)
@@ -1252,7 +1252,7 @@ def cmd_encode(args: argparse.Namespace) -> None:
 
 def cmd_cluster_similarity(args: argparse.Namespace) -> None:
     """Analyze the distribution of cosine similarities for each cluster."""
-    from src.similarity_analysis import cluster_similarity
+    from src.pipeline_v1_legacy.similarity_analysis import cluster_similarity
     
     run = _resolve_run(args)
     session_id = _resolve_session_id(args)
@@ -1330,12 +1330,12 @@ def cmd_cluster(args: argparse.Namespace) -> None:
         cluster_cfg["algorithm"] = args.algorithm
 
     # 4. Run full clustering pipeline
-    from src.clustering import run_full_pipeline
+    from src.pipeline_v1_legacy.clustering import run_full_pipeline
 
     result = run_full_pipeline(embeddings, cluster_cfg)
 
     # 5. Save cluster report (JSON + UMAP plot + gallery)
-    from src.reporter import print_summary, save_cluster_report
+    from src.pipeline_v1_legacy.reporter import print_summary, save_cluster_report
 
     save_cluster_report(result, metadata, output_dir, detector=detector or "H1")
 
@@ -1348,8 +1348,8 @@ def cmd_cluster(args: argparse.Namespace) -> None:
 def cmd_report(args: argparse.Namespace) -> None:
     """Regenerate UMAP and cluster gallery from existing embeddings and cluster_report.json."""
     import json
-    from src.clustering import run_pca, run_umap
-    from src.reporter import _save_umap_plot, _save_cluster_gallery
+    from src.pipeline_v1_legacy.clustering import run_pca, run_umap
+    from src.pipeline_v1_legacy.reporter import _save_umap_plot, _save_cluster_gallery
 
     session_id = getattr(args, "session_id", None) or None
     detector = getattr(args, "detector", None)
@@ -1466,7 +1466,7 @@ def cmd_report(args: argparse.Namespace) -> None:
 
 def cmd_stability(args: argparse.Namespace) -> None:
     """Measure clustering robustness with ARI on multiple perturbed runs."""
-    from src.stability import run_stability_analysis
+    from src.pipeline_v1_legacy.stability import run_stability_analysis
 
     session_id = getattr(args, "session_id", None) or "default"
     detector = getattr(args, "detector", None) or "H1"
@@ -1516,8 +1516,8 @@ def cmd_stability(args: argparse.Namespace) -> None:
 def cmd_ablation(args: argparse.Namespace) -> None:
     """Run ablation study to test clustering robustness against image perturbations."""
     import json
-    from src.ablation import run_ablation_study
-    from src.clustering import run_full_pipeline
+    from src.pipeline_v1_legacy.ablation import run_ablation_study
+    from src.pipeline_v1_legacy.clustering import run_full_pipeline
 
     session_id = getattr(args, "session_id", None) or None
     detector = getattr(args, "detector", None)
@@ -1610,7 +1610,7 @@ def cmd_ablation(args: argparse.Namespace) -> None:
 
 def cmd_crosscheck(args: argparse.Namespace) -> None:
     """Cross-check anomalous clusters against the Gravity Spy database."""
-    from src.gravity_spy_checker import (
+    from src.pipeline_v1_legacy.gravity_spy_checker import (
         cross_check_anomalous_clusters,
         print_crosscheck_summary,
     )
@@ -1649,7 +1649,7 @@ def cmd_build_reference(args: argparse.Namespace) -> None:
 
 def _build_reference(args: argparse.Namespace) -> None:
     """Build a DINOv2 embedding reference index from the Gravity Spy training set."""
-    from src.reference_builder import (
+    from src.pipeline_v1_legacy.reference_builder import (
         download_training_set_metadata,
         extract_from_tar,
         build_reference_index_from_paths,
@@ -1709,11 +1709,11 @@ def _build_reference(args: argparse.Namespace) -> None:
 def cmd_morphcheck(args: argparse.Namespace) -> None:
     """Run morphological similarity cross-check against reference index."""
     import json
-    from src.similarity_checker import (
+    from src.pipeline_v1_legacy.similarity_checker import (
         run_morphological_crosscheck,
         print_morphological_summary,
     )
-    from src.utils import discover_references
+    from src.core.utils import discover_references
 
     session_id = getattr(args, "session_id", None) or None
     detector = getattr(args, "detector", None)
@@ -1922,13 +1922,13 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
 
 def _build_indomain_reference(args: argparse.Namespace) -> None:
     """Build an in-domain DINOv2 reference index from labeled O3b spectrograms."""
-    from src.indomain_reference_builder import (
+    from src.pipeline_v1_legacy.indomain_reference_builder import (
         build_indomain_reference,
         download_gs_classifications_csv,
         select_reference_events,
     )
 
-    from src.utils import generate_reference_filename
+    from src.core.utils import generate_reference_filename
 
     detector: str = args.detector
     run: str = args.run
@@ -1985,12 +1985,12 @@ def cmd_download_all_references(args: argparse.Namespace) -> None:
 
     Downloads are sequential to respect Zenodo rate limits.
     """
-    from src.indomain_reference_builder import (
+    from src.pipeline_v1_legacy.indomain_reference_builder import (
         build_indomain_reference,
         download_gs_classifications_csv,
         select_reference_events,
     )
-    from src.utils import generate_reference_filename
+    from src.core.utils import generate_reference_filename
 
     # Resolve which runs to process
     if args.all_runs:
@@ -2084,8 +2084,8 @@ def cmd_download_all_references(args: argparse.Namespace) -> None:
 
 def cmd_validate_reference(args: argparse.Namespace) -> None:
     """Validate reference index with a GW150914 sanity check."""
-    from src.similarity_checker import cosine_knn_search
-    from src.reference_builder import load_reference_index
+    from src.pipeline_v1_legacy.similarity_checker import cosine_knn_search
+    from src.pipeline_v1_legacy.reference_builder import load_reference_index
 
     reference_path = Path(args.reference)
     cfg = load_config()
@@ -2104,8 +2104,8 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
     gps_end = event["end"]
 
     # Step 1: Fetch and preprocess the test event with our pipeline
-    from src.data_loader import fetch_strain_data as _fetch
-    from src.preprocessor import bandpass as _bp, generate_qtransform as _qt, whiten as _wh
+    from src.core.data_loader import fetch_strain_data as _fetch
+    from src.core.preprocessor import bandpass as _bp, generate_qtransform as _qt, whiten as _wh
 
     logger.info("Fetching %s (%s) [%d, %d]", test_event, detector, gps_start, gps_end)
     ts = _fetch(detector, gps_start, gps_end)
@@ -2165,7 +2165,7 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
 
 def cmd_benchmark_clustering(args: argparse.Namespace) -> None:
     """Run benchmark of the clustering pipeline against a reference index."""
-    from src.benchmark import run_benchmark
+    from src.pipeline_v1_legacy.benchmark import run_benchmark
     
     logger.info("=== BENCHMARK CLUSTERING ===")
     
@@ -2183,7 +2183,7 @@ def cmd_benchmark_clustering(args: argparse.Namespace) -> None:
 
 def cmd_timeslide(args: argparse.Namespace) -> None:
     """Run time-slide analysis to estimate background coincidence significance."""
-    from src.timeslide import run_timeslide
+    from src.pipeline_v1_legacy.timeslide import run_timeslide
 
     run = _resolve_run(args)
     run_lower = run.lower()
@@ -2266,7 +2266,7 @@ def cmd_timeslide(args: argparse.Namespace) -> None:
 
 def cmd_full_analysis_report(args: argparse.Namespace) -> None:
     """Generate final summary reports from existing step reports without running analysis."""
-    from src.full_analysis import generate_reports_only
+    from src.pipeline_v1_legacy.full_analysis import generate_reports_only
 
     session_id = _resolve_session_id(args)
     if not session_id:
@@ -2298,7 +2298,7 @@ def cmd_full_analysis_report(args: argparse.Namespace) -> None:
 
 def cmd_full_analysis(args: argparse.Namespace) -> None:
     """Automate the full analysis pipeline for one or more detectors."""
-    from src.full_analysis import run_full_analysis
+    from src.pipeline_v1_legacy.full_analysis import run_full_analysis
 
     session_id = _resolve_session_id(args)
     run = _resolve_run(args)
@@ -2309,7 +2309,7 @@ def cmd_full_analysis(args: argparse.Namespace) -> None:
     _log_run_header(run, str(detectors) if detectors else "AUTO", session_id)
 
     # Hardware diagnostics — log active device at startup
-    from src.utils import get_device
+    from src.core.utils import get_device
     active_device = get_device(verbose=True)
 
     result = run_full_analysis(
@@ -2353,7 +2353,7 @@ def cmd_calibrate(args: argparse.Namespace) -> None:
 
 def _calibrate_loglikelihood(args: argparse.Namespace) -> None:
     """Calibrate the DPMM log-likelihood anomaly threshold from the reference."""
-    from src.loglikelihood_calibrator import calibrate_loglikelihood_threshold
+    from src.pipeline_v1_legacy.loglikelihood_calibrator import calibrate_loglikelihood_threshold
 
     result = calibrate_loglikelihood_threshold(
         reference_path=args.reference,
@@ -2372,7 +2372,7 @@ def _calibrate_loglikelihood(args: argparse.Namespace) -> None:
 
 def _calibrate_threshold(args: argparse.Namespace) -> None:
     """Calibrate per-class cosine similarity thresholds from the reference index."""
-    from src.threshold_calibrator import calibrate_thresholds
+    from src.pipeline_v1_legacy.threshold_calibrator import calibrate_thresholds
 
     result = calibrate_thresholds(
         reference_path=args.reference,
@@ -2385,14 +2385,14 @@ def _calibrate_threshold(args: argparse.Namespace) -> None:
 
 def cmd_scan_live(args: argparse.Namespace) -> None:
     """Run the autopilot live scanner."""
-    from src.scan_live import run_scan_live
+    from src.pipeline_v1_legacy.scan_live import run_scan_live
 
     run = _resolve_run(args)
     session_id = getattr(args, "session_id", None)
     hours = getattr(args, "hours", None)
 
     # Hardware diagnostics — log active device at startup
-    from src.utils import get_device
+    from src.core.utils import get_device
     active_device = get_device(verbose=True)
 
     run_scan_live(
@@ -2410,8 +2410,8 @@ def cmd_scan_live(args: argparse.Namespace) -> None:
 
 def cmd_run_injection(args: argparse.Namespace) -> None:
     """Run Mock Data Challenge with synthetic glitch injection."""
-    from src.injection import run_mdc
-    from src.plot_mdc import plot_sensitivity_curve, plot_confusion_matrix, generate_mdc_report
+    from src.pipeline_v1_legacy.injection import run_mdc
+    from src.pipeline_v1_legacy.plot_mdc import plot_sensitivity_curve, plot_confusion_matrix, generate_mdc_report
     import yaml
     import pandas as pd
     
@@ -2494,7 +2494,7 @@ def _add_mode_argument(parser: argparse.ArgumentParser) -> None:
 
 def cmd_build_patch_reference(args: argparse.Namespace) -> None:
     """Build a compressed patch-level reference index from an images directory."""
-    from src.index_builder import PatchIndexBuilder
+    from src.pipeline_v1_legacy.index_builder import PatchIndexBuilder
     
     images_dir = Path(args.images_dir)
     output_npz = Path(args.output)
@@ -2511,9 +2511,9 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     import time
     import random
     from datetime import datetime, timezone
-    from src.patch_producer import PatchProducer
-    from src.patch_scorer import PatchScorer
-    from src.production_writer import ProductionWriter
+    from src.core.patch_producer import PatchProducer
+    from src.core.patch_scorer import PatchScorer
+    from src.pipeline_v2_production.production_writer import ProductionWriter
 
     data_dir = Path(args.data_dir)
     detector = args.detector
@@ -2561,7 +2561,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             continue
             
         # Setup session logging manually since root wrapper misses list args
-        from src.utils import set_session_log_file, close_session_log
+        from src.core.utils import set_session_log_file, close_session_log
         log_file = writer.logs_dir / "session.log"
         set_session_log_file(log_file)
         
@@ -2676,7 +2676,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
 
 
 def cmd_production_cluster(args):
-    from src.production_cluster import H5Clusterer
+    from src.pipeline_v2_production.production_cluster import H5Clusterer
     from pathlib import Path
     import sys
     
@@ -2692,7 +2692,7 @@ def cmd_production_cluster(args):
 def cmd_production_report(args):
     """Run the Phase 6 production report pipeline."""
     logger.info("=== Starting Production Report ===")
-    from src.production_report import ValidationReporter
+    from src.pipeline_v2_production.production_report import ValidationReporter
     reporter = ValidationReporter(session_id=args.session_id, detector=args.detector)
     if getattr(args, "only_plots", False):
         reporter.run_only_plots()
@@ -2777,7 +2777,7 @@ def cmd_validate_reports(args):
 def cmd_aggregate_report(args):
     """Cross-session aggregation, deduplication, and Spearman stability defense."""
     logger.info("=== Starting Aggregate Report ===")
-    from src.aggregate_report import AggregateReporter
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
     reporter = AggregateReporter(production_dir=args.production_dir)
     reporter.run()
 
@@ -3972,7 +3972,7 @@ def main() -> None:
     parser = build_parser()
     
     if len(sys.argv) == 1:
-        from src.wizard import run_wizard
+        from src.core.wizard import run_wizard
         run_wizard(parser)
         sys.exit(0)
         
@@ -3995,7 +3995,7 @@ def main() -> None:
             args.session_id = session_id
             run = _resolve_run(args)
             
-            from src.utils import set_session_log_file, close_session_log
+            from src.core.utils import set_session_log_file, close_session_log
             log_dir = session_path(run, session_id) / "logs"
             log_file = log_dir / "session.log"
             set_session_log_file(log_file)

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch, call
 import numpy as np
 import pytest
 
-from src.full_analysis import _save_detector_report, run_full_analysis
+from src.pipeline_v1_legacy.full_analysis import _save_detector_report, run_full_analysis
 
 
 # ---------------------------------------------------------------------------

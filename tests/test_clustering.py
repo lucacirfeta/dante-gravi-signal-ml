@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from sklearn.datasets import make_blobs
 
-from src.clustering import (
+from src.pipeline_v1_legacy.clustering import (
     identify_anomalous_clusters,
     run_full_pipeline,
     run_hdbscan,

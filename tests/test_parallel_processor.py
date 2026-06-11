@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.parallel_processor import (
+from src.core.parallel_processor import (
     _process_single_segment,
     batch_process_parallel,
     get_optimal_workers,

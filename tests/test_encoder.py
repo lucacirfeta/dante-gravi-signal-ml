@@ -18,7 +18,7 @@ import pytest
 import torch
 from PIL import Image
 
-from src.encoder import build_dinov2_transform
+from src.core.encoder import build_dinov2_transform
 
 
 # =====================================================================
@@ -57,7 +57,7 @@ class TestExtractDatasetEmptyDir:
         """Passing a directory with no PNGs should raise FileNotFoundError."""
         from unittest.mock import MagicMock
 
-        from src.encoder import DINOv2Encoder
+        from src.core.encoder import DINOv2Encoder
 
         # Mock the encoder to avoid downloading the model
         encoder = object.__new__(DINOv2Encoder)
@@ -90,7 +90,7 @@ class TestExtractSingleEmbedding:
 
     def test_shape_and_norm(self, tmp_path: Path) -> None:
         """extract() → (384,) float32 with L2-norm ≈ 1.0."""
-        from src.encoder import DINOv2Encoder
+        from src.core.encoder import DINOv2Encoder
 
         png = _make_noise_png(tmp_path / "noise.png")
         encoder = DINOv2Encoder()
@@ -107,7 +107,7 @@ class TestExtractBatchShapes:
 
     def test_batch_output(self, tmp_path: Path) -> None:
         """extract_batch(5 PNGs) → (5, 384) float32."""
-        from src.encoder import DINOv2Encoder
+        from src.core.encoder import DINOv2Encoder
 
         paths = [
             _make_noise_png(tmp_path / f"noise_{i}.png") for i in range(5)
@@ -125,7 +125,7 @@ class TestExtractDatasetOutputs:
 
     def test_npy_and_json(self, tmp_path: Path) -> None:
         """extract_dataset() saves .npy and companion .json with correct metadata."""
-        from src.encoder import DINOv2Encoder
+        from src.core.encoder import DINOv2Encoder
 
         # Create 3 test PNGs
         for i in range(3):
