@@ -148,6 +148,21 @@ The pipeline establishes a reproducible baseline for zero-shot glitch morphology
 
 ---
 
+## 🖼️ Visual Diagnostic Layer: Saliency Gallery
+
+The pipeline includes a three-panel visual diagnostic engine (`saliency_gallery/`) designed to make the neural architecture fully inspectable and interpretable. Each PNG file generated for the anomalies provides the following structural analysis of the transient:
+
+1. **Panel 1 (Original Q-Transform):** Represents the raw 256x256 tensor of the Q-Transform spectrogram. It is used to visually isolate energy bursts in the time-frequency space prior to any neural extraction.
+2. **Panel 2 (Patch Saliency):** Displays the native 37x37 attention grid of the DINOv2 patches. The hollow red rectangles highlight the Top-68 local anomalous patches, algorithmically selected via Multiple Instance Learning (MIL) to construct the final 384-dimensional latent vector.
+3. **Panel 3 (Anomaly Saliency Overlay):** Utilizes a bilinear up-sampling (from 37x37 to 256x256 pixels) via standard graphics libraries to perfectly register the anomaly score heatmap onto the base physical coordinates of the original spectrogram.
+
+**Physical Interpretation vs. Domain-Shift Hallucinations:**
+The Saliency Gallery is the fundamental tool to distinguish real transients from model artifacts in an unsupervised detection task.
+- A **true physical alignment** (glitch) manifests as a localized, high-contrast overlay, where the red rectangles (the extracted MIL patches) accurately trace the actual morphology of a signal against the background.
+- A **domain-shift hallucination** instead presents as a regular, diffuse "chessboard" pattern, dictated by the rigid 14x14 pixel grid of the Vision Transformer. This visual anomaly occurs in the absence of real signal contrast and is driven almost entirely by the bias of the ViT's *positional embeddings*, forcing the model to search in vain for features within a purely stochastic and isotropic background noise.
+
+---
+
 ## 📂 Project Structure & Naming Conventions
 
 All pipeline-generated outputs strictly follow this path convention: `data/runs/<run>/<session_id>/...`.
