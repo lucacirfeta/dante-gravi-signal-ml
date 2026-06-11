@@ -59,31 +59,31 @@ _COINCIDENCE_ENUM = {
 # 1. VALIDATION GATE
 # ===================================================================
 
-def _validate_session_json(json_path: Path, expected_det: str) -> Optional[dict]:
+def _validate_session_json(json_path: Path, expected_det: str) -> Tuple[Optional[dict], str]:
     """
     Apply the four-point validation gate to a cluster_report JSON.
-    Returns the parsed dict if valid, None if excluded.
+    Returns (parsed_dict, "") if valid, or (None, "reason") if excluded.
     """
     try:
         with open(json_path, "r") as f:
             data = json.load(f)
     except Exception as e:
         logger.warning(f"Session {json_path.name} excluded: JSON parse error — {e}")
-        return None
+        return None, "JSON parse error"
 
     # Gate 1: gps_dedup_validated field present
     if "gps_dedup_validated" not in data:
-        gps_tag = json_path.stem  # e.g. cluster_report_novelties_1368973312_L1
+        gps_tag = json_path.stem
         logger.warning(
             f"Session {gps_tag} excluded: gps_dedup_validated field missing. "
             "Re-run production-report after applying serializer fix."
         )
-        return None
+        return None, "Missing 'gps_dedup_validated' flag"
 
     # Gate 2: gps_dedup_validated == true
     if data["gps_dedup_validated"] is not True:
         logger.warning(f"Session {json_path.name} excluded: gps_dedup_validated != true")
-        return None
+        return None, "gps_dedup_validated is False"
 
     # Gate 3: detector matches
     json_det = data.get("detector", "")
@@ -92,7 +92,7 @@ def _validate_session_json(json_path: Path, expected_det: str) -> Optional[dict]
             f"Session {json_path.name} excluded: detector mismatch "
             f"(expected {expected_det}, got {json_det})"
         )
-        return None
+        return None, f"Detector mismatch (expected {expected_det}, got {json_det})"
 
     # Gate 4: n_samples consistency
     clusters = data.get("clusters", {})
@@ -105,9 +105,9 @@ def _validate_session_json(json_path: Path, expected_det: str) -> Optional[dict]
             f"Session {json_path.name} excluded: n_samples mismatch "
             f"(computed {n_samples_true} vs declared {n_samples_declared})"
         )
-        return None
+        return None, f"n_samples mismatch (computed {n_samples_true} vs declared {n_samples_declared})"
 
-    return data
+    return data, ""
 
 
 # ===================================================================
@@ -331,10 +331,10 @@ class AggregateReporter:
                     continue
 
                 # Validate JSON
-                data = _validate_session_json(json_path, det)
+                data, reason = _validate_session_json(json_path, det)
                 if data is None:
                     total_excluded += 1
-                    excluded_list.append(f"{gps}_{det} (validation failed)")
+                    excluded_list.append(f"{gps}_{det} (Excluded: {reason})")
                     continue
 
                 # Extract Spearman metadata
@@ -567,33 +567,38 @@ class AggregateReporter:
         # Paper-ready statement
         l1_rho = spearman_results["l1"].get("spearman_rho")
         l1_p = spearman_results["l1"].get("spearman_p")
+        l1_n = spearman_results["l1"].get("n_sessions_spearman")
         h1_rho = spearman_results["h1"].get("spearman_rho")
         h1_p = spearman_results["h1"].get("spearman_p")
+        h1_n = spearman_results["h1"].get("n_sessions_spearman")
 
+        def format_statement(det_name, rho, p_val, n_val):
+            if p_val < 0.05:
+                return (
+                    f"ARI shows a statistically significant positive correlation with sample size for {det_name} "
+                    f"(Spearman ρ = {rho:.4f}, p = {p_val:.4f}), mathematically demonstrating that reduced ARI in "
+                    f"restricted windows reflects sample size under-determination in high-dimensional mixture fitting "
+                    f"rather than topological manifold decay. Sessions with n < {MIN_SAMPLES_SPEARMAN} are excluded from "
+                    f"global stability claims."
+                )
+            else:
+                return (
+                    f"No statistically significant correlation was found between ARI and sample size for {det_name} "
+                    f"(Spearman ρ = {rho:.3f}, p = {p_val:.3f}), which does not exclude a real correlation "
+                    f"given the limited number of valid sessions (n={n_val})."
+                )
+
+        lines.append("PAPER-READY STATEMENT (use verbatim in manuscript):")
         if l1_rho is not None and h1_rho is not None:
-            lines.append("PAPER-READY STATEMENT (use verbatim in manuscript):")
-            lines.append(
-                f'"ARI shows a positive correlation with sample size for both detectors '
-                f"(L1: Spearman ρ = {l1_rho:.4f}, p = {l1_p:.4f}; "
-                f"H1: Spearman ρ = {h1_rho:.4f}, p = {h1_p:.4f}), "
-                f"mathematically demonstrating that reduced ARI in "
-                f"restricted windows reflects sample size under-determination in "
-                f"high-dimensional mixture fitting rather than topological manifold "
-                f"decay. Sessions with n < {MIN_SAMPLES_SPEARMAN} are excluded from "
-                f'global stability claims."'
-            )
+            stmt_l1 = format_statement("L1", l1_rho, l1_p, l1_n)
+            stmt_h1 = format_statement("H1", h1_rho, h1_p, h1_n)
+            lines.append(f'"{stmt_l1} {stmt_h1}"')
         elif l1_rho is not None:
-            lines.append(
-                f"PAPER-READY STATEMENT (L1 only — H1 insufficient sessions): "
-                f'"ARI shows correlation with sample size '
-                f"(L1: Spearman ρ = {l1_rho:.4f}, p = {l1_p:.4f})."
-                f'"'
-            )
+            lines.append(f'"{format_statement("L1", l1_rho, l1_p, l1_n)}"')
+        elif h1_rho is not None:
+            lines.append(f'"{format_statement("H1", h1_rho, h1_p, h1_n)}"')
         else:
-            lines.append(
-                "PAPER-READY STATEMENT: Insufficient sessions for both detectors. "
-                "Spearman analysis deferred."
-            )
+            lines.append("Insufficient sessions for both detectors. Spearman analysis deferred.")
 
         log_path = self.output_dir / "stability_synthesis.log"
         with open(log_path, "w", encoding="utf-8") as f:
