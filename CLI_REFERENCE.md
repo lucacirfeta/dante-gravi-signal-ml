@@ -213,16 +213,16 @@ Automated continuous workflow that safely chains `patch-production` $\to$ `produ
 * **Under the Hood (Processing Details):**
   1. Intercepts all configuration arguments and logs them globally for absolute traceability.
   2. Spawns the `patch-production` pipeline identically to the standalone command, natively enforcing `--resume`. It maintains state via `checkpoint.txt` and HDF5 SWMR checkpoints.
-  3. **State-Aware Resilience:** If a session's checkpoint is marked as `DONE`, the orchestrator skips the heavy DINOv2 processing instantly. If `full_discovery_report_{detector}.md` exists, it skips the entire session, ensuring flawless and rapid execution when resuming massive multi-session runs.
+  3. **State-Aware Resilience:** If a session's checkpoint is marked as `DONE`, the orchestrator skips the heavy DINOv2 processing instantly. If `full_discovery_report_{session}_{detector}.md` exists, it skips the entire session, ensuring flawless and rapid execution when resuming massive multi-session runs.
   4. Upon conclusion of each step, it autonomously invokes the `production-cluster` and `production-report` commands sequentially.
   
 - *Accepts identical arguments as `patch-production`.*
 
 ### 5d. `production-report`
-Executes the final Phase 6 and 7 automated validation pipeline to produce the `full_discovery_report_{detector}.md`. It performs cross-validation against the Gravity Spy catalog, calculates topological stability metrics, and generates saliency galleries.
+Executes the final Phase 6 and 7 automated validation pipeline to produce the `full_discovery_report_{session}_{detector}.md`. It performs cross-validation against the Gravity Spy catalog, calculates topological stability metrics, and generates saliency galleries.
 
 * **Under the Hood (Processing Details):**
-  1. Identifies the `novelties.h5` and `cluster_report.json` for the given session.
+  1. Identifies the `novelties.h5` and `cluster_report_novelties_{session}_{detector}.json` for the given session.
   2. Executes internal VQ Cosine Similarity Fallback by normalizing and querying the compressed reference background index to map known classes.
   3. Projects the 384D Multiple Instance Learning vectors down to an exact 4D space using UMAP (cosine metric) and calculates the Bootstrap Adjusted Rand Index (ARI, N=20).
   4. Dynamically samples pristine background segments (`Science Mode`) from the GWOSC timeline, and computes the spatial median background.
@@ -232,6 +232,20 @@ Executes the final Phase 6 and 7 automated validation pipeline to produce the `f
 - `--session-id` **(Required)**: Session ID to evaluate.
 - `--detector` **(Required)**: Detector. Choices: `H1`, `L1`.
 - `--run`: Search observational run. *Default: `O4a`*.
+
+### 5e. `validate-reports`
+Validates all generated artifacts, ensures GPS deduplication mathematically, and verifies root metadata injections for the given production run. This runs automatically at the end of `patch-analysis`.
+
+* **Under the Hood (Processing Details):**
+  1. Parsers the `cluster_report_novelties_{session}_{detector}.json`.
+  2. Checks if `gps_dedup_validated` is True and manually verifies no duplicates exist.
+  3. Verifies `n_samples` equals the sum of unique items.
+  4. Verifies presence of all required metadata fields (e.g. `distribution_separation_sigma`).
+  5. Verifies existence and nomenclature of all mandated files (Markdown, CSV, PNGs) following the strict `{session}_{detector}` prefix rule.
+  6. Returns exit code `0` if all assertions PASS, `1` if any FAIL.
+
+- `--session-id` **(Required)**: Session ID to evaluate.
+- `--detector` **(Required)**: Detector. Choices: `H1`, `L1`.
 
 ### 5e. `last-gps`
 Returns the most advanced (end) GPS time to resume stopped runs without invoking external servers.

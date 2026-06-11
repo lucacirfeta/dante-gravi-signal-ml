@@ -47,7 +47,7 @@ class ValidationReporter:
         self.saliency_dir = self.report_dir / "saliency_gallery"
         self.saliency_dir.mkdir(parents=True, exist_ok=True)
         
-        self.status_file = self.report_dir / f"report_status_{detector}.json"
+        self.status_file = self.report_dir / f"report_status_{self.session_id}_{self.detector}.json"
         self.status = self._load_status()
         self.status["MD5_index"] = "1080afa809964011e398c44fb24b73c6"
         self._save_status()
@@ -287,7 +287,7 @@ class ValidationReporter:
         # We leave them as TRUE_NOVEL_CANDIDATE in the CSV so they get picked up
         # by Section IV.C logic, which we renamed to DetChar.
         
-        out_csv = self.report_dir / f"morphcheck_novelties_{self.detector}.csv"
+        out_csv = self.report_dir / f"morphcheck_novelties_{self.session_id}_{self.detector}.csv"
         df_out.to_csv(out_csv, index=False)
         self.status["morphcheck_stats"] = {
             "total_candidates": len(df_out),
@@ -343,7 +343,7 @@ class ValidationReporter:
         ax.set_title("Temporal Distribution of Anomalous Clusters")
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
-        plt.savefig(self.report_dir / f"temporal_distribution_{self.detector}.png", dpi=200)
+        plt.savefig(self.report_dir / f"temporal_distribution_{self.session_id}_{self.detector}.png", dpi=200)
         plt.close()
 
     def step3_stability_metrics(self):
@@ -407,9 +407,17 @@ class ValidationReporter:
         orig_labels = np.array([gps_to_cid.get(float(g), "-1") for g in gps_times_arr])
         
         cluster_stability = {}
+        excluded_singletons = 0
         for c in np.unique(orig_labels):
             if c == "-1": continue
             c_indices = np.where(orig_labels == c)[0]
+            
+            # Check if singleton from json
+            cdata = clusters_dict.get(str(c), {})
+            if cdata.get("is_singleton", False):
+                excluded_singletons += 1
+                continue
+                
             if len(c_indices) < 3: continue # Only evaluate stability for non-trivial clusters
             
             stable_count = 0
@@ -423,6 +431,10 @@ class ValidationReporter:
                 if max_overlap >= 0.70:
                     stable_count += 1
             cluster_stability[str(c)] = stable_count / n_iters
+            
+        if excluded_singletons > 0:
+            logger.info(f"Excluded {excluded_singletons} singleton clusters from stability analysis.")
+            self.status["excluded_singletons"] = excluded_singletons
             
         self.status["cluster_stability"] = cluster_stability
 
@@ -530,7 +542,7 @@ class ValidationReporter:
             gps_list = clusters[cid].get("gps_times", [])[:3] # top 3 prototypes
             for t_start in gps_list:
                 t_start = int(t_start)
-                out_prefix = self.saliency_dir / f"C{cid}_{self.detector}_{t_start}_{t_start+32}"
+                out_prefix = self.saliency_dir / f"C{cid}_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
                 
                 ts = fetch_strain_data(self.detector, t_start, t_start + 32)
                 ts = whiten(ts)
@@ -645,7 +657,7 @@ class ValidationReporter:
         ax.legend()
         
         fig.tight_layout()
-        plt.savefig(self.report_dir / f"pooling_comparison_{self.detector}.png", dpi=200)
+        plt.savefig(self.report_dir / f"pooling_comparison_{self.session_id}_{self.detector}.png", dpi=200)
         plt.close()
 
     def step6_compile_report(self):
@@ -709,24 +721,29 @@ class ValidationReporter:
         md_content += f"- **Known (Gravity Spy / VQ Match)**: {stats.get('known', 0)}\n"
         md_content += f"- **Unclassified (Novel Candidates)**: {stats.get('unclassified', 0)}\n"
         md_content += f"- **Instrumental Anomalies (Out of Science Mode)**: {stats.get('instrumental', 0)}\n\n"
-        md_content += f"The full list of matches is available in [`morphcheck_novelties_{self.detector}.csv`](morphcheck_novelties_{self.detector}.csv).\n\n"
+        md_content += f"The full list of matches is available in [`morphcheck_novelties_{self.session_id}_{self.detector}.csv`](morphcheck_novelties_{self.session_id}_{self.detector}.csv).\n\n"
         
-        # Section IV.A
-        md_content += "## Section IV.A: The Signal Dilution Proof\n"
-        md_content += "This ablation validates the core premise: Global Pooling fails to identify micro-structural transients because the denominator (1369 patches) mediates the signal with the background noise. Our Multiple Instance Learning approach (Top-68 patches) lifts the signal above the background threshold seamlessly.\n\n"
-        md_content += f"![Pooling Comparison](pooling_comparison_{self.detector}.png)\n\n"
+        # Section III
+        md_content += "## Section III: Pooling Comparison (Ablation)\n"
+        md_content += "Comparison of Top-K spatial pooling versus global generic DINOv2 pooling on the largest novel cluster. This ablation validates the core premise: Global Pooling fails to identify micro-structural transients because the denominator (1369 patches) mediates the signal with the background noise. Our Multiple Instance Learning approach (Top-68 patches) lifts the signal above the background threshold seamlessly.\n\n"
+        md_content += f"![Pooling Comparison](pooling_comparison_{self.session_id}_{self.detector}.png)\n\n"
         
         # Section IV.B
         md_content += "## Section IV.B: Unsupervised Morphology Discovery\n"
         md_content += "We apply the Dirichlet Process Mixture Model (DPMM) in a compressed UMAP 4D manifold. To rigorously prove topological stability, we perform a Bootstrap (N=20) sampling *before* UMAP projection, ensuring the manifold's geometry is tested for robustness rather than purely deterministic convergence.\n"
-        mean_ari = self.status.get('mean_ari', 0.0)
-        md_content += f"- **Mean Bootstrap Adjusted Rand Index (ARI)**: **{mean_ari:.4f}**\n\n"
+        md_content += f"- **Global Mean ARI**: {self.status.get('mean_ari', 0.0):.4f} (Calculated via 4D UMAP Bootstrapped DPMM, N=20)\n"
+        
+        excluded = self.status.get("excluded_singletons", 0)
+        if excluded > 0:
+            md_content += f"- **Note**: {excluded} singleton clusters were excluded from stability analysis.\n"
+            
+        md_content += "- **Stable Core Clusters**:\n"
         
         stab = self.status.get("cluster_stability", {})
         if stab:
             stable_100 = [c for c, s in stab.items() if s >= 1.0]
             unstable = {c: s for c, s in stab.items() if s < 0.70}
-            md_content += f"ARI = {mean_ari:.4f} reflects moderate topological stability; instability is concentrated in micro-clusters "
+            md_content += f"ARI = {self.status.get('mean_ari', 0.0):.4f} reflects moderate topological stability; instability is concentrated in micro-clusters "
             if unstable:
                 unstable_str = ", ".join(f"C{c}: {s*100:.0f}%" for c, s in sorted(unstable.items(), key=lambda x: int(x[0])))
                 md_content += f"({unstable_str}) with low cardinality, "
@@ -738,11 +755,11 @@ class ValidationReporter:
         
         dq_flag = self.status.get('dq_flag_used', 'CBC_CAT1')
         md_content += f"Scatter plot of Cluster IDs over GPS time. The shaded background represents Data Quality (DQ) intervals, filtered using the `{dq_flag}` flag:\n\n"
-        md_content += f"![Temporal Distribution](temporal_distribution_{self.detector}.png)\n\n"
+        md_content += f"![Temporal Distribution](temporal_distribution_{self.session_id}_{self.detector}.png)\n\n"
         
         # Read the DataFrame
         df_out = pd.DataFrame()
-        csv_path = self.report_dir / f"morphcheck_novelties_{self.detector}.csv"
+        csv_path = self.report_dir / f"morphcheck_novelties_{self.session_id}_{self.detector}.csv"
         if csv_path.exists():
             df_out = pd.read_csv(csv_path)
             
@@ -768,7 +785,7 @@ class ValidationReporter:
                 t_start = int(row['t_start'])
                 md_content += f"### Candidate at GPS {t_start} (Cluster {cid})\n"
                 
-                out_prefix = self.saliency_dir / f"NOVEL_{self.detector}_{t_start}_{t_start+32}"
+                out_prefix = self.saliency_dir / f"NOVEL_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
                 sal_img = f"{out_prefix.name}_saliency.png"
                 if not (self.saliency_dir / sal_img).exists() and model is not None and hasattr(self, 'spatial_median'):
                     try:
@@ -824,8 +841,8 @@ class ValidationReporter:
                 except:
                     pass
                     
-                img_path = self.report_dir / "saliency_gallery" / f"NOVEL_{self.detector}_{t}_{t+32}_saliency.png"
-                img_md = f"NOVEL_{self.detector}_{t}_{t+32}_saliency.png"
+                img_path = self.report_dir / "saliency_gallery" / f"NOVEL_{self.detector}_{self.session_id}_{t}_{t+32}_saliency.png"
+                img_md = f"NOVEL_{self.detector}_{self.session_id}_{t}_{t+32}_saliency.png"
                 
                 md_content += f"### Candidate at GPS {t} (Cluster {cid})\n"
                 md_content += f"- **DQ status:** {self.detector}_CBC_CAT1 ACTIVE. DMT-ANALYSIS_READY:1 not verifiable via public API for O4a. Classification as astrophysical candidate is tentative pending official LVK DQ release.\n"
@@ -855,7 +872,7 @@ class ValidationReporter:
         except Exception as e:
             md_content += f"Could not load gallery images: {e}\n"
             
-        with open(self.report_dir / f"full_discovery_report_{self.detector}.md", "w") as f:
+        with open(self.report_dir / f"full_discovery_report_{self.session_id}_{self.detector}.md", "w") as f:
             f.write(md_content)
             
         with open(self.status_file, "w") as f:

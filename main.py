@@ -2697,6 +2697,80 @@ def cmd_production_report(args):
     reporter.run()
 
 
+def cmd_validate_reports(args):
+    """Validate all required artifacts and metadata constraints."""
+    import sys
+    import json
+    from pathlib import Path
+    logger.info(f"=== Validating Reports for Session {args.session_id} ({args.detector}) ===")
+    
+    prod_dir = Path("data") / "production" / str(args.session_id)
+    report_dir = prod_dir / "report"
+    
+    # Required files map
+    files_to_check = [
+        prod_dir / f"cluster_report_novelties_{args.session_id}_{args.detector}.json",
+        prod_dir / f"umap_novelties_{args.session_id}_{args.detector}.png",
+        report_dir / f"full_discovery_report_{args.session_id}_{args.detector}.md",
+        report_dir / f"morphcheck_novelties_{args.session_id}_{args.detector}.csv",
+        report_dir / f"temporal_distribution_{args.session_id}_{args.detector}.png",
+        report_dir / f"pooling_comparison_{args.session_id}_{args.detector}.png",
+        report_dir / f"report_status_{args.session_id}_{args.detector}.json",
+    ]
+    
+    failed = False
+    
+    for f in files_to_check:
+        if not f.exists():
+            logger.error(f"[VALIDATION FAILED] Missing required file: {f.name}")
+            failed = True
+            
+    # Check JSON specifics
+    json_path = prod_dir / f"cluster_report_novelties_{args.session_id}_{args.detector}.json"
+    if json_path.exists():
+        try:
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+                
+            # Check GPS duplicates in each cluster
+            total_unique = 0
+            singletons = 0
+            for cid, cdata in data.get("clusters", {}).items():
+                gps_list = cdata.get("gps_times", [])
+                if len(gps_list) != len(set(gps_list)):
+                    logger.error(f"[VALIDATION FAILED] GPS duplicates found in cluster {cid}")
+                    failed = True
+                total_unique += len(set(gps_list))
+                if len(set(gps_list)) == 1:
+                    singletons += 1
+                    
+            if data.get("n_samples") != total_unique:
+                logger.error(f"[VALIDATION FAILED] n_samples mismatch: {data.get('n_samples')} != {total_unique}")
+                failed = True
+                
+            req_fields = [
+                "session_start_gps", "session_end_gps", "detector", "dq_flag_used", 
+                "threshold_p99", "background_n_samples", "background_gps_saved", 
+                "vq_index_md5", "generation_timestamp", "gps_dedup_validated", 
+                "distribution_separation_sigma", "n_singleton_clusters"
+            ]
+            for field in req_fields:
+                if field not in data:
+                    logger.error(f"[VALIDATION FAILED] Missing root metadata field in JSON: {field}")
+                    failed = True
+                    
+        except Exception as e:
+            logger.error(f"[VALIDATION FAILED] Could not parse JSON: {e}")
+            failed = True
+            
+    if failed:
+        logger.error(f"Validation FAILED for {args.session_id}_{args.detector}. Exiting with code 1.")
+        sys.exit(1)
+    else:
+        logger.info(f"[VALIDATION PASSED] Session {args.session_id}_{args.detector} is fully valid.")
+        sys.exit(0)
+
+
 def cmd_patch_analysis(args):
     """Orchestrates the full Phase 4 & 5 pipeline."""
     logger.info("=== Starting Automated Patch-Analysis Pipeline ===")
@@ -2720,7 +2794,7 @@ def cmd_patch_analysis(args):
     for session in sessions_to_process:
         for det in detectors:
             # Check if session is already fully completed (report exists)
-            report_file = output_dir / str(session) / "report" / f"full_discovery_report_{det}.md"
+            report_file = output_dir / str(session) / "report" / f"full_discovery_report_{session}_{det}.md"
             if report_file.exists():
                 logger.info(f"[SKIP] Session {session} ({det}) is already fully analyzed (report exists).")
                 continue
@@ -2742,6 +2816,19 @@ def cmd_patch_analysis(args):
                 r_args.session_id = str(session)
                 r_args.detector = det
                 cmd_production_report(r_args)
+                
+                logger.info(f"STEP 4: Report Validation for session {session} ({det})")
+                try:
+                    # Run without exiting since we are in a loop
+                    import sys
+                    from unittest.mock import patch
+                    with patch.object(sys, 'exit') as mock_exit:
+                        cmd_validate_reports(r_args)
+                        if mock_exit.call_args and mock_exit.call_args[0][0] == 1:
+                            logger.error(f"Validation failed for {session}_{det}. Halting loop.")
+                            sys.exit(1)
+                except SystemExit as e:
+                    if e.code != 0: raise
             else:
                 logger.warning(f"No production output found at {h5_path}. Skipping clustering.")
 
@@ -3836,6 +3923,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--detector", type=str, default="H1", choices=["H1", "L1"]
     )
     p_production_report.set_defaults(func=cmd_production_report)
+
+    # --- validate-reports ---
+    p_validate_reports = subparsers.add_parser(
+        "validate-reports",
+        help="Validate all required artifacts and metadata constraints.",
+    )
+    p_validate_reports.add_argument(
+        "--session-id", type=str, required=True, help="Session ID to validate."
+    )
+    p_validate_reports.add_argument(
+        "--detector", type=str, default="H1", choices=["H1", "L1"]
+    )
+    p_validate_reports.set_defaults(func=cmd_validate_reports)
 
     return parser
 

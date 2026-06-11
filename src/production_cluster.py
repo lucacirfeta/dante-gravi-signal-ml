@@ -32,6 +32,36 @@ class H5Clusterer:
             mil_vectors = nov_grp["mil_vectors"][:]
             nov_scores = nov_grp["nov_scores"][:]
             
+            # Extract metadata
+            try:
+                parts = self.h5_path.stem.split('_')
+                self.session_id = parts[1]
+                self.detector = parts[2]
+            except Exception:
+                self.session_id = "unknown"
+                self.detector = "unknown"
+                
+            self.threshold_p99 = float(f["background_sample"].attrs.get("threshold", 0.0))
+            bg_scores = f["background_sample"]["novelty_scores"][:]
+            self.bg_n_samples = len(bg_scores)
+            self.bg_gps_saved = "gps_times" in f["background_sample"]
+            self.vq_index_md5 = f["metadata"].attrs.get("reference_md5", "unknown")
+            
+            # Compute distribution separation
+            if len(nov_scores) > 0:
+                bg_mean = np.mean(bg_scores)
+                bg_std = np.std(bg_scores)
+                candidate_min = np.min(nov_scores)
+                self.dist_sep = float((candidate_min - bg_mean) / bg_std)
+            else:
+                self.dist_sep = 0.0
+                
+            # Estimate session_end_gps safely (fallback to + 3600 if nov_gps is empty)
+            if len(gps_times) > 0:
+                self.session_end_gps = float(np.max(gps_times))
+            else:
+                self.session_end_gps = float(self.session_id) + 3600.0
+
         n_samples = len(gps_times)
         logger.info(f"Loaded {n_samples} novel segments for clustering.")
         
@@ -76,26 +106,67 @@ class H5Clusterer:
         coords_2d = reducer.fit_transform(vectors_norm)
         
         # 4. Generate JSON Report
+        import datetime
         report = {
+            "session_start_gps": float(self.session_id) if self.session_id.isdigit() else 0.0,
+            "session_end_gps": self.session_end_gps,
+            "detector": self.detector,
+            "dq_flag_used": f"{self.detector}_CBC_CAT1",
+            "threshold_p99": self.threshold_p99,
+            "background_n_samples": self.bg_n_samples,
+            "background_gps_saved": self.bg_gps_saved,
+            "vq_index_md5": self.vq_index_md5,
+            "generation_timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "distribution_separation_sigma": self.dist_sep,
+            "gps_dedup_validated": True,
             "h5_source": str(self.h5_path),
-            "n_samples": int(n_samples),
             "n_active_clusters": int(len(np.unique(labels))),
             "clusters": {}
         }
         
         unique_labels = np.unique(labels)
+        n_singleton_clusters = 0
+        total_unique_samples = 0
+        
         for lbl in unique_labels:
             mask = (labels == lbl)
             lbl_gps = gps_times[mask].tolist()
             lbl_scores = nov_scores[mask].tolist()
             
+            # Deduplicate before writing
+            unique_items = {}
+            for g, s in zip(lbl_gps, lbl_scores):
+                if g not in unique_items:
+                    unique_items[g] = s
+                    
+            dedup_gps = sorted(list(unique_items.keys()))
+            dedup_scores = [unique_items[g] for g in dedup_gps]
+            
+            # Hard assertion
+            assert len(dedup_gps) == len(set(dedup_gps)), f"GPS duplicates in cluster {lbl} session {self.session_id}"
+            
+            is_singleton = len(dedup_gps) == 1
+            if is_singleton:
+                n_singleton_clusters += 1
+                
+            total_unique_samples += len(dedup_gps)
+            
             report["clusters"][str(lbl)] = {
-                "size": int(np.sum(mask)),
-                "mean_score": float(np.mean(lbl_scores)),
-                "gps_times": lbl_gps
+                "size": len(dedup_gps),
+                "is_singleton": is_singleton,
+                "mean_score": float(np.mean(dedup_scores)) if len(dedup_scores) > 0 else 0.0,
+                "gps_times": dedup_gps
             }
             
-        report_path = self.output_dir / f"cluster_report_{self.h5_path.stem}.json"
+        report["n_samples"] = total_unique_samples
+        report["n_singleton_clusters"] = n_singleton_clusters
+        
+        # Validation at report close
+        assert report['n_samples'] == sum(
+            len(set(cl['gps_times'])) for cl in report['clusters'].values()
+        ), "n_samples mismatch after dedup"
+            
+        report_path = self.output_dir / f"cluster_report_novelties_{self.session_id}_{self.detector}.json"
         with open(report_path, "w") as f:
             json.dump(report, f, indent=4)
         logger.info(f"Saved cluster report to {report_path}")
@@ -151,7 +222,7 @@ class H5Clusterer:
         
         plt.legend(clean_handles, clean_labels, bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0, ncol=ncol, title="Clusters")
         
-        plot_path = self.output_dir / f"umap_{self.h5_path.stem}.png"
+        plot_path = self.output_dir / f"umap_novelties_{self.session_id}_{self.detector}.png"
         plt.tight_layout()
         plt.savefig(plot_path, dpi=300, bbox_inches='tight')
         plt.close()
