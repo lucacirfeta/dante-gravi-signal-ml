@@ -596,6 +596,6 @@ class AggregateReporter:
             )
 
         log_path = self.output_dir / "stability_synthesis.log"
-        with open(log_path, "w") as f:
+        with open(log_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
         logger.info(f"Wrote stability_synthesis.log")

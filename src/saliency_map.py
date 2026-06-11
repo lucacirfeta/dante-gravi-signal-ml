@@ -21,9 +21,12 @@ def generate_saliency_map(
     # 1. (Rimosso il caricamento dell'indice VQ globale per disaccoppiamento architetturale)
 
     # 2. Extract patch tokens
-    # Generate pseudo-RGB image from raw spectrogram matrix for DINOv2
-    spec_8bit = np.uint8(spectrogram_matrix * 255.0)
-    img = Image.fromarray(spec_8bit).convert("RGB")
+    # Generate RGB image from raw spectrogram matrix matching patch-production
+    cmap = plt.get_cmap("cividis")
+    rgb_spectrogram = cmap(spectrogram_matrix)[:, :, :3]
+    rgb_spectrogram_uint8 = (rgb_spectrogram * 255).astype(np.uint8)
+    
+    img = Image.fromarray(rgb_spectrogram_uint8).convert("RGB")
     
     transform = transforms.Compose([
         transforms.Resize((518, 518)),
