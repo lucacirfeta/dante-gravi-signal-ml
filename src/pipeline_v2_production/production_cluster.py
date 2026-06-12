@@ -78,17 +78,27 @@ class H5Clusterer:
         from sklearn.decomposition import PCA
         
         d_input = vectors_norm.shape[1]
-        if n_samples < 10:
-            n_components_pca = n_samples - 1
+        
+        # Calculate d_90
+        if n_samples > 1:
+            pca_90 = PCA(n_components=0.90, svd_solver='full', random_state=42)
+            pca_90.fit(vectors_norm)
+            d_90 = pca_90.n_components_
         else:
-            n_components_pca = 0.90
+            d_90 = 1
             
+        floor = min(20, n_samples - 1) if n_samples >= 21 else max(1, n_samples - 1)
+        if n_samples == 1:
+            floor = 1
+            
+        n_components_pca = max(d_90, floor)
+        
         pca = PCA(n_components=n_components_pca, svd_solver='full', random_state=42)
         vectors_reduced = pca.fit_transform(vectors_norm)
         d_output = vectors_reduced.shape[1]
         variance_retained = float(np.sum(pca.explained_variance_ratio_))
         
-        logger.info(f"PCA: {d_input}D → {d_output}D (varianza: {variance_retained:.1%})")
+        logger.info(f"PCA: {d_input}D → {d_output}D (varianza: {variance_retained:.1%}, floor applicato: {d_90 < floor})")
         
         # 3. Conditional Covariance & Adaptive Regularization for DPMM
         if n_samples >= 200:
@@ -99,6 +109,12 @@ class H5Clusterer:
             cov_type = 'diag'
             
         logger.info(f"DPMM covariance_type: {cov_type} (n={n_samples})")
+        
+        if n_samples < 50:
+            n_init = 5
+        else:
+            n_init = 3
+        logger.info(f"DPMM n_init: {n_init} (n={n_samples})")
         
         if n_samples < 100:
             reg_covar = 1e-3
@@ -116,7 +132,7 @@ class H5Clusterer:
             weight_concentration_prior_type='dirichlet_process',
             weight_concentration_prior=0.01,
             max_iter=500,
-            n_init=3,
+            n_init=n_init,
             random_state=42
         )
         
@@ -154,6 +170,7 @@ class H5Clusterer:
             "pca_n_components": int(d_output),
             "pca_variance_retained": float(variance_retained),
             "covariance_type_used": cov_type,
+            "n_init_used": n_init,
             "n_samples": int(n_samples),
             "clusters": {}
         }
