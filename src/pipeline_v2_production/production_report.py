@@ -74,6 +74,28 @@ class ValidationReporter:
             self.step1_morphcheck()
             self._mark_completed("step1_morphcheck")
             
+        if "step2_temporal_distribution" not in self.status["steps_completed"]:
+            self.step2_temporal_distribution()
+            self._mark_completed("step2_temporal_distribution")
+            
+        if "step3_stability_metrics" not in self.status["steps_completed"]:
+            self.step3_stability_metrics()
+            self._mark_completed("step3_stability_metrics")
+            
+        if "step4_saliency_gallery" not in self.status["steps_completed"]:
+            self.step4_saliency_gallery()
+            self._mark_completed("step4_saliency_gallery")
+            
+        if "step5_pooling_comparison" not in self.status["steps_completed"]:
+            self.step5_pooling_comparison()
+            self._mark_completed("step5_pooling_comparison")
+            
+        if "step6_compile_report" not in self.status["steps_completed"]:
+            self.step6_compile_report()
+            self._mark_completed("step6_compile_report")
+            
+        logger.info("Production Report completed.")
+            
     def run_only_plots(self):
         logger.info(f"Starting ONLY-PLOTS Routine for session {self.session_id}")
         
@@ -158,27 +180,7 @@ class ValidationReporter:
                 
         logger.info("ONLY-PLOTS Routine completed.")
             
-        if "step2_temporal_distribution" not in self.status["steps_completed"]:
-            self.step2_temporal_distribution()
-            self._mark_completed("step2_temporal_distribution")
-            
-        if "step3_stability_metrics" not in self.status["steps_completed"]:
-            self.step3_stability_metrics()
-            self._mark_completed("step3_stability_metrics")
-            
-        if "step4_saliency_gallery" not in self.status["steps_completed"]:
-            self.step4_saliency_gallery()
-            self._mark_completed("step4_saliency_gallery")
-            
-        if "step5_pooling_comparison" not in self.status["steps_completed"]:
-            self.step5_pooling_comparison()
-            self._mark_completed("step5_pooling_comparison")
-            
-        if "step6_compile_report" not in self.status["steps_completed"]:
-            self.step6_compile_report()
-            self._mark_completed("step6_compile_report")
-            
-        logger.info("Production Report completed.")
+        logger.info("ONLY-PLOTS Routine successfully executed.")
         
     def _fetch_dq_segments(self, start_gps: int, end_gps: int) -> list:
         """Fetch DQ segments for temporal distribution shading using tiered fallback."""
