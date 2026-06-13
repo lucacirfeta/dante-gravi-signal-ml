@@ -2672,6 +2672,10 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 
         writer.mark_completed()
         logger.info(f"=== Session {session} Complete. Novel found: {novel_count} ===")
+        
+        from src.core.data_loader import clear_astropy_cache
+        clear_astropy_cache()
+        
         close_session_log()
 
 
@@ -2840,6 +2844,9 @@ def cmd_patch_analysis(args):
                             sys.exit(1)
                 except SystemExit as e:
                     if e.code != 0: raise
+                    
+                from src.core.data_loader import clear_astropy_cache
+                clear_astropy_cache()
             else:
                 logger.warning(f"No production output found at {h5_path}. Skipping clustering.")
 

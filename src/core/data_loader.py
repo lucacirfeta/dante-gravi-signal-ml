@@ -375,3 +375,12 @@ def _validate_detector(detector: str) -> None:
         raise ValueError(
             f"Unsupported detector '{detector}'. Must be one of {supported}."
         )
+
+def clear_astropy_cache() -> None:
+    """Clear the astropy download cache to prevent disk space exhaustion."""
+    try:
+        from astropy.utils.data import clear_download_cache
+        clear_download_cache()
+        logger.info("Astropy download cache cleared successfully.")
+    except Exception as exc:
+        logger.warning("Failed to clear astropy cache: %s", exc)
