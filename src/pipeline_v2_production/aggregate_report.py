@@ -494,7 +494,139 @@ class AggregateReporter:
         self._write_stability_log(spearman_results)
 
         # ----------------------------------------------------------
-        # Phase 5: Summary JSON
+        # Phase 5: Cross-Session Cosine Similarity
+        # ----------------------------------------------------------
+        import h5py
+        from sklearn.metrics.pairwise import cosine_similarity
+        from sklearn.preprocessing import normalize
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        from scipy.cluster import hierarchy
+
+        candidates_df = pd.concat([table_3a, table_3b], ignore_index=True)
+        n_cands = len(candidates_df)
+        logger.info(f"Phase 5: Computing cross-session cosine similarity for {n_cands} candidates...")
+
+        candidate_metadata = []
+        mil_vectors = []
+
+        for idx, row in candidates_df.iterrows():
+            gps = row["gps_start"]
+            session = row["session_id"]
+            det = row["detector"]
+            table_source = "3a" if row["partner_observing_status"] == "ACTIVE_NO_ANOMALY" else "3b"
+
+            h5_path = self.production_dir / str(session) / f"novelties_{session}_{det}.h5"
+            if not h5_path.exists():
+                logger.warning(f"HDF5 missing for GPS {gps} in {h5_path}. Skipping.")
+                continue
+
+            try:
+                with h5py.File(h5_path, "r") as f:
+                    if "novelties/gps_times" not in f or "novelties/mil_vectors" not in f:
+                        logger.warning(f"Missing datasets in {h5_path} for GPS {gps}. Skipping.")
+                        continue
+                        
+                    gps_times = f["novelties/gps_times"][:]
+                    vectors = f["novelties/mil_vectors"][:]
+                    
+                    idx_match = np.where(gps_times == gps)[0]
+                    if len(idx_match) == 0:
+                        logger.warning(f"GPS {gps} not found in {h5_path}. Skipping.")
+                        continue
+                        
+                    vec = vectors[idx_match[0]]
+                    mil_vectors.append(vec)
+                    candidate_metadata.append({
+                        "gps": float(gps),
+                        "detector": det,
+                        "session_id": str(session),
+                        "table": table_source
+                    })
+            except Exception as e:
+                logger.warning(f"Error reading HDF5 {h5_path}: {e}. Skipping.")
+                continue
+
+        max_cross_sim = 0.0
+        highly_sim_count = 0
+
+        if len(mil_vectors) > 1:
+            # 1. Cosine Similarity
+            X = np.vstack(mil_vectors)
+            X_norm = normalize(X, norm='l2', axis=1)
+            sim_matrix = cosine_similarity(X_norm)
+            
+            # 2. Metrics
+            n_valid = len(mil_vectors)
+            off_diag_mask = ~np.eye(n_valid, dtype=bool)
+            off_diag_vals = sim_matrix[off_diag_mask]
+            
+            max_cross_sim = float(np.max(off_diag_vals)) if len(off_diag_vals) > 0 else 0.0
+            mean_cross_sim = float(np.mean(off_diag_vals)) if len(off_diag_vals) > 0 else 0.0
+            
+            top_pairs = []
+            for i in range(n_valid):
+                for j in range(i + 1, n_valid):
+                    score = float(sim_matrix[i, j])
+                    if score > 0.75:
+                        highly_sim_count += 1
+                        top_pairs.append({
+                            "gps_1": candidate_metadata[i]["gps"],
+                            "gps_2": candidate_metadata[j]["gps"],
+                            "similarity": score
+                        })
+            
+            top_pairs = sorted(top_pairs, key=lambda x: x["similarity"], reverse=True)
+            
+            # 3. Save JSON
+            sim_report = {
+                "n_candidates_analyzed": n_valid,
+                "candidates_metadata": candidate_metadata,
+                "similarity_matrix": sim_matrix.tolist(),
+                "global_stats": {
+                    "max_off_diagonal_similarity": max_cross_sim,
+                    "mean_off_diagonal_similarity": mean_cross_sim
+                },
+                "top_similar_pairs": top_pairs
+            }
+            
+            with open(self.output_dir / "candidate_similarity.json", "w") as f:
+                json.dump(sim_report, f, indent=4)
+                
+            # 4. Clustered Heatmap
+            try:
+                dist_matrix = 1.0 - sim_matrix
+                from scipy.spatial.distance import squareform
+                dist_matrix = np.clip((dist_matrix + dist_matrix.T) / 2, 0, None)
+                np.fill_diagonal(dist_matrix, 0)
+                condensed_dist = squareform(dist_matrix)
+                
+                linkage_mat = hierarchy.linkage(condensed_dist, method='average')
+                order = hierarchy.leaves_list(linkage_mat)
+                
+                sim_matrix_ordered = sim_matrix[order, :][:, order]
+                labels = [f"{candidate_metadata[i]['gps']}_{candidate_metadata[i]['detector']}" for i in order]
+                
+                plt.figure(figsize=(12, 10))
+                sns.heatmap(
+                    sim_matrix_ordered, 
+                    cmap="viridis", 
+                    xticklabels=labels, 
+                    yticklabels=labels,
+                    cbar_kws={'label': 'Cosine Similarity'}
+                )
+                plt.title(f"Cross-Session Morphological Similarity (n={n_valid})")
+                plt.tight_layout()
+                plt.savefig(self.output_dir / "candidate_similarity_heatmap.png", dpi=300)
+                plt.close()
+                logger.info("Saved candidate_similarity_heatmap.png and candidate_similarity.json.")
+            except Exception as e:
+                logger.error(f"Error generating hierarchical heatmap: {e}")
+        else:
+            logger.info("Not enough valid candidates to compute cross-similarity.")
+
+        # ----------------------------------------------------------
+        # Phase 6: Summary JSON
         # ----------------------------------------------------------
         summary = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -508,6 +640,8 @@ class AggregateReporter:
             "duplicates_removed": duplicates_removed,
             "table_3a_count": len(table_3a),
             "table_3b_count": len(table_3b),
+            "max_cross_similarity": max_cross_sim,
+            "highly_similar_pairs_count": highly_sim_count,
         }
         for det in DETECTORS:
             summary[det.lower()] = spearman_results[det.lower()]
