@@ -296,6 +296,34 @@ class AggregateReporter:
         self.production_dir = Path(production_dir)
         self.output_dir = self.production_dir / "aggregated"
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self._cluster_reports_cache = {}
+
+    def _get_local_cluster_id(self, session_id: str, detector: str, gps: float) -> str:
+        """Fetch the cluster ID for a specific GPS candidate from the session's JSON."""
+        cache_key = f"{session_id}_{detector}"
+        if cache_key not in self._cluster_reports_cache:
+            session_dir = self.production_dir / str(session_id)
+            json_path = _find_json(session_dir, str(session_id), detector)
+            
+            clusters_data = {}
+            if json_path is not None:
+                try:
+                    with open(json_path, "r") as f:
+                        data = json.load(f)
+                        clusters_data = data.get("clusters", {})
+                except Exception as e:
+                    logger.warning(f"Failed to read JSON for cache {json_path}: {e}")
+            
+            self._cluster_reports_cache[cache_key] = clusters_data
+            
+        clusters_data = self._cluster_reports_cache[cache_key]
+        for c_id, c_info in clusters_data.items():
+            gps_times = c_info.get("gps_times", [])
+            # Convert all to float for robust comparison
+            if any(float(g) == float(gps) for g in gps_times):
+                return f"C{c_id}"
+                
+        return "Unclustered"
 
     def run(self) -> dict:
         """Execute the full aggregation pipeline."""
@@ -435,9 +463,16 @@ class AggregateReporter:
             f"({duplicates_removed} duplicates removed)"
         )
 
+        # Resolve local_cluster_id for all master candidates
+        logger.info("Resolving local_cluster_id for all unique candidates...")
+        master["local_cluster_id"] = master.apply(
+            lambda row: self._get_local_cluster_id(str(row["session_id"]), row["detector"], float(row["gps_start"])),
+            axis=1
+        )
+
         # Write master candidates
         master_cols = [
-            "gps_start", "detector", "session_id", "gs_label",
+            "gps_start", "detector", "local_cluster_id", "session_id", "gs_label",
             "partner_observing_status", "status", "source_session", "is_duplicate"
         ]
         # Only include columns that exist
@@ -458,7 +493,7 @@ class AggregateReporter:
         ].copy()
 
         table_cols = [
-            "gps_start", "detector", "session_id", "gs_label",
+            "gps_start", "detector", "local_cluster_id", "session_id", "gs_label",
             "partner_observing_status", "source_session"
         ]
         out_3a_cols = [c for c in table_cols if c in table_3a.columns]
