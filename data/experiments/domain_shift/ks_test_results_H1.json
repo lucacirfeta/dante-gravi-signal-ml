@@ -1,0 +1,13 @@
+{
+    "detector": "H1",
+    "duration": 4096,
+    "o3b_gps_start": 1256663443,
+    "o4a_gps_start": 1368979913,
+    "mean_sim_o3b": 0.803547739982605,
+    "mean_sim_o4a": 0.8082529306411743,
+    "mean_shift": 0.004705190658569336,
+    "ks_statistic_full": 0.0461160062089116,
+    "ks_pvalue_full": 2.321811617133217e-162,
+    "ks_statistic_sub": 0.0352,
+    "ks_pvalue_sub": 0.004075699259476923
+}

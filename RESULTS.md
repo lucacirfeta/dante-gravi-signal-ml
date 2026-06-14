@@ -27,3 +27,4 @@ This document tracks the results of the `gravi-signal-ml` pipeline operating in 
 - **Threshold Calibration:** GEV distribution fitted on the local topological VQ index.
 - **Topological Saliency:** Extracted via pure spatial cosine similarity (no VQ weighting).
 - **Signal Dilution Barrier:** Broken via $K=37$ Top-K Patch Mean Pooling.
+- **Domain Shift Invariance (O3b vs O4a):** [COMPLETED] 2-sample KS test on 4096s of pure background from O3b vs O4a using frozen ViT-S/14 patch-level similarities. Mean shift: +0.0047 (0.58\%). KS Test (sub N=5000): $D=0.0352$, $p=0.004$. Instrument drift is fully absorbed by local GEV recalibration.

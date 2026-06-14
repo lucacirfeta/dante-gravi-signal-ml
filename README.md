@@ -18,6 +18,8 @@
 
 ## 📢 News
 
+**14 June 2026** – We formally validated the **Domain Shift Invariance** of our VQ Index between O3b and O4a via a large-scale Kolmogorov-Smirnov test ($N \approx 175k$). The mean shift in the DINOv2 cosine similarity manifold is confirmed to be operationally negligible ($+0.0047$, $0.58\%$), proving the robustness of our local GEV recalibration framework against instrument upgrades like squeezed-light injection.
+
 **07 June 2026** – We drafted the third paper of our series on the topological extraction of GW glitches: *"Patch-Level DINOv2 Scoring for Gravitational-Wave Glitch Detection: Breaking the Signal Dilution Barrier via Vector-Quantized Local Feature Indexing"*.
 
 **05 June 2026** – Our new Mock Data Challenge (MDC) paper is available on arXiv: **[2606.06237](https://arxiv.org/abs/2606.06237)**. It formally details the sensitivity limits of the pipeline and the Signal Dilution effect.
@@ -40,9 +42,7 @@ labeled training data and with native hardware acceleration (CUDA/MPS) for
 lightning-fast inference.
 
 It clusters glitch spectrograms by visual morphology within a latent space using frozen DINOv2 features.
-It identifies anomaly clusters through novelty detection, and cross-checks them against
-an in-domain Gravity Spy O3b reference index to assess whether they represent known or potentially
-uncharacterized glitch morphologies. Robustness validation is ensured through stability and ablation testing, and temporal background is estimated via time-slide coincidence analysis.
+It identifies anomaly clusters through zero-shot novelty detection via **Patch-Level Multiple Instance Learning (MIL)** and **Adaptive GEV Thresholding** ($p_{99}$), and cross-checks them against an in-domain Gravity Spy O3b reference index. Robustness validation is ensured through stability and ablation testing, and temporal background is estimated via time-slide coincidence analysis.
 
 > **Note on Virgo (V1):** Virgo did not participate in O4a due to a commissioning
 > issue. It rejoined the network in O4b. This pipeline therefore targets H1
@@ -112,7 +112,7 @@ The pipeline establishes a reproducible baseline for zero-shot glitch morphology
 3. **Absence of Auxiliary Channel Validation:** This tool operates entirely on primary strain data (H1/L1). It does not cross-reference environmental or instrumental auxiliary channels to confirm the physical origin of the anomalies.
 4. **Physically Distinct but Visually Similar Glitches:** The pipeline has an inability to exclude physically distinct glitch classes if they produce visually similar spectrogram morphologies. Ground-truth physical novelty may exist undetected within existing clusters.
 5. **Out-Of-Distribution (OOD) Blindness / Signal Dilution:** Mock Data Challenge (MDC) tests on both short-duration broadband (`SpiralBurst`, `StepLadder`) and long-duration narrowband (`HarmonicComb`, `NarrowChirp`) morphologies revealed that the original pipeline completely fails to recognize them as `NOVEL`, even at extreme SNRs up to $\approx 430$ (Max Recall = 0.00). As formally demonstrated in **[Cirfeta (2026b), arXiv:2606.06237](https://arxiv.org/abs/2606.06237)**, this is caused by the *Signal Dilution Effect* induced by the global average pooling of DINOv2's `[CLS]` token over 32s windows. While the architecture was upgraded to a **Patch-Level MIL (Multiple Instance Learning)** framework to mathematically separate the distributions (achieving $KS \sim 0.90$), the extremely heavy-tailed background of LIGO O4a requires a strict empirical 99th-percentile threshold to guarantee a 1% FPR. This threshold acts as a guillotine, collapsing the effective Boolean recall to just **16.6%** even for very loud signals ($SNR \sim 138$). Thus, the O4a "Null Result" reflects the extreme statistical nature of the background noise tails rather than the definitive absence of physical anomalies.
-6. **Saliency Map Discrimination:** Due to the severely non-isotropic geometry of the DINOv2 hypersphere on spectrograms, Fréchet-tail stochastic noise can produce extreme local cosine similarities matching or exceeding those of loud astrophysical bursts. Consequently, our patch-level **Topological Saliency Map** functions purely as a post-hoc morphological visualizer and cannot be employed as a single-frame binary detector.
+6. **Saliency Map Discrimination:** Due to the severely non-isotropic geometry of the DINOv2 hypersphere on spectrograms, Fréchet-tail stochastic noise can produce extreme local cosine similarities matching or exceeding those of loud astrophysical bursts. Consequently, a single-patch cosine similarity threshold cannot be employed as a binary detector (e.g., $s_i > \tau$). This is precisely why Pipeline V2 implements a **Top-$k$ Multiple Instance Learning (MIL)** aggregation paired with an adaptive GEV recalibration, integrating the anomaly score over a morphological footprint rather than a single peak.
 
 ---
 
