@@ -576,7 +576,8 @@ class AggregateReporter:
                         "gps": float(gps),
                         "detector": det,
                         "session_id": str(session),
-                        "table": table_source
+                        "table": table_source,
+                        "local_cluster_id": row["local_cluster_id"]
                     })
             except Exception as e:
                 logger.warning(f"Error reading HDF5 {h5_path}: {e}. Skipping.")
@@ -591,54 +592,113 @@ class AggregateReporter:
             X_norm = normalize(X, norm='l2', axis=1)
             sim_matrix = cosine_similarity(X_norm)
             
-            # 2. Metrics
             n_valid = len(mil_vectors)
             off_diag_mask = ~np.eye(n_valid, dtype=bool)
             off_diag_vals = sim_matrix[off_diag_mask]
             
             max_cross_sim = float(np.max(off_diag_vals)) if len(off_diag_vals) > 0 else 0.0
-            mean_cross_sim = float(np.mean(off_diag_vals)) if len(off_diag_vals) > 0 else 0.0
+            highly_sim_count = int(np.sum(off_diag_vals > 0.75) // 2)
+
+            # 2. Distance, Linkage, and Global Family Extraction
+            dist_matrix = 1.0 - sim_matrix
+            from scipy.spatial.distance import squareform
+            dist_matrix = np.clip((dist_matrix + dist_matrix.T) / 2, 0, None)
+            np.fill_diagonal(dist_matrix, 0)
+            condensed_dist = squareform(dist_matrix)
             
-            top_pairs = []
+            from scipy.cluster import hierarchy
+            linkage_mat = hierarchy.linkage(condensed_dist, method='single')
+            cluster_labels = hierarchy.fcluster(linkage_mat, t=0.25, criterion='distance')
+            
+            unique_clusters, counts = np.unique(cluster_labels, return_counts=True)
+            family_map = {}
+            family_counter = 1
+            for c_id, count in zip(unique_clusters, counts):
+                if count > 1:
+                    family_map[c_id] = f"Family_{family_counter:02d}"
+                    family_counter += 1
+                else:
+                    family_map[c_id] = "Singleton"
+            
+            for i, c_id in enumerate(cluster_labels):
+                fam = family_map[c_id]
+                if fam == "Singleton":
+                    fam = f"Singleton_{int(candidate_metadata[i]['gps'])}"
+                candidate_metadata[i]["global_family_id"] = fam
+
+            # 3. Transitivity Resolution and Master Taxonomy
+            is_3a = np.array([m["table"] == "3a" for m in candidate_metadata])
+            is_3b = ~is_3a
+            
+            max_sim_to_3a = np.zeros(n_valid)
+            if np.any(is_3a):
+                max_sim_to_3a = np.max(sim_matrix[:, is_3a], axis=1)
+                
             for i in range(n_valid):
-                for j in range(i + 1, n_valid):
-                    score = float(sim_matrix[i, j])
-                    if score > 0.75:
-                        highly_sim_count += 1
-                        top_pairs.append({
-                            "gps_1": candidate_metadata[i]["gps"],
-                            "gps_2": candidate_metadata[j]["gps"],
-                            "similarity": score
-                        })
+                meta = candidate_metadata[i]
+                if meta["table"] == "3a":
+                    meta["transitivity_status"] = "Confirmed_Local"
+                    meta["max_sim_to_3a"] = 1.0
+                else:
+                    meta["max_sim_to_3a"] = max_sim_to_3a[i]
+                    meta["transitivity_status"] = "Resolved_via_Transitivity" if max_sim_to_3a[i] > 0.75 else "True_Unverifiable_Anomaly"
+
+            master_df = pd.DataFrame([{
+                "gps_start": m["gps"],
+                "detector": m["detector"],
+                "session_id": m["session_id"],
+                "origin_table": m["table"],
+                "local_cluster_id": m.get("local_cluster_id", "Unknown"),
+                "global_family_id": m["global_family_id"],
+                "max_similarity_to_3a": m["max_sim_to_3a"] if m["table"] == "3b" else "",
+                "transitivity_status": m["transitivity_status"]
+            } for m in candidate_metadata])
             
-            top_pairs = sorted(top_pairs, key=lambda x: x["similarity"], reverse=True)
+            master_df.to_csv(self.output_dir / "Master_Taxonomy_O4a.csv", index=False)
+            logger.info(f"Saved Master_Taxonomy_O4a.csv with {len(master_df)} candidates.")
+
+            # 4. Global Taxonomy Report JSON
+            global_families = []
+            unique_families = np.unique([m["global_family_id"] for m in candidate_metadata])
             
-            # 3. Save JSON
-            sim_report = {
-                "n_candidates_analyzed": n_valid,
-                "candidates_metadata": candidate_metadata,
-                "similarity_matrix": sim_matrix.tolist(),
-                "global_stats": {
-                    "max_off_diagonal_similarity": max_cross_sim,
-                    "mean_off_diagonal_similarity": mean_cross_sim
+            for fam in unique_families:
+                fam_mask = np.array([m["global_family_id"] == fam for m in candidate_metadata])
+                members = np.where(fam_mask)[0]
+                total_mem = len(members)
+                t3a_mem = int(np.sum(is_3a[fam_mask]))
+                t3b_mem = total_mem - t3a_mem
+                
+                if total_mem > 1:
+                    fam_sims = sim_matrix[members][:, members]
+                    mean_sim = float(np.mean(fam_sims[~np.eye(total_mem, dtype=bool)]))
+                else:
+                    mean_sim = 1.0
+                    
+                global_families.append({
+                    "family_id": fam,
+                    "total_members": total_mem,
+                    "table_3a_members": t3a_mem,
+                    "table_3b_members": t3b_mem,
+                    "mean_internal_similarity": mean_sim,
+                    "gps_list": [candidate_metadata[i]["gps"] for i in members]
+                })
+                
+            taxonomy_report = {
+                "transitivity_metrics": {
+                    "total_table_3b_candidates": int(np.sum(is_3b)),
+                    "resolved_via_transitivity": int(np.sum((is_3b) & (max_sim_to_3a > 0.75))),
+                    "remaining_unverifiable_anomalies": int(np.sum((is_3b) & (max_sim_to_3a <= 0.75)))
                 },
-                "top_similar_pairs": top_pairs
+                "global_families": global_families
             }
             
-            with open(self.output_dir / "candidate_similarity.json", "w") as f:
-                json.dump(sim_report, f, indent=4)
-                
-            # 4. Clustered Heatmap
+            with open(self.output_dir / "global_taxonomy_report.json", "w") as f:
+                json.dump(taxonomy_report, f, indent=4)
+            logger.info("Saved global_taxonomy_report.json.")
+
+            # 5. Clustered Heatmap
             try:
-                dist_matrix = 1.0 - sim_matrix
-                from scipy.spatial.distance import squareform
-                dist_matrix = np.clip((dist_matrix + dist_matrix.T) / 2, 0, None)
-                np.fill_diagonal(dist_matrix, 0)
-                condensed_dist = squareform(dist_matrix)
-                
-                linkage_mat = hierarchy.linkage(condensed_dist, method='average')
                 order = hierarchy.leaves_list(linkage_mat)
-                
                 sim_matrix_ordered = sim_matrix[order, :][:, order]
                 labels = [f"{candidate_metadata[i]['gps']}_{candidate_metadata[i]['detector']}" for i in order]
                 
@@ -654,7 +714,7 @@ class AggregateReporter:
                 plt.tight_layout()
                 plt.savefig(self.output_dir / "candidate_similarity_heatmap.png", dpi=300)
                 plt.close()
-                logger.info("Saved candidate_similarity_heatmap.png and candidate_similarity.json.")
+                logger.info("Saved candidate_similarity_heatmap.png")
             except Exception as e:
                 logger.error(f"Error generating hierarchical heatmap: {e}")
         else:
