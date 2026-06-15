@@ -33,7 +33,16 @@ class ProductionWriter:
                 # Metadata group
                 meta_grp = f.create_group("metadata")
                 for k, v in metadata.items():
-                    meta_grp.attrs[k] = v
+                    if v is None:
+                        meta_grp.attrs[k] = "None"
+                    elif isinstance(v, (dict, list, tuple)):
+                        import json
+                        try:
+                            meta_grp.attrs[k] = json.dumps(v)
+                        except TypeError:
+                            meta_grp.attrs[k] = str(v)
+                    else:
+                        meta_grp.attrs[k] = v
                 
                 # Background sample group
                 bg_grp = f.create_group("background_sample")
