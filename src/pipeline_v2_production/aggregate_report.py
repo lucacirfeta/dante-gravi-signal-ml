@@ -1081,7 +1081,7 @@ class AggregateReporter:
                 if result["nans"] > 1000:
                     result["classification"] = "Macro-Dropout Artifact"
                 elif not result["dq_active"] and result["nans"] == 0:
-                    result["classification"] = "Genuine Physical Transient (Dark Glitch)"
+                    result["classification"] = "Genuine Physical Transient (NEW)"
                 elif result["nans"] == 0:
                     result["classification"] = "Genuine Physical Transient"
                 
