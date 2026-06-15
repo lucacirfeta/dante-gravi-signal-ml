@@ -56,6 +56,10 @@ class SyntheticGlitchGenerator:
             sig = self._generate_harmonic_comb(t)
         elif glitch_type == "AsymBlip":
             sig = self._generate_asym_blip(t)
+        elif glitch_type == "Blip":
+            sig = self._generate_blip(t)
+        elif glitch_type == "ScatteredLight":
+            sig = self._generate_scattered_light(t)
         else:
             raise ValueError(f"Unknown glitch_type: {glitch_type}")
             
@@ -234,6 +238,44 @@ class SyntheticGlitchGenerator:
         sig = carrier * envelope
 
         return sig
+
+    def _generate_blip(self, t: np.ndarray) -> np.ndarray:
+        """Pure Blip: symmetric Gaussian envelope, extremely short duration (10-50 ms)."""
+        duration = t[-1]
+        t_peak = duration / 2.0
+        sigma = 0.015  # 15 ms std dev -> ~40 ms effective width
+        
+        envelope = np.exp(-0.5 * ((t - t_peak) / sigma) ** 2)
+        
+        # Broadband carrier: white noise bandpassed to typical blip frequencies (100-300 Hz)
+        carrier = np.random.randn(len(t))
+        freqs = np.fft.rfftfreq(len(carrier), d=1.0/self.sample_rate)
+        fft_carrier = np.fft.rfft(carrier)
+        mask = (freqs >= 100) & (freqs <= 300)
+        fft_carrier[~mask] = 0
+        carrier = np.fft.irfft(fft_carrier, n=len(carrier))
+        
+        return carrier * envelope
+
+    def _generate_scattered_light(self, t: np.ndarray) -> np.ndarray:
+        """Scattered Light Arch: Parabolic frequency sweep over 1-2 seconds."""
+        duration = t[-1]
+        t_peak = duration / 2.0
+        
+        f_max = 60.0
+        f_min = 10.0
+        arch_duration = 1.5
+        
+        a = (f_max - f_min) / (arch_duration / 2.0)**2
+        
+        f = f_max - a * (t - t_peak)**2
+        f[f < f_min] = 0
+        
+        phase = 2 * np.pi * np.cumsum(f) / self.sample_rate
+        sig = np.sin(phase) * (f > f_min)
+        
+        window = signal.windows.tukey(len(sig), alpha=0.1)
+        return sig * window
 
 
 class InjectionEngine:

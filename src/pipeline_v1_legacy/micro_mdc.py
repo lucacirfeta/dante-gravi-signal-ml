@@ -216,8 +216,8 @@ if __name__ == '__main__':
     patch_cfg = cfg.get("patch_novelty", {})
     
     # FINAL RUN PARAMETERS
-    glitch_types = ["AsymBlip", "SpiralBurst", "HarmonicComb"]
-    n_injections = 30
+    glitch_types = ["Blip", "ScatteredLight", "AsymBlip", "SpiralBurst", "HarmonicComb"]
+    n_injections = 100
     n_amplitudes = 8
     amp_min = 1e-22
     amp_max = 1e-21
@@ -225,8 +225,8 @@ if __name__ == '__main__':
     detector_name = "L1"
     seed = 42
     
-    # Mappa K specifica per glitch (override per validazione K=68)
-    k_values = [15, 37, 68, 100]
+    # Mappa K specifica per glitch (solo K=100 per l'MDC del paper)
+    k_values = [100]
     device = patch_cfg.get("device", "cuda")
     
     # Initialize the patch-level novelty detector
