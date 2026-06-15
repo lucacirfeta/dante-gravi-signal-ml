@@ -25,7 +25,8 @@ class PatchScorer:
         k: int = 68,
         fpr: float = 0.01,
         n_background: int = 500,
-        seed: int = 42
+        seed: int = 42,
+        verify_md5: bool = True
     ):
         self.device = torch.device(device) if device else get_device()
         self.k = k
@@ -35,15 +36,18 @@ class PatchScorer:
         self.reference_index_path = Path(reference_index_path)
         
         # 1. MD5 Verification
-        self._verify_md5()
+        if verify_md5:
+            self._verify_md5()
+        else:
+            logger.info("Skipping MD5 verification for custom reference index.")
         
         # 2. Load Centroids
         data = np.load(self.reference_index_path)
         centroids_np = data["embeddings"]
         
-        # Expected shape constraint
-        if centroids_np.shape != (281, 384):
-            raise RuntimeError(f"Expected reference index shape (281, 384), got {centroids_np.shape}")
+        # Expected shape constraint (N_centroids, 384)
+        if centroids_np.ndim != 2 or centroids_np.shape[1] != 384:
+            raise RuntimeError(f"Expected reference index shape (N, 384), got {centroids_np.shape}")
             
         self.centroids = torch.tensor(centroids_np, device=self.device, dtype=torch.float32)
         # Explicit L2 normalization
