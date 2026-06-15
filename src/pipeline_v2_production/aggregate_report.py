@@ -775,6 +775,7 @@ class AggregateReporter:
         # Phase 9b: Strain Sanity Check & Physical Validation
         # ----------------------------------------------------------
         sanity_metrics = self._run_sanity_checks(taxonomy_report) if 'taxonomy_report' in locals() else {}
+        self._generate_psd_plots(sanity_metrics)
 
         master_report = {
             "summary": summary,
@@ -1057,6 +1058,63 @@ class AggregateReporter:
             pass
 
         return sanity_metrics
+
+    def _generate_psd_plots(self, sanity_metrics: dict):
+        import matplotlib.pyplot as plt
+        import logging
+        from pathlib import Path
+        try:
+            from gwpy.timeseries import TimeSeries
+        except ImportError:
+            logger.error("gwpy not installed. Skipping PSD generation.")
+            return
+
+        for fam_id, data in sanity_metrics.items():
+            if data.get("classification") == "Macro-Dropout Artifact" or data.get("nans", 0) > 0:
+                logger.info(f"Skipping PSD for {fam_id} (Data dropout)")
+                continue
+
+            gps = data["gps"]
+            det = data["detector"]
+            logger.info(f"Generating PSD for {fam_id} at {gps}...")
+
+            try:
+                # Fetch 1 second around glitch and 1 second background (e.g. 10s earlier)
+                ts_glitch = TimeSeries.fetch_open_data(det, gps - 0.5, gps + 0.5, cache=False)
+                ts_bkg = TimeSeries.fetch_open_data(det, gps - 10.5, gps - 9.5, cache=False)
+
+                # Compute PSD (Welch's method)
+                psd_glitch = ts_glitch.psd(fftlength=0.25)
+                psd_bkg = ts_bkg.psd(fftlength=0.25)
+
+                plt.figure(figsize=(10, 6))
+                ax = plt.gca()
+                ax.plot(psd_bkg.frequencies, psd_bkg.value, label='Background (-10s)', color='gray', alpha=0.7)
+                ax.plot(psd_glitch.frequencies, psd_glitch.value, label=f'Glitch ({fam_id})', color='red', alpha=0.9)
+
+                ax.set_yscale('log')
+                ax.set_xscale('log')
+                ax.set_xlim(10, 2048)
+                ax.set_xlabel('Frequency [Hz]')
+                ax.set_ylabel(r'Power Spectral Density [strain$^2$/Hz]')
+                ax.set_title(f"PSD Comparison: {fam_id} ({det} @ {gps})")
+                ax.legend()
+                ax.grid(True, which='both', ls='--', alpha=0.4)
+
+                out_dir = self.output_dir / "visual_checks" / fam_id
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / f"psd_{fam_id}.png"
+                plt.savefig(out_path, dpi=300, bbox_inches='tight')
+                plt.close()
+                logger.info(f"Saved PSD plot to {out_path}")
+            except Exception as e:
+                logger.error(f"Failed to generate PSD for {fam_id}: {e}")
+
+        try:
+            from astropy.utils.data import clear_download_cache
+            clear_download_cache()
+        except ImportError:
+            pass
 
     def _generate_markdown_report(self, metrics: dict):
         import datetime
