@@ -98,13 +98,22 @@ class PatchScorer:
         percentile_target = (1.0 - self.fpr) * 100.0
         threshold = float(np.percentile(scores_np, percentile_target))
         
+        # Fit GEV for reporting purposes
+        try:
+            from scipy.stats import genextreme
+            c, loc, scale = genextreme.fit(scores_np)
+            gev_params = {"mu": float(loc), "sigma": float(scale), "xi": float(-c)}
+        except Exception as e:
+            logger.warning(f"GEV fit failed: {e}")
+            gev_params = {"mu": None, "sigma": None, "xi": None}
+        
         logger.info("[CALIBRATION] n_background: %d", len(background_spectrograms))
         logger.info("[CALIBRATION] novelty_score mean: %.4f", scores_np.mean())
         logger.info("[CALIBRATION] novelty_score std:  %.4f", scores_np.std())
         logger.info("[CALIBRATION] threshold (p%d):    %.4f", int(percentile_target), threshold)
-        logger.info("[CALIBRATION] method: empirical_percentile")
+        logger.info("[CALIBRATION] method: empirical_percentile + GEV log")
         
-        return threshold, scores_np
+        return threshold, scores_np, gev_params
 
     @torch.no_grad()
     def score_spectrogram(self, spectrogram_arrays: list[np.ndarray], threshold: float) -> list[dict]:

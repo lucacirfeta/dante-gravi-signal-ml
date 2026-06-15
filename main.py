@@ -2611,7 +2611,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 logger.warning(f"No valid segments found for session {session}. Skipping.")
                 continue
                 
-            threshold, bg_scores = scorer.calibrate_threshold(bg_samples)
+            threshold, bg_scores, gev_params = scorer.calibrate_threshold(bg_samples)
             bg_gps_np = np.array(bg_gps, dtype=np.float64)
             
             metadata = {
@@ -2621,7 +2621,8 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 "k": k,
                 "reference_md5": scorer.reference_md5,
                 "n_background": len(bg_samples),
-                "timestamp_created": datetime.now(timezone.utc).isoformat()
+                "timestamp_created": datetime.now(timezone.utc).isoformat(),
+                "gev_params": gev_params
             }
             
             writer.verify_and_init(metadata, bg_scores, threshold, bg_gps_np)

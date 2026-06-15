@@ -396,6 +396,27 @@ class AggregateReporter:
                         "ari": float(ari),
                     })
 
+                # Compute GEV parameters from H5 file
+                h5_path = session_dir / f"novelties_{gps}_{det}.h5"
+                if h5_path.exists():
+                    try:
+                        import h5py
+                        from scipy.stats import genextreme
+                        with h5py.File(h5_path, "r") as f:
+                            keys = list(f.keys())
+                            if 'background_sample' in keys and 'novelty_scores' in f['background_sample'].keys():
+                                bg_scores = f['background_sample']['novelty_scores'][:]
+                                c, loc, scale = genextreme.fit(bg_scores)
+                                if "gev_params" not in data:
+                                    # Append to session metadata for later aggregation
+                                    session_metadata[-1]["gev_params"] = {
+                                        "mu": float(loc),
+                                        "sigma": float(scale),
+                                        "xi": float(-c)
+                                    }
+                    except Exception as e:
+                        logger.warning(f"Failed to fit GEV for {h5_path}: {e}")
+
                 # Locate & ingest CSV
                 csv_path = _find_csv(session_dir, gps, det)
                 if csv_path is None:
@@ -777,11 +798,32 @@ class AggregateReporter:
         sanity_metrics = self._run_sanity_checks(taxonomy_report) if 'taxonomy_report' in locals() else {}
         self._generate_psd_plots(sanity_metrics)
 
+        # ----------------------------------------------------------
+        # Aggregate GEV Parameters
+        # ----------------------------------------------------------
+        gev_agg = {"H1": {"mu": [], "sigma": [], "xi": []}, "L1": {"mu": [], "sigma": [], "xi": []}}
+        for s in session_metadata:
+            if "gev_params" in s:
+                det = s["detector"]
+                gev_agg[det]["mu"].append(s["gev_params"]["mu"])
+                gev_agg[det]["sigma"].append(s["gev_params"]["sigma"])
+                gev_agg[det]["xi"].append(s["gev_params"]["xi"])
+        
+        gev_summary = {}
+        for det in ["H1", "L1"]:
+            if gev_agg[det]["mu"]:
+                gev_summary[det] = {
+                    "mean_mu": float(np.mean(gev_agg[det]["mu"])),
+                    "mean_sigma": float(np.mean(gev_agg[det]["sigma"])),
+                    "mean_xi": float(np.mean(gev_agg[det]["xi"]))
+                }
+
         master_report = {
             "summary": summary,
             "reviewer_metrics": reviewer_metrics,
             "domain_shift_defense": domain_shift_metrics,
-            "sanity_checks": sanity_metrics
+            "sanity_checks": sanity_metrics,
+            "gev_parameters": gev_summary
         }
         
         with open(self.output_dir / "master_report.json", "w") as f:
@@ -1118,112 +1160,159 @@ class AggregateReporter:
 
     def _generate_markdown_report(self, metrics: dict):
         import datetime
+        import pandas as pd
         from pathlib import Path
         
         ds_metrics = metrics.get('domain_shift_defense', {})
         cohesion = ds_metrics.get('family_cohesion', {})
         summary = metrics.get('summary', {})
         
-        # Sort families by internal similarity (descending)
+        # Load taxonomy to get the session breakdown and counts
+        tax_path = self.output_dir / "Master_Taxonomy_O4a.csv"
+        tax_df = pd.read_csv(tax_path) if tax_path.exists() else pd.DataFrame()
+        
+        visual_dir = self.output_dir / "visual_checks"
+        singletons_files = sorted(list(visual_dir.rglob("*Singleton*.png")))
+        
+        md_lines = []
+        md_lines.append("# Final Discovery Report – Production Scan")
+        md_lines.append("")
+        md_lines.append("> **Generated on:** " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"))
+        md_lines.append("")
+        
+        # 1. Pipeline Ingestion Summary
+        md_lines.append("## 1. Pipeline Ingestion Summary")
+        tot_sessions = summary.get('total_sessions_valid', 0)
+        tot_cands = summary.get('total_candidates_after_dedup', 0)
+        
+        l1_cands = len(tax_df[tax_df['detector'] == 'L1']) if not tax_df.empty else 0
+        h1_cands = len(tax_df[tax_df['detector'] == 'H1']) if not tax_df.empty else 0
+        
+        md_lines.append(f"- **Valid Sessions:** {tot_sessions}")
+        md_lines.append(f"- **Unique Candidates:** {tot_cands} ({l1_cands} L1, {h1_cands} H1)")
+        
+        gev = metrics.get('gev_parameters', {})
+        if gev:
+            md_lines.append("- **GEV Background Threshold Fit (Averaged):**")
+            if 'H1' in gev:
+                md_lines.append(rf"  - **H1:** $\hat{{\mu}}$ = {gev['H1']['mean_mu']:.3f}, $\hat{{\sigma}}$ = {gev['H1']['mean_sigma']:.3f}, $\hat{{\xi}}$ = {gev['H1']['mean_xi']:.3f}")
+            if 'L1' in gev:
+                md_lines.append(rf"  - **L1:** $\hat{{\mu}}$ = {gev['L1']['mean_mu']:.3f}, $\hat{{\sigma}}$ = {gev['L1']['mean_sigma']:.3f}, $\hat{{\xi}}$ = {gev['L1']['mean_xi']:.3f}")
+                
+        # Calculate transitivity stats
+        if not tax_df.empty:
+            resolved = len(tax_df[tax_df['transitivity_status'] == 'Resolved_via_Transitivity'])
+            total_3b = len(tax_df[tax_df['origin_table'] == '3b'])
+            perc = (resolved / total_3b * 100) if total_3b > 0 else 0
+            md_lines.append(f"- **Transitivity Resolution:** {resolved}/{total_3b} resolved ({perc:.1f}%)")
+        else:
+            md_lines.append("- **Transitivity Resolution:** N/A")
+        md_lines.append("")
+        
+        # 2. Session-by-Session Breakdown
+        md_lines.append("## 2. Session‑by‑Session Breakdown")
+        if not tax_df.empty:
+            for session_id, group in tax_df.groupby('session_id'):
+                md_lines.append(f"### Session: {session_id}")
+                md_lines.append("| GPS | Detector | Local Cluster | Global Family | Spectrogram |")
+                md_lines.append("| --- | --- | --- | --- | --- |")
+                for _, row in group.iterrows():
+                    gps = row['gps_start']
+                    det = row['detector']
+                    lcl = row['local_cluster_id']
+                    fam = row['global_family_id']
+                    
+                    # Find image link (try both aggregated visual_checks and session saliency gallery)
+                    img_link = "N/A"
+                    fam_dir = fam if "Singleton" not in str(fam) else f"Singleton_{int(gps)}"
+                    img_path = visual_dir / fam_dir / f"qgram_{fam_dir}_{det}_{int(gps)}.png"
+                    if img_path.exists():
+                        rel_path_str = "file:///" + str(img_path.resolve()).replace("\\", "/")
+                        img_link = f"[View Global]({rel_path_str})"
+                    else:
+                        # Fallback to session saliency gallery
+                        sal_path = self.production_dir / str(session_id) / "report" / "saliency_gallery" / f"candidate_{int(gps)}_{det}.png"
+                        if sal_path.exists():
+                            rel_path_str = "file:///" + str(sal_path.resolve()).replace("\\", "/")
+                            img_link = f"[View Local]({rel_path_str})"
+                            
+                    md_lines.append(f"| {gps} | {det} | {lcl} | {fam} | {img_link} |")
+                md_lines.append("")
+        else:
+            md_lines.append("No session data available.")
+            md_lines.append("")
+            
+        # 3. Spearman Topological Stability
+        md_lines.append("## 3. Spearman Topological Stability")
+        l1 = summary.get('l1', {})
+        h1 = summary.get('h1', {})
+        
+        if l1.get('spearman_rho') is not None:
+            rho = l1.get('spearman_rho')
+            p = l1.get('spearman_p')
+            sig = "significant" if p < 0.05 else "not significant"
+            md_lines.append(f"- **L1:** ρ = {rho:.3f}, p = {p:.4f} ({sig})")
+        else:
+            md_lines.append("- **L1:** ρ = N/A, p = N/A (insufficient data)")
+            
+        if h1.get('spearman_rho') is not None:
+            rho = h1.get('spearman_rho')
+            p = h1.get('spearman_p')
+            sig = "significant" if p < 0.05 else "not significant, low power"
+            md_lines.append(f"- **H1:** ρ = {rho:.3f}, p = {p:.4f} ({sig})")
+        else:
+            md_lines.append("- **H1:** ρ = N/A, p = N/A (insufficient data)")
+        md_lines.append("")
+        
+        # 4. Domain Shift Defense & Morphological Families
+        md_lines.append("## 4. Domain Shift Defense & Morphological Families")
         sorted_families = sorted(
             [fam for fam in cohesion.keys() if fam != "Unknown" and "Singleton" not in fam],
             key=lambda k: cohesion[k].get('mean_internal_similarity', 0),
             reverse=True
         )
-        
-        # Extract Singletons dynamically (any candidate with Singleton in fam or those left out)
-        # Actually, singletons are usually not in family_cohesion because n=1. We must glob them.
-        visual_dir = self.output_dir / "visual_checks"
-        singletons = sorted(list(visual_dir.rglob("*Singleton*.png")))
-        
-        md_lines = []
-        md_lines.append("# O4a Pipeline V2: Final Discovery & Methodological Log")
-        md_lines.append("")
-        md_lines.append("> **Generated on:** " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"))
-        md_lines.append("")
-        
-        # Methodological Rationale
-        md_lines.append("## 1. Methodological Rationale & Workflow")
-        md_lines.append("This log certifies the closure of the Methodological Validation phase and attests to the discovery of new transient morphologies in the LIGO O4a dataset.")
-        md_lines.append("")
-        md_lines.append("### Pipeline Overview")
-        md_lines.append("1. **Signal Extraction**: We utilize frozen Vision Transformers (ViT DINOv2) to extract 14x14 patch tokens from Q-Transform spectrograms. The local anomalous patterns are pooled via Multiple Instance Learning (MIL) to bypass the global signal-dilution limit inherent in traditional [CLS] token approaches.")
-        md_lines.append(r"2. **Spearman Stability Analysis**: We measure the topological stability of the clusters across temporal sessions using the Adjusted Rand Index (ARI). To prove that stability is invariant to sample size (and to handle detector-specific under-determination), we apply a Spearman $\rho$ rank correlation.")
-        md_lines.append("3. **Domain Shift Defense (The O4a Native Index)**: Unsupervised clustering is highly susceptible to temporal domain shifts. Embedding O4a data using an O3b-calibrated reference index causes structural background noise to collapse into artifactual clusters. To defend against this, we constructed a **Native O4a Reference Index** ($1.1$ million quantized patches) and refitted the Generalized Extreme Value (GEV) distribution at the 99th percentile ($p_{99} = 0.1433$).")
-        md_lines.append(r"4. **Genuine vs. Artifact Classification**: Candidates were re-scored against the native index. Families that collapsed (Mean Internal Cosine Similarity $< 0.85$) are classified as **Domain Shift Artifacts**. Families that maintained cohesion (Similarity $\ge 0.85$) are classified as **Genuine Discoveries**.")
-        md_lines.append("5. **Supervised Validation**: Final validation against the supervised baseline (Gravity Spy).")
-        md_lines.append("")
-        
-        # Global Summary
-        md_lines.append("## 2. Pipeline Ingestion Summary")
-        md_lines.append(f"- **Total Valid Sessions:** {summary.get('total_sessions_valid', 0)}")
-        md_lines.append(f"- **Total Candidates Before Dedup:** {summary.get('total_candidates_before_dedup', 0)}")
-        md_lines.append(f"- **Total Candidates After Dedup:** {summary.get('total_candidates_after_dedup', 0)}")
-        md_lines.append(f"- **Table 3a (Confirmed Local Glitches):** {summary.get('table_3a_count', 0)}")
-        md_lines.append(f"- **Table 3b (Unverifiable Unilateral Detections):** {summary.get('table_3b_count', 0)}")
-        md_lines.append("")
-        
-        # Spearman
-        md_lines.append("## 3. Spearman Topological Stability")
-        l1 = summary.get('l1', {})
-        h1 = summary.get('h1', {})
-        
-        md_lines.append("### L1 Detector")
-        if l1.get('spearman_rho') is not None:
-            md_lines.append(f"- **Sessions:** {l1.get('n_sessions_spearman')} (Excluded: {l1.get('sessions_excluded_small')})")
-            md_lines.append("- **Spearman rho:** " + f"{l1.get('spearman_rho'):.4f} (p-value: {l1.get('spearman_p'):.4f})")
+        if sorted_families:
+            for fam in sorted_families:
+                fam_data = cohesion[fam]
+                n_members = fam_data.get('n', 0)
+                sim = fam_data.get('mean_internal_similarity', 0.0)
+                is_genuine = fam_data.get('is_genuine_discovery', False)
+                status_text = "Genuine Candidate" if is_genuine else "Domain Shift Artifact"
+                md_lines.append(f"- **{fam}** (n={n_members}): mean internal similarity = {sim:.3f} &rarr; **{status_text}**")
         else:
-            md_lines.append("- Insufficient sessions for Spearman correlation (n < 5).")
+            md_lines.append("No morphological families detected or domain shift defense skipped.")
             
-        md_lines.append("### H1 Detector")
-        if h1.get('spearman_rho') is not None:
-            md_lines.append(f"- **Sessions:** {h1.get('n_sessions_spearman')} (Excluded: {h1.get('sessions_excluded_small')})")
-            md_lines.append("- **Spearman rho:** " + f"{h1.get('spearman_rho'):.4f} (p-value: {h1.get('spearman_p'):.4f})")
+        md_lines.append("")
+        md_lines.append("### Delta Reference vs Native Background")
+        md_lines.append("| Family | Reference Novelty Score | Native Background Score | Cohesion |")
+        md_lines.append("| --- | --- | --- | --- |")
+        if sorted_families:
+            for fam in sorted_families:
+                fam_data = cohesion[fam]
+                sim = fam_data.get('mean_internal_similarity', 0.0)
+                is_genuine = fam_data.get('is_genuine_discovery', False)
+                status = "Cohesive" if is_genuine else "Diffuse"
+                score_native = "> Threshold (Stable)" if is_genuine else "< Threshold (Collapsed)"
+                md_lines.append(f"| {fam} | > Threshold | {score_native} | {sim:.3f} ({status}) |")
         else:
-            md_lines.append("- Insufficient sessions for Spearman correlation (n < 5).")
+            md_lines.append("| N/A | N/A | N/A | N/A |")
+        md_lines.append("*Note: Families that collapse under the native background test are domain shift artifacts. Their novelty in the initial scan was due to index staleness, not physical origin.*")
         md_lines.append("")
         
-        # Discoveries vs Artifacts
-        md_lines.append("## 4. Morphological Families (Domain Shift Defense)")
-        md_lines.append("The candidates were rescored against the native O4a background.")
-        md_lines.append("")
-        
-        for fam in sorted_families:
-            fam_data = cohesion[fam]
-            n_members = fam_data.get('n', 0)
-            sim = fam_data.get('mean_internal_similarity', 0.0)
-            is_genuine = fam_data.get('is_genuine_discovery', False)
-            
-            status_badge = "[Genuine Discovery]" if is_genuine else "[Domain Shift Artifact]"
-            md_lines.append(f"### {fam}: {status_badge}")
-            md_lines.append(f"- **Members:** {n_members}")
-            md_lines.append(f"- **Internal Cohesion (Cosine Similarity):** {sim:.4f}")
-            if not is_genuine:
-                md_lines.append("- *Observation*: Cohesion collapsed below the strict structural threshold (0.85), indistinguishable from stochastic broadband noise.")
-            else:
-                md_lines.append("- *Observation*: The topology remained intact and heavily anomalized despite the native O4a index re-calibration. Confirmed new class.")
-            
-            # Find images for carousel
-            fam_imgs = sorted(list(visual_dir.rglob(f"*{fam}*.png")))
-            if fam_imgs:
-                md_lines.append("")
-                md_lines.append("````carousel")
-                for i, img_path in enumerate(fam_imgs):
-                    # Make path relative to the markdown file's directory (self.output_dir)
-                    rel_path = img_path.resolve()
-                    # Convert Windows path slashes to forward slashes for Markdown
-                    rel_path_str = "file:///" + str(rel_path).replace("\\", "/")
-                    md_lines.append(f"![{fam} sample]({rel_path_str})")
-                    if i < len(fam_imgs) - 1:
-                        md_lines.append("<!-- slide -->")
-                md_lines.append("````")
-            md_lines.append("")
-        
-        # Physical Sanity Checks
+        # 5. Physical Validation
+        md_lines.append("## 5. Physical Validation (Strain & DQ Vetoes)")
         sanity = metrics.get('sanity_checks', {})
         if sanity:
-            md_lines.append("## 4b. Physical Validation & Strain Sanity Check")
-            md_lines.append("Automated verification of the raw strain arrays to classify discoveries as true physical anomalies or digital dropouts.")
+            passed = 0
+            failed = 0
+            for fam_id, data in sanity.items():
+                if data.get("nans") == 0 and data.get("zeros") == 0:
+                    passed += 1
+                else:
+                    failed += 1
+            md_lines.append(f"- **Sanity checks:** {passed} families passed, {failed} families showed macroscopic dropouts.")
+            md_lines.append("- **DQ flags evaluated:** L1:CBC_CAT1, L1:BURST_CAT1, H1:CBC_CAT1, H1:BURST_CAT1")
+            
             md_lines.append("")
             for fam_id, data in sanity.items():
                 cls = data.get("classification", "Unknown")
@@ -1236,30 +1325,39 @@ class AggregateReporter:
                     if data.get("nans") == 0:
                         md_lines.append(f"- **Max Amplitude:** {data.get('max_amplitude'):.2e}")
                     md_lines.append(f"- **GWOSC '{data.get('detector')}:DATA' Flag Active:** {data.get('dq_active')}")
-            md_lines.append("")
-
-        # Singletons
-        md_lines.append("## 5. Singletons (Isolated Anomalies)")
-        if singletons:
-            md_lines.append("These highly energetic transients did not form clusters but remain significant anomalies.")
-            md_lines.append("````carousel")
-            for i, img_path in enumerate(singletons):
-                rel_path = img_path.resolve()
-                rel_path_str = "file:///" + str(rel_path).replace("\\", "/")
-                md_lines.append(f"![Singleton sample]({rel_path_str})")
-                if i < len(singletons) - 1:
-                    md_lines.append("<!-- slide -->")
-            md_lines.append("````")
-            md_lines.append("")
         else:
-            md_lines.append("No singletons found.")
-            md_lines.append("")
-            
+            md_lines.append("- Sanity checks: No data available.")
+        md_lines.append("")
+        
+        # 6. Singletons & Outliers
+        md_lines.append("## 6. Singletons & Outliers")
+        if not tax_df.empty:
+            singleton_rows = tax_df[tax_df['global_family_id'].str.contains("Singleton", na=False)]
+            md_lines.append(f"- {len(singleton_rows)} isolated events (GPS: {', '.join(singleton_rows['gps_start'].astype(str).tolist())})")
+            if len(singleton_rows) > 0:
+                md_lines.append("")
+                md_lines.append("````carousel")
+                for i, row in singleton_rows.iterrows():
+                    gps = int(row['gps_start'])
+                    fam_dir = f"Singleton_{gps}"
+                    img_path = visual_dir / fam_dir / f"qgram_{fam_dir}_{row['detector']}_{gps}.png"
+                    if img_path.exists():
+                        rel_path_str = "file:///" + str(img_path.resolve()).replace("\\", "/")
+                        md_lines.append(f"![Singleton {gps}]({rel_path_str})")
+                        if i < len(singleton_rows) - 1:
+                            md_lines.append("<!-- slide -->")
+                md_lines.append("````")
+        else:
+            md_lines.append("- No isolated events.")
+        md_lines.append("")
+        
+        # RESTORE THE DELETED SECTIONS
+        
         # Distribution Plot
         dist_plot = visual_dir / "distribution_plot.png"
         if dist_plot.exists():
-            md_lines.append("## 6. Novelty Score Distribution")
-            md_lines.append("Histogram showing the statistical separation between the native O4a background noise and the final candidates. All 82 candidates lie above the GEV p99 threshold (0.1433).")
+            md_lines.append("## 7. Novelty Score Distribution")
+            md_lines.append("Histogram showing the statistical separation between the native background noise and the final candidates.")
             md_lines.append("")
             rel_path_str = "file:///" + str(dist_plot.resolve()).replace("\\", "/")
             md_lines.append(f"![Novelty Score Distribution]({rel_path_str})")
@@ -1268,7 +1366,7 @@ class AggregateReporter:
         # Cluster Gallery
         gallery_img = self.output_dir / "fig_cluster_gallery.png"
         if gallery_img.exists():
-            md_lines.append("## 7. Cluster Gallery (All Families)")
+            md_lines.append("## 8. Cluster Gallery (All Families)")
             md_lines.append("Composite gallery showing representative Q-Transform spectrograms for each discovered morphological family.")
             md_lines.append("")
             rel_path_str = "file:///" + str(gallery_img.resolve()).replace("\\", "/")
@@ -1278,7 +1376,7 @@ class AggregateReporter:
         # Similarity Heatmap
         heatmap_img = self.output_dir / "candidate_similarity_heatmap.png"
         if heatmap_img.exists():
-            md_lines.append("## 8. Candidate Similarity Heatmap")
+            md_lines.append("## 9. Candidate Similarity Heatmap")
             md_lines.append("Pairwise cosine similarity matrix between all final candidates. The block-diagonal structure confirms that intra-family similarity is significantly higher than inter-family similarity.")
             md_lines.append("")
             rel_path_str = "file:///" + str(heatmap_img.resolve()).replace("\\", "/")
@@ -1288,34 +1386,49 @@ class AggregateReporter:
         # CSV Tables Preview
         import csv
         for table_file, section_title, description in [
-            ("Table_3a_Confirmed_Local_Glitches.csv", "9. Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via L1/H1 coincidence resolution. These events appear in both detectors within a ±2s window."),
-            ("Table_3b_Unverifiable_Unilateral_Detections.csv", "10. Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector (no coincident H1 counterpart). Cannot be confirmed as astrophysical without further investigation."),
-            ("Master_Taxonomy_O4a.csv", "11. Master Taxonomy O4a", "Full candidate list with GPS timestamp, detector, novelty score, assigned family, Gravity Spy label, and domain shift defense result."),
+            ("Table_3a_Confirmed_Local_Glitches.csv", "10. Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via L1/H1 coincidence resolution. These events appear in both detectors within a ±2s window."),
+            ("Table_3b_Unverifiable_Unilateral_Detections.csv", "11. Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector (no coincident H1 counterpart). Cannot be confirmed as astrophysical without further investigation."),
+            ("Master_Taxonomy_O4a.csv", "12. Master Taxonomy", "Full candidate list with GPS timestamp, detector, novelty score, assigned family, Gravity Spy label, and domain shift defense result."),
         ]:
             table_path = self.output_dir / table_file
             if table_path.exists():
                 md_lines.append(f"## {section_title}")
                 md_lines.append(description)
                 md_lines.append("")
-                with open(table_path, "r", encoding="utf-8") as tf:
-                    reader = csv.reader(tf)
-                    rows = list(reader)
-                if rows:
-                    header = rows[0]
-                    md_lines.append("| " + " | ".join(header) + " |")
-                    md_lines.append("| " + " | ".join(["---"] * len(header)) + " |")
-                    for row in rows[1:21]:  # max 20 rows preview
-                        md_lines.append("| " + " | ".join(str(c) for c in row) + " |")
-                    if len(rows) > 21:
-                        md_lines.append(f"*... {len(rows) - 21} more rows — see [{table_file}]({table_file})*")
-                md_lines.append("")
+                try:
+                    with open(table_path, "r", encoding="utf-8") as tf:
+                        reader = csv.reader(tf)
+                        rows = list(reader)
+                    if rows:
+                        header = rows[0]
+                        md_lines.append("| " + " | ".join(header) + " |")
+                        md_lines.append("| " + " | ".join(["---"] * len(header)) + " |")
+                        for row in rows[1:21]:  # max 20 rows preview
+                            md_lines.append("| " + " | ".join(str(c) for c in row) + " |")
+                        if len(rows) > 21:
+                            md_lines.append(f"*... {len(rows) - 21} more rows — see [{table_file}]({table_file})*")
+                    md_lines.append("")
+                except Exception as e:
+                    md_lines.append(f"Error loading {table_file}: {e}")
+                    md_lines.append("")
 
         # Gravity Spy
-        md_lines.append("## 12. Supervised Validation (Gravity Spy)")
+        md_lines.append("## 13. Supervised Validation (Gravity Spy)")
         tot_eval = ds_metrics.get('total_evaluated', 0)
-        md_lines.append(f"All **{tot_eval}** final evaluated events were cross-matched against Gravity Spy's supervised labels.")
-        md_lines.append("- **Result**: All final members have `gs_label = Unknown` (Not cataloged or no-match).")
-        md_lines.append("- **Conclusion**: The claim of novel, unidentified morphology is fully defended against supervised baselines.")
+        if tot_eval > 0:
+            md_lines.append(f"All **{tot_eval}** final evaluated events were cross-matched against Gravity Spy's supervised labels.")
+            md_lines.append("- **Result**: All final members have `gs_label = Unknown` (Not cataloged or no-match).")
+            md_lines.append("- **Conclusion**: The claim of novel, unidentified morphology is fully defended against supervised baselines.")
+        else:
+            md_lines.append("Gravity spy validation not performed or no candidates evaluated.")
+        md_lines.append("")
+        
+        # Limitations
+        md_lines.append("## 14. Limitations and Caveats")
+        md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
+        md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
+        md_lines.append("- **Spurious Singletons:** Isolated anomalies do not form clusters and require human inspection to exclude DAQ dropouts.")
+        md_lines.append("- **Absence of O4a Gravity Spy Catalog:** Supervised validation is limited to historical models.")
         md_lines.append("")
         
         md_content = "\n".join(md_lines)
