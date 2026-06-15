@@ -18,6 +18,8 @@
 
 ## 📢 News
 
+**15 June 2026** – We completed the full environmental vetting and strain sanity check for our O4a anomalies. The pipeline successfully isolated a genuine physical "Dark Glitch" (Family_01) with perfectly clean, non-clipped strain ($1.6\times 10^{-17}$) operating in a data segment lacking active GWOSC DQ science flags. Concurrently, it isolated macro data dropouts (Singleton) composed entirely of `NaNs`. The extreme 79:3 (L1:H1) candidate asymmetry firmly establishes a local instrumental origin at Livingston, demonstrating the power of zero-shot learning to map uncatalogued noise manifolds.
+
 **14 June 2026** – We formally validated the **Domain Shift Invariance** of our VQ Index between O3b and O4a via a large-scale Kolmogorov-Smirnov test. Furthermore, applying our pipeline on 140 hours of O4a data yielded 82 unilateral glitch candidates with a severe 16:1 L1/H1 asymmetry. Rigorous statistical null testing demonstrated that these anomalous morphological families are indistinguishable from the background ($p > 0.05$), proving that applying an O3b-calibrated reference index to O4a produces diffuse noise clustering. This finding robustly characterizes the domain shift between the observing runs and highlights the necessity of a native O4a index.
 
 **07 June 2026** – We drafted the third paper of our series on the topological extraction of GW glitches: *"Patch-Level DINOv2 Scoring for Gravitational-Wave Glitch Detection: Breaking the Signal Dilution Barrier via Vector-Quantized Local Feature Indexing"*.

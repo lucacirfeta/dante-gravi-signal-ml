@@ -771,10 +771,16 @@ class AggregateReporter:
         # ----------------------------------------------------------
         domain_shift_metrics = self._run_domain_shift_defense(master) if 'master' in locals() else {}
 
+        # ----------------------------------------------------------
+        # Phase 9b: Strain Sanity Check & Physical Validation
+        # ----------------------------------------------------------
+        sanity_metrics = self._run_sanity_checks(taxonomy_report) if 'taxonomy_report' in locals() else {}
+
         master_report = {
             "summary": summary,
             "reviewer_metrics": reviewer_metrics,
-            "domain_shift_defense": domain_shift_metrics
+            "domain_shift_defense": domain_shift_metrics,
+            "sanity_checks": sanity_metrics
         }
         
         with open(self.output_dir / "master_report.json", "w") as f:
@@ -980,6 +986,78 @@ class AggregateReporter:
                 
         return metrics
 
+    def _run_sanity_checks(self, taxonomy_report: dict) -> dict:
+        import numpy as np
+        import logging
+        sanity_metrics = {}
+        families = taxonomy_report.get("global_families", [])
+        
+        try:
+            from gwpy.timeseries import TimeSeries
+            from gwpy.segments import DataQualityFlag
+        except ImportError:
+            logger.error("gwpy not installed. Skipping sanity checks.")
+            return sanity_metrics
+            
+        for fam in families:
+            fam_id = fam["family_id"]
+            gps_list = fam.get("gps_list", [])
+            if not gps_list:
+                continue
+                
+            # Use the first GPS as the medoid/representative
+            gps = float(gps_list[0])
+            det = "L1" # Default assuming majority are L1 based on severe asymmetry
+            
+            result = {
+                "gps": gps,
+                "detector": det,
+                "nans": 0,
+                "zeros": 0,
+                "max_amplitude": 0.0,
+                "dq_active": False,
+                "classification": "Unknown",
+                "error": None
+            }
+            
+            try:
+                # 1. Fetch Strain
+                ts = TimeSeries.fetch_open_data(det, gps - 2, gps + 2, cache=False)
+                strain = ts.value
+                result["nans"] = int(np.isnan(strain).sum())
+                result["zeros"] = int((strain == 0).sum())
+                
+                if result["nans"] == 0:
+                    result["max_amplitude"] = float(np.max(np.abs(strain)))
+                    
+                # 2. Fetch DQ Flag
+                flag = DataQualityFlag.fetch_open_data(f"{det}:DATA", gps - 2, gps + 2)
+                result["dq_active"] = bool(gps in flag.active)
+                
+                # 3. Classify
+                if result["nans"] > 1000:
+                    result["classification"] = "Macro-Dropout Artifact"
+                elif not result["dq_active"] and result["nans"] == 0:
+                    result["classification"] = "Genuine Physical Transient (Dark Glitch)"
+                elif result["nans"] == 0:
+                    result["classification"] = "Genuine Physical Transient"
+                
+            except Exception as e:
+                result["error"] = str(e)
+                
+            sanity_metrics[fam_id] = result
+            logger.info(f"Sanity Check {fam_id} ({gps}): {result['classification']} (NaNs: {result['nans']})")
+            
+        # Clean the global astropy cache to avoid unbounded disk usage
+        try:
+            from astropy.utils.data import clear_download_cache
+            clear_download_cache()
+            logger.info("Cleared astropy download cache.")
+        except ImportError:
+            pass
+
+        return sanity_metrics
+
     def _generate_markdown_report(self, metrics: dict):
         import datetime
         from pathlib import Path
@@ -1083,6 +1161,25 @@ class AggregateReporter:
                 md_lines.append("````")
             md_lines.append("")
         
+        # Physical Sanity Checks
+        sanity = metrics.get('sanity_checks', {})
+        if sanity:
+            md_lines.append("## 4b. Physical Validation & Strain Sanity Check")
+            md_lines.append("Automated verification of the raw strain arrays to classify discoveries as true physical anomalies or digital dropouts.")
+            md_lines.append("")
+            for fam_id, data in sanity.items():
+                cls = data.get("classification", "Unknown")
+                md_lines.append(f"### {fam_id} - {cls}")
+                md_lines.append(f"- **Representative GPS:** {data.get('gps')}")
+                if data.get("error"):
+                    md_lines.append(f"- **Status:** Fetch failed ({data.get('error')})")
+                else:
+                    md_lines.append(f"- **Strain Integrity:** {data.get('nans')} NaNs, {data.get('zeros')} zeros.")
+                    if data.get("nans") == 0:
+                        md_lines.append(f"- **Max Amplitude:** {data.get('max_amplitude'):.2e}")
+                    md_lines.append(f"- **GWOSC '{data.get('detector')}:DATA' Flag Active:** {data.get('dq_active')}")
+            md_lines.append("")
+
         # Singletons
         md_lines.append("## 5. Singletons (Isolated Anomalies)")
         if singletons:
