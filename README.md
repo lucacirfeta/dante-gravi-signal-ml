@@ -18,9 +18,14 @@
 
 ## 📢 News
 
-**15 June 2026** — Completed the full domain shift validation and Mock Data Challenge (MDC) integration. The MDC rigorously demonstrates that our 32s MIL spatial poolizer accurately isolates stationary morphologies (e.g., HarmonicCombs) with nearly 100% recall, while defining a clear spatial dilution barrier for sub-second anomalies (0.00 recall for Blips). Furthermore, the pipeline successfully isolated cohesive domain shift artifacts (Family_01) under the O3b index, which completely collapsed ($0.0\%$ survival rate) when evaluated against the native O4a background.
+**16 June 2026** — Addressed final mathematical and architectural peer-review feedback:
+- **[CLS] Baseline Comparison:** Validated that traditional global `[CLS]` token pooling yields 0.00 recall on O4a candidates ($KS=0.04$, $p>0.5$), confirming the severe topological signal dilution barrier compared to Patch-MIL.
+- **Mathematical Rigor:** Formalized the justification for Ward's linkage on cosine distance ($||\hat{\mathbf{z}}_i - \hat{\mathbf{z}}_j||^2 = 2D_{ij}$) and clarified that GEV parameters describe the MIL score $S_{\rm MIL}^{(k)}$, not raw similarities.
+- **Taxonomy Refinements:** Resolved the logical tension in Family\_03 (temporal clustering vs morphological stochasticity), corrected candidate counts, and explicitly documented the third H1 singleton (GPS 1386091456) missing from GWOSC data.
 
-**14 June 2026** — We formally validated the **Domain Shift Invariance** of our VQ Index between O3b and O4a via a large-scale Kolmogorov-Smirnov test. Applying our pipeline on $\approx 180$ days of O4a data yielded 104 unilateral glitch candidates. Rigorous statistical null testing demonstrated that these anomalous morphological families are indistinguishable from the native background ($p > 0.05$), proving that applying an O3b-calibrated reference index to O4a produces false positives due to macroscopic domain shift. This finding robustly characterizes the domain shift between the observing runs and highlights the necessity of a native O4a index.
+**15 June 2026** — Completed the full domain shift validation and Mock Data Challenge (MDC) integration. The MDC rigorously demonstrates that our 32s MIL spatial poolizer accurately isolates stationary morphologies (e.g., HarmonicCombs) with nearly 100% recall, while defining a clear spatial dilution barrier for sub-second anomalies (0.00 recall for Blips). Furthermore, the pipeline successfully isolated cohesive domain shift artifacts (Family\_01 and the massive 123-member temporally-clustered Family\_03) under the O3b index, which completely collapsed ($0.0\%$ survival rate) when evaluated against the native O4a background.
+
+**14 June 2026** — We formally validated the **Domain Shift Invariance** of our VQ Index between O3b and O4a via a large-scale Kolmogorov-Smirnov test. Applying our pipeline on $\approx 180$ days of O4a data yielded 140 unilateral glitch candidates. Rigorous statistical null testing demonstrated that these anomalous morphological families are indistinguishable from the native background ($p > 0.05$), proving that applying an O3b-calibrated reference index to O4a produces false positives due to macroscopic domain shift. This finding robustly characterizes the domain shift between the observing runs and highlights the necessity of a native O4a index.
 
 **26 May 2026** – The LIGO-Virgo-KAGRA Collaboration released the **GWTC-5.0 catalog** 
 ([press release](https://www.ligo.org/news/)), reporting 161 new gravitational-wave events 
@@ -53,10 +58,10 @@ It identifies anomaly clusters through zero-shot novelty detection via **Patch-L
 The sensitivity limits of our Patch-Level Multiple Instance Learning (MIL) framework and the spatial **Signal Dilution** effect are rigorously quantified through our Mock Data Challenge. We injected five synthetic transient morphologies spanning the full durational spectrum (Blip, AsymBlip, SpiralBurst, ScatteredLight, HarmonicComb) into empirical O4a noise and evaluated the recall at the operational $p_{99}$ GEV threshold. To ensure rigorous benchmarking across disparate durations, we evaluate performance against the theoretical **Matched-Filter Signal-to-Noise Ratio ($\rho$)** rather than peak-to-RMS, anchoring the total injected signal energy to the detector's local PSD.
 
 <div align="center">
-  <img src="paper_draft/springer/img/mdc_recall_curve.png" alt="MDC Recall Curve" width="600"/>
+  <img src="paper_draft/springer/img/fig_mdc_recall_snr.png" alt="MDC Recall Curve" width="600"/>
 </div>
 
-As demonstrated (computed over $N_{\rm inj}=100$ independent trials per bin, with 95% binomial confidence), the pipeline reaches nearly 100% recall for stationary and extended morphologies (e.g., *HarmonicCombs*), but it is mathematically blind to sub-second glitches (e.g., *Blips*) due to the topological dilution within the 32-second spatial grid (recall 0.00). This rigorously defines the physical boundaries of applicability for the current 32-second analysis window.
+As demonstrated by the full Mock Data Challenge (completed 16 June 2026, computed over $N_{\rm inj}=100$ independent trials per bin, with 95% binomial confidence via Wilson score), the pipeline reaches nearly 100% recall for stationary and extended morphologies (e.g., *HarmonicCombs*). However, it is mathematically blind to sub-second glitches (e.g., *Blips*, *AsymBlips*) due to the topological dilution within the 32-second spatial grid (yielding recall 0.00 even at Matched-Filter SNR > 300). This rigorously defines the physical boundaries of applicability for the current 32-second analysis window.
 
 > **💡 The 32-Second Window Trade-off (PSD Stability):** Why not just use a 1-second or 4-second multi-scale window to catch Blips? We explicitly tested this hypothesis (`test_window_hypothesis.py`) and found it to be methodologically flawed. Extracting Q-transforms over sub-second windows severely degrades the Power Spectral Density (PSD) estimation required for physical whitening. Without $\sim$32 seconds of contiguous data, low-frequency seismic noise corrupts the whitening filter, paradoxically *decreasing* the detection sensitivity for short transients. The 32-second window is therefore a mandatory physical compromise between PSD stability and the square input constraints of DINOv2.
 
@@ -74,6 +79,13 @@ This protocol guarantees the absolute purity of the O4a reference index, validat
 <div align="center">
   <img src="paper_draft/springer/img/fig_qq_domain_shift.png" alt="Empirical Tail QQ-Plot" width="600"/>
 </div>
+
+### Rigorous O4a Native Index Generation
+Because the official O4a glitch catalogs and full auxiliary datasets are not yet publicly released, we autonomously reconstructed a native O4a background dictionary directly from the raw strain data. To ensure the Domain Shift Defense is scientifically bulletproof, the native index was built with **strict methodological symmetry** to the O3b baseline:
+- **Balanced Representation:** 500 segments from H1, 500 segments from L1.
+- **Statistical Independence:** Uniform temporal sampling across the run with a strict 32-second guard-time between segments.
+- **Vector Quantization Symmetry:** $K=1216$ MiniBatchKMeans centroids, identical to the O3b index.
+- **DQ Vetoes:** Identical strict data quality gating (zero NaNs, no extreme clipping).
 
 ### FAQ: Methodological Rigor of Empirical Tail Validation
 To mathematically validate our False Positive Rate (FPR) bounds against domain shift, we computed empirical tails on 500 rigorously vetted background segments. Anticipating stringent peer-review scrutiny, we explicitly addressed four critical caveats:
@@ -138,7 +150,7 @@ The codebase is organized into **three single-responsibility packages** under `s
 
 This pipeline evaluates the **morphology** of instrumental noise transients in the latent space constructed by frozen DINOv2 embeddings. It is specifically designed for unsupervised anomaly clustering and novelty detection.
 
-**Within the DINOv2 latent representation and strict Data Quality gating framework (`L1_CBC_CAT1`) used in this study, 82 morphologically unclassified unilateral segments were discovered in the analyzed pristine O4a data.** A rigorous topological characterization revealed a severe detection asymmetry between L1 and H1 (16:1). While the taxonomy pipeline successfully clustered these candidates into families using cross-session transitivity, statistical hypothesis testing against the empirical O3b background showed these aggregates fail the null test ($p > 0.05$). This validates the pipeline's robustness as a diagnostic tool: rather than falsely reporting noise fluctuations as new astrophysical discoveries, it successfully maps the severe domain shift that occurred between O3b and O4a due to instrumental upgrades.
+**Within the DINOv2 latent representation and strict Data Quality gating framework (`L1_CBC_CAT1`) used in this study, 140 morphologically unclassified unilateral segments were discovered in the analyzed pristine O4a data.** A rigorous topological characterization revealed a severe detection asymmetry between L1 and H1 (34:1). While the taxonomy pipeline successfully clustered these candidates into families using cross-session transitivity, statistical hypothesis testing against the empirical O3b background showed these aggregates fail the null test ($p > 0.05$). This validates the pipeline's robustness as a diagnostic tool: rather than falsely reporting noise fluctuations as new astrophysical discoveries, it successfully maps the severe domain shift that occurred between O3b and O4a due to instrumental upgrades.
 
 The pipeline establishes a reproducible baseline for zero-shot glitch morphology characterization. The topological stability of the extracted morphological families was formally proven via UMAP-4D Bootstrapped DPMM clustering (N=20, ARI=0.68).
 
@@ -393,3 +405,9 @@ If you use this software in your research, please cite our preprint:
 ```
 
 For more details, please refer to the `CITATION.cff` file.
+
+---
+
+## 🤖 LLM Disclosure
+
+The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.
