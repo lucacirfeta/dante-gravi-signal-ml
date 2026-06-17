@@ -170,6 +170,69 @@ def fetch_strain_data(
     return ts
 
 
+def fetch_local_or_remote_strain(
+        detector: DetectorID,
+        gps_start: float,
+        gps_end: float,
+        cache_raw: bool = False,
+) -> TimeSeries:
+    """Fetch strain data, prioritizing local 4096s O4a blocks.
+    
+    If local blocks are not found, falls back to GWOSC open data fetch.
+    """
+    directories = [
+        Path("D:/o4a"),
+        Path("C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"),
+        Path("data/raw")
+    ]
+    
+    # Attempt local search
+    for dir_path in directories:
+        if not dir_path.exists():
+            continue
+            
+        for file in dir_path.rglob(f"{detector}_*.hdf5"):
+            parts = file.stem.split("_")
+            if len(parts) >= 3:
+                try:
+                    f_start = float(parts[1])
+                    f_end = float(parts[2])
+                    if f_start <= gps_start and f_end >= gps_end:
+                        logger.info(f"Found local block {file.name} covering [{gps_start}, {gps_end}]")
+                        ts = TimeSeries.read(file)
+                        return ts.crop(gps_start, gps_end)
+                except ValueError:
+                    continue
+                    
+    logger.info(f"Local block not found for {detector} [{gps_start}, {gps_end}]. Fetching from GWOSC...")
+    
+    max_retries = 3
+    base_delay = 2.0
+    import random
+    
+    for attempt in range(max_retries):
+        try:
+            ts = TimeSeries.fetch_open_data(
+                detector,
+                gps_start,
+                gps_end,
+                cache=True,
+                verbose=False
+            )
+            return ts
+        except Exception as exc:
+            if attempt < max_retries - 1:
+                sleep_time = base_delay * (2 ** attempt) + random.uniform(0, 2)
+                logger.warning(
+                    f"Fetch error {detector} [{gps_start}-{gps_end}]: {exc}. "
+                    f"Retrying in {sleep_time:.1f}s..."
+                )
+                time.sleep(sleep_time)
+            else:
+                logger.error(f"GWOSC fetch failed after {max_retries} attempts.")
+                raise RuntimeError(f"GWOSC fetch failed: {exc}")
+
+
 def fetch_o4a_segments(
         detector: DetectorID,
         duration_hours: float = 1.0,

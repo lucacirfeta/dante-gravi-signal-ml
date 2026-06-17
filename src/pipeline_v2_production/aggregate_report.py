@@ -1066,8 +1066,9 @@ class AggregateReporter:
             }
             
             try:
+                from src.core.data_loader import fetch_local_or_remote_strain
                 # 1. Fetch Strain
-                ts = TimeSeries.fetch_open_data(det, gps - 2, gps + 2, cache=False)
+                ts = fetch_local_or_remote_strain(det, gps - 2, gps + 2)
                 strain = ts.value
                 result["nans"] = int(np.isnan(strain).sum())
                 result["zeros"] = int((strain == 0).sum())
@@ -1123,9 +1124,10 @@ class AggregateReporter:
             logger.info(f"Generating PSD for {fam_id} at {gps}...")
 
             try:
+                from src.core.data_loader import fetch_local_or_remote_strain
                 # Fetch 1 second around glitch and 1 second background (e.g. 10s earlier)
-                ts_glitch = TimeSeries.fetch_open_data(det, gps - 0.5, gps + 0.5, cache=False)
-                ts_bkg = TimeSeries.fetch_open_data(det, gps - 10.5, gps - 9.5, cache=False)
+                ts_glitch = fetch_local_or_remote_strain(det, gps - 0.5, gps + 0.5)
+                ts_bkg = fetch_local_or_remote_strain(det, gps - 10.5, gps - 9.5)
 
                 # Compute PSD (Welch's method)
                 psd_glitch = ts_glitch.psd(fftlength=0.25)
