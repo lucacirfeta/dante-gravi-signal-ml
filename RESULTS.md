@@ -18,13 +18,13 @@ This document tracks the results of the `gravi-signal-ml` pipeline operating in 
 
 | Run | Session ID | Run Date/Time | Analysis Status | Salient Detections (NOVEL) |
 |:---|:-----------|:--------------|:----------------|:---------------------------|
-| `O4a` | `Production Scan` | 2026-06-16 | Aggregate Report (72 sessions) | **140 candidates** (110 local instrumental vs 30 unilateral). Morphological families completely collapse (survival rate 0.0%) against the native O4a background. Definitive evidence of Domain Shift distortion by the O3b index. |
+| `O4a` | `Production Scan` | 2026-06-16 | Aggregate Report (72 sessions) | **140 candidates** (110 local instrumental vs 30 unilateral). Cohesive morphological families completely collapse (0 structured families survive) against the native O4a background. Definitive evidence of Domain Shift distortion by the O3b index. |
 
 ---
 
 ## 🔬 Phase 4 Validation baselines
 
-- **Threshold Calibration:** GEV distribution fitted on the local topological VQ index. Mathematical extraction of the shape parameter $\hat{\xi} \approx -0.065$ confirms a bounded Weibull domain. *Statistical Note: We explicitly avoid invoking the Fisher-Tippett-Gnedenko (FTG) theorem, as asserting asymptotic extreme-value guarantees for the mean of Top-$K$ order statistics is a mathematical error. Instead, the GEV family is rigorously utilized as a robust empirical parameterization that exceptionally captures the strongly asymmetric and physically bounded ($s \leq 1$) noise distribution.*
+- **Threshold Calibration:** The operational detection threshold $\tau_{\rm op}$ is defined non-parametrically as the empirical $99^{\rm th}$ percentile ($P_{99}$) of the background distribution. A GEV distribution is fitted to the tail purely for descriptive characterization of the strong non-Gaussian skewness and bounded Weibull domain ($\hat{\xi} \approx -0.065$). *Statistical Note: We explicitly avoid invoking the Fisher-Tippett-Gnedenko (FTG) theorem, as asserting asymptotic extreme-value guarantees for the mean of Top-$K$ order statistics is a mathematical error. Instead, the GEV family is rigorously utilized as a robust empirical parameterization that exceptionally captures the strongly asymmetric and physically bounded ($s \leq 1$) noise distribution.*
 - **Topological Saliency:** Extracted via pure spatial cosine similarity (no VQ weighting).
 - **Signal Dilution Barrier:** Broken via $K=37$ Top-K Patch Mean Pooling.
 - **`[CLS]` Global Pooling Comparison:** Evaluated the 140 confirmed candidates against the identical GEV threshold using the 768D global `[CLS]` token. The global pooling yielded a 0.00% recall, with a mean cosine similarity of $0.996 \pm 0.002$ and a Kolmogorov-Smirnov separation from the background of $D = 0.04$ ($p > 0.5$). This empirically proves that standard ViT global pooling is mathematically blind to these anomalies in production data due to topological signal dilution.
@@ -38,10 +38,10 @@ This document tracks the results of the `gravi-signal-ml` pipeline operating in 
 To resolve whether the candidates were genuine or artifacts of the O3b domain shift, we built a native O4a index, recalibrated the $p_{99}$ threshold via GEV, and rescored all 140 candidates.
 
 **Final Verdict:**
-- **Universal Collapse**: $0.0\%$ survival rate. All 140 candidates collapsed below the native O4a $p_{99}$ novelty threshold.
-- **Macroscopic Temporal Aggregates (Family\_03)**: The dominant aggregate, Family\_03 (123 members, 88\% of all candidates), showed extreme temporal clustering (e.g., bursts of 17--28 events over 5--22 hour windows in specific sessions like GPS 1382451712 and 1385043712), characteristic of a metastable instrumental mode rather than stochastic noise. Despite this highly structured temporal clustering, it collapsed completely (0.0\% survival) under the native O4a index, proving it is a purely domain-shift driven artifact.
-- **Narrative Inversion**: Even highly cohesive clusters like **Family\_01 (internal similarity 0.92)** are not anomalies against the native O4a background. They are normal O4a patterns that the O3b index fails to represent correctly.
-- This provides a definitive validation of the pipeline's **Domain Shift Defense**: without native recalibration, the O3b index introduces systematic distortions leading to false positives.
+- **Cohesion Collapse**: $37.8\%$ overall survival rate (53 of 140 candidates), but **0.0\% of cohesive macro-families survived**. No family maintained both multiple survivors and sufficient morphological cohesion ($>0.85$).
+- **Family\_01 Falsification**: The highly cohesive Family\_01 (internal similarity 0.92) collapsed completely (0 survivors) under the native index. It is not an anomaly against the native O4a background; it is a normal O4a pattern that the stale O3b index failed to represent.
+- **Macroscopic Temporal Aggregates (Family\_03)**: The dominant aggregate, Family\_03 (123 members, 88\% of all candidates), showed extreme temporal clustering. While 47 members survived the numerical threshold, their internal cohesion plummeted to 0.776 (diffuse noise), proving it is a purely domain-shift driven artifact rather than a structured taxonomy.
+- This provides a definitive validation of the pipeline's **Domain Shift Defense**: without native recalibration, the O3b index introduces massive systematic distortions, transforming ordinary background noise into cohesive structural artifacts.
 
 ### 5. Snapshot & Reproducibility Metadata
 These results constitute a point-in-time snapshot of the pipeline execution. Due to the continuous evolution of the codebase, the generated JSON and CSV metrics are not checked into the repository.

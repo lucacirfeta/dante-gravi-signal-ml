@@ -84,7 +84,7 @@
 - **File:** `src/similarity_checker.py` (`assess_novelty_dynamic`, `compute_baseline_stats`), `src/injection.py` (`run_mdc`), `config.yaml` (`similarity.dynamic_threshold`)
 - **Esperimento:** `scratch/baseline_variance_test.py` (30 segmenti L1), `scratch/sanity_check.py` (SpiralBurst SNR=134.8)
 
-### D-11 — Calibrazione Empirica della Soglia Operativa (GEV)
+### D-11 - Calibrazione Empirica della Soglia Operativa (P99 + GEV Descriptive)
 - **Metodo:** L'impostazione di $\tau_\mathrm{op} = 0.874$ basata sul 5° percentile ($\times 10^{-5}$) della distribuzione empirica calcolata su 188.142 segmenti O4a di background.
 - **Motivazione statistica:** Come dimostrato nel paper (arXiv:2606.06237), la distribuzione di background nello spazio coseno di DINOv2 è fortemente asimmetrica a sinistra (skewness = -4.12, kurtosis = 15.38) e segue una distribuzione GEV (Generalized Extreme Value), rendendo completamente inadeguate le soglie Gaussiane $k-\sigma$ (richiederebbero $k \approx 23.9$). 
 - **Stato:** ✅ Pubblicato su arXiv:2606.06237 come standard di calibrazione riproducibile per anomaly detection ViT-based.

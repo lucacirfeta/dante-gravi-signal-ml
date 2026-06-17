@@ -928,10 +928,73 @@ class AggregateReporter:
         logger.info(f"Wrote stability_synthesis.log")
 
 
+    def _calibrate_native_threshold(self, scorer, n_samples: int = 150) -> float:
+        import numpy as np
+        import random
+        from pathlib import Path
+        from src.core.preprocessor import whiten, bandpass, generate_qtransform
+        from gwpy.timeseries import TimeSeries
+        
+        logger.info(f"Calibrating native O4a threshold on up to {n_samples} local background segments...")
+        
+        directories = [
+            Path("D:/o4a"),
+            Path("C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"),
+            Path("data/raw")
+        ]
+        
+        valid_files = []
+        for dir_path in directories:
+            if dir_path.exists():
+                valid_files.extend(list(dir_path.rglob("L1_*.hdf5")))
+                
+        if not valid_files:
+            logger.warning("No local L1 background files found. Falling back to 0.1433.")
+            return 0.1433
+            
+        random.seed(42)
+        random.shuffle(valid_files)
+        
+        background_spectrograms = []
+        # Take a subset of files
+        for file_path in valid_files[:30]:
+            try:
+                ts = TimeSeries.read(file_path)
+                # Split 4096s block into 32s segments
+                duration = int(ts.duration.value)
+                for start_offset in range(0, min(duration, 32 * 5), 32): # Take up to 5 segments per file
+                    if len(background_spectrograms) >= n_samples:
+                        break
+                    
+                    sub_ts = ts.crop(ts.t0.value + start_offset, ts.t0.value + start_offset + 32)
+                    ts_w = whiten(sub_ts)
+                    ts_bp = bandpass(ts_w)
+                    q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
+                    q_gram_uint8 = (q_gram * 255).astype(np.uint8)
+                    if q_gram_uint8.ndim == 2:
+                        q_gram_rgb = np.stack([q_gram_uint8]*3, axis=-1)
+                    else:
+                        q_gram_rgb = q_gram_uint8
+                    background_spectrograms.append(q_gram_rgb)
+            except Exception as e:
+                logger.debug(f"Failed to extract background from {file_path.name}: {e}")
+                
+            if len(background_spectrograms) >= n_samples:
+                break
+                
+        if not background_spectrograms:
+            logger.error("Failed to fetch any background spectrograms. Falling back to 0.1433.")
+            return 0.1433
+            
+        logger.info(f"Successfully generated {len(background_spectrograms)} background spectrograms. Calibrating...")
+        threshold, scores_np, gev_params = scorer.calibrate_threshold(background_spectrograms, batch_size=32)
+        logger.info(f"Native O4a Threshold Calibrated: {threshold:.4f} (GEV: {gev_params})")
+        return float(threshold)
+
     def _run_domain_shift_defense(self, master_df) -> dict:
         import numpy as np
         from tqdm import tqdm
-        from src.core.data_loader import fetch_strain_data
+        from src.core.data_loader import fetch_strain_data, fetch_local_or_remote_strain
         from src.core.preprocessor import whiten, bandpass, generate_qtransform
         from src.core.patch_scorer import PatchScorer
         from pathlib import Path
@@ -954,7 +1017,7 @@ class AggregateReporter:
             logger.error(f"Failed to load O4a index: {e}")
             return metrics
             
-        threshold = 0.1433
+        threshold = self._calibrate_native_threshold(scorer, n_samples=200)
         survived = 0
         total = len(master_df)
         new_mil_vectors = {}
@@ -980,7 +1043,7 @@ class AggregateReporter:
             cid = f"{gps}_{det}"
             
             try:
-                cand_ts = fetch_strain_data(det, gps, gps + 32, cache_raw=True, local_only=True)
+                cand_ts = fetch_local_or_remote_strain(det, gps, gps + 32, cache_raw=True)
                 cand_ts = whiten(cand_ts)
                 cand_ts = bandpass(cand_ts)
                 q_gram = generate_qtransform(cand_ts, output_size=(256, 256))
@@ -991,13 +1054,13 @@ class AggregateReporter:
                     q_gram_rgb = q_gram_uint8
                     
                 res = scorer.score_spectrogram([q_gram_rgb], threshold=threshold)[0]
+                # Only add to family cohesion if it SURVIVED the domain shift defense
                 if res["is_novel"]:
                     survived += 1
-                    
-                new_mil_vectors[cid] = {
-                    "fam": fam,
-                    "vector": res["mil_vector"]
-                }
+                    new_mil_vectors[cid] = {
+                        "fam": fam,
+                        "vector": res["mil_vector"]
+                    }
             except Exception as e:
                 logger.error(f"Failed to process candidate {cid}: {e}")
                 

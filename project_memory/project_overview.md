@@ -187,7 +187,7 @@ Ablation variants implementate in `ablation.py`: `grayscale`, `inverted`, `shuff
 2. **UMAP distorsione globale:** Preserva struttura locale, distorce distanze globali. Cluster anomali potrebbero riflettere artefatti di preprocessing.
 3. **Assenza canali ausiliari:** Solo strain H1/L1. Nessun incrocio con canali ambientali/strumentali per confermare l'origine fisica delle anomalie.
 4. **Morfologie fisicamente distinte ma visivamente simili:** Classi fisicamente diverse ma spettrogrammaticamente simili non verrebbero distinte.
-5. **OOD Blindness / Signal Dilution:** Come dimostrato in [arXiv:2606.06237](https://arxiv.org/abs/2606.06237), il global average pooling del token `[CLS]` di DINOv2 diluisce i segnali localizzati (occupanti <5% della griglia). Le morfologie a banda molto stretta o durata impulsiva non possono superare le rigorose soglie empiriche (es. $\tau_\mathrm{op} = 0.874$), rendendo la pipeline ceca verso di esse indipendentemente dal loro SNR (massimo Recall = 0). L'assunzione Gaussiana (soglie $k-\sigma$) è matematicamente scorretta per questo task poiché la coda di distribuzione è governata da una Generalized Extreme Value (GEV).
+5. **OOD Blindness / Signal Dilution:** Come dimostrato in [arXiv:2606.06237](https://arxiv.org/abs/2606.06237), l'architettura reference-guided fallisce nell'individuare micro-glitch (es. Blip < 0.1s) a causa della diluizione topologica nella window di 32s. Questo limite è stato validato tramite l'MDC (Recall 0.00% per segnali brevi ad alto SNR) e accettato come un trade-off fisico inevitabile per garantire la stabilità della PSD nella banda 10-50 Hz (necessaria per HarmonicComb e transienti lunghi). L'implementazione di un'architettura multi-scala parallela è deferita a lavori futuri.
 
 ---
 

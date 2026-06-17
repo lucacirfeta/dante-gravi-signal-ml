@@ -56,8 +56,8 @@ Contiene i moduli sperimentali originali basati su Token CLS globale (768D), PCA
        │ DINOv2 frozen (core/encoder)    │
        │ Extraction Patch Tokens (14x14) │
        │ L2-norm MIL Pooling Top-K → 384D│
-       │ Vector Quantization compression │
-       │ GEV Thresholding                │
+       │ patch_scorer.py                 │
+       │ Empirical P99 Thresholding      │
        │ Output: novelties.h5 (SWMR)     │
        └─────────────────────────────────┘
            │
