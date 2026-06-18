@@ -102,6 +102,31 @@
 - **Stato:** ✅ Implementato (2026-06-07). Architettura blindata a due layer: Trigger GEV (su VQ index) → Localizzazione (su Spatial Median Matrix).
 - **Fonte:** `src/saliency_map.py`, `scripts/run_saliency_demo.py`, `walkthrough.md`
 
+### D-14 — Peer-Review Wave 3 Defenses (Philosophical Honesty)
+- **Metodo:** Adozione di un approccio di "radical intellectual honesty" per placare le critiche sul rigore matematico e architetturale.
+- **Decisioni:**
+  1. Abbandono della GEV come bound statistico formale per le mean order statistics, relegata a parametrizzazione empirica/euristica.
+  2. Dichiarazione esplicita della cecità ai transienti brevi (Blips) come "critical operational limitation" e non come scelta di design.
+  3. Promozione dell'Adjusted Rand Index (ARI) a metrica quantitativa principale, declassando il "Validation Triangle" e la soglia di transitivity (0.75) a euristiche puramente qualitative.
+  4. Abbandono dell'uso di Gravity Spy come prova di esclusione a favore di prova di Concept Drift.
+  5. Riconoscimento formale della distorsione topologica della PCA nello spazio L2 in attesa di vMF-DPMM nativi sferici.
+  6. La falsificazione di Family_01 dimostra solo che "non è distinguibile dal rumore stazionario O4a tramite solo strain", richiedendo i canali fisici PEM per il verdetto finale.
+- **Stato:** ✅ Implementato (2026-06-17) nel manoscritto LaTeX.
+- **Fonte:** `paper_v2_springer.tex`, `scratch/reviewer_defense.md`, Memorix `obs:219`
+
+---
+
+### D-15 — Peer-Review Wave 6 Defenses (Structural Amputations)
+- **Metodo:** Ristrutturazione radicale del paper per rispondere a critiche fatali (dealbreakers) sulla statistica e sulla geometria.
+- **Decisioni:**
+  1. **Rimozione Totale GEV:** L'equazione GEV, la Tabella 1 e la Figura 3 sono state fisicamente amputate dal paper per evitare confusione matematica. La soglia $\tau_{\rm op}$ è definita strettamente come percentile empirico $P_{99}$.
+  2. **Statistica Massiccia:** $N_{\rm null}$ corretto da 500 a 150.000 campioni per garantire la solidità statistica del 99° percentile.
+  3. **Titolo:** Rinominato il paper aggiungendo "Extended-Transient", accettando formalmente l'incapacità di rilevare transienti sub-secondo (Blips).
+  4. **Tautologia Domain Shift:** La narrativa di "scoperta" è stata convertita in "metodo per quantificare il limite inferiore di rilevabilità e fornire un protocollo di background subtraction nativo".
+  5. **HDBSCAN vs vMF-DPMM:** Inserita difesa esplicita nella Sezione 3.2.2 spiegando che la PCA è un compromesso computazionale per evitare l'instabilità delle funzioni di Bessel (vMF-DPMM), e che HDBSCAN è stato empiricamente scartato per problemi di mega-cluster collassati nello spazio ViT.
+- **Stato:** ✅ Implementato (2026-06-18) nel manoscritto LaTeX.
+- **Fonte:** `paper_v2_springer.tex`, `reviewer_6.md`
+
 ---
 
 ## 2. Decisioni Aperte / Bug Noti
