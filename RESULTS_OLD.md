@@ -1,6 +1,6 @@
 # 🔬 Scientific Results and Benchmark Log (RESULTS.md)
 
-This document collects the chronological history of runs executed with the `gravi-signal-ml` pipeline. Data is organized by **Observational Run** and **Session ID** to track the evolution of analyses over time.
+This document collects the chronological history of runs executed with the `DANTE` pipeline. Data is organized by **Observational Run** and **Session ID** to track the evolution of analyses over time.
 
 ---
 

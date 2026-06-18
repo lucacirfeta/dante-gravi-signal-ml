@@ -8,7 +8,7 @@
 
 | Campo | Valore |
 |-------|--------|
-| **Nome repo** | `gravi-signal-ml` (`dante-gravi-signal-ml` su GitHub) |
+| **Nome repo** | `DANTE` (`dante-gravi-signal-ml` su GitHub) |
 | **GitHub** | https://github.com/lucacirfeta/dante-gravi-signal-ml |
 | **Autore** | Luca Cirfeta (ORCID: 0009-0000-1235-3186) — Capgemini / Independent Researcher, Rome, IT |
 | **Licenza** | Apache 2.0 |

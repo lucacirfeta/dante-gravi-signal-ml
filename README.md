@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🔭 DANTE (Deep Anomaly Network for Transient Extraction) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20543811.svg)](https://doi.org/10.5281/zenodo.20543811)
+# 🔭 DANTE (Domain-Adaptive Network for Transient Evaluation) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20543811.svg)](https://doi.org/10.5281/zenodo.20543811)
 
 **Unsupervised Morphological Characterization of Gravitational-Wave Glitches**
 
-*> **Previously known as `gravi-signal-ml` Pipeline V2.** A Reference-Guided Unsupervised Pipeline for Extended-Transient Anomaly Detection in LIGO O4a using frozen ViT Patch Tokens and Vector-Quantized Reference Indices.*
+*> A Reference-Guided Unsupervised Pipeline for Extended-Transient Anomaly Detection in LIGO O4a using frozen ViT Patch Tokens and Vector-Quantized Reference Indices.*
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
@@ -121,8 +121,8 @@ Naive statistical tests often demand a "uniform chronological distribution" to v
 ### 4. Ward's Linkage Bias & Elongated Manifolds
 Because our $L_2$-normalized feature vectors reside on the $S^{383}$ hypersphere, the cosine distance rigorously maps to squared Euclidean distance, mathematically justifying the use of Ward's minimum-variance criterion. However, we formally acknowledge its geometric bias: Ward's method enforces compact, isotropic (spherical) clusters. For elongated physical manifolds (like frequency-drifting Scattered Light arches), Ward's linkage may fracture the manifold into sub-clusters. This **conservative fragmentation** is a deliberate engineering trade-off; it is vastly superior to *single-linkage*, which suffers from the catastrophic "chaining effect" that would artificially merge distinct physical populations.
 
-### 5. Blip Blindness & Limitations
-The pipeline's topological sensitivity relies on a 32-second spatial grid. Sub-second transients such as Blips and AsymBlips suffer from extreme topological dilution, yielding a recall of $0.00$ even at $\rho \approx 380$. We explicitly declare this blindness to short transients as a critical architectural limitation, and restrict the pipeline's scope to extended-duration transients.
+### 5. Blip Blindness & Multi-Scale Limitations
+The pipeline's topological sensitivity relies on a 32-second spatial grid. Sub-second transients such as Blips and AsymBlips suffer from extreme topological dilution, yielding a recall of $0.00$ even at $\rho \approx 380$. We explicitly declare this blindness to short transients as a critical architectural limitation. While naive "Multi-Scale" workarounds (e.g., resizing 2-second sub-windows to the ViT input resolution) might superficially recover these transients, they introduce a mathematically fatal **Scale Domain Shift**. Comparing a 2-second window against a reference index built on 32-second manifolds violates the scale-invariance limits of the frozen DINOv2 encoder, causing a catastrophic explosion of False Positives. Resolving this limitation rigorously requires building independent **Multi-Scale Reference Dictionaries** natively calibrated for each temporal scale—a primary objective for Version 3 (V3).
 
 ### 6. ARI Metric Dominance & Concept Drift Proof
 We reject using obsolete supervised models (e.g., O3b Gravity Spy) as exclusion evidence for anomaly novelty, citing severe **Supervised Concept Drift** in new detector states. Formal cluster stability is primarily quantified via bootstrapped **Adjusted Rand Index (ARI)**, demoting geometric heuristics (like the Validation Triangle) to operational screening tools. Final physical validation strictly requires auxiliary Physical Environmental Monitoring (PEM) channels.
@@ -214,7 +214,7 @@ The Saliency Gallery is the fundamental tool to distinguish real transients from
 
 All pipeline-generated outputs strictly follow this path convention: `data/runs/<run>/<session_id>/...`.
 ```text
-gravi-signal-ml/
+DANTE/
 ├── data/                                    # Git-ignored data artifacts
 │   ├── raw/                                 # .hdf5 strain downloads from GWOSC
 │   ├── production/                          # Validated V2 session outputs and JSON/CSV reports

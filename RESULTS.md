@@ -1,6 +1,6 @@
 # 🔬 Scientific Results and Benchmark Log (Phase 4: Patch-Level MIL)
 
-This document tracks the results of the `gravi-signal-ml` pipeline operating in its **Phase 4 architecture** (Patch-Level Multiple Instance Learning).
+This document tracks the results of the DANTE (Domain-Adaptive Network for Transient Evaluation) pipeline operating in its **Phase 4 architecture** (Patch-Level Multiple Instance Learning).
 
 > **Note on Legacy Data:** The Phase 1 results (based on the global `[CLS]` token pooling) have been deprecated for short-duration glitches due to the Signal Dilution limit. They are preserved for historical context and macroscopic glitch analysis in [RESULTS_OLD.md](RESULTS_OLD.md).
 
