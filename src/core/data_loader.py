@@ -181,6 +181,7 @@ def fetch_local_or_remote_strain(
     If local blocks are not found, falls back to GWOSC open data fetch.
     """
     directories = [
+        Path("E:/o4a"),
         Path("D:/o4a"),
         Path("C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"),
         Path("data/raw")
