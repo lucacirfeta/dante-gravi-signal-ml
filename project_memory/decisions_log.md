@@ -129,6 +129,18 @@
 
 ---
 
+### D-16 — Peer-Review Wave 11 Defenses (Notation & Provenance)
+- **Metodo:** Disambiguazione completa dei simboli di soglia operativi e tracciamento rigoroso dei parametri di generazione dei Vector Quantized (VQ) indices.
+- **Decisioni:**
+  1. **Disambiguazione Thresholds:** Il simbolo `\tau_{\rm op}` era sovrascritto su tre scale incompatibili. È stato disambiguato in: $\tau_{\rm CLS}$ (baseline MDC globale), $\tau_{\rm O3b}$ (baseline storica patch-level), $\tau_{\rm op}$ (produzione P99), e $\tau_{\rm op}^{\rm L1}$ (soglia nativa O4a).
+  2. **Disambiguazione DPMM:** Il parametro $n$ della Sezione 5.3.1 (segmenti processati dal DPMM, inclusi i segmenti di background) è stato separato da $n$ (numero di anomalie) in $N_{\rm seg}$ per risolvere il paradosso numerico dei "2700 candidati in L1".
+  3. **Conteggio Centroidi O3b:** Corretto un bug documentativo critico. Il paper dichiarava erroneamente 1216 centroidi per l'indice O3b (che ne ha 281, con K adattivo su 23 classi). Il valore 1216 apparteneva in realtà all'indice O4a.
+  4. **Documentazione Indice Nativo O4a:** Aggiunta una sottosezione metodologica dedicata all'indice nativo O4a per eliminare l'asimmetria documentativa.
+- **Stato:** ✅ Implementato (2026-06-19) nel manoscritto LaTeX.
+- **Fonte:** `paper_v2_springer.tex`, `reviewer_11.md`
+
+---
+
 ## 2. Decisioni Aperte / Bug Noti
 
 ### D-OPEN-01 — `reporter.py` hardcoda parametri nel JSON
