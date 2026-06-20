@@ -146,6 +146,35 @@ def gps_to_utc(gps_time: int | float) -> str:
     return t.iso
 
 
+def get_observing_run(gps_start: int | float) -> str:
+    """Deduce the observing run from the GPS start time.
+    
+    Args:
+        gps_start: GPS start time of the segment/candidate.
+        
+    Returns:
+        The observing run identifier (e.g. "O4a", "O3b").
+        
+    Raises:
+        ValueError: If the GPS time falls outside known run epochs.
+    """
+    gps = float(gps_start)
+    if 1126051217 <= gps <= 1137254417:
+        return "O1"
+    elif 1164556817 <= gps <= 1187733618:
+        return "O2"
+    elif 1238166018 <= gps <= 1253977218:
+        return "O3a"
+    elif 1256655618 <= gps <= 1269363618:
+        return "O3b"
+    elif 1368973312 <= gps <= 1384525312:
+        return "O4a"
+    elif gps > 1397062818:
+        return "O4b"
+    else:
+        raise ValueError(f"GPS time {gps} does not fall into any known LIGO/Virgo observing run epoch.")
+
+
 # ---------------------------------------------------------------------------
 # Spectrogram normalization
 # ---------------------------------------------------------------------------

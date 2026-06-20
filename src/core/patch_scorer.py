@@ -80,7 +80,7 @@ class PatchScorer:
         logger.info(f"Reference MD5 verified: {self.reference_md5}")
 
     @torch.no_grad()
-    def calibrate_threshold(self, background_spectrograms: list[np.ndarray], batch_size: int = 32) -> tuple[float, np.ndarray]:
+    def calibrate_threshold(self, background_spectrograms: list[np.ndarray], batch_size: int = 32) -> tuple[float, np.ndarray, dict]:
         """Calibrates threshold empirically (p99) on background samples."""
         if len(background_spectrograms) < self.n_background:
             logger.warning(f"Calibration expected {self.n_background} samples, got {len(background_spectrograms)}")

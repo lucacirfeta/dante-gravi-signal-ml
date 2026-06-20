@@ -7,7 +7,7 @@ from pathlib import Path
 from sklearn.metrics.pairwise import cosine_similarity
 import argparse
 
-from src.core.utils import setup_logger
+from src.core.utils import setup_logger, get_observing_run
 from src.core.data_loader import fetch_local_or_remote_strain
 from src.core.preprocessor import whiten, bandpass, generate_qtransform
 from src.core.patch_scorer import PatchScorer
@@ -128,8 +128,31 @@ def run_cross_detector_veto():
         sim = cosine_similarity(v1, v2)[0, 0]
         logger.info(f"Match Similarity: {sim:.3f}")
         
-        if sim > 0.85:
-            logger.info(f"--> [COINCIDENT] Candidate {gps} matched in {partner} with sim {sim:.3f}")
+        # 5. Extract run and load empirical threshold (Hard-Fail if missing)
+        import json
+        import pathlib
+        cfg_path = pathlib.Path("config/cross_detector_threshold.json")
+        
+        try:
+            run = get_observing_run(gps)
+        except Exception as e:
+            logger.error(f"Cannot deduce observing run for GPS {gps}: {e}")
+            raise RuntimeError(f"Missing run context for GPS {gps}")
+            
+        tau_coh = None
+        if cfg_path.exists():
+            with open(cfg_path, "r") as f:
+                cfg_data = json.load(f)
+                if run in cfg_data and "tau_coh" in cfg_data[run]:
+                    tau_coh = float(cfg_data[run]["tau_coh"])
+                
+        if tau_coh is None:
+            logger.error(f"CRITICAL: No EVT cohesion threshold ('tau_coh') explicitly calibrated for run '{run}' in {cfg_path}.")
+            logger.error("The pipeline cannot guarantee a controlled False Positive Rate for this background epoch.")
+            raise RuntimeError(f"Missing EVT calibration for observing run '{run}'. Refusing to proceed with arbitrary heuristics.")
+
+        if sim > tau_coh:
+            logger.info(f"--> [COINCIDENT] Candidate {gps} matched in {partner} with sim {sim:.3f} (> {tau_coh:.3f})")
             new_row = row.copy()
             new_row["status"] = "COINCIDENT"
             new_row["partner_observing_status"] = "ACTIVE_ANOMALY_DETECTED"

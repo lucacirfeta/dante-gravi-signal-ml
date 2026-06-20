@@ -2782,8 +2782,9 @@ def cmd_validate_reports(args):
 def cmd_aggregate_report(args):
     """Cross-session aggregation, deduplication, and Spearman stability defense."""
     logger.info("=== Starting Aggregate Report ===")
+    run = _resolve_run(args)
     from src.pipeline_v2_production.aggregate_report import AggregateReporter
-    reporter = AggregateReporter(production_dir=args.production_dir)
+    reporter = AggregateReporter(production_dir=args.production_dir, run=run)
     reporter.run()
 
 
@@ -3969,6 +3970,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default="data/production/",
         help="Root production directory containing all session subdirectories.",
+    )
+    p_aggregate.add_argument(
+        "--run",
+        type=str,
+        default="O4a",
+        help="Observing run context for EVT thresholds (e.g. O4a, O3b).",
     )
     p_aggregate.set_defaults(func=cmd_aggregate_report)
 

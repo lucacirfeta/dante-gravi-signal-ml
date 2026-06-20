@@ -292,8 +292,9 @@ def _compute_spearman(
 class AggregateReporter:
     """Cross-session read-only aggregation pipeline."""
 
-    def __init__(self, production_dir: str = "data/production"):
+    def __init__(self, production_dir: str = "data/production", run: str = "O4a"):
         self.production_dir = Path(production_dir)
+        self.observing_run = run
         self.output_dir = self.production_dir / "aggregated"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._cluster_reports_cache = {}
@@ -1086,10 +1087,28 @@ class AggregateReporter:
                 sim = np.dot(vectors, vectors.T)
                 i_upper = np.triu_indices(n, k=1)
                 mean_sim = float(np.mean(sim[i_upper]))
+                
+                tau_coh = None
+                try:
+                    import json
+                    import pathlib
+                    cfg_path = pathlib.Path("config/cross_detector_threshold.json")
+                    if cfg_path.exists():
+                        with open(cfg_path, "r") as f:
+                            cfg_data = json.load(f)
+                            if self.observing_run in cfg_data and "tau_coh" in cfg_data[self.observing_run]:
+                                tau_coh = float(cfg_data[self.observing_run]["tau_coh"])
+                except Exception as e:
+                    logger.error(f"Failed reading config {cfg_path}: {e}")
+                    
+                if tau_coh is None:
+                    logger.error(f"CRITICAL: No EVT cohesion threshold explicitly calibrated for run '{self.observing_run}'.")
+                    raise RuntimeError(f"Missing EVT calibration for observing run '{self.observing_run}' in {cfg_path}. Refusing to proceed.")
+                    
                 metrics["family_cohesion"][fam] = {
                     "n": n,
                     "mean_internal_similarity": mean_sim,
-                    "is_genuine_discovery": bool(mean_sim > 0.85)
+                    "is_genuine_discovery": bool(mean_sim > tau_coh)
                 }
                 
         return metrics
