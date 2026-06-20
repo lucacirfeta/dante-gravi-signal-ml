@@ -18,6 +18,13 @@
 
 ## 📢 News
 
+**20 June 2026** — Completed final statistical and physical validations for Peer-Review Defense (Reviews 12 & 13):
+- **Fisher-Tippett & Extreme Value Rejection:** Formally justified the rejection of the Fisher-Tippett-Gnedenko (GEV) parametric fit in favor of an empirical $P_{99}$ threshold. Explicitly detailed that the spatial correlation of overlapping ViT patch tokens violates the core statistical independence assumption required for block maxima theory.
+- **GraceDB Singleton Cross-Reference:** Fortified the physical origin of the three isolated extreme anomalies (Singletons) by cross-referencing their precise GPS timestamps against public LIGO/Virgo/KAGRA O4a event triggers and hardware injection logs. Zero coincidences rule out unregistered astrophysical events or calibrations, formally confirming them as pure unmodeled instrumental artifacts.
+- **Dimensionality Floor Logic:** Addressed concerns regarding the adaptive PCA dimensionality formula, clarifying that enforcing a minimum floor ($d_{\rm PCA} \ge d_{90\%}$) for small populations intentionally retains $\gg 90\%$ (often 100%) of sample variance to prevent spatial collapse and DPMM singularity.
+- **Physical Asymmetry & Cross-Detector Veto:** Clarified that the severe 34:1 anomaly ratio (L1 vs H1) is driven by physical background non-stationarity rather than algorithmic bias. Defended the conservative $\pm 2$s cross-detector veto window as a deliberate choice to capture slow environmental couplings (e.g., Schumann resonances).
+- **Scale Separation & Domain Defense:** Disambiguated mathematical scales between global cosine similarity ($\tau_{\rm CLS}$) and topological novelty distances ($\tau_{\rm op}$). Detailed the MiniBatchKMeans quantization limits to mathematically prove the Domain Shift Defense does not absorb sparse astrophysical transients.
+
 **19 June 2026** — Executed a strict **Mathematical Notation & Provenance Cleanup** (Review 11):
 - **Symbol Disambiguation:** Eliminated notation overloading by strictly defining independent threshold symbols across the operational scales: $\tau_{\rm CLS}$ (global token baseline), $\tau_{\rm O3b}$ (historical baseline), $\tau_{\rm op}$ (production MIL $P_{99}$), and $\tau_{\rm op}^{\rm L1}$ (native Livingston threshold).
 - **DPMM Population Clarification:** Disambiguated the DPMM clusterer input variable $N_{\rm seg}$ (total processed segments per session) from the anomalous candidate count, mathematically reconciling the bootstrap stability sample bounds (44 sessions with $N_{\rm seg} \geq 100$).
