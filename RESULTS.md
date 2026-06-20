@@ -65,7 +65,7 @@ These results constitute a point-in-time snapshot of the pipeline execution. Due
 *   **Family\_01**: 11 candidates (Mean Internal Similarity: 0.9186)
 *   **Family\_02**: 3 candidates (Mean Internal Similarity: 0.8080)
 *   **Family\_03**: 123 candidates (Mean Internal Similarity: 0.8394)
-*   **Singletons**: 3 candidates. Formally cross-referenced against GraceDB O4a event triggers and Hardware Injections ($\pm 2$s window) with 0 coincidences, rigorously ruling out unregistered astrophysical events or calibrations.
+*   **Singletons**: 3 candidates. Formally cross-referenced against GraceDB O4a event triggers and Hardware Injections ($\pm 2$s window) with 0 coincidences, rigorously ruling out unregistered astrophysical events or calibrations. The most extreme singleton (GPS 1371073984, S_MIL = 0.47) exhibits an asymmetric "mottled/warped mesh" spectral texture lacking scattering or mechanical periodicity, suggesting a complex evolving non-stationary coupling. The H1 singleton (GPS 1386091456) fetch failed due to GWOSC archive constraints, highlighting the critical bottleneck of relying on remote public archives without internal PEM auxiliary channels for robust physical classification.
 
 *   **Commit Hash / Reference:** Please refer to the Zenodo deposition (DOI: 10.5281/zenodo.20543811) for the exact frozen artifacts (`master_report.json`, `global_taxonomy_report.json`) generated in `data/production/aggregated/`.
 
