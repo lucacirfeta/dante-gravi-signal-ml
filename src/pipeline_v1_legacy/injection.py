@@ -60,6 +60,8 @@ class SyntheticGlitchGenerator:
             sig = self._generate_blip(t)
         elif glitch_type == "ScatteredLight":
             sig = self._generate_scattered_light(t)
+        elif glitch_type == "WallOfLines":
+            sig = self._generate_wall_of_lines(t)
         else:
             raise ValueError(f"Unknown glitch_type: {glitch_type}")
             
@@ -276,6 +278,38 @@ class SyntheticGlitchGenerator:
         
         window = signal.windows.tukey(len(sig), alpha=0.1)
         return sig * window
+
+    def _generate_wall_of_lines(
+        self,
+        t: np.ndarray,
+        n_lines: int = 15,
+        f_min: float = 200.0,
+        f_max: float = 1800.0,
+    ) -> np.ndarray:
+        """Wall of horizontal spectral lines simulating Family_01 morphology.
+
+        Generates persistent, randomly-spaced tonal lines spanning the
+        high-frequency band (200-1800 Hz).  Unlike HarmonicComb (which uses
+        integer harmonics of a fundamental), WallOfLines places random
+        frequencies with slight amplitude modulation for realism.
+
+        No Tukey windowing is applied so the signal persists across the
+        full 32-second duration, matching Family_01's observed behavior.
+
+        Physically motivated: instrumental couplings (e.g., servo oscillations,
+        calibration lines, or scattered-light interference fringes) can produce
+        a dense forest of narrow-band spectral features at non-harmonic
+        frequencies that are absent in O3b but ubiquitous in O4a.
+        """
+        sig = np.zeros_like(t)
+        freqs = np.random.uniform(f_min, f_max, n_lines)
+        for f in freqs:
+            phi = np.random.uniform(0, 2 * np.pi)
+            # Slight amplitude modulation (0.5-1.0) for realism
+            ak = np.random.uniform(0.5, 1.0)
+            sig += ak * np.sin(2 * np.pi * f * t + phi)
+        # No windowing: persistent across full duration (like Family_01)
+        return sig
 
 
 class InjectionEngine:

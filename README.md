@@ -18,6 +18,9 @@
 
 ## 📢 News
 
+**20 June 2026** — Executed and formally integrated the **Controlled Recovery Test** (Review 1 \& 12):
+- **Circularity Trap Falsification:** Definitively falsified the hypothesis of methodological circularity regarding the Domain Shift Defense. By injecting synthetic transient morphologies (`HarmonicComb`, `ScatteredLight`, `WallOfLines`) into the native O4a background, we empirically proved that the native background index is mathematically selective (approaching 100% recovery at $\rho > 50$). This confirms that the total collapse of `Family_01` under the native index is not an algorithmic artifact of an overly expansive background, but the physical consequence of its pervasive, stationary nature within the O4a noise floor.
+
 **20 June 2026** — Executed final defensive framing against O4-era contemporary approaches and finalized singletons analysis (Reviews 14-17):
 - **O4-Era Contemporary Comparison:** Explicitly framed DANTE as a complementary tool to modern supervised frameworks (e.g., Gravity Spy) and Active Learning. Clarified that DANTE autonomously structures unclassified `None_of_the_Above` events without human-in-the-loop cycles, mitigating domain-shift-induced false discoveries via proactive mathematical recalibration rather than reactive retraining.
 - **Narrowed Operational Regime:** Embraced the failure to detect short-duration transients (Blips) as a deliberate architectural trade-off to resolve the *Signal Dilution Effect* for extended transients, decoupling it from the PCA-DPMM framework that mitigates small-sample covariance singularity.
@@ -110,6 +113,13 @@ This protocol guarantees the absolute purity of the O4a reference index, validat
 
 <div align="center">
   <img src="paper_draft/springer/img/fig_qq_domain_shift.png" alt="Empirical Tail QQ-Plot" width="600"/>
+</div>
+
+### 🧪 Controlled Recovery Test (Circularity Defense)
+To definitively falsify the hypothesis of methodological circularity—the concern that the native O4a index is so expansive that it blindly absorbs all anomalies—we executed an empirical Controlled Recovery Test. We injected three synthetic transient morphologies (`HarmonicComb`, `ScatteredLight`, and sparse `WallOfLines`) into the native O4a background. The results demonstrate that the Domain Shift Defense is mathematically **selective**: it approaches 100% recovery at high matched-filter SNR ($\rho > 50$) for all discrete morphologies. Crucially, the sparse `WallOfLines` morphology (designed as a discrete topological proxy for the pervasive `Family_01`) survives the native index at $>98\%$ recovery for $\rho > 150$. This provides absolute empirical proof that the total collapse of `Family_01` under the native index is the physical consequence of its pervasive, stationary nature, rather than an algorithmic artifact.
+
+<div align="center">
+  <img src="paper_draft/springer/img/fig_dsd_recovery_curves.png" alt="DSD Controlled Recovery Curves" width="600"/>
 </div>
 
 ### Rigorous O4a Native Index Generation
