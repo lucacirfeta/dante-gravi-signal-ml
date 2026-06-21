@@ -121,8 +121,7 @@ class H5Clusterer:
         else:
             reg_covar = 1e-4
 
-        max_components = 30
-        n_components_dpmm = min(15, n_samples, max_components)
+        n_components_dpmm = min(15, n_samples)
         
         logger.info(f"Running BayesianGaussianMixture on {d_output}D vectors...")
         dpmm = BayesianGaussianMixture(

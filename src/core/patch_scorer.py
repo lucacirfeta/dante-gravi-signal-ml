@@ -86,11 +86,17 @@ class PatchScorer:
             logger.warning(f"Calibration expected {self.n_background} samples, got {len(background_spectrograms)}")
             
         all_novelty_scores = []
+        import gc
         for i in range(0, len(background_spectrograms), batch_size):
             batch = background_spectrograms[i:i+batch_size]
             results = self.score_spectrogram(batch, threshold=1.0) # threshold 1.0 ensures is_novel=False
             for res in results:
                 all_novelty_scores.append(res["novelty_score"])
+                
+            # Explicit garbage collection to prevent DINOv2 VRAM fragmentation
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
             
         scores_np = np.array(all_novelty_scores, dtype=np.float32)
         
@@ -98,20 +104,15 @@ class PatchScorer:
         percentile_target = (1.0 - self.fpr) * 100.0
         threshold = float(np.percentile(scores_np, percentile_target))
         
-        # Fit GEV for reporting purposes
-        try:
-            from scipy.stats import genextreme
-            c, loc, scale = genextreme.fit(scores_np)
-            gev_params = {"mu": float(loc), "sigma": float(scale), "xi": float(-c)}
-        except Exception as e:
-            logger.warning(f"GEV fit failed: {e}")
-            gev_params = {"mu": None, "sigma": None, "xi": None}
+        # GEV fitting on bulk population is a mathematical fallacy according to EVT.
+        # We strictly avoid it and set parameters to None to prevent downstream reporting of invalid metrics.
+        gev_params = {"mu": None, "sigma": None, "xi": None}
         
         logger.info("[CALIBRATION] n_background: %d", len(background_spectrograms))
         logger.info("[CALIBRATION] novelty_score mean: %.4f", scores_np.mean())
         logger.info("[CALIBRATION] novelty_score std:  %.4f", scores_np.std())
         logger.info("[CALIBRATION] threshold (p%d):    %.4f", int(percentile_target), threshold)
-        logger.info("[CALIBRATION] method: empirical_percentile + GEV log")
+        logger.info("[CALIBRATION] method: empirical_percentile only (GEV strictly rejected)")
         
         return threshold, scores_np, gev_params
 
@@ -166,5 +167,10 @@ class PatchScorer:
                 "mil_vector": mil_vector.cpu().numpy().astype(np.float32),
                 "patch_anomaly_scores": anomaly_scores[i].cpu().numpy().astype(np.float32)
             })
+            
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
             
         return results

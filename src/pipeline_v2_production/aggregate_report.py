@@ -397,26 +397,9 @@ class AggregateReporter:
                         "ari": float(ari),
                     })
 
-                # Compute GEV parameters from H5 file
-                h5_path = session_dir / f"novelties_{gps}_{det}.h5"
-                if h5_path.exists():
-                    try:
-                        import h5py
-                        from scipy.stats import genextreme
-                        with h5py.File(h5_path, "r") as f:
-                            keys = list(f.keys())
-                            if 'background_sample' in keys and 'novelty_scores' in f['background_sample'].keys():
-                                bg_scores = f['background_sample']['novelty_scores'][:]
-                                c, loc, scale = genextreme.fit(bg_scores)
-                                if "gev_params" not in data:
-                                    # Append to session metadata for later aggregation
-                                    session_metadata[-1]["gev_params"] = {
-                                        "mu": float(loc),
-                                        "sigma": float(scale),
-                                        "xi": float(-c)
-                                    }
-                    except Exception as e:
-                        logger.warning(f"Failed to fit GEV for {h5_path}: {e}")
+                # GEV fitting on raw background_scores removed due to EVT mathematical fallacy
+                # The pipeline strictly uses the non-parametric empirical P99 threshold.
+                pass
 
                 # Locate & ingest CSV
                 csv_path = _find_csv(session_dir, gps, det)
