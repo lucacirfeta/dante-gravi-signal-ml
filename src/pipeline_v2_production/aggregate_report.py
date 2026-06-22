@@ -647,20 +647,42 @@ class AggregateReporter:
                 else:
                     meta["max_sim_to_3a"] = max_sim_to_3a[i]
                     meta["transitivity_status"] = "Resolved_via_Transitivity" if max_sim_to_3a[i] > 0.75 else "True_Unverifiable_Anomaly"
-
-            master_df = pd.DataFrame([{
-                "gps_start": m["gps"],
-                "detector": m["detector"],
-                "session_id": m["session_id"],
-                "origin_table": m["table"],
-                "local_cluster_id": m.get("local_cluster_id", "Unknown"),
-                "global_family_id": m["global_family_id"],
-                "max_similarity_to_3a": m["max_sim_to_3a"] if m["table"] == "3b" else "",
-                "transitivity_status": m["transitivity_status"]
-            } for m in candidate_metadata])
+            from src.pipeline_v2_production.query_gravity_spy import query_gravity_spy_for_gps
             
+            master_records = []
+            for m in candidate_metadata:
+                gs_label = "Not_Found"
+                gs_conf = 0.0
+                
+                # Query Gravity Spy only if we haven't permanently failed before
+                if getattr(self, "_gs_credentials_failed", False):
+                    gs_data = None
+                else:
+                    gs_data = query_gravity_spy_for_gps(m["gps"], m["detector"])
+                    if gs_data is None:
+                        logger.warning("Gravity Spy query failed (likely missing credentials). Disabling further GS queries for this run.")
+                        self._gs_credentials_failed = True
+                
+                if gs_data and gs_data.get("count", 0) > 0:
+                    gs_label = gs_data["glitches"][0].get("ml_label", "Unknown")
+                    gs_conf = gs_data["glitches"][0].get("ml_confidence", 0.0)
+                    
+                master_records.append({
+                    "gps_start": m["gps"],
+                    "detector": m["detector"],
+                    "session_id": m["session_id"],
+                    "origin_table": m["table"],
+                    "local_cluster_id": m.get("local_cluster_id", "Unknown"),
+                    "global_family_id": m["global_family_id"],
+                    "max_similarity_to_3a": m["max_sim_to_3a"] if m["table"] == "3b" else "",
+                    "transitivity_status": m["transitivity_status"],
+                    "gravity_spy_label": gs_label,
+                    "gravity_spy_confidence": gs_conf
+                })
+                
+            master_df = pd.DataFrame(master_records)
             master_df.to_csv(self.output_dir / "Master_Taxonomy_O4a.csv", index=False)
-            logger.info(f"Saved Master_Taxonomy_O4a.csv with {len(master_df)} candidates.")
+            logger.info(f"Saved Master_Taxonomy_O4a.csv with {len(master_df)} candidates (including Gravity Spy labels).")
 
             # 4. Global Taxonomy Report JSON
             global_families = []

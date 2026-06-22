@@ -59,6 +59,10 @@ class ProductionWriter:
                 nov_grp.create_dataset("nov_scores", shape=(0,), maxshape=(None,), dtype='float32', chunks=True)
                 nov_grp.create_dataset("top_k_idx", shape=(0, metadata.get('k', 68)), maxshape=(None, metadata.get('k', 68)), dtype='int32', chunks=True)
                 
+                # Use variable-length string dataset for serialized ablation dictionary
+                dt_str = h5py.string_dtype(encoding='utf-8')
+                nov_grp.create_dataset("ablation_k_scores", shape=(0,), maxshape=(None,), dtype=dt_str, chunks=True)
+                
     def load_threshold(self):
         """Loads the threshold from existing HDF5 file if present."""
         if self.hdf5_path.exists():
@@ -108,11 +112,19 @@ class ProductionWriter:
             nov_grp["nov_scores"].resize(n_new, axis=0)
             nov_grp["top_k_idx"].resize(n_new, axis=0)
             
+            if "ablation_k_scores" in nov_grp:
+                nov_grp["ablation_k_scores"].resize(n_new, axis=0)
+            
             # Assign
             nov_grp["gps_times"][n_current] = gps_start
             nov_grp["mil_vectors"][n_current] = result_dict["mil_vector"]
             nov_grp["nov_scores"][n_current] = result_dict["novelty_score"]
             nov_grp["top_k_idx"][n_current] = result_dict["top_k_indices"]
+            
+            import json
+            if "ablation_k_scores" in nov_grp:
+                ab_dict = result_dict.get("ablation_k_scores", {})
+                nov_grp["ablation_k_scores"][n_current] = json.dumps(ab_dict).encode('utf-8')
             
             # Flush changes to disk
             f.flush()

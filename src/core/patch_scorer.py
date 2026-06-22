@@ -23,6 +23,7 @@ class PatchScorer:
         reference_index_path: str | Path,
         device: str | torch.device | None = None,
         k: int = 68,
+        k_ablations: list[int] | None = None,
         fpr: float = 0.01,
         n_background: int = 500,
         seed: int = 42,
@@ -30,6 +31,7 @@ class PatchScorer:
     ):
         self.device = torch.device(device) if device else get_device()
         self.k = k
+        self.k_ablations = k_ablations or []
         self.fpr = fpr
         self.n_background = n_background
         self.seed = seed
@@ -160,8 +162,17 @@ class PatchScorer:
             
             n_score = float(novelty_scores[i].cpu().item())
             
+            # Compute ablation scores for different k values seamlessly
+            ablation_k_scores = {}
+            if hasattr(self, 'k_ablations') and self.k_ablations:
+                for ab_k in self.k_ablations:
+                    ab_k = min(ab_k, anomaly_scores.shape[-1])
+                    ab_score = anomaly_scores[i].topk(ab_k)[0].mean().item()
+                    ablation_k_scores[f"k_{ab_k}"] = ab_score
+            
             results.append({
                 "novelty_score": n_score,
+                "ablation_k_scores": ablation_k_scores,
                 "is_novel": n_score > threshold,
                 "top_k_indices": k_idx.cpu().numpy().astype(np.int32),
                 "mil_vector": mil_vector.cpu().numpy().astype(np.float32),
