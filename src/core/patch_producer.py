@@ -65,10 +65,20 @@ class PatchProducer:
         if not self.data_dir.exists():
             raise FileNotFoundError(f"Data directory not found: {self.data_dir}")
             
-        # We glob all HDF5 files matching the detector
-        self.hdf5_files = sorted(list(self.data_dir.rglob(f"*{self.detector}*.hdf5")))
+        from src.core.data_loader import _DATA_DIRECTORIES
+        
+        self.hdf5_files = []
+        if self.data_dir.exists():
+            self.hdf5_files.extend(list(self.data_dir.rglob(f"*{self.detector}*.hdf5")))
+            
+        for d in _DATA_DIRECTORIES:
+            if d.exists() and d != self.data_dir:
+                self.hdf5_files.extend(list(d.rglob(f"*{self.detector}*.hdf5")))
+                
+        self.hdf5_files = sorted(list(set(self.hdf5_files)))
+        
         if not self.hdf5_files:
-            logger.warning(f"No HDF5 files found for detector {self.detector} in {self.data_dir}")
+            logger.warning(f"No HDF5 files found for detector {self.detector} in {self.data_dir} or configured external drives.")
             
     def _read_channel_name(self, ts_dict) -> str:
         """Finds the correct strain channel name dynamically."""

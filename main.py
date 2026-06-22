@@ -1041,25 +1041,9 @@ def _reprocess_single_png(
                 import shutil
                 shutil.copy2(save_path, bak_path)
 
-        # Try local cache first if requested
-        ts = None
-        if use_cache:
-            cache_dir = _Path("data/raw")
-            cache_file_name = f"{detector}_{gps_start}_{gps_end}.hdf5"
-            cache_file = cache_dir / cache_file_name
-            # Also search in GPS subdirectories (data/raw/{gps_start}/)
-            if not cache_file.exists() and cache_dir.exists():
-                sub_matches = list(cache_dir.glob(f"*/{cache_file_name}"))
-                if sub_matches:
-                    cache_file = sub_matches[0]
-            if cache_file.exists():
-                from gwpy.timeseries import TimeSeries
-                ts = TimeSeries.read(cache_file)
-                print(f"  Cache hit: {cache_file.name}")
-
-        if ts is None:
-            from src.core.data_loader import fetch_strain_data
-            ts = fetch_strain_data(detector, gps_start, gps_end)
+        # fetch_strain_data automatically searches _DATA_DIRECTORIES before downloading
+        from src.core.data_loader import fetch_strain_data
+        ts = fetch_strain_data(detector, gps_start, gps_end)
 
         from src.core.preprocessor import whiten, bandpass, generate_qtransform
         ts_w = whiten(ts)

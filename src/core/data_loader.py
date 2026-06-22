@@ -386,22 +386,24 @@ def generate_segments_from_gps_range(
 
 
 def _find_latest_raw_session() -> Path | None:
-    """Scans data/raw/ and returns the path to the folder with the highest GPS name."""
-    raw_dir = Path("data/raw")
-    if not raw_dir.exists():
-        return None
-
+    """Scans all configured data directories and returns the path to the folder with the highest GPS name."""
     max_gps = -1
     latest_path = None
-    for d in raw_dir.iterdir():
-        if d.is_dir():
-            try:
-                gps_val = int(d.name)
-                if gps_val > max_gps:
-                    max_gps = gps_val
-                    latest_path = d
-            except ValueError:
-                pass
+    
+    for base_dir in _DATA_DIRECTORIES:
+        if not base_dir.exists():
+            continue
+            
+        for d in base_dir.iterdir():
+            if d.is_dir():
+                try:
+                    gps_val = int(d.name)
+                    if gps_val > max_gps:
+                        max_gps = gps_val
+                        latest_path = d
+                except ValueError:
+                    continue
+                    
     return latest_path
 
 
