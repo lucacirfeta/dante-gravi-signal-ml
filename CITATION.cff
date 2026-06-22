@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 
-title: "gravi-signal-ml"
+title: "DANTE"
 abstract: >
   An open-source Python pipeline for unsupervised morphological
   characterization of LIGO/Virgo O4a gravitational-wave glitch data.

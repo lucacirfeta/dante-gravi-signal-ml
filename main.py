@@ -2505,6 +2505,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir)
     resume = args.resume
     k = args.k
+    k_ablations = getattr(args, "k_ablations", [15, 37, 68, 100])
     fpr = args.fpr
     n_background = args.n_background
     seed = getattr(args, "seed", 42)
@@ -2517,6 +2518,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     scorer = PatchScorer(
         reference_index_path="data/reference/patch_compressed_index.npz",
         k=k,
+        k_ablations=k_ablations,
         fpr=fpr,
         n_background=n_background,
         seed=seed
@@ -2524,6 +2526,12 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     
     if not sessions:
         logger.info("Nessuna sessione fornita esplicitamente. Tento l'auto-discovery delle cartelle in data_dir...")
+        
+        if not data_dir.exists():
+            error_msg = f"Errore: la directory dati '{data_dir}' non esiste. Se usi percorsi Windows nel terminale, usa le virgolette (es. \"E:\\o4a\") o usa gli slash (es. E:/o4a)."
+            logger.error(error_msg)
+            raise FileNotFoundError(error_msg)
+            
         discovered_sessions = []
         for path in data_dir.iterdir():
             if path.is_dir() and list(path.rglob(f"*{detector}*.hdf5")):
@@ -3882,6 +3890,13 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=68,
         help="Number of top-k patches for MIL vector. Default: 68.",
+    )
+    p_patch_analysis.add_argument(
+        "--k-ablations",
+        nargs="*",
+        type=int,
+        default=[15, 37, 68, 100],
+        help="List of k values for spatial pooling ablation. Default: 15 37 68 100",
     )
     p_patch_analysis.add_argument(
         "--fpr",
