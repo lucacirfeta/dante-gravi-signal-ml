@@ -45,15 +45,12 @@ def run_cross_detector_veto():
     
     ref_index_path = Path("data/index/patch_compressed_index.npz")
     if not ref_index_path.exists():
-        # Try fallback
-        ref_index_path = Path("E:/dante-gravi-signal-ml/data/index/patch_compressed_index.npz")
-        if not ref_index_path.exists():
-            ref_index_path = list(Path(".").rglob("patch_compressed_index.npz"))
-            if ref_index_path:
-                ref_index_path = ref_index_path[0]
-            else:
-                logger.warning("Could not find reference index. Run index builder first.")
-                return
+        ref_index_path = list(Path(".").rglob("patch_compressed_index.npz"))
+        if ref_index_path:
+            ref_index_path = ref_index_path[0]
+        else:
+            logger.warning("Could not find reference index. Run index builder first.")
+            return
 
     scorer = PatchScorer(
         reference_index_path=ref_index_path,

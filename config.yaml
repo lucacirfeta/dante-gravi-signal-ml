@@ -46,6 +46,13 @@ scan_extended:
   hours_per_detector: 144
   detectors: ["H1", "L1"]
 
+# Data loading configuration
+data_loading:
+  local_directories:
+    - "E:/o4a"
+    - "C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"
+    - "data/raw"
+
 
 # Preprocessing parameters
 preprocessing:

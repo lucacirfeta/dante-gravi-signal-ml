@@ -36,6 +36,13 @@ _CFG = load_config()
 _O4A_START: int = _CFG["o4a_window"]["gps_start"]
 _O4A_END: int = _CFG["o4a_window"]["gps_end"]
 _SAMPLE_RATE: int = _CFG["preprocessing"]["sample_rate"]
+_DATA_DIRECTORIES_CFG = _CFG.get("data_loading", {}).get("local_directories", [
+    "E:/o4a",
+    "C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a",
+    "data/raw"
+])
+_DATA_DIRECTORIES: list[Path] = [Path(d) for d in _DATA_DIRECTORIES_CFG]
+
 
 
 # ---------------------------------------------------------------------------
@@ -85,6 +92,38 @@ def fetch_strain_data(
         utc_end,
     )
 
+    # 1. Tenta il caricamento da un blocco locale più grande (es. O4a 4096s) sui drive prioritari
+    directories = _DATA_DIRECTORIES
+    
+    for dir_path in directories:
+        if not dir_path.exists():
+            continue
+            
+        # Per data/raw evitiamo rglob pesante se non necessario, 
+        # ma per E:/o4a lo usiamo per trovare i blocchi di 4096s
+        try:
+            for file in dir_path.rglob(f"{detector}_*.hdf5"):
+                parts = file.stem.split("_")
+                if len(parts) >= 3:
+                    try:
+                        f_start = float(parts[1])
+                        f_end = float(parts[2])
+                        if f_start <= gps_start and f_end >= gps_end:
+                            try:
+                                ts = TimeSeries.read(file)
+                                ts_cropped = ts.crop(gps_start, gps_end)
+                                if ts_cropped.sample_rate.value != sample_rate:
+                                    ts_cropped = ts_cropped.resample(sample_rate)
+                                logger.info("Local block hit for %s covering [%d, %d] in %s", file.name, gps_start, gps_end, dir_path)
+                                return ts_cropped
+                            except Exception as exc:
+                                logger.warning("Failed to read/crop local block %s: %s", file.name, exc)
+                    except ValueError:
+                        continue
+        except Exception as exc:
+            logger.warning(f"Error while searching in {dir_path}: {exc}")
+
+    # 2. Controllo exact match legacy su data/raw (nel caso non sia stato trovato dal rglob o sia formattato diversamente)
     cache_dir = Path("data/raw")
     cache_file_name = f"{detector}_{gps_start}_{gps_end}.hdf5"
     cache_file = cache_dir / cache_file_name
@@ -98,6 +137,8 @@ def fetch_strain_data(
         try:
             ts = TimeSeries.read(cache_file)
             logger.info("Cache hit for %s", cache_file.name)
+            if ts.sample_rate.value != sample_rate:
+                ts = ts.resample(sample_rate)
             return ts
         except Exception as exc:
             logger.warning("Cache read failed for %s, moving to .corrupt: %s", cache_file.name, exc)
@@ -111,6 +152,7 @@ def fetch_strain_data(
                     cache_file.unlink()
                 except Exception:
                     pass
+
 
 
     # === LOCAL ONLY MODE ===
@@ -180,12 +222,7 @@ def fetch_local_or_remote_strain(
     
     If local blocks are not found, falls back to GWOSC open data fetch.
     """
-    directories = [
-        Path("E:/o4a"),
-        Path("D:/o4a"),
-        Path("C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"),
-        Path("data/raw")
-    ]
+    directories = _DATA_DIRECTORIES
     
     # Attempt local search
     for dir_path in directories:

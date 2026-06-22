@@ -942,12 +942,9 @@ class AggregateReporter:
         from gwpy.timeseries import TimeSeries
         
         logger.info(f"Calibrating native O4a threshold on up to {n_samples} local background segments...")
+        from src.core.data_loader import _DATA_DIRECTORIES
         
-        directories = [
-            Path("D:/o4a"),
-            Path("C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"),
-            Path("data/raw")
-        ]
+        directories = _DATA_DIRECTORIES
         
         valid_files = []
         for dir_path in directories:

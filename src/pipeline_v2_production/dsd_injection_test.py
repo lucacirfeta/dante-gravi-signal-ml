@@ -37,7 +37,7 @@ import pandas as pd
 import torch
 from tqdm import tqdm
 
-from src.core.data_loader import fetch_local_or_remote_strain
+from src.core.data_loader import fetch_local_or_remote_strain, _DATA_DIRECTORIES
 from src.core.patch_scorer import PatchScorer
 from src.core.preprocessor import bandpass, generate_qtransform, whiten
 from src.core.utils import setup_logger
@@ -124,11 +124,7 @@ class DSDControlledRecoveryTest:
 
     def _discover_available_segments(self) -> list[tuple[int, int]]:
         """Discover all available 32s O4a segments from E:\\o4a local cache."""
-        directories = [
-            Path("E:/o4a"),
-            Path("D:/o4a"),
-            Path("data/raw"),
-        ]
+        directories = _DATA_DIRECTORIES
 
         all_segments = []
         for dir_path in directories:
