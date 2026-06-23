@@ -56,7 +56,7 @@ To resolve whether the candidates were genuine or artifacts of the O3b domain sh
 <div align="center">
   <img src="paper_draft/springer/img/fig_dsd_recovery_curves.png" alt="DSD Controlled Recovery Curves" width="600"/>
 </div>
-- This provides a definitive validation of the pipeline's **Domain Shift Defense**: without native recalibration, the O3b index introduces massive systematic distortions, transforming ordinary background noise into cohesive structural artifacts.
+- This provides a definitive validation of the pipeline's **Domain Shift Defense**: without native recalibration, the O3b index introduces a significant bias, transforming ordinary background noise into cohesive structural artifacts.
 
 ### 5. Snapshot & Reproducibility Metadata
 These results constitute a point-in-time snapshot of the pipeline execution. Due to the continuous evolution of the codebase, the generated JSON and CSV metrics are not checked into the repository.

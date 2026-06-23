@@ -62,6 +62,10 @@ class SyntheticGlitchGenerator:
             sig = self._generate_scattered_light(t)
         elif glitch_type == "WallOfLines":
             sig = self._generate_wall_of_lines(t)
+        elif glitch_type == "KoiFish":
+            sig = self._generate_koi_fish(t)
+        elif glitch_type == "Whistle":
+            sig = self._generate_whistle(t)
         else:
             raise ValueError(f"Unknown glitch_type: {glitch_type}")
             
@@ -310,6 +314,76 @@ class SyntheticGlitchGenerator:
             sig += ak * np.sin(2 * np.pi * f * t + phi)
         # No windowing: persistent across full duration (like Family_01)
         return sig
+
+    def _generate_koi_fish(self, t: np.ndarray) -> np.ndarray:
+        """Koi Fish morphology: very loud broadband burst with low-frequency 'fins'.
+        
+        Physically motivated: similar to a blip but with much higher amplitude, causing 
+        filter ringing that appears as a teardrop or fish shape in the Q-transform.
+        Frequencies span ~30 Hz to 500 Hz.
+        """
+        duration = t[-1]
+        t_peak = duration / 2.0
+        
+        # Asymmetric envelope: sharp rise, long decay (filter ringing)
+        tau_rise = 0.005
+        tau_decay = 0.080
+        
+        envelope = np.where(
+            t <= t_peak,
+            np.exp(-((t - t_peak) ** 2) / (2 * tau_rise ** 2)),
+            np.exp(-(t - t_peak) / tau_decay),
+        )
+        
+        # Carrier: bandpassed white noise with power concentrated at lower frequencies
+        carrier = np.random.randn(len(t))
+        freqs = np.fft.rfftfreq(len(carrier), d=1.0/self.sample_rate)
+        fft_carrier = np.fft.rfft(carrier)
+        
+        # Mask 30 - 500 Hz, with 1/f falloff to simulate the dense low-frequency 'body'
+        mask = (freqs >= 30) & (freqs <= 500)
+        fft_carrier[~mask] = 0
+        # Apply 1/f scaling to the valid frequencies
+        valid_freqs = freqs[mask]
+        fft_carrier[mask] = fft_carrier[mask] * (30.0 / valid_freqs)
+        
+        carrier = np.fft.irfft(fft_carrier, n=len(carrier))
+        return carrier * envelope
+
+    def _generate_whistle(self, t: np.ndarray) -> np.ndarray:
+        """Whistle morphology: V-shaped or W-shaped narrow-band frequency sweep.
+        
+        Physically motivated: radio frequency signals (like Vackar oscillators) 
+        crossing the LIGO frequency band, appearing as distinct V-shaped chirps.
+        Usually span 0.5s - 1.0s in duration, sweeping down and then up.
+        """
+        duration = t[-1]
+        t_center = duration / 2.0
+        
+        f_max = 800.0
+        f_min = 200.0
+        sweep_duration = 0.6  # 600 ms sweep
+        
+        # V-shape: frequency drops linearly then rises linearly
+        t_start = t_center - sweep_duration / 2.0
+        t_end = t_center + sweep_duration / 2.0
+        
+        # Parabolic sweep for a smoother V-shape
+        a = (f_max - f_min) / (sweep_duration / 2.0)**2
+        f = f_max - a * (t - t_center)**2
+        
+        # Outside the sweep duration, frequency is 0 (no signal)
+        f[t < t_start] = 0
+        f[t > t_end] = 0
+        
+        # Ensure it doesn't drop below f_min numerically due to discretization
+        f[(f < f_min) & (f > 0)] = f_min
+        
+        phase = 2 * np.pi * np.cumsum(f) / self.sample_rate
+        sig = np.sin(phase) * (f > 0)
+        
+        window = signal.windows.tukey(len(sig), alpha=0.2)
+        return sig * window
 
 
 class InjectionEngine:
