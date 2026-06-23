@@ -18,7 +18,7 @@ This document tracks the results of the DANTE (Domain-Adaptive Network for Trans
 
 | Run | Session ID | Run Date/Time | Analysis Status | Salient Detections (NOVEL) |
 |:---|:-----------|:--------------|:----------------|:---------------------------|
-| `O4a` | `Production Scan` | 2026-06-16 | Aggregate Report (72 sessions) | **140 candidates** (110 local instrumental vs 30 unilateral). Cohesive morphological families completely collapse (0 structured families survive) against the native O4a background. Definitive evidence of Domain Shift distortion by the O3b index. |
+| `O4a` | `Production Scan` | 2026-06-23 | Aggregate Report (72 sessions) | **140 candidates** (110 local instrumental vs 30 unilateral). Cohesive morphological families completely collapse (0 structured families survive) against the native O4a background. Definitive evidence of Domain Shift distortion by the O3b index. |
 
 ---
 
@@ -61,7 +61,7 @@ To resolve whether the candidates were genuine or artifacts of the O3b domain sh
 ### 5. Snapshot & Reproducibility Metadata
 These results constitute a point-in-time snapshot of the pipeline execution. Due to the continuous evolution of the codebase, the generated JSON and CSV metrics are not checked into the repository.
 
-*   **Run Date:** 2026-06-16
+*   **Run Date:** 2026-06-23
 *   **Total Sessions Processed:** 72
 *   **Total Segments Evaluated:** ~214,092
 *   **Final Candidate Anomalies:** 140 (110 local instrumental, 30 unilateral)
