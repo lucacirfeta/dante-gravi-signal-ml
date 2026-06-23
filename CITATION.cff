@@ -2,17 +2,21 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 
-title: "DANTE"
+title: "DANTE (Domain-Adaptive Network for Transient Evaluation)"
 abstract: >
   An open-source Python pipeline for unsupervised morphological
-  characterization of LIGO/Virgo O4a gravitational-wave glitch data.
-  The pipeline applies DINOv2-Reg frozen feature extraction, PCA
-  dimensionality reduction, UMAP manifold learning, and Dirichlet
-  Process Mixture Model (DPMM) clustering to identify morphologically
-  distinct groups of detector noise transients without labeled training
-  data. Includes ablation study, stability analysis, time-slide
-  background estimation, and in-domain morphological cross-check
-  validated with GW150914 (Chirp@0.997).
+  characterization of LIGO/Virgo gravitational-wave glitch data.
+  To overcome the Signal Dilution Limit, the architecture extracts
+  dense Patch Tokens from a frozen DINOv2 (ViT) model, applying
+  Top-K Multiple Instance Learning (MIL) in the spherical cosine
+  similarity space against a Vector-Quantized background reference.
+  Classification relies on rigorous Extreme Value Theory (EVT)
+  thresholding to guarantee a robust False Positive Rate. The 
+  extracted anomaly vectors are then grouped via UMAP and Dirichlet
+  Process Mixture Model (DPMM) clustering to discover new transient
+  morphologies without generative fine-tuning. Includes extensive 
+  ablation studies, spatial saliency mapping, and cross-validation 
+  against the Gravity Spy catalog.
 
 authors:
   - family-names: "Cirfeta"
@@ -22,8 +26,8 @@ authors:
     city: "Rome"
     country: "IT"
 
-version: "1.0.0"
-date-released: "2026-05-01"
+version: "2.0.0"
+date-released: "2026-06-23"
 
 doi: "10.5281/zenodo.20543811"
 url: "https://github.com/lucacirfeta/dante-gravi-signal-ml"

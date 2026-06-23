@@ -101,42 +101,47 @@ class H5Clusterer:
         logger.info(f"PCA: {d_input}D → {d_output}D (varianza: {variance_retained:.1%}, floor applicato: {d_90 < floor})")
         
         # 3. Conditional Covariance & Adaptive Regularization for DPMM
-        if n_samples >= 200:
-            cov_type = 'full'
-        elif 50 <= n_samples < 200:
-            cov_type = 'tied'
+        if n_samples < 30:
+            logger.warning(f"Sample size {n_samples} < 30. Bypassing DPMM to prevent degenerate covariance matrices.")
+            # Assign each point to its own cluster (singleton)
+            labels = np.arange(n_samples)
         else:
-            cov_type = 'diag'
+            if n_samples >= 200:
+                cov_type = 'full'
+            elif 50 <= n_samples < 200:
+                cov_type = 'tied'
+            else:
+                cov_type = 'diag'
+                
+            logger.info(f"DPMM covariance_type: {cov_type} (n={n_samples})")
             
-        logger.info(f"DPMM covariance_type: {cov_type} (n={n_samples})")
-        
-        if n_samples < 50:
-            n_init = 5
-        else:
-            n_init = 3
-        logger.info(f"DPMM n_init: {n_init} (n={n_samples})")
-        
-        if n_samples < 100:
-            reg_covar = 1e-3
-        else:
-            reg_covar = 1e-4
+            if n_samples < 50:
+                n_init = 5
+            else:
+                n_init = 3
+            logger.info(f"DPMM n_init: {n_init} (n={n_samples})")
+            
+            if n_samples < 100:
+                reg_covar = 1e-3
+            else:
+                reg_covar = 1e-4
 
-        n_components_dpmm = min(15, n_samples)
-        
-        logger.info(f"Running BayesianGaussianMixture on {d_output}D vectors...")
-        dpmm = BayesianGaussianMixture(
-            n_components=n_components_dpmm,
-            covariance_type=cov_type,
-            reg_covar=reg_covar,
-            weight_concentration_prior_type='dirichlet_process',
-            weight_concentration_prior=0.01,
-            max_iter=500,
-            n_init=n_init,
-            random_state=42
-        )
-        
-        # Fit and predict labels
-        labels = dpmm.fit_predict(vectors_reduced)
+            n_components_dpmm = min(15, n_samples)
+            
+            logger.info(f"Running BayesianGaussianMixture on {d_output}D vectors...")
+            dpmm = BayesianGaussianMixture(
+                n_components=n_components_dpmm,
+                covariance_type=cov_type,
+                reg_covar=reg_covar,
+                weight_concentration_prior_type='dirichlet_process',
+                weight_concentration_prior=0.01,
+                max_iter=500,
+                n_init=n_init,
+                random_state=42
+            )
+            
+            # Fit and predict labels
+            labels = dpmm.fit_predict(vectors_reduced)
         
         # 3. UMAP for 2D Visualization only
         logger.info("Running UMAP for 2D visualization projection...")

@@ -746,6 +746,40 @@ class AggregateReporter:
                 logger.info("Saved candidate_similarity_heatmap.png")
             except Exception as e:
                 logger.error(f"Error generating hierarchical heatmap: {e}")
+                
+            # 5b. Intra-Cluster vs Background Distance Plot
+            try:
+                intra_distances = []
+                background_distances = []
+                
+                n_elements = len(cluster_labels)
+                for i in range(n_elements):
+                    for j in range(i + 1, n_elements):
+                        d = dist_matrix[i, j]
+                        fam_i = candidate_metadata[i]["global_family_id"]
+                        fam_j = candidate_metadata[j]["global_family_id"]
+                        
+                        if fam_i == fam_j and "Family" in fam_i:
+                            intra_distances.append(d)
+                        else:
+                            background_distances.append(d)
+                
+                if intra_distances and background_distances:
+                    plt.figure(figsize=(10, 6))
+                    sns.kdeplot(intra_distances, label='Intra-Cluster Distances (Macro-Families)', fill=True, color='red', alpha=0.5)
+                    sns.kdeplot(background_distances, label='Inter-Cluster / Background Distances', fill=True, color='gray', alpha=0.5)
+                    
+                    plt.title("Morphological Diffusivity: Intra-Cluster vs Background Distances")
+                    plt.xlabel("Cosine Distance (1 - Cosine Similarity)")
+                    plt.ylabel("Density")
+                    plt.legend()
+                    plt.tight_layout()
+                    plt.savefig(self.output_dir / "morphological_diffusivity_distances.png", dpi=300)
+                    plt.close()
+                    logger.info("Saved morphological_diffusivity_distances.png")
+            except Exception as e:
+                logger.error(f"Error generating diffusivity plot: {e}")
+                
         else:
             logger.info("Not enough valid candidates to compute cross-similarity.")
 
