@@ -105,6 +105,8 @@ class H5Clusterer:
             logger.warning(f"Sample size {n_samples} < 30. Bypassing DPMM to prevent degenerate covariance matrices.")
             # Assign each point to its own cluster (singleton)
             labels = np.arange(n_samples)
+            cov_type = 'bypassed_n<30'
+            n_init = 0
         else:
             if n_samples >= 200:
                 cov_type = 'full'

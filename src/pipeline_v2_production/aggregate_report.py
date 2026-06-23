@@ -389,12 +389,15 @@ class AggregateReporter:
                             except Exception:
                                 pass
 
-                if ari is not None:
+                is_bypassed = data.get("covariance_type_used") == "bypassed_n<30"
+                
+                if ari is not None or is_bypassed:
                     session_metadata.append({
                         "session_id": gps,
                         "detector": det,
                         "n_samples_true": n_samples_true,
-                        "ari": float(ari),
+                        "ari": float(ari) if ari is not None else None,
+                        "bypassed": is_bypassed
                     })
 
                 # GEV fitting on raw background_scores removed due to EVT mathematical fallacy
@@ -786,6 +789,8 @@ class AggregateReporter:
         # ----------------------------------------------------------
         # Phase 6: Summary JSON
         # ----------------------------------------------------------
+        total_bypassed = sum(1 for s in session_metadata if s.get("bypassed", False))
+        
         summary = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "vq_index_md5": VQ_INDEX_MD5,
@@ -793,13 +798,14 @@ class AggregateReporter:
             "total_sessions_valid": total_valid,
             "total_sessions_excluded": total_excluded,
             "sessions_excluded_list": excluded_list,
+            "total_sessions_bypassing_dpmm": total_bypassed,
             "total_candidates_before_dedup": total_before_dedup,
-            "total_candidates_after_dedup": len(master),
-            "duplicates_removed": duplicates_removed,
-            "table_3a_count": len(table_3a),
-            "table_3b_count": len(table_3b),
-            "max_cross_similarity": max_cross_sim,
-            "highly_similar_pairs_count": highly_sim_count,
+            "total_candidates_after_dedup": len(master) if 'master' in locals() else 0,
+            "duplicates_removed": duplicates_removed if 'duplicates_removed' in locals() else 0,
+            "table_3a_count": len(table_3a) if 'table_3a' in locals() else 0,
+            "table_3b_count": len(table_3b) if 'table_3b' in locals() else 0,
+            "max_cross_similarity": max_cross_sim if 'max_cross_sim' in locals() else 0.0,
+            "highly_similar_pairs_count": highly_sim_count if 'highly_sim_count' in locals() else 0,
         }
         for det in DETECTORS:
             summary[det.lower()] = spearman_results[det.lower()]
