@@ -21,6 +21,9 @@
 **23 June 2026** — Addressed Critical Peer Review Flaws (Major Comments):
 - **DPMM Covariance Stability:** Implemented a strict $n < 100$ mathematical bypass for the Dirichlet Process Mixture Model (DPMM) to prevent singular covariance matrix estimation in the small-sample regime. Sessions with $< 100$ outliers are now correctly handled as independent singletons without forcing a generative fit.
 - **Morphological Diffusivity (Family\_03):** Replaced the heuristic 50% False Positive Rate (FPR) argument for single-linkage chaining with a rigorous empirical validation. We now extract and plot the distribution of intra-cluster cosine distances against the pairwise distances of random stationary background noise. The distribution overlap formally proves that Family\_03 is a continuously drifting domain-shift manifold.
+<div align="center">
+  <img src="paper_draft/springer/img/morphological_diffusivity_distances.png" alt="Morphological Diffusivity Distances" width="600"/>
+</div>
 - **Family\_01 Circularity Resolution:** Addressed the conceptual limit of unsupervised background subtraction. The collapse of Family\_01 under the native O4a index does not mean it is "benign stationary noise", but rather proves its macroscopically pervasive nature. The K-Means Vector Quantization ($K=1216$) inherently minimizes inertia by absorbing dense topological regions, structurally incorporating the continuous glitch into the reference dictionary.
 - **Singletons & PEM Restrictions:** Re-classified the 3 isolated extreme transients strictly as *mathematical outliers in the feature space* rather than definitive astrophysical or novel instrumental discoveries. Given the current access restrictions to complete auxiliary Physical Environment Monitoring (PEM) channels, formal cross-correlation is explicitly mandated as future work to establish their physical origin.
 
@@ -30,6 +33,10 @@
 **20 June 2026** — Completed Extreme Value Theory (EVT) derivation for morphological cross-detector cohesion (Review 18):
 - **GPD Thresholding:** Replaced the heuristic $S_{cos} > 0.85$ cohesion limit with a rigorously derived $\tau_{\rm coh} = 0.9750$ threshold. Applied the Peak-Over-Threshold (POT) framework to the native O4a cross-detector noise similarity distribution, formally modeling its Weibull-type truncated right tail ($\xi = -0.4785$).
 - **Statistical Independence:** Corrected a conceptual overlap between intra-detector manifold density and the bipartite $L_1 \times H_1$ noise background. The new EVT derivation is fully documented in an Appendix with Mean Residual Life and GPD QQ-plots, mathematically immunizing the Domain Shift Defense against further statistical critique.
+<div align="center">
+  <img src="paper_draft/springer/img/fig_mrl_plot.png" alt="Mean Residual Life Plot" width="400"/>
+  <img src="paper_draft/springer/img/fig_qq_s_coh_gpd.png" alt="GPD QQ-Plot" width="400"/>
+</div>
 
 **20 June 2026** — Executed and formally integrated the **Controlled Recovery Test** (Review 1 \& 12):
 - **Circularity Trap Falsification:** Definitively falsified the hypothesis of methodological circularity regarding the Domain Shift Defense. By injecting synthetic transient morphologies (`HarmonicComb`, `ScatteredLight`, `WallOfLines`) into the native O4a background, we empirically proved that the native background index is mathematically selective (approaching 100% recovery at $\rho > 50$). This confirms that the total collapse of `Family_01` under the native index is not an algorithmic artifact of an overly expansive background, but the physical consequence of its pervasive, stationary nature within the O4a noise floor.
@@ -72,6 +79,9 @@
 
 **16 June 2026** — Addressed final mathematical and architectural peer-review feedback:
 - **[CLS] Baseline Comparison:** Validated that traditional global `[CLS]` token pooling yields 0.00 recall on O4a candidates ($KS=0.04$, $p>0.5$), confirming the severe topological signal dilution barrier compared to Patch-MIL.
+<div align="center">
+  <img src="paper_draft/springer/img/pooling_comparison_1368973312_H1.png" alt="CLS Baseline Comparison" width="600"/>
+</div>
 - **Mathematical Rigor:** Formalized the chordal distance identity on the $\mathbb{S}^{383}$ hypersphere ($||\hat{\mathbf{z}}_i - \hat{\mathbf{z}}_j||^2 = 2D_{ij}$) as a well-defined metric for hierarchical clustering and clarified that GEV parameters describe the MIL score $S_{\rm MIL}^{(k)}$, not raw similarities.
 - **Taxonomy Refinements:** Resolved the logical tension in Family\_03 (temporal clustering vs morphological stochasticity), corrected candidate counts, and explicitly documented the third H1 singleton (GPS 1386091456) missing from GWOSC data.
 
