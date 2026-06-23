@@ -1,1 +1,1 @@
-{"cluster_id": "C0", "stability": "100%", "gps_time": "1369131960", "gwtc_match": "Nessuno", "h1_coincidence": "H1_DATA Inattivo", "novelty_score": "0.5124", "classification": "ORFANO (non in Gravity Spy O3b)"}
+{"cluster_id": "Singleton_01", "stability": "Estrema", "gps_time": "1369131960", "gwtc_match": "Nessuno", "h1_coincidence": "H1_DATA Inattivo", "novelty_score": "0.5124", "classification": "Singleton Estremo (Sopravvissuto a Domain Shift O4a)"}

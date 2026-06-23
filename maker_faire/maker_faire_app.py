@@ -351,8 +351,15 @@ class MakerFaireApp(QMainWindow):
         
         # Colonna Destra (Cruscotti)
         right_col = QVBoxLayout()
+        info_lbl = QLabel("Il Modello Standard diluisce i glitch piccoli nel rumore di fondo (Signal Dilution Limit).\nIl Nostro Modello analizza zone ristrette (Top-68) superando il Domain Shift e trovando segnali puri.")
+        info_lbl.setFont(QFont("Arial", 12))
+        info_lbl.setAlignment(Qt.AlignCenter)
+        info_lbl.setStyleSheet("color: #AAAAAA;")
+        info_lbl.setWordWrap(True)
+        right_col.addWidget(info_lbl)
+        
         self.dash_cls = DashPanel("MODELLO STANDARD (CLS Globale)", threshold=0.874)
-        self.dash_patch = DashPanel("NOSTRO MODELLO (Patch-Level Top-68)", threshold=0.4122)
+        self.dash_patch = DashPanel("NOSTRO MODELLO (Patch-Level Top-68)", threshold=0.3359)
         
         right_col.addWidget(self.dash_cls)
         right_col.addWidget(self.dash_patch)
@@ -467,7 +474,7 @@ class MakerFaireApp(QMainWindow):
         patch_score = res['patch_novelty']
         self.trick_score_total += 1
         
-        if patch_score < 0.4122:
+        if patch_score < 0.3359:
             self.trick_score_wins += 1
             self.trick_result_lbl.setText("COMPLIMENTI! Hai ingannato l'AI!")
             self.trick_result_lbl.setStyleSheet("color: #00FF00;")
@@ -534,6 +541,18 @@ class MakerFaireApp(QMainWindow):
     # --- TAB 3: CATALOGO ---
     def setup_tab3(self):
         layout = QVBoxLayout(self.tab3)
+        
+        title_lbl = QLabel("I 3 SINGLETON ESTREMI SOPRAVVISSUTI AL DOMAIN SHIFT O4a")
+        title_lbl.setFont(QFont("Arial", 18, QFont.Bold))
+        title_lbl.setAlignment(Qt.AlignCenter)
+        title_lbl.setStyleSheet("color: #00FFCC;")
+        layout.addWidget(title_lbl)
+        
+        info_lbl = QLabel("Le macro-famiglie O3b sono collassate dopo la ricalibrazione. Solo questi 3 eventi anomali sono rimasti solidi.")
+        info_lbl.setFont(QFont("Arial", 14))
+        info_lbl.setAlignment(Qt.AlignCenter)
+        info_lbl.setStyleSheet("color: #AAAAAA;")
+        layout.addWidget(info_lbl)
         
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
