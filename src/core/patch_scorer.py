@@ -100,21 +100,47 @@ class PatchScorer:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             
+        from scipy.stats import genextreme
+        
         scores_np = np.array(all_novelty_scores, dtype=np.float32)
         
-        # Empirical percentile direct computation (Correction #3 implies no GEV)
-        percentile_target = (1.0 - self.fpr) * 100.0
-        threshold = float(np.percentile(scores_np, percentile_target))
+        # EVT Block Maxima to compute GEV threshold
+        # We ensure enough blocks are created, defaulting to block_size=100 or smaller
+        block_size = 100
+        n_blocks = len(scores_np) // block_size
+        if n_blocks < 10:  # If we have very few samples, adjust block size dynamically
+            block_size = max(10, len(scores_np) // 10)
+            n_blocks = len(scores_np) // block_size
         
-        # GEV fitting on bulk population is a mathematical fallacy according to EVT.
-        # We strictly avoid it and set parameters to None to prevent downstream reporting of invalid metrics.
-        gev_params = {"mu": None, "sigma": None, "xi": None}
-        
+        if n_blocks > 0:
+            d_blocks = scores_np[:n_blocks*block_size].reshape(n_blocks, block_size)
+            d_maxima = np.max(d_blocks, axis=1)
+            
+            # genextreme.fit returns: shape (c/xi), location (loc/mu), scale
+            c, loc, scale = genextreme.fit(d_maxima)
+            gev_params = {"xi": float(c), "mu": float(loc), "sigma": float(scale)}
+            
+            # For a target sample-level FPR:
+            # P(Sample > tau) = FPR
+            # P(max(N samples) < tau) = (1 - FPR)^N
+            q_block = (1.0 - self.fpr) ** block_size
+            threshold = float(genextreme.ppf(q_block, c, loc=loc, scale=scale))
+            
+            logger.info("[CALIBRATION] method: GEV Block Maxima (block_size=%d, n_blocks=%d)", block_size, n_blocks)
+        else:
+            logger.warning("Not enough samples for GEV block maxima. Falling back to empirical percentile.")
+            percentile_target = (1.0 - self.fpr) * 100.0
+            threshold = float(np.percentile(scores_np, percentile_target))
+            gev_params = {"mu": None, "sigma": None, "xi": None}
+            logger.info("[CALIBRATION] method: empirical_percentile fallback")
+            
         logger.info("[CALIBRATION] n_background: %d", len(background_spectrograms))
         logger.info("[CALIBRATION] novelty_score mean: %.4f", scores_np.mean())
         logger.info("[CALIBRATION] novelty_score std:  %.4f", scores_np.std())
-        logger.info("[CALIBRATION] threshold (p%d):    %.4f", int(percentile_target), threshold)
-        logger.info("[CALIBRATION] method: empirical_percentile only (GEV strictly rejected)")
+        logger.info("[CALIBRATION] threshold (FPR %.4f): %.4f", self.fpr, threshold)
+        if gev_params["xi"] is not None:
+            logger.info("[CALIBRATION] GEV params: xi=%.4f, mu=%.4f, sigma=%.4f", 
+                        gev_params["xi"], gev_params["mu"], gev_params["sigma"])
         
         return threshold, scores_np, gev_params
 
