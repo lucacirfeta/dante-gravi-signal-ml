@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔭 DANTE (Domain-Adaptive Network for Transient Evaluation) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20543811.svg)](https://doi.org/10.5281/zenodo.20543811)
+# 🔭 DANTE (Domain-Adaptive Network for Transient Evaluation) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20820846.svg)](https://zenodo.org/records/20820846)
 
 **Unsupervised Morphological Characterization of Gravitational-Wave Glitches**
 
@@ -91,13 +91,13 @@ these new observations.
 
 ## 🎯 What This Project Does
 
-This pipeline performs **unsupervised morphological characterization** of glitch
-activity in [O2–O4a gravitational-wave data](https://gwosc.org/) — without
-labeled training data and with native hardware acceleration (CUDA/MPS) for
-lightning-fast inference.
+**DANTE** is an open-source Python pipeline for the unsupervised morphological discovery of LIGO/Virgo gravitational-wave transients in [O2–O4a data](https://gwosc.org/). It is designed to perform without labeled training data, utilizing native hardware acceleration (CUDA/MPS) for lightning-fast inference.
 
-It clusters glitch spectrograms by visual morphology within a latent space using frozen DINOv2 features.
-It identifies anomaly clusters through reference-guided novelty detection via **Patch-Level Multiple Instance Learning (MIL)** and **Empirical P99 Thresholding**. The background novelty distribution is modeled via an empirical 99th percentile ($P_{99}$), with a Generalized Extreme Value (GEV) fit utilized strictly as a robust descriptive parameterization for the heavy tails. The resulting shape parameter ($\hat{\xi} \approx -0.06$) accurately captures the heavy asymmetry and explicitly models the finite upper bound of spatial cosine similarities (Weibull domain). Candidates are cross-checked against an in-domain Gravity Spy O3b reference index. Robustness validation is ensured through stability and ablation testing, and temporal background is estimated via time-slide coincidence analysis.
+To overcome the **Signal Dilution Limit** inherent in standard global pooling architectures, DANTE extracts dense Patch Tokens (14x14) from a pre-trained, frozen DINOv2 Vision Transformer (ViT). It calculates local Top-K anomalies in the spherical L2-normalized cosine similarity space against a Vector-Quantized background reference (MiniBatchKMeans), effectively preventing memory bottlenecks during background indexing.
+
+A core architectural innovation is its rigorous statistical thresholding. Instead of relying on heuristic bounds, the NOVEL/KNOWN classification fits a **Generalized Extreme Value (GEV)** distribution to the heavy tail of local astrophysical noise, mathematically guaranteeing an exact False Positive Rate (FPR). The resulting shape parameter ($\hat{\xi} \approx -0.06$) accurately captures the heavy asymmetry, explicitly modeling the finite upper bound of spatial cosine similarities (Weibull domain). Furthermore, the distributional separation between signals and background is directly validated through the **Kolmogorov-Smirnov (KS) test**, robustly bypassing the fluctuations of Boolean recall metrics.
+
+Finally, the extracted anomaly vectors undergo **Multiple Instance Learning (MIL)** pooling and are clustered via UMAP and a **Dirichlet Process Mixture Model (DPMM)** to discover new transient morphologies. This achieves state-of-the-art anomaly discovery without requiring any generative fine-tuning (e.g., MAE). The pipeline includes spatial saliency mapping, reproducible baseline configurations, and cross-validation against the Gravity Spy catalog.
 
 > **Note on Virgo (V1):** Virgo did not participate in O4a due to a commissioning
 > issue. It rejoined the network in O4b. This pipeline therefore targets H1
