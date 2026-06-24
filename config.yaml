@@ -50,7 +50,9 @@ scan_extended:
 data_loading:
   local_directories:
     - "E:/o4a"
+    - "/mnt/e/o4a"
     - "C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"
+    - "/mnt/c/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a"
     - "data/raw"
 
 
