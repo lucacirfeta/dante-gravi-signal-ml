@@ -234,6 +234,7 @@ data/reference/training_images/
 data/reference/*.npz
 data/reference/*.csv
 data/reference/*.tar.gz
+data/production/
 
 # Logs
 logs/
@@ -304,4 +305,5 @@ gemini_utils
 paper_drafts
 paper_draft
 run_results
-production
+scratch_bib.txt
+scratch_diff.txt

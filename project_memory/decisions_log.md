@@ -141,6 +141,17 @@
 
 ---
 
+### D-17 — Peer-Review Wave "Final" Defenses (GEV Excision & Production Realignment)
+- **Metodo:** Rimozione totale del GEV a favore dell'empirico $P_{99}$ per incompatibilità teorica sui recettivi sovrapposti del ViT, e allineamento ai conteggi reali di produzione O4a.
+- **Decisioni:**
+  1. La soglia operativa $\tau_{\rm op}^{\rm Det}$ non usa più l'Extreme Value Theorem ma viene calcolata strettamente come il 99° percentile empirico.
+  2. Aggiunta tabella di sensibilità sulla fraction $k$ del pooling MIL.
+  3. Modifica dell'abstract per non dichiarare come "prova" la stazionarietà ma come "coerenza", riconoscendo la selettività condizionata.
+- **Stato:** ✅ Implementato (2026-06-24) nel manoscritto LaTeX.
+- **Fonte:** `paper_v2_springer.tex`, `reviewer/reviewer_response.md`
+
+---
+
 ## 2. Decisioni Aperte / Bug Noti
 
 ### D-OPEN-01 — `reporter.py` hardcoda parametri nel JSON
