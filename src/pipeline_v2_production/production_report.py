@@ -472,7 +472,7 @@ class ValidationReporter:
             
             # Cluster bootstrap subset
             dpmm = BayesianGaussianMixture(
-                n_components=25,
+                n_components=min(25, n_samples),
                 covariance_type='full',
                 weight_concentration_prior_type='dirichlet_process',
                 weight_concentration_prior=0.1,
