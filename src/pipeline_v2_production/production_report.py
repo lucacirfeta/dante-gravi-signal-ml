@@ -40,6 +40,7 @@ class ValidationReporter:
         self.cluster_json = self.production_dir / f"cluster_report_novelties_{session_id}_{detector}.json"
         self.reference_dir = Path("data") / "reference"
         self.dq_cache_path = self.reference_dir / f"dq_cache_{detector}_O4a.json"
+        self._dinov2_model = None
         
         # Output artifacts
         self.report_dir = self.production_dir / "report"
@@ -61,6 +62,19 @@ class ValidationReporter:
     def _save_status(self):
         with open(self.status_file, "w") as f:
             json.dump(self.status, f, indent=4)
+            
+    def _get_model(self):
+        if self._dinov2_model is None:
+            import torch
+            try:
+                self._dinov2_model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
+            except Exception as e:
+                logger.warning(f"GitHub API failed ({e}), loading from local cache...")
+                cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
+                self._dinov2_model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
+            self._dinov2_model.eval()
+            self._dinov2_model.to(self.device)
+        return self._dinov2_model
             
     def _mark_completed(self, step_name: str):
         if step_name not in self.status["steps_completed"]:
@@ -534,47 +548,50 @@ class ValidationReporter:
         else:
             t_start, t_end = int(nov_gps.min()), int(nov_gps.max())
             
-        # DQ filtering
-        dq_segs = self._fetch_dq_segments(t_start, t_end)
+        logger.info("Extracting pristine background from local HDF5 blocks...")
+        from src.core.data_loader import _DATA_DIRECTORIES
         
-        logger.info("background_sample/gps_times not saved in HDF5. Dynamically sampling 25 clean segments...")
+        local_files = []
+        for dir_path in _DATA_DIRECTORIES:
+            if not dir_path.exists(): continue
+            local_files.extend(list(dir_path.rglob(f"{self.detector}_*.hdf5")))
+            
+        if not local_files:
+            logger.warning("No local HDF5 files found! Cannot compute dynamic background offline.")
+            return np.zeros((1369, 384)), np.zeros(384)
+            
         np.random.seed(42)
-        clean_gps = []
-        attempts = 0
-        while len(clean_gps) < 25 and attempts < 1000:
-            t_cand = np.random.randint(t_start, t_end)
-            attempts += 1
+        # Sample up to 25 local files
+        if len(local_files) > 25:
+            sampled_files = np.random.choice(local_files, 25, replace=False)
+        else:
+            sampled_files = local_files
             
-            if dq_segs:
-                in_dq = any(s_start <= t_cand <= s_end for s_start, s_end in dq_segs)
-                if not in_dq:
-                    continue
-                    
-            if len(nov_gps) > 0 and np.any(np.abs(nov_gps - t_cand) <= 32):
-                continue
-                
-            clean_gps.append(t_cand)
-            
-        logger.info(f"Sampled {len(clean_gps)} pristine segments for background.")
-        
-        try:
-            model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-        except Exception as e:
-            logger.warning(f"GitHub API failed ({e}), loading from local cache...")
-            cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
-            model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
-        model.eval()
-        model.to(self.device)
+        model = self._get_model()
         transform = build_dinov2_transform()
         
         all_patches = []
-        for t in clean_gps:
+        clean_gps = []
+        for file in sampled_files:
             try:
-                t_int = int(t)
-                ts = fetch_strain_data(self.detector, t_int, t_int + 32)
-                ts = whiten(ts)
-                ts = bandpass(ts)
-                spec_matrix = generate_qtransform(ts, save_path=None)
+                from gwpy.timeseries import TimeSeries
+                ts = TimeSeries.read(file)
+                dur = int(ts.duration.value)
+                if dur < 32:
+                    continue
+                    
+                # Pick a random 32s segment inside the file
+                # If file is e.g. 4096s, valid start offsets are 0 to 4096-32
+                max_offset = dur - 32
+                offset = np.random.randint(0, max_offset + 1) if max_offset > 0 else 0
+                
+                t_start_local = ts.t0.value + offset
+                t_end_local = t_start_local + 32
+                ts_cropped = ts.crop(t_start_local, t_end_local)
+                
+                ts_cropped = whiten(ts_cropped)
+                ts_cropped = bandpass(ts_cropped)
+                spec_matrix = generate_qtransform(ts_cropped, save_path=None)
                 
                 spec_8bit = np.uint8(spec_matrix * 255.0)
                 img = Image.fromarray(spec_8bit).convert("RGB")
@@ -584,8 +601,9 @@ class ValidationReporter:
                     patches = feats['x_norm_patchtokens'].squeeze(0)
                     patches = F.normalize(patches, p=2, dim=-1)
                     all_patches.append(patches.cpu().numpy())
+                clean_gps.append(t_start_local)
             except Exception as e:
-                logger.warning(f"Failed to process pristine segment {t}: {e}")
+                logger.warning(f"Failed to process local file {file.name}: {e}")
                 
         if os.path.exists(self.report_dir / "temp_qtrans.png"):
             os.remove(self.report_dir / "temp_qtrans.png")
@@ -615,14 +633,7 @@ class ValidationReporter:
         self.spatial_median = spatial_median
         self.global_mean = global_mean
         
-        try:
-            model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-        except Exception as e:
-            logger.warning(f"GitHub API failed ({e}), loading from local cache...")
-            cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
-            model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
-        model.eval()
-        model.to(self.device)
+        model = self._get_model()
         
         for cid in sorted_cids:
             gps_list = clusters[cid].get("gps_times", [])[:3] # top 3 prototypes
