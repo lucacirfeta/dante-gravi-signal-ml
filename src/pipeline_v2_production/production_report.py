@@ -552,12 +552,15 @@ class ValidationReporter:
         from src.core.data_loader import _DATA_DIRECTORIES
         
         local_files = []
+        logger.info(f"Scanning for {self.detector}_*.hdf5 in the following directories:")
         for dir_path in _DATA_DIRECTORIES:
-            if not dir_path.exists(): continue
+            exists = dir_path.exists()
+            logger.info(f" -> {dir_path} (Exists: {exists})")
+            if not exists: continue
             local_files.extend(list(dir_path.rglob(f"{self.detector}_*.hdf5")))
             
         if not local_files:
-            logger.warning("No local HDF5 files found! Cannot compute dynamic background offline.")
+            logger.warning(f"No local HDF5 files found for {self.detector}! Cannot compute dynamic background offline.")
             return np.zeros((1369, 384)), np.zeros(384)
             
         np.random.seed(42)
