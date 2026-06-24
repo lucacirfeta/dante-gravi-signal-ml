@@ -185,12 +185,16 @@ class PatchProducer:
                     if "synchronously read data" in err_str or "filter returned failure" in err_str or "unable to open file" in err_str:
                         try:
                             import shutil
-                            # file_path example: E:/o4a/1386598912/L1_...hdf5
-                            # run_name = "o4a", session_name = "1386598912"
-                            run_name = file_path.parent.parent.name
-                            session_name = file_path.parent.name
-                            
-                            corrupt_dir = Path("E:/corrupt") / run_name / session_name
+                            # Riconoscimento dinamico del mount point (WSL "/mnt/e/" o Windows "E:/")
+                            if len(file_path.parts) >= 4:
+                                base_mount = file_path.parents[2] # Es. /mnt/e/ oppure E:/
+                                run_name = file_path.parent.parent.name # Es. o4a
+                                session_name = file_path.parent.name    # Es. 1386598912
+                                corrupt_dir = base_mount / "corrupt" / run_name / session_name
+                            else:
+                                # Fallback sicuro per path corti (es. data/raw/file.hdf5)
+                                corrupt_dir = file_path.parent / ".corrupt"
+                                
                             corrupt_dir.mkdir(parents=True, exist_ok=True)
                             
                             corrupt_path = corrupt_dir / file_path.name
