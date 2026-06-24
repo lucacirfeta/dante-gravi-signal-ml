@@ -180,6 +180,25 @@ class PatchProducer:
                 except Exception as e:
                     logger.error(f"Failed to read or process file {file_path}: {e}")
                     
+                    # Auto-heal: sposta il file corrotto per escluderlo dai futuri run
+                    err_str = str(e).lower()
+                    if "synchronously read data" in err_str or "filter returned failure" in err_str or "unable to open file" in err_str:
+                        try:
+                            import shutil
+                            # file_path example: E:/o4a/1386598912/L1_...hdf5
+                            # run_name = "o4a", session_name = "1386598912"
+                            run_name = file_path.parent.parent.name
+                            session_name = file_path.parent.name
+                            
+                            corrupt_dir = Path("E:/corrupt") / run_name / session_name
+                            corrupt_dir.mkdir(parents=True, exist_ok=True)
+                            
+                            corrupt_path = corrupt_dir / file_path.name
+                            shutil.move(str(file_path), str(corrupt_path))
+                            logger.warning(f"[AUTO-HEAL] File corrotto spostato in {corrupt_path}")
+                        except Exception as ren_e:
+                            logger.error(f"Impossibile spostare il file corrotto: {ren_e}")
+                    
             # Svuota i rimanenti futures (Garantendo sempre l'ordine FIFO)
             for future in futures:
                 gps, spec = future.result()
