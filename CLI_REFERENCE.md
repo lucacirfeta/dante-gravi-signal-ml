@@ -42,7 +42,7 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
 - **O2** (Start: 2016-11-30)
 - **O3a** (Start: 2019-04-01)
 - **O3b** (Start: 2019-11-01)
-- **O4a** (Start: 2023-05-24) *[Default]*
+- **O4a** (Start: 2023-05-24, Extended to: 2024-01-19) *[Default]*
 
 ---
 
@@ -260,8 +260,12 @@ Cross-session read-only reducer. Aggregates unique unclassified novel candidates
   2. Applies a strict 4-point **Validation Gate** per session: JSON parseable, `gps_dedup_validated == true`, detector match, and `n_samples` consistency. Invalid sessions are excluded entirely (no partial ingestion).
   3. Ingests morphcheck CSVs, normalizes columns to canonical schema, and resolves cross-detector coincidence status via GWOSC timeline queries.
   4. Performs chronological cross-session deduplication on exact `gps_start`, keeping the earliest session's claim.
-  5. Separates deduplicated UNCLASSIFIED candidates into **Table 3a** (Confirmed Local Glitches: `ACTIVE_NO_ANOMALY`) and **Table 3b** (Unverifiable Unilateral Detections: `INACTIVE`).
-  6. Computes **Spearman rank correlation** (ρ) between `n_samples_true` and bootstrap ARI **independently per detector** (never mixing H1/L1). Excludes sessions with `n < 100` and requires `≥ 5` eligible sessions.
+  5. Evaluates the **Cross-Detector Coincidence Veto** (computing cosine similarity with partner raw strain at ±2s). Separates deduplicated candidates into:
+     - **Table 3c** (Astrophysical/Coincident Transients: partner active, similarity $\ge \tau_{coh}$)
+     - **Table 3a** (Confirmed Local Glitches: partner active, no coincidence)
+     - **Table 3b** (Unverifiable Unilateral Detections: partner inactive)
+  6. **Domain Shift Defense:** Re-scores surviving anomalies against the extended O4a background (`patch_compressed_index_o4a_ex.npz`) to ensure transients are morphologically true anomalies and not artifacts of inter-run physical detector changes.
+  7. Computes **Spearman rank correlation** ($\rho$) between `n_samples_true` and bootstrap ARI **independently per detector** (never mixing H1/L1). Excludes sessions with `n < 100` and requires `≥ 5` eligible sessions.
   7. Writes `aggregate_summary.json`, `master_candidates.csv`, `Table_3a_*.csv`, `Table_3b_*.csv`, and `stability_synthesis.log` to `data/production/aggregated/`.
 
 - `--production-dir`: Root production directory. *Default: `data/production/`*.

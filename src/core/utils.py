@@ -167,7 +167,7 @@ def get_observing_run(gps_start: int | float) -> str:
         return "O3a"
     elif 1256655618 <= gps <= 1269363618:
         return "O3b"
-    elif 1368973312 <= gps <= 1389452418:
+    elif 1368973312 <= gps <= 1389713408:
         return "O4a"
     elif gps > 1397062818:
         return "O4b"
