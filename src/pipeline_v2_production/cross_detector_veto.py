@@ -14,20 +14,10 @@ from src.core.patch_scorer import PatchScorer
 
 logger = setup_logger(__name__)
 
-def run_cross_detector_veto():
+def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     logger.info("=" * 60)
     logger.info("=== CROSS-DETECTOR COINCIDENCE VETO (Wave 7) ===")
     logger.info("=" * 60)
-    
-    production_dir = Path("data/production")
-    aggregated_dir = production_dir / "aggregated"
-    master_csv = aggregated_dir / "master_candidates.csv"
-    
-    if not master_csv.exists():
-        logger.error(f"Master CSV not found at {master_csv}")
-        return
-        
-    df = pd.read_csv(master_csv)
     
     logger.info(f"Loaded {len(df)} candidates from master list.")
     
@@ -159,10 +149,25 @@ def run_cross_detector_veto():
             logger.info(f"--> [LOCAL] Candidate {gps} is pure instrumental (sim={sim:.3f})")
             local_rows.append(row)
             
-    # Write Final Output Dataframes
-    df_3a = pd.DataFrame(local_rows)
-    df_3b = pd.DataFrame(unverifiable_rows)
-    df_3c = pd.DataFrame(coincident_rows)
+    # Convert to Final Output Dataframes
+    df_3a = pd.DataFrame(local_rows) if local_rows else pd.DataFrame(columns=df.columns)
+    df_3b = pd.DataFrame(unverifiable_rows) if unverifiable_rows else pd.DataFrame(columns=df.columns)
+    df_3c = pd.DataFrame(coincident_rows) if coincident_rows else pd.DataFrame(columns=df.columns)
+    
+    logger.info("Veto procedure completed successfully.")
+    return df_3a, df_3b, df_3c
+
+def run_cross_detector_veto():
+    production_dir = Path("data/production")
+    aggregated_dir = production_dir / "aggregated"
+    master_csv = aggregated_dir / "master_candidates.csv"
+    
+    if not master_csv.exists():
+        logger.error(f"Master CSV not found at {master_csv}")
+        return
+        
+    df = pd.read_csv(master_csv)
+    df_3a, df_3b, df_3c = execute_cross_detector_veto(df, production_dir)
     
     table_cols = [
         "gps_start", "detector", "local_cluster_id", "session_id", "gs_label",
@@ -185,8 +190,6 @@ def run_cross_detector_veto():
                  "\n# NOTE: Unverifiable due to non-observing status of partner.\n")
     _write_table(df_3c, aggregated_dir / "Table_3c_Coincident_Astrophysical.csv",
                  "\n# NOTE: Morphological cross-match confirmed (Cosine Similarity > 0.85).\n")
-                 
-    logger.info("Veto procedure completed successfully.")
 
 if __name__ == "__main__":
     run_cross_detector_veto()

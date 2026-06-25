@@ -594,10 +594,12 @@ class ValidationReporter:
                 
                 ts_cropped = whiten(ts_cropped)
                 ts_cropped = bandpass(ts_cropped)
-                spec_matrix = generate_qtransform(ts_cropped, save_path=None)
+                spec_matrix = generate_qtransform(ts_cropped, save_path=None, cmap="cividis")
                 
-                spec_8bit = np.uint8(spec_matrix * 255.0)
-                img = Image.fromarray(spec_8bit).convert("RGB")
+                cmap_func = plt.get_cmap("cividis")
+                rgb_spectrogram = cmap_func(spec_matrix)[:, :, :3]
+                rgb_spectrogram_uint8 = (rgb_spectrogram * 255.0).astype(np.uint8)
+                img = Image.fromarray(rgb_spectrogram_uint8).convert("RGB")
                 tensor = transform(img).unsqueeze(0).to(self.device)
                 with torch.inference_mode():
                     feats = model.forward_features(tensor)

@@ -491,14 +491,10 @@ class AggregateReporter:
         logger.info(f"Wrote master_candidates.csv ({len(master)} rows)")
 
         # ----------------------------------------------------------
-        # Phase 3: Taxonomy Separation
+        # Phase 3: Taxonomy Separation (Rigorous Cross-Detector Veto)
         # ----------------------------------------------------------
-        table_3a = master[
-            master["partner_observing_status"] == "ACTIVE_NO_ANOMALY"
-        ].copy()
-        table_3b = master[
-            master["partner_observing_status"] == "INACTIVE"
-        ].copy()
+        from src.pipeline_v2_production.cross_detector_veto import execute_cross_detector_veto
+        table_3a, table_3b, table_3c = execute_cross_detector_veto(master, self.output_dir.parent)
 
         table_cols = [
             "gps_start", "detector", "local_cluster_id", "session_id", "gs_label",
@@ -506,23 +502,36 @@ class AggregateReporter:
         ]
         out_3a_cols = [c for c in table_cols if c in table_3a.columns]
         out_3b_cols = [c for c in table_cols if c in table_3b.columns]
+        out_3c_cols = [c for c in table_cols if c in table_3c.columns]
 
-        table_3a[out_3a_cols].to_csv(
-            self.output_dir / "Table_3a_Confirmed_Local_Glitches.csv",
-            index=False
-        )
+        if not table_3a.empty:
+            table_3a[out_3a_cols].to_csv(
+                self.output_dir / "Table_3a_Confirmed_Local_Glitches.csv",
+                index=False
+            )
         logger.info(f"Table 3a: {len(table_3a)} confirmed local glitches")
 
         # Table 3b with mandatory footnote
         table_3b_path = self.output_dir / "Table_3b_Unverifiable_Unilateral_Detections.csv"
-        table_3b[out_3b_cols].to_csv(table_3b_path, index=False)
-        with open(table_3b_path, "a") as f:
-            f.write(
-                "# NOTE: These candidates cannot be classified as local or bilateral\n"
-                "# due to the opposite instrument's non-observing status at the time\n"
-                "# of detection, and are retained for future offline cross-validation.\n"
-            )
+        if not table_3b.empty:
+            table_3b[out_3b_cols].to_csv(table_3b_path, index=False)
+            with open(table_3b_path, "a") as f:
+                f.write(
+                    "\n# NOTE: These candidates cannot be classified as local or bilateral\n"
+                    "# due to the opposite instrument's non-observing status at the time\n"
+                    "# of detection, and are retained for future offline cross-validation.\n"
+                )
         logger.info(f"Table 3b: {len(table_3b)} unverifiable unilateral detections")
+
+        # Table 3c
+        table_3c_path = self.output_dir / "Table_3c_Coincident_Astrophysical.csv"
+        if not table_3c.empty:
+            table_3c[out_3c_cols].to_csv(table_3c_path, index=False)
+            with open(table_3c_path, "a") as f:
+                f.write(
+                    "\n# NOTE: Morphological cross-match confirmed (Cosine Similarity > tau_coh).\n"
+                )
+        logger.info(f"Table 3c: {len(table_3c)} coincident/astrophysical candidates")
 
         # ----------------------------------------------------------
         # Phase 4: Spearman Stability Defense
@@ -546,6 +555,8 @@ class AggregateReporter:
         import seaborn as sns
         from scipy.cluster import hierarchy
 
+        if not table_3a.empty: table_3a["table_source"] = "3a"
+        if not table_3b.empty: table_3b["table_source"] = "3b"
         candidates_df = pd.concat([table_3a, table_3b], ignore_index=True)
         n_cands = len(candidates_df)
         logger.info(f"Phase 5: Computing cross-session cosine similarity for {n_cands} candidates...")
@@ -557,7 +568,7 @@ class AggregateReporter:
             gps = row["gps_start"]
             session = row["session_id"]
             det = row["detector"]
-            table_source = "3a" if row["partner_observing_status"] == "ACTIVE_NO_ANOMALY" else "3b"
+            table_source = row.get("table_source", "3a")
 
             h5_path = self.production_dir / str(session) / f"novelties_{session}_{det}.h5"
             if not h5_path.exists():
@@ -1461,19 +1472,36 @@ class AggregateReporter:
         md_lines.append("## 6. Singletons & Outliers")
         if not tax_df.empty:
             singleton_rows = tax_df[tax_df['global_family_id'].str.contains("Singleton", na=False)]
-            md_lines.append(f"- {len(singleton_rows)} isolated events (GPS: {', '.join(singleton_rows['gps_start'].astype(str).tolist())})")
-            if len(singleton_rows) > 0:
+            total_singletons = len(singleton_rows)
+            
+            valid_singletons = []
+            error_singletons = []
+            for _, row in singleton_rows.iterrows():
+                gps = int(row['gps_start'])
+                fam_dir = f"Singleton_{gps}"
+                img_path = visual_dir / fam_dir / f"qgram_{fam_dir}_{row['detector']}_{gps}.png"
+                if img_path.exists():
+                    valid_singletons.append((gps, row, img_path))
+                else:
+                    error_singletons.append(gps)
+            
+            md_lines.append(f"- {total_singletons} isolated events detected in topology.")
+            if len(error_singletons) > 0:
+                md_lines.append(f"  - **{len(valid_singletons)} valid** (GWOSC fetch successful)")
+                md_lines.append(f"  - **{len(error_singletons)} GWOSC fetch error** (Excluded from physical validation: GPS {', '.join(map(str, error_singletons))})")
+            else:
+                if total_singletons > 0:
+                    md_lines.append(f"  - All {total_singletons} validated (GWOSC fetch successful)")
+            md_lines.append(f"- GPS List: {', '.join(singleton_rows['gps_start'].astype(str).tolist())}")
+            
+            if len(valid_singletons) > 0:
                 md_lines.append("")
                 md_lines.append("````carousel")
-                for i, row in singleton_rows.iterrows():
-                    gps = int(row['gps_start'])
-                    fam_dir = f"Singleton_{gps}"
-                    img_path = visual_dir / fam_dir / f"qgram_{fam_dir}_{row['detector']}_{gps}.png"
-                    if img_path.exists():
-                        rel_path_str = "file:///" + str(img_path.resolve()).replace("\\", "/")
-                        md_lines.append(f"![Singleton {gps}]({rel_path_str})")
-                        if i < len(singleton_rows) - 1:
-                            md_lines.append("<!-- slide -->")
+                for i, (gps, row, img_path) in enumerate(valid_singletons):
+                    rel_path_str = "file:///" + str(img_path.resolve()).replace("\\", "/")
+                    md_lines.append(f"![Singleton {gps}]({rel_path_str})")
+                    if i < len(valid_singletons) - 1:
+                        md_lines.append("<!-- slide -->")
                 md_lines.append("````")
         else:
             md_lines.append("- No isolated events.")
@@ -1510,6 +1538,21 @@ class AggregateReporter:
             rel_path_str = "file:///" + str(heatmap_img.resolve()).replace("\\", "/")
             md_lines.append(f"![Candidate Similarity Heatmap]({rel_path_str})")
             md_lines.append("")
+
+        md_lines.append("## 10. Produced Datasets")
+        md_lines.append("The following data products have been persisted for further analysis:")
+        md_lines.append("| File | Description | Notes |")
+        md_lines.append("| --- | --- | --- |")
+        
+        tables = [
+            ("Master_Taxonomy_O4a.csv", "1. Master Taxonomy", "Final merged list of all un-vetoed physical transient candidates across all detector sessions."),
+            ("Table_3a_Confirmed_Local_Glitches.csv", "10. Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
+            ("Table_3b_Unverifiable_Unilateral_Detections.csv", "11. Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
+            ("Table_3c_Coincident_Astrophysical.csv", "12. Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window.")
+        ]
+        for file_name, title, desc in tables:
+            md_lines.append(f"| {file_name} | {title} | {desc} |")
+        md_lines.append("")
 
         # CSV Tables Preview
         import csv
