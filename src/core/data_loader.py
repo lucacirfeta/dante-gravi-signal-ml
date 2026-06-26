@@ -385,6 +385,19 @@ def generate_segments_from_gps_range(
 # ---------------------------------------------------------------------------
 
 
+def _find_raw_session_by_id(session_id: str) -> Path | None:
+    """Scans all configured data directories and returns the path to the folder matching the session_id."""
+    for base_dir in _DATA_DIRECTORIES:
+        if not base_dir.exists():
+            continue
+            
+        target = base_dir / session_id
+        if target.exists() and target.is_dir():
+            return target
+            
+    return None
+
+
 def _find_latest_raw_session() -> Path | None:
     """Scans all configured data directories and returns the path to the folder with the highest GPS name."""
     max_gps = -1

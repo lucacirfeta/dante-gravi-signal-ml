@@ -71,9 +71,10 @@ class PatchProducer:
         if self.data_dir.exists():
             self.hdf5_files.extend(list(self.data_dir.rglob(f"*{self.detector}*.hdf5")))
             
-        for d in _DATA_DIRECTORIES:
-            if d.exists() and d != self.data_dir:
-                self.hdf5_files.extend(list(d.rglob(f"*{self.detector}*.hdf5")))
+        if not self.hdf5_files:
+            for d in _DATA_DIRECTORIES:
+                if d.exists() and d != self.data_dir:
+                    self.hdf5_files.extend(list(d.rglob(f"*{self.detector}*.hdf5")))
                 
         self.hdf5_files = sorted(list(set(self.hdf5_files)))
         

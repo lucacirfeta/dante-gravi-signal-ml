@@ -401,8 +401,10 @@ def cmd_scan(args: argparse.Namespace) -> None:
     # --- Raw Path Logic ---
     raw_path = getattr(args, "raw_path", None)
     if not raw_path:
-        from src.core.data_loader import _find_latest_raw_session
-        raw_path = _find_latest_raw_session()
+        from src.core.data_loader import _find_latest_raw_session, _find_raw_session_by_id
+        raw_path = _find_raw_session_by_id(session_id)
+        if not raw_path:
+            raw_path = _find_latest_raw_session()
         
     if raw_path:
         import re
@@ -859,8 +861,10 @@ def cmd_scan_extended(args: argparse.Namespace) -> None:
     raw_path = getattr(args, "raw_path", None)
     explicit_raw_path = raw_path is not None
     if not raw_path:
-        from src.core.data_loader import _find_latest_raw_session
-        raw_path = _find_latest_raw_session()
+        from src.core.data_loader import _find_latest_raw_session, _find_raw_session_by_id
+        raw_path = _find_raw_session_by_id(session_id)
+        if not raw_path:
+            raw_path = _find_latest_raw_session()
         
     end_gps = target_end_gps
     segment_length = 4096
