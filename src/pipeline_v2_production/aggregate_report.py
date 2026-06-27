@@ -22,6 +22,7 @@ import pandas as pd
 from scipy import stats
 
 from src.core.utils import setup_logger
+from src.pipeline_v2_production.physics_correlation import run_physics_correlation
 
 logger = setup_logger(__name__)
 
@@ -890,6 +891,26 @@ class AggregateReporter:
         logger.info("Saved master_report.json")
         
         # ----------------------------------------------------------
+        # Phase 9b: Physics Correlation Defense
+        # ----------------------------------------------------------
+        taxonomy_csv = self.output_dir / "Master_Taxonomy_O4a.csv"
+        physics_stats = {}
+        if taxonomy_csv.exists():
+            try:
+                physics_stats = run_physics_correlation(
+                    taxonomy_csv=taxonomy_csv,
+                    production_dir=self.production_dir,
+                    output_dir=self.output_dir,
+                )
+                master_report["physics_correlation"] = physics_stats
+                logger.info("Physics Correlation Test completed successfully.")
+            except Exception as e:
+                logger.error(f"Physics Correlation Test failed: {e}")
+                physics_stats = {"status": "FAILED", "error": str(e)}
+        else:
+            logger.warning("Master_Taxonomy_O4a.csv not found. Skipping Physics Correlation.")
+
+        # ----------------------------------------------------------
         # Phase 10: Generate Final Discovery Markdown Report
         # ----------------------------------------------------------
         self._generate_markdown_report(master_report)
@@ -1623,6 +1644,40 @@ class AggregateReporter:
         md_lines.append("")
         
         # Limitations
+        # Section 15: Physics Correlation Defense
+        physics_corr = metrics.get('physics_correlation', {})
+        md_lines.append("## 15. Physics Correlation Defense")
+        if physics_corr and physics_corr.get('status') != 'FAILED':
+            global_stats = physics_corr.get('global', {})
+            r_val = global_stats.get('r_pearson', 'N/A')
+            rho_val = global_stats.get('rho_spearman', 'N/A')
+            p_val = global_stats.get('p_value_mantel', 'N/A')
+            n_events = global_stats.get('n_samples', 'N/A')
+            md_lines.append(f"Global Mantel test (N={n_events}): Pearson r = {r_val}, Spearman ρ = {rho_val}, p-value (permutation, 9999 iters) = {p_val}")
+            md_lines.append("")
+            md_lines.append("> **SNR definition**: peak of whitened time-series amplitude, NOT matched-filter SNR (PyCBC/BayesWave).")
+            md_lines.append("")
+            per_family = physics_corr.get('per_family', [])
+            if per_family:
+                md_lines.append("| Family | N | r (Pearson) | ρ (Spearman) | p (Mantel) | Note |")
+                md_lines.append("| --- | --- | --- | --- | --- | --- |")
+                for fam in per_family:
+                    r_f = f"{fam['r_pearson']:.3f}" if fam.get('r_pearson') is not None and not (isinstance(fam.get('r_pearson'), float) and np.isnan(fam['r_pearson'])) else 'N/A'
+                    rho_f = f"{fam['rho_spearman']:.3f}" if fam.get('rho_spearman') is not None and not (isinstance(fam.get('rho_spearman'), float) and np.isnan(fam['rho_spearman'])) else 'N/A'
+                    p_f = f"{fam['p_value_mantel']:.4f}" if fam.get('p_value_mantel') is not None and not (isinstance(fam.get('p_value_mantel'), float) and np.isnan(fam['p_value_mantel'])) else 'N/A'
+                    md_lines.append(f"| {fam['family']} | {fam['n']} | {r_f} | {rho_f} | {p_f} | {fam.get('note', '')} |")
+                md_lines.append("")
+            # Embed figure if it exists
+            fig_path = self.output_dir / "fig_latent_vs_physics.png"
+            if fig_path.exists():
+                rel_path_str = "file:///" + str(fig_path.resolve()).replace("\\", "/")
+                md_lines.append(f"![Latent vs Physics Correlation]({rel_path_str})")
+                md_lines.append("")
+        else:
+            err_msg = physics_corr.get('error', 'Not executed') if physics_corr else 'Not executed'
+            md_lines.append(f"Physics Correlation Test not available: {err_msg}")
+            md_lines.append("")
+
         md_lines.append("## 14. Limitations and Caveats")
         md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
         md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
