@@ -1544,6 +1544,27 @@ class AggregateReporter:
             md_lines.append(f"- GPS List: {', '.join(singleton_rows['gps_start'].astype(str).tolist())}")
             
             if len(valid_singletons) > 0:
+                # Add physics parameters table for singletons
+                singleton_physics_path = self.output_dir / "singleton_physics.csv"
+                if singleton_physics_path.exists():
+                    try:
+                        import pandas as pd
+                        sp_df = pd.read_csv(singleton_physics_path)
+                        md_lines.append("")
+                        md_lines.append("### Singleton Physical Parameters")
+                        md_lines.append("| GPS | Detector | Peak Freq (Hz) | Duration (s) | SNR proxy |")
+                        md_lines.append("| --- | --- | --- | --- | --- |")
+                        for _, sp_row in sp_df.iterrows():
+                            f_val = f"{sp_row['peak_freq_hz']:.1f}" if pd.notna(sp_row['peak_freq_hz']) else "N/A"
+                            d_val = f"{sp_row['duration_s']:.3f}" if pd.notna(sp_row['duration_s']) else "N/A"
+                            s_val = f"{sp_row['snr_proxy']:.1f}" if pd.notna(sp_row['snr_proxy']) else "N/A"
+                            gps_val = int(sp_row['gps_start'])
+                            md_lines.append(f"| {gps_val} | {sp_row['detector']} | {f_val} | {d_val} | {s_val} |")
+                        md_lines.append("")
+                        md_lines.append("> **Note**: SNR proxy is the peak amplitude of the whitened time series, not a matched-filter SNR.")
+                    except Exception as e:
+                        logger.error(f"Failed to load singleton_physics.csv for report: {e}")
+
                 md_lines.append("")
                 md_lines.append("````carousel")
                 for i, (gps, row, img_path) in enumerate(valid_singletons):
@@ -1597,7 +1618,8 @@ class AggregateReporter:
             ("Master_Taxonomy_O4a.csv", "1. Master Taxonomy", "Final merged list of all un-vetoed physical transient candidates across all detector sessions."),
             ("Table_3a_Confirmed_Local_Glitches.csv", "10. Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
             ("Table_3b_Unverifiable_Unilateral_Detections.csv", "11. Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
-            ("Table_3c_Coincident_Astrophysical.csv", "12. Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window.")
+            ("Table_3c_Coincident_Astrophysical.csv", "12. Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
+            ("singleton_physics.csv", "13. Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies.")
         ]
         for file_name, title, desc in tables:
             md_lines.append(f"| {file_name} | {title} | {desc} |")
