@@ -1288,6 +1288,34 @@ class AggregateReporter:
                 plt.savefig(out_path, dpi=300, bbox_inches='tight')
                 plt.close()
                 logger.info(f"Saved PSD plot to {out_path}")
+
+                if fam_id.startswith("Singleton"):
+                    try:
+                        import shutil
+                        import pandas as pd
+                        tax_path = self.output_dir / "Master_Taxonomy_O4a.csv"
+                        if tax_path.exists():
+                            tax_df = pd.read_csv(tax_path)
+                            row = tax_df[tax_df['global_family_id'] == fam_id]
+                            if not row.empty:
+                                session_id = row.iloc[0]['session_id']
+                                sal_dir = self.production_dir / str(int(session_id)) / "report" / "saliency_gallery"
+                                if sal_dir.exists():
+                                    copied = False
+                                    for sal_file in sal_dir.glob(f"*{int(gps)}*saliency*.png"):
+                                        out_sal = out_dir / f"saliency_{fam_id}.png"
+                                        shutil.copy(sal_file, out_sal)
+                                        logger.info(f"Copied saliency map for {fam_id} to {out_sal}")
+                                        copied = True
+                                        break
+                                    if not copied:
+                                        for sal_file in sal_dir.glob(f"candidate_{int(gps)}*.png"):
+                                            out_sal = out_dir / f"saliency_{fam_id}.png"
+                                            shutil.copy(sal_file, out_sal)
+                                            logger.info(f"Copied saliency map for {fam_id} to {out_sal}")
+                                            break
+                    except Exception as e:
+                        logger.error(f"Failed to copy saliency map for {fam_id}: {e}")
             except Exception as e:
                 logger.error(f"Failed to generate PSD for {fam_id}: {e}")
 
