@@ -78,7 +78,7 @@ similarity:
   k_neighbors: 5
   novelty_threshold: 0.85    # cosine sim below this → NOVEL (legacy static; used in full_analysis.py)
   consensus_threshold: 0.60  # label agreement below this → AMBIGUOUS
-  training_set_zenodo: "10.5281/zenodo/1476551"
+  training_set_zenodo: "10.5281/zenodo.1476551"
   max_per_class: 50
   duration: 1.0              # spectrogram window used for reference
   # Dynamic (session-adaptive) threshold — replaces static novelty_threshold in MDC/scan_live.
