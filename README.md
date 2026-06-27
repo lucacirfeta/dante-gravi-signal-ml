@@ -1,7 +1,7 @@
 # DANTE: Domain-Adaptive Network for Transient Evaluation
 > Unsupervised morphological characterization of gravitational-wave transients using frozen Vision Transformers and Multiple Instance Learning.
 
-[![arXiv](https://img.shields.io/badge/arXiv-2605.28572-b31b1b.svg)](https://arxiv.org/abs/2605.28572)
+[![arXiv](https://img.shields.io/badge/arXiv-2605.25702-b31b1b.svg)](https://arxiv.org/abs/2606.25702)
 [![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.20960011-blue.svg)](https://doi.org/10.5281/zenodo.20960011)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
