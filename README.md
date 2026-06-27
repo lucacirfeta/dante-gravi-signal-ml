@@ -2,7 +2,7 @@
 > Unsupervised morphological characterization of gravitational-wave transients using frozen Vision Transformers and Multiple Instance Learning.
 
 [![arXiv](https://img.shields.io/badge/arXiv-2605.28572-b31b1b.svg)](https://arxiv.org/abs/2605.28572)
-[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.20820846-blue.svg)](https://doi.org/10.5281/zenodo.20820846)
+[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.20960011-blue.svg)](https://doi.org/10.5281/zenodo.20960011)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -110,7 +110,7 @@ If you use this software in your research, please cite our preprint:
   eprint = {2605.28572},
   archivePrefix = {arXiv},
   primaryClass = {astro-ph.IM},
-  doi    = {10.5281/zenodo.20820846},
+  doi    = {10.5281/zenodo.20960011},
   url    = {https://arxiv.org/abs/2605.28572}
 }
 ```
