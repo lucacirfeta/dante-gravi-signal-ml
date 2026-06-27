@@ -113,7 +113,7 @@ clustering:
   # Fix this value to guarantee exact reproducibility across sessions.
   random_state: 42
   dpmm:
-    n_components: 25
+    n_components: 15
     anomaly_percentile: 5.0
     anomaly_threshold: 4.0191   # calibrated fixed threshold
                               # float  = calibrated fixed threshold
@@ -162,8 +162,8 @@ hardware:
 # Patch-Level Novelty Detection
 patch_novelty:
   enabled: true
-  k_baseline: 37
-  k_sweep: [15, 37, 68]
+  k_baseline: 68
+  k_sweep: [8, 34, 68, 136, 272]
   device: cuda
 
 # Micro-MDC Configuration

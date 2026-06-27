@@ -107,7 +107,7 @@ class DINOv2Encoder:
             cfg = load_config()
             hw_cfg = cfg.get("hardware", {})
             _batch_defaults = {
-                "cuda": hw_cfg.get("cuda_batch_size", 64),
+                "cuda": hw_cfg.get("cuda_batch_size", 32),
                 "mps": hw_cfg.get("mps_batch_size", 32),
                 "cpu": hw_cfg.get("cpu_batch_size", 16),
             }

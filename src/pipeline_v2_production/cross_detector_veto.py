@@ -45,7 +45,7 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
     scorer = PatchScorer(
         reference_index_path=ref_index_path,
         device=device,
-        k=37, # Default K for top-K pooling (can use 68 as well)
+        k=68, # Strict architectural prior aligned with primary PatchScorer
         verify_md5=False
     )
     

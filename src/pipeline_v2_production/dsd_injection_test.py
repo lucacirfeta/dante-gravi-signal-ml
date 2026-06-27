@@ -221,7 +221,7 @@ class DSDControlledRecoveryTest:
             DataFrame with per-injection results
         """
         if morphologies is None:
-            morphologies = ["HarmonicComb", "WallOfLines", "ScatteredLight"]
+            morphologies = ["HarmonicComb", "WallOfLines", "ScatteredLight", "KoiFish", "Whistle"]
 
         if amplitudes is None:
             # Calibrated amplitude range: from barely visible to clearly dominant
@@ -517,11 +517,15 @@ class DSDControlledRecoveryTest:
             "HarmonicComb": "#2ecc71",
             "WallOfLines": "#e74c3c",
             "ScatteredLight": "#3498db",
+            "KoiFish": "#9b59b6",
+            "Whistle": "#f1c40f",
         }
         markers = {
             "HarmonicComb": "o",
             "WallOfLines": "s",
             "ScatteredLight": "^",
+            "KoiFish": "v",
+            "Whistle": "*",
         }
 
         for morph in summary["morphology"].unique():
@@ -607,7 +611,7 @@ def main():
     )
     parser.add_argument(
         "--morphologies", nargs="+",
-        default=["HarmonicComb", "WallOfLines", "ScatteredLight"],
+        default=["HarmonicComb", "WallOfLines", "ScatteredLight", "KoiFish", "Whistle"],
         help="Morphologies to test"
     )
     parser.add_argument(
