@@ -2531,15 +2531,27 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     if not sessions:
         logger.info("Nessuna sessione fornita esplicitamente. Tento l'auto-discovery delle cartelle in data_dir...")
         
-        if not data_dir.exists():
-            error_msg = f"Errore: la directory dati '{data_dir}' non esiste. Se usi percorsi Windows nel terminale, usa le virgolette (es. \"E:\\o4a\") o usa gli slash (es. E:/o4a)."
+        from src.core.data_loader import _DATA_DIRECTORIES
+        
+        search_dirs = []
+        if data_dir.exists():
+            search_dirs.append(data_dir)
+        for d in _DATA_DIRECTORIES:
+            if d.exists() and d not in search_dirs:
+                search_dirs.append(d)
+                
+        if not search_dirs:
+            error_msg = f"Errore: Nessuna cartella dati disponibile (né {data_dir} né i fallback in config.yaml)."
             logger.error(error_msg)
             raise FileNotFoundError(error_msg)
             
         discovered_sessions = []
-        for path in data_dir.iterdir():
-            if path.is_dir() and list(path.rglob(f"*{detector}*.hdf5")):
-                discovered_sessions.append(path.name)
+        for s_dir in search_dirs:
+            for path in s_dir.iterdir():
+                if path.is_dir() and path.name.isdigit() and list(path.rglob(f"*{detector}*.hdf5")):
+                    discovered_sessions.append(path.name)
+                    
+        discovered_sessions = list(set(discovered_sessions))
                 
         if discovered_sessions:
             sessions = sorted(discovered_sessions)
