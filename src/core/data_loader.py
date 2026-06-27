@@ -123,26 +123,35 @@ def fetch_strain_data(
         except Exception as exc:
             logger.warning(f"Error while searching in {dir_path}: {exc}")
 
-    # 2. Controllo exact match legacy su data/raw (nel caso non sia stato trovato dal rglob o sia formattato diversamente)
-    cache_dir = Path("data/raw")
+    # 2. Controllo exact match nei _DATA_DIRECTORIES (nel caso non sia stato trovato dal rglob o sia formattato diversamente)
     cache_file_name = f"{detector}_{gps_start}_{gps_end}.hdf5"
-    cache_file = cache_dir / cache_file_name
-    # Also search in GPS subdirectories (data/raw/{gps_start}/)
-    if not cache_file.exists() and cache_dir.exists():
-        sub_matches = list(cache_dir.glob(f"*/{cache_file_name}"))
+    cache_file = None
+    
+    for dir_path in directories:
+        if not dir_path.exists():
+            continue
+            
+        target = dir_path / cache_file_name
+        if target.exists():
+            cache_file = target
+            break
+            
+        # Also search in GPS subdirectories (dir_path/{gps_start}/)
+        sub_matches = list(dir_path.glob(f"*/{cache_file_name}"))
         if sub_matches:
             cache_file = sub_matches[0]
+            break
 
-    if cache_file.exists():
+    if cache_file and cache_file.exists():
         try:
             ts = TimeSeries.read(cache_file)
-            logger.info("Cache hit for %s", cache_file.name)
+            logger.info("Cache hit for %s in %s", cache_file.name, cache_file.parent)
             if ts.sample_rate.value != sample_rate:
                 ts = ts.resample(sample_rate)
             return ts
         except Exception as exc:
             logger.warning("Cache read failed for %s, moving to .corrupt: %s", cache_file.name, exc)
-            corrupt_dir = cache_dir / ".corrupt"
+            corrupt_dir = cache_file.parent / ".corrupt"
             corrupt_dir.mkdir(parents=True, exist_ok=True)
             try:
                 cache_file.rename(corrupt_dir / cache_file.name)
@@ -195,6 +204,7 @@ def fetch_strain_data(
 
     if cache_raw:
         try:
+            cache_dir = directories[0] if directories else Path("data/raw")
             cache_dir.mkdir(parents=True, exist_ok=True)
             cache_write_path = cache_dir / cache_file_name
             ts.write(cache_write_path, format='hdf5')

@@ -29,13 +29,13 @@ from src.core.encoder import build_dinov2_transform
 logger = setup_logger(__name__)
 
 class ValidationReporter:
-    def __init__(self, session_id: str, detector: str = "H1", run_name: str = "O4a"):
+    def __init__(self, session_id: str, detector: str = "H1", run_name: str = "O4a", output_dir: str = "data/production"):
         self.session_id = session_id
         self.detector = detector
         self.run_name = run_name
         self.device = get_device()
         
-        self.production_dir = Path("data") / "production" / str(session_id)
+        self.production_dir = Path(output_dir) / str(session_id)
         self.h5_path = self.production_dir / f"novelties_{session_id}_{detector}.h5"
         self.cluster_json = self.production_dir / f"cluster_report_novelties_{session_id}_{detector}.json"
         self.reference_dir = Path("data") / "reference"

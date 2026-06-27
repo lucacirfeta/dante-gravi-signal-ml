@@ -2518,6 +2518,11 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
 
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    # Inject data_dir into global directories to support --data-dir override globally
+    from src.core.data_loader import _DATA_DIRECTORIES
+    if data_dir not in _DATA_DIRECTORIES:
+        _DATA_DIRECTORIES.insert(0, data_dir)
+    
     # 1. Initialize PatchScorer
     scorer = PatchScorer(
         reference_index_path="data/reference/patch_compressed_index.npz",
@@ -2554,11 +2559,13 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         discovered_sessions = list(set(discovered_sessions))
                 
         if discovered_sessions:
-            sessions = sorted(discovered_sessions)
+            args.sessions = sorted(discovered_sessions)
+            sessions = args.sessions
             logger.info(f"Trovate {len(sessions)} sessioni. Ordine cronologico: {sessions}")
         else:
             logger.warning("Nessuna sottocartella valida trovata. Processo data_dir come sessione unica ('ALL').")
-            sessions = ["ALL"]
+            args.sessions = ["ALL"]
+            sessions = args.sessions
         
     for session in sessions:
         logger.info(f"=== Starting Patch-Level Production for Session {session} ===")
@@ -2706,7 +2713,8 @@ def cmd_production_report(args):
     """Run the Phase 6 production report pipeline."""
     logger.info("=== Starting Production Report ===")
     from src.pipeline_v2_production.production_report import ValidationReporter
-    reporter = ValidationReporter(session_id=args.session_id, detector=args.detector)
+    output_dir = getattr(args, "output_dir", "data/production")
+    reporter = ValidationReporter(session_id=args.session_id, detector=args.detector, output_dir=output_dir)
     if getattr(args, "only_plots", False):
         reporter.run_only_plots()
     else:
@@ -2720,7 +2728,8 @@ def cmd_validate_reports(args):
     from pathlib import Path
     logger.info(f"=== Validating Reports for Session {args.session_id} ({args.detector}) ===")
     
-    prod_dir = Path("data") / "production" / str(args.session_id)
+    output_dir = getattr(args, "output_dir", "data/production")
+    prod_dir = Path(output_dir) / str(args.session_id)
     report_dir = prod_dir / "report"
     
     # Required files map
@@ -2812,7 +2821,8 @@ def cmd_patch_analysis(args):
     
     sessions_to_process = args.sessions
     if not sessions_to_process:
-        sessions_to_process = [d.name for d in data_dir.iterdir() if d.is_dir() and d.name.isdigit()]
+        logger.error("No sessions found to process for patch-analysis.")
+        return
         
     detectors = [args.detector]
     
@@ -2840,6 +2850,7 @@ def cmd_patch_analysis(args):
                 r_args = ReportArgs()
                 r_args.session_id = str(session)
                 r_args.detector = det
+                r_args.output_dir = str(output_dir)
                 cmd_production_report(r_args)
                 
                 logger.info(f"STEP 4: Report Validation for session {session} ({det})")
@@ -3958,6 +3969,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--detector", type=str, default="H1", choices=["H1", "L1"]
     )
     p_production_report.add_argument(
+        "--output-dir", type=str, default="data/production/", help="Output directory."
+    )
+    p_production_report.add_argument(
         "--only-plots", action="store_true", help="Only regenerate saliency plots without running clustering or checks."
     )
     p_production_report.set_defaults(func=cmd_production_report)
@@ -3972,6 +3986,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_validate_reports.add_argument(
         "--detector", type=str, default="H1", choices=["H1", "L1"]
+    )
+    p_validate_reports.add_argument(
+        "--output-dir", type=str, default="data/production/", help="Output directory."
     )
     p_validate_reports.set_defaults(func=cmd_validate_reports)
 
