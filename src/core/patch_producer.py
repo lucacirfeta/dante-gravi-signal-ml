@@ -78,8 +78,8 @@ class PatchProducer:
                     fallback_dir = d / self.data_dir.name
                     if fallback_dir.exists() and fallback_dir.is_dir():
                         self.hdf5_files.extend(list(fallback_dir.rglob(f"*{self.detector}*.hdf5")))
-                    elif self.data_dir.name == "o4a" or self.data_dir.name == "raw":
-                        # If the data_dir is the root (e.g. processing 'ALL' sessions), fallback to the whole global directory
+                    elif not self.data_dir.name.isdigit():
+                        # If the data_dir is not a session folder (e.g. processing 'ALL' sessions), fallback to the whole global directory
                         self.hdf5_files.extend(list(d.rglob(f"*{self.detector}*.hdf5")))
                 
         self.hdf5_files = sorted(list(set(self.hdf5_files)))
