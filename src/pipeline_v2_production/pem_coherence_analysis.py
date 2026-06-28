@@ -1,30 +1,46 @@
 """
 PEM Offline Coherence Analysis
+==============================
 
-This standalone script analyzes the spectral coherence between gravitational-wave strain
-and the available public (safe) O4a auxiliary channels for structurally anomalous candidates
-(e.g., Family_01 and Singletons).
+Analyzes the spectral coherence between gravitational-wave strain and
+auxiliary (PEM/CAL/IMC/SUS/OAF/ASC) channels for structurally anomalous
+candidates (e.g. Family_01 and Singletons).
 
-Data fetching uses NDS2 to nds.gwosc.org, with a local cache in data/raw/auxiliary/
-to prevent repeated slow network requests.
+IMPORTANT — PUBLIC DATA LIMITATION:
+    Auxiliary channels are NOT publicly available via ``nds.gwosc.org``.
+    They require LVC credentials and access to site-internal NDS servers
+    (``nds.ligo-la.caltech.edu`` / ``nds.ligo-wa.caltech.edu``).
+
+    When running against public GWOSC data only, this module produces a
+    "null-result" coherence report, explicitly documenting the data-access
+    limitation.  A strain ASD plot is generated per event as a diagnostic
+    sanity check (stationarity / spectral cleanliness).
+
+    If you later obtain LVC credentials, set ``nds_host`` via the CLI
+    ``--nds-host`` argument and the full coherence pipeline will activate.
 """
 
-import logging
-import os
 from pathlib import Path
-from typing import Dict, List, Optional
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from gwpy.timeseries import TimeSeries
-import h5py
+from typing import Optional
 
-from src.core.utils import setup_logger
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import time
+import shutil
+from gwpy.frequencyseries import FrequencySeries
+from gwpy.timeseries import TimeSeries
+
 from src.core.data_loader import fetch_strain_data
+from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
 
-# O4a Public Safe Auxiliary Channels
+# ---------------------------------------------------------------------------
+# O4a candidate auxiliary channels (require LVC credentials)
+# ---------------------------------------------------------------------------
 AUX_CHANNELS = {
     "H1": [
         "H1:CAL-PCALX_RX_PD_OUT_DQ",
@@ -54,47 +70,69 @@ AUX_CHANNELS = {
         "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
         "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ",
         "L1:SUS-PI_PROC_COMPUTE_MODE5_RMSMON",
-    ]
+    ],
 }
 
 
-def fetch_auxiliary_data(channel: str, gps_start: int, gps_end: int, cache_dir: Path) -> Optional[TimeSeries]:
-    """Fetch auxiliary channel data with local caching as HDF5."""
+# ---------------------------------------------------------------------------
+# Auxiliary channel fetch (requires LVC credentials / internal NDS)
+# ---------------------------------------------------------------------------
+
+def fetch_auxiliary_data(
+    channel: str,
+    gps_start: int,
+    gps_end: int,
+    cache_dir: Path,
+    nds_host: Optional[str] = None,
+) -> Optional[TimeSeries]:
+    """Fetch auxiliary channel data with local HDF5 caching.
+
+    Returns ``None`` immediately if no NDS host is configured, since
+    ``nds.gwosc.org`` does not expose auxiliary channels.
+    """
+    if nds_host is None:
+        return None  # Aux channels not available on public GWOSC NDS
+
     safe_channel = channel.replace(":", "_")
     cache_file = cache_dir / f"{safe_channel}_{gps_start}_{gps_end}.hdf5"
 
     if cache_file.exists():
-        logger.debug(f"Loading cached aux data for {channel}: {cache_file}")
+        logger.debug("Loading cached aux data for %s: %s", channel, cache_file)
         try:
-            return TimeSeries.read(cache_file, format='hdf5', name=channel)
-        except Exception as e:
-            logger.warning(f"Failed to read cache {cache_file}: {e}. Will re-fetch.")
+            return TimeSeries.read(cache_file, format="hdf5", path=channel)
+        except Exception as exc:
+            logger.warning("Failed to read cache %s: %s. Will re-fetch.", cache_file, exc)
 
-    logger.info(f"Fetching {channel} from NDS2 ({gps_start} - {gps_end})...")
+    logger.info("Fetching %s from NDS2 @ %s (%d - %d)...", channel, nds_host, gps_start, gps_end)
     try:
-        ts = TimeSeries.fetch(channel, start=gps_start, end=gps_end, host='nds.gwosc.org')
+        time.sleep(1.0)  # Rate limiter to avoid being blocked by NDS2 servers
+        ts = TimeSeries.fetch(channel, start=gps_start, end=gps_end, host=nds_host)
         cache_dir.mkdir(parents=True, exist_ok=True)
-        ts.write(cache_file, format='hdf5', overwrite=True, name=channel)
+        ts.write(cache_file, format="hdf5", overwrite=True)
         return ts
-    except Exception as e:
-        logger.error(f"Failed to fetch {channel}: {e}")
+    except Exception as exc:
+        logger.error("Failed to fetch %s: %s", channel, exc)
         return None
 
 
+# ---------------------------------------------------------------------------
+# Coherence calculation
+# ---------------------------------------------------------------------------
+
 def calculate_coherence_and_plot(
-        strain: TimeSeries,
-        aux: TimeSeries,
-        channel_name: str,
-        detector: str,
-        gps_start: int,
-        output_dir: Path,
-        fftlength: float = 2.0,
-        freq_bounds: tuple = (20, 500),
-        threshold: float = 0.6
+    strain: TimeSeries,
+    aux: TimeSeries,
+    channel_name: str,
+    detector: str,
+    gps_start: int,
+    output_dir: Path,
+    fftlength: float = 2.0,
+    freq_bounds: tuple = (20, 500),
+    threshold: float = 0.6,
 ) -> dict:
-    """Calculate coherence, extract max peak, and generate plot if significant."""
+    """Compute coherence between *strain* and *aux*, save a plot if significant."""
     try:
-        # Match sample rates. Resample the higher rate one to the lower rate one.
+        # Align sample rates (resample the faster to the slower)
         if strain.sample_rate != aux.sample_rate:
             target_sr = min(strain.sample_rate.value, aux.sample_rate.value)
             if strain.sample_rate.value > target_sr:
@@ -102,15 +140,13 @@ def calculate_coherence_and_plot(
             if aux.sample_rate.value > target_sr:
                 aux = aux.resample(target_sr)
 
-        # Calculate coherence
-        coh = strain.coherence(aux, fftlength=fftlength, overlap=fftlength/2)
-        
-        # Limit to frequency bounds
+        coh = strain.coherence(aux, fftlength=fftlength, overlap=fftlength / 2)
+
         freqs = coh.frequencies.value
         mask = (freqs >= freq_bounds[0]) & (freqs <= freq_bounds[1])
         coh_band = coh.value[mask]
         freq_band = freqs[mask]
-        
+
         if len(coh_band) == 0:
             return {"max_coherence": 0.0, "peak_freq": 0.0, "significant": False}
 
@@ -119,220 +155,374 @@ def calculate_coherence_and_plot(
         significant = max_coh >= threshold
 
         if significant:
-            logger.info(f"*** SIGNIFICANT COHERENCE DETECTED *** {channel_name} (GPS {gps_start}): C={max_coh:.2f} at {peak_freq:.1f}Hz")
-            
-            # Plot
-            fig, ax = plt.subplots(figsize=(10, 5))
-            ax.plot(coh.frequencies, coh.value, color='purple')
-            ax.set_xlim(*freq_bounds)
-            ax.set_ylim(0, 1)
-            ax.set_xlabel('Frequency [Hz]')
-            ax.set_ylabel('Coherence')
-            ax.set_title(f'Coherence: {detector} Strain vs {channel_name}\nGPS: {gps_start} | Max C={max_coh:.2f} @ {peak_freq:.1f}Hz')
-            ax.grid(True, alpha=0.5)
-            
+            logger.info(
+                "*** SIGNIFICANT COHERENCE *** %s (GPS %d): C=%.2f at %.1f Hz",
+                channel_name, gps_start, max_coh, peak_freq,
+            )
             plot_dir = output_dir / "pem" / "coherence_plots"
             plot_dir.mkdir(parents=True, exist_ok=True)
             safe_chan = channel_name.replace(":", "_")
             plot_path = plot_dir / f"coh_{detector}_{safe_chan}_{gps_start}.png"
-            fig.savefig(plot_path, dpi=150, bbox_inches='tight')
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(coh.frequencies, coh.value, color="purple")
+            ax.set_xlim(*freq_bounds)
+            ax.set_ylim(0, 1)
+            ax.set_xlabel("Frequency [Hz]")
+            ax.set_ylabel("Coherence")
+            ax.set_title(
+                f"Coherence: {detector} Strain vs {channel_name}\n"
+                f"GPS: {gps_start} | Max C={max_coh:.2f} @ {peak_freq:.1f} Hz"
+            )
+            ax.grid(True, alpha=0.5)
+            fig.savefig(plot_path, dpi=150, bbox_inches="tight")
             plt.close(fig)
 
-        return {
-            "max_coherence": max_coh,
-            "peak_freq": peak_freq,
-            "significant": significant
-        }
+        return {"max_coherence": max_coh, "peak_freq": peak_freq, "significant": significant}
 
-    except Exception as e:
-        logger.error(f"Error calculating coherence for {channel_name}: {e}")
+    except Exception as exc:
+        logger.error("Error calculating coherence for %s: %s", channel_name, exc)
         return {"max_coherence": np.nan, "peak_freq": np.nan, "significant": False}
 
 
+# ---------------------------------------------------------------------------
+# Strain ASD plot (sanity check when aux channels are unavailable)
+# ---------------------------------------------------------------------------
+
+def _plot_strain_asd(
+    strain: TimeSeries,
+    detector: str,
+    gps_start: int,
+    family: str,
+    output_dir: Path,
+    fftlength: float = 4.0,
+    freq_bounds: tuple = (20, 500),
+) -> Path:
+    """Compute and save the ASD of the strain segment as a diagnostic plot."""
+    plot_dir = output_dir / "pem" / "strain_asd"
+    plot_dir.mkdir(parents=True, exist_ok=True)
+    plot_path = plot_dir / f"asd_{detector}_{gps_start}_{family}.png"
+
+    try:
+        asd = strain.asd(fftlength=fftlength, overlap=fftlength / 2)
+        freqs = asd.frequencies.value
+        mask = (freqs >= freq_bounds[0]) & (freqs <= freq_bounds[1])
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.loglog(freqs[mask], asd.value[mask], color="steelblue", lw=0.8)
+        ax.set_xlabel("Frequency [Hz]")
+        ax.set_ylabel(r"ASD [strain / $\sqrt{\mathrm{Hz}}$]")
+        ax.set_title(
+            f"Strain ASD — {detector} | GPS: {gps_start} | {family}\n"
+            "(Auxiliary channels not available on public GWOSC NDS)"
+        )
+        ax.grid(True, which="both", alpha=0.3)
+        fig.tight_layout()
+        fig.savefig(plot_path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        logger.info("Saved strain ASD plot: %s", plot_path)
+    except Exception as exc:
+        logger.warning("Could not generate ASD plot for GPS %d: %s", gps_start, exc)
+
+    return plot_path
+
+
+# ---------------------------------------------------------------------------
+# Main orchestrator
+# ---------------------------------------------------------------------------
+
 def run_pem_coherence_analysis(
-        taxonomy_csv: Path,
-        cache_dir: Path,
-        output_dir: Path,
-        target_families: list = ["Family_01"],
-        include_singletons: bool = True,
-        max_events_per_family: int = 5
-):
-    """Orchestrate the PEM coherence analysis."""
+    taxonomy_csv: Path,
+    cache_dir: Path,
+    output_dir: Path,
+    target_families: list = None,
+    include_singletons: bool = True,
+    max_events_per_family: int = 5,
+    nds_host: Optional[str] = None,
+) -> None:
+    """Orchestrate the PEM coherence analysis.
+
+    Parameters
+    ----------
+    taxonomy_csv:
+        Path to the Master Taxonomy CSV produced by ``aggregate-report``.
+    cache_dir:
+        Local cache directory for auxiliary HDF5 files.
+    output_dir:
+        Root output directory.
+    target_families:
+        List of family IDs to process.  If empty / None, all non-Singleton
+        families in the taxonomy are processed automatically.
+    include_singletons:
+        Whether to include Singleton anomalies.
+    max_events_per_family:
+        Maximum number of events to analyse per family.
+    nds_host:
+        NDS2 server hostname for auxiliary channels.  If ``None`` (default),
+        the module runs in null-result mode (public GWOSC data only).
+    """
     if not taxonomy_csv.exists():
-        logger.error(f"Taxonomy CSV not found: {taxonomy_csv}")
+        logger.error("Taxonomy CSV not found: %s", taxonomy_csv)
         return
 
+    public_mode = nds_host is None
+    if public_mode:
+        logger.warning(
+            "NDS host not configured (--nds-host). Running in NULL-RESULT mode: "
+            "auxiliary channels are not publicly available on nds.gwosc.org. "
+            "Strain ASD plots will be generated as a diagnostic sanity check."
+        )
+
     df = pd.read_csv(taxonomy_csv)
-    
-    # Select targets
+
+    if not target_families:
+        target_families = [f for f in df["global_family_id"].unique() if f != "Singleton"]
+        logger.info("Auto-detected %d families from taxonomy.", len(target_families))
+
+    # Build event list
     targets = []
-    
     for fam in target_families:
-        fam_df = df[df['global_family_id'] == fam]
-        # if 'snr' in columns, sort by it, otherwise just take head
+        fam_df = df[df["global_family_id"] == fam]
         if not fam_df.empty:
-            fam_df = fam_df.head(max_events_per_family)
-            for _, row in fam_df.iterrows():
+            for _, row in fam_df.head(max_events_per_family).iterrows():
                 targets.append({
-                    "detector": row['detector'],
-                    "gps_start": int(row['gps_start']),
-                    "family": row['global_family_id'],
-                    "source": "family"
+                    "detector": row["detector"],
+                    "gps_start": int(row["gps_start"]),
+                    "family": row["global_family_id"],
+                    "source": "family",
                 })
-                
+
     if include_singletons:
-        sing_df = df[df['global_family_id'] == 'Singleton']
-        for _, row in sing_df.iterrows():
+        for _, row in df[df["global_family_id"] == "Singleton"].iterrows():
             targets.append({
-                "detector": row['detector'],
-                "gps_start": int(row['gps_start']),
-                "family": 'Singleton',
-                "source": "singleton"
+                "detector": row["detector"],
+                "gps_start": int(row["gps_start"]),
+                "family": "Singleton",
+                "source": "singleton",
             })
-            
-    logger.info(f"Selected {len(targets)} candidate events for coherence analysis.")
-    
+
+    logger.info("Selected %d candidate events for coherence analysis.", len(targets))
+
     results = []
-    
+    asd_plots = []
+
     for i, target in enumerate(targets):
         det = target["detector"]
         gps_start = target["gps_start"]
         gps_end = gps_start + 32
         fam = target["family"]
-        
-        logger.info(f"[{i+1}/{len(targets)}] Analyzing {det} event at GPS {gps_start} ({fam})")
-        
-        # 1. Fetch Strain
-        try:
-            strain_ts = fetch_strain_data(det, gps_start, gps_end)
-            # DANTE pipeline applies whitening and bandpass before feature extraction.
-            # We'll just apply a 20Hz highpass to remove seismic rumble.
-            strain_ts = strain_ts.highpass(20)
-        except Exception as e:
-            logger.error(f"Failed to fetch strain for GPS {gps_start}: {e}")
-            continue
-            
-        # 2. Iterate Aux Channels
         channels = AUX_CHANNELS.get(det, [])
-        for ch in channels:
-            aux_ts = fetch_auxiliary_data(ch, gps_start, gps_end, cache_dir)
-            if aux_ts is None:
-                continue
-            
-            # Apply highpass to aux as well if it's high sample rate
-            if aux_ts.sample_rate.value >= 40:
-                 try:
-                     aux_ts = aux_ts.highpass(20)
-                 except:
-                     pass
-                     
-            coh_metrics = calculate_coherence_and_plot(
-                strain=strain_ts,
-                aux=aux_ts,
-                channel_name=ch,
-                detector=det,
-                gps_start=gps_start,
-                output_dir=output_dir
-            )
-            
-            results.append({
-                "detector": det,
-                "gps_start": gps_start,
-                "family": fam,
-                "aux_channel": ch,
-                "max_coherence": coh_metrics["max_coherence"],
-                "peak_freq": coh_metrics["peak_freq"],
-                "significant": coh_metrics["significant"]
-            })
-            
-    # Save Report
+
+        logger.info("[%d/%d] Analysing %s event at GPS %d (%s)", i + 1, len(targets), det, gps_start, fam)
+
+        # Fetch strain (always available locally)
+        try:
+            strain_ts = fetch_strain_data(det, gps_start, gps_end).highpass(20)
+        except Exception as exc:
+            logger.error("Failed to fetch strain for GPS %d: %s", gps_start, exc)
+            continue
+
+        if public_mode:
+            # ---------- NULL-RESULT MODE ----------
+            # Record all aux channels as unavailable; generate ASD plot instead.
+            for ch in channels:
+                results.append({
+                    "detector": det,
+                    "gps_start": gps_start,
+                    "family": fam,
+                    "aux_channel": ch,
+                    "max_coherence": np.nan,
+                    "peak_freq": np.nan,
+                    "significant": False,
+                    "data_available": False,
+                    "note": "Aux channel not available on public GWOSC NDS",
+                })
+
+            p = _plot_strain_asd(strain_ts, det, gps_start, fam, output_dir)
+            asd_plots.append(p)
+        else:
+            # ---------- FULL COHERENCE MODE ----------
+            for ch in channels:
+                aux_ts = fetch_auxiliary_data(ch, gps_start, gps_end, cache_dir, nds_host)
+                if aux_ts is None:
+                    results.append({
+                        "detector": det,
+                        "gps_start": gps_start,
+                        "family": fam,
+                        "aux_channel": ch,
+                        "max_coherence": np.nan,
+                        "peak_freq": np.nan,
+                        "significant": False,
+                        "data_available": False,
+                        "note": f"Fetch failed from {nds_host}",
+                    })
+                    continue
+
+                if aux_ts.sample_rate.value >= 40:
+                    try:
+                        aux_ts = aux_ts.highpass(20)
+                    except Exception:
+                        pass
+
+                metrics = calculate_coherence_and_plot(
+                    strain=strain_ts,
+                    aux=aux_ts,
+                    channel_name=ch,
+                    detector=det,
+                    gps_start=gps_start,
+                    output_dir=output_dir,
+                )
+                results.append({
+                    "detector": det,
+                    "gps_start": gps_start,
+                    "family": fam,
+                    "aux_channel": ch,
+                    "max_coherence": metrics["max_coherence"],
+                    "peak_freq": metrics["peak_freq"],
+                    "significant": metrics["significant"],
+                    "data_available": True,
+                    "note": "",
+                })
+
+    # ---------------------------------------------------------------------------
+    # Persist results
+    # ---------------------------------------------------------------------------
     if results:
         res_df = pd.DataFrame(results)
         pem_out_dir = output_dir / "pem"
         pem_out_dir.mkdir(parents=True, exist_ok=True)
         report_path = pem_out_dir / "coherence_report.csv"
         res_df.to_csv(report_path, index=False)
-        logger.info(f"Saved coherence report to {report_path}")
-        
-        # Inject into Final Discovery Report if it exists
-        _inject_into_final_report(output_dir, res_df, pem_out_dir / "coherence_plots")
+        logger.info("Saved coherence report to %s", report_path)
 
-def _inject_into_final_report(output_dir: Path, res_df: pd.DataFrame, plots_dir: Path):
-    report_path = output_dir / "Final_Discovery_Report.md"
-    if not report_path.exists():
-        return
-        
-    try:
-        with open(report_path, "r", encoding="utf-8") as f:
-            content = f.read()
-            
-        if "## 16. PEM Offline Coherence Defense" in content:
-            logger.info("PEM section already exists in Final_Discovery_Report.md. Skipping injection to avoid duplicates.")
-            return
-            
-        md_lines = []
-        md_lines.append("## 16. PEM Offline Coherence Defense")
-        md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
-        md_lines.append("")
-        md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant |")
-        md_lines.append("| --- | --- | --- | --- | --- | --- | --- |")
-        for _, row in res_df.iterrows():
-            sig_icon = "🔴 YES" if row.get("significant", False) else "🟢 NO"
-            md_lines.append(f"| {row['detector']} | {row['gps_start']} | {row['family']} | {row['aux_channel']} | {row['max_coherence']:.3f} | {row['peak_freq_hz']:.1f} | {sig_icon} |")
-        md_lines.append("")
-        
-        if plots_dir.exists():
-            plots = list(plots_dir.glob("*.png"))
-            if plots:
-                md_lines.append("````carousel")
-                for i, p in enumerate(plots):
-                    if i > 0:
-                        md_lines.append("<!-- slide -->")
-                    rel_p = "file:///" + str(p.resolve()).replace("\\", "/")
-                    md_lines.append(f"![PEM Coherence {p.name}]({rel_p})")
-                md_lines.append("````")
-                md_lines.append("")
-                
-        new_section = "\n".join(md_lines)
-        
-        # Try to insert before Limitations
-        if "## 17. Limitations and Caveats" in content:
-            content = content.replace("## 17. Limitations and Caveats", new_section + "\n## 17. Limitations and Caveats")
-        elif "## 14. Limitations and Caveats" in content:
-            content = content.replace("## 14. Limitations and Caveats", new_section + "\n## 17. Limitations and Caveats")
+        # Summary log
+        if public_mode:
+            n_events = len({(r["detector"], r["gps_start"]) for r in results})
+            logger.warning(
+                "NULL-RESULT: %d events × %d channels recorded. "
+                "No coherence computed (aux data requires LVC credentials). "
+                "Strain ASD plots saved to %s",
+                n_events, len(AUX_CHANNELS.get("H1", [])), pem_out_dir / "strain_asd",
+            )
         else:
-            content += "\n" + new_section
-            
-        with open(report_path, "w", encoding="utf-8") as f:
-            f.write(content)
-        logger.info("Successfully injected PEM results into Final_Discovery_Report.md")
-    except Exception as e:
-        logger.error(f"Failed to inject PEM results into Final_Discovery_Report.md: {e}")
-        
-        # Log summary
-        sig_df = res_df[res_df['significant'] == True]
-        if not sig_df.empty:
-            logger.warning(f"Found {len(sig_df)} significant coherence couplings!")
-            for _, row in sig_df.iterrows():
-                logger.warning(f"  - {row['detector']} {row['family']} at {row['gps_start']} coupled with {row['aux_channel']} (C={row['max_coherence']:.2f})")
-        else:
-            logger.info("No significant instrumental coherence found for the selected events.")
+            sig_df = res_df[res_df["significant"] == True]
+            if not sig_df.empty:
+                logger.warning("Found %d significant coherence couplings!", len(sig_df))
+                for _, row in sig_df.iterrows():
+                    logger.warning(
+                        "  - %s %s at %d coupled with %s (C=%.2f)",
+                        row["detector"], row["family"], row["gps_start"],
+                        row["aux_channel"], row["max_coherence"],
+                    )
+            else:
+                logger.info("No significant instrumental coherence found.")
+
+        _inject_into_final_report(
+            output_dir=output_dir,
+            res_df=res_df,
+            plots_dir=pem_out_dir / ("strain_asd" if public_mode else "coherence_plots"),
+            public_mode=public_mode,
+        )
     else:
         logger.warning("No results to save.")
 
+    # Cleanup auxiliary data cache to free disk space
+    if cache_dir.exists():
+        logger.info("Cleaning up auxiliary cache directory: %s", cache_dir)
+        try:
+            shutil.rmtree(cache_dir)
+        except Exception as exc:
+            logger.error("Failed to clean up cache directory %s: %s", cache_dir, exc)
+
+
+# ---------------------------------------------------------------------------
+# Report injection
+# ---------------------------------------------------------------------------
+
+def _inject_into_final_report(
+    output_dir: Path,
+    res_df: pd.DataFrame,
+    plots_dir: Path,
+    public_mode: bool = True,
+) -> None:
+    """Append (or update) the PEM section in Final_Discovery_Report.md."""
+    report_path = output_dir / "Final_Discovery_Report.md"
+    if not report_path.exists():
+        logger.info("Final_Discovery_Report.md not found — skipping injection.")
+        return
+
+    try:
+        content = report_path.read_text(encoding="utf-8")
+
+        if "## 16. PEM Offline Coherence Defense" in content:
+            logger.info("PEM section already exists — skipping injection.")
+            return
+
+        md_lines = []
+        md_lines.append("## 16. PEM Offline Coherence Defense")
+        if public_mode:
+            md_lines.append(
+                "> **NULL-RESULT (public data limitation):** Auxiliary PEM/CAL/IMC/SUS channels "
+                "are not available on the public GWOSC NDS server. No instrumental coupling could "
+                "be assessed. Strain ASD plots are provided as a spectral cleanliness proxy."
+            )
+        else:
+            md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
+        md_lines.append("")
+
+        if public_mode:
+            # Compact event table — one row per event
+            seen = set()
+            md_lines.append("| Detector | GPS Start | Family | Channels Attempted | Status |")
+            md_lines.append("| --- | --- | --- | --- | --- |")
+            for _, row in res_df.iterrows():
+                key = (row["detector"], row["gps_start"])
+                if key in seen:
+                    continue
+                seen.add(key)
+                n_ch = int((res_df["gps_start"] == row["gps_start"]).sum())
+                md_lines.append(
+                    f"| {row['detector']} | {row['gps_start']} | {row['family']} "
+                    f"| {n_ch} | ⚪ DATA UNAVAILABLE |"
+                )
+        else:
+            md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant |")
+            md_lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+            for _, row in res_df.iterrows():
+                sig_icon = "🔴 YES" if row.get("significant", False) else "🟢 NO"
+                mc = f"{row['max_coherence']:.3f}" if not np.isnan(row["max_coherence"]) else "N/A"
+                pf = f"{row['peak_freq']:.1f}" if not np.isnan(row["peak_freq"]) else "N/A"
+                md_lines.append(
+                    f"| {row['detector']} | {row['gps_start']} | {row['family']} "
+                    f"| {row['aux_channel']} | {mc} | {pf} | {sig_icon} |"
+                )
+        md_lines.append("")
+
+
+
+        new_section = "\n".join(md_lines)
+
+        # Insert before Limitations section (try several known headings)
+        for heading in ("## 17. Limitations", "## 14. Limitations"):
+            if heading in content:
+                content = content.replace(heading, new_section + "\n" + heading)
+                break
+        else:
+            content += "\n" + new_section
+
+        report_path.write_text(content, encoding="utf-8")
+        logger.info("Successfully injected PEM results into Final_Discovery_Report.md")
+
+    except Exception as exc:
+        logger.error("Failed to inject PEM results into Final_Discovery_Report.md: %s", exc)
+
 
 if __name__ == "__main__":
-    # Test script execution
+    import sys
     project_root = Path(__file__).resolve().parent.parent.parent
-    tax_csv = project_root / "data" / "production" / "aggregated" / "Master_Taxonomy_O4a.csv"
-    cache_d = project_root / "data" / "raw" / "auxiliary"
-    out_d = project_root / "data" / "production" / "aggregated"
-    
     run_pem_coherence_analysis(
-        taxonomy_csv=tax_csv,
-        cache_dir=cache_d,
-        output_dir=out_d,
-        target_families=["Family_01"],
-        include_singletons=True,
-        max_events_per_family=3
+        taxonomy_csv=project_root / "data" / "production" / "aggregated" / "Master_Taxonomy_O4a.csv",
+        cache_dir=project_root / "data" / "raw" / "auxiliary",
+        output_dir=project_root / "data" / "production" / "aggregated",
+        max_events_per_family=3,
     )

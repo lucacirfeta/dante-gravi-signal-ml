@@ -2872,6 +2872,27 @@ def cmd_patch_analysis(args):
                 logger.warning(f"No production output found at {h5_path}. Skipping clustering.")
 
 
+def cmd_pem_coherence_analysis(args: argparse.Namespace) -> None:
+    """Run PEM offline coherence analysis."""
+    from src.pipeline_v2_production.pem_coherence_analysis import run_pem_coherence_analysis
+
+    logger.info("=== PEM COHERENCE ANALYSIS ===")
+    
+    tax_csv = Path(args.taxonomy_csv)
+    cache_d = Path(args.cache_dir)
+    out_d = Path(args.output_dir)
+    
+    run_pem_coherence_analysis(
+        taxonomy_csv=tax_csv,
+        cache_dir=cache_d,
+        output_dir=out_d,
+        target_families=args.target_families,
+        include_singletons=not args.no_singletons,
+        max_events_per_family=args.max_events,
+        nds_host=args.nds_host,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -4010,6 +4031,58 @@ def build_parser() -> argparse.ArgumentParser:
         help="Observing run context for EVT thresholds (e.g. O4a, O3b).",
     )
     p_aggregate.set_defaults(func=cmd_aggregate_report)
+
+    # --- pem-coherence-analysis ---
+    p_pem = subparsers.add_parser(
+        "pem-coherence-analysis",
+        help="Run PEM offline coherence analysis.",
+    )
+    p_pem.add_argument(
+        "--taxonomy-csv",
+        type=str,
+        default="data/production/aggregated/Master_Taxonomy_O4a.csv",
+        help="Path to the Master Taxonomy CSV.",
+    )
+    p_pem.add_argument(
+        "--cache-dir",
+        type=str,
+        default="data/raw/auxiliary",
+        help="Cache directory for auxiliary channels.",
+    )
+    p_pem.add_argument(
+        "--output-dir",
+        type=str,
+        default="data/production/aggregated",
+        help="Output directory for reports and plots.",
+    )
+    p_pem.add_argument(
+        "--target-families",
+        nargs="*",
+        default=[],
+        help="List of family IDs to analyze. If empty, analyzes all families.",
+    )
+    p_pem.add_argument(
+        "--no-singletons",
+        action="store_true",
+        help="Exclude Singleton anomalies from analysis.",
+    )
+    p_pem.add_argument(
+        "--max-events",
+        type=int,
+        default=5,
+        help="Max events to process per family.",
+    )
+    p_pem.add_argument(
+        "--nds-host",
+        type=str,
+        default=None,
+        help=(
+            "NDS2 server hostname for auxiliary channels "
+            "(e.g. nds.ligo-la.caltech.edu). "
+            "Requires LVC credentials. If omitted, runs in null-result mode."
+        ),
+    )
+    p_pem.set_defaults(func=cmd_pem_coherence_analysis)
 
     return parser
 
