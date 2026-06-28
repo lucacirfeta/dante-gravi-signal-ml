@@ -1756,7 +1756,28 @@ class AggregateReporter:
 
 if __name__ == "__main__":
     from src.core.utils import setup_logger
+    import subprocess
+    import sys
+    
     setup_logger("aggregate_report")
     
     reporter = AggregateReporter()
     reporter.run()
+
+    # Automatically run offline validation scripts
+    logger.info("Starting automated offline validation...")
+    try:
+        logger.info("-> Running PEM Coherence Analysis...")
+        subprocess.run([sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"], check=True)
+        
+        logger.info("-> Running Poisson Upper Limit (H1)...")
+        subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", "H1"], check=True)
+        
+        logger.info("-> Running Poisson Upper Limit (L1)...")
+        subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", "L1"], check=True)
+        
+        logger.info("All automated offline validation scripts completed and injected successfully.")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"An offline validation script failed with exit code {e.returncode}: {e}")
+    except Exception as e:
+        logger.error(f"Failed to execute automated offline validation scripts: {e}")
