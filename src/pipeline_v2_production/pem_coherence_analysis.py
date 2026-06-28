@@ -498,18 +498,25 @@ def _inject_into_final_report(
                 is_sig = row.get("significant", False)
                 
                 if is_sig and not np.isnan(pf_val):
-                    is_mains_harmonic = any(abs(pf_val - h) < 1.0 for h in [60.0, 120.0, 180.0, 300.0])
+                    det = row.get("detector", "H1")
+                    if det == "V1":
+                        mains_freqs = [50.0, 100.0, 150.0, 250.0]
+                    else:
+                        mains_freqs = [60.0, 120.0, 180.0, 300.0]
+                    is_mains_harmonic = any(abs(pf_val - h) < 1.0 for h in mains_freqs)
                     
-                    if "IMC-WFS" in row['aux_channel'] and abs(pf_val - 60.0) < 1.0:
-                        notes.append("IMC coupling at 60 Hz mains fundamental — consistent with known IMC length noise coupling in O4.")
-                    elif "OAF-IMC" in row['aux_channel'] and abs(pf_val - 60.0) < 1.0:
-                        notes.append("60Hz coupling — OAF pre-filter input coherent with IMC-WFS-B (same subsystem).")
+                    if "IMC-WFS" in row['aux_channel'] and abs(pf_val - mains_freqs[0]) < 1.0:
+                        notes.append(f"IMC coupling at {int(mains_freqs[0])} Hz mains fundamental — consistent with known IMC length noise coupling in O4.")
+                    elif "OAF-IMC" in row['aux_channel'] and abs(pf_val - mains_freqs[0]) < 1.0:
+                        notes.append(f"{int(mains_freqs[0])}Hz coupling — OAF pre-filter input coherent with IMC-WFS-B (same subsystem).")
                     elif "ASC-X" in row['aux_channel'] and is_mains_harmonic:
                         notes.append(f"{int(pf_val)}Hz mains harmonic coupling via ASC-X angular control loop.")
                     elif "ASC-X" in row['aux_channel']:
                         notes.append("Angular control coupling (ASC-X)")
                     elif "CAL_LINE" in row['aux_channel'] and abs(pf_val - 45.0) < 2.0 and mc_val > 0.9:
                         notes.append("Possible 2nd harmonic of ETMX calibration line (~21 Hz); frequency shift from nominal warrants further investigation.")
+                    elif "CAL-PCALY" in row['aux_channel'] and abs(pf_val - 26.5) < 2.0:
+                        notes.append("Y-arm PCAL signal; frequency consistent with SUS-ETMX cal-line shift observed on this event.")
                     elif is_mains_harmonic:
                         notes.append(f"Ubiquitous {int(pf_val)}Hz mains harmonic")
 
@@ -525,6 +532,14 @@ def _inject_into_final_report(
         md_lines.append("")
 
         new_section = "\n".join(md_lines)
+        
+        # Write standalone report
+        standalone_path = output_dir / "pem" / "pem_coherence_report.md"
+        standalone_path.parent.mkdir(parents=True, exist_ok=True)
+        # Strip the '## 16. ' prefix for the standalone title
+        standalone_content = new_section.replace("## 16. PEM Offline Coherence Defense", "# PEM Offline Coherence Defense")
+        standalone_path.write_text(standalone_content, encoding="utf-8")
+        logger.info(f"Saved standalone PEM report to {standalone_path}")
 
         import re
         if "## 16. PEM Offline Coherence Defense" in content:

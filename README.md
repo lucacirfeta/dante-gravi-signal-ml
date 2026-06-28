@@ -88,6 +88,9 @@ For immediate verification without re-running the feature extraction, the labele
 - **Cross-Session Connectivity:** ARI of 0.96 across 72 discontinuous observing sessions.
   *(Conditions: Measured via Single-linkage HAC on DPMM centroids with a cosine distance cutoff of 0.25).*
 
+- **Methodological Upper Limit:** $R_{90} < 3.70 \text{ yr}^{-1}$ for H1 ($N=0$) and $R_{90} < 6.52 \text{ yr}^{-1}$ for L1 ($N=1$) on morphologically novel transients.
+  *(Conditions: Evaluated over bounding spans of ~227 days and ~218 days respectively during O4a. Limits are structurally driven by the limited observation window rather than pipeline sensitivity).*
+
 ## 🛑 Limitations
 1. **Computational Bottleneck:** The $Q$-transform and DINOv2 patch extraction are computationally intensive. DANTE operates strictly offline/high-latency and is **not** capable of real-time, low-latency multi-messenger alerting.
 2. **Frequency Domain Truncation:** The $Q$-transform upper bound of 2048 Hz prevents characterization of ultra-high frequency anomalies.
