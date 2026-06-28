@@ -1240,12 +1240,14 @@ class AggregateReporter:
                 if result["nans"] > 1000:
                     result["classification"] = "Macro-Dropout Artifact"
                 elif not result["dq_active"] and result["nans"] == 0:
-                    result["classification"] = "Genuine Physical Transient (NEW)"
+                    result["classification"] = "Strain Data Integrity Check: PASS"
                 elif result["nans"] == 0:
-                    result["classification"] = "Genuine Physical Transient"
+                    result["classification"] = "Strain Data Integrity Check: PASS"
                 
             except Exception as e:
                 result["error"] = str(e)
+                result["nans"] = -1
+                result["zeros"] = -1
                 
             sanity_metrics[fam_id] = result
             logger.info(f"Sanity Check {fam_id} ({gps}): {result['classification']} (NaNs: {result['nans']})")
@@ -1400,7 +1402,11 @@ class AggregateReporter:
         # 2. Session-by-Session Breakdown
         md_lines.append("## 2. Session‑by‑Session Breakdown")
         if not tax_df.empty:
-            for session_id, group in tax_df.groupby('session_id'):
+            grouped_sessions = list(tax_df.groupby('session_id'))
+            for i, (session_id, group) in enumerate(grouped_sessions):
+                if i >= 10:
+                    md_lines.append(f"### ... and {len(grouped_sessions)-10} more sessions — see file completo")
+                    break
                 md_lines.append(f"### Session: {session_id}")
                 md_lines.append("| GPS | Detector | Local Cluster | Global Family | Spectrogram |")
                 md_lines.append("| --- | --- | --- | --- | --- |")
@@ -1536,11 +1542,11 @@ class AggregateReporter:
             
             md_lines.append(f"- {total_singletons} isolated events detected in topology.")
             if len(error_singletons) > 0:
-                md_lines.append(f"  - **{len(valid_singletons)} valid** (GWOSC fetch successful)")
-                md_lines.append(f"  - **{len(error_singletons)} GWOSC fetch error** (Excluded from physical validation: GPS {', '.join(map(str, error_singletons))})")
+                md_lines.append(f"  - **{len(valid_singletons)} valid** (Visual Q-transforms found)")
+                md_lines.append(f"  - **{len(error_singletons)} missing images** (No visual Q-transform: GPS {', '.join(map(str, error_singletons))})")
             else:
                 if total_singletons > 0:
-                    md_lines.append(f"  - All {total_singletons} validated (GWOSC fetch successful)")
+                    md_lines.append(f"  - All {total_singletons} validated (Visual check successful)")
             md_lines.append(f"- GPS List: {', '.join(singleton_rows['gps_start'].astype(str).tolist())}")
             
             if len(valid_singletons) > 0:
@@ -1579,64 +1585,71 @@ class AggregateReporter:
         
         # RESTORE THE DELETED SECTIONS
         
+        sec_num = 7
+        
         # Distribution Plot
         dist_plot = visual_dir / "distribution_plot.png"
         if dist_plot.exists():
-            md_lines.append("## 7. Novelty Score Distribution")
+            md_lines.append(f"## {sec_num}. Novelty Score Distribution")
             md_lines.append("Histogram showing the statistical separation between the native background noise and the final candidates.")
             md_lines.append("")
             rel_path_str = "file:///" + str(dist_plot.resolve()).replace("\\", "/")
             md_lines.append(f"![Novelty Score Distribution]({rel_path_str})")
             md_lines.append("")
+            sec_num += 1
 
         # Cluster Gallery
         gallery_img = self.output_dir / "fig_cluster_gallery.png"
         if gallery_img.exists():
-            md_lines.append("## 8. Cluster Gallery (All Families)")
+            md_lines.append(f"## {sec_num}. Cluster Gallery (All Families)")
             md_lines.append("Composite gallery showing representative Q-Transform spectrograms for each discovered morphological family.")
             md_lines.append("")
             rel_path_str = "file:///" + str(gallery_img.resolve()).replace("\\", "/")
             md_lines.append(f"![Cluster Gallery]({rel_path_str})")
             md_lines.append("")
+            sec_num += 1
 
         # Similarity Heatmap
         heatmap_img = self.output_dir / "candidate_similarity_heatmap.png"
         if heatmap_img.exists():
-            md_lines.append("## 9. Candidate Similarity Heatmap")
-            md_lines.append("Pairwise cosine similarity matrix between all final candidates. The block-diagonal structure confirms that intra-family similarity is significantly higher than inter-family similarity.")
+            md_lines.append(f"## {sec_num}. Candidate Similarity Heatmap")
+            md_lines.append("Pairwise cosine similarity matrix between all final candidates. The block-diagonal structure visually suggests that intra-family similarity is significantly higher than inter-family similarity.")
             md_lines.append("")
             rel_path_str = "file:///" + str(heatmap_img.resolve()).replace("\\", "/")
             md_lines.append(f"![Candidate Similarity Heatmap]({rel_path_str})")
             md_lines.append("")
+            sec_num += 1
 
-        md_lines.append("## 10. Produced Datasets")
+        md_lines.append(f"## {sec_num}. Produced Datasets")
         md_lines.append("The following data products have been persisted for further analysis:")
         md_lines.append("| File | Description | Notes |")
         md_lines.append("| --- | --- | --- |")
         
         tables = [
             ("Master_Taxonomy_O4a.csv", "1. Master Taxonomy", "Final merged list of all un-vetoed physical transient candidates across all detector sessions."),
-            ("Table_3a_Confirmed_Local_Glitches.csv", "10. Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
-            ("Table_3b_Unverifiable_Unilateral_Detections.csv", "11. Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
-            ("Table_3c_Coincident_Astrophysical.csv", "12. Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
-            ("singleton_physics.csv", "13. Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies.")
+            ("Table_3a_Confirmed_Local_Glitches.csv", f"{sec_num}.a Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
+            ("Table_3b_Unverifiable_Unilateral_Detections.csv", f"{sec_num}.b Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
+            ("Table_3c_Coincident_Astrophysical.csv", f"{sec_num}.c Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
+            ("singleton_physics.csv", f"{sec_num}.d Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies.")
         ]
         for file_name, title, desc in tables:
             md_lines.append(f"| {file_name} | {title} | {desc} |")
         md_lines.append("")
+        sec_num += 1
 
         # CSV Tables Preview
         import csv
         for table_file, section_title, description in [
-            ("Table_3a_Confirmed_Local_Glitches.csv", "10. Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via L1/H1 coincidence resolution. These events appear in both detectors within a ±2s window."),
-            ("Table_3b_Unverifiable_Unilateral_Detections.csv", "11. Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector (no coincident H1 counterpart). Cannot be confirmed as astrophysical without further investigation."),
-            ("Master_Taxonomy_O4a.csv", "12. Master Taxonomy", "Full candidate list with GPS timestamp, detector, novelty score, assigned family, Gravity Spy label, and domain shift defense result."),
+            ("Table_3a_Confirmed_Local_Glitches.csv", "Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via L1/H1 coincidence resolution. These events appear in both detectors within a ±2s window."),
+            ("Table_3b_Unverifiable_Unilateral_Detections.csv", "Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector (no coincident H1 counterpart). Cannot be confirmed as astrophysical without further investigation."),
+            ("Master_Taxonomy_O4a.csv", "Master Taxonomy", "Full candidate list with GPS timestamp, detector, novelty score, assigned family, Gravity Spy label, and domain shift defense result."),
         ]:
             table_path = self.output_dir / table_file
             if table_path.exists():
-                md_lines.append(f"## {section_title}")
+                md_lines.append(f"## {sec_num}. {section_title}")
                 md_lines.append(description)
                 md_lines.append("")
+                sec_num += 1
                 try:
                     with open(table_path, "r", encoding="utf-8") as tf:
                         reader = csv.reader(tf)
