@@ -454,10 +454,6 @@ def _inject_into_final_report(
     try:
         content = report_path.read_text(encoding="utf-8")
 
-        if "## 16. PEM Offline Coherence Defense" in content:
-            logger.info("PEM section already exists — skipping injection.")
-            return
-
         md_lines = []
         md_lines.append("## 16. PEM Offline Coherence Defense")
         if public_mode:
@@ -468,7 +464,9 @@ def _inject_into_final_report(
             )
         else:
             md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
-        md_lines.append("")
+            md_lines.append("> ")
+            md_lines.append("> **Methodological Caveat:** `significant=True` is based on a fixed absolute threshold ($C \ge 0.6$) evaluated over a 32-second window (64 averages at 0.5s FFT length), uncorrected for multiple comparisons. This is a heuristic veto, not a rigorous statistical p-value.")
+            md_lines.append("")
 
         if public_mode:
             # Compact event table — one row per event
@@ -486,32 +484,68 @@ def _inject_into_final_report(
                     f"| {n_ch} | ⚪ DATA UNAVAILABLE |"
                 )
         else:
-            md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant |")
-            md_lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+            md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant | Notes |")
+            md_lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
             for _, row in res_df.iterrows():
                 sig_icon = "🔴 YES" if row.get("significant", False) else "🟢 NO"
-                mc = f"{row['max_coherence']:.3f}" if not np.isnan(row["max_coherence"]) else "N/A"
-                pf = f"{row['peak_freq']:.1f}" if not np.isnan(row["peak_freq"]) else "N/A"
+                mc_val = row["max_coherence"]
+                pf_val = row["peak_freq"]
+                mc = f"{mc_val:.3f}" if not np.isnan(mc_val) else "N/A"
+                pf = f"{pf_val:.1f}" if not np.isnan(pf_val) else "N/A"
+                
+                # Physical Diagnosis Notes
+                notes = []
+                is_sig = row.get("significant", False)
+                
+                if is_sig and not np.isnan(pf_val):
+                    is_mains_harmonic = any(abs(pf_val - h) < 1.0 for h in [60.0, 120.0, 180.0, 300.0])
+                    
+                    if "IMC-WFS" in row['aux_channel'] and abs(pf_val - 60.0) < 1.0:
+                        notes.append("IMC coupling at 60 Hz mains fundamental — consistent with known IMC length noise coupling in O4.")
+                    elif "OAF-IMC" in row['aux_channel'] and abs(pf_val - 60.0) < 1.0:
+                        notes.append("60Hz coupling — OAF pre-filter input coherent with IMC-WFS-B (same subsystem).")
+                    elif "ASC-X" in row['aux_channel'] and is_mains_harmonic:
+                        notes.append(f"{int(pf_val)}Hz mains harmonic coupling via ASC-X angular control loop.")
+                    elif "ASC-X" in row['aux_channel']:
+                        notes.append("Angular control coupling (ASC-X)")
+                    elif "CAL_LINE" in row['aux_channel'] and abs(pf_val - 45.0) < 2.0 and mc_val > 0.9:
+                        notes.append("Possible 2nd harmonic of ETMX calibration line (~21 Hz); frequency shift from nominal warrants further investigation.")
+                    elif is_mains_harmonic:
+                        notes.append(f"Ubiquitous {int(pf_val)}Hz mains harmonic")
+
+                if "LSC-POP" in row['aux_channel'] and mc_val > 0.9:
+                    notes.append("⚠️ Active Control / Calibration Line coupling")
+                
+                note_str = ", ".join(notes) if notes else "-"
+                
                 md_lines.append(
                     f"| {row['detector']} | {row['gps_start']} | {row['family']} "
-                    f"| {row['aux_channel']} | {mc} | {pf} | {sig_icon} |"
+                    f"| {row['aux_channel']} | {mc} | {pf} | {sig_icon} | {note_str} |"
                 )
         md_lines.append("")
 
-
-
         new_section = "\n".join(md_lines)
 
-        # Insert before Limitations section (try several known headings)
-        for heading in ("## 17. Limitations", "## 14. Limitations"):
-            if heading in content:
-                content = content.replace(heading, new_section + "\n" + heading)
-                break
+        import re
+        if "## 16. PEM Offline Coherence Defense" in content:
+            logger.info("PEM section already exists — overwriting.")
+            content = re.sub(
+                r"## 16\. PEM Offline Coherence Defense.*?(?=\n## (?:17|14)\. Limitations|\Z)",
+                new_section.replace('\\', '\\\\'),
+                content,
+                flags=re.DOTALL
+            )
         else:
-            content += "\n" + new_section
+            # Insert before Limitations section (try several known headings)
+            for heading in ("## 17. Limitations", "## 14. Limitations"):
+                if heading in content:
+                    content = content.replace(heading, new_section + "\n" + heading)
+                    break
+            else:
+                content += "\n" + new_section
 
         report_path.write_text(content, encoding="utf-8")
-        logger.info("Successfully injected PEM results into Final_Discovery_Report.md")
+        logger.info("Successfully injected/updated PEM results into Final_Discovery_Report.md")
 
     except Exception as exc:
         logger.error("Failed to inject PEM results into Final_Discovery_Report.md: %s", exc)
