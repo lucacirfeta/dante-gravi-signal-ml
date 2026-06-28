@@ -1162,27 +1162,9 @@ class AggregateReporter:
                 i_upper = np.triu_indices(n, k=1)
                 mean_sim = float(np.mean(sim[i_upper]))
                 
-                tau_coh = None
-                try:
-                    import json
-                    import pathlib
-                    cfg_path = pathlib.Path("config/cross_detector_threshold.json")
-                    if cfg_path.exists():
-                        with open(cfg_path, "r") as f:
-                            cfg_data = json.load(f)
-                            if self.observing_run in cfg_data and "tau_coh" in cfg_data[self.observing_run]:
-                                tau_coh = float(cfg_data[self.observing_run]["tau_coh"])
-                except Exception as e:
-                    logger.error(f"Failed reading config {cfg_path}: {e}")
-                    
-                if tau_coh is None:
-                    logger.error(f"CRITICAL: No EVT cohesion threshold explicitly calibrated for run '{self.observing_run}'.")
-                    raise RuntimeError(f"Missing EVT calibration for observing run '{self.observing_run}' in {cfg_path}. Refusing to proceed.")
-                    
                 metrics["family_cohesion"][fam] = {
                     "n": n,
-                    "mean_internal_similarity": mean_sim,
-                    "is_genuine_discovery": bool(mean_sim > tau_coh)
+                    "mean_internal_similarity": mean_sim
                 }
                 
         return metrics
@@ -1460,6 +1442,18 @@ class AggregateReporter:
         
         # 4. Domain Shift Defense & Morphological Families
         md_lines.append("## 4. Domain Shift Defense & Morphological Families")
+        
+        # Display actual domain shift experiment results
+        ds = metrics.get('domain_shift_defense', {})
+        total_eval = ds.get('total_evaluated', 0)
+        survived = ds.get('survived_native_threshold', 0)
+        survival_rate = ds.get('survival_rate', 0.0)
+        if ds.get('experiment_run', False):
+            md_lines.append(f"- **Native O4a Threshold Test:** {survived}/{total_eval} candidates survived ({survival_rate*100:.1f}%)")
+        else:
+            md_lines.append("- **Native O4a Threshold Test:** Not executed (native index not available).")
+        md_lines.append("")
+        
         sorted_families = sorted(
             [fam for fam in cohesion.keys() if fam != "Unknown" and "Singleton" not in fam],
             key=lambda k: cohesion[k].get('mean_internal_similarity', 0),
@@ -1470,27 +1464,22 @@ class AggregateReporter:
                 fam_data = cohesion[fam]
                 n_members = fam_data.get('n', 0)
                 sim = fam_data.get('mean_internal_similarity', 0.0)
-                is_genuine = fam_data.get('is_genuine_discovery', False)
-                status_text = "Genuine Candidate" if is_genuine else "Domain Shift Artifact"
-                md_lines.append(f"- **{fam}** (n={n_members}): mean internal similarity = {sim:.3f} &rarr; **{status_text}**")
+                md_lines.append(f"- **{fam}** (n={n_members}): mean intra-family similarity = {sim:.3f}")
         else:
             md_lines.append("No morphological families detected or domain shift defense skipped.")
             
         md_lines.append("")
-        md_lines.append("### Delta Reference vs Native Background")
-        md_lines.append("| Family | Reference Novelty Score | Native Background Score | Cohesion |")
-        md_lines.append("| --- | --- | --- | --- |")
+        md_lines.append("### Morphological Cohesion Assessment")
+        md_lines.append("| Family | N | Mean S_intra |")
+        md_lines.append("| --- | --- | --- |")
         if sorted_families:
             for fam in sorted_families:
                 fam_data = cohesion[fam]
+                n_members = fam_data.get('n', 0)
                 sim = fam_data.get('mean_internal_similarity', 0.0)
-                is_genuine = fam_data.get('is_genuine_discovery', False)
-                status = "Cohesive" if is_genuine else "Diffuse"
-                score_native = "> Threshold (Stable)" if is_genuine else "< Threshold (Collapsed)"
-                md_lines.append(f"| {fam} | > Threshold | {score_native} | {sim:.3f} ({status}) |")
+                md_lines.append(f"| {fam} | {n_members} | {sim:.3f} |")
         else:
-            md_lines.append("| N/A | N/A | N/A | N/A |")
-        md_lines.append("*Note: Families that collapse under the native background test are domain shift artifacts. Their novelty in the initial scan was due to index staleness, not physical origin.*")
+            md_lines.append("| N/A | N/A | N/A |")
         md_lines.append("")
         
         # 5. Physical Validation
