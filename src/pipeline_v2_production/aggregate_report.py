@@ -1704,7 +1704,43 @@ class AggregateReporter:
             md_lines.append(f"Physics Correlation Test not available: {err_msg}")
             md_lines.append("")
 
-        md_lines.append("## 14. Limitations and Caveats")
+        # ----------------------------------------------------------
+        # Section 16: PEM Offline Coherence Defense
+        # ----------------------------------------------------------
+        pem_report_path = self.output_dir / "pem" / "coherence_report.csv"
+        if pem_report_path.exists():
+            md_lines.append("## 16. PEM Offline Coherence Defense")
+            md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
+            md_lines.append("")
+            try:
+                import pandas as pd
+                pem_df = pd.read_csv(pem_report_path)
+                md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant |")
+                md_lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+                for _, row in pem_df.iterrows():
+                    sig_icon = "🔴 YES" if row.get("significant", False) else "🟢 NO"
+                    md_lines.append(f"| {row['detector']} | {row['gps_start']} | {row['family']} | {row['aux_channel']} | {row['max_coherence']:.3f} | {row['peak_freq_hz']:.1f} | {sig_icon} |")
+                md_lines.append("")
+                
+                # Check for plots
+                pem_plots_dir = self.output_dir / "pem" / "coherence_plots"
+                if pem_plots_dir.exists():
+                    plots = list(pem_plots_dir.glob("*.png"))
+                    if plots:
+                        md_lines.append("````carousel")
+                        for i, p in enumerate(plots):
+                            if i > 0:
+                                md_lines.append("<!-- slide -->")
+                            rel_p = "file:///" + str(p.resolve()).replace("\\", "/")
+                            md_lines.append(f"![PEM Coherence {p.name}]({rel_p})")
+                        md_lines.append("````")
+                        md_lines.append("")
+            except Exception as e:
+                logger.error(f"Failed to load PEM report for markdown: {e}")
+                md_lines.append(f"*Error loading PEM report: {e}*")
+                md_lines.append("")
+
+        md_lines.append("## 17. Limitations and Caveats")
         md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
         md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
         md_lines.append("- **Spurious Singletons:** Isolated anomalies do not form clusters and require human inspection to exclude DAQ dropouts.")

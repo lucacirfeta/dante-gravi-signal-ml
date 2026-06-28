@@ -254,6 +254,61 @@ def run_pem_coherence_analysis(
         res_df.to_csv(report_path, index=False)
         logger.info(f"Saved coherence report to {report_path}")
         
+        # Inject into Final Discovery Report if it exists
+        _inject_into_final_report(output_dir, res_df, pem_out_dir / "coherence_plots")
+
+def _inject_into_final_report(output_dir: Path, res_df: pd.DataFrame, plots_dir: Path):
+    report_path = output_dir / "Final_Discovery_Report.md"
+    if not report_path.exists():
+        return
+        
+    try:
+        with open(report_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        if "## 16. PEM Offline Coherence Defense" in content:
+            logger.info("PEM section already exists in Final_Discovery_Report.md. Skipping injection to avoid duplicates.")
+            return
+            
+        md_lines = []
+        md_lines.append("## 16. PEM Offline Coherence Defense")
+        md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
+        md_lines.append("")
+        md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant |")
+        md_lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+        for _, row in res_df.iterrows():
+            sig_icon = "🔴 YES" if row.get("significant", False) else "🟢 NO"
+            md_lines.append(f"| {row['detector']} | {row['gps_start']} | {row['family']} | {row['aux_channel']} | {row['max_coherence']:.3f} | {row['peak_freq_hz']:.1f} | {sig_icon} |")
+        md_lines.append("")
+        
+        if plots_dir.exists():
+            plots = list(plots_dir.glob("*.png"))
+            if plots:
+                md_lines.append("````carousel")
+                for i, p in enumerate(plots):
+                    if i > 0:
+                        md_lines.append("<!-- slide -->")
+                    rel_p = "file:///" + str(p.resolve()).replace("\\", "/")
+                    md_lines.append(f"![PEM Coherence {p.name}]({rel_p})")
+                md_lines.append("````")
+                md_lines.append("")
+                
+        new_section = "\n".join(md_lines)
+        
+        # Try to insert before Limitations
+        if "## 17. Limitations and Caveats" in content:
+            content = content.replace("## 17. Limitations and Caveats", new_section + "\n## 17. Limitations and Caveats")
+        elif "## 14. Limitations and Caveats" in content:
+            content = content.replace("## 14. Limitations and Caveats", new_section + "\n## 17. Limitations and Caveats")
+        else:
+            content += "\n" + new_section
+            
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        logger.info("Successfully injected PEM results into Final_Discovery_Report.md")
+    except Exception as e:
+        logger.error(f"Failed to inject PEM results into Final_Discovery_Report.md: {e}")
+        
         # Log summary
         sig_df = res_df[res_df['significant'] == True]
         if not sig_df.empty:
