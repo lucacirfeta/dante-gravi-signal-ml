@@ -1000,7 +1000,9 @@ class AggregateReporter:
         else:
             lines.append("Insufficient sessions for both detectors. Spearman analysis deferred.")
 
-        log_path = self.output_dir / "stability_synthesis.log"
+        stability_dir = self.output_dir / "stability"
+        stability_dir.mkdir(parents=True, exist_ok=True)
+        log_path = stability_dir / "stability_synthesis.log"
         with open(log_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
         logger.info(f"Wrote stability_synthesis.log")
@@ -1540,7 +1542,7 @@ class AggregateReporter:
             
             if len(valid_singletons) > 0:
                 # Add physics parameters table for singletons
-                singleton_physics_path = self.output_dir / "singleton_physics.csv"
+                singleton_physics_path = self.output_dir / "physics" / "singleton_physics.csv"
                 if singleton_physics_path.exists():
                     try:
                         import pandas as pd
@@ -1616,10 +1618,10 @@ class AggregateReporter:
         
         tables = [
             ("Master_Taxonomy_O4a.csv", "1. Master Taxonomy", "Final merged list of all un-vetoed physical transient candidates across all detector sessions."),
-            ("Table_3a_Confirmed_Local_Glitches.csv", f"{sec_num}.a Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
+            ("Table_3a_Confirmed_Local_Glitch.csv", f"{sec_num}.a Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
             ("Table_3b_Unverifiable_Unilateral_Detections.csv", f"{sec_num}.b Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
             ("Table_3c_Coincident_Astrophysical.csv", f"{sec_num}.c Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
-            ("singleton_physics.csv", f"{sec_num}.d Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies.")
+            ("physics/singleton_physics.csv", f"{sec_num}.d Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies.")
         ]
         for file_name, title, desc in tables:
             md_lines.append(f"| {file_name} | {title} | {desc} |")
@@ -1692,7 +1694,7 @@ class AggregateReporter:
                     md_lines.append(f"| {fam['family']} | {fam['n']} | {r_f} | {rho_f} | {p_f} | {fam.get('note', '')} |")
                 md_lines.append("")
             # Embed figure if it exists
-            fig_path = self.output_dir / "fig_latent_vs_physics.png"
+            fig_path = self.output_dir / "physics" / "fig_latent_vs_physics.png"
             if fig_path.exists():
                 rel_path_str = "file:///" + str(fig_path.resolve()).replace("\\", "/")
                 md_lines.append(f"![Latent vs Physics Correlation]({rel_path_str})")

@@ -87,6 +87,9 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
     - [`calibrate-loglikelihood`](#21-calibrate-loglikelihood) — Calibrate log-likelihood thresholds
     - [`scan-live`](#22-scan-live) — Producer-consumer live scanner
 
+6. **Offline Validation Scripts (Peer Review Defense)**
+    - [`pem-coherence-analysis`](#23-pem-coherence-analysis) — Validate instrumental anomalies against GWOSC Safety List
+
 ---
 
 ## Core & Data Acquisition

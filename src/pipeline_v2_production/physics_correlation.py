@@ -339,14 +339,16 @@ def run_physics_correlation(
     export_df["duration_s"] = phys_df["duration_s"].values
     export_df["snr_proxy_note"] = "peak_whitened_amplitude_NOT_matched_filter"
     export_df["snr_proxy"] = phys_df["snr_proxy"].values
-    export_df.to_csv(output_dir / "physics_correlation.csv", index=False)
+    physics_out_dir = output_dir / "physics"
+    physics_out_dir.mkdir(parents=True, exist_ok=True)
+    export_df.to_csv(physics_out_dir / "physics_correlation.csv", index=False)
     logger.info(f"Saved physics_correlation.csv ({n_events} events).")
 
     # --- Singleton export ---
     singleton_mask = valid_df["global_family_id"].str.contains("Singleton", na=False)
     if singleton_mask.any():
         singleton_df = export_df[singleton_mask].copy()
-        singleton_df.to_csv(output_dir / "singleton_physics.csv", index=False)
+        singleton_df.to_csv(physics_out_dir / "singleton_physics.csv", index=False)
         logger.info(f"Saved singleton_physics.csv ({singleton_mask.sum()} singletons).")
 
     # --- Build distance matrices ---
@@ -435,7 +437,7 @@ def run_physics_correlation(
         "segment_duration_s": 32,
         "bandpass_hz": [_PREPROC["f_low"], _PREPROC["f_high"]],
     }
-    with open(output_dir / "physics_correlation_stats.json", "w") as f:
+    with open(physics_out_dir / "physics_correlation_stats.json", "w") as f:
         json.dump(stats_output, f, indent=2, default=str)
     logger.info("Saved physics_correlation_stats.json")
 
@@ -543,7 +545,8 @@ def _generate_figure(
                  ha="center", va="center", transform=ax2.transAxes, fontsize=14)
 
     plt.tight_layout()
-    fig_path = output_dir / "fig_latent_vs_physics.png"
+    physics_out_dir = output_dir / "physics"
+    fig_path = physics_out_dir / "fig_latent_vs_physics.png"
     plt.savefig(fig_path, dpi=300, bbox_inches="tight")
     plt.close()
     logger.info(f"Saved {fig_path}")
