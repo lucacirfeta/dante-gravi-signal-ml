@@ -885,30 +885,40 @@ class AggregateReporter:
             "sanity_checks": sanity_metrics,
             "gev_parameters": gev_summary
         }
-        
-        with open(self.output_dir / "master_report.json", "w") as f:
-            json.dump(master_report, f, indent=4)
-        logger.info("Saved master_report.json")
-        
         # ----------------------------------------------------------
         # Phase 9b: Physics Correlation Defense
         # ----------------------------------------------------------
         taxonomy_csv = self.output_dir / "Master_Taxonomy_O4a.csv"
         physics_stats = {}
+        physics_stats_json = self.output_dir / "physics" / "physics_correlation_stats.json"
+        
         if taxonomy_csv.exists():
-            try:
-                physics_stats = run_physics_correlation(
-                    taxonomy_csv=taxonomy_csv,
-                    production_dir=self.production_dir,
-                    output_dir=self.output_dir,
-                )
-                master_report["physics_correlation"] = physics_stats
-                logger.info("Physics Correlation Test completed successfully.")
-            except Exception as e:
-                logger.error(f"Physics Correlation Test failed: {e}")
-                physics_stats = {"status": "FAILED", "error": str(e)}
+            if physics_stats_json.exists():
+                logger.info(f"Loading existing Physics Correlation stats from {physics_stats_json}")
+                try:
+                    with open(physics_stats_json, "r") as f:
+                        physics_stats = json.load(f)
+                    master_report["physics_correlation"] = physics_stats
+                except Exception as e:
+                    logger.error(f"Failed to load existing physics stats: {e}")
+            else:
+                try:
+                    physics_stats = run_physics_correlation(
+                        taxonomy_csv=taxonomy_csv,
+                        production_dir=self.production_dir,
+                        output_dir=self.output_dir,
+                    )
+                    master_report["physics_correlation"] = physics_stats
+                    logger.info("Physics Correlation Test completed successfully.")
+                except Exception as e:
+                    logger.error(f"Physics Correlation Test failed: {e}")
+                    physics_stats = {"status": "FAILED", "error": str(e)}
         else:
             logger.warning("Master_Taxonomy_O4a.csv not found. Skipping Physics Correlation.")
+            
+        with open(self.output_dir / "master_report.json", "w") as f:
+            json.dump(master_report, f, indent=4)
+        logger.info("Saved master_report.json")
 
         # ----------------------------------------------------------
         # Phase 10: Generate Final Discovery Markdown Report
@@ -1705,11 +1715,11 @@ class AggregateReporter:
             md_lines.append("")
 
         # ----------------------------------------------------------
-        # Section 16: PEM Offline Coherence Defense
+        # Section 17: PEM Offline Coherence Defense
         # ----------------------------------------------------------
         pem_report_path = self.output_dir / "pem" / "coherence_report.csv"
         if pem_report_path.exists():
-            md_lines.append("## 16. PEM Offline Coherence Defense")
+            md_lines.append("## 17. PEM Offline Coherence Defense")
             md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
             md_lines.append("")
             try:
@@ -1719,7 +1729,11 @@ class AggregateReporter:
                 md_lines.append("| --- | --- | --- | --- | --- | --- | --- |")
                 for _, row in pem_df.iterrows():
                     sig_icon = "🔴 YES" if row.get("significant", False) else "🟢 NO"
-                    md_lines.append(f"| {row['detector']} | {row['gps_start']} | {row['family']} | {row['aux_channel']} | {row['max_coherence']:.3f} | {row['peak_freq_hz']:.1f} | {sig_icon} |")
+                    coh_val = row.get("max_coherence")
+                    coh_str = f"{coh_val:.3f}" if pd.notna(coh_val) else "N/A"
+                    freq_val = row.get("peak_freq")
+                    freq_str = f"{freq_val:.1f}" if pd.notna(freq_val) else "N/A"
+                    md_lines.append(f"| {row.get('detector', '')} | {row.get('gps_start', '')} | {row.get('family', '')} | {row.get('aux_channel', '')} | {coh_str} | {freq_str} | {sig_icon} |")
                 md_lines.append("")
                 
                 # Check for plots
@@ -1740,7 +1754,7 @@ class AggregateReporter:
                 md_lines.append(f"*Error loading PEM report: {e}*")
                 md_lines.append("")
 
-        md_lines.append("## 17. Limitations and Caveats")
+        md_lines.append("## 18. Limitations and Caveats")
         md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
         md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
         md_lines.append("- **Spurious Singletons:** Isolated anomalies do not form clusters and require human inspection to exclude DAQ dropouts.")
@@ -1767,14 +1781,15 @@ if __name__ == "__main__":
     # Automatically run offline validation scripts
     logger.info("Starting automated offline validation...")
     try:
+        from src.core.utils import load_config
+        detectors = load_config().get("detectors", ["H1", "L1"])
+        
+        for det in detectors:
+            logger.info(f"-> Running Poisson Upper Limit ({det})...")
+            subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", det], check=True)
+
         logger.info("-> Running PEM Coherence Analysis...")
         subprocess.run([sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"], check=True)
-        
-        logger.info("-> Running Poisson Upper Limit (H1)...")
-        subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", "H1"], check=True)
-        
-        logger.info("-> Running Poisson Upper Limit (L1)...")
-        subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", "L1"], check=True)
         
         logger.info("All automated offline validation scripts completed and injected successfully.")
     except subprocess.CalledProcessError as e:

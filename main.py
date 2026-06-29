@@ -21,6 +21,9 @@ observing runs via ``--run`` (O2, O3a, O3b, O4a — default O4a).
     calibrate-loglikelihood  — Calibrate DPMM log-likelihood anomaly threshold
     scan-live                — Autopilot live scanner: classify spectrograms as KNOWN/NOVEL
     download-all-references  — Download and build in-domain references for multiple runs/detectors
+    aggregate-report         — Cross-session aggregation, deduplication, and Spearman stability
+    poisson-upper-limit      — Calculate the Poisson Upper Limit on a null-result detector
+    pem-coherence-analysis   — Run PEM offline coherence analysis
 
 Usage:
     python main.py fetch                    --event GW150914
@@ -33,6 +36,9 @@ Usage:
     python main.py crosscheck               --report data/clusters/cluster_report.json --metadata data/embeddings/o4a_h1_6h.json
     python main.py build-indomain-reference --output data/reference/indomain_index.npz
     python main.py validate-reference       --reference data/reference/indomain_index.npz
+    python main.py poisson-upper-limit      # (Defaults to all configured detectors)
+    python main.py aggregate-report         # (Aggregates reports and injects offline validation)
+    python main.py pem-coherence-analysis   --nds-host nds.gwosc.org
 
     # Backward-compatible explicit paths (override session-id):
     python main.py encode  --input-dir data/spectrograms/o4a/H1/ --output data/embeddings/o4a_h1_48h.npy
@@ -2893,6 +2899,21 @@ def cmd_pem_coherence_analysis(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_poisson_upper_limit(args: argparse.Namespace) -> None:
+    from src.pipeline_v2_production.poisson_upper_limit import run_poisson_upper_limit
+    from src.core.utils import load_config
+    
+    detectors = [args.detector] if args.detector else load_config().get("detectors", ["H1", "L1"])
+    
+    for det in detectors:
+        logger.info(f"Running poisson upper limit for {det}")
+        run_poisson_upper_limit(
+            aggregated_dir=Path(args.production_dir) / "aggregated",
+            target_detector=det,
+            cl=0.90
+        )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser with subcommands."""
     parser = argparse.ArgumentParser(
@@ -4031,6 +4052,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Observing run context for EVT thresholds (e.g. O4a, O3b).",
     )
     p_aggregate.set_defaults(func=cmd_aggregate_report)
+
+    # --- poisson-upper-limit ---
+    p_poisson = subparsers.add_parser(
+        "poisson-upper-limit",
+        help="Calculate the Poisson Upper Limit on a null-result detector.",
+    )
+    p_poisson.add_argument(
+        "--detector", type=str, default=None, help="Target detector (e.g. H1, L1). If omitted, runs for all detectors in config."
+    )
+    p_poisson.add_argument(
+        "--production-dir", type=str, default="data/production/", help="Production directory"
+    )
+    p_poisson.set_defaults(func=cmd_poisson_upper_limit)
 
     # --- pem-coherence-analysis ---
     p_pem = subparsers.add_parser(

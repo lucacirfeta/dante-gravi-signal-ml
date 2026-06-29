@@ -51,7 +51,8 @@ def calculate_livetime(aggregated_dir: Path, detector: str = "H1") -> float:
         
     det_lower = detector.lower()
     if det_lower not in master_report["summary"]:
-        raise KeyError(f"Detector {detector} not found in master_report.json")
+        logger.warning(f"Detector {detector} not found in master_report.json")
+        return 0.0, 0, 0.0
         
     valid_sessions_count = master_report["summary"][det_lower].get("n_sessions_valid", 0)
     logger.info(f"Master report indicates {valid_sessions_count} valid sessions for {detector}.")
@@ -76,10 +77,14 @@ def calculate_livetime(aggregated_dir: Path, detector: str = "H1") -> float:
     total_seconds = sum(end - start for start, end in merged_intervals)
     total_days = total_seconds / 86400.0
     
-    logger.info(f"Found {len(intervals)} reports. Merged into {len(merged_intervals)} disjoint segments.")
-    logger.info(f"Exact {detector} Livetime: {total_seconds:,.1f} seconds ({total_days:,.3f} days).")
+    n_sessions = len(intervals)
+    bounding_span_seconds = merged_intervals[-1][1] - merged_intervals[0][0] if merged_intervals else 0
+    bounding_span_days = bounding_span_seconds / 86400.0
     
-    return total_days
+    logger.info(f"Found {n_sessions} reports. Merged into {len(merged_intervals)} disjoint segments.")
+    logger.info(f"Exact {detector} Livetime: {total_seconds:,.1f} seconds ({total_days:,.3f} days). Bounding span: {bounding_span_days:,.1f} days.")
+    
+    return total_days, n_sessions, bounding_span_days
 
 def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", cl: float = 0.90):
     """
@@ -89,7 +94,7 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
     logger.info(f"Starting Poisson Upper Limit calculation for {target_detector}...")
     
     # 1. Calculate Livetime
-    livetime_days = calculate_livetime(aggregated_dir, target_detector)
+    livetime_days, n_sessions, bounding_span_days = calculate_livetime(aggregated_dir, target_detector)
     if livetime_days <= 0:
         logger.error("Livetime is 0. Aborting.")
         return
@@ -158,14 +163,15 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
         
         f.write("## 1. Livetime Analysis\n")
         f.write(f"- **Detector:** {target_detector}\n")
-        f.write(f"- **Total Scanned Span:** {livetime_days * 86400:,.1f} seconds\n")
-        f.write(f"- **Total Scanned Span:** {livetime_days:,.3f} days ({livetime_days / 365.25:,.4f} years)\n")
-        f.write("*Note on Coverage: A DANTE 'session' does not represent a single 4096s GWOSC file, but rather a continuous macro-block of analysis spanning several days. Consequently, 41 sessions cover a bounding span of ~227 days. This span encompasses both `ANALYSIS_READY` segments and natural detector gaps, which explains the discrepancy between calendar days and pure science mode livetime. Overlapping session boundaries have been strictly disjoint-merged to avoid double-counting.*\n\n")
+        f.write(f"- **Effective Livetime:** {livetime_days * 86400:,.1f} seconds\n")
+        f.write(f"- **Effective Livetime:** {livetime_days:,.3f} days ({livetime_days / 365.25:,.4f} years)\n")
+        f.write(f"*Note on Coverage: A DANTE 'session' does not represent a single 4096s GWOSC file, but rather a continuous macro-block of analysis spanning several days. Consequently, {n_sessions} sessions cover a calendar bounding span of ~{bounding_span_days:.0f} days. This calendar span encompasses both `ANALYSIS_READY` segments and natural detector gaps, which explains the discrepancy between the ~{bounding_span_days:.0f} calendar days and the actual ~{livetime_days:.0f} days of pure science mode livetime. Overlapping session boundaries have been strictly disjoint-merged to avoid double-counting.*\n\n")
         
         f.write("## 2. Event Statistics\n")
         f.write(f"- **Observed Unclassified Anomalies ($N$):** {int(n_obs)}\n")
         f.write("  - *Filter Criteria:* `transitivity_status == 'True_Unverifiable_Anomaly'` AND `detector == target_detector`.\n")
-        f.write("  - *Context:* Anomalies fully classified into recurring morphological families (e.g. `Family_03`) or cross-detector validated as local instrumental glitches (`Confirmed_Local`) are successfully characterized by the pipeline and thus excluded from the pool of 'unknowns'.\n\n")
+        f.write("  - *Context:* Anomalies fully classified into recurring morphological families (e.g. `Family_03`) or cross-detector validated as local instrumental glitches (`Confirmed_Local`) are successfully characterized by the pipeline and thus excluded from the pool of 'unknowns'.\n")
+        f.write("  - *Asymmetry Context:* The asymmetry in $N$ between detectors reflects the pipeline architecture: L1 serves as the primary discovery detector while H1 events are cross-validated against L1, making H1's null result a direct consequence of the cross-correlation veto design rather than an independent measurement.\n\n")
         
         f.write("## 3. Upper Limit Calculation\n")
         f.write(f"- **Confidence Level:** {cl*100:.1f}%\n")
@@ -203,19 +209,21 @@ def _inject_into_final_report(aggregated_dir: Path):
         text = text.replace(f"# Poisson Upper Limit on {det} Data\n\n", f"### {det} Upper Limit\n\n")
         combined_content.append(text)
         
-    full_injection = "\n## 17. Poisson Upper Limit (Offline Validation)\n\n" + "\n---\n\n".join(combined_content) + "\n"
+    full_injection = "\n## 16. Poisson Upper Limit (Offline Validation)\n\n" + "\n---\n\n".join(combined_content) + "\n"
         
     try:
         content = master_report.read_text(encoding="utf-8")
         
         # Replace existing section if present
-        if "## 17. Poisson Upper Limit (Offline Validation)" in content:
-            # Regex to replace everything from ## 17 until ## Limitations or end of file
-            content = re.sub(r"## 17\. Poisson Upper Limit \(Offline Validation\).*?(?=## Limitations|\Z)", lambda _: full_injection, content, flags=re.DOTALL)
+        if "## 16. Poisson Upper Limit (Offline Validation)" in content:
+            # Regex to replace everything from ## 16 until ## 17. PEM or end of file
+            content = re.sub(r"## 16\. Poisson Upper Limit \(Offline Validation\).*?(?=## 17\. PEM Offline|## 18\. Limitations|\Z)", lambda _: full_injection, content, flags=re.DOTALL)
             new_content = content
         else:
-            if "## Limitations" in content:
-                new_content = content.replace("## Limitations", full_injection + "## Limitations")
+            if "## 17. PEM Offline" in content:
+                new_content = content.replace("## 17. PEM Offline", full_injection + "## 17. PEM Offline")
+            elif "## 18. Limitations" in content:
+                new_content = content.replace("## 18. Limitations", full_injection + "## 18. Limitations")
             else:
                 new_content = content + full_injection
                 

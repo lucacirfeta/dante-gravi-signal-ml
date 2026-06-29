@@ -455,7 +455,7 @@ def _inject_into_final_report(
         content = report_path.read_text(encoding="utf-8")
 
         md_lines = []
-        md_lines.append("## 16. PEM Offline Coherence Defense")
+        md_lines.append("## 17. PEM Offline Coherence Defense")
         if public_mode:
             md_lines.append(
                 "> **NULL-RESULT (public data limitation):** Auxiliary PEM/CAL/IMC/SUS channels "
@@ -536,23 +536,23 @@ def _inject_into_final_report(
         # Write standalone report
         standalone_path = output_dir / "pem" / "pem_coherence_report.md"
         standalone_path.parent.mkdir(parents=True, exist_ok=True)
-        # Strip the '## 16. ' prefix for the standalone title
-        standalone_content = new_section.replace("## 16. PEM Offline Coherence Defense", "# PEM Offline Coherence Defense")
+        # Strip the '## 17. ' prefix for the standalone title
+        standalone_content = new_section.replace("## 17. PEM Offline Coherence Defense", "# PEM Offline Coherence Defense")
         standalone_path.write_text(standalone_content, encoding="utf-8")
         logger.info(f"Saved standalone PEM report to {standalone_path}")
 
         import re
-        if "## 16. PEM Offline Coherence Defense" in content:
+        if "## 17. PEM Offline Coherence Defense" in content:
             logger.info("PEM section already exists — overwriting.")
             content = re.sub(
-                r"## 16\. PEM Offline Coherence Defense.*?(?=\n## (?:17|14)\. Limitations|\Z)",
+                r"## 17\. PEM Offline Coherence Defense.*?(?=\n## (?:18|14)\. Limitations|\Z)",
                 new_section.replace('\\', '\\\\'),
                 content,
                 flags=re.DOTALL
             )
         else:
             # Insert before Limitations section (try several known headings)
-            for heading in ("## 17. Limitations", "## 14. Limitations"):
+            for heading in ("## 18. Limitations", "## 14. Limitations"):
                 if heading in content:
                     content = content.replace(heading, new_section + "\n" + heading)
                     break
