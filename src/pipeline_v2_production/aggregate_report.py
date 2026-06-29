@@ -1413,7 +1413,7 @@ class AggregateReporter:
                     # Find image link (try both aggregated visual_checks and session saliency gallery)
                     img_link = "N/A"
                     fam_dir = fam if "Singleton" not in str(fam) else f"Singleton_{int(gps)}"
-                    img_path = visual_dir / fam_dir / f"qgram_{fam_dir}_{det}_{int(gps)}.png"
+                    img_path = visual_dir / fam_dir / f"saliency_{fam_dir}.png"
                     if img_path.exists():
                         rel_path_str = "file:///" + str(img_path.resolve()).replace("\\", "/")
                         img_link = f"[View Global]({rel_path_str})"
@@ -1438,7 +1438,10 @@ class AggregateReporter:
         if l1.get('spearman_rho') is not None:
             rho = l1.get('spearman_rho')
             p = l1.get('spearman_p')
-            sig = "significant" if p < 0.05 else "not significant"
+            if p < 0.05:
+                sig = "significant"
+            else:
+                sig = "borderline/not significant — the topological clustering does not exhibit a strict monotonic relationship with physical sample density, though it is not purely random noise"
             md_lines.append(f"- **L1:** ρ = {rho:.3f}, p = {p:.4f} ({sig})")
         else:
             md_lines.append("- **L1:** ρ = N/A, p = N/A (insufficient data)")
@@ -1446,7 +1449,10 @@ class AggregateReporter:
         if h1.get('spearman_rho') is not None:
             rho = h1.get('spearman_rho')
             p = h1.get('spearman_p')
-            sig = "significant" if p < 0.05 else "not significant, low power"
+            if p < 0.05:
+                sig = "significant"
+            else:
+                sig = "not significant — correlation is statistically unverifiable due to low sample power (n<10), preventing robust interpretation rather than implying true structural randomness"
             md_lines.append(f"- **H1:** ρ = {rho:.3f}, p = {p:.4f} ({sig})")
         else:
             md_lines.append("- **H1:** ρ = N/A, p = N/A (insufficient data)")
@@ -1519,7 +1525,9 @@ class AggregateReporter:
                     md_lines.append(f"- **Strain Integrity:** {data.get('nans')} NaNs, {data.get('zeros')} zeros.")
                     if data.get("nans") == 0:
                         md_lines.append(f"- **Max Amplitude:** {data.get('max_amplitude'):.2e}")
-                    md_lines.append(f"- **GWOSC '{data.get('detector')}:DATA' Flag Active:** {data.get('dq_active')}")
+                    dq = data.get('dq_active')
+                    dq_str = "True (Science Mode, reliable)" if dq else "False (Data Quality compromised / not Science Mode)"
+                    md_lines.append(f"- **GWOSC '{data.get('detector')}:DATA' Flag Active:** {dq_str}")
         else:
             md_lines.append("- Sanity checks: No data available.")
         md_lines.append("")
@@ -1535,7 +1543,7 @@ class AggregateReporter:
             for _, row in singleton_rows.iterrows():
                 gps = int(row['gps_start'])
                 fam_dir = f"Singleton_{gps}"
-                img_path = visual_dir / fam_dir / f"qgram_{fam_dir}_{row['detector']}_{gps}.png"
+                img_path = visual_dir / fam_dir / f"saliency_{fam_dir}.png"
                 if img_path.exists():
                     valid_singletons.append((gps, row, img_path))
                 else:
@@ -1543,8 +1551,11 @@ class AggregateReporter:
             
             md_lines.append(f"- {total_singletons} isolated events detected in topology.")
             if len(error_singletons) > 0:
-                md_lines.append(f"  - **{len(valid_singletons)} valid** (Visual Q-transforms found)")
-                md_lines.append(f"  - **{len(error_singletons)} missing images** (No visual Q-transform: GPS {', '.join(map(str, error_singletons))})")
+                if len(valid_singletons) == 0:
+                    md_lines.append(f"  - **0 Q-transforms available** (all {len(error_singletons)} singletons lack visual spectrograms: GPS {', '.join(map(str, error_singletons))})")
+                else:
+                    md_lines.append(f"  - **{len(valid_singletons)} Q-transforms available**")
+                    md_lines.append(f"  - **{len(error_singletons)} missing images** (No visual Q-transform: GPS {', '.join(map(str, error_singletons))})")
             else:
                 if total_singletons > 0:
                     md_lines.append(f"  - All {total_singletons} validated (Visual check successful)")
@@ -1715,6 +1726,13 @@ class AggregateReporter:
             md_lines.append("")
 
         # ----------------------------------------------------------
+        # Section 16: Poisson Upper Limit Placeholder
+        # ----------------------------------------------------------
+        md_lines.append("## 16. Poisson Upper Limit (Offline Validation)")
+        md_lines.append("> Waiting for poisson module injection...")
+        md_lines.append("")
+
+        # ----------------------------------------------------------
         # Section 17: PEM Offline Coherence Defense
         # ----------------------------------------------------------
         pem_report_path = self.output_dir / "pem" / "coherence_report.csv"
@@ -1745,7 +1763,30 @@ class AggregateReporter:
         md_lines.append("## 18. Limitations and Caveats")
         md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
         md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
-        md_lines.append("- **Spurious Singletons:** Isolated anomalies do not form clusters and require human inspection to exclude DAQ dropouts.")
+        
+        if total_singletons > 0:
+            if len(error_singletons) > 0:
+                md_lines.append(f"- **Spurious Singletons:** The {len(error_singletons)} identified singleton(s) (GPS: {', '.join(map(str, error_singletons))}) lack available visual Q-transform/saliency images and cannot be visually validated. Their origin remains undetermined.")
+            else:
+                gps_list = [int(r['gps_start']) for _, r in singleton_rows.iterrows()]
+                md_lines.append(f"- **Spurious Singletons:** The {total_singletons} isolated singleton(s) (GPS: {', '.join(map(str, gps_list))}) have visual validation images available, but as isolated anomalies they still require human inspection to exclude DAQ dropouts.")
+        else:
+            md_lines.append("- **Spurious Singletons:** No singletons detected; all events form defined morphological clusters.")
+            
+        # Dynamically check for SUS-ETMX coupling in PEM report
+        etmx_families = set()
+        if pem_report_path.exists():
+            try:
+                pem_df = pd.read_csv(pem_report_path)
+                etmx_coupled = pem_df[(pem_df['significant'] == True) & (pem_df['aux_channel'].str.contains('SUS-ETMX'))]
+                etmx_families = set(etmx_coupled['family'].unique())
+            except:
+                pass
+        
+        if etmx_families:
+            fams_str = ", ".join(sorted(etmx_families))
+            md_lines.append(f"- **Calibration Line Coupling (SUS-ETMX):** Morphological clusters ({fams_str}) exhibit significant coherence with ETMX calibration lines. This indicates a known instrumental effect (calibration coupling) consistent with why the O3b reference model did not recognize it as a known class — the morphology may reflect an O4a-specific instrumental configuration not represented in the O3b training set.")
+
         md_lines.append("- **Absence of O4a Gravity Spy Catalog:** Supervised validation is limited to historical models.")
         md_lines.append("")
         

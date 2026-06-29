@@ -161,19 +161,19 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
         f.write(f"# Poisson Upper Limit on {target_detector} Data\n\n")
         f.write("> **Methodological Limit:** Upper limit on the rate of morphologically novel, instrumentally unclassified transients in O4a data as characterized by the DANTE pipeline.\n\n")
         
-        f.write("## 1. Livetime Analysis\n")
+        f.write("#### 1. Livetime Analysis\n")
         f.write(f"- **Detector:** {target_detector}\n")
         f.write(f"- **Effective Livetime:** {livetime_days * 86400:,.1f} seconds\n")
         f.write(f"- **Effective Livetime:** {livetime_days:,.3f} days ({livetime_days / 365.25:,.4f} years)\n")
         f.write(f"*Note on Coverage: A DANTE 'session' does not represent a single 4096s GWOSC file, but rather a continuous macro-block of analysis spanning several days. Consequently, {n_sessions} sessions cover a calendar bounding span of ~{bounding_span_days:.0f} days. This calendar span encompasses both `ANALYSIS_READY` segments and natural detector gaps, which explains the discrepancy between the ~{bounding_span_days:.0f} calendar days and the actual ~{livetime_days:.0f} days of pure science mode livetime. Overlapping session boundaries have been strictly disjoint-merged to avoid double-counting.*\n\n")
         
-        f.write("## 2. Event Statistics\n")
+        f.write("#### 2. Event Statistics\n")
         f.write(f"- **Observed Unclassified Anomalies ($N$):** {int(n_obs)}\n")
         f.write("  - *Filter Criteria:* `transitivity_status == 'True_Unverifiable_Anomaly'` AND `detector == target_detector`.\n")
         f.write("  - *Context:* Anomalies fully classified into recurring morphological families (e.g. `Family_03`) or cross-detector validated as local instrumental glitches (`Confirmed_Local`) are successfully characterized by the pipeline and thus excluded from the pool of 'unknowns'.\n")
         f.write("  - *Asymmetry Context:* The asymmetry in $N$ between detectors reflects the pipeline architecture: L1 serves as the primary discovery detector while H1 events are cross-validated against L1, making H1's null result a direct consequence of the cross-correlation veto design rather than an independent measurement.\n\n")
         
-        f.write("## 3. Upper Limit Calculation\n")
+        f.write("#### 3. Upper Limit Calculation\n")
         f.write(f"- **Confidence Level:** {cl*100:.1f}%\n")
         if n_obs == 0:
             f.write(f"- **Expected Events Bound ($\\lambda_{{{cl*100:.0f}}}$):** {lambda_90:.6f}\n")
@@ -182,7 +182,7 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
             f.write(f"- **Expected Events Bound ($\\lambda_{{{cl*100:.0f}}}$):** {lambda_90:.6f}\n")
             f.write(f"  - *Derivation:* Calculated via the general chi-squared distribution $\\frac{{1}}{{2}}\\chi^2_{{2(N+1), 0.90}}$.\n\n")
             
-        f.write("### Resulting Constraints\n")
+        f.write("##### Resulting Constraints\n")
         event_text = "the absence of unclassified events" if n_obs == 0 else f"{n_obs} unclassified event(s)"
         f.write(f"Given the limited {target_detector} coverage of {livetime_days:.0f} days and {event_text}, DANTE establishes a methodological upper limit of **$R_{{{cl*100:.0f}}} < {rate_per_year:.2f}$ yr⁻¹** (or {rate_per_day:.4f} events/day) on novel morphological transients. This is a constraint driven primarily by the short observation window rather than by the pipeline's sensitivity.\n")
         
