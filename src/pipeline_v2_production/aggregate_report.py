@@ -1753,10 +1753,10 @@ class AggregateReporter:
         # ----------------------------------------------------------
         # Section 17: PEM Offline Coherence Defense
         # ----------------------------------------------------------
+        md_lines.append(f"## {sec_num}. PEM Offline Coherence Defense")
+        sec_num += 1
         pem_report_path = self.output_dir / "pem" / "coherence_report.csv"
         if pem_report_path.exists():
-            md_lines.append(f"## {sec_num}. PEM Offline Coherence Defense")
-            sec_num += 1
             md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
             md_lines.append("")
             try:
@@ -1778,6 +1778,9 @@ class AggregateReporter:
                 logger.error(f"Failed to load PEM report for markdown: {e}")
                 md_lines.append(f"*Error loading PEM report: {e}*")
                 md_lines.append("")
+        else:
+            md_lines.append("> Waiting for PEM coherence module injection...")
+            md_lines.append("")
 
         md_lines.append(f"## {sec_num}. Limitations and Caveats")
         sec_num += 1

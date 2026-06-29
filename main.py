@@ -2814,16 +2814,24 @@ def cmd_aggregate_report(args):
     logger.info("Starting automated offline validation...")
     import subprocess
     import sys
+    import os
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.path.abspath(".")
+    
     try:
         from src.core.utils import load_config
         detectors = load_config().get("detectors", ["H1", "L1"])
         
         for det in detectors:
             logger.info(f"-> Running Poisson Upper Limit ({det})...")
-            subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", det], check=True)
+            subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", det], env=env, check=True)
 
         logger.info("-> Running PEM Coherence Analysis...")
-        subprocess.run([sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"], check=True)
+        pem_cmd = [sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"]
+        if hasattr(args, "nds_host") and args.nds_host:
+            pem_cmd.extend(["--nds-host", args.nds_host])
+            
+        subprocess.run(pem_cmd, env=env, check=True)
         
         logger.info("All automated offline validation scripts completed and injected successfully.")
     except Exception as e:
@@ -4069,6 +4077,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         default="O4a",
         help="Observing run context for EVT thresholds (e.g. O4a, O3b).",
+    )
+    p_aggregate.add_argument(
+        "--nds-host", 
+        type=str, 
+        default=None, 
+        help="NDS2 server hostname for PEM analysis (e.g. nds.gwosc.org). If omitted, runs in public NULL-RESULT mode."
     )
     p_aggregate.set_defaults(func=cmd_aggregate_report)
 

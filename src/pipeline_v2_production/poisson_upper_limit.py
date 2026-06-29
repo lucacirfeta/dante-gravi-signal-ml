@@ -163,8 +163,8 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
         
         f.write("#### 1. Livetime Analysis\n")
         f.write(f"- **Detector:** {target_detector}\n")
-        f.write(f"- **Effective Livetime:** {livetime_days * 86400:,.1f} seconds\n")
-        f.write(f"- **Effective Livetime:** {livetime_days:,.3f} days ({livetime_days / 365.25:,.4f} years)\n")
+        f.write(f"- **Effective Livetime (Seconds):** {livetime_days * 86400:,.1f}\n")
+        f.write(f"- **Effective Livetime (Days):** {livetime_days:,.3f} ({livetime_days / 365.25:,.4f} years)\n")
         f.write(f"*Note on Coverage: A DANTE 'session' does not represent a single 4096s GWOSC file, but rather a continuous macro-block of analysis spanning several days. Consequently, {n_sessions} sessions cover a calendar bounding span of ~{bounding_span_days:.0f} days. This calendar span encompasses both `ANALYSIS_READY` segments and natural detector gaps, which explains the discrepancy between the ~{bounding_span_days:.0f} calendar days and the actual ~{livetime_days:.0f} days of pure science mode livetime. Overlapping session boundaries have been strictly disjoint-merged to avoid double-counting.*\n\n")
         
         f.write("#### 2. Event Statistics\n")
@@ -215,8 +215,13 @@ def _inject_into_final_report(aggregated_dir: Path):
         
         # Replace existing section if present
         if "Poisson Upper Limit (Offline Validation)" in content:
-            # Regex to replace everything from ## <any>. Poisson until ## <any>. PEM or ## <any>. Limitations or end of file
-            content = re.sub(r"(## \d+\. Poisson Upper Limit \(Offline Validation\)).*?(?=## \d+\. PEM Offline|## \d+\. Limitations|\Z)", lambda m: m.group(1) + "\n" + full_injection_body, content, flags=re.DOTALL)
+            # Regex to replace everything from the Poisson header until the NEXT numbered header or EOF
+            content = re.sub(
+                r"(## \d+\. Poisson Upper Limit \(Offline Validation\)).*?(?=\n## \d+\. |\Z)",
+                lambda m: m.group(1) + "\n" + full_injection_body,
+                content,
+                flags=re.DOTALL
+            )
             new_content = content
         else:
             if "PEM Offline" in content:
