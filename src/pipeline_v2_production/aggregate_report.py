@@ -1725,30 +1725,18 @@ class AggregateReporter:
             try:
                 import pandas as pd
                 pem_df = pd.read_csv(pem_report_path)
-                md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant |")
-                md_lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+                md_lines.append("| Detector | GPS Start | Family | Aux Channel | Max Coherence | Peak Freq (Hz) | Significant | Notes |")
+                md_lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
                 for _, row in pem_df.iterrows():
                     sig_icon = "🔴 YES" if row.get("significant", False) else "🟢 NO"
                     coh_val = row.get("max_coherence")
                     coh_str = f"{coh_val:.3f}" if pd.notna(coh_val) else "N/A"
                     freq_val = row.get("peak_freq")
                     freq_str = f"{freq_val:.1f}" if pd.notna(freq_val) else "N/A"
-                    md_lines.append(f"| {row.get('detector', '')} | {row.get('gps_start', '')} | {row.get('family', '')} | {row.get('aux_channel', '')} | {coh_str} | {freq_str} | {sig_icon} |")
+                    notes = row.get("notes", "")
+                    md_lines.append(f"| {row.get('detector', '')} | {row.get('gps_start', '')} | {row.get('family', '')} | {row.get('aux_channel', '')} | {coh_str} | {freq_str} | {sig_icon} | {notes} |")
                 md_lines.append("")
-                
-                # Check for plots
-                pem_plots_dir = self.output_dir / "pem" / "coherence_plots"
-                if pem_plots_dir.exists():
-                    plots = list(pem_plots_dir.glob("*.png"))
-                    if plots:
-                        md_lines.append("````carousel")
-                        for i, p in enumerate(plots):
-                            if i > 0:
-                                md_lines.append("<!-- slide -->")
-                            rel_p = "file:///" + str(p.resolve()).replace("\\", "/")
-                            md_lines.append(f"![PEM Coherence {p.name}]({rel_p})")
-                        md_lines.append("````")
-                        md_lines.append("")
+
             except Exception as e:
                 logger.error(f"Failed to load PEM report for markdown: {e}")
                 md_lines.append(f"*Error loading PEM report: {e}*")
