@@ -30,8 +30,10 @@ pip install -r requirements.txt
 # 2. Download raw GWOSC strain data (L1, 72 hours)
 python main.py fetch-raw --detector L1 --hours 72
 
-# 3. Build the baseline memory dictionary (Vector Quantization)
-python main.py build-patch-reference --detector L1
+# 3. Obtain the baseline memory dictionary (Vector Quantization)
+# Download the required patch_compressed_index.npz from Zenodo into data/reference/
+# (e.g. using wget or manually downloading it)
+mkdir -p data/reference/
 
 # 4. Run production inference (MIL Top-68 scoring)
 python main.py patch-production --detector L1 --k 68 --batch-size 32
@@ -74,7 +76,7 @@ Raw O4a strain data is fetched programmatically from the Gravitational Wave Open
 For immediate verification without re-running the feature extraction, the labeled benchmark sets and O4a reference indices are permanently hosted on Zenodo:
 - **In-Domain Reference Index:** `10.5281/zenodo.5649212`
 - **Gravity Spy Training Set:** `10.5281/zenodo.1476551`
-- The pipeline will automatically fetch the necessary `.npz` indices if they are missing from `data/reference/`.
+- The pipeline will automatically fetch the necessary `.npz` indices for V1 legacy if they are missing from `data/reference/`. For V2 production, ensure `patch_compressed_index.npz` is manually placed in `data/reference/`.
 
 ## 📊 Key Results
 *Note: All empirical claims are strictly bounded by the conditions under which they were measured.*
