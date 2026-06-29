@@ -2810,6 +2810,25 @@ def cmd_aggregate_report(args):
     reporter = AggregateReporter(production_dir=args.production_dir, run=run)
     reporter.run()
 
+    # Automatically run offline validation scripts
+    logger.info("Starting automated offline validation...")
+    import subprocess
+    import sys
+    try:
+        from src.core.utils import load_config
+        detectors = load_config().get("detectors", ["H1", "L1"])
+        
+        for det in detectors:
+            logger.info(f"-> Running Poisson Upper Limit ({det})...")
+            subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", det], check=True)
+
+        logger.info("-> Running PEM Coherence Analysis...")
+        subprocess.run([sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"], check=True)
+        
+        logger.info("All automated offline validation scripts completed and injected successfully.")
+    except Exception as e:
+        logger.error(f"Failed to execute automated offline validation scripts: {e}")
+
 
 def cmd_patch_analysis(args):
     """Orchestrates the full Phase 4 & 5 pipeline."""

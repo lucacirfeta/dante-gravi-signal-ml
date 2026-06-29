@@ -1226,8 +1226,8 @@ class AggregateReporter:
                 if result["nans"] == 0:
                     result["max_amplitude"] = float(np.max(np.abs(strain)))
                     
-                # 2. Fetch DQ Flag
-                flag = DataQualityFlag.fetch_open_data(f"{det}:DATA", gps - 2, gps + 2)
+                # 2. Fetch DQ Flag (CBC_CAT1 as per paper)
+                flag = DataQualityFlag.fetch_open_data(f"{det}_CBC_CAT1", gps - 2, gps + 2)
                 result["dq_active"] = bool(gps in flag.active)
                 
                 # 3. Classify
@@ -1527,7 +1527,7 @@ class AggregateReporter:
                         md_lines.append(f"- **Max Amplitude:** {data.get('max_amplitude'):.2e}")
                     dq = data.get('dq_active')
                     dq_str = "True (Science Mode, reliable)" if dq else "False (Data Quality compromised / not Science Mode)"
-                    md_lines.append(f"- **GWOSC '{data.get('detector')}:DATA' Flag Active:** {dq_str}")
+                    md_lines.append(f"- **GWOSC '{data.get('detector')}_CBC_CAT1' Flag Active:** {dq_str}")
         else:
             md_lines.append("- Sanity checks: No data available.")
         md_lines.append("")
@@ -1680,7 +1680,8 @@ class AggregateReporter:
                     md_lines.append("")
 
         # Gravity Spy
-        md_lines.append("## 13. Supervised Validation (Gravity Spy)")
+        md_lines.append(f"## {sec_num}. Supervised Validation (Gravity Spy)")
+        sec_num += 1
         tot_eval = ds_metrics.get('total_evaluated', 0)
         if tot_eval > 0:
             md_lines.append(f"All **{tot_eval}** final evaluated events were cross-matched against Gravity Spy's supervised labels.")
@@ -1693,14 +1694,23 @@ class AggregateReporter:
         # Limitations
         # Section 15: Physics Correlation Defense
         physics_corr = metrics.get('physics_correlation', {})
-        md_lines.append("## 15. Physics Correlation Defense")
+        md_lines.append(f"## {sec_num}. Physics Correlation Defense")
+        sec_num += 1
         if physics_corr and physics_corr.get('status') != 'FAILED':
             global_stats = physics_corr.get('global', {})
             r_val = global_stats.get('r_pearson', 'N/A')
             rho_val = global_stats.get('rho_spearman', 'N/A')
             p_val = global_stats.get('p_value_mantel', 'N/A')
             n_events = global_stats.get('n_samples', 'N/A')
-            md_lines.append(f"Global Mantel test (N={n_events}): Pearson r = {r_val}, Spearman ρ = {rho_val}, p-value (permutation, 9999 iters) = {p_val}")
+            
+            r_val_str = f"{r_val:.3f}" if isinstance(r_val, (int, float)) else str(r_val)
+            rho_val_str = f"{rho_val:.3f}" if isinstance(rho_val, (int, float)) else str(rho_val)
+            if isinstance(p_val, (int, float)):
+                p_val_str = "< 0.0001" if abs(p_val - 0.0001) < 1e-9 else f"{p_val:.4f}"
+            else:
+                p_val_str = str(p_val)
+                
+            md_lines.append(f"Global Mantel test (N={n_events}): Pearson r = {r_val_str}, Spearman ρ = {rho_val_str}, p-value (permutation, 9999 iters) = {p_val_str}")
             md_lines.append("")
             md_lines.append("> **SNR definition**: peak of whitened time-series amplitude, NOT matched-filter SNR (PyCBC/BayesWave).")
             md_lines.append("")
@@ -1709,9 +1719,16 @@ class AggregateReporter:
                 md_lines.append("| Family | N | r (Pearson) | ρ (Spearman) | p (Mantel) | Note |")
                 md_lines.append("| --- | --- | --- | --- | --- | --- |")
                 for fam in per_family:
-                    r_f = f"{fam['r_pearson']:.3f}" if fam.get('r_pearson') is not None and not (isinstance(fam.get('r_pearson'), float) and np.isnan(fam['r_pearson'])) else 'N/A'
-                    rho_f = f"{fam['rho_spearman']:.3f}" if fam.get('rho_spearman') is not None and not (isinstance(fam.get('rho_spearman'), float) and np.isnan(fam['rho_spearman'])) else 'N/A'
-                    p_f = f"{fam['p_value_mantel']:.4f}" if fam.get('p_value_mantel') is not None and not (isinstance(fam.get('p_value_mantel'), float) and np.isnan(fam['p_value_mantel'])) else 'N/A'
+                    if fam['n'] <= 3:
+                        r_f, rho_f, p_f = 'N/A', 'N/A', 'N/A'
+                    else:
+                        r_f = f"{fam['r_pearson']:.3f}" if fam.get('r_pearson') is not None and not (isinstance(fam.get('r_pearson'), float) and np.isnan(fam['r_pearson'])) else 'N/A'
+                        rho_f = f"{fam['rho_spearman']:.3f}" if fam.get('rho_spearman') is not None and not (isinstance(fam.get('rho_spearman'), float) and np.isnan(fam['rho_spearman'])) else 'N/A'
+                        p_raw = fam.get('p_value_mantel')
+                        if p_raw is not None and not (isinstance(p_raw, float) and np.isnan(p_raw)):
+                            p_f = "< 0.0001" if abs(p_raw - 0.0001) < 1e-9 else f"{p_raw:.4f}"
+                        else:
+                            p_f = 'N/A'
                     md_lines.append(f"| {fam['family']} | {fam['n']} | {r_f} | {rho_f} | {p_f} | {fam.get('note', '')} |")
                 md_lines.append("")
             # Embed figure if it exists
@@ -1728,7 +1745,8 @@ class AggregateReporter:
         # ----------------------------------------------------------
         # Section 16: Poisson Upper Limit Placeholder
         # ----------------------------------------------------------
-        md_lines.append("## 16. Poisson Upper Limit (Offline Validation)")
+        md_lines.append(f"## {sec_num}. Poisson Upper Limit (Offline Validation)")
+        sec_num += 1
         md_lines.append("> Waiting for poisson module injection...")
         md_lines.append("")
 
@@ -1737,7 +1755,8 @@ class AggregateReporter:
         # ----------------------------------------------------------
         pem_report_path = self.output_dir / "pem" / "coherence_report.csv"
         if pem_report_path.exists():
-            md_lines.append("## 17. PEM Offline Coherence Defense")
+            md_lines.append(f"## {sec_num}. PEM Offline Coherence Defense")
+            sec_num += 1
             md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
             md_lines.append("")
             try:
@@ -1760,7 +1779,8 @@ class AggregateReporter:
                 md_lines.append(f"*Error loading PEM report: {e}*")
                 md_lines.append("")
 
-        md_lines.append("## 18. Limitations and Caveats")
+        md_lines.append(f"## {sec_num}. Limitations and Caveats")
+        sec_num += 1
         md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
         md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
         

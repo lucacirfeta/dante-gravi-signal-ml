@@ -209,23 +209,22 @@ def _inject_into_final_report(aggregated_dir: Path):
         text = text.replace(f"# Poisson Upper Limit on {det} Data\n\n", f"### {det} Upper Limit\n\n")
         combined_content.append(text)
         
-    full_injection = "\n## 16. Poisson Upper Limit (Offline Validation)\n\n" + "\n---\n\n".join(combined_content) + "\n"
-        
+    full_injection_body = "\n" + "\n---\n\n".join(combined_content) + "\n"
     try:
         content = master_report.read_text(encoding="utf-8")
         
         # Replace existing section if present
-        if "## 16. Poisson Upper Limit (Offline Validation)" in content:
-            # Regex to replace everything from ## 16 until ## 17. PEM or end of file
-            content = re.sub(r"## 16\. Poisson Upper Limit \(Offline Validation\).*?(?=## 17\. PEM Offline|## 18\. Limitations|\Z)", lambda _: full_injection, content, flags=re.DOTALL)
+        if "Poisson Upper Limit (Offline Validation)" in content:
+            # Regex to replace everything from ## <any>. Poisson until ## <any>. PEM or ## <any>. Limitations or end of file
+            content = re.sub(r"(## \d+\. Poisson Upper Limit \(Offline Validation\)).*?(?=## \d+\. PEM Offline|## \d+\. Limitations|\Z)", lambda m: m.group(1) + "\n" + full_injection_body, content, flags=re.DOTALL)
             new_content = content
         else:
-            if "## 17. PEM Offline" in content:
-                new_content = content.replace("## 17. PEM Offline", full_injection + "## 17. PEM Offline")
-            elif "## 18. Limitations" in content:
-                new_content = content.replace("## 18. Limitations", full_injection + "## 18. Limitations")
+            if "PEM Offline" in content:
+                new_content = re.sub(r"(## \d+\. PEM Offline)", r"## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body + r"\1", content)
+            elif "Limitations" in content:
+                new_content = re.sub(r"(## \d+\. Limitations)", r"## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body + r"\1", content)
             else:
-                new_content = content + full_injection
+                new_content = content + "\n## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body
                 
         master_report.write_text(new_content, encoding="utf-8")
         logger.info("Successfully injected/updated Upper Limit into Final_Discovery_Report.md.")
