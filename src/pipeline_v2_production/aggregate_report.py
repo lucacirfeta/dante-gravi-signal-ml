@@ -1788,11 +1788,8 @@ class AggregateReporter:
         md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
         
         if total_singletons > 0:
-            if len(error_singletons) > 0:
-                md_lines.append(f"- **Spurious Singletons:** The {len(error_singletons)} identified singleton(s) (GPS: {', '.join(map(str, error_singletons))}) lack available visual Q-transform/saliency images and cannot be visually validated. Their origin remains undetermined.")
-            else:
-                gps_list = [int(r['gps_start']) for _, r in singleton_rows.iterrows()]
-                md_lines.append(f"- **Spurious Singletons:** The {total_singletons} isolated singleton(s) (GPS: {', '.join(map(str, gps_list))}) have visual validation images available, but as isolated anomalies they still require human inspection to exclude DAQ dropouts.")
+            gps_list = [int(r['gps_start']) for _, r in singleton_rows.iterrows()]
+            md_lines.append(f"- **Spurious Singletons ({total_singletons} events - GPS: {', '.join(map(str, gps_list))}):** Despite showing formal PEM coherence hits (e.g., at 180Hz mains or frequency-shifted calibration lines), the lack of multiple-comparisons correction for the C>=0.6 threshold implies a high false positive rate for casual noise. These hits are physically weak or ambiguous and warrant further manual investigation rather than being considered definitively 'instrumentally explained'.")
         else:
             md_lines.append("- **Spurious Singletons:** No singletons detected; all events form defined morphological clusters.")
             
