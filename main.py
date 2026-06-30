@@ -2827,9 +2827,7 @@ def cmd_aggregate_report(args):
             subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", det], env=env, check=True)
 
         logger.info("-> Running PEM Coherence Analysis...")
-        pem_cmd = [sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"]
-        if hasattr(args, "nds_host") and args.nds_host:
-            pem_cmd.extend(["--nds-host", args.nds_host])
+        pem_cmd = [sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py", "--nds-host", "nds.gwosc.org"]
             
         subprocess.run(pem_cmd, env=env, check=True)
         
