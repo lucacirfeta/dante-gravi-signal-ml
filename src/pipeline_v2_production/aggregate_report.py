@@ -1789,7 +1789,7 @@ class AggregateReporter:
         
         if total_singletons > 0:
             gps_list = [int(r['gps_start']) for _, r in singleton_rows.iterrows()]
-            md_lines.append(f"- **Spurious Singletons ({total_singletons} events - GPS: {', '.join(map(str, gps_list))}):** Despite showing formal PEM coherence hits (e.g., at 180Hz mains or frequency-shifted calibration lines), the lack of multiple-comparisons correction for the C>=0.6 threshold implies a high false positive rate for casual noise. These hits are physically weak or ambiguous and warrant further manual investigation rather than being considered definitively 'instrumentally explained'.")
+            md_lines.append(f"- **Spurious Singletons ({total_singletons} events - GPS: {', '.join(map(str, gps_list))}):** The isolated singleton(s) have visual validation images available. Note: any formal PEM coherence hits for these isolated events must be interpreted cautiously. The lack of multiple-comparisons correction for the C>=0.6 threshold across many auxiliary channels implies a high false positive rate for casual noise (e.g., ubiquitous mains harmonics or weak couplings). Such hits are often physically ambiguous and warrant further manual investigation rather than being considered definitively 'instrumentally explained'.")
         else:
             md_lines.append("- **Spurious Singletons:** No singletons detected; all events form defined morphological clusters.")
             
