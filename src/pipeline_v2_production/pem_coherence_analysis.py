@@ -543,8 +543,8 @@ def _inject_into_final_report(
         if "PEM Offline Coherence Defense" in content:
             logger.info("PEM section already exists — overwriting.")
             content = re.sub(
-                r"(## \d+\. PEM Offline Coherence Defense).*?(?=\n## \d+\. |\Z)",
-                r"\1\n" + new_section.replace('\\', '\\\\'),
+                r"(## (?:X|\d+)\. PEM Offline Coherence Defense).*?(?=\n## |\Z)",
+                r"\1\n" + new_section.replace('\\', '\\\\') + "\n",
                 content,
                 flags=re.DOTALL
             )
@@ -561,10 +561,17 @@ def _inject_into_final_report(
 
 if __name__ == "__main__":
     import sys
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Run PEM Coherence Analysis")
+    parser.add_argument("--nds-host", type=str, default=None, help="NDS2 server hostname")
+    args, unknown = parser.parse_known_args()
+    
     project_root = Path(__file__).resolve().parent.parent.parent
     run_pem_coherence_analysis(
         taxonomy_csv=project_root / "data" / "production" / "aggregated" / "Master_Taxonomy_O4a.csv",
         cache_dir=project_root / "data" / "raw" / "auxiliary",
         output_dir=project_root / "data" / "production" / "aggregated",
         max_events_per_family=3,
+        nds_host=args.nds_host
     )

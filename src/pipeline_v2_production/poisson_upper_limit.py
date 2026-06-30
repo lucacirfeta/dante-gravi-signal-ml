@@ -216,18 +216,17 @@ def _inject_into_final_report(aggregated_dir: Path):
         # Replace existing section if present
         if "Poisson Upper Limit (Offline Validation)" in content:
             # Regex to replace everything from the Poisson header until the NEXT numbered header or EOF
-            content = re.sub(
-                r"(## \d+\. Poisson Upper Limit \(Offline Validation\)).*?(?=\n## \d+\. |\Z)",
+            new_content = re.sub(
+                r"(## (?:X|\d+)\. Poisson Upper Limit \(Offline Validation\)).*?(?=\n## |\Z)",
                 lambda m: m.group(1) + "\n" + full_injection_body,
                 content,
                 flags=re.DOTALL
             )
-            new_content = content
         else:
             if "PEM Offline" in content:
-                new_content = re.sub(r"(## \d+\. PEM Offline)", r"## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body + r"\1", content)
+                new_content = re.sub(r"(## (?:X|\d+)\. PEM Offline)", r"## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body + r"\n\1", content)
             elif "Limitations" in content:
-                new_content = re.sub(r"(## \d+\. Limitations)", r"## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body + r"\1", content)
+                new_content = re.sub(r"(## (?:X|\d+)\. Limitations)", r"## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body + r"\n\1", content)
             else:
                 new_content = content + "\n## X. Poisson Upper Limit (Offline Validation)\n" + full_injection_body
                 
