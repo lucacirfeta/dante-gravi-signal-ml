@@ -850,7 +850,7 @@ class AggregateReporter:
         # ----------------------------------------------------------
         # Phase 9: Domain Shift Defense (Native O4a Index)
         # ----------------------------------------------------------
-        domain_shift_metrics = self._run_domain_shift_defense(master) if 'master' in locals() else {}
+        domain_shift_metrics = self._run_domain_shift_defense(master_df) if 'master_df' in locals() else {}
 
         # ----------------------------------------------------------
         # Phase 9b: Strain Sanity Check & Physical Validation
@@ -1841,7 +1841,7 @@ if __name__ == "__main__":
             subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", det], check=True)
 
         logger.info("-> Running PEM Coherence Analysis...")
-        subprocess.run([sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"], check=True)
+        subprocess.run([sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py", "--nds-host", "nds.gwosc.org"], check=True)
         
         logger.info("All automated offline validation scripts completed and injected successfully.")
     except subprocess.CalledProcessError as e:
