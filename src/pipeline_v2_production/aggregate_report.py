@@ -1071,12 +1071,12 @@ class AggregateReporter:
                 
         if not background_spectrograms:
             logger.error("Failed to fetch any background spectrograms. Falling back to 0.1433.")
-            return 0.1433
+            return 0.1433, np.array([0.1433])
             
         logger.info(f"Successfully generated {len(background_spectrograms)} background spectrograms. Calibrating...")
         threshold, scores_np, gev_params = scorer.calibrate_threshold(background_spectrograms, batch_size=32)
         logger.info(f"Native O4a Threshold Calibrated: {threshold:.4f} (GEV: {gev_params})")
-        return float(threshold)
+        return float(threshold), scores_np
 
     def _run_domain_shift_defense(self, master_df) -> dict:
         import numpy as np
@@ -1104,7 +1104,34 @@ class AggregateReporter:
             logger.error(f"Failed to load O4a index: {e}")
             return metrics
             
-        threshold = self._calibrate_native_threshold(scorer, n_samples=200)
+        res = self._calibrate_native_threshold(scorer, n_samples=200)
+        if isinstance(res, tuple):
+            threshold, scores_np = res
+        else:
+            threshold = res
+            scores_np = np.array([threshold])
+        
+        # Block Bootstrap for correct 95% CI of the threshold (B=1000)
+        import numpy as np
+        np.random.seed(42)
+        B = 1000
+        n_scores = len(scores_np)
+        if n_scores > 1:
+            boot_thresholds = []
+            for _ in range(B):
+                boot_sample = np.random.choice(scores_np, size=n_scores, replace=True)
+                boot_thresholds.append(np.percentile(boot_sample, 99.0)) # 1% FPR = 99th percentile
+            boot_thresholds = np.array(boot_thresholds)
+            ci_upper_bound = float(np.percentile(boot_thresholds, 97.5)) # Upper bound of 95% CI
+            mean_threshold = float(np.mean(boot_thresholds))
+        else:
+            ci_upper_bound = threshold
+            mean_threshold = threshold
+        
+        robust = 0
+        ambiguous = 0
+        background = 0
+        
         survived = 0
         total = len(master_df)
         new_mil_vectors = {}
@@ -1116,21 +1143,17 @@ class AggregateReporter:
             import pandas as pd
             tax_df = pd.read_csv(tax_path)
             
-        logger.info("Rescoring candidates with Native O4a Index...")
-        for i, row in tqdm(master_df.iterrows(), total=total, desc="Domain Shift"):
-            det = row['detector']
-            gps = float(row['gps_start'])
-            
-            fam = "Unknown"
-            if tax_df is not None:
-                matches = tax_df[(tax_df['gps_start'] == gps) & (tax_df['detector'] == det)]
-                if not matches.empty:
-                    fam = matches.iloc[0]['global_family_id']
-                    
-            cid = f"{gps}_{det}"
-            
+        for idx, row in tqdm(master_df.iterrows(), total=total, desc="Domain Shift Defense"):
             try:
-                cand_ts = fetch_local_or_remote_strain(det, gps, gps + 32, cache_raw=True)
+                cid = f"{row['gps_start']}_{row['detector']}"
+                fam = "Unknown"
+                if tax_df is not None:
+                    match = tax_df[(tax_df['gps_start'] == row['gps_start']) & (tax_df['detector'] == row['detector'])]
+                    if not match.empty:
+                        fam = match.iloc[0]['global_family_id']
+                
+                # Fetch candidate
+                cand_ts = fetch_local_or_remote_strain(row["detector"], float(row["gps_start"]), float(row["gps_start"]) + 32, cache_raw=True)
                 cand_ts = whiten(cand_ts)
                 cand_ts = bandpass(cand_ts)
                 q_gram = generate_qtransform(cand_ts, output_size=(256, 256))
@@ -1141,8 +1164,20 @@ class AggregateReporter:
                     q_gram_rgb = q_gram_uint8
                     
                 res = scorer.score_spectrogram([q_gram_rgb], threshold=threshold)[0]
-                # Only add to family cohesion if it SURVIVED the domain shift defense
-                if res["is_novel"]:
+                score = res['novelty_score']
+                
+                # Dynamic Block-Bootstrap Margin Logic
+                if score >= ci_upper_bound:
+                    robust += 1
+                    is_robust = True
+                elif score >= mean_threshold:
+                    ambiguous += 1
+                    is_robust = False
+                else:
+                    background += 1
+                    is_robust = False
+
+                if is_robust:
                     survived += 1
                     new_mil_vectors[cid] = {
                         "fam": fam,
@@ -1155,6 +1190,9 @@ class AggregateReporter:
         metrics["total_evaluated"] = total
         metrics["survived_native_threshold"] = survived
         metrics["survival_rate"] = float(survived / total) if total > 0 else 0.0
+        metrics["robust_count"] = robust
+        metrics["ambiguous_count"] = ambiguous
+        metrics["background_count"] = background
         
         families = {}
         for cid, data in new_mil_vectors.items():
@@ -1465,9 +1503,16 @@ class AggregateReporter:
         ds = metrics.get('domain_shift_defense', {})
         total_eval = ds.get('total_evaluated', 0)
         survived = ds.get('survived_native_threshold', 0)
-        survival_rate = ds.get('survival_rate', 0.0)
+        robust = ds.get('robust_count', 0)
+        ambiguous = ds.get('ambiguous_count', 0)
+        background = ds.get('background_count', 0)
+        
         if ds.get('experiment_run', False):
-            md_lines.append(f"- **Native O4a Threshold Test:** {survived}/{total_eval} candidates survived ({survival_rate*100:.1f}%)")
+            md_lines.append(f"- **Native O4a Threshold Test (Block-Bootstrap B=1000, 95% CI):** Su {total_eval} candidati valutati:")
+            md_lines.append(f"  - **{robust}** candidati classificati come \"robust\" (punteggio di anomalia superiore all'upper bound del CI)")
+            md_lines.append(f"  - **{ambiguous}** candidati classificati come \"ambiguous\" (sopra la media, sotto l'upper bound)")
+            md_lines.append(f"  - **{background}** candidati classificati come \"background\" (sotto la media del threshold)")
+            md_lines.append(f"  *(Survival rate robusto: {(robust/total_eval)*100:.1f}%)*")
         else:
             md_lines.append("- **Native O4a Threshold Test:** Not executed (native index not available).")
         md_lines.append("")

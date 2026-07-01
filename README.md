@@ -40,6 +40,15 @@ python main.py patch-production --detector L1 --k 68 --batch-size 32
 
 # 5. Cluster the discovered anomalies (DPMM)
 python main.py production-cluster --detector L1
+
+# 6. Aggregate cross-session reports and run stability analysis
+python main.py aggregate-report
+
+# 7. Perform PEM coherence analysis on the candidates
+python main.py pem-coherence-analysis --nds-host nds.gwosc.org
+
+# 8. Calculate Poisson Upper Limit for null-result periods
+python main.py poisson-upper-limit
 ```
 
 ## 🔭 Scientific Context
