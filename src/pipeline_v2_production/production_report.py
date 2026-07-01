@@ -29,10 +29,11 @@ from src.core.encoder import build_dinov2_transform
 logger = setup_logger(__name__)
 
 class ValidationReporter:
-    def __init__(self, session_id: str, detector: str = "H1", run_name: str = "O4a", output_dir: str = "data/production"):
+    def __init__(self, session_id: str, detector: str = "H1", run_name: str = "O4a", reference_run: str = "O3b", output_dir: str = "data/production"):
         self.session_id = session_id
         self.detector = detector
         self.run_name = run_name
+        self.reference_run = reference_run
         self.device = get_device()
         
         self.production_dir = Path(output_dir) / str(session_id)
@@ -231,10 +232,11 @@ class ValidationReporter:
         df_gs = pd.read_csv(csv_path)
         
         # Load VQ index for fallback
-        vq_path = self.reference_dir / "patch_compressed_index.npz"
+        vq_path = self.reference_dir / f"patch_compressed_index_{self.reference_run.lower()}.npz"
         vq_centroids = None
         vq_class_names = None
         if vq_path.exists():
+            logger.info(f"Loading reference index for Fallback VQ Check: {vq_path.name}")
             with np.load(vq_path, allow_pickle=True) as data:
                 vq_centroids = data["embeddings"]
                 vq_class_names = data["labels"]
@@ -810,7 +812,7 @@ class ValidationReporter:
         md_content += "## 2. Morphcheck (Cross-Validation with Gravity Spy)\n"
         stats = self.status.get("morphcheck_stats", {})
         md_content += "By intersecting the detected GPS times with the local Gravity Spy catalogs using a strict interval join (`t_start <= peak_time <= t_start + 32`), we classify anomalies as KNOWN (already in GSpy) or NOVEL (Unclassified).\n"
-        md_content += "If the GSpy catalog is outdated (e.g. O3b vs O4a), we trigger an **Internal VQ Cosine Similarity Check** using the `patch_compressed_index.npz` (L2-normalized 384D mean slice) to identify the Nearest Known Class.\n\n"
+        md_content += f"If the GSpy catalog is outdated (e.g. O3b vs O4a), we trigger an **Internal VQ Cosine Similarity Check** using the `patch_compressed_index_{self.reference_run.lower()}.npz` (L2-normalized 384D mean slice) to identify the Nearest Known Class.\n\n"
         md_content += f"- **DQ Flag Used**: `{self.status.get('dq_flag_used', 'N/A')}`\n"
         md_content += f"- **Total Prototypes Checked**: {stats.get('total_candidates', 0)}\n"
         md_content += f"- **Known (Gravity Spy / VQ Match)**: {stats.get('known', 0)}\n"

@@ -213,9 +213,10 @@ Cross-session read-only reducer. Aggregates unique unclassified novel candidates
      - **Table 3b** (Unverifiable Unilateral Detections: partner inactive)
   6. **Domain Shift Defense:** Re-scores surviving anomalies against the extended O4a background (`patch_compressed_index_o4a_ex.npz`) to ensure transients are morphologically true anomalies and not artifacts of inter-run physical detector changes.
   7. Computes **Spearman rank correlation** ($\rho$) between `n_samples_true` and bootstrap ARI **independently per detector** (never mixing H1/L1). Excludes sessions with `n < 100` and requires `≥ 5` eligible sessions.
-  7. Writes `aggregate_summary.json`, `master_candidates.csv`, `Table_3a_*.csv`, `Table_3b_*.csv`, and `stability_synthesis.log` to `data/production/aggregated/`.
+  8. Writes `aggregate_summary.json`, `master_candidates.csv`, `Table_3a_*.csv`, `Table_3b_*.csv`, and `stability_synthesis.log` to `data/production/aggregated/`.
 
 - `--production-dir`: Root production directory. *Default: `data/production/`*.
+- `--run`: Observing run context for EVT thresholds (e.g. O4a, O4b). *Default: `O4a`*.
 
 ### 🧱 SECONDARY COMMANDS (Modular / Debug)
 These commands are invoked automatically in sequence by the Primary Commands. Use them individually only for debugging or step-by-step execution.
@@ -229,14 +230,16 @@ Run the Phase 4 Patch-Level Production pipeline directly on raw O4a data.
   3. Preprocessed images are yielded in batches of size `--batch-size`.
   4. The batched images are sent to DINOv2 on GPU, generating embeddings, calculating Top-K L2-normalized MIL vectors, and computing extreme-value p99 threshold anomaly scores against a compressed Vector Quantization (VQ) reference index.
   5. Continuous output is recorded chronologically in an SWMR HDF5 dataset inside `data/production/<session_id>`. Supports seamless `--resume`.
+  6. **Dual-Scoring**: Automatically searches for a native run index (`patch_compressed_index_{run}_ex.npz` or `.npz`). If found, dynamically enables a secondary novelty scoring pass directly on the native background for *Domain Shift Defense*, with zero I/O overhead.
 
 - `--detector` **(Required)**: Detector to use. Choices: `H1`, `L1`.
 - `--data-dir`: Directory containing raw HDF5 files. *Default: `data/raw/o4a/`*.
 - `--sessions`: List of sessions to process. If empty, processes all folders.
 - `--output-dir`: Output directory. *Default: `data/production/`*.
 - `--resume`: Flag. Resumes from the last checkpoint written to the HDF5 archive.
+- `--run`: Observing run context (e.g., O4a, O4b). Determines native index for dual-scoring. *Default: `O4a`*.
 - `--k`: Number of top-k patches for MIL vector pooling. *Default: `68`*.
-- `--fpr`: False Positive Rate for theoretical GEV thresholding (future use). *Default: `0.01`*.
+- `--fpr`: False Positive Rate for theoretical GEV thresholding (empirical). *Default: `0.01`* (Note: highly recommended to use `0.05` for broad searches).
 - `--n-background`: Samples used for empirical threshold calibration. *Default: `500`*.
 - `--seed`: Random seed. *Default: `42`*.
 - `--workers`: Number of CPU workers for parallel Q-Transform preprocessing. *Default: `8`*.

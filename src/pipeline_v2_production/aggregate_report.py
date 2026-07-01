@@ -696,8 +696,12 @@ class AggregateReporter:
                 })
                 
             master_df = pd.DataFrame(master_records)
-            master_df.to_csv(self.output_dir / "Master_Taxonomy_O4a.csv", index=False)
-            logger.info(f"Saved Master_Taxonomy_O4a.csv with {len(master_df)} candidates (including Gravity Spy labels).")
+            
+            # Final output paths parameterised with self.observing_run
+            master_df.to_csv(self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv", index=False)
+            md_content = f"# Master Anomaly Taxonomy - {self.observing_run}\n\n"
+            md_content += "This report aggregates all validated True Anomalies across all processed sessions.\n\n"
+            logger.info(f"Saved Master_Taxonomy_{self.observing_run}.csv with {len(master_df)} candidates (including Gravity Spy labels).")
 
             # 4. Global Taxonomy Report JSON
             global_families = []
@@ -816,8 +820,8 @@ class AggregateReporter:
             "duplicates_removed": duplicates_removed if 'duplicates_removed' in locals() else 0,
             "table_3a_count": len(table_3a) if 'table_3a' in locals() else 0,
             "table_3b_count": len(table_3b) if 'table_3b' in locals() else 0,
-            "max_cross_similarity": max_cross_sim if 'max_cross_sim' in locals() else 0.0,
-            "highly_similar_pairs_count": highly_sim_count if 'highly_sim_count' in locals() else 0,
+            "max_cross_sim": max_cross_sim if 'max_cross_sim' in locals() else 0.0,
+            "highly_sim_count": highly_sim_count if 'highly_sim_count' in locals() else 0,
         }
         for det in DETECTORS:
             summary[det.lower()] = spearman_results[det.lower()]
@@ -888,7 +892,7 @@ class AggregateReporter:
         # ----------------------------------------------------------
         # Phase 9b: Physics Correlation Defense
         # ----------------------------------------------------------
-        taxonomy_csv = self.output_dir / "Master_Taxonomy_O4a.csv"
+        taxonomy_csv = self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv"
         physics_stats = {}
         physics_stats_json = self.output_dir / "physics" / "physics_correlation_stats.json"
         
@@ -914,11 +918,12 @@ class AggregateReporter:
                     logger.error(f"Physics Correlation Test failed: {e}")
                     physics_stats = {"status": "FAILED", "error": str(e)}
         else:
-            logger.warning("Master_Taxonomy_O4a.csv not found. Skipping Physics Correlation.")
+            logger.warning("Master_Taxonomy file not found. Skipping Physics Correlation.")
             
-        with open(self.output_dir / "master_report.json", "w") as f:
-            json.dump(master_report, f, indent=4)
-        logger.info("Saved master_report.json")
+        with open(self.output_dir / f"Aggregate_Report_{self.observing_run}.md", "w") as f:
+            f.write(md_content)
+            
+        logger.info(f"Aggregation complete. Taxonomy saved to Master_Taxonomy_{self.observing_run}.csv")
 
         # ----------------------------------------------------------
         # Phase 10: Generate Final Discovery Markdown Report
@@ -1018,49 +1023,146 @@ class AggregateReporter:
         logger.info(f"Wrote stability_synthesis.log")
 
 
-    def _calibrate_native_threshold(self) -> dict:
+    def _extract_detector_background(self, scorer, det_name, target_n=5000) -> np.ndarray:
+        import numpy as np
+        import random
+        from gwpy.timeseries import TimeSeries
+        from src.core.data_loader import _DATA_DIRECTORIES
+        from src.core.preprocessor import whiten, bandpass, generate_qtransform
+        import logging
+        logger = logging.getLogger("aggregate_report")
+        
+        valid_files = []
+        for dir_path in _DATA_DIRECTORIES:
+            if dir_path.exists():
+                valid_files.extend(list(dir_path.rglob(f"{det_name}_*.hdf5")))
+                
+        if not valid_files:
+            return np.array([])
+            
+        random.seed(42)
+        random.shuffle(valid_files)
+        scores = []
+        batch_size = 64
+        batch_grams = []
+        
+        logger.info(f"Extracting {target_n} background scores from raw data for {det_name}...")
+        for file_path in valid_files:
+            if len(scores) >= target_n:
+                break
+            try:
+                ts = TimeSeries.read(file_path)
+                duration = int(ts.duration.value)
+                
+                # Use a step of 64s: 32s segment + 32s guard time
+                for start_offset in range(0, duration, 64):
+                    if start_offset + 32 > duration:
+                        break
+                    
+                    sub_ts = ts.crop(ts.t0.value + start_offset, ts.t0.value + start_offset + 32)
+                    ts_w = whiten(sub_ts)
+                    ts_bp = bandpass(ts_w)
+                    q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
+                    q_gram_uint8 = (q_gram * 255).astype(np.uint8)
+                    if q_gram_uint8.ndim == 2:
+                        q_gram_rgb = np.stack([q_gram_uint8]*3, axis=-1)
+                    else:
+                        q_gram_rgb = q_gram_uint8
+                    
+                    batch_grams.append(q_gram_rgb)
+                    
+                    if len(batch_grams) == batch_size:
+                        batch_res = scorer.score_spectrogram(batch_grams, threshold=1.0)
+                        for r in batch_res:
+                            scores.append(r['novelty_score'])
+                            if len(scores) >= target_n:
+                                break
+                        batch_grams = []
+                        if len(scores) >= target_n:
+                            break
+            except Exception:
+                pass
+                
+        if len(batch_grams) > 0 and len(scores) < target_n:
+            batch_res = scorer.score_spectrogram(batch_grams, threshold=1.0)
+            for r in batch_res:
+                scores.append(r['novelty_score'])
+                if len(scores) >= target_n:
+                    break
+                    
+        return np.array(scores[:target_n], dtype=np.float32)
+
+    def _calibrate_native_threshold(self, scorer) -> dict:
         import numpy as np
         import os
         from pathlib import Path
         import logging
         logger = logging.getLogger("aggregate_report")
         
-        l1_path = Path("data/production/aggregated/background_scores_L1.npy")
-        h1_path = Path("data/production/aggregated/background_scores_H1.npy")
-        
-        if not l1_path.exists() or not h1_path.exists():
-            logger.error("Detector-specific background scores not found. Run scratch/compute_background_scores.py first.")
-            return {}
-            
-        l1_scores = np.load(l1_path)
-        h1_scores = np.load(h1_path)
-        
-        def block_bootstrap_p99_ci(scores, B=1000, seed=42):
-            np.random.seed(seed)
-            n = len(scores)
-            b = max(1, int(n**(1/3)))
-            num_blocks = int(np.ceil(n / b))
-            
-            bootstrap_p99 = np.zeros(B)
-            for i in range(B):
-                block_starts = np.random.randint(0, n - b + 1, size=num_blocks)
-                boot_sample = []
-                for start in block_starts:
-                    boot_sample.extend(scores[start:start+b])
-                boot_sample = np.array(boot_sample[:n])
-                bootstrap_p99[i] = np.percentile(boot_sample, 99)
+        result_dict = {}
+        for det in ["L1", "H1"]:
+            det_path = self.output_dir / f"background_scores_{det}_{self.observing_run}.npy"
+            if det_path.exists():
+                scores = np.load(det_path)
+            else:
+                # Option A: Check for Dual-Scoring native scores
+                native_files = list(self.production_dir.rglob(f"{self.observing_run}_*_{det}_native_scores.npy"))
+                scores_list = []
+                for f in native_files:
+                    try:
+                        scores_list.extend(np.load(f))
+                    except:
+                        pass
                 
-            ci_upper = np.percentile(bootstrap_p99, 97.5)
-            ci_lower = np.percentile(bootstrap_p99, 2.5)
-            return ci_lower, ci_upper
+                if len(scores_list) >= 5000:
+                    import random
+                    random.seed(42)
+                    scores = np.array(random.sample(scores_list, 5000), dtype=np.float32)
+                    np.save(det_path, scores)
+                    logger.info(f"Sampled 5000 dual-scoring backgrounds for {det} and saved to {det_path}")
+                    
+                    # Clean up temporary native_scores files
+                    for f in native_files:
+                        try:
+                            f.unlink()
+                        except Exception as e:
+                            logger.warning(f"Failed to delete temporary file {f}: {e}")
+                    logger.info(f"Cleaned up {len(native_files)} temporary dual-scoring files for {det}.")
+                else:
+                    # Option C: Fallback to compute from raw data
+                    scores = self._extract_detector_background(scorer, det, 5000)
+                    if len(scores) > 0:
+                        np.save(det_path, scores)
+                        logger.info(f"Extracted {len(scores)} backgrounds from raw data for {det} and saved to {det_path}")
+                        
+            if len(scores) == 0:
+                logger.error(f"Failed to obtain background scores for {det}.")
+                continue
+                
+            def block_bootstrap_p99_ci(scores_arr, B=1000, seed=42):
+                np.random.seed(seed)
+                n = len(scores_arr)
+                b = max(1, int(n**(1/3)))
+                num_blocks = int(np.ceil(n / b))
+                
+                bootstrap_p99 = np.zeros(B)
+                for i in range(B):
+                    block_starts = np.random.randint(0, n - b + 1, size=num_blocks)
+                    boot_sample = []
+                    for start in block_starts:
+                        boot_sample.extend(scores_arr[start:start+b])
+                    boot_sample = np.array(boot_sample[:n])
+                    bootstrap_p99[i] = np.percentile(boot_sample, 99)
+                    
+                ci_upper = np.percentile(bootstrap_p99, 97.5)
+                ci_lower = np.percentile(bootstrap_p99, 2.5)
+                return ci_lower, ci_upper
+                
+            ci_lower, ci_upper = block_bootstrap_p99_ci(scores)
+            p99 = np.percentile(scores, 99)
+            result_dict[det] = {"ci_lower": float(ci_lower), "ci_upper": float(ci_upper), "p99": float(p99)}
             
-        ci_lower_l1, ci_upper_l1 = block_bootstrap_p99_ci(l1_scores)
-        ci_lower_h1, ci_upper_h1 = block_bootstrap_p99_ci(h1_scores)
-        
-        return {
-            "L1": {"ci_lower": float(ci_lower_l1), "ci_upper": float(ci_upper_l1), "p99": float(np.percentile(l1_scores, 99))},
-            "H1": {"ci_lower": float(ci_lower_h1), "ci_upper": float(ci_upper_h1), "p99": float(np.percentile(h1_scores, 99))}
-        }
+        return result_dict
 
     def _run_domain_shift_defense(self, master_df) -> dict:
         import numpy as np
@@ -1072,7 +1174,16 @@ class AggregateReporter:
         import logging
         logger = logging.getLogger("aggregate_report")
         
-        index_path = Path("data/reference/patch_compressed_index_o4a_ex.npz")
+        run_str = self.observing_run.lower()
+        index_ex = Path(f"data/reference/patch_compressed_index_{run_str}_ex.npz")
+        index_official = Path(f"data/reference/patch_compressed_index_{run_str}.npz")
+        
+        index_path = None
+        if index_ex.exists():
+            index_path = index_ex
+        elif index_official.exists():
+            index_path = index_official
+            
         metrics = {
             "experiment_run": False,
             "survival_rate": 0.0,
@@ -1081,25 +1192,25 @@ class AggregateReporter:
             "L1": {"robust": 0, "ambiguous": 0, "background": 0, "total": 0}
         }
         
-        if not index_path.exists():
-            logger.warning(f"Native O4a index not found at {index_path}. Skipping Domain Shift Defense.")
+        if index_path is None:
+            logger.warning(f"Native {self.observing_run} index not found (checked _ex and official). Skipping Domain Shift Defense.")
             return metrics
             
-        logger.info("Loading native O4a index for domain shift defense...")
+        logger.info(f"Loading native {self.observing_run} index for domain shift defense...")
         try:
             scorer = PatchScorer(reference_index_path=str(index_path), verify_md5=False)
         except Exception as e:
-            logger.error(f"Failed to load O4a index: {e}")
+            logger.error(f"Failed to load native index: {e}")
             return metrics
             
-        threshold_dict = self._calibrate_native_threshold()
+        threshold_dict = self._calibrate_native_threshold(scorer)
         if not threshold_dict:
             return metrics
             
         total = len(master_df)
         new_mil_vectors = {}
         
-        tax_path = self.output_dir / "Master_Taxonomy_O4a.csv"
+        tax_path = self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv"
         tax_df = None
         if tax_path.exists():
             import pandas as pd

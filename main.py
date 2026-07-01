@@ -2529,15 +2529,46 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     if data_dir not in _DATA_DIRECTORIES:
         _DATA_DIRECTORIES.insert(0, data_dir)
     
+    seed = getattr(args, "seed", 42)
+    reference_run = getattr(args, "reference_run", "O3b").lower()
+    
+    primary_index_path = f"data/reference/patch_compressed_index_{reference_run}.npz"
+    if not Path(primary_index_path).exists():
+        logger.warning(f"Primary reference index {primary_index_path} not found. Ensure it was built.")
+        
     # 1. Initialize PatchScorer
     scorer = PatchScorer(
-        reference_index_path="data/reference/patch_compressed_index.npz",
+        reference_index_path=primary_index_path,
         k=k,
         k_ablations=k_ablations,
         fpr=fpr,
         n_background=n_background,
         seed=seed
     )
+    
+    native_scorer = None
+    run_str = getattr(args, "run", "O4a").lower()
+    
+    # Support both Early Release (_ex) and Official data indices
+    index_ex = Path(f"data/reference/patch_compressed_index_{run_str}_ex.npz")
+    index_official = Path(f"data/reference/patch_compressed_index_{run_str}.npz")
+    
+    auto_native_index = None
+    if index_ex.exists():
+        auto_native_index = index_ex
+    elif index_official.exists():
+        auto_native_index = index_official
+        
+    if auto_native_index is not None:
+        logger.info(f"Loading native index for dual-scoring automatically: {auto_native_index}")
+        native_scorer = PatchScorer(
+            reference_index_path=str(auto_native_index),
+            k=k,
+            k_ablations=k_ablations,
+            fpr=fpr,
+            n_background=0,  # Optimization: skip empirical background modeling for the secondary scorer
+            seed=seed
+        )
     
     if not sessions:
         logger.info("Nessuna sessione fornita esplicitamente. Tento l'auto-discovery delle cartelle in data_dir...")
@@ -2657,6 +2688,8 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         novel_count = 0
         import torch
         
+        native_scores_log = []
+        
         for gps_batch, spec_batch in producer:
             # Filter batch items that are already processed
             valid_gps = []
@@ -2670,6 +2703,12 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 continue
                 
             results = scorer.score_spectrogram(valid_spec, threshold)
+            
+            if native_scorer:
+                native_results = native_scorer.score_spectrogram(valid_spec, 1.0)
+                for nr in native_results:
+                    native_scores_log.append(nr["novelty_score"])
+            
             processed += len(valid_gps)
             
             for gps_start, result_dict in zip(valid_gps, results):
@@ -2694,6 +2733,13 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 
         writer.mark_completed()
         logger.info(f"=== Session {session} Complete. Novel found: {novel_count} ===")
+        
+        if native_scorer and native_scores_log:
+            run_str = getattr(args, "run", "O4a")
+            native_arr = np.array(native_scores_log, dtype=np.float32)
+            out_file = output_dir / session / f"{run_str}_{session}_{detector}_native_scores.npy"
+            np.save(out_file, native_arr)
+            logger.info(f"Saved {len(native_scores_log)} native background scores for Domain Shift Defense to {out_file}")
         
         from src.core.data_loader import clear_astropy_cache
         clear_astropy_cache()
@@ -2720,7 +2766,14 @@ def cmd_production_report(args):
     logger.info("=== Starting Production Report ===")
     from src.pipeline_v2_production.production_report import ValidationReporter
     output_dir = getattr(args, "output_dir", "data/production")
-    reporter = ValidationReporter(session_id=args.session_id, detector=args.detector, output_dir=output_dir)
+    reference_run = getattr(args, "reference_run", "O3b")
+    reporter = ValidationReporter(
+        session_id=args.session_id, 
+        detector=args.detector, 
+        run_name=getattr(args, "run", "O4a"),
+        reference_run=reference_run,
+        output_dir=output_dir
+    )
     if getattr(args, "only_plots", False):
         reporter.run_only_plots()
     else:
@@ -2827,7 +2880,10 @@ def cmd_aggregate_report(args):
             subprocess.run([sys.executable, "src/pipeline_v2_production/poisson_upper_limit.py", "--detector", det], env=env, check=True)
 
         logger.info("-> Running PEM Coherence Analysis...")
-        pem_cmd = [sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py", "--nds-host", "nds.gwosc.org"]
+        nds_host = getattr(args, "nds_host", None)
+        pem_cmd = [sys.executable, "src/pipeline_v2_production/pem_coherence_analysis.py"]
+        if nds_host:
+            pem_cmd.extend(["--nds-host", nds_host])
             
         subprocess.run(pem_cmd, env=env, check=True)
         
@@ -2881,6 +2937,8 @@ def cmd_patch_analysis(args):
                 r_args = ReportArgs()
                 r_args.session_id = str(session)
                 r_args.detector = det
+                r_args.run = getattr(args, "run", "O4a")
+                r_args.reference_run = getattr(args, "reference_run", "O3b")
                 r_args.output_dir = str(output_dir)
                 cmd_production_report(r_args)
                 
@@ -3004,6 +3062,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_patch_production.add_argument("--seed", type=int, default=42)
     p_patch_production.add_argument("--workers", type=int, default=8, help="Number of CPU workers for Q-Transform")
     p_patch_production.add_argument("--batch-size", type=int, default=32, help="Batch size for DINOv2 GPU inference")
+    p_patch_production.add_argument("--run", type=str, default="O4a", help="Observing run name (e.g., O4a, O4b, O5)")
+    p_patch_production.add_argument("--reference-run", type=str, default="O3b", help="Observing run to use as the primary memory index")
     p_patch_production.set_defaults(func=cmd_patch_production)
 
     # --- scan ---
