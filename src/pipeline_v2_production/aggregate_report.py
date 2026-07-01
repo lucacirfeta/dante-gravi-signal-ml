@@ -1018,79 +1018,67 @@ class AggregateReporter:
         logger.info(f"Wrote stability_synthesis.log")
 
 
-    def _calibrate_native_threshold(self, scorer, n_samples: int = 150) -> float:
+    def _calibrate_native_threshold(self) -> dict:
         import numpy as np
-        import random
+        import os
         from pathlib import Path
-        from src.core.preprocessor import whiten, bandpass, generate_qtransform
-        from gwpy.timeseries import TimeSeries
+        import logging
+        logger = logging.getLogger("aggregate_report")
         
-        logger.info(f"Calibrating native O4a threshold on up to {n_samples} local background segments...")
-        from src.core.data_loader import _DATA_DIRECTORIES
+        l1_path = Path("data/production/aggregated/background_scores_L1.npy")
+        h1_path = Path("data/production/aggregated/background_scores_H1.npy")
         
-        directories = _DATA_DIRECTORIES
-        
-        valid_files = []
-        for dir_path in directories:
-            if dir_path.exists():
-                valid_files.extend(list(dir_path.rglob("L1_*.hdf5")))
-                
-        if not valid_files:
-            logger.warning("No local L1 background files found. Falling back to 0.1433.")
-            return 0.1433
+        if not l1_path.exists() or not h1_path.exists():
+            logger.error("Detector-specific background scores not found. Run scratch/compute_background_scores.py first.")
+            return {}
             
-        random.seed(42)
-        random.shuffle(valid_files)
+        l1_scores = np.load(l1_path)
+        h1_scores = np.load(h1_path)
         
-        background_spectrograms = []
-        # Take a subset of files
-        for file_path in valid_files[:30]:
-            try:
-                ts = TimeSeries.read(file_path)
-                # Split 4096s block into 32s segments
-                duration = int(ts.duration.value)
-                for start_offset in range(0, min(duration, 32 * 5), 32): # Take up to 5 segments per file
-                    if len(background_spectrograms) >= n_samples:
-                        break
-                    
-                    sub_ts = ts.crop(ts.t0.value + start_offset, ts.t0.value + start_offset + 32)
-                    ts_w = whiten(sub_ts)
-                    ts_bp = bandpass(ts_w)
-                    q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
-                    q_gram_uint8 = (q_gram * 255).astype(np.uint8)
-                    if q_gram_uint8.ndim == 2:
-                        q_gram_rgb = np.stack([q_gram_uint8]*3, axis=-1)
-                    else:
-                        q_gram_rgb = q_gram_uint8
-                    background_spectrograms.append(q_gram_rgb)
-            except Exception as e:
-                logger.debug(f"Failed to extract background from {file_path.name}: {e}")
-                
-            if len(background_spectrograms) >= n_samples:
-                break
-                
-        if not background_spectrograms:
-            logger.error("Failed to fetch any background spectrograms. Falling back to 0.1433.")
-            return 0.1433, np.array([0.1433])
+        def block_bootstrap_p99_ci(scores, B=1000, seed=42):
+            np.random.seed(seed)
+            n = len(scores)
+            b = max(1, int(n**(1/3)))
+            num_blocks = int(np.ceil(n / b))
             
-        logger.info(f"Successfully generated {len(background_spectrograms)} background spectrograms. Calibrating...")
-        threshold, scores_np, gev_params = scorer.calibrate_threshold(background_spectrograms, batch_size=32)
-        logger.info(f"Native O4a Threshold Calibrated: {threshold:.4f} (GEV: {gev_params})")
-        return float(threshold), scores_np
+            bootstrap_p99 = np.zeros(B)
+            for i in range(B):
+                block_starts = np.random.randint(0, n - b + 1, size=num_blocks)
+                boot_sample = []
+                for start in block_starts:
+                    boot_sample.extend(scores[start:start+b])
+                boot_sample = np.array(boot_sample[:n])
+                bootstrap_p99[i] = np.percentile(boot_sample, 99)
+                
+            ci_upper = np.percentile(bootstrap_p99, 97.5)
+            ci_lower = np.percentile(bootstrap_p99, 2.5)
+            return ci_lower, ci_upper
+            
+        ci_lower_l1, ci_upper_l1 = block_bootstrap_p99_ci(l1_scores)
+        ci_lower_h1, ci_upper_h1 = block_bootstrap_p99_ci(h1_scores)
+        
+        return {
+            "L1": {"ci_lower": float(ci_lower_l1), "ci_upper": float(ci_upper_l1), "p99": float(np.percentile(l1_scores, 99))},
+            "H1": {"ci_lower": float(ci_lower_h1), "ci_upper": float(ci_upper_h1), "p99": float(np.percentile(h1_scores, 99))}
+        }
 
     def _run_domain_shift_defense(self, master_df) -> dict:
         import numpy as np
         from tqdm import tqdm
-        from src.core.data_loader import fetch_strain_data, fetch_local_or_remote_strain
+        from src.core.data_loader import fetch_local_or_remote_strain
         from src.core.preprocessor import whiten, bandpass, generate_qtransform
         from src.core.patch_scorer import PatchScorer
         from pathlib import Path
+        import logging
+        logger = logging.getLogger("aggregate_report")
         
         index_path = Path("data/reference/patch_compressed_index_o4a_ex.npz")
         metrics = {
             "experiment_run": False,
             "survival_rate": 0.0,
-            "family_cohesion": {}
+            "family_cohesion": {},
+            "H1": {"robust": 0, "ambiguous": 0, "background": 0, "total": 0},
+            "L1": {"robust": 0, "ambiguous": 0, "background": 0, "total": 0}
         }
         
         if not index_path.exists():
@@ -1104,39 +1092,13 @@ class AggregateReporter:
             logger.error(f"Failed to load O4a index: {e}")
             return metrics
             
-        res = self._calibrate_native_threshold(scorer, n_samples=200)
-        if isinstance(res, tuple):
-            threshold, scores_np = res
-        else:
-            threshold = res
-            scores_np = np.array([threshold])
-        
-        # Block Bootstrap for correct 95% CI of the threshold (B=1000)
-        import numpy as np
-        np.random.seed(42)
-        B = 1000
-        n_scores = len(scores_np)
-        if n_scores > 1:
-            boot_thresholds = []
-            for _ in range(B):
-                boot_sample = np.random.choice(scores_np, size=n_scores, replace=True)
-                boot_thresholds.append(np.percentile(boot_sample, 99.0)) # 1% FPR = 99th percentile
-            boot_thresholds = np.array(boot_thresholds)
-            ci_upper_bound = float(np.percentile(boot_thresholds, 97.5)) # Upper bound of 95% CI
-            mean_threshold = float(np.mean(boot_thresholds))
-        else:
-            ci_upper_bound = threshold
-            mean_threshold = threshold
-        
-        robust = 0
-        ambiguous = 0
-        background = 0
-        
-        survived = 0
+        threshold_dict = self._calibrate_native_threshold()
+        if not threshold_dict:
+            return metrics
+            
         total = len(master_df)
         new_mil_vectors = {}
         
-        # Load taxonomy to get global families
         tax_path = self.output_dir / "Master_Taxonomy_O4a.csv"
         tax_df = None
         if tax_path.exists():
@@ -1145,15 +1107,15 @@ class AggregateReporter:
             
         for idx, row in tqdm(master_df.iterrows(), total=total, desc="Domain Shift Defense"):
             try:
-                cid = f"{row['gps_start']}_{row['detector']}"
+                det = row['detector']
+                cid = f"{row['gps_start']}_{det}"
                 fam = "Unknown"
                 if tax_df is not None:
-                    match = tax_df[(tax_df['gps_start'] == row['gps_start']) & (tax_df['detector'] == row['detector'])]
+                    match = tax_df[(tax_df['gps_start'] == row['gps_start']) & (tax_df['detector'] == det)]
                     if not match.empty:
                         fam = match.iloc[0]['global_family_id']
                 
-                # Fetch candidate
-                cand_ts = fetch_local_or_remote_strain(row["detector"], float(row["gps_start"]), float(row["gps_start"]) + 32, cache_raw=True)
+                cand_ts = fetch_local_or_remote_strain(det, float(row['gps_start']), float(row['gps_start']) + 32, cache_raw=True)
                 cand_ts = whiten(cand_ts)
                 cand_ts = bandpass(cand_ts)
                 q_gram = generate_qtransform(cand_ts, output_size=(256, 256))
@@ -1163,22 +1125,29 @@ class AggregateReporter:
                 else:
                     q_gram_rgb = q_gram_uint8
                     
-                res = scorer.score_spectrogram([q_gram_rgb], threshold=threshold)[0]
+                res = scorer.score_spectrogram([q_gram_rgb], threshold=0.0)[0]
                 score = res['novelty_score']
                 
-                # Dynamic Block-Bootstrap Margin Logic
-                if score >= ci_upper_bound:
-                    robust += 1
+                det_thresholds = threshold_dict.get(det)
+                if not det_thresholds:
+                    continue
+                    
+                ci_upper_bound = det_thresholds['ci_upper']
+                ci_lower_bound = det_thresholds['ci_lower']
+                
+                metrics[det]["total"] += 1
+                
+                if score > ci_upper_bound:
+                    metrics[det]["robust"] += 1
                     is_robust = True
-                elif score >= mean_threshold:
-                    ambiguous += 1
+                elif score >= ci_lower_bound:
+                    metrics[det]["ambiguous"] += 1
                     is_robust = False
                 else:
-                    background += 1
+                    metrics[det]["background"] += 1
                     is_robust = False
 
                 if is_robust:
-                    survived += 1
                     new_mil_vectors[cid] = {
                         "fam": fam,
                         "vector": res["mil_vector"]
@@ -1188,11 +1157,13 @@ class AggregateReporter:
                 
         metrics["experiment_run"] = True
         metrics["total_evaluated"] = total
-        metrics["survived_native_threshold"] = survived
-        metrics["survival_rate"] = float(survived / total) if total > 0 else 0.0
-        metrics["robust_count"] = robust
-        metrics["ambiguous_count"] = ambiguous
-        metrics["background_count"] = background
+        
+        robust_total = metrics["H1"]["robust"] + metrics["L1"]["robust"]
+        metrics["survived_native_threshold"] = robust_total
+        metrics["survival_rate"] = float(robust_total / total) if total > 0 else 0.0
+        metrics["robust_count"] = robust_total
+        metrics["ambiguous_count"] = metrics["H1"]["ambiguous"] + metrics["L1"]["ambiguous"]
+        metrics["background_count"] = metrics["H1"]["background"] + metrics["L1"]["background"]
         
         families = {}
         for cid, data in new_mil_vectors.items():
@@ -1508,11 +1479,16 @@ class AggregateReporter:
         background = ds.get('background_count', 0)
         
         if ds.get('experiment_run', False):
-            md_lines.append(f"- **Native O4a Threshold Test (Block-Bootstrap B=1000, 95% CI):** Su {total_eval} candidati valutati:")
-            md_lines.append(f"  - **{robust}** candidati classificati come \"robust\" (punteggio di anomalia superiore all'upper bound del CI)")
-            md_lines.append(f"  - **{ambiguous}** candidati classificati come \"ambiguous\" (sopra la media, sotto l'upper bound)")
-            md_lines.append(f"  - **{background}** candidati classificati come \"background\" (sotto la media del threshold)")
-            md_lines.append(f"  *(Survival rate robusto: {(robust/total_eval)*100:.1f}%)*")
+            h1 = ds.get('H1', {})
+            l1 = ds.get('L1', {})
+            md_lines.append(f"- **Native O4a Threshold Test (Detector-Specific Block-Bootstrap B=1000, N=5000):** Su {total_eval} candidati valutati (H1: {h1.get('total', 0)}, L1: {l1.get('total', 0)}):")
+            md_lines.append(f"  - **{robust}** candidati **ROBUST** (Score > CI Upper)")
+            md_lines.append(f"    - H1: {h1.get('robust', 0)} / L1: {l1.get('robust', 0)}")
+            md_lines.append(f"  - **{ambiguous}** candidati **AMBIGUOUS** (CI Lower <= Score <= CI Upper)")
+            md_lines.append(f"    - H1: {h1.get('ambiguous', 0)} / L1: {l1.get('ambiguous', 0)}")
+            md_lines.append(f"  - **{background}** candidati **BACKGROUND** (Score < CI Lower)")
+            md_lines.append(f"    - H1: {h1.get('background', 0)} / L1: {l1.get('background', 0)}")
+            md_lines.append(f"\n  *(Survival rate robusto: {(robust/total_eval)*100:.1f}%)*")
         else:
             md_lines.append("- **Native O4a Threshold Test:** Not executed (native index not available).")
         md_lines.append("")
