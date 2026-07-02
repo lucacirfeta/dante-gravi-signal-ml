@@ -1232,6 +1232,7 @@ class AggregateReporter:
         
         tax_path = self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv"
         tax_df = None
+        robustness_records = {}
         if tax_path.exists():
             import pandas as pd
             tax_df = pd.read_csv(tax_path)
@@ -1283,9 +1284,27 @@ class AggregateReporter:
                         "fam": fam,
                         "vector": res["mil_vector"]
                     }
+                
+                robustness_records[cid] = {
+                    "score": score,
+                    "robustness_class": "ROBUST" if is_robust else ("AMBIGUOUS" if score >= ci_lower_bound else "BACKGROUND")
+                }
             except Exception as e:
                 logger.error(f"Failed to process candidate {cid}: {e}")
                 
+        if tax_df is not None and not tax_df.empty:
+            def get_robustness(row):
+                cid = f"{row['gps_start']}_{row['detector']}"
+                return robustness_records.get(cid, {}).get("robustness_class", "BACKGROUND")
+            def get_native_score(row):
+                cid = f"{row['gps_start']}_{row['detector']}"
+                return robustness_records.get(cid, {}).get("score", 0.0)
+                
+            tax_df["robustness_class"] = tax_df.apply(get_robustness, axis=1)
+            tax_df["native_o4a_score"] = tax_df.apply(get_native_score, axis=1)
+            tax_df.to_csv(tax_path, index=False)
+            logger.info(f"Updated {tax_path.name} with native domain shift scores and robustness classification.")
+            
         metrics["experiment_run"] = True
         metrics["total_evaluated"] = total
         
@@ -1318,6 +1337,17 @@ class AggregateReporter:
                     "n": n,
                     "mean_internal_similarity": mean_sim
                 }
+                
+        # Append robustness to taxonomy and save
+        if tax_df is not None:
+            tax_df["robustness_class"] = tax_df.apply(
+                lambda row: robustness_records.get(f"{row['gps_start']}_{row['detector']}", {}).get("robustness_class", "UNKNOWN"), axis=1
+            )
+            tax_df["native_score"] = tax_df.apply(
+                lambda row: robustness_records.get(f"{row['gps_start']}_{row['detector']}", {}).get("score", -1), axis=1
+            )
+            tax_df.to_csv(tax_path, index=False)
+            logger.info(f"Updated {tax_path.name} with robustness classification.")
                 
         return metrics
 

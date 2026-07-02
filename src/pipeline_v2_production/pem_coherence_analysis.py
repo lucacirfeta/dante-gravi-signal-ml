@@ -88,8 +88,14 @@ def fetch_auxiliary_data(
     Returns ``None`` immediately if no NDS host is configured, since
     ``nds.gwosc.org`` does not expose auxiliary channels.
     """
+    # Hardcode internal NDS hosts for WSL/LVC credentials
+    if channel.startswith("L1:"):
+        nds_host = "nds.ligo-la.caltech.edu"
+    elif channel.startswith("H1:"):
+        nds_host = "nds.ligo-wa.caltech.edu"
+        
     if nds_host is None:
-        return None  # Aux channels not available on public GWOSC NDS
+        return None  # Fallback just in case
 
     safe_channel = channel.replace(":", "_")
     cache_file = cache_dir / f"{safe_channel}_{gps_start}_{gps_end}.hdf5"
@@ -278,7 +284,7 @@ def run_pem_coherence_analysis(
         channel_thresholds = {}
         logger.warning("No channel_thresholds.json found. Using default 0.6.")
 
-    public_mode = nds_host is None
+    public_mode = False  # Hardcoded to False as requested to force fetching
     if public_mode:
         logger.warning(
             "NDS host not configured (--nds-host). Running in NULL-RESULT mode: "
