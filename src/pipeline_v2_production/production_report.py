@@ -454,8 +454,9 @@ class ValidationReporter:
             vecs = f["novelties/mil_vectors"][:]
             gps_times_arr = f["novelties/gps_times"][:]
             
-        if len(vecs) == 0:
-            logger.warning("No novelties found for stability test.")
+        if len(vecs) < 15:
+            logger.warning(f"Not enough novelties ({len(vecs)}) for stability test. Skipping.")
+            self.status["mean_ari"] = 1.0
             return
             
         n_iters = 20

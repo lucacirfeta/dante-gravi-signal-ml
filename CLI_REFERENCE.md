@@ -217,6 +217,7 @@ Cross-session read-only reducer. Aggregates unique unclassified novel candidates
 
 - `--production-dir`: Root production directory. *Default: `data/production/`*.
 - `--run`: Observing run context for EVT thresholds (e.g. O4a, O4b). *Default: `O4a`*.
+- `--nds-host`: NDS2 server hostname for PEM analysis (e.g. `nds.gwosc.org`). If omitted, runs in public NULL-RESULT mode.
 
 ### 🧱 SECONDARY COMMANDS (Modular / Debug)
 These commands are invoked automatically in sequence by the Primary Commands. Use them individually only for debugging or step-by-step execution.

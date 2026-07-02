@@ -40,7 +40,7 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
             ref_index_path = ref_index_path[0]
         else:
             logger.warning("Could not find reference index. Run index builder first.")
-            return
+            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
     scorer = PatchScorer(
         reference_index_path=ref_index_path,

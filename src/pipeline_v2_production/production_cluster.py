@@ -146,16 +146,20 @@ class H5Clusterer:
             labels = dpmm.fit_predict(vectors_reduced)
         
         # 3. UMAP for 2D Visualization only
-        logger.info("Running UMAP for 2D visualization projection...")
-        import umap
-        reducer = umap.UMAP(
-            n_components=2,
-            metric='cosine',
-            n_neighbors=min(15, n_samples - 1) if n_samples > 15 else n_samples - 1,
-            min_dist=0.1,
-            random_state=42
-        )
-        coords_2d = reducer.fit_transform(vectors_norm)
+        if n_samples < 3:
+            logger.info("Not enough samples for UMAP (needs >= 3). Bypassing visualization projection.")
+            coords_2d = np.zeros((n_samples, 2))
+        else:
+            logger.info("Running UMAP for 2D visualization projection...")
+            import umap
+            reducer = umap.UMAP(
+                n_components=2,
+                metric='cosine',
+                n_neighbors=min(15, n_samples - 1),
+                min_dist=0.1,
+                random_state=42
+            )
+            coords_2d = reducer.fit_transform(vectors_norm)
         
         # 4. Generate JSON Report
         import datetime

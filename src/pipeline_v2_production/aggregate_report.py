@@ -547,6 +547,24 @@ class AggregateReporter:
         self._write_stability_log(spearman_results)
 
         # ----------------------------------------------------------
+        # Phase X: Aggregate Native Background Scores
+        # ----------------------------------------------------------
+        for det in DETECTORS:
+            native_scores = []
+            for s_meta in session_metadata:
+                sess_id = s_meta["session_id"]
+                native_path = self.production_dir / str(sess_id) / f"{self.observing_run}_{sess_id}_{det}_native_scores.npy"
+                if native_path.exists():
+                    try:
+                        scores = np.load(native_path)
+                        native_scores.append(scores)
+                    except:
+                        pass
+            if native_scores:
+                concat_scores = np.concatenate(native_scores)
+                np.save(self.output_dir / f"background_scores_{det}_{self.observing_run}.npy", concat_scores)
+
+        # ----------------------------------------------------------
         # Phase 5: Cross-Session Cosine Similarity
         # ----------------------------------------------------------
         import h5py
@@ -920,10 +938,12 @@ class AggregateReporter:
         else:
             logger.warning("Master_Taxonomy file not found. Skipping Physics Correlation.")
             
-        with open(self.output_dir / f"Aggregate_Report_{self.observing_run}.md", "w") as f:
-            f.write(md_content)
+
             
         logger.info(f"Aggregation complete. Taxonomy saved to Master_Taxonomy_{self.observing_run}.csv")
+        
+        with open(self.output_dir / "aggregate_summary.json", "w") as f:
+            json.dump(master_report, f, indent=4)
 
         # ----------------------------------------------------------
         # Phase 10: Generate Final Discovery Markdown Report
@@ -1918,7 +1938,13 @@ class AggregateReporter:
         sec_num += 1
         md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
         md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
-        
+        if not tax_df.empty and 'global_family_id' in tax_df.columns:
+            singleton_rows = tax_df[tax_df['global_family_id'].str.contains('Singleton', na=False)]
+            total_singletons = len(singleton_rows)
+        else:
+            singleton_rows = pd.DataFrame()
+            total_singletons = 0
+            
         if total_singletons > 0:
             gps_list = [int(r['gps_start']) for _, r in singleton_rows.iterrows()]
             md_lines.append(f"- **Spurious Singletons ({total_singletons} events - GPS: {', '.join(map(str, gps_list))}):** The isolated singleton(s) have visual validation images available. Note: any formal PEM coherence hits for these isolated events must be interpreted cautiously. The lack of multiple-comparisons correction for the C>=0.6 threshold across many auxiliary channels implies a high false positive rate for casual noise (e.g., ubiquitous mains harmonics or weak couplings). Such hits are often physically ambiguous and warrant further manual investigation rather than being considered definitively 'instrumentally explained'.")
