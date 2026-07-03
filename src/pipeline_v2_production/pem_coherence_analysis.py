@@ -85,15 +85,8 @@ def fetch_auxiliary_data(
 ) -> Optional[TimeSeries]:
     """Fetch auxiliary channel data with local HDF5 caching.
 
-    Returns ``None`` immediately if no NDS host is configured, since
-    ``nds.gwosc.org`` does not expose auxiliary channels.
+    Returns ``None`` immediately if no NDS host is configured.
     """
-    # Hardcode internal NDS hosts for WSL/LVC credentials
-    if channel.startswith("L1:"):
-        nds_host = "nds.ligo-la.caltech.edu"
-    elif channel.startswith("H1:"):
-        nds_host = "nds.ligo-wa.caltech.edu"
-        
     if nds_host is None:
         return None  # Fallback just in case
 
@@ -284,7 +277,7 @@ def run_pem_coherence_analysis(
         channel_thresholds = {}
         logger.warning("No channel_thresholds.json found. Using default 0.6.")
 
-    public_mode = False  # Hardcoded to False as requested to force fetching
+    public_mode = (nds_host is None)
     if public_mode:
         logger.warning(
             "NDS host not configured (--nds-host). Running in NULL-RESULT mode: "

@@ -872,7 +872,7 @@ class AggregateReporter:
         # ----------------------------------------------------------
         # Phase 9: Domain Shift Defense (Native O4a Index)
         # ----------------------------------------------------------
-        domain_shift_metrics = self._run_domain_shift_defense(master_df) if 'master_df' in locals() else {}
+        domain_shift_metrics = self._run_domain_shift_defense(master) if 'master' in locals() else {}
 
         # ----------------------------------------------------------
         # Phase 9b: Strain Sanity Check & Physical Validation

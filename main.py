@@ -4139,7 +4139,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_aggregate.add_argument(
         "--nds-host", 
         type=str, 
-        default=None, 
+        default="nds.gwosc.org", 
         help="NDS2 server hostname for PEM analysis (e.g. nds.gwosc.org). If omitted, runs in public NULL-RESULT mode."
     )
     p_aggregate.set_defaults(func=cmd_aggregate_report)
@@ -4200,10 +4200,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_pem.add_argument(
         "--nds-host",
         type=str,
-        default=None,
+        default="nds.gwosc.org",
         help=(
             "NDS2 server hostname for auxiliary channels "
-            "(e.g. nds.ligo-la.caltech.edu). "
+            "(e.g. nds.gwosc.org). "
             "Requires LVC credentials. If omitted, runs in null-result mode."
         ),
     )
