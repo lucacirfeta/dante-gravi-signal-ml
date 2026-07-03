@@ -110,7 +110,7 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
     # The rigorous criteria for an unexplained macroscopic anomaly on the target detector:
     # It must be on the target detector AND its transitivity status must indicate it could not 
     # be vetoed or classified via cross-detector coincidence.
-    unexplained_mask = (df["detector"] == target_detector) & (df["transitivity_status"] == "True_Unverifiable_Anomaly")
+    unexplained_mask = (df["detector"] == target_detector) & (df["transitivity_status"] == "Unclassified_Physical_Anomaly")
     
     n_obs = unexplained_mask.sum()
     logger.info(f"Found N={n_obs} unexplained anomalies satisfying strict criteria.")
@@ -169,7 +169,7 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
         
         f.write("#### 2. Event Statistics\n")
         f.write(f"- **Observed Unclassified Anomalies ($N$):** {int(n_obs)}\n")
-        f.write("  - *Filter Criteria:* `transitivity_status == 'True_Unverifiable_Anomaly'` AND `detector == target_detector`.\n")
+        f.write("  - *Filter Criteria:* `transitivity_status == 'Unclassified_Physical_Anomaly'` AND `detector == target_detector`.\n")
         f.write("  - *Context:* Anomalies fully classified into recurring morphological families (e.g. `Family_03`) or cross-detector validated as local instrumental glitches (`Confirmed_Local`) are successfully characterized by the pipeline and thus excluded from the pool of 'unknowns'.\n")
         f.write("  - *Asymmetry Context:* The asymmetry in $N$ between detectors reflects the pipeline architecture: L1 serves as the primary discovery detector while H1 events are cross-validated against L1, making H1's null result a direct consequence of the cross-correlation veto design rather than an independent measurement.\n\n")
         

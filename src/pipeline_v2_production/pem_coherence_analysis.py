@@ -51,25 +51,20 @@ AUX_CHANNELS = {
         "H1:IMC-WFS_A_DC_YAW_OUT_DQ",
         "H1:LSC-POP_A_LF_OUT_DQ",
         "H1:LSC-REFL_A_RIN_OUT_DQ",
-        "H1:OAF-IMC_WFS_A_DC_PIT_PREFILT_OUT_DQ",
-        "H1:OAF-IMC_WFS_A_DC_YAW_PREFILT_OUT_DQ",
-        "H1:OAF-REFL_A_RIN_PREFILT_OUT_DQ",
         "H1:PEM-EY_MAINSMON_EBAY_1_DQ",
         "H1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
         "H1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
         "H1:SUS-ETMX_L3_CAL_LINE_OUT_DQ",
-        "H1:SUS-PI_PROC_COMPUTE_MODE29_RMSMON",
     ],
     "L1": [
         "L1:ASC-X_TR_A_NSUM_OUT_DQ",
         "L1:CAL-PCALX_RX_PD_OUT_DQ",
         "L1:CAL-PCALY_RX_PD_OUT_DQ",
         "L1:IMC-WFS_B_I_PIT_OUT_DQ",
-        "L1:OAF-IMC_WFS_B_I_PIT_PREFILT_OUT_DQ",
+        "L1:PEM-EY_MAINSMON_EBAY_1_DQ",
         "L1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
         "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
         "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ",
-        "L1:SUS-PI_PROC_COMPUTE_MODE5_RMSMON",
     ],
 }
 
@@ -589,7 +584,10 @@ def _inject_into_final_report(
                     elif "ASC-X" in row['aux_channel']:
                         notes.append("Angular control coupling (ASC-X)")
                     elif is_mains_harmonic:
-                        notes.append(f"Ubiquitous {int(pf_val)}Hz mains harmonic")
+                        if "MAINSMON" in row['aux_channel']:
+                            notes.append(f"Ubiquitous {int(pf_val)}Hz mains harmonic (Channel explicitly excluded from Bonferroni budget due to high 23% background FPR)")
+                        else:
+                            notes.append(f"Ubiquitous {int(pf_val)}Hz mains harmonic")
 
                 if "LSC-POP" in row['aux_channel'] and mc_val > 0.9:
                     notes.append("⚠️ Active Control / Calibration Line coupling")

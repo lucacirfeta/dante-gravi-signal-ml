@@ -679,7 +679,7 @@ class AggregateReporter:
                     meta["max_sim_to_3a"] = 1.0
                 else:
                     meta["max_sim_to_3a"] = max_sim_to_3a[i]
-                    meta["transitivity_status"] = "Resolved_via_Transitivity" if max_sim_to_3a[i] > 0.75 else "True_Unverifiable_Anomaly"
+                    meta["transitivity_status"] = "Resolved_via_Transitivity" if max_sim_to_3a[i] > 0.75 else "Unclassified_Physical_Anomaly"
             from src.pipeline_v2_production.query_gravity_spy import query_gravity_spy_for_gps
             
             master_records = []
