@@ -45,6 +45,7 @@ python main.py production-cluster --detector L1
 python main.py aggregate-report
 
 # 7. Perform PEM coherence analysis on the candidates
+# (Ensure data/production/aggregated/pem/channel_thresholds.json is present)
 python main.py pem-coherence-analysis --nds-host nds.gwosc.org
 
 # 8. Calculate Poisson Upper Limit for null-result periods
