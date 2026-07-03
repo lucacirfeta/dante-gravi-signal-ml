@@ -38,6 +38,8 @@ from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
 
+MEDOID_PRIORITY = ['ROBUST', 'AMBIGUOUS', 'BACKGROUND']
+
 # ---------------------------------------------------------------------------
 # O4a candidate auxiliary channels (require LVC credentials)
 # ---------------------------------------------------------------------------
@@ -295,14 +297,42 @@ def run_pem_coherence_analysis(
     targets = []
     for fam in target_families:
         fam_df = df[df["global_family_id"] == fam]
-        if not fam_df.empty:
-            for _, row in fam_df.head(max_events_per_family).iterrows():
+        if fam_df.empty:
+            continue
+            
+        spots_left = max_events_per_family
+        for pclass in MEDOID_PRIORITY:
+            if spots_left <= 0:
+                break
+            class_df = fam_df[fam_df["robustness_class"] == pclass]
+            if class_df.empty:
+                continue
+            
+            # Sort by native_o4a_score to cover the distribution
+            class_df = class_df.sort_values("native_o4a_score")
+            n_cands = len(class_df)
+            
+            if n_cands <= spots_left:
+                selected = class_df
+            else:
+                if spots_left == 3:
+                    indices = [0, n_cands // 2, n_cands - 1]
+                elif spots_left == 2:
+                    indices = [0, n_cands - 1]
+                else:
+                    indices = [n_cands // 2]
+                selected = class_df.iloc[indices]
+                
+            for _, row in selected.iterrows():
                 targets.append({
                     "detector": row["detector"],
                     "gps_start": int(row["gps_start"]),
                     "family": row["global_family_id"],
                     "source": "family",
                 })
+                logger.info(f"Selected {pclass} member for {fam}: GPS {int(row['gps_start'])} (score: {row.get('native_o4a_score', 0):.3f})")
+                
+            spots_left -= len(selected)
 
     if include_singletons:
         for _, row in df[df["global_family_id"] == "Singleton"].iterrows():
@@ -312,6 +342,7 @@ def run_pem_coherence_analysis(
                 "family": "Singleton",
                 "source": "singleton",
             })
+            logger.info(f"Selected Singleton member: GPS {int(row['gps_start'])} (score: {row.get('native_o4a_score', 0):.3f})")
 
     logger.info("Selected %d candidate events for coherence analysis.", len(targets))
 

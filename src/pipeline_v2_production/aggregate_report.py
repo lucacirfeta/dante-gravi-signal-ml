@@ -1789,13 +1789,6 @@ class AggregateReporter:
                         logger.error(f"Failed to load singleton_physics.csv for report: {e}")
 
                 md_lines.append("")
-                md_lines.append("````carousel")
-                for i, (gps, row, img_path) in enumerate(valid_singletons):
-                    rel_path_str = "file:///" + str(img_path.resolve()).replace("\\", "/")
-                    md_lines.append(f"![Singleton {gps}]({rel_path_str})")
-                    if i < len(valid_singletons) - 1:
-                        md_lines.append("<!-- slide -->")
-                md_lines.append("````")
         else:
             md_lines.append("- No isolated events.")
         md_lines.append("")
@@ -1810,9 +1803,6 @@ class AggregateReporter:
             md_lines.append(f"## {sec_num}. Novelty Score Distribution")
             md_lines.append("Histogram showing the statistical separation between the native background noise and the final candidates.")
             md_lines.append("")
-            rel_path_str = "file:///" + str(dist_plot.resolve()).replace("\\", "/")
-            md_lines.append(f"![Novelty Score Distribution]({rel_path_str})")
-            md_lines.append("")
             sec_num += 1
 
         # Cluster Gallery
@@ -1821,9 +1811,6 @@ class AggregateReporter:
             md_lines.append(f"## {sec_num}. Cluster Gallery (All Families)")
             md_lines.append("Composite gallery showing representative Q-Transform spectrograms for each discovered morphological family.")
             md_lines.append("")
-            rel_path_str = "file:///" + str(gallery_img.resolve()).replace("\\", "/")
-            md_lines.append(f"![Cluster Gallery]({rel_path_str})")
-            md_lines.append("")
             sec_num += 1
 
         # Similarity Heatmap
@@ -1831,9 +1818,6 @@ class AggregateReporter:
         if heatmap_img.exists():
             md_lines.append(f"## {sec_num}. Candidate Similarity Heatmap")
             md_lines.append("Pairwise cosine similarity matrix between all final candidates. The block-diagonal structure visually suggests that intra-family similarity is significantly higher than inter-family similarity.")
-            md_lines.append("")
-            rel_path_str = "file:///" + str(heatmap_img.resolve()).replace("\\", "/")
-            md_lines.append(f"![Candidate Similarity Heatmap]({rel_path_str})")
             md_lines.append("")
             sec_num += 1
 
