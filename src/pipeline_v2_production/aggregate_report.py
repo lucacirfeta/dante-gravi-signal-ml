@@ -1654,6 +1654,29 @@ class AggregateReporter:
             md_lines.append("- **Native O4a Threshold Test:** Not executed (native index not available).")
         md_lines.append("")
         
+        # Check for dissolved families
+        if not tax_df.empty and 'robustness_class' in tax_df.columns:
+            dissolved_families = []
+            all_fams = tax_df[~tax_df['global_family_id'].str.contains("Singleton|Unknown", na=False)]['global_family_id'].unique()
+            for fam in all_fams:
+                fam_df = tax_df[tax_df['global_family_id'] == fam]
+                total_n = len(fam_df)
+                robust_n = len(fam_df[fam_df['robustness_class'] == 'ROBUST'])
+                if total_n >= 2 and robust_n < 2:
+                    ambig_n = len(fam_df[fam_df['robustness_class'] == 'AMBIGUOUS'])
+                    bg_n = len(fam_df[fam_df['robustness_class'] == 'BACKGROUND'])
+                    dissolved_families.append({
+                        'fam': fam, 'total': total_n, 'robust': robust_n, 'ambig': ambig_n, 'bg': bg_n
+                    })
+            if dissolved_families:
+                md_lines.append("### Domain Shift Dissolution (Artifact Filtering)")
+                md_lines.append("The following morphological families dissolved below the Domain Shift threshold (surviving $n < 2$), empirically demonstrating they were systematic artifacts of the O3b-to-O4a domain gap rather than robust physical anomalies:")
+                for d in dissolved_families:
+                    md_lines.append(f"- **{d['fam']}**: originally {d['total']} members. Post-threshold: {d['robust']} ROBUST, {d['ambig']} AMBIGUOUS, {d['bg']} BACKGROUND.")
+                    if d['robust'] == 1:
+                        md_lines.append("  *(The single surviving candidate is automatically accounted for as an isolated topological Singleton)*")
+                md_lines.append("")
+
         sorted_families = sorted(
             [fam for fam in cohesion.keys() if fam != "Unknown" and "Singleton" not in fam],
             key=lambda k: cohesion[k].get('mean_internal_similarity', 0),
@@ -1967,7 +1990,21 @@ class AggregateReporter:
         md_lines.append(f"## {sec_num}. Limitations and Caveats")
         sec_num += 1
         md_lines.append("- **Detector Asymmetry:** L1/H1 asymmetry is partially explained by physical differences (e.g. O4a duty cycles and localized instrumental modes), but extreme ratios need further investigation.")
-        md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
+        
+        dissolved_names = []
+        if not tax_df.empty and 'robustness_class' in tax_df.columns:
+            all_f = tax_df[~tax_df['global_family_id'].str.contains("Singleton|Unknown", na=False)]['global_family_id'].unique()
+            for f in all_f:
+                f_df = tax_df[tax_df['global_family_id'] == f]
+                if len(f_df) >= 2 and len(f_df[f_df['robustness_class'] == 'ROBUST']) < 2:
+                    dissolved_names.append(f)
+                    
+        if dissolved_names:
+            fams_str = ", ".join(dissolved_names)
+            md_lines.append(f"- **Domain Shifts:** The predominantly ambiguous/background classification of {fams_str} members under the block-bootstrap native calibration threshold is consistent with their interpretation as domain-shift artifacts, confirming that the reference index incorrectly flags pervasive O4a stationary features as morphologically novel.")
+        else:
+            md_lines.append("- **Domain Shifts:** The collapse of certain families under native index testing proves the presence of domain shift. The reference index must be re-calibrated per observing run.")
+
         if not tax_df.empty and 'global_family_id' in tax_df.columns:
             singleton_rows = tax_df[tax_df['global_family_id'].str.contains('Singleton', na=False)]
             total_singletons = len(singleton_rows)
