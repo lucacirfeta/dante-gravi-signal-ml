@@ -37,22 +37,11 @@ _PREPROC = _CFG["preprocessing"]
 # ---------------------------------------------------------------------------
 
 
-def whiten(ts: TimeSeries) -> TimeSeries:
+import warnings
+
+def _whiten_raw_unsafe(ts: TimeSeries) -> TimeSeries:
     """Whiten a strain time series to flatten the noise power spectrum.
-
-    Whitening divides the signal by its amplitude spectral density,
-    removing the frequency-dependent noise floor and making transient
-    signals (chirps, glitches) more visible.
-
-    Args:
-        ts: Input strain time series.
-
-    Returns:
-        Whitened :class:`TimeSeries` with the same metadata.
-
-    Raises:
-        ValueError: If the time series is too short for whitening
-            (less than 1 second).
+    Internal use only. Use `whiten_context` instead to avoid edge artifacts.
     """
     duration = float(ts.duration.value)
     if duration < 1.0:
@@ -63,6 +52,19 @@ def whiten(ts: TimeSeries) -> TimeSeries:
 
     logger.debug("Whitening %.1f s of %s data", duration, ts.channel)
     return ts.whiten()
+
+def whiten(ts: TimeSeries) -> TimeSeries:
+    """
+    DEPRECATED: Apply standard whitening without padding.
+    Raises a DeprecationWarning due to Gibbs Ringing/Signal Dilution Barrier at boundaries.
+    Use `whiten_context` instead.
+    """
+    warnings.warn(
+        "whiten() diretto è deprecato per rischio di artefatti ai bordi. Usa whiten_context().",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return _whiten_raw_unsafe(ts)
 
 
 def bandpass(
