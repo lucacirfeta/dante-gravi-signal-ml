@@ -291,13 +291,17 @@ def build_indomain_reference(
             # Fetch → Whiten (with context padding) → Bandpass → Q-transform → PNG
             ts_context = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0)
             from src.core.preprocessor import whiten_context, extract_clean_subwindow
-            ts_w_context, p_pad, e_pad = whiten_context(ts_context, gps_start, gps_end, pad=4.0)
+            ts_w_context, pad_info = whiten_context(ts_context, gps_start, gps_end, pad=4.0)
             ts_clean = extract_clean_subwindow(ts_w_context, gps_start, gps_end)
             generate_qtransform(ts_clean, save_path=save_path)
 
             image_paths.append(save_path)
             labels.append(label)
             gps_times.append(event_time)
+            
+            p_pad = pad_info['left'] or pad_info['right']
+            e_pad = min(pad_info['effective_left'], pad_info['effective_right'])
+            
             partial_pads.append(p_pad)
             effective_pads.append(e_pad)
             

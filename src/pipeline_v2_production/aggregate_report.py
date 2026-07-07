@@ -2042,6 +2042,14 @@ class AggregateReporter:
         md_content = "\n".join(md_lines)
         log_path = self.output_dir / "Final_Discovery_Report.md"
         with open(log_path, "w", encoding="utf-8") as f:
+            f.write("# Final Discovery Report (O4a)\n")
+            f.write("## Taxonomy of Comparison: Pre-fix vs Post-fix\n\n")
+            f.write("To prevent post-hoc rationalizations, the candidates from the new O4a scan must be strictly classified against the previous baseline according to the following taxonomy:\n\n")
+            f.write("1. **Persistente (Persistent):** The candidate retains the same GPS time and is classified as ROBUST in both the old and new runs. This validates that the candidate is independent of the legacy whitening artifact.\n")
+            f.write("2. **Scomparso (Disappeared):** A candidate that was ROBUST or AMBIGUOUS in the old run, but is now SUB_THRESHOLD (or completely undetected) in the new run. These are the false positives explicitly inflated by the edge artifact.\n")
+            f.write("3. **Emerso (Emerged):** A candidate that was absent (or SUB_THRESHOLD) in the old run, but is now detected and classified as ROBUST or AMBIGUOUS. This directly quantifies the recovered sensitivity due to the fix.\n")
+            f.write("4. **Riclassificato (Reclassified):** A candidate that changes category (e.g., ROBUST → AMBIGUOUS, or AMBIGUOUS → ROBUST) but does not disappear completely.\n\n")
+            f.write("> [!NOTE]\n> For any *Emersi* (Emerged) candidates, cross-reference them against the LVK \"Data Quality Products for Transient Gravitational Wave Searches\" and \"Glitch Modelling for Events\" (GWTC-4.0, August 2025 on Zenodo). This external dataset provides official data quality and glitch modelling flags that can independently validate the astrophysical or instrumental nature of these newly recovered signals, granting high external credibility to the pipeline's discovery capabilities.\n\n")
             f.write(md_content)
         logger.info(f"Wrote {log_path}")
 

@@ -25,7 +25,7 @@ def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str, se
             
             from src.core.preprocessor import whiten_context, extract_clean_subwindow
             # 1. Whitening & Bandpass with context
-            ts_w_context, _, _ = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
+            ts_w_context, _ = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
             
             # 2. Extract strictly the target segment
             ts_clean = extract_clean_subwindow(ts_w_context, seg_start, seg_end)
