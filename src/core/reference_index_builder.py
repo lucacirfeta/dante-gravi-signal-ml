@@ -234,6 +234,8 @@ def build_indomain_reference(
     image_paths: list[Path] = []
     labels: list[str] = []
     gps_times: list[float] = []
+    partial_pads: list[bool] = []
+    effective_pads: list[float] = []
     skipped = 0
 
     for idx, row in tqdm(
@@ -258,19 +260,23 @@ def build_indomain_reference(
             image_paths.append(save_path)
             labels.append(label)
             gps_times.append(event_time)
+            partial_pads.append(False) # Assume False for cached if missing
+            effective_pads.append(4.0)
             continue
 
         try:
             # Fetch → Whiten (with context padding) → Bandpass → Q-transform → PNG
             ts_context = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0)
             from src.core.preprocessor import whiten_context, extract_clean_subwindow
-            ts_w_context, _, _ = whiten_context(ts_context, gps_start, gps_end, pad=4.0)
+            ts_w_context, p_pad, e_pad = whiten_context(ts_context, gps_start, gps_end, pad=4.0)
             ts_clean = extract_clean_subwindow(ts_w_context, gps_start, gps_end)
             generate_qtransform(ts_clean, save_path=save_path)
 
             image_paths.append(save_path)
             labels.append(label)
             gps_times.append(event_time)
+            partial_pads.append(p_pad)
+            effective_pads.append(e_pad)
 
         except Exception as exc:
             logger.warning(
@@ -311,6 +317,8 @@ def build_indomain_reference(
     label_array = np.array(labels, dtype=str)
     gps_array = np.array(gps_times, dtype=np.float64)
     path_array = np.array([str(p) for p in image_paths], dtype=str)
+    partial_pad_array = np.array(partial_pads, dtype=bool)
+    effective_pad_array = np.array(effective_pads, dtype=np.float64)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     np.savez(
@@ -318,7 +326,9 @@ def build_indomain_reference(
         embeddings=embeddings,
         labels=label_array,
         gps_times=gps_array,
-        image_paths=path_array,
+        paths=path_array,
+        partial_pads=partial_pad_array,
+        effective_pads=effective_pad_array,
     )
 
     # ---- Save companion .json metadata ----

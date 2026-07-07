@@ -1916,7 +1916,7 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
 
 def _build_indomain_reference(args: argparse.Namespace) -> None:
     """Build an in-domain DINOv2 reference index from labeled O3b spectrograms."""
-    from src.core.gravity_spy import (
+    from src.core.reference_index_builder import (
         build_indomain_reference,
         download_gs_classifications_csv,
         select_reference_events,
@@ -1979,7 +1979,7 @@ def cmd_download_all_references(args: argparse.Namespace) -> None:
 
     Downloads are sequential to respect Zenodo rate limits.
     """
-    from src.core.gravity_spy import (
+    from src.core.reference_index_builder import (
         build_indomain_reference,
         download_gs_classifications_csv,
         select_reference_events,
