@@ -39,7 +39,7 @@ from tqdm import tqdm
 
 from src.core.data_loader import fetch_local_or_remote_strain, _DATA_DIRECTORIES
 from src.core.patch_scorer import PatchScorer
-from src.core.preprocessor import bandpass, generate_qtransform, whiten
+from src.core.preprocessor import generate_qtransform, whiten_context, extract_clean_subwindow
 from src.core.injection import InjectionEngine, SyntheticGlitchGenerator
 
 logger = setup_logger(__name__)
@@ -158,9 +158,9 @@ class DSDControlledRecoveryTest:
         background_spectrograms = []
         for seg_start, seg_end in tqdm(bg_segments, desc="Background calibration"):
             try:
-                ts = fetch_local_or_remote_strain(self.detector, seg_start, seg_end)
-                ts_w = whiten(ts)
-                ts_bp = bandpass(ts_w)
+                ts_super = fetch_local_or_remote_strain(self.detector, seg_start - 4.0, seg_end + 4.0)
+                ts_w, pad_info = whiten_context(ts_super, seg_start, seg_end, pad=4.0)
+                ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
                 q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
                 q_gram_uint8 = (q_gram * 255).astype(np.uint8)
                 if q_gram_uint8.ndim == 2:
@@ -260,9 +260,9 @@ class DSDControlledRecoveryTest:
             for i in bg_indices[:100]:  # Smaller sample for O3b
                 seg_start, seg_end = available_segments[i]
                 try:
-                    ts = fetch_local_or_remote_strain(self.detector, seg_start, seg_end)
-                    ts_w = whiten(ts)
-                    ts_bp = bandpass(ts_w)
+                    ts_super = fetch_local_or_remote_strain(self.detector, seg_start - 4.0, seg_end + 4.0)
+                    ts_w, pad_info = whiten_context(ts_super, seg_start, seg_end, pad=4.0)
+                    ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
                     q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
                     q_gram_uint8 = (q_gram * 255).astype(np.uint8)
                     if q_gram_uint8.ndim == 2:
@@ -307,19 +307,22 @@ class DSDControlledRecoveryTest:
                     t_inject = seg_start + SEGMENT_LENGTH / 2.0
 
                     try:
-                        # Fetch clean strain
-                        ts_clean = fetch_local_or_remote_strain(
-                            self.detector, seg_start, seg_end
+                        # Fetch padded clean strain
+                        ts_super = fetch_local_or_remote_strain(
+                            self.detector, seg_start - 4.0, seg_end + 4.0
                         )
 
-                        # Generate and inject synthetic signal
+                        # Generate and inject synthetic signal into padded strain
                         glitch = self.glitch_gen.generate(morph, amp, duration=1.0)
-                        ts_injected = self.injector.inject(ts_clean, glitch, t_inject)
-                        snr = self.injector.compute_snr(ts_clean, glitch)
+                        ts_injected = self.injector.inject(ts_super, glitch, t_inject)
+                        
+                        # We compute SNR on the cropped center part for consistency
+                        ts_clean_center = ts_super.crop(seg_start, seg_end)
+                        snr = self.injector.compute_snr(ts_clean_center, glitch)
 
                         # Preprocess
-                        ts_w = whiten(ts_injected)
-                        ts_bp = bandpass(ts_w)
+                        ts_w, pad_info = whiten_context(ts_injected, seg_start, seg_end, pad=4.0)
+                        ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
 
                         # Generate Q-transform
                         q_gram = generate_qtransform(ts_bp, output_size=(256, 256))

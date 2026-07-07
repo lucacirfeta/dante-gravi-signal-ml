@@ -23,7 +23,7 @@ from src.core.utils import setup_logger, get_device
 from src.core.reference_index_builder import download_gs_classifications_csv
 from src.pipeline_v2_production.saliency_map import generate_saliency_map
 from src.core.data_loader import fetch_strain_data
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
 from src.core.encoder import build_dinov2_transform
 
 logger = setup_logger(__name__)
@@ -154,9 +154,9 @@ class ValidationReporter:
                 out_prefix = self.saliency_dir / f"C{cid}_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
                 logger.info(f"Regenerating plot for cluster {cid} GPS {t_start}")
                 try:
-                    ts = fetch_strain_data(self.detector, t_start, t_start + 32)
-                    ts = whiten(ts)
-                    ts = bandpass(ts)
+                    ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0)
+                    ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
+                    ts = extract_clean_subwindow(ts_w, t_start, t_start + 32.0)
                     spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
                     
                     generate_saliency_map(
@@ -177,9 +177,9 @@ class ValidationReporter:
             out_prefix = self.saliency_dir / f"NOVEL_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
             logger.info(f"Regenerating plot for NOVEL candidate GPS {t_start}")
             try:
-                ts = fetch_strain_data(self.detector, t_start, t_start + 32)
-                ts = whiten(ts)
-                ts = bandpass(ts)
+                ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0)
+                ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
+                ts = extract_clean_subwindow(ts_w, t_start, t_start + 32.0)
                 spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
                 
                 generate_saliency_map(
@@ -593,10 +593,11 @@ class ValidationReporter:
                 
                 t_start_local = ts.t0.value + offset
                 t_end_local = t_start_local + 32
-                ts_cropped = ts.crop(t_start_local, t_end_local)
-                
-                ts_cropped = whiten(ts_cropped)
-                ts_cropped = bandpass(ts_cropped)
+                crop_start = max(ts.t0.value, t_start_local - 4.0)
+                crop_end = min(ts.t0.value + ts.duration.value, t_end_local + 4.0)
+                ts_super = ts.crop(crop_start, crop_end)
+                ts_cropped_w, pad_info = whiten_context(ts_super, t_start_local, t_end_local, pad=4.0)
+                ts_cropped = extract_clean_subwindow(ts_cropped_w, t_start_local, t_end_local)
                 spec_matrix = generate_qtransform(ts_cropped, save_path=None, cmap="cividis")
                 
                 cmap_func = plt.get_cmap("cividis")
@@ -649,9 +650,9 @@ class ValidationReporter:
                 t_start = int(t_start)
                 out_prefix = self.saliency_dir / f"C{cid}_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
                 
-                ts = fetch_strain_data(self.detector, t_start, t_start + 32)
-                ts = whiten(ts)
-                ts = bandpass(ts)
+                ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0)
+                ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
+                ts = extract_clean_subwindow(ts_w, t_start, t_start + 32.0)
                 spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
                 
                 res = generate_saliency_map(
@@ -711,9 +712,9 @@ class ValidationReporter:
         
         for idx, t_start in enumerate(gps_list):
             t_start = int(t_start)
-            ts = fetch_strain_data(self.detector, t_start, t_start + 32)
-            ts = whiten(ts)
-            ts = bandpass(ts)
+            ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0)
+            ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
+            ts = extract_clean_subwindow(ts_w, t_start, t_start + 32.0)
             spec_matrix = generate_qtransform(ts, save_path=None)
             
             spec_8bit = np.uint8(spec_matrix * 255.0)
@@ -887,9 +888,9 @@ class ValidationReporter:
                 sal_img = f"{out_prefix.name}_saliency.png"
                 if not (self.saliency_dir / sal_img).exists() and model is not None and hasattr(self, 'spatial_median'):
                     try:
-                        ts = fetch_strain_data(self.detector, t_start, t_start + 32)
-                        ts = whiten(ts)
-                        ts = bandpass(ts)
+                        ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0)
+                        ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
+                        ts = extract_clean_subwindow(ts_w, t_start, t_start + 32.0)
                         spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
                         
                         generate_saliency_map(

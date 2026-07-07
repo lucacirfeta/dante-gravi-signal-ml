@@ -56,15 +56,14 @@ def _whiten_raw_unsafe(ts: TimeSeries) -> TimeSeries:
 def whiten(ts: TimeSeries) -> TimeSeries:
     """
     DEPRECATED: Apply standard whitening without padding.
-    Raises a DeprecationWarning due to Gibbs Ringing/Signal Dilution Barrier at boundaries.
+    Raises a RuntimeError due to Gibbs Ringing/Signal Dilution Barrier at boundaries.
     Use `whiten_context` instead.
     """
-    warnings.warn(
-        "whiten() diretto è deprecato per rischio di artefatti ai bordi. Usa whiten_context().",
-        DeprecationWarning,
-        stacklevel=2
+    raise RuntimeError(
+        "whiten() diretto è vietato per rischio di artefatti ai bordi. "
+        "Usa whiten_context() per includere il padding necessario."
     )
-    return _whiten_raw_unsafe(ts)
+
 
 
 def bandpass(
@@ -124,8 +123,7 @@ def whiten_context(
 
     Returns:
         ts_bp: La TimeSeries whitenata e bandpassata, comprensiva di pad (se disponibile).
-        partial_pad: True se non è stato possibile applicare tutto il padding richiesto.
-        effective_pad: Il padding minimo effettivo che è stato possibile applicare.
+        pad_info: Dizionario con {'left': bool, 'right': bool, 'effective_left': float, 'effective_right': float}.
     """
     t0 = float(ts_full.t0.value)
     t1 = t0 + float(ts_full.duration.value)
@@ -135,18 +133,23 @@ def whiten_context(
 
     actual_left_pad = context_start - pad_start
     actual_right_pad = pad_end - context_end
-    effective_pad = min(actual_left_pad, actual_right_pad)
-    partial_pad = effective_pad < pad
+    
+    pad_info = {
+        'left': actual_left_pad < pad,
+        'right': actual_right_pad < pad,
+        'effective_left': actual_left_pad,
+        'effective_right': actual_right_pad
+    }
 
     ts_padded = ts_full.crop(pad_start, pad_end)
 
     # Whiten & Bandpass
-    # Avoid infinite logging in a loop by keeping it to debug
-    logger.debug("Whitening context [%.1f, %.1f] (pad=%.1f)", pad_start, pad_end, effective_pad)
+    logger.debug("Whitening context [%.1f, %.1f] (pad_L=%.1f, pad_R=%.1f)", 
+                 pad_start, pad_end, actual_left_pad, actual_right_pad)
     ts_w = ts_padded.whiten()
     ts_bp = bandpass(ts_w)
 
-    return ts_bp, partial_pad, effective_pad
+    return ts_bp, pad_info
 
 
 def extract_clean_subwindow(

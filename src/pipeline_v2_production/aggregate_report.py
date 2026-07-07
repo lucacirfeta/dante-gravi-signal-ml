@@ -1048,7 +1048,7 @@ class AggregateReporter:
         import random
         from gwpy.timeseries import TimeSeries
         from src.core.data_loader import _DATA_DIRECTORIES
-        from src.core.preprocessor import whiten, bandpass, generate_qtransform
+        from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
         import logging
         logger = logging.getLogger("aggregate_report")
         
@@ -1088,7 +1088,7 @@ class AggregateReporter:
                     ts_context = ts.crop(crop_start, crop_end)
                     
                     from src.core.preprocessor import whiten_context, extract_clean_subwindow
-                    ts_w, _, _ = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
+                    ts_w, pad_info = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
                     ts_clean = extract_clean_subwindow(ts_w, seg_start, seg_end)
                     q_gram = generate_qtransform(ts_clean, output_size=(256, 256))
                     q_gram_uint8 = (q_gram * 255).astype(np.uint8)
@@ -1143,11 +1143,11 @@ class AggregateReporter:
                         pass
                 
                 if len(scores_list) >= 5000:
-                    import random
-                    random.seed(42)
-                    scores = np.array(random.sample(scores_list, 5000), dtype=np.float32)
+                    # FIX: Prendiamo uno slice contiguo invece di un random.sample per preservare 
+                    # l'autocorrelazione temporale necessaria al block-bootstrap.
+                    scores = np.array(scores_list[:5000], dtype=np.float32)
                     np.save(det_path, scores)
-                    logger.info(f"Sampled 5000 dual-scoring backgrounds for {det} and saved to {det_path}")
+                    logger.info(f"Sampled 5000 contiguous dual-scoring backgrounds for {det} and saved to {det_path}")
                     
                     # Clean up temporary native_scores files
                     for f in native_files:
@@ -1196,7 +1196,7 @@ class AggregateReporter:
         import numpy as np
         from tqdm import tqdm
         from src.core.data_loader import fetch_local_or_remote_strain
-        from src.core.preprocessor import whiten, bandpass, generate_qtransform
+        from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
         from src.core.patch_scorer import PatchScorer
         from pathlib import Path
         import logging
@@ -1255,9 +1255,11 @@ class AggregateReporter:
                     if not match.empty:
                         fam = match.iloc[0]['global_family_id']
                 
-                cand_ts = fetch_local_or_remote_strain(det, float(row['gps_start']), float(row['gps_start']) + 32, cache_raw=True)
-                cand_ts = whiten(cand_ts)
-                cand_ts = bandpass(cand_ts)
+                start = float(row['gps_start'])
+                end = start + 32
+                cand_super = fetch_local_or_remote_strain(det, start - 4.0, end + 4.0, cache_raw=True)
+                ts_w, pad_info = whiten_context(cand_super, start, end, pad=4.0)
+                cand_ts = extract_clean_subwindow(ts_w, start, end)
                 q_gram = generate_qtransform(cand_ts, output_size=(256, 256))
                 q_gram_uint8 = (q_gram * 255).astype(np.uint8)
                 if q_gram_uint8.ndim == 2:

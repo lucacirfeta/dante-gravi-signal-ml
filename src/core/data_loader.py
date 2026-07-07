@@ -112,10 +112,12 @@ def fetch_strain_data(
                     try:
                         f_start = float(parts[1])
                         f_end = float(parts[2])
-                        if f_start <= gps_start and f_end >= gps_end:
+                        if f_start <= gps_start + 4.0 and f_end >= gps_end - 4.0:
                             try:
                                 ts = TimeSeries.read(file)
-                                ts_cropped = ts.crop(gps_start, gps_end)
+                                crop_start = max(f_start, gps_start)
+                                crop_end = min(f_end, gps_end)
+                                ts_cropped = ts.crop(crop_start, crop_end)
                                 if ts_cropped.sample_rate.value != sample_rate:
                                     ts_cropped = ts_cropped.resample(sample_rate)
                                 logger.info("Local block hit for %s covering [%d, %d] in %s", file.name, gps_start, gps_end, dir_path)
@@ -252,10 +254,12 @@ def fetch_local_or_remote_strain(
                 try:
                     f_start = float(parts[1])
                     f_end = float(parts[2])
-                    if f_start <= gps_start and f_end >= gps_end:
-                        logger.info(f"Found local block {file.name} covering [{gps_start}, {gps_end}]")
+                    if f_start <= gps_start + 4.0 and f_end >= gps_end - 4.0:
+                        logger.info(f"Found local block {file.name} covering [{gps_start}, {gps_end}] (with up to 4s padding tolerance)")
                         ts = TimeSeries.read(file)
-                        return ts.crop(gps_start, gps_end)
+                        crop_start = max(f_start, gps_start)
+                        crop_end = min(f_end, gps_end)
+                        return ts.crop(crop_start, crop_end)
                 except ValueError:
                     continue
                     
