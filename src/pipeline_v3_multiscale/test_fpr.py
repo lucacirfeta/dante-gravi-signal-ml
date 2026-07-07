@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from src.core.data_loader import fetch_strain_data, _DATA_DIRECTORIES
 from gwosc.timeline import get_segments
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -88,8 +88,9 @@ def test_fpr(detector="L1", n_test=200):
     pbar = tqdm(total=n_test, desc="FPR Testing")
     for t_bg in valid_t_bgs:
         try:
-            ts_clean = fetch_strain_data(detector, t_bg - 16, t_bg + 16, cache_raw=True)
-            ts_white = whiten(ts_clean)
+            ts_super = fetch_strain_data(detector, t_bg - 16 - 4.0, t_bg + 16 + 4.0, cache_raw=True, edge_tolerance=4.0)
+            ts_w_padded, _ = whiten_context(ts_super, t_bg - 16, t_bg + 16, pad=4.0)
+            ts_white = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)
             ts_bp = bandpass(ts_white)
             
             scale_scores = {}

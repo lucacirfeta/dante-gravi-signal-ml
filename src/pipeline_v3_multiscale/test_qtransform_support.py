@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 from pathlib import Path
 from src.core.data_loader import fetch_strain_data
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -21,8 +21,9 @@ def run_qtransform_support_test(gps_start: int, num_segments: int = 20, detector
     passed = True
     for start in available_starts:
         end = start + segment_length
-        ts_clean = fetch_strain_data(detector, start, end, cache_raw=True)
-        ts_white = whiten(ts_clean)
+        ts_super = fetch_strain_data(detector, start - 4.0, end + 4.0, cache_raw=True, edge_tolerance=4.0)
+        ts_w_padded, _ = whiten_context(ts_super, start, end, pad=4.0)
+        ts_white = extract_clean_subwindow(ts_w_padded, start, end)
         ts_bp = bandpass(ts_white)
         
         # Test 4s baseline

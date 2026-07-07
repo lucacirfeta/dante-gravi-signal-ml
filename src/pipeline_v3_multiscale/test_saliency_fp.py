@@ -12,7 +12,7 @@ from gwosc.timeline import get_segments
 from tenacity import retry, wait_exponential, stop_after_attempt
 
 from src.core.data_loader import fetch_strain_data
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.pipeline_v3_multiscale.micro_mdc_multiscale import excess_power_veto
 from src.core.utils import setup_logger
 
@@ -100,7 +100,9 @@ def test_saliency_and_veto(detector="L1", n_test=50, seed=42):
                     logger.debug(f"Segment {t_bg} rejected by excess_power_veto.")
                     continue
                 
-                ts_white = whiten(ts_clean)
+                ts_super = ts_block.crop(win_start - 4.0, win_end + 4.0)
+                ts_w_padded, _ = whiten_context(ts_super, t_bg - 16, t_bg + 16, pad=4.0)
+                ts_white = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)
                 ts_bp = bandpass(ts_white)
                 
                 is_fp = False

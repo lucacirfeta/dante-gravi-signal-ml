@@ -1141,9 +1141,14 @@ class AggregateReporter:
                 random.shuffle(native_files)
                 
                 scores_list = []
+                files_used = 0
                 for f in native_files:
                     try:
-                        scores_list.extend(np.load(f))
+                        file_scores = np.load(f)
+                        scores_list.extend(file_scores[:500])
+                        files_used += 1
+                        if len(scores_list) >= 5000:
+                            break
                     except:
                         pass
                 
@@ -1152,7 +1157,7 @@ class AggregateReporter:
                     # l'autocorrelazione temporale necessaria al block-bootstrap.
                     scores = np.array(scores_list[:5000], dtype=np.float32)
                     np.save(det_path, scores)
-                    logger.info(f"Sampled 5000 contiguous dual-scoring backgrounds for {det} and saved to {det_path}")
+                    logger.info(f"Sampled 5000 contiguous dual-scoring backgrounds for {det} from {files_used} unique files, saved to {det_path}")
                     
                     # Clean up temporary native_scores files
                     for f in native_files:

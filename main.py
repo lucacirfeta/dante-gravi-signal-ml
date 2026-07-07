@@ -59,7 +59,7 @@ from astropy.time import Time
 
 from src.core.data_loader import fetch_o4a_segments, fetch_strain_data
 from src.core.encoder import DINOv2Encoder
-from src.core.preprocessor import bandpass, batch_process, generate_qtransform, whiten
+from src.core.preprocessor import bandpass, batch_process, generate_qtransform, whiten_context, extract_clean_subwindow
 from src.core.utils import enable_ansi_colors, load_config, setup_logger, session_path
 
 # Enable ANSI escape sequences for Windows terminal
@@ -338,10 +338,11 @@ def cmd_fetch(args: argparse.Namespace) -> None:
     logger.info("=== FETCH: %s (%s) ===", event_name, detector)
 
     # 1. Fetch strain data
-    ts = fetch_strain_data(detector, gps_start, gps_end)
+    ts_super = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0, edge_tolerance=4.0)
 
     # 2. Whiten
-    ts_white = whiten(ts)
+    ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
+    ts_white = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
 
     # 3. Bandpass
     ts_bp = bandpass(ts_white)
@@ -1053,10 +1054,11 @@ def _reprocess_single_png(
 
         # fetch_strain_data automatically searches _DATA_DIRECTORIES before downloading
         from src.core.data_loader import fetch_strain_data
-        ts = fetch_strain_data(detector, gps_start, gps_end)
+        ts_super = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0, edge_tolerance=4.0)
 
-        from src.core.preprocessor import whiten, bandpass, generate_qtransform
-        ts_w = whiten(ts)
+        from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
+        ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
+        ts_w = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
         ts_bp = bandpass(ts_w)
         generate_qtransform(ts_bp, save_path=save_path, cmap=cmap)
 
@@ -2099,11 +2101,12 @@ def cmd_validate_reference(args: argparse.Namespace) -> None:
 
     # Step 1: Fetch and preprocess the test event with our pipeline
     from src.core.data_loader import fetch_strain_data as _fetch
-    from src.core.preprocessor import bandpass as _bp, generate_qtransform as _qt, whiten as _wh
+    from src.core.preprocessor import bandpass as _bp, generate_qtransform as _qt, whiten_context as _wh_ctx, extract_clean_subwindow as _ecs
 
     logger.info("Fetching %s (%s) [%d, %d]", test_event, detector, gps_start, gps_end)
-    ts = _fetch(detector, gps_start, gps_end)
-    ts_white = _wh(ts)
+    ts_super = _fetch(detector, gps_start - 4.0, gps_end + 4.0, edge_tolerance=4.0)
+    ts_w_padded, _ = _wh_ctx(ts_super, gps_start, gps_end, pad=4.0)
+    ts_white = _ecs(ts_w_padded, gps_start, gps_end)
     ts_bp = _bp(ts_white)
 
     test_dir = reference_path.parent / "validation"

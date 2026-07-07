@@ -13,7 +13,7 @@ from sklearn.cluster import MiniBatchKMeans
 from gwosc.timeline import get_segments
 
 from src.core.data_loader import fetch_strain_data, clear_astropy_cache, _DATA_DIRECTORIES
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.encoder import DINOv2Encoder, build_dinov2_transform
 from src.core.utils import setup_logger
 
@@ -132,7 +132,8 @@ def build_multiscale_dictionaries(
         try:
             # Use raw data fetching, assume it's cached locally
             ts_clean = fetch_strain_data(detector, block_start, block_end, cache_raw=False)
-            ts_white = whiten(ts_clean)
+            ts_w_padded, _ = whiten_context(ts_clean, block_start, block_end, pad=4.0)
+            ts_white = extract_clean_subwindow(ts_w_padded, block_start, block_end)
             ts_bp = bandpass(ts_white)
         except Exception as e:
             logger.warning(f"Failed to load block {block_start}: {e}")

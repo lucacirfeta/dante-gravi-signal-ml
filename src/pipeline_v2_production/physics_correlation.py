@@ -39,7 +39,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
 
 from src.core.data_loader import fetch_strain_data
-from src.core.preprocessor import whiten, bandpass
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass
 from src.core.utils import load_config, setup_logger
 
 matplotlib.use("Agg")
@@ -89,11 +89,12 @@ def extract_physical_params(
     gps_start = int(gps)
     gps_end = gps_start + segment_duration
 
-    # Fetch raw strain (local HDF5 first, GWOSC fallback)
-    ts = fetch_strain_data(detector, gps_start, gps_end)
+    # Fetch raw strain (local HDF5 first, GWOSC fallback) with padding
+    ts_super = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0, edge_tolerance=4.0)
 
     # Preprocessing — identical to production pipeline
-    ts_white = whiten(ts)
+    ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
+    ts_white = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
     ts_bp = bandpass(ts_white)
 
     # --- SNR proxy ---

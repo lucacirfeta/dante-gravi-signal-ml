@@ -9,7 +9,7 @@ import argparse
 
 from src.core.utils import setup_logger, get_observing_run
 from src.core.data_loader import fetch_local_or_remote_strain
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.patch_scorer import PatchScorer
 
 logger = setup_logger(__name__)
@@ -86,7 +86,7 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
             
         # 2. Fetch partner raw strain
         try:
-            ts = fetch_local_or_remote_strain(partner, gps, gps + 32, cache_raw=False)
+            ts_super = fetch_local_or_remote_strain(partner, gps - 4.0, gps + 36.0, cache_raw=False, edge_tolerance=4.0)
         except Exception as e:
             logger.warning(f"Failed to fetch partner strain: {e}")
             local_rows.append(row)
@@ -94,7 +94,8 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
             
         # 3. Encode partner
         try:
-            ts_white = whiten(ts)
+            ts_w_padded, _ = whiten_context(ts_super, gps, gps + 32.0, pad=4.0)
+            ts_white = extract_clean_subwindow(ts_w_padded, gps, gps + 32.0)
             ts_bp = bandpass(ts_white)
             spectrogram = generate_qtransform(ts_bp)
             # score_spectrogram returns a list of dicts

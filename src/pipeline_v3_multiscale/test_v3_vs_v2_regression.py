@@ -6,7 +6,7 @@ import scipy
 import torch
 from pathlib import Path
 from src.core.data_loader import fetch_strain_data
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -22,11 +22,12 @@ def run_regression_test(gps_start: int, duration: int = 32, detector: str = "L1"
     gps_end = gps_start + duration
     
     logger.info(f"Fetching strain data for {detector} [{gps_start}, {gps_end}]")
-    ts_clean = fetch_strain_data(detector, gps_start, gps_end, cache_raw=True)
+    ts_super = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0, cache_raw=True, edge_tolerance=4.0)
     
     # --- V2 (Production) Logic ---
     # In V2, we take the target segment and directly whiten and bandpass it.
-    ts_v2_white = whiten(ts_clean)
+    ts_v2_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
+    ts_v2_white = extract_clean_subwindow(ts_v2_w_padded, gps_start, gps_end)
     ts_v2_bp = bandpass(ts_v2_white)
     v2_qtransform = generate_qtransform(ts_v2_bp)
     
@@ -34,7 +35,8 @@ def run_regression_test(gps_start: int, duration: int = 32, detector: str = "L1"
     # In V3, we fetch a 32s buffer, whiten and bandpass the buffer, then crop to target.
     # Since our target here is the 32s buffer itself, the crop is a no-op, 
     # but we execute it explicitly to test the API flow.
-    ts_buffer_white = whiten(ts_clean)
+    ts_buffer_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
+    ts_buffer_white = extract_clean_subwindow(ts_buffer_w_padded, gps_start, gps_end)
     ts_buffer_bp = bandpass(ts_buffer_white)
     # Crop to the inner segment (which is the whole segment in this test)
     ts_v3_bp = ts_buffer_bp.crop(gps_start, gps_end)

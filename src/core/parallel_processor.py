@@ -42,12 +42,12 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
         import urllib.error
         # Import inside function to avoid pickling issues
         from src.core.data_loader import fetch_strain_data
-        from src.core.preprocessor import whiten, bandpass, generate_qtransform
+        from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 
         # Fetch
-        ts = fetch_strain_data(detector, gps_start, gps_end,
+        ts = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0,
                                sample_rate=config.get('sample_rate', 4096),
-                               cache_raw=cache_raw)
+                               cache_raw=cache_raw, edge_tolerance=4.0)
 
         segment_duration = gps_end - gps_start
         chunk_size = 32
@@ -65,8 +65,11 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
 
                 import numpy as np
                 try:
-                    ts_chunk = ts.crop(chunk_start, chunk_end)
-                    ts_w = whiten(ts_chunk)
+                    crop_start = max(ts.t0.value, chunk_start - 4.0)
+                    crop_end = min(ts.t0.value + ts.duration.value, chunk_end + 4.0)
+                    ts_super = ts.crop(crop_start, crop_end)
+                    ts_w_padded, _ = whiten_context(ts_super, chunk_start, chunk_end, pad=4.0)
+                    ts_w = extract_clean_subwindow(ts_w_padded, chunk_start, chunk_end)
                     ts_bp = bandpass(ts_w,
                                      f_low=config.get('f_low', 20.0),
                                      f_high=config.get('f_high', 2000.0))
@@ -97,7 +100,11 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
                 return (segment_id, True)
 
             # Preprocess
-            ts_w = whiten(ts)
+            crop_start = max(ts.t0.value, gps_start - 4.0)
+            crop_end = min(ts.t0.value + ts.duration.value, gps_end + 4.0)
+            ts_super = ts.crop(crop_start, crop_end)
+            ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
+            ts_w = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
             ts_bp = bandpass(ts_w,
                              f_low=config.get('f_low', 20.0),
                              f_high=config.get('f_high', 2000.0))

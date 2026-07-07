@@ -13,7 +13,7 @@ from sklearn.cluster import MiniBatchKMeans
 from gwosc.timeline import get_segments
 
 from src.core.data_loader import fetch_strain_data
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.encoder import build_dinov2_transform
 from src.core.utils import setup_logger
 from src.pipeline_v3_multiscale.micro_mdc_multiscale import excess_power_veto
@@ -74,8 +74,9 @@ def build_o3a_dictionaries(detector="L1", n_dict=2000, seed=42):
             if not any(s[0] <= win_start and s[1] >= win_end for s in data_segs): continue
                 
             try:
-                ts_clean = fetch_strain_data(detector, t_bg - 16, t_bg + 16, cache_raw=False)
-                ts_white = whiten(ts_clean)
+                ts_super = fetch_strain_data(detector, t_bg - 16 - 4.0, t_bg + 16 + 4.0, cache_raw=False, edge_tolerance=4.0)
+                ts_w_padded, _ = whiten_context(ts_super, t_bg - 16, t_bg + 16, pad=4.0)
+                ts_white = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)
                 ts_bp = bandpass(ts_white)
             except Exception as e:
                 continue

@@ -301,8 +301,8 @@ def batch_process(
             segment_duration = gps_end - gps_start
             chunk_size = 32
 
-            # 1. Fetch strain data
-            ts = fetch_strain_data(detector, gps_start, gps_end)
+            # 1. Fetch strain data with padding
+            ts_super = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0, edge_tolerance=4.0)
 
             if segment_duration > chunk_size:
                 # Slice into chunks (e.g. 128 chunks for 4096s)
@@ -317,8 +317,11 @@ def batch_process(
                         continue
 
                     try:
-                        ts_chunk = ts.crop(chunk_start, chunk_end)
-                        ts_white = whiten(ts_chunk)
+                        crop_start = max(ts_super.t0.value, chunk_start - 4.0)
+                        crop_end = min(ts_super.t0.value + ts_super.duration.value, chunk_end + 4.0)
+                        ts_chunk_super = ts_super.crop(crop_start, crop_end)
+                        ts_w_padded, _ = whiten_context(ts_chunk_super, chunk_start, chunk_end, pad=4.0)
+                        ts_white = extract_clean_subwindow(ts_w_padded, chunk_start, chunk_end)
                         ts_bp = bandpass(ts_white)
 
                         if not np.isfinite(ts_bp.value).all():
@@ -343,7 +346,11 @@ def batch_process(
                     continue
 
                 # 2. Whiten
-                ts_white = whiten(ts)
+                crop_start = max(ts_super.t0.value, gps_start - 4.0)
+                crop_end = min(ts_super.t0.value + ts_super.duration.value, gps_end + 4.0)
+                ts_super_cropped = ts_super.crop(crop_start, crop_end)
+                ts_w_padded, _ = whiten_context(ts_super_cropped, gps_start, gps_end, pad=4.0)
+                ts_white = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
 
                 # 3. Bandpass
                 ts_bp = bandpass(ts_white)

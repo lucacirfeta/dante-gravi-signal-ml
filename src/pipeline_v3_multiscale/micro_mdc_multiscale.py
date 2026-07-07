@@ -13,7 +13,7 @@ from PIL import Image
 from gwosc.timeline import get_segments
 
 from src.core.data_loader import fetch_strain_data, clear_astropy_cache, _DATA_DIRECTORIES
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.encoder import build_dinov2_transform
 from src.core.utils import setup_logger
 
@@ -106,7 +106,8 @@ def run_micro_mdc_multiscale(detector="L1", n_calib=5000, seed=42):
             
         try:
             ts_clean = fetch_strain_data(detector, block_start, block_end, cache_raw=False)
-            ts_white = whiten(ts_clean)
+            ts_w_padded, _ = whiten_context(ts_clean, block_start, block_end, pad=4.0)
+            ts_white = extract_clean_subwindow(ts_w_padded, block_start, block_end)
             ts_bp = bandpass(ts_white)
         except: continue
             

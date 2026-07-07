@@ -9,7 +9,7 @@ import scipy.stats as stats
 from src.core.data_loader import fetch_strain_data
 from gwosc.timeline import get_segments
 from tenacity import retry, wait_exponential, stop_after_attempt
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -97,8 +97,9 @@ def test_fpr_o3a(detector="L1", n_test=500, seed=42):
             if not any(s[0] <= win_start and s[1] >= win_end for s in data_segs): continue
             
             try:
-                ts_clean = ts_block.crop(win_start, win_end)
-                ts_white = whiten(ts_clean)
+                ts_super = ts_block.crop(win_start - 4.0, win_end + 4.0)
+                ts_w_padded, _ = whiten_context(ts_super, win_start, win_end, pad=4.0)
+                ts_white = extract_clean_subwindow(ts_w_padded, win_start, win_end)
                 ts_bp = bandpass(ts_white)
                 
                 scale_scores = {}

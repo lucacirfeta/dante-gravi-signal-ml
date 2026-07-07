@@ -13,7 +13,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from src.core.utils import setup_logger, load_config
-from src.core.preprocessor import whiten, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.encoder import DINOv2Encoder
 from src.pipeline_v1_legacy.similarity_checker import cosine_knn_search, assess_novelty, assess_novelty_dynamic, compute_baseline_stats
 from src.core.utils import discover_references
@@ -640,8 +640,8 @@ def run_mdc(
         seg_end = seg_start + segment_length
         
         try:
-            # Fetch strain
-            ts_clean = fetch_strain_data(detector, seg_start, seg_end, cache_raw=True)
+            # Fetch padded strain (±4s)
+            ts_clean = fetch_strain_data(detector, seg_start - 4.0, seg_end + 4.0, cache_raw=True, edge_tolerance=4.0)
             
             # Injection point (center of the 32s segment)
             t_inject = seg_start + segment_length / 2.0
@@ -654,15 +654,13 @@ def run_mdc(
                 ts_injected = injector.inject(ts_clean, glitch, t_inject)
                 snr = injector.compute_snr(ts_clean, glitch)
                 
-            # Process segment
-            ts_white = whiten(ts_injected)
+            # Process segment with padded context
+            ts_white_padded, _ = whiten_context(ts_injected, seg_start, seg_end, pad=4.0)
+            ts_white = extract_clean_subwindow(ts_white_padded, seg_start, seg_end)
             ts_bp = bandpass(ts_white)
             
-            # Use the full 32s segment — this matches the operational pipeline
-            # (batch_process in full_analysis.py generates Q-transforms on full 32s chunks).
-            # A 4s crop was previously used here, but created an inconsistency: MDC
-            # sensitivity measured at 4s ≠ sensitivity of the operational O4a analysis.
-            ts_crop = ts_bp.crop(seg_start, seg_end)
+            # The window is now exactly [seg_start, seg_end], so no further crop is needed.
+            ts_crop = ts_bp
 
             save_spec_path = None
             if saved_specs[gtype] < 5:
