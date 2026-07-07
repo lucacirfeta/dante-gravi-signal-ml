@@ -88,9 +88,9 @@ def test_real_blips(detector: str = "L1", n_test: int = -1):
         
         try:
             ts_context = fetch_strain_data(detector, start - 4.0, end + 4.0, cache_raw=True)
-            from src.core.preprocessor import whiten_context, extract_clean_subwindow
+            from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass
             ts_white_full, _, _ = whiten_context(ts_context, start, end, pad=4.0)
-            ts_bp = ts_white_full.bandpass(20.0, 2048.0)
+            ts_bp = bandpass(ts_white_full)
             
             blip_res = item.copy()
             

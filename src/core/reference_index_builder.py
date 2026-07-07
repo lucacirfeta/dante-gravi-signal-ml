@@ -255,13 +255,36 @@ def build_indomain_reference(
         label_dir.mkdir(parents=True, exist_ok=True)
         save_path = label_dir / f"{event_time:.1f}.png"
 
-        # Skip if already processed (resume support)
-        if save_path.exists():
-            image_paths.append(save_path)
-            labels.append(label)
-            gps_times.append(event_time)
-            partial_pads.append(False) # Assume False for cached if missing
-            effective_pads.append(4.0)
+        # Skip if already processed AND sidecar json is valid (resume support)
+        sidecar_path = save_path.with_suffix('.json')
+        preprocessor_version = "whiten_context_v1"
+        is_cached = False
+        
+        if save_path.exists() and sidecar_path.exists():
+            try:
+                import json
+                with open(sidecar_path, "r") as f:
+                    meta = json.load(f)
+                if meta.get("preprocessor_version") == preprocessor_version:
+                    image_paths.append(save_path)
+                    labels.append(label)
+                    gps_times.append(event_time)
+                    partial_pads.append(meta.get("partial_pad", False))
+                    effective_pads.append(meta.get("effective_pad", 4.0))
+                    is_cached = True
+                else:
+                    # Invalid version, delete cache
+                    save_path.unlink(missing_ok=True)
+                    sidecar_path.unlink(missing_ok=True)
+            except Exception as e:
+                logger.warning(f"Failed to read sidecar {sidecar_path}: {e}")
+                save_path.unlink(missing_ok=True)
+                sidecar_path.unlink(missing_ok=True)
+        elif save_path.exists():
+            # Missing sidecar, invalidate
+            save_path.unlink(missing_ok=True)
+            
+        if is_cached:
             continue
 
         try:
@@ -277,6 +300,15 @@ def build_indomain_reference(
             gps_times.append(event_time)
             partial_pads.append(p_pad)
             effective_pads.append(e_pad)
+            
+            # Save sidecar
+            import json
+            with open(sidecar_path, "w") as f:
+                json.dump({
+                    "preprocessor_version": preprocessor_version,
+                    "partial_pad": p_pad,
+                    "effective_pad": e_pad
+                }, f)
 
         except Exception as exc:
             logger.warning(
