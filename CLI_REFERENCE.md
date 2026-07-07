@@ -10,19 +10,6 @@ This guide provides a complete and updated list of all available commands in the
 
 ---
 
-## Quick Reference (Most Used Commands)
-
-- **Automatic Scan & Full Analysis:**
-  `python main.py scan-extended --workers 6 --full-analysis True`
-- **Resume an Interrupted Run:**
-  `python main.py scan-extended --session-id <SESSION_ID> --workers 6 --continue-run`
-- **Generate Reference Index:**
-  `python main.py download-all-references --runs O3b --detectors H1`
-- **Visualize and Update UMAP Report:**
-  `python main.py report --session-id <SESSION_ID> --detector H1`
-
----
-
 ## Structural Conventions
 
 ### Session ID Convention

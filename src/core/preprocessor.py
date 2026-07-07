@@ -102,6 +102,71 @@ def bandpass(
     return ts.bandpass(f_low, f_high, fstop=(fstop_low, fstop_high))
 
 
+def whiten_context(
+    ts_full: TimeSeries,
+    context_start: float,
+    context_end: float,
+    pad: float = 4.0
+) -> tuple[TimeSeries, bool, float]:
+    """Whiten un blocco di contesto ampio UNA VOLTA (pad extra su entrambi i lati, scartato dopo).
+    
+    Ritorna la TimeSeries whitenata+bandpassata, pulita, pronta
+    per essere croppata a qualsiasi sotto-finestra (32s, 4s, 2s, 1s, 0.5s) senza
+    richiedere un nuovo whitening per ciascuna scala.
+
+    Args:
+        ts_full: Il blocco grezzo grande in memoria.
+        context_start: L'inizio del contesto logico richiesto (senza pad).
+        context_end: La fine del contesto logico richiesto (senza pad).
+        pad: Padding addizionale ai lati in secondi (default: 4.0).
+
+    Returns:
+        ts_bp: La TimeSeries whitenata e bandpassata, comprensiva di pad (se disponibile).
+        partial_pad: True se non è stato possibile applicare tutto il padding richiesto.
+        effective_pad: Il padding minimo effettivo che è stato possibile applicare.
+    """
+    t0 = float(ts_full.t0.value)
+    t1 = t0 + float(ts_full.duration.value)
+
+    pad_start = max(t0, context_start - pad)
+    pad_end = min(t1, context_end + pad)
+
+    actual_left_pad = context_start - pad_start
+    actual_right_pad = pad_end - context_end
+    effective_pad = min(actual_left_pad, actual_right_pad)
+    partial_pad = effective_pad < pad
+
+    ts_padded = ts_full.crop(pad_start, pad_end)
+
+    # Whiten & Bandpass
+    # Avoid infinite logging in a loop by keeping it to debug
+    logger.debug("Whitening context [%.1f, %.1f] (pad=%.1f)", pad_start, pad_end, effective_pad)
+    ts_w = ts_padded.whiten()
+    ts_bp = bandpass(ts_w)
+
+    return ts_bp, partial_pad, effective_pad
+
+
+def extract_clean_subwindow(
+    ts_context_whitened: TimeSeries,
+    seg_start: float,
+    seg_end: float
+) -> TimeSeries:
+    """Crop esatto della sotto-finestra di analisi dal contesto già whitenato+bandpassato.
+    Nessun nuovo whitening qui.
+
+    Args:
+        ts_context_whitened: La TimeSeries di contesto già filtrata (con o senza pad ai margini).
+        seg_start: Inizio esatto della finestra desiderata.
+        seg_end: Fine esatta della finestra desiderata.
+        
+    Returns:
+        La TimeSeries tagliata esattamente ai margini richiesti.
+    """
+    return ts_context_whitened.crop(seg_start, seg_end)
+
+
+
 def generate_qtransform(
         ts: TimeSeries,
         qrange: tuple[int, int] = tuple(_PREPROC["qrange"]),  # type: ignore[arg-type]

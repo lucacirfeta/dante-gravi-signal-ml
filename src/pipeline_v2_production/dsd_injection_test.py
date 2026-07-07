@@ -40,8 +40,7 @@ from tqdm import tqdm
 from src.core.data_loader import fetch_local_or_remote_strain, _DATA_DIRECTORIES
 from src.core.patch_scorer import PatchScorer
 from src.core.preprocessor import bandpass, generate_qtransform, whiten
-from src.core.utils import setup_logger
-from src.pipeline_v1_legacy.injection import InjectionEngine, SyntheticGlitchGenerator
+from src.core.injection import InjectionEngine, SyntheticGlitchGenerator
 
 logger = setup_logger(__name__)
 

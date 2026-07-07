@@ -12,7 +12,7 @@ import random
 import torch
 from tqdm import tqdm
 
-from src.pipeline_v1_legacy.injection import SyntheticGlitchGenerator, InjectionEngine, _load_all_references
+from src.core.injection import SyntheticGlitchGenerator, InjectionEngine, _load_all_references
 from src.core.preprocessor import whiten, bandpass, generate_qtransform
 from src.pipeline_v1_legacy.novelty_detector import PatchLevelNoveltyDetector
 from src.core.data_loader import fetch_strain_data

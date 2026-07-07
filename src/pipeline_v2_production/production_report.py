@@ -20,7 +20,7 @@ from sklearn.metrics import adjusted_rand_score
 from sklearn.mixture import BayesianGaussianMixture
 
 from src.core.utils import setup_logger, get_device
-from src.pipeline_v1_legacy.indomain_reference_builder import download_gs_classifications_csv
+from src.core.gravity_spy import download_gs_classifications_csv
 from src.pipeline_v2_production.saliency_map import generate_saliency_map
 from src.core.data_loader import fetch_strain_data
 from src.core.preprocessor import whiten, bandpass, generate_qtransform

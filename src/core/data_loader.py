@@ -38,7 +38,11 @@ _O4A_END: int = _CFG["o4a_window"]["gps_end"]
 _SAMPLE_RATE: int = _CFG["preprocessing"]["sample_rate"]
 _DATA_DIRECTORIES_CFG = _CFG.get("data_loading", {}).get("local_directories", [
     "E:/o4a",
+    "/mnt/e/o4a",
+    "E:/raw/o4a_cache",
+    "/mnt/e/raw/o4a_cache",
     "C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a",
+    "/mnt/c/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a",
     "data/raw"
 ])
 _DATA_DIRECTORIES: list[Path] = [Path(d) for d in _DATA_DIRECTORIES_CFG]
@@ -204,7 +208,10 @@ def fetch_strain_data(
 
     if cache_raw:
         try:
-            cache_dir = directories[0] if directories else Path("data/raw")
+            # IMPORTANT: We MUST NOT write to the external directories (E:/o4a, /mnt/e/o4a) 
+            # because they are read-only dataset storage.
+            # Any new chunks downloaded from GWOSC must be cached locally in the project.
+            cache_dir = Path("data/raw/o4a_cache")
             cache_dir.mkdir(parents=True, exist_ok=True)
             cache_write_path = cache_dir / cache_file_name
             ts.write(cache_write_path, format='hdf5')

@@ -92,28 +92,27 @@ def run_mdc_session(
         
         try:
             if mock_strain:
-                # Generate synthetic Gaussian noise mimicking white strain
-                # 4096 Hz * 32s = 131072 samples
-                noise_std = 1e-21  # typical amplitude scale
-                ts_clean_data = np.random.normal(0, noise_std, int(4096 * segment_length))
+                noise_std = 1e-21
+                duration = segment_length + 8.0
+                ts_context_clean_data = np.random.normal(0, noise_std, int(4096 * duration))
                 from gwpy.timeseries import TimeSeries
-                ts_clean = TimeSeries(ts_clean_data, t0=seg_start, dt=1.0/4096, name=detector)
+                ts_context_clean = TimeSeries(ts_context_clean_data, t0=seg_start - 4.0, dt=1.0/4096, name=detector)
             else:
-                ts_clean = fetch_strain_data(detector, seg_start, seg_end, cache_raw=True)
+                ts_context_clean = fetch_strain_data(detector, seg_start - 4.0, seg_end + 4.0, cache_raw=True)
                 
             t_inject = seg_start + segment_length / 2.0
             
             if gtype == "NULL":
-                ts_injected = ts_clean
+                ts_context_injected = ts_context_clean
                 snr = 0.0
             else:
                 glitch = glitch_gen.generate(gtype, amp, duration=1.0)
-                ts_injected = injector.inject(ts_clean, glitch, t_inject)
-                snr = injector.compute_snr(ts_clean, glitch)
+                ts_context_injected = injector.inject(ts_context_clean, glitch, t_inject)
+                snr = injector.compute_snr(ts_context_clean.crop(seg_start, seg_end), glitch)
                 
-            ts_white = whiten(ts_injected)
-            ts_bp = bandpass(ts_white)
-            ts_crop = ts_bp.crop(seg_start, seg_end)
+            from src.core.preprocessor import whiten_context, extract_clean_subwindow
+            ts_w_context, _, _ = whiten_context(ts_context_injected, seg_start, seg_end, pad=4.0)
+            ts_crop = extract_clean_subwindow(ts_w_context, seg_start, seg_end)
             
             save_spec_path = None
             if saved_specs[gtype] < 3:

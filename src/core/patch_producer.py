@@ -10,9 +10,9 @@ from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
 
-def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str) -> tuple[int, np.ndarray]:
+def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str, seg_start: float, seg_end: float) -> tuple[int, np.ndarray]:
     """Module-level function for multiprocessing. 
-    Applies Whiten -> Bandpass -> Q-Transform -> Image conversion.
+    Applies Whiten Context -> Q-Transform -> Image conversion.
     """
     try:
         from gwpy.timeseries import TimeSeries
@@ -21,14 +21,17 @@ def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str) ->
         
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            ts_seg = TimeSeries(ts_value, t0=t0, dt=dt, name=name)
+            ts_context = TimeSeries(ts_value, t0=t0, dt=dt, name=name)
             
-            # 1. Whitening
-            ts_white = whiten(ts_seg)
-            # 2. Bandpass
-            ts_bp = bandpass(ts_white)
+            from src.core.preprocessor import whiten_context, extract_clean_subwindow
+            # 1. Whitening & Bandpass with context
+            ts_w_context, _, _ = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
+            
+            # 2. Extract strictly the target segment
+            ts_clean = extract_clean_subwindow(ts_w_context, seg_start, seg_end)
+            
             # 3. Q-Transform + Cividis normalize
-            spectrogram = generate_qtransform(ts_bp, save_path=None, cmap="cividis")
+            spectrogram = generate_qtransform(ts_clean, save_path=None, cmap="cividis")
             
             cmap = plt.get_cmap("cividis")
             rgb_spectrogram = cmap(spectrogram)[:, :, :3]
@@ -149,20 +152,26 @@ class PatchProducer:
                             
                         current_end = current_start + self.segment_duration
                         
-                        ts_seg = ts_full.crop(current_start, current_end)
+                        pad = 4.0
+                        crop_start = max(start_time, current_start - pad)
+                        crop_end = min(end_time, current_end + pad)
+                        ts_context = ts_full.crop(crop_start, crop_end)
                         
-                        if not np.isfinite(ts_seg.value).all() or np.all(ts_seg.value == 0):
+                        ts_target = ts_full.crop(current_start, current_end)
+                        if not np.isfinite(ts_target.value).all() or np.all(ts_target.value == 0):
                             skipped_nan += 1
                             current_start += self.segment_duration
                             continue
                             
-                        # Inietta nel pool di processi (passiamo i valori base, non l'oggetto TS intero per evitare pickling overhead)
+                        # Inietta nel pool di processi
                         future = executor.submit(
                             _worker_preprocess,
-                            ts_seg.value,
-                            ts_seg.t0.value,
-                            ts_seg.dt.value,
-                            ts_seg.name
+                            ts_context.value,
+                            ts_context.t0.value,
+                            ts_context.dt.value,
+                            ts_context.name,
+                            current_start,
+                            current_end
                         )
                         futures.append(future)
                         

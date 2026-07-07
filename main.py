@@ -1916,7 +1916,7 @@ def cmd_morphcheck(args: argparse.Namespace) -> None:
 
 def _build_indomain_reference(args: argparse.Namespace) -> None:
     """Build an in-domain DINOv2 reference index from labeled O3b spectrograms."""
-    from src.pipeline_v1_legacy.indomain_reference_builder import (
+    from src.core.gravity_spy import (
         build_indomain_reference,
         download_gs_classifications_csv,
         select_reference_events,
@@ -1979,7 +1979,7 @@ def cmd_download_all_references(args: argparse.Namespace) -> None:
 
     Downloads are sequential to respect Zenodo rate limits.
     """
-    from src.pipeline_v1_legacy.indomain_reference_builder import (
+    from src.core.gravity_spy import (
         build_indomain_reference,
         download_gs_classifications_csv,
         select_reference_events,
@@ -2404,7 +2404,7 @@ def cmd_scan_live(args: argparse.Namespace) -> None:
 
 def cmd_run_injection(args: argparse.Namespace) -> None:
     """Run Mock Data Challenge with synthetic glitch injection."""
-    from src.pipeline_v1_legacy.injection import run_mdc
+    from src.core.injection import run_mdc
     from src.pipeline_v1_legacy.plot_mdc import plot_sensitivity_curve, plot_confusion_matrix, generate_mdc_report
     import yaml
     import pandas as pd

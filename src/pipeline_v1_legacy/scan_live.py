@@ -395,7 +395,7 @@ def run_scan_live(
     reference_path = Path(reference_path)
     if not reference_path.exists():
         logger.info("Reference index %s not found — building automatically...", reference_path)
-        from src.pipeline_v1_legacy.indomain_reference_builder import (
+        from src.core.gravity_spy import (
             build_indomain_reference,
             download_gs_classifications_csv,
             select_reference_events,

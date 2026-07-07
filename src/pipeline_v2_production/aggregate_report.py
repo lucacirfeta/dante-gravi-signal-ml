@@ -1079,10 +1079,18 @@ class AggregateReporter:
                     if start_offset + 32 > duration:
                         break
                     
-                    sub_ts = ts.crop(ts.t0.value + start_offset, ts.t0.value + start_offset + 32)
-                    ts_w = whiten(sub_ts)
-                    ts_bp = bandpass(ts_w)
-                    q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
+                    pad = 4.0
+                    seg_start = ts.t0.value + start_offset
+                    seg_end = seg_start + 32
+                    
+                    crop_start = max(ts.t0.value, seg_start - pad)
+                    crop_end = min(ts.t0.value + duration, seg_end + pad)
+                    ts_context = ts.crop(crop_start, crop_end)
+                    
+                    from src.core.preprocessor import whiten_context, extract_clean_subwindow
+                    ts_w, _, _ = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
+                    ts_clean = extract_clean_subwindow(ts_w, seg_start, seg_end)
+                    q_gram = generate_qtransform(ts_clean, output_size=(256, 256))
                     q_gram_uint8 = (q_gram * 255).astype(np.uint8)
                     if q_gram_uint8.ndim == 2:
                         q_gram_rgb = np.stack([q_gram_uint8]*3, axis=-1)

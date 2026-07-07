@@ -261,11 +261,12 @@ def build_indomain_reference(
             continue
 
         try:
-            # Fetch → Whiten → Bandpass → Q-transform → PNG
-            ts = fetch_strain_data(detector, gps_start, gps_end)
-            ts_white = whiten(ts)
-            ts_bp = bandpass(ts_white)
-            generate_qtransform(ts_bp, save_path=save_path)
+            # Fetch → Whiten (with context padding) → Bandpass → Q-transform → PNG
+            ts_context = fetch_strain_data(detector, gps_start - 4.0, gps_end + 4.0)
+            from src.core.preprocessor import whiten_context, extract_clean_subwindow
+            ts_w_context, _, _ = whiten_context(ts_context, gps_start, gps_end, pad=4.0)
+            ts_clean = extract_clean_subwindow(ts_w_context, gps_start, gps_end)
+            generate_qtransform(ts_clean, save_path=save_path)
 
             image_paths.append(save_path)
             labels.append(label)

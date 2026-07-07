@@ -261,6 +261,7 @@ raw/
 *.hdf5
 *.h5
 *.hdf
+*.sh
 
 # Generated spectrograms (PNG + PyTorch tensors)
 spectrograms/
