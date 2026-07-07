@@ -61,6 +61,7 @@ def fetch_strain_data(
         sample_rate: int = _SAMPLE_RATE,
         cache_raw: bool = False,
         local_only: bool = False,
+        edge_tolerance: float = 0.0,
 ) -> TimeSeries:
     """Fetch open strain data from GWOSC for a given detector and time range.
 
@@ -112,7 +113,7 @@ def fetch_strain_data(
                     try:
                         f_start = float(parts[1])
                         f_end = float(parts[2])
-                        if f_start <= gps_start + 4.0 and f_end >= gps_end - 4.0:
+                        if f_start <= gps_start + edge_tolerance and f_end >= gps_end - edge_tolerance:
                             try:
                                 ts = TimeSeries.read(file)
                                 crop_start = max(f_start, gps_start)
@@ -236,6 +237,7 @@ def fetch_local_or_remote_strain(
         gps_start: float,
         gps_end: float,
         cache_raw: bool = False,
+        edge_tolerance: float = 0.0,
 ) -> TimeSeries:
     """Fetch strain data, prioritizing local 4096s O4a blocks.
     
@@ -254,8 +256,8 @@ def fetch_local_or_remote_strain(
                 try:
                     f_start = float(parts[1])
                     f_end = float(parts[2])
-                    if f_start <= gps_start + 4.0 and f_end >= gps_end - 4.0:
-                        logger.info(f"Found local block {file.name} covering [{gps_start}, {gps_end}] (with up to 4s padding tolerance)")
+                    if f_start <= gps_start + edge_tolerance and f_end >= gps_end - edge_tolerance:
+                        logger.info(f"Found local block {file.name} covering [{gps_start}, {gps_end}] (tolerance: {edge_tolerance}s)")
                         ts = TimeSeries.read(file)
                         crop_start = max(f_start, gps_start)
                         crop_end = min(f_end, gps_end)

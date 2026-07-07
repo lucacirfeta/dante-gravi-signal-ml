@@ -158,7 +158,7 @@ class DSDControlledRecoveryTest:
         background_spectrograms = []
         for seg_start, seg_end in tqdm(bg_segments, desc="Background calibration"):
             try:
-                ts_super = fetch_local_or_remote_strain(self.detector, seg_start - 4.0, seg_end + 4.0)
+                ts_super = fetch_local_or_remote_strain(self.detector, seg_start - 4.0, seg_end + 4.0, edge_tolerance=4.0)
                 ts_w, pad_info = whiten_context(ts_super, seg_start, seg_end, pad=4.0)
                 ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
                 q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
@@ -260,7 +260,7 @@ class DSDControlledRecoveryTest:
             for i in bg_indices[:100]:  # Smaller sample for O3b
                 seg_start, seg_end = available_segments[i]
                 try:
-                    ts_super = fetch_local_or_remote_strain(self.detector, seg_start - 4.0, seg_end + 4.0)
+                    ts_super = fetch_local_or_remote_strain(self.detector, seg_start - 4.0, seg_end + 4.0, edge_tolerance=4.0)
                     ts_w, pad_info = whiten_context(ts_super, seg_start, seg_end, pad=4.0)
                     ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
                     q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
@@ -309,7 +309,7 @@ class DSDControlledRecoveryTest:
                     try:
                         # Fetch padded clean strain
                         ts_super = fetch_local_or_remote_strain(
-                            self.detector, seg_start - 4.0, seg_end + 4.0
+                            self.detector, seg_start - 4.0, seg_end + 4.0, edge_tolerance=4.0
                         )
 
                         # Generate and inject synthetic signal into padded strain

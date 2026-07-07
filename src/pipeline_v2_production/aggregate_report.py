@@ -1135,6 +1135,11 @@ class AggregateReporter:
             else:
                 # Option A: Check for Dual-Scoring native scores
                 native_files = list(self.production_dir.rglob(f"{self.observing_run}_*_{det}_native_scores.npy"))
+                
+                import random
+                random.seed(42)
+                random.shuffle(native_files)
+                
                 scores_list = []
                 for f in native_files:
                     try:
@@ -1257,7 +1262,7 @@ class AggregateReporter:
                 
                 start = float(row['gps_start'])
                 end = start + 32
-                cand_super = fetch_local_or_remote_strain(det, start - 4.0, end + 4.0, cache_raw=True)
+                cand_super = fetch_local_or_remote_strain(det, start - 4.0, end + 4.0, cache_raw=True, edge_tolerance=4.0)
                 ts_w, pad_info = whiten_context(cand_super, start, end, pad=4.0)
                 cand_ts = extract_clean_subwindow(ts_w, start, end)
                 q_gram = generate_qtransform(cand_ts, output_size=(256, 256))
