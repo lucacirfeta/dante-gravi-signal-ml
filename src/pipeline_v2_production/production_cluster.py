@@ -146,8 +146,8 @@ class H5Clusterer:
             labels = dpmm.fit_predict(vectors_reduced)
         
         # 3. UMAP for 2D Visualization only
-        if n_samples < 3:
-            logger.info("Not enough samples for UMAP (needs >= 3). Bypassing visualization projection.")
+        if n_samples <= 5:
+            logger.info(f"Not enough samples for UMAP (needs > 5, got {n_samples}). Bypassing visualization projection.")
             coords_2d = np.zeros((n_samples, 2))
         else:
             logger.info("Running UMAP for 2D visualization projection...")

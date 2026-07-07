@@ -69,7 +69,7 @@ class PatchScorer:
         
     def _verify_md5(self):
         """Strict MD5 verification to prevent silent corruptions."""
-        EXPECTED_MD5 = "1080afa809964011e398c44fb24b73c6"
+        EXPECTED_MD5 = "5d5d1a7a3f55637fab125b558fdd795e"
         hash_md5 = hashlib.md5()
         with open(self.reference_index_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):

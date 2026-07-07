@@ -42,7 +42,7 @@ def calculate_livetime(aggregated_dir: Path, detector: str = "H1") -> float:
     Calculate the exact livetime in days by reading all valid cluster reports
     for the specified detector and merging overlapping GPS segments.
     """
-    master_report_path = aggregated_dir / "master_report.json"
+    master_report_path = aggregated_dir / "aggregate_summary.json"
     if not master_report_path.exists():
         raise FileNotFoundError(f"Master report not found at {master_report_path}")
         
