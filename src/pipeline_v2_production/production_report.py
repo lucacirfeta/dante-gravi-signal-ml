@@ -484,9 +484,11 @@ class ValidationReporter:
                         if pca_ratio >= 0.85 and temporal_span >= 22:
                             # Keep status = UNCONFIRMED_MORPHOLOGY to route to PEM
                             label = "LIKELY_SPECTRAL_LINE"
-                        elif temporal_center <= 2 or temporal_center >= 34:
-                            status = "SUSPECTED_EDGE_ARTIFACT"
-                            label = "SUSPECTED_EDGE_ARTIFACT"
+                    
+                    is_edge = (temporal_center <= 2 or temporal_center >= 34)
+                    if is_edge:
+                        status = "SUSPECTED_EDGE_ARTIFACT"
+                        label = "SUSPECTED_EDGE_ARTIFACT"
 
                     results.append({
                         "cluster_id": cid,
