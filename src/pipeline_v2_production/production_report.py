@@ -901,7 +901,7 @@ class ValidationReporter:
         other_det = "L1" if self.detector == "H1" else "H1"
         md_content += f"To further validate these candidates (including those labeled via VQ fallback), we perform a strict coincidence check against the {other_det} detector (`{other_det}_DATA`), the GWTC-4.0 catalog, and cross-reference with PEM coherence hits for each GPS time (±60s window).\n\n"
         
-        novelties = df_out[df_out["status"].isin(["TRUE_NOVEL_CANDIDATE", "KNOWN (VQ Fallback)"])] if len(df_out) > 0 else []
+        novelties = df_out[df_out["status"].isin(["UNCONFIRMED_MORPHOLOGY", "KNOWN_GLITCH"])] if len(df_out) > 0 else []
         if len(novelties) == 0:
             md_content += "*No candidates requiring independent coincidence verification found in this session.*\n\n"
         else:
