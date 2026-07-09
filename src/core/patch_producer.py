@@ -135,7 +135,8 @@ class PatchProducer:
                     )
                     
                     cache_dir = Path("data/raw/o4a_cache")
-                    flat_cache_dir = Path("/mnt/e/o4a")
+                    flat_cache_dir = Path("/mnt/e/o4a") / str(session_start)
+                    flat_cache_dir.mkdir(parents=True, exist_ok=True)
                     
                     # If /mnt/e/o4a exists, we move it there to maintain coherence. 
                     # Otherwise, we leave it in the default cache dir.
