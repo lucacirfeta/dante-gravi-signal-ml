@@ -51,7 +51,6 @@ AUX_CHANNELS = {
         "H1:IMC-WFS_A_DC_YAW_OUT_DQ",
         "H1:LSC-POP_A_LF_OUT_DQ",
         "H1:LSC-REFL_A_RIN_OUT_DQ",
-        "H1:PEM-EY_MAINSMON_EBAY_1_DQ",
         "H1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
         "H1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
         "H1:SUS-ETMX_L3_CAL_LINE_OUT_DQ",
@@ -61,7 +60,6 @@ AUX_CHANNELS = {
         "L1:CAL-PCALX_RX_PD_OUT_DQ",
         "L1:CAL-PCALY_RX_PD_OUT_DQ",
         "L1:IMC-WFS_B_I_PIT_OUT_DQ",
-        "L1:PEM-EY_MAINSMON_EBAY_1_DQ",
         "L1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
         "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
         "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ",
@@ -244,7 +242,7 @@ def evaluate_candidate_pem(
     import json
     from gwpy.timeseries import TimeSeriesDict
 
-    thresholds_file = Path("data/production/aggregated/pem/channel_thresholds.json")
+    thresholds_file = Path("data/production_reference/channel_thresholds.json")
     if not thresholds_file.exists():
         logger.error(f"channel_thresholds.json missing at {thresholds_file}. Aborting to PEM_UNAVAILABLE to avoid silent bias.")
         return "PEM_UNAVAILABLE"
@@ -270,19 +268,24 @@ def evaluate_candidate_pem(
         logger.error(f"Failed to fetch strain for PEM at GPS {gps_start}: {exc}")
         return "PEM_UNAVAILABLE"
 
-    # 2. Batch fetch ALL auxiliary channels
-    try:
-        logger.info(f"Batch fetching {len(channels)} NDS2 channels for GPS {gps_start}...")
-        time.sleep(1.0)
-        aux_dict = TimeSeriesDict.fetch(channels, start=gps_start, end=gps_end, host=nds_host)
-    except Exception as exc:
-        logger.error(f"NDS2 batch fetch failed at GPS {gps_start}: {exc}")
-        return "PEM_UNAVAILABLE"
+    # 2. Fetch auxiliary channels using the cached function
+    aux_dict = {}
+    cache_dir = Path("data/production/aggregated/pem/cache")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"Fetching {len(channels)} NDS2 channels for GPS {gps_start}...")
+    for ch in channels:
+        try:
+            aux_ts = fetch_auxiliary_data(ch, gps_start, gps_end, cache_dir, nds_host)
+            if aux_ts is not None:
+                aux_dict[ch] = aux_ts
+        except Exception as e:
+            logger.warning("Failed to fetch %s: %s", ch, e)
 
     # 3. Evaluate Coherence
     valid_channels = 0
     for ch in channels:
-        if ch not in aux_dict:
+        if ch not in aux_dict or aux_dict[ch] is None:
             continue
 
         aux_ts = aux_dict[ch]

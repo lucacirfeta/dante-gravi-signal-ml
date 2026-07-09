@@ -325,6 +325,37 @@ class ValidationReporter:
                     
             return True, 'SCIENCE_MODE_OK'
 
+        def block_bootstrap_p99_ci(scores_arr, B=1000, seed=42):
+            np.random.seed(seed)
+            n = len(scores_arr)
+            b = max(1, int(n**(1/3)))
+            num_blocks = int(np.ceil(n / b))
+            
+            bootstrap_p99 = np.zeros(B)
+            for i in range(B):
+                block_starts = np.random.randint(0, n - b + 1, size=num_blocks)
+                boot_sample = []
+                for start in block_starts:
+                    boot_sample.extend(scores_arr[start:start+b])
+                boot_sample = np.array(boot_sample[:n])
+                bootstrap_p99[i] = np.percentile(boot_sample, 99)
+                
+            ci_upper = np.percentile(bootstrap_p99, 97.5)
+            return ci_upper
+
+        nov_scores_dict = {}
+        ci_upper = 0.0
+        if self.h5_path.exists():
+            with h5py.File(self.h5_path, 'r') as f:
+                if 'novelties/nov_scores' in f and 'novelties/gps_times' in f:
+                    nov_scores = f['novelties/nov_scores'][:]
+                    gps_times = f['novelties/gps_times'][:]
+                    nov_scores_dict = {float(g): float(s) for g, s in zip(gps_times, nov_scores)}
+                
+                if 'background_sample/novelty_scores' in f:
+                    bg_scores = f['background_sample/novelty_scores'][:]
+                    ci_upper = block_bootstrap_p99_ci(bg_scores)
+
         with open(self.cluster_json, "r") as f:
             clusters = json.load(f)["clusters"]
             
@@ -346,7 +377,10 @@ class ValidationReporter:
                         "gs_label": "DetChar",
                         "confidence": 0.0,
                         "status": "INSTRUMENTAL_ANOMALY (OUT_OF_SCIENCE_MODE)",
-                        "spatial_coherence_score": 0.0
+                        "top_k_bbox_area": 0.0,
+                        "top_k_pca_ratio": 1.0,
+                        "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
+                        "ci_upper": ci_upper
                     })
                     continue
                 
@@ -372,7 +406,9 @@ class ValidationReporter:
                         "confidence": best["ml_confidence"],
                         "status": "KNOWN",
                         "top_k_bbox_area": bbox_area,
-                        "top_k_pca_ratio": pca_ratio
+                        "top_k_pca_ratio": pca_ratio,
+                        "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
+                        "ci_upper": ci_upper
                     })
                 else:
                     # 3. Fallback to Internal VQ Cosine Similarity Check
@@ -412,7 +448,9 @@ class ValidationReporter:
                         "confidence": conf,
                         "status": status,
                         "top_k_bbox_area": bbox_area,
-                        "top_k_pca_ratio": pca_ratio
+                        "top_k_pca_ratio": pca_ratio,
+                        "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
+                        "ci_upper": ci_upper
                     })
         df_out = pd.DataFrame(results)
         
@@ -901,7 +939,32 @@ class ValidationReporter:
         other_det = "L1" if self.detector == "H1" else "H1"
         md_content += f"To further validate these candidates (including those labeled via VQ fallback), we perform a strict coincidence check against the {other_det} detector (`{other_det}_DATA`), the GWTC-4.0 catalog, and cross-reference with PEM coherence hits for each GPS time (±60s window).\n\n"
         
-        novelties = df_out[df_out["status"].isin(["UNCONFIRMED_MORPHOLOGY", "KNOWN_GLITCH"])] if len(df_out) > 0 else []
+        if len(df_out) > 0:
+            # Sort all candidates by absolute anomaly score descending, then by PCA ratio ascending
+            if "anomaly_score" in df_out.columns:
+                df_out = df_out.sort_values(by=["anomaly_score", "top_k_pca_ratio"], ascending=[False, True])
+            
+            # Filter logic: only keep KNOWN_GLITCH or extreme UNCONFIRMED_MORPHOLOGY
+            render_mask = df_out["status"] == "KNOWN_GLITCH"
+            unconfirmed_mask = df_out["status"] == "UNCONFIRMED_MORPHOLOGY"
+            
+            # Apply CI upper bound filter to UNCONFIRMED_MORPHOLOGY
+            if "anomaly_score" in df_out.columns and "ci_upper" in df_out.columns:
+                extreme_mask = df_out["anomaly_score"] > df_out["ci_upper"]
+                bulk_mask = unconfirmed_mask & (~extreme_mask)
+                render_mask = render_mask | (unconfirmed_mask & extreme_mask)
+            else:
+                render_mask = render_mask | unconfirmed_mask
+                bulk_mask = pd.Series([False]*len(df_out))
+                
+            novelties = df_out[render_mask]
+            num_bulk = bulk_mask.sum()
+            
+            if num_bulk > 0:
+                md_content += f"> [!NOTE]\n> **Two-Tier Triage Applied:** {num_bulk} candidates with `UNCONFIRMED_MORPHOLOGY` status fell within the expected 1% statistical noise tail (score <= Block-Bootstrap CI Upper Bound). They have been excluded from individual rendering and PEM querying to prioritize extreme morphological deviations. Their complete metrics (including DINOv2 score and 1D energy profile) remain preserved in the CSV log.\n\n"
+        else:
+            novelties = []
+            
         if len(novelties) == 0:
             md_content += "*No candidates requiring independent coincidence verification found in this session.*\n\n"
         else:
