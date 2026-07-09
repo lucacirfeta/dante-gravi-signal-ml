@@ -19,7 +19,7 @@ from torchvision import transforms
 from sklearn.metrics import adjusted_rand_score
 from sklearn.mixture import BayesianGaussianMixture
 
-from src.core.utils import setup_logger, get_device
+from src.core.utils import setup_logger, get_device, compute_spatial_coherence
 from src.core.reference_index_builder import download_gs_classifications_csv
 from src.pipeline_v2_production.saliency_map import generate_saliency_map
 from src.core.data_loader import fetch_strain_data
@@ -243,14 +243,22 @@ class ValidationReporter:
         else:
             logger.warning("VQ index not found for internal fallback!")
             
-        # Load HDF5 file to fetch mil_vectors
+        # Load HDF5 file to fetch mil_vectors and top_k_idx
         mil_vectors_dict = {}
+        top_k_idx_dict = {}
         if self.h5_path.exists():
             with h5py.File(self.h5_path, 'r') as f:
                 gps_times_arr = f["novelties"]["gps_times"][:]
                 mil_vectors_arr = f["novelties"]["mil_vectors"][:]
-                for g, v in zip(gps_times_arr, mil_vectors_arr):
+                top_k_idx_arr = f["novelties"]["top_k_idx"][:]
+                
+                # Safety check: ensure arrays are perfectly aligned
+                assert len(gps_times_arr) == len(mil_vectors_arr), "Mismatch between gps_times and mil_vectors length"
+                assert len(gps_times_arr) == len(top_k_idx_arr), "Mismatch between gps_times and top_k_idx length"
+                
+                for g, v, k in zip(gps_times_arr, mil_vectors_arr, top_k_idx_arr):
                     mil_vectors_dict[g] = v
+                    top_k_idx_dict[g] = k
         
         science_segments = [(0, 2000000000)]
         hw_segs = []
@@ -334,7 +342,8 @@ class ValidationReporter:
                         "peak_time": None,
                         "gs_label": "DetChar",
                         "confidence": 0.0,
-                        "status": "INSTRUMENTAL_ANOMALY (OUT_OF_SCIENCE_MODE)"
+                        "status": "INSTRUMENTAL_ANOMALY (OUT_OF_SCIENCE_MODE)",
+                        "spatial_coherence_score": 0.0
                     })
                     continue
                 
@@ -343,13 +352,21 @@ class ValidationReporter:
                 
                 if len(matches) > 0:
                     best = matches.iloc[matches["ml_confidence"].argmax()]
+                    
+                    # Calculate Spatial Coherence Score for True KNOWN
+                    coherence = 0.0
+                    if t_start_val in top_k_idx_dict:
+                        top_k_idx = top_k_idx_dict[t_start_val]
+                        coherence = compute_spatial_coherence(top_k_idx)
+                        
                     results.append({
                         "cluster_id": cid,
                         "t_start": t_start_val,
                         "peak_time": best["event_time"],
                         "gs_label": best["ml_label"],
                         "confidence": best["ml_confidence"],
-                        "status": "KNOWN"
+                        "status": "KNOWN",
+                        "spatial_coherence_score": coherence
                     })
                 else:
                     # 3. Fallback to Internal VQ Cosine Similarity Check
@@ -373,13 +390,20 @@ class ValidationReporter:
                             label = vq_class_names[max_idx]
                             conf = float(max_sim)
                             
+                    # Calculate Spatial Coherence Score
+                    coherence = 0.0
+                    if t_start_val in top_k_idx_dict:
+                        top_k_idx = top_k_idx_dict[t_start_val]
+                        coherence = compute_spatial_coherence(top_k_idx)
+                            
                     results.append({
                         "cluster_id": cid,
                         "t_start": t_start_val,
                         "peak_time": None,
                         "gs_label": label,
                         "confidence": conf,
-                        "status": status
+                        "status": status,
+                        "spatial_coherence_score": coherence
                     })
         df_out = pd.DataFrame(results)
         

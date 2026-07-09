@@ -75,13 +75,46 @@ class PatchProducer:
             for d in _DATA_DIRECTORIES:
                 if d.exists() and d != self.data_dir:
                     # Look for the specific session folder inside the global directory
-                    fallback_dir = d / self.data_dir.name
+                    if self.data_dir.name.isdigit():
+                        session_aligned = str((int(self.data_dir.name) // 4096) * 4096)
+                        fallback_dir = d / session_aligned
+                    else:
+                        fallback_dir = d / self.data_dir.name
+                        
                     if fallback_dir.exists() and fallback_dir.is_dir():
                         self.hdf5_files.extend(list(fallback_dir.rglob(f"*{self.detector}*.hdf5")))
                     elif not self.data_dir.name.isdigit():
                         # If the data_dir is not a session folder (e.g. processing 'ALL' sessions), fallback to the whole global directory
                         self.hdf5_files.extend(list(d.rglob(f"*{self.detector}*.hdf5")))
                 
+        # Fallback finale: fetch_strain_data/fetch_local_or_remote_strain scrivono
+        # sempre nella cache piatta (data/raw/o4a_cache/{det}_{start}_{end}.hdf5),
+        # mai in una sottocartella di sessione. Se data_dir e' un ID di sessione
+        # numerico e non abbiamo trovato nulla nelle sottocartelle attese, cerchiamo
+        # nella cache piatta i blocchi 4096s-allineati il cui intervallo GPS
+        # si sovrappone alla sessione, invece di richiedere uno spostamento manuale.
+        if not self.hdf5_files and self.data_dir.name.isdigit():
+            session_start = int(self.data_dir.name)
+            session_end = session_start + 4096 # session duration is fixed to 4096
+            for d in _DATA_DIRECTORIES:
+                if not d.exists():
+                    continue
+                for f in d.glob(f"*{self.detector}*.hdf5"):
+                    parts = f.stem.replace(f"{self.detector}_", "").split("_")
+                    if len(parts) >= 2:
+                        try:
+                            f_start, f_end = int(float(parts[0])), int(float(parts[1]))
+                            if f_start < session_end and f_end > session_start:
+                                self.hdf5_files.append(f)
+                        except ValueError:
+                            continue
+            if self.hdf5_files:
+                logger.warning(
+                    f"HDF5 per sessione {self.data_dir.name} trovati nella cache piatta "
+                    f"({len(self.hdf5_files)} file), non nella sottocartella attesa. "
+                    f"Verificare fetch_strain_data se questo accade sistematicamente."
+                )
+
         self.hdf5_files = sorted(list(set(self.hdf5_files)))
         
         if not self.hdf5_files:

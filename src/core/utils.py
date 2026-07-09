@@ -407,3 +407,41 @@ def discover_references(reference_dir: Path = Path("data/reference")) -> list[Pa
     if not reference_dir.exists():
         return []
     return sorted(reference_dir.glob("indomain*.npz"))
+
+
+def compute_spatial_coherence(top_k_indices: np.ndarray | list[int], grid_size: int = 37) -> float:
+    """Computes spatial coherence score (fraction of patches with at least 1 neighbor in an 8-connected grid).
+
+    Args:
+        top_k_indices: Array or list of 1D patch indices.
+        grid_size: The grid size (e.g. 37 for DINOv2 518/14).
+
+    Returns:
+        A float in [0.0, 1.0] representing the fraction of patches with at least one neighbor.
+    """
+    if not len(top_k_indices):
+        return 0.0
+
+    coords = set()
+    for idx in top_k_indices:
+        i = int(idx // grid_size)
+        j = int(idx % grid_size)
+        coords.add((i, j))
+
+    with_neighbors = 0
+    for (i, j) in coords:
+        has_neighbor = False
+        for di in [-1, 0, 1]:
+            for dj in [-1, 0, 1]:
+                if di == 0 and dj == 0:
+                    continue
+                if (i + di, j + dj) in coords:
+                    has_neighbor = True
+                    break
+            if has_neighbor:
+                break
+        if has_neighbor:
+            with_neighbors += 1
+
+    return float(with_neighbors) / len(coords)
+
