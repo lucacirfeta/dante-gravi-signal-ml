@@ -29,6 +29,21 @@ from src.pipeline_v2_production.pem_coherence_analysis import evaluate_candidate
 
 logger = setup_logger(__name__)
 
+def should_run_pem_check(status: str, anomaly_score: float, ci_upper: float) -> bool:
+    """
+    Routing logic to determine if PEM coherence check should be executed.
+    Ensures compliance with the established state machine.
+    """
+    if status in ["KNOWN", "KNOWN_GLITCH"]:
+        return False
+    if status == "COINCIDENT_TRANSIENT":
+        return True
+    if status == "UNCONFIRMED_MORPHOLOGY":
+        if pd.isna(anomaly_score) or pd.isna(ci_upper):
+            return True
+        return float(anomaly_score) > float(ci_upper)
+    return True
+
 class ValidationReporter:
     def __init__(self, session_id: str, detector: str = "H1", run_name: str = "O4a", reference_run: str = "O3b", output_dir: str = "data/production", nds_host: Optional[str] = None):
         self.session_id = session_id
@@ -1039,15 +1054,20 @@ class ValidationReporter:
                 except:
                     pass
 
-                # Check PEM Coherence automatically
-                pem_status = evaluate_candidate_pem(self.detector, t, t+32, nds_host=self.nds_host)
-                # TODO: When NDS2 credentials are fixed, separate NO_CORR from UNAVAILABLE in UNCONFIRMED_MORPHOLOGY counts.
-                if pem_status == "CORRELATION_FOUND":
-                    pem_str = f"**PEM Correlation:** Environmental coupling confirmed.\n**PEM_STATUS:** CORRELATION_FOUND"
-                elif pem_status.startswith("NO_CORRELATION"):
-                    pem_str = f"**PEM Correlation:** No environmental coupling detected.\n**PEM_STATUS:** {pem_status}"
+                # Check PEM Coherence automatically based on routing logic
+                anomaly_score = row.get("anomaly_score", 0.0)
+                ci_upper = row.get("ci_upper", 0.0)
+                if should_run_pem_check(row["status"], anomaly_score, ci_upper):
+                    pem_status = evaluate_candidate_pem(self.detector, t, t+32, nds_host=self.nds_host)
+                    # TODO: When NDS2 credentials are fixed, separate NO_CORR from UNAVAILABLE in UNCONFIRMED_MORPHOLOGY counts.
+                    if pem_status == "CORRELATION_FOUND":
+                        pem_str = f"**PEM Correlation:** Environmental coupling confirmed.\n**PEM_STATUS:** CORRELATION_FOUND"
+                    elif pem_status.startswith("NO_CORRELATION"):
+                        pem_str = f"**PEM Correlation:** No environmental coupling detected.\n**PEM_STATUS:** {pem_status}"
+                    else:
+                        pem_str = f"**PEM Correlation:** Auxiliary channels unavailable or fetch failed.\n**PEM_STATUS:** PEM_UNAVAILABLE"
                 else:
-                    pem_str = f"**PEM Correlation:** Auxiliary channels unavailable or fetch failed.\n**PEM_STATUS:** PEM_UNAVAILABLE"
+                    pem_str = f"**PEM Correlation:** Skipped (Candidate previously dismissed by morphological state machine)\n**PEM_STATUS:** NOT_CHECKED"
 
                 if other_det_status == "UNOBSERVABLE":
                     cross_str += "\n*Note: Independent multi-detector coincidence verification is not possible for this candidate. Evaluation relies strictly on two lines of evidence: 1) Local Time-Frequency Morphology, 2) PEM Correlation.*"
