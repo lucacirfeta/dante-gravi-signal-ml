@@ -967,7 +967,7 @@ class ValidationReporter:
                     pass
 
                 # Check PEM Coherence automatically
-                pem_status = evaluate_candidate_pem(self.detector, t, t+32)
+                pem_status = evaluate_candidate_pem(self.detector, t, t+32, nds_host="nds.gwosc.org")
                 if pem_status == "CORRELATION_FOUND":
                     pem_str = f"**PEM Correlation:** Environmental coupling confirmed.\n**PEM_STATUS:** CORRELATION_FOUND"
                 elif pem_status.startswith("NO_CORRELATION"):
