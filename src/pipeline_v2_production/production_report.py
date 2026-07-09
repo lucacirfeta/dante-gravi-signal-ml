@@ -30,11 +30,12 @@ from src.pipeline_v2_production.pem_coherence_analysis import evaluate_candidate
 logger = setup_logger(__name__)
 
 class ValidationReporter:
-    def __init__(self, session_id: str, detector: str = "H1", run_name: str = "O4a", reference_run: str = "O3b", output_dir: str = "data/production"):
+    def __init__(self, session_id: str, detector: str = "H1", run_name: str = "O4a", reference_run: str = "O3b", output_dir: str = "data/production", nds_host: Optional[str] = None):
         self.session_id = session_id
         self.detector = detector
         self.run_name = run_name
         self.reference_run = reference_run
+        self.nds_host = nds_host
         self.device = get_device()
         
         self.production_dir = Path(output_dir) / str(session_id)
@@ -247,6 +248,7 @@ class ValidationReporter:
         # Load HDF5 file to fetch mil_vectors and top_k_idx
         mil_vectors_dict = {}
         top_k_idx_dict = {}
+        gps_times_arr = []
         if self.h5_path.exists():
             with h5py.File(self.h5_path, 'r') as f:
                 gps_times_arr = f["novelties"]["gps_times"][:]
@@ -967,7 +969,7 @@ class ValidationReporter:
                     pass
 
                 # Check PEM Coherence automatically
-                pem_status = evaluate_candidate_pem(self.detector, t, t+32)
+                pem_status = evaluate_candidate_pem(self.detector, t, t+32, nds_host=self.nds_host)
                 if pem_status == "CORRELATION_FOUND":
                     pem_str = f"**PEM Correlation:** Environmental coupling confirmed.\n**PEM_STATUS:** CORRELATION_FOUND"
                 elif pem_status.startswith("NO_CORRELATION"):

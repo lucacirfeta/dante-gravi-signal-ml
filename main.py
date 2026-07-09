@@ -2775,7 +2775,8 @@ def cmd_production_report(args):
         detector=args.detector, 
         run_name=getattr(args, "run", "O4a"),
         reference_run=reference_run,
-        output_dir=output_dir
+        output_dir=output_dir,
+        nds_host=getattr(args, "nds_host", None)
     )
     if getattr(args, "only_plots", False):
         reporter.run_only_plots()
@@ -4085,6 +4086,9 @@ def build_parser() -> argparse.ArgumentParser:
         default=32,
         help="PyTorch batch size for DINOv2 extraction. Default: 32.",
     )
+    p_patch_analysis.add_argument(
+        "--nds-host", type=str, default=None, help="NDS2 server hostname for PEM analysis (e.g. nds.gwosc.org). If omitted, uses standard logic."
+    )
     p_patch_analysis.set_defaults(func=cmd_patch_analysis)
 
     # --- production-report ---
@@ -4100,6 +4104,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_production_report.add_argument(
         "--output-dir", type=str, default="data/production/", help="Output directory."
+    )
+    p_production_report.add_argument(
+        "--nds-host", type=str, default=None, help="NDS2 server hostname for PEM analysis (e.g. nds.gwosc.org). If omitted, uses standard logic."
     )
     p_production_report.add_argument(
         "--only-plots", action="store_true", help="Only regenerate saliency plots without running clustering or checks."
