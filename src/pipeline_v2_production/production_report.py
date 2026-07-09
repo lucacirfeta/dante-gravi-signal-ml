@@ -481,9 +481,7 @@ class ValidationReporter:
                             
                     # Geometric Filters
                     if status == "UNCONFIRMED_MORPHOLOGY":
-                        if pca_ratio >= 0.85 and temporal_span >= 22:
-                            # Keep status = UNCONFIRMED_MORPHOLOGY to route to PEM
-                            label = "LIKELY_SPECTRAL_LINE"
+                        pass
                     
                     is_edge = (temporal_center <= 2 or temporal_center >= 34)
                     if is_edge:
