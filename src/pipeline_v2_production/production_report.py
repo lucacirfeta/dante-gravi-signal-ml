@@ -385,7 +385,7 @@ class ValidationReporter:
                         max_idx = np.argmax(sims)
                         max_sim = sims[max_idx]
                         
-                        if max_sim >= 0.5:
+                        if max_sim >= 0.80:
                             status = "KNOWN (VQ Fallback)"
                             label = vq_class_names[max_idx]
                             conf = float(max_sim)
@@ -887,14 +887,14 @@ class ValidationReporter:
             df_out = pd.read_csv(csv_path)
             
         # Section IV.C
-        md_content += f"## Section IV.C: Morphologically Unclassified Segments — Science Mode Verified ({self.detector}_CBC_CAT1)\n"
+        md_content += f"## Section IV.C: Unclassified & VQ Fallback Segments — Science Mode Verified ({self.detector}_CBC_CAT1)\n"
         md_content += f"Science mode verification used the {self.detector}_CBC_CAT1 flag via gwosc.timeline.get_segments. This is the most restrictive data quality flag publicly available for O4a through the GWOSC API. The LVK-internal flag DMT-ANALYSIS_READY:1 is not exposed in the public GWOSC release for O4a (returns 0 segments). All novel candidates were verified as occurring within {self.detector}_CBC_CAT1 active periods. Hardware injection flags ({self.detector}_HW_INJ, {self.detector}_CBC_INJ, {self.detector}_BURST_INJ) were checked with null result.\n\n"
         other_det = "L1" if self.detector == "H1" else "H1"
-        md_content += f"To further validate these candidates, we perform a strict coincidence check against the {other_det} detector (`{other_det}_DATA`) and the GWTC-4.0 catalog for each GPS time (±60s window).\n\n"
+        md_content += f"To further validate these candidates (including those labeled via VQ fallback), we perform a strict coincidence check against the {other_det} detector (`{other_det}_DATA`), the GWTC-4.0 catalog, and cross-reference with PEM coherence hits for each GPS time (±60s window).\n\n"
         
-        novelties = df_out[df_out["status"] == "TRUE_NOVEL_CANDIDATE"] if len(df_out) > 0 else []
+        novelties = df_out[df_out["status"].isin(["TRUE_NOVEL_CANDIDATE", "KNOWN (VQ Fallback)"])] if len(df_out) > 0 else []
         if len(novelties) == 0:
-            md_content += "*No True Novel Candidates found in this session.*\n\n"
+            md_content += "*No candidates requiring independent coincidence verification found in this session.*\n\n"
         else:
             try:
                 model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
