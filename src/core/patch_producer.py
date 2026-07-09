@@ -118,9 +118,52 @@ class PatchProducer:
         self.hdf5_files = sorted(list(set(self.hdf5_files)))
         
         if not self.hdf5_files:
-            error_msg = f"No HDF5 files found for detector {self.detector} in {self.data_dir} or configured external drives."
-            logger.warning(error_msg)
-            raise FileNotFoundError(error_msg)
+            if self.data_dir.name.isdigit():
+                session_start = int(self.data_dir.name)
+                session_end = session_start + 4096
+                logger.info(f"HDF5 files for {self.detector} not found. Attempting auto-download of 4096s block...")
+                
+                try:
+                    from src.core.data_loader import fetch_strain_data
+                    # Download the whole 4096s block (will cache to data/raw/o4a_cache)
+                    _ = fetch_strain_data(
+                        self.detector, 
+                        session_start, 
+                        session_end, 
+                        edge_tolerance=0.0, 
+                        cache_raw=True
+                    )
+                    
+                    cache_dir = Path("data/raw/o4a_cache")
+                    flat_cache_dir = Path("/mnt/e/o4a")
+                    
+                    # If /mnt/e/o4a exists, we move it there to maintain coherence. 
+                    # Otherwise, we leave it in the default cache dir.
+                    expected_filename = f"{self.detector}_{session_start}_{session_end}.hdf5"
+                    src_file = cache_dir / expected_filename
+                    dst_file = flat_cache_dir / expected_filename
+                    
+                    if src_file.exists() and flat_cache_dir.exists():
+                        import shutil
+                        shutil.move(str(src_file), str(dst_file))
+                        logger.info(f"Moved downloaded block to {dst_file}")
+                        self.hdf5_files.append(dst_file)
+                    elif src_file.exists():
+                        self.hdf5_files.append(src_file)
+                    elif dst_file.exists():
+                        self.hdf5_files.append(dst_file)
+                    else:
+                        error_msg = f"Auto-download failed to produce the expected file {expected_filename}"
+                        logger.warning(error_msg)
+                        raise FileNotFoundError(error_msg)
+                        
+                except Exception as e:
+                    logger.error(f"Auto-download failed: {e}")
+                    raise FileNotFoundError(f"Failed to auto-download missing HDF5 for {self.detector}: {e}")
+            else:
+                error_msg = f"No HDF5 files found for detector {self.detector} in {self.data_dir} or configured external drives."
+                logger.warning(error_msg)
+                raise FileNotFoundError(error_msg)
             
     def _read_channel_name(self, ts_dict) -> str:
         """Finds the correct strain channel name dynamically."""
