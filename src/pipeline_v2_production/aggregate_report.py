@@ -167,7 +167,7 @@ def _resolve_coincidence_status(
         if len(segs) > 0:
             return "ACTIVE_NO_ANOMALY"
         else:
-            return "INACTIVE"
+            return "UNOBSERVABLE"
     except Exception:
         return "NOT_CHECKED"
 
@@ -1564,6 +1564,10 @@ class AggregateReporter:
         
         md_lines.append(f"- **Valid Sessions:** {tot_sessions}")
         md_lines.append(f"- **Unique Candidates:** {tot_cands} ({l1_cands} L1, {h1_cands} H1)")
+        
+        if not tax_df.empty and 'partner_observing_status' in tax_df.columns:
+            unobs_count = len(tax_df[tax_df['partner_observing_status'] == 'UNOBSERVABLE'])
+            md_lines.append(f"- **Cross-Detector Coincidence Unobservable (Partner Offline):** {unobs_count} candidates")
         
         gev = metrics.get('gev_parameters', {})
         if gev:

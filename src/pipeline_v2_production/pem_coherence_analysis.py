@@ -123,6 +123,7 @@ def calculate_coherence_and_plot(
     fftlength: float = 2.0,
     freq_bounds: tuple = (20, 500),
     threshold: float = 0.6,
+    save_plot: bool = True,
 ) -> dict:
     """Compute coherence between *strain* and *aux*, save a plot if significant."""
     try:
@@ -153,24 +154,25 @@ def calculate_coherence_and_plot(
                 "*** SIGNIFICANT COHERENCE *** %s (GPS %d): C=%.2f at %.1f Hz",
                 channel_name, gps_start, max_coh, peak_freq,
             )
-            plot_dir = output_dir / "pem" / "coherence_plots"
-            plot_dir.mkdir(parents=True, exist_ok=True)
-            safe_chan = channel_name.replace(":", "_")
-            plot_path = plot_dir / f"coh_{detector}_{safe_chan}_{gps_start}.png"
+            if save_plot:
+                plot_dir = output_dir / "pem" / "coherence_plots"
+                plot_dir.mkdir(parents=True, exist_ok=True)
+                safe_chan = channel_name.replace(":", "_")
+                plot_path = plot_dir / f"coh_{detector}_{safe_chan}_{gps_start}.png"
 
-            fig, ax = plt.subplots(figsize=(10, 5))
-            ax.plot(coh.frequencies, coh.value, color="purple")
-            ax.set_xlim(*freq_bounds)
-            ax.set_ylim(0, 1)
-            ax.set_xlabel("Frequency [Hz]")
-            ax.set_ylabel("Coherence")
-            ax.set_title(
-                f"Coherence: {detector} Strain vs {channel_name}\n"
-                f"GPS: {gps_start} | Max C={max_coh:.2f} @ {peak_freq:.1f} Hz"
-            )
-            ax.grid(True, alpha=0.5)
-            fig.savefig(plot_path, dpi=150, bbox_inches="tight")
-            plt.close(fig)
+                fig, ax = plt.subplots(figsize=(10, 5))
+                ax.plot(coh.frequencies, coh.value, color="purple")
+                ax.set_xlim(*freq_bounds)
+                ax.set_ylim(0, 1)
+                ax.set_xlabel("Frequency [Hz]")
+                ax.set_ylabel("Coherence")
+                ax.set_title(
+                    f"Coherence: {detector} Strain vs {channel_name}\n"
+                    f"GPS: {gps_start} | Max C={max_coh:.2f} @ {peak_freq:.1f} Hz"
+                )
+                ax.grid(True, alpha=0.5)
+                fig.savefig(plot_path, dpi=150, bbox_inches="tight")
+                plt.close(fig)
 
         return {"max_coherence": max_coh, "peak_freq": peak_freq, "significant": significant}
 
@@ -222,6 +224,98 @@ def _plot_strain_asd(
 
 
 # ---------------------------------------------------------------------------
+# Single-candidate PEM Evaluation (Used in Production Report)
+# ---------------------------------------------------------------------------
+
+def evaluate_candidate_pem(
+    detector: str,
+    gps_start: int,
+    gps_end: int,
+    nds_host: Optional[str] = "nds.ligo.caltech.edu",
+) -> str:
+    """
+    Evaluates PEM coherence for a single candidate.
+    Returns strings like:
+      - "CORRELATION_FOUND"
+      - "NO_CORRELATION (All channels checked)"
+      - "NO_CORRELATION (Partial 7/9 channels)"
+      - "PEM_UNAVAILABLE"
+    """
+    import json
+    from gwpy.timeseries import TimeSeriesDict
+
+    thresholds_file = Path("data/production/aggregated/pem/channel_thresholds.json")
+    if not thresholds_file.exists():
+        logger.error(f"channel_thresholds.json missing at {thresholds_file}. Aborting to PEM_UNAVAILABLE to avoid silent bias.")
+        return "PEM_UNAVAILABLE"
+
+    try:
+        with open(thresholds_file, "r") as f:
+            channel_thresholds = json.load(f)
+    except Exception as exc:
+        logger.error(f"Failed to load channel_thresholds.json: {exc}")
+        return "PEM_UNAVAILABLE"
+
+    if nds_host is None:
+        return "PEM_UNAVAILABLE"
+
+    channels = AUX_CHANNELS.get(detector, [])
+    if not channels:
+        return "PEM_UNAVAILABLE"
+
+    # 1. Fetch strain data
+    try:
+        strain = fetch_strain_data(detector, gps_start, gps_end)
+    except Exception as exc:
+        logger.error(f"Failed to fetch strain for PEM at GPS {gps_start}: {exc}")
+        return "PEM_UNAVAILABLE"
+
+    # 2. Batch fetch ALL auxiliary channels
+    try:
+        logger.info(f"Batch fetching {len(channels)} NDS2 channels for GPS {gps_start}...")
+        time.sleep(1.0)
+        aux_dict = TimeSeriesDict.fetch(channels, start=gps_start, end=gps_end, host=nds_host)
+    except Exception as exc:
+        logger.error(f"NDS2 batch fetch failed at GPS {gps_start}: {exc}")
+        return "PEM_UNAVAILABLE"
+
+    # 3. Evaluate Coherence
+    valid_channels = 0
+    for ch in channels:
+        if ch not in aux_dict:
+            continue
+
+        aux_ts = aux_dict[ch]
+        # Skip if channel data is entirely zero/NaN
+        if len(aux_ts) == 0 or np.all(aux_ts.value == 0) or np.all(np.isnan(aux_ts.value)):
+            continue
+
+        thresh = channel_thresholds.get(ch)
+        if thresh is None:
+            logger.error(f"No calibrated threshold for {ch}. Skipping channel.")
+            continue
+
+        valid_channels += 1
+
+        try:
+            res = calculate_coherence_and_plot(
+                strain, aux_ts, ch, detector, gps_start, Path("/tmp"), threshold=thresh, save_plot=False
+            )
+            if res["significant"]:
+                return "CORRELATION_FOUND"
+        except Exception as exc:
+            logger.error(f"Coherence calc failed for {ch} at GPS {gps_start}: {exc}")
+            continue
+
+    if valid_channels == 0:
+        return "PEM_UNAVAILABLE"
+    elif valid_channels < len(channels):
+        return f"NO_CORRELATION (Partial {valid_channels}/{len(channels)} channels)"
+    else:
+        return "NO_CORRELATION (All channels checked)"
+
+
+# ---------------------------------------------------------------------------
 # Main orchestrator
 # ---------------------------------------------------------------------------
 
@@ -266,13 +360,13 @@ def run_pem_coherence_analysis(
     logger.info("Active L1 channels (%d remaining): %s", len(AUX_CHANNELS.get("L1", [])), AUX_CHANNELS.get("L1", []))
 
     thresholds_file = output_dir / "pem" / "channel_thresholds.json"
-    if thresholds_file.exists():
-        with open(thresholds_file, "r") as f:
-            channel_thresholds = json.load(f)
-        logger.info("Loaded calibrated channel thresholds.")
-    else:
-        channel_thresholds = {}
-        logger.warning("No channel_thresholds.json found. Using default 0.6.")
+    if not thresholds_file.exists():
+        logger.error(f"channel_thresholds.json missing at {thresholds_file}. Aborting to avoid uncalibrated 0.6 defaults.")
+        return
+
+    with open(thresholds_file, "r") as f:
+        channel_thresholds = json.load(f)
+    logger.info("Loaded calibrated channel thresholds.")
 
     public_mode = (nds_host is None)
     if public_mode:

@@ -25,6 +25,7 @@ from src.pipeline_v2_production.saliency_map import generate_saliency_map
 from src.core.data_loader import fetch_strain_data
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
 from src.core.encoder import build_dinov2_transform
+from src.pipeline_v2_production.pem_coherence_analysis import evaluate_candidate_pem
 
 logger = setup_logger(__name__)
 
@@ -953,14 +954,29 @@ class ValidationReporter:
                 # Check other detector coincidence
                 other_det = "L1" if self.detector == "H1" else "H1"
                 cross_str = f"**{other_det} Coincidence:** Unavailable"
+                other_det_status = "NOT_CHECKED"
                 try:
                     cross_segs = get_segments(f"{other_det}_DATA", t, t+32)
                     if len(cross_segs) > 0:
-                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Active, NO corresponding morphological anomaly detected (Local {self.detector} Glitch)"
+                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Active, NO corresponding morphological anomaly detected (Local {self.detector} Glitch)\n**{other_det}_STATUS:** ACTIVE_NO_ANOMALY"
+                        other_det_status = "ACTIVE_NO_ANOMALY"
                     else:
-                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Inactive (Unobservable)"
+                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Inactive (Unobservable)\n**{other_det}_STATUS:** UNOBSERVABLE"
+                        other_det_status = "UNOBSERVABLE"
                 except:
                     pass
+
+                # Check PEM Coherence automatically
+                pem_status = evaluate_candidate_pem(self.detector, t, t+32)
+                if pem_status == "CORRELATION_FOUND":
+                    pem_str = f"**PEM Correlation:** Environmental coupling confirmed.\n**PEM_STATUS:** CORRELATION_FOUND"
+                elif pem_status.startswith("NO_CORRELATION"):
+                    pem_str = f"**PEM Correlation:** No environmental coupling detected.\n**PEM_STATUS:** {pem_status}"
+                else:
+                    pem_str = f"**PEM Correlation:** Auxiliary channels unavailable or fetch failed.\n**PEM_STATUS:** PEM_UNAVAILABLE"
+
+                if other_det_status == "UNOBSERVABLE":
+                    cross_str += "\n*Note: Independent multi-detector coincidence verification is not possible for this candidate. Evaluation relies strictly on two lines of evidence: 1) Local Time-Frequency Morphology, 2) PEM Correlation.*"
                     
                 img_path = self.report_dir / "saliency_gallery" / f"NOVEL_{self.detector}_{self.session_id}_{t}_{t+32}_saliency.png"
                 img_md = f"NOVEL_{self.detector}_{self.session_id}_{t}_{t+32}_saliency.png"
@@ -968,7 +984,8 @@ class ValidationReporter:
                 md_content += f"### Candidate at GPS {t} (Cluster {cid})\n"
                 md_content += f"- **DQ status:** {self.detector}_CBC_CAT1 ACTIVE. DMT-ANALYSIS_READY:1 not verifiable via public API for O4a. Classification as astrophysical candidate is tentative pending official LVK DQ release.\n"
                 md_content += f"- {gw_str}\n"
-                md_content += f"- {cross_str}\n\n"
+                md_content += f"- {cross_str}\n"
+                md_content += f"- {pem_str}\n\n"
                 if img_path.exists():
                     md_content += f"![{img_md}](saliency_gallery/{img_md})\n\n"
         
