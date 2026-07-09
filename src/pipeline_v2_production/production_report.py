@@ -34,7 +34,7 @@ def should_run_pem_check(status: str, anomaly_score: float, ci_upper: float) -> 
     Routing logic to determine if PEM coherence check should be executed.
     Ensures compliance with the established state machine.
     """
-    if status in ["KNOWN", "KNOWN_GLITCH"]:
+    if status in ["KNOWN", "KNOWN_GLITCH", "SUSPECTED_EDGE_ARTIFACT"]:
         return False
     if status == "COINCIDENT_TRANSIENT":
         return True
@@ -360,16 +360,26 @@ class ValidationReporter:
 
         nov_scores_dict = {}
         ci_upper = 0.0
+        
+        global_bg_file = Path(f"data/production/aggregated/background_scores_{self.detector}_{self.run_name}.npy")
+        if global_bg_file.exists():
+            bg_scores = np.load(global_bg_file)
+            ci_upper = block_bootstrap_p99_ci(bg_scores)
+            logger.info(f"Using GLOBAL background scores from {global_bg_file} to compute ci_upper: {ci_upper:.4f}")
+        else:
+            if self.h5_path.exists():
+                with h5py.File(self.h5_path, 'r') as f:
+                    if 'background_sample/novelty_scores' in f:
+                        bg_scores = f['background_sample/novelty_scores'][:]
+                        ci_upper = block_bootstrap_p99_ci(bg_scores)
+                        logger.info(f"Fallback to LOCAL session background to compute ci_upper: {ci_upper:.4f}")
+
         if self.h5_path.exists():
             with h5py.File(self.h5_path, 'r') as f:
                 if 'novelties/nov_scores' in f and 'novelties/gps_times' in f:
                     nov_scores = f['novelties/nov_scores'][:]
                     gps_times = f['novelties/gps_times'][:]
                     nov_scores_dict = {float(g): float(s) for g, s in zip(gps_times, nov_scores)}
-                
-                if 'background_sample/novelty_scores' in f:
-                    bg_scores = f['background_sample/novelty_scores'][:]
-                    ci_upper = block_bootstrap_p99_ci(bg_scores)
 
         with open(self.cluster_json, "r") as f:
             clusters = json.load(f)["clusters"]
@@ -394,6 +404,8 @@ class ValidationReporter:
                         "status": "INSTRUMENTAL_ANOMALY (OUT_OF_SCIENCE_MODE)",
                         "top_k_bbox_area": 0.0,
                         "top_k_pca_ratio": 1.0,
+                        "temporal_span": 0,
+                        "temporal_center": 18.0,
                         "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
                         "ci_upper": ci_upper
                     })
@@ -408,10 +420,15 @@ class ValidationReporter:
                     # Calculate Morphological metrics for True KNOWN
                     bbox_area = 0.0
                     pca_ratio = 1.0
+                    temporal_span = 0
+                    temporal_center = 18.0
                     if t_start_val in top_k_idx_dict:
                         top_k_idx = top_k_idx_dict[t_start_val]
                         bbox_area = compute_bbox(top_k_idx)
                         pca_ratio = compute_pca_ratio(top_k_idx)
+                        cols = top_k_idx % 37
+                        temporal_span = int(np.max(cols) - np.min(cols))
+                        temporal_center = float(np.mean(cols))
                         
                     results.append({
                         "cluster_id": cid,
@@ -422,6 +439,8 @@ class ValidationReporter:
                         "status": "KNOWN",
                         "top_k_bbox_area": bbox_area,
                         "top_k_pca_ratio": pca_ratio,
+                        "temporal_span": temporal_span,
+                        "temporal_center": temporal_center,
                         "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
                         "ci_upper": ci_upper
                     })
@@ -450,11 +469,25 @@ class ValidationReporter:
                     # Calculate Morphological metrics
                     bbox_area = 0.0
                     pca_ratio = 1.0
+                    temporal_span = 0
+                    temporal_center = 18.0
                     if t_start_val in top_k_idx_dict:
                         top_k_idx = top_k_idx_dict[t_start_val]
                         bbox_area = compute_bbox(top_k_idx)
                         pca_ratio = compute_pca_ratio(top_k_idx)
+                        cols = top_k_idx % 37
+                        temporal_span = int(np.max(cols) - np.min(cols))
+                        temporal_center = float(np.mean(cols))
                             
+                    # Geometric Filters
+                    if status == "UNCONFIRMED_MORPHOLOGY":
+                        if pca_ratio >= 0.85 and temporal_span >= 22:
+                            # Keep status = UNCONFIRMED_MORPHOLOGY to route to PEM
+                            label = "LIKELY_SPECTRAL_LINE"
+                        elif temporal_center <= 2 or temporal_center >= 34:
+                            status = "SUSPECTED_EDGE_ARTIFACT"
+                            label = "SUSPECTED_EDGE_ARTIFACT"
+
                     results.append({
                         "cluster_id": cid,
                         "t_start": t_start_val,
@@ -464,6 +497,8 @@ class ValidationReporter:
                         "status": status,
                         "top_k_bbox_area": bbox_area,
                         "top_k_pca_ratio": pca_ratio,
+                        "temporal_span": temporal_span,
+                        "temporal_center": temporal_center,
                         "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
                         "ci_upper": ci_upper
                     })
@@ -961,8 +996,8 @@ class ValidationReporter:
             if "anomaly_score" in df_out.columns:
                 df_out = df_out.sort_values(by=["anomaly_score", "top_k_pca_ratio"], ascending=[False, True])
             
-            # Filter logic: only keep KNOWN_GLITCH or extreme UNCONFIRMED_MORPHOLOGY
-            render_mask = df_out["status"] == "KNOWN_GLITCH"
+            # Filter logic: only keep KNOWN_GLITCH, SUSPECTED_EDGE_ARTIFACT, or extreme UNCONFIRMED_MORPHOLOGY
+            render_mask = df_out["status"].isin(["KNOWN_GLITCH", "SUSPECTED_EDGE_ARTIFACT"])
             unconfirmed_mask = df_out["status"] == "UNCONFIRMED_MORPHOLOGY"
             
             # Apply CI upper bound filter to UNCONFIRMED_MORPHOLOGY
