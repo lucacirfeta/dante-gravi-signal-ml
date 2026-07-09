@@ -23,8 +23,7 @@ def run_qtransform_support_test(gps_start: int, num_segments: int = 20, detector
         end = start + segment_length
         ts_super = fetch_strain_data(detector, start - 4.0, end + 4.0, cache_raw=True, edge_tolerance=4.0)
         ts_w_padded, _ = whiten_context(ts_super, start, end, pad=4.0)
-        ts_white = extract_clean_subwindow(ts_w_padded, start, end)
-        ts_bp = bandpass(ts_white)
+        ts_bp = extract_clean_subwindow(ts_w_padded, start, end)  # already whitened+bandpassed
         
         # Test 4s baseline
         ts_4s = ts_bp.crop(start + 14, start + 18)

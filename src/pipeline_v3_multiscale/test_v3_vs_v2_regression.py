@@ -27,8 +27,7 @@ def run_regression_test(gps_start: int, duration: int = 32, detector: str = "L1"
     # --- V2 (Production) Logic ---
     # In V2, we take the target segment and directly whiten and bandpass it.
     ts_v2_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
-    ts_v2_white = extract_clean_subwindow(ts_v2_w_padded, gps_start, gps_end)
-    ts_v2_bp = bandpass(ts_v2_white)
+    ts_v2_bp = extract_clean_subwindow(ts_v2_w_padded, gps_start, gps_end)  # already whitened+bandpassed
     v2_qtransform = generate_qtransform(ts_v2_bp)
     
     # --- V3 (Multiscale Pilot) Logic ---
@@ -36,8 +35,7 @@ def run_regression_test(gps_start: int, duration: int = 32, detector: str = "L1"
     # Since our target here is the 32s buffer itself, the crop is a no-op, 
     # but we execute it explicitly to test the API flow.
     ts_buffer_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
-    ts_buffer_white = extract_clean_subwindow(ts_buffer_w_padded, gps_start, gps_end)
-    ts_buffer_bp = bandpass(ts_buffer_white)
+    ts_buffer_bp = extract_clean_subwindow(ts_buffer_w_padded, gps_start, gps_end)  # already whitened+bandpassed
     # Crop to the inner segment (which is the whole segment in this test)
     ts_v3_bp = ts_buffer_bp.crop(gps_start, gps_end)
     v3_qtransform = generate_qtransform(ts_v3_bp)

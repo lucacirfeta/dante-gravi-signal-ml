@@ -51,10 +51,12 @@ _STATUS_MAP = {
 
 # Valid enum values for partner_observing_status
 _COINCIDENCE_ENUM = {
-    "ACTIVE_NO_ANOMALY",
-    "INACTIVE",
-    "ACTIVE_ANOMALY_DETECTED",
-    "NOT_CHECKED",
+    "ACTIVE_UNVERIFIED",       # partner recording; anomaly search not yet run
+    "ACTIVE_NO_ANOMALY",       # partner recording; morphological search ran, no match
+    "ACTIVE_ANOMALY_DETECTED", # partner recording; morphological match found
+    "INACTIVE",                # legacy label: partner not in observing mode
+    "UNOBSERVABLE",            # partner had no data at candidate time
+    "NOT_CHECKED",             # GWOSC query failed / never attempted
 }
 
 
@@ -167,7 +169,11 @@ def _resolve_coincidence_status(
 
         segs = get_segments(f"{other_det}_DATA", int(gps_start), int(gps_start) + 32)
         if len(segs) > 0:
-            return "ACTIVE_NO_ANOMALY"
+            # The partner was recording, but no anomaly search has been
+            # performed here. Only cross_detector_veto may upgrade this to
+            # ACTIVE_NO_ANOMALY / ACTIVE_ANOMALY_DETECTED after the actual
+            # morphological cross-match.
+            return "ACTIVE_UNVERIFIED"
         else:
             return "UNOBSERVABLE"
     except Exception:

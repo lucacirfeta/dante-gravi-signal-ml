@@ -94,8 +94,7 @@ def extract_physical_params(
 
     # Preprocessing — identical to production pipeline
     ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
-    ts_white = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
-    ts_bp = bandpass(ts_white)
+    ts_bp = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)  # already whitened+bandpassed
 
     # --- SNR proxy ---
     data = np.array(ts_bp.value, dtype=np.float64)

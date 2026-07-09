@@ -46,13 +46,25 @@ def excess_power_veto(ts_whitened, sample_rate=4096):
     return False
 
 def block_bootstrap_p99(scores, B=1000, seed=42):
+    """Moving-block bootstrap of the 99th percentile.
+
+    ViT receptive fields overlap between adjacent segments, so scores are
+    autocorrelated: resampling must draw CONTIGUOUS blocks (length n^(1/3),
+    same rule as the V2 production block_bootstrap_p99_ci), never single
+    samples i.i.d. — that would underestimate the p99 variance.
+    """
     rng = np.random.default_rng(seed)
-    p99_samples = []
+    scores = np.asarray(scores)
     n = len(scores)
-    for _ in range(B):
-        idx = rng.integers(0, n, size=n)
-        p99_samples.append(np.percentile(scores[idx], 99.0))
-    return np.mean(p99_samples), np.std(p99_samples)
+    b = max(1, int(n ** (1 / 3)))
+    num_blocks = int(np.ceil(n / b))
+
+    p99_samples = np.zeros(B)
+    for i in range(B):
+        block_starts = rng.integers(0, n - b + 1, size=num_blocks)
+        boot = np.concatenate([scores[s:s + b] for s in block_starts])[:n]
+        p99_samples[i] = np.percentile(boot, 99.0)
+    return float(np.mean(p99_samples)), float(np.std(p99_samples))
 
 def run_micro_mdc_multiscale(detector="L1", n_calib=5000, seed=42):
     np.random.seed(seed)
@@ -107,8 +119,7 @@ def run_micro_mdc_multiscale(detector="L1", n_calib=5000, seed=42):
         try:
             ts_clean = fetch_strain_data(detector, block_start, block_end, cache_raw=False)
             ts_w_padded, _ = whiten_context(ts_clean, block_start, block_end, pad=4.0)
-            ts_white = extract_clean_subwindow(ts_w_padded, block_start, block_end)
-            ts_bp = bandpass(ts_white)
+            ts_bp = extract_clean_subwindow(ts_w_padded, block_start, block_end)  # already whitened+bandpassed
         except: continue
             
         candidate_t_bgs = np.arange(block_start + 64, block_end - 64, stride)

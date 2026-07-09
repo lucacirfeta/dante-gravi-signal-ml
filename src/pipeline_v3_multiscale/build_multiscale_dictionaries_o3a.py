@@ -76,8 +76,7 @@ def build_o3a_dictionaries(detector="L1", n_dict=2000, seed=42):
             try:
                 ts_super = fetch_strain_data(detector, t_bg - 16 - 4.0, t_bg + 16 + 4.0, cache_raw=False, edge_tolerance=4.0)
                 ts_w_padded, _ = whiten_context(ts_super, t_bg - 16, t_bg + 16, pad=4.0)
-                ts_white = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)
-                ts_bp = bandpass(ts_white)
+                ts_bp = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)  # already whitened+bandpassed
             except Exception as e:
                 continue
                 
@@ -116,7 +115,7 @@ def build_o3a_dictionaries(detector="L1", n_dict=2000, seed=42):
     pbar.close()
     
     with open(output_dir / f"{detector}_dict_t_bg.json", "w") as f:
-        json.json(valid_t_bgs, f)
+        json.dump(valid_t_bgs, f)
         
     for scale in scales:
         all_feats = np.concatenate(embeddings_by_scale[scale], axis=0)

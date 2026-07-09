@@ -1081,8 +1081,8 @@ class ValidationReporter:
                 try:
                     cross_segs = get_segments(f"{other_det}_DATA", t, t+32)
                     if len(cross_segs) > 0:
-                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Active, NO corresponding morphological anomaly detected (Local {self.detector} Glitch)\n**{other_det}_STATUS:** ACTIVE_NO_ANOMALY"
-                        other_det_status = "ACTIVE_NO_ANOMALY"
+                        cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Active — morphological cross-match NOT yet performed at this stage (see cross_detector_veto)\n**{other_det}_STATUS:** ACTIVE_UNVERIFIED"
+                        other_det_status = "ACTIVE_UNVERIFIED"
                     else:
                         cross_str = f"**{other_det} Coincidence:** {other_det}_DATA Inactive (Unobservable)\n**{other_det}_STATUS:** UNOBSERVABLE"
                         other_det_status = "UNOBSERVABLE"

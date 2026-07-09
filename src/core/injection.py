@@ -656,8 +656,7 @@ def run_mdc(
                 
             # Process segment with padded context
             ts_white_padded, _ = whiten_context(ts_injected, seg_start, seg_end, pad=4.0)
-            ts_white = extract_clean_subwindow(ts_white_padded, seg_start, seg_end)
-            ts_bp = bandpass(ts_white)
+            ts_bp = extract_clean_subwindow(ts_white_padded, seg_start, seg_end)  # already whitened+bandpassed
             
             # The window is now exactly [seg_start, seg_end], so no further crop is needed.
             ts_crop = ts_bp

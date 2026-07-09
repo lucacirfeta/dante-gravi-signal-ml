@@ -133,8 +133,7 @@ def build_multiscale_dictionaries(
             # Use raw data fetching, assume it's cached locally
             ts_clean = fetch_strain_data(detector, block_start, block_end, cache_raw=False)
             ts_w_padded, _ = whiten_context(ts_clean, block_start, block_end, pad=4.0)
-            ts_white = extract_clean_subwindow(ts_w_padded, block_start, block_end)
-            ts_bp = bandpass(ts_white)
+            ts_bp = extract_clean_subwindow(ts_w_padded, block_start, block_end)  # already whitened+bandpassed
         except Exception as e:
             logger.warning(f"Failed to load block {block_start}: {e}")
             continue

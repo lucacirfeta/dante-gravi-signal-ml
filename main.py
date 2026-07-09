@@ -342,10 +342,7 @@ def cmd_fetch(args: argparse.Namespace) -> None:
 
     # 2. Whiten
     ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
-    ts_white = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
-
-    # 3. Bandpass
-    ts_bp = bandpass(ts_white)
+    ts_bp = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)  # already whitened+bandpassed
 
     # 4. Generate Q-transform spectrogram
     output_dir = Path("data/spectrograms")
@@ -1058,8 +1055,7 @@ def _reprocess_single_png(
 
         from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
         ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
-        ts_w = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
-        ts_bp = bandpass(ts_w)
+        ts_bp = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)  # already whitened+bandpassed
         generate_qtransform(ts_bp, save_path=save_path, cmap=cmap)
 
         return (filename, True, "OK")

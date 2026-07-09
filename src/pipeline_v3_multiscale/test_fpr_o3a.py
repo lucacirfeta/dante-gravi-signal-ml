@@ -99,8 +99,7 @@ def test_fpr_o3a(detector="L1", n_test=500, seed=42):
             try:
                 ts_super = ts_block.crop(win_start - 4.0, win_end + 4.0)
                 ts_w_padded, _ = whiten_context(ts_super, win_start, win_end, pad=4.0)
-                ts_white = extract_clean_subwindow(ts_w_padded, win_start, win_end)
-                ts_bp = bandpass(ts_white)
+                ts_bp = extract_clean_subwindow(ts_w_padded, win_start, win_end)  # already whitened+bandpassed
                 
                 scale_scores = {}
                 valid_extraction = True

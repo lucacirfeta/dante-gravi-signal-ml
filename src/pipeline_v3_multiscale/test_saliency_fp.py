@@ -102,8 +102,7 @@ def test_saliency_and_veto(detector="L1", n_test=50, seed=42):
                 
                 ts_super = ts_block.crop(win_start - 4.0, win_end + 4.0)
                 ts_w_padded, _ = whiten_context(ts_super, t_bg - 16, t_bg + 16, pad=4.0)
-                ts_white = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)
-                ts_bp = bandpass(ts_white)
+                ts_bp = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)  # already whitened+bandpassed
                 
                 is_fp = False
                 

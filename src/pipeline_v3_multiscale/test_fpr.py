@@ -90,8 +90,7 @@ def test_fpr(detector="L1", n_test=200):
         try:
             ts_super = fetch_strain_data(detector, t_bg - 16 - 4.0, t_bg + 16 + 4.0, cache_raw=True, edge_tolerance=4.0)
             ts_w_padded, _ = whiten_context(ts_super, t_bg - 16, t_bg + 16, pad=4.0)
-            ts_white = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)
-            ts_bp = bandpass(ts_white)
+            ts_bp = extract_clean_subwindow(ts_w_padded, t_bg - 16, t_bg + 16)  # already whitened+bandpassed
             
             scale_scores = {}
             valid_extraction = True

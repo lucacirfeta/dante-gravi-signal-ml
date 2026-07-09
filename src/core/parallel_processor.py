@@ -69,10 +69,7 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
                     crop_end = min(ts.t0.value + ts.duration.value, chunk_end + 4.0)
                     ts_super = ts.crop(crop_start, crop_end)
                     ts_w_padded, _ = whiten_context(ts_super, chunk_start, chunk_end, pad=4.0)
-                    ts_w = extract_clean_subwindow(ts_w_padded, chunk_start, chunk_end)
-                    ts_bp = bandpass(ts_w,
-                                     f_low=config.get('f_low', 20.0),
-                                     f_high=config.get('f_high', 2000.0))
+                    ts_bp = extract_clean_subwindow(ts_w_padded, chunk_start, chunk_end)  # already whitened+bandpassed
 
                     if not np.isfinite(ts_bp.value).all():
                         print(f"Skipping segment {filename}: contains NaN/Inf after processing")
@@ -104,10 +101,7 @@ def _process_single_segment(args: tuple) -> tuple[str, bool]:
             crop_end = min(ts.t0.value + ts.duration.value, gps_end + 4.0)
             ts_super = ts.crop(crop_start, crop_end)
             ts_w_padded, _ = whiten_context(ts_super, gps_start, gps_end, pad=4.0)
-            ts_w = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
-            ts_bp = bandpass(ts_w,
-                             f_low=config.get('f_low', 20.0),
-                             f_high=config.get('f_high', 2000.0))
+            ts_bp = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)  # already whitened+bandpassed
 
             # Check for NaN/Inf after filtering
             import numpy as np

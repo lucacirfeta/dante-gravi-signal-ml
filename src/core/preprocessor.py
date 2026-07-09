@@ -321,8 +321,7 @@ def batch_process(
                         crop_end = min(ts_super.t0.value + ts_super.duration.value, chunk_end + 4.0)
                         ts_chunk_super = ts_super.crop(crop_start, crop_end)
                         ts_w_padded, _ = whiten_context(ts_chunk_super, chunk_start, chunk_end, pad=4.0)
-                        ts_white = extract_clean_subwindow(ts_w_padded, chunk_start, chunk_end)
-                        ts_bp = bandpass(ts_white)
+                        ts_bp = extract_clean_subwindow(ts_w_padded, chunk_start, chunk_end)  # already whitened+bandpassed
 
                         if not np.isfinite(ts_bp.value).all():
                             logger.warning("Skipping chunk [%d, %d]: contains NaN/Inf", chunk_start, chunk_end)
@@ -350,10 +349,7 @@ def batch_process(
                 crop_end = min(ts_super.t0.value + ts_super.duration.value, gps_end + 4.0)
                 ts_super_cropped = ts_super.crop(crop_start, crop_end)
                 ts_w_padded, _ = whiten_context(ts_super_cropped, gps_start, gps_end, pad=4.0)
-                ts_white = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)
-
-                # 3. Bandpass
-                ts_bp = bandpass(ts_white)
+                ts_bp = extract_clean_subwindow(ts_w_padded, gps_start, gps_end)  # already whitened+bandpassed
 
                 # Check for NaN/Inf after filtering
                 if not np.isfinite(ts_bp.value).all():

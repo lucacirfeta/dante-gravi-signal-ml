@@ -9,7 +9,7 @@ import argparse
 
 from src.core.utils import setup_logger, get_observing_run
 from src.core.data_loader import fetch_local_or_remote_strain
-from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
+from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
 from src.core.patch_scorer import PatchScorer
 
 logger = setup_logger(__name__)
@@ -55,7 +55,7 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
         session = row["session_id"]
         status = row["partner_observing_status"]
         
-        if status == "INACTIVE":
+        if status in ("INACTIVE", "UNOBSERVABLE"):
             unverifiable_rows.append(row)
             continue
             
@@ -63,47 +63,55 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
         logger.info(f"Targeted search: Candidate GPS {gps} in {primary}. Fetching {partner}...")
         
         # 1. Load primary vector
+        # A candidate is a "confirmed local glitch" ONLY after a completed
+        # morphological search in the partner returned no match. Any I/O or
+        # processing failure means the search never ran -> UNVERIFIABLE.
+        def _unverifiable(reason: str):
+            failed = row.copy()
+            failed["partner_observing_status"] = "NOT_CHECKED"
+            failed["gs_label"] = f"UNVERIFIABLE ({reason})"
+            unverifiable_rows.append(failed)
+
         h5_path = production_dir / str(session) / f"novelties_{session}_{primary}.h5"
         if not h5_path.exists():
-            logger.warning(f"HDF5 missing for GPS {gps} in {h5_path}. Skipping.")
-            local_rows.append(row)
+            logger.warning(f"HDF5 missing for GPS {gps} in {h5_path}. Marking unverifiable.")
+            _unverifiable("primary HDF5 missing")
             continue
-            
+
         try:
             with h5py.File(h5_path, "r") as f:
                 gps_times = f["novelties/gps_times"][:]
                 vectors = f["novelties/mil_vectors"][:]
                 idx_match = np.where(gps_times == gps)[0]
                 if len(idx_match) == 0:
-                    logger.warning(f"GPS {gps} not found in {h5_path}. Skipping.")
-                    local_rows.append(row)
+                    logger.warning(f"GPS {gps} not found in {h5_path}. Marking unverifiable.")
+                    _unverifiable("GPS not found in primary HDF5")
                     continue
                 primary_vec = vectors[idx_match[0]]
         except Exception as e:
-            logger.warning(f"Error reading primary H5: {e}")
-            local_rows.append(row)
+            logger.warning(f"Error reading primary H5: {e}. Marking unverifiable.")
+            _unverifiable("primary HDF5 read error")
             continue
-            
+
         # 2. Fetch partner raw strain
         try:
             ts_super = fetch_local_or_remote_strain(partner, gps - 4.0, gps + 36.0, cache_raw=False, edge_tolerance=4.0)
         except Exception as e:
-            logger.warning(f"Failed to fetch partner strain: {e}")
-            local_rows.append(row)
+            logger.warning(f"Failed to fetch partner strain: {e}. Marking unverifiable.")
+            _unverifiable("partner strain fetch failed")
             continue
-            
+
         # 3. Encode partner
         try:
             ts_w_padded, _ = whiten_context(ts_super, gps, gps + 32.0, pad=4.0)
             ts_white = extract_clean_subwindow(ts_w_padded, gps, gps + 32.0)
-            ts_bp = bandpass(ts_white)
-            spectrogram = generate_qtransform(ts_bp)
+            spectrogram = generate_qtransform(ts_white)
             # score_spectrogram returns a list of dicts
             results = scorer.score_spectrogram([spectrogram], threshold=1.0)
             partner_vec = results[0]["mil_vector"]
         except Exception as e:
-            logger.warning(f"Failed to encode partner strain: {e}")
-            local_rows.append(row)
+            logger.warning(f"Failed to encode partner strain: {e}. Marking unverifiable.")
+            _unverifiable("partner encoding failed")
             continue
             
         # 4. Cosine Similarity
@@ -142,13 +150,20 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
         if sim > tau_coh:
             logger.info(f"--> [COINCIDENT] Candidate {gps} matched in {partner} with sim {sim:.3f} (> {tau_coh:.3f})")
             new_row = row.copy()
-            new_row["status"] = "COINCIDENT"
+            # COINCIDENT_TRANSIENT is the status consumed by the downstream
+            # state machine (production_report.should_run_pem_check,
+            # aggregate_report._STATUS_MAP). This is its only producer.
+            new_row["status"] = "COINCIDENT_TRANSIENT"
             new_row["partner_observing_status"] = "ACTIVE_ANOMALY_DETECTED"
             new_row["gs_label"] = "Coincident/Astrophysical/Magnetic"
             coincident_rows.append(new_row)
         else:
             logger.info(f"--> [LOCAL] Candidate {gps} is pure instrumental (sim={sim:.3f})")
-            local_rows.append(row)
+            # The morphological search actually ran and found nothing: this
+            # is the only code path allowed to assert ACTIVE_NO_ANOMALY.
+            vetoed = row.copy()
+            vetoed["partner_observing_status"] = "ACTIVE_NO_ANOMALY"
+            local_rows.append(vetoed)
             
     # Convert to Final Output Dataframes
     df_3a = pd.DataFrame(local_rows) if local_rows else pd.DataFrame(columns=df.columns)
@@ -190,7 +205,7 @@ def run_cross_detector_veto():
     _write_table(df_3b, aggregated_dir / "Table_3b_Unverifiable_Unilateral_Detections_Vetoed.csv", 
                  "\n# NOTE: Unverifiable due to non-observing status of partner.\n")
     _write_table(df_3c, aggregated_dir / "Table_3c_Coincident_Astrophysical.csv",
-                 "\n# NOTE: Morphological cross-match confirmed (Cosine Similarity > 0.85).\n")
+                 "\n# NOTE: Morphological cross-match confirmed (Cosine Similarity > run-calibrated tau_coh, see config/cross_detector_threshold.json).\n")
 
 if __name__ == "__main__":
     run_cross_detector_veto()
