@@ -19,7 +19,7 @@ from torchvision import transforms
 from sklearn.metrics import adjusted_rand_score
 from sklearn.mixture import BayesianGaussianMixture
 
-from src.core.utils import setup_logger, get_device, compute_spatial_coherence
+from src.core.utils import setup_logger, get_device, compute_bbox, compute_pca_ratio
 from src.core.reference_index_builder import download_gs_classifications_csv
 from src.pipeline_v2_production.saliency_map import generate_saliency_map
 from src.core.data_loader import fetch_strain_data
@@ -356,11 +356,13 @@ class ValidationReporter:
                 if len(matches) > 0:
                     best = matches.iloc[matches["ml_confidence"].argmax()]
                     
-                    # Calculate Spatial Coherence Score for True KNOWN
-                    coherence = 0.0
+                    # Calculate Morphological metrics for True KNOWN
+                    bbox_area = 0.0
+                    pca_ratio = 1.0
                     if t_start_val in top_k_idx_dict:
                         top_k_idx = top_k_idx_dict[t_start_val]
-                        coherence = compute_spatial_coherence(top_k_idx)
+                        bbox_area = compute_bbox(top_k_idx)
+                        pca_ratio = compute_pca_ratio(top_k_idx)
                         
                     results.append({
                         "cluster_id": cid,
@@ -369,11 +371,12 @@ class ValidationReporter:
                         "gs_label": best["ml_label"],
                         "confidence": best["ml_confidence"],
                         "status": "KNOWN",
-                        "spatial_coherence_score": coherence
+                        "top_k_bbox_area": bbox_area,
+                        "top_k_pca_ratio": pca_ratio
                     })
                 else:
                     # 3. Fallback to Internal VQ Cosine Similarity Check
-                    status = "TRUE_NOVEL_CANDIDATE"
+                    status = "UNCONFIRMED_MORPHOLOGY"
                     label = "Unknown"
                     conf = 0.0
                     
@@ -389,15 +392,17 @@ class ValidationReporter:
                         max_sim = sims[max_idx]
                         
                         if max_sim >= 0.80:
-                            status = "KNOWN (VQ Fallback)"
+                            status = "KNOWN_GLITCH"
                             label = vq_class_names[max_idx]
                             conf = float(max_sim)
                             
-                    # Calculate Spatial Coherence Score
-                    coherence = 0.0
+                    # Calculate Morphological metrics
+                    bbox_area = 0.0
+                    pca_ratio = 1.0
                     if t_start_val in top_k_idx_dict:
                         top_k_idx = top_k_idx_dict[t_start_val]
-                        coherence = compute_spatial_coherence(top_k_idx)
+                        bbox_area = compute_bbox(top_k_idx)
+                        pca_ratio = compute_pca_ratio(top_k_idx)
                             
                     results.append({
                         "cluster_id": cid,
@@ -406,22 +411,23 @@ class ValidationReporter:
                         "gs_label": label,
                         "confidence": conf,
                         "status": status,
-                        "spatial_coherence_score": coherence
+                        "top_k_bbox_area": bbox_area,
+                        "top_k_pca_ratio": pca_ratio
                     })
         df_out = pd.DataFrame(results)
         
-        # Override TRUE_NOVEL_CANDIDATE logic for DetChar reporting
+        # Override UNCONFIRMED_MORPHOLOGY logic for DetChar reporting
         # as we are considering them commissioning transients 
         # (DMT-ANALYSIS_READY:1 inactive functionally).
-        # We leave them as TRUE_NOVEL_CANDIDATE in the CSV so they get picked up
+        # We leave them as UNCONFIRMED_MORPHOLOGY in the CSV so they get picked up
         # by Section IV.C logic, which we renamed to DetChar.
         
         out_csv = self.report_dir / f"morphcheck_novelties_{self.session_id}_{self.detector}.csv"
         df_out.to_csv(out_csv, index=False)
         self.status["morphcheck_stats"] = {
             "total_candidates": len(df_out),
-            "known": int((df_out["status"].isin(["KNOWN", "KNOWN (VQ Fallback)"])).sum()) if len(df_out) > 0 else 0,
-            "unclassified": int((df_out["status"] == "TRUE_NOVEL_CANDIDATE").sum()) if len(df_out) > 0 else 0,
+            "known": int((df_out["status"].isin(["KNOWN", "KNOWN_GLITCH"])).sum()) if len(df_out) > 0 else 0,
+            "unclassified": int((df_out["status"] == "UNCONFIRMED_MORPHOLOGY").sum()) if len(df_out) > 0 else 0,
             "instrumental": int((df_out["status"] == "INSTRUMENTAL_ANOMALY (OUT_OF_SCIENCE_MODE)").sum()) if len(df_out) > 0 else 0
         }
         logger.info(f"Morphcheck completed. {self.status['morphcheck_stats']['unclassified']} novelties unclassified.")
@@ -970,6 +976,7 @@ class ValidationReporter:
 
                 # Check PEM Coherence automatically
                 pem_status = evaluate_candidate_pem(self.detector, t, t+32, nds_host=self.nds_host)
+                # TODO: When NDS2 credentials are fixed, separate NO_CORR from UNAVAILABLE in UNCONFIRMED_MORPHOLOGY counts.
                 if pem_status == "CORRELATION_FOUND":
                     pem_str = f"**PEM Correlation:** Environmental coupling confirmed.\n**PEM_STATUS:** CORRELATION_FOUND"
                 elif pem_status.startswith("NO_CORRELATION"):

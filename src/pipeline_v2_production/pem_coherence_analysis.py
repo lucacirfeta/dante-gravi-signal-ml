@@ -231,7 +231,7 @@ def evaluate_candidate_pem(
     detector: str,
     gps_start: int,
     gps_end: int,
-    nds_host: Optional[str] = "nds.ligo.caltech.edu",
+    nds_host: Optional[str] = "nds.gwosc.org",
 ) -> str:
     """
     Evaluates PEM coherence for a single candidate.

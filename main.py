@@ -2770,13 +2770,17 @@ def cmd_production_report(args):
     from src.pipeline_v2_production.production_report import ValidationReporter
     output_dir = getattr(args, "output_dir", "data/production")
     reference_run = getattr(args, "reference_run", "O3b")
+    nds_host_arg = getattr(args, "nds_host", None)
+    if getattr(args, "skip_pem", False):
+        nds_host_arg = None
+        
     reporter = ValidationReporter(
         session_id=args.session_id, 
         detector=args.detector, 
         run_name=getattr(args, "run", "O4a"),
         reference_run=reference_run,
         output_dir=output_dir,
-        nds_host=getattr(args, "nds_host", None)
+        nds_host=nds_host_arg
     )
     if getattr(args, "only_plots", False):
         reporter.run_only_plots()
@@ -4107,6 +4111,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_production_report.add_argument(
         "--nds-host", type=str, default=None, help="NDS2 server hostname for PEM analysis (e.g. nds.gwosc.org). If omitted, uses standard logic."
+    )
+    p_production_report.add_argument(
+        "--skip-pem", action="store_true", help="Explicitly skip PEM analysis by forcing nds_host to None."
     )
     p_production_report.add_argument(
         "--only-plots", action="store_true", help="Only regenerate saliency plots without running clustering or checks."
