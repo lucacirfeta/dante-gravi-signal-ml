@@ -939,6 +939,8 @@ class ValidationReporter:
         other_det = "L1" if self.detector == "H1" else "H1"
         md_content += f"To further validate these candidates (including those labeled via VQ fallback), we perform a strict coincidence check against the {other_det} detector (`{other_det}_DATA`), the GWTC-4.0 catalog, and cross-reference with PEM coherence hits for each GPS time (±60s window).\n\n"
         
+        md_content += "> [!NOTE]\n> **Methodological Note on Candidate Triage:** La soglia di revisione individuale per i candidati morfologicamente non confermati è ancorata al limite superiore dell'intervallo di confidenza (CI) al 95% bootstrap della soglia p99, non a un test di significatività diretto sul singolo candidato. L'utilizzo dell'incertezza sulla soglia globale come filtro di sbarramento è una misura operativa per separare la bulk del rumore di fondo dagli outlier morfologici estremi, prioritizzando la revisione umana.\n\n"
+
         if len(df_out) > 0:
             # Sort all candidates by absolute anomaly score descending, then by PCA ratio ascending
             if "anomaly_score" in df_out.columns:
