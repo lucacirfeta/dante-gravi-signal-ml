@@ -496,7 +496,17 @@ def run_pem_coherence_analysis(
                     except Exception:
                         pass
 
-                thresh = channel_thresholds.get(ch, 0.6)
+                thresh = channel_thresholds.get(ch)
+                if thresh is None:
+                    logger.warning(f"No calibrated threshold for {ch}. Skipping channel.")
+                    results.append({
+                        "detector": det,
+                        "channel": ch,
+                        "max_coherence": np.nan,
+                        "peak_freq": np.nan,
+                        "significant": False
+                    })
+                    continue
                 metrics = calculate_coherence_and_plot(
                     strain=strain_ts,
                     aux=aux_ts,
