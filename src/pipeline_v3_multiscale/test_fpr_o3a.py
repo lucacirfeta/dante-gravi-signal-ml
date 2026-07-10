@@ -24,11 +24,13 @@ def test_fpr_o3a(detector="L1", n_test=500, seed=42):
         thresholds = json.load(f)
     p99_thresh = {s: thresholds[s]["p99_mean"] for s in thresholds}
     
-    logger.info("Fetching O3a segments...")
+    logger.info("Fetching O3a segments (full run window, audit fix M-4)...")
+    # Full O3a range: the previous window [1238166018, 1240166018] covered only
+    # the first ~23 days, silently discarding blocks sampled outside it.
     start_time = 1238166018
-    end_time = 1240166018
-    burst_segs = get_segments(f'{detector}_BURST_CAT1', start_time, end_time)
-    data_segs = get_segments(f'{detector}_DATA', start_time, end_time)
+    end_time = 1253977218
+    burst_segs = get_segments_retry(f'{detector}_BURST_CAT1', start_time, end_time)
+    data_segs = get_segments_retry(f'{detector}_DATA', start_time, end_time)
     
     np.random.seed(seed)
     
@@ -91,6 +93,13 @@ def test_fpr_o3a(detector="L1", n_test=500, seed=42):
         while block_results < 40 and attempts < 200 and len(results) < n_test:
             attempts += 1
             t_bg = np.random.randint(block_start + 64, block_end - 64)
+            # Guard-time B-4: centers must be pairwise separated by >= 96 s
+            # (max(scales) + 64), otherwise overlapping ViT receptive fields
+            # correlate the FPR samples and the guard-time fix is inactive
+            # exactly on the path that measures the FPR.
+            from src.pipeline_v3_multiscale.sampling import respects_guard
+            if not respects_guard(t_bg, [r["gps"] for r in results]):
+                continue
             win_start, win_end = t_bg - 16, t_bg + 16
             
             if not any(s[0] <= win_start and s[1] >= win_end for s in burst_segs): continue

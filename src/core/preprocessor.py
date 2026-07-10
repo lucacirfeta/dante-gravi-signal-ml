@@ -179,6 +179,7 @@ def generate_qtransform(
         output_size: tuple[int, int] = tuple(_PREPROC["output_size"]),  # type: ignore[arg-type]
         save_path: Path | None = None,
         cmap: str | None = None,
+        normalizer=None,
 ) -> np.ndarray:
     """Compute a constant-Q transform spectrogram from a time series.
 
@@ -231,8 +232,12 @@ def generate_qtransform(
     )
     spectrogram = zoom(spectrogram, zoom_factors, order=1)
 
-    # Normalize to [0, 1]
-    spectrogram = normalize_spectrogram(spectrogram)
+    # Normalize to [0, 1]. Default: per-image min-max (production behavior).
+    # `normalizer` allows the norm-leakage experiment to inject the fixed
+    # run-independent scheme without forking this function.
+    if normalizer is None:
+        normalizer = normalize_spectrogram
+    spectrogram = normalizer(spectrogram)
 
     # Optionally save as PNG
     if save_path is not None:

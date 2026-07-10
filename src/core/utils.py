@@ -197,6 +197,23 @@ def normalize_spectrogram(arr: np.ndarray) -> np.ndarray:
     return ((arr - arr_min) / (arr_max - arr_min)).astype(np.float32)
 
 
+def normalize_spectrogram_fixed(arr: np.ndarray, e_max: float) -> np.ndarray:
+    """Run-independent normalization: clip to [0, e_max], scale to [0, 1].
+
+    Unlike per-image min-max, the pixel<->energy mapping does not depend on
+    the order statistics (max) of the individual image, so residual spectral
+    lines of a given observing run cannot compress the contrast of the rest
+    of the image (norm-leakage experiment, scheme B2). Legal on whitened
+    data only, where Q-transform energy is in run-independent units.
+
+    e_max must be FROZEN once (from pooled calibration data) and never
+    re-derived per run, or the run signature re-enters through the back door.
+    """
+    if e_max <= 0:
+        raise ValueError(f"e_max must be positive, got {e_max}")
+    return (np.clip(arr, 0.0, e_max) / e_max).astype(np.float32)
+
+
 def enable_ansi_colors() -> None:
     """Enable VT100 terminal support for Windows PowerShell/CMD.
     

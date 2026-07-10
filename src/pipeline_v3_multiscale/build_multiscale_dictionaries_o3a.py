@@ -89,11 +89,11 @@ def build_o3a_dictionaries(detector="L1", n_dict=2000, seed=42):
                     valid_extraction = False
                     break
                     
-                ts_taper = ts_crop.taper(duration=scale * 0.125)
-                    
+                # NB: nessun taper qui — il builder O4a non lo applica; un taper
+                # asimmetrico tra dizionari sarebbe un confondente (audit M-5).
                 temp_path = temp_dir / f"dict_{scale}.png"
                 try:
-                    generate_qtransform(ts_taper, qrange=(4, 32), save_path=temp_path)
+                    generate_qtransform(ts_crop, qrange=(4, 32), save_path=temp_path)
                     img = Image.open(temp_path)
                     tensor = transform(img).unsqueeze(0).to(device)
                     with torch.inference_mode():
@@ -120,7 +120,7 @@ def build_o3a_dictionaries(detector="L1", n_dict=2000, seed=42):
     for scale in scales:
         all_feats = np.concatenate(embeddings_by_scale[scale], axis=0)
         logger.info(f"Clustering {len(all_feats)} patches for scale {scale}s...")
-        kmeans = MiniBatchKMeans(n_clusters=281, batch_size=4096, n_init=3, random_state=42)
+        kmeans = MiniBatchKMeans(n_clusters=275, batch_size=4096, n_init=3, random_state=42)  # K aligned to production (audit B-5)
         kmeans.fit(all_feats)
         centroids = kmeans.cluster_centers_
         centroids_norm = centroids / np.linalg.norm(centroids, axis=1, keepdims=True)

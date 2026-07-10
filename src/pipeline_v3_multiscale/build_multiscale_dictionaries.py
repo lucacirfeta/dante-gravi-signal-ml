@@ -213,7 +213,10 @@ def build_multiscale_dictionaries(
         json.dump(valid_t_bgs, f, indent=4)
         
     # 3. Compress with MiniBatchKMeans (CPU)
-    k_clusters = 281
+    # K=275 is the empirically-verified production dictionary size
+    # (data/reference/patch_compressed_index_o3b.npz, MD5-pinned). The old
+    # hardcoded 281 was a legacy value that never shipped (audit B-5).
+    k_clusters = 275
     logger.info(f"Running MiniBatchKMeans with K={k_clusters} on patch tokens...")
     
     for scale in scales:
