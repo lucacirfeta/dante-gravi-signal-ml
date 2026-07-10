@@ -35,9 +35,10 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
     
     ref_index_path = Path("data/index/patch_compressed_index.npz")
     if not ref_index_path.exists():
-        ref_index_path = list(Path(".").rglob("patch_compressed_index.npz"))
-        if ref_index_path:
-            ref_index_path = ref_index_path[0]
+        found = list(Path(".").rglob("patch_compressed_index*.npz"))
+        if found:
+            ref_index_path = found[0]
+            logger.info(f"Using fallback reference index: {ref_index_path}")
         else:
             logger.warning("Could not find reference index. Run index builder first.")
             return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
