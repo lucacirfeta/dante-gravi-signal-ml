@@ -86,9 +86,9 @@ def spectrogram_to_rgb(spec01: np.ndarray, cmap: str = "cividis") -> np.ndarray:
 
     Kept identical to the PNG path of generate_qtransform (colormap +
     8-bit quantization are part of the channel under test, not confounders)."""
-    import matplotlib.cm as cm
+    import matplotlib
 
-    rgba = cm.get_cmap(cmap)(np.clip(spec01, 0.0, 1.0))
+    rgba = matplotlib.colormaps[cmap](np.clip(spec01, 0.0, 1.0))
     return (rgba[..., :3] * 255).astype(np.uint8)
 
 
