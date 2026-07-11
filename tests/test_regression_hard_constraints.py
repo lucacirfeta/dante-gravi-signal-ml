@@ -288,3 +288,34 @@ def test_unsafe_pem_channels_not_in_production_list():
         assert not any(banned in ch for ch in flat), (
             f"Unsafe channel {banned} reintroduced in production AUX_CHANNELS"
         )
+
+
+# =====================================================================
+# Soglie per-run — nessuna applicazione cross-run silenziosa
+# =====================================================================
+
+def test_threshold_run_guard_refuses_cross_run():
+    """Thresholds calibrated on one run must not be silently applied to
+    another (the only channel with residual excess in the 2026-07 leakage
+    investigation). Only explicit allow_cross_run=True measurement contexts
+    may bypass."""
+    from src.pipeline_v3_multiscale.sampling import assert_threshold_run
+
+    thr = {"calibration_run": "O4a", "4s": {"p99_mean": 0.1}}
+    assert_threshold_run(thr, "O4a")                      # same run: ok
+    assert_threshold_run(thr, "O3a", allow_cross_run=True)  # explicit: ok
+    with pytest.raises(RuntimeError, match="Cross-run"):
+        assert_threshold_run(thr, "O3a")                  # silent: refused
+    with pytest.raises(ValueError, match="calibration_run"):
+        assert_threshold_run({"4s": {}}, "O4a")           # untagged: refused
+
+
+def test_pem_skip_is_logged_not_silent():
+    """M-1: a missing NDS host must produce an explicit warning, never a
+    bare `return None`."""
+    text = _read("src/pipeline_v2_production/pem_coherence_analysis.py")
+    m = re.search(r"if nds_host is None:\s*\n(.*?)return None", text, re.S)
+    assert m and "logger.warning" in m.group(1), (
+        "Silent PEM fallback reintroduced: nds_host=None returns None "
+        "without a warning."
+    )

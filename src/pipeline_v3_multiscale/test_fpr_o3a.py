@@ -22,7 +22,12 @@ def test_fpr_o3a(detector="L1", n_test=500, seed=42):
     thresh_file = Path(f"results/micro_mdc/multiscale/{detector}_thresholds.json")
     with open(thresh_file, "r") as f:
         thresholds = json.load(f)
-    p99_thresh = {s: thresholds[s]["p99_mean"] for s in thresholds}
+    # This script is the cross-run MEASUREMENT: O4a thresholds on O3a data
+    # is the quantity under study, hence allow_cross_run=True.
+    from src.pipeline_v3_multiscale.sampling import assert_threshold_run
+    assert_threshold_run(thresholds, "O3a", allow_cross_run=True)
+    p99_thresh = {s: thresholds[s]["p99_mean"] for s in thresholds
+                  if isinstance(thresholds[s], dict) and "p99_mean" in thresholds[s]}
     
     logger.info("Fetching O3a segments (full run window, audit fix M-4)...")
     # Full O3a range: the previous window [1238166018, 1240166018] covered only

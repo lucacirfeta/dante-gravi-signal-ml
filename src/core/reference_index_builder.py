@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 from src.core.data_loader import fetch_strain_data
 from src.core.encoder import DINOv2Encoder
-from src.core.preprocessor import bandpass, generate_qtransform, whiten
+from src.core.preprocessor import generate_qtransform
 from src.core.utils import setup_logger
 
 logger: logging.Logger = setup_logger(__name__)

@@ -19,7 +19,11 @@ FREQ_BOUNDS = (20, 500)
 THRESHOLD = 0.6
 NDS_HOST = "nds.gwosc.org"
 
-# We have 11 channels in production
+# Measurement list for the FPR significance test — NOT the production list.
+# It DELIBERATELY includes PEM-EY_MAINSMON (excluded from production with
+# FPR=23% measured by this very script): removing it here would make the
+# exclusion untestable. Production channels live in
+# pem_coherence_analysis.AUX_CHANNELS — never import this list for analysis.
 L1_CHANNELS = [
     "L1:ASC-X_TR_A_NSUM_OUT_DQ",
     "L1:CAL-PCALX_RX_PD_OUT_DQ",

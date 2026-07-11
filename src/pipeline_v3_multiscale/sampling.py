@@ -13,6 +13,29 @@ import numpy as np
 GUARD_TIME_S = 96.0  # max(scales)=32 + 64 s
 
 
+def assert_threshold_run(thresholds: dict, target_run: str,
+                         allow_cross_run: bool = False) -> None:
+    """Refuse to apply thresholds calibrated on one run to data of another.
+
+    The 2026-07 leakage investigation concluded that cross-run threshold
+    transfer is the only channel with any residual excess (mild, tail-only,
+    block-clustered). Production must recalibrate per run; only explicitly
+    cross-run measurement scripts may pass allow_cross_run=True.
+    """
+    calib = thresholds.get("calibration_run")
+    if calib is None:
+        raise ValueError(
+            "Thresholds file has no 'calibration_run' tag — recalibrate with "
+            "the current micro_mdc_multiscale (post-audit) before use."
+        )
+    if calib.lower() != target_run.lower() and not allow_cross_run:
+        raise RuntimeError(
+            f"Cross-run threshold application refused: calibrated on {calib}, "
+            f"target run {target_run}. Recalibrate on {target_run} or pass "
+            "allow_cross_run=True in a measurement-only context."
+        )
+
+
 def respects_guard(t: float, accepted: list[float] | np.ndarray,
                    guard: float = GUARD_TIME_S) -> bool:
     """True if `t` is at least `guard` seconds away from every accepted center."""

@@ -184,7 +184,11 @@ def run_micro_mdc_multiscale(detector="L1", n_calib=5000, seed=42):
         logger.warning(f"Only found {len(valid_t_bgs)} segments out of {n_calib}.")
         
     # Block Bootstrap
-    thresholds = {}
+    # calibration_run tags the thresholds with the run the background comes
+    # from (local blocks = O4a pool). Applying them to another run is only
+    # legitimate in explicitly cross-run MEASUREMENT scripts (test_fpr_o3a);
+    # production consumers must call assert_threshold_run() first.
+    thresholds = {"calibration_run": "O4a", "detector": detector}
     for scale in scales:
         scores_arr = np.array(calib_scores[scale])
         p99_mean, p99_std = block_bootstrap_p99(scores_arr, B=1000, seed=seed)

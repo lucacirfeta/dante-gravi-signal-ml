@@ -83,7 +83,14 @@ def fetch_auxiliary_data(
     Returns ``None`` immediately if no NDS host is configured.
     """
     if nds_host is None:
-        return None  # Fallback just in case
+        # Explicit skip, never silent (audit M-1 / hard constraint 7):
+        # downstream must see WHY the PEM check did not run.
+        logger.warning(
+            "PEM SKIP: no NDS host configured — auxiliary channel %s NOT "
+            "fetched; candidate will carry PEM_UNAVAILABLE, not a pass.",
+            channel,
+        )
+        return None
 
     safe_channel = channel.replace(":", "_")
     cache_file = cache_dir / f"{safe_channel}_{gps_start}_{gps_end}.hdf5"

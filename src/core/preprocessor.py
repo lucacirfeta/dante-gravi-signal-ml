@@ -108,7 +108,7 @@ def whiten_context(
     context_start: float,
     context_end: float,
     pad: float = 4.0
-) -> tuple[TimeSeries, bool, float]:
+) -> tuple[TimeSeries, dict]:
     """Whiten un blocco di contesto ampio UNA VOLTA (pad extra su entrambi i lati, scartato dopo).
     
     Ritorna la TimeSeries whitenata+bandpassata, pulita, pronta

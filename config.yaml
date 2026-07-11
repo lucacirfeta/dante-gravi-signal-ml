@@ -7,7 +7,8 @@
 detectors:
   - "H1"   # LIGO Hanford
   - "L1"   # LIGO Livingston
-  - "V1"   # Virgo
+# NOTE: Virgo (V1) intentionally absent — it did not participate in O4a
+# (commissioning); all O4a claims are LIGO-only (hard constraint 11).
 
 # Known reference events for validation and PoC demonstrations
 reference_events:
