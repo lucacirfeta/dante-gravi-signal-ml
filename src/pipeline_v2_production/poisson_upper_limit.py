@@ -71,7 +71,7 @@ def calculate_livetime(aggregated_dir: Path, detector: str = "H1") -> float:
                 
     if not intervals:
         logger.warning(f"No cluster reports found for {detector}.")
-        return 0.0
+        return 0.0, 0, 0.0  # must match the 3-tuple contract of the happy path
         
     merged_intervals = merge_intervals(intervals)
     total_seconds = sum(end - start for start, end in merged_intervals)
@@ -86,7 +86,7 @@ def calculate_livetime(aggregated_dir: Path, detector: str = "H1") -> float:
     
     return total_days, n_sessions, bounding_span_days
 
-def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", cl: float = 0.90):
+def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", cl: float = 0.90, run: str = "O4a"):
     """
     Calculate the Poisson Upper Limit on the rate of morphologically novel, 
     instrumentally unclassified transients for the target detector.
@@ -100,7 +100,7 @@ def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", c
         return
         
     # 2. Extract Event Count (N)
-    taxonomy_path = aggregated_dir / "Master_Taxonomy_O4a.csv"
+    taxonomy_path = aggregated_dir / f"Master_Taxonomy_{run}.csv"
     if not taxonomy_path.exists():
         logger.error(f"Taxonomy CSV not found at {taxonomy_path}")
         return
@@ -239,7 +239,8 @@ if __name__ == "__main__":
     setup_logger()
     parser = argparse.ArgumentParser(description="Calculate Poisson Upper Limit on a null-result detector")
     parser.add_argument("--detector", type=str, default="H1", help="Target detector (e.g. H1, L1)")
+    parser.add_argument("--run", type=str, default="O4a", help="Observing run (selects Master_Taxonomy_<run>.csv)")
     args = parser.parse_args()
     
     agg_dir = Path("data/production/aggregated")
-    run_poisson_upper_limit(agg_dir, target_detector=args.detector)
+    run_poisson_upper_limit(agg_dir, target_detector=args.detector, run=args.run)

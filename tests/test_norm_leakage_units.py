@@ -145,3 +145,52 @@ def test_topk_score_matches_production_rule():
     anomaly = 1.0 - (tokens @ cents.T).max(axis=1)
     expected = float(np.sort(anomaly)[-68:].mean())
     assert got == pytest.approx(expected, rel=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# V3 integration — multiscale characterization
+# ---------------------------------------------------------------------------
+
+def test_multiscale_thresholds_are_run_gated():
+    """The characterization layer must refuse thresholds calibrated on a
+    different run than the candidates (no silent cross-run application)."""
+    import json
+    from src.pipeline_v3_multiscale import multiscale_candidates as mc
+
+    thr_path = REPO_ROOT / "results/micro_mdc/multiscale/L1_thresholds.json"
+    if not thr_path.exists():
+        pytest.skip("no calibrated thresholds in this checkout")
+    thr = json.loads(thr_path.read_text())
+    assert thr.get("calibration_run") == "O4a"
+    # same run: passes
+    mc.load_thresholds("L1", "O4a")
+    # different run: refused
+    with pytest.raises(RuntimeError, match="Cross-run"):
+        mc.load_thresholds("L1", "O3a")
+
+
+def test_multiscale_profile_handles_missing_taxonomy(tmp_path):
+    """With no taxonomy the characterization must return None loudly, not
+    crash nor fabricate output."""
+    from src.pipeline_v3_multiscale.multiscale_candidates import profile_candidates
+
+    assert profile_candidates(run="O3a", aggregated_dir=tmp_path) is None
+
+
+def test_encode_batch_matches_single(monkeypatch):
+    """encode_batch must be numerically consistent with encode_rgb (the
+    production V2 scorer path); guards the in-memory batching refactor."""
+    pytest.importorskip("torch")
+    import torch
+    if not torch.cuda.is_available():
+        pytest.skip("GPU busy/absent — parity check is GPU-tied")
+    from src.pipeline_v3_multiscale.norm_leakage.common import PatchEncoder
+    import numpy as np
+
+    enc = PatchEncoder()
+    rng = np.random.default_rng(0)
+    rgbs = [rng.integers(0, 255, size=(256, 256, 3), dtype=np.uint8)
+            for _ in range(3)]
+    batch = enc.encode_batch(rgbs)
+    singles = np.stack([enc.encode_rgb(r) for r in rgbs])
+    assert np.allclose(batch, singles, atol=1e-4)

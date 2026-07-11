@@ -63,7 +63,8 @@ def query_gravity_spy_for_gps(gps_time, detector, window=2.0):
 def main():
     logger.info("Starting Gravity Spy External Validation Cross-Check...")
     
-    tax_file = Path("data/production/aggregated/Master_Taxonomy_O4a.csv")
+    import os
+    tax_file = Path(f"data/production/aggregated/Master_Taxonomy_{os.environ.get('DANTE_RUN', 'O4a')}.csv")
     if not tax_file.exists():
         logger.error(f"Taxonomy file not found at {tax_file}. Cannot proceed.")
         return

@@ -2997,8 +2997,19 @@ def cmd_poisson_upper_limit(args: argparse.Namespace) -> None:
         run_poisson_upper_limit(
             aggregated_dir=Path(args.production_dir) / "aggregated",
             target_detector=det,
-            cl=0.90
+            cl=0.90,
+            run=getattr(args, "run", "O4a"),
         )
+
+
+def cmd_multiscale_analysis(args: argparse.Namespace) -> None:
+    """V3 multiscale characterization of V2 candidates (no discovery fusion)."""
+    from src.pipeline_v3_multiscale.multiscale_candidates import profile_candidates
+    profile_candidates(
+        run=args.run,
+        aggregated_dir=Path(args.production_dir) / "aggregated",
+        detectors=tuple(args.detectors),
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -4156,6 +4167,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="NDS2 server hostname for PEM analysis (e.g. nds.gwosc.org). If omitted, runs in public NULL-RESULT mode."
     )
     p_aggregate.set_defaults(func=cmd_aggregate_report)
+
+    # --- multiscale-analysis (V3 characterization) ---
+    p_ms = subparsers.add_parser(
+        "multiscale-analysis",
+        help="V3: re-score V2 candidates at {0.5,1,2,4}s scales (duration profiling, no OR-fusion).",
+    )
+    p_ms.add_argument("--run", type=str, default="O4a")
+    p_ms.add_argument("--production-dir", type=str, default="data/production/")
+    p_ms.add_argument("--detectors", nargs="*", default=["L1", "H1"])
+    p_ms.set_defaults(func=cmd_multiscale_analysis)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(

@@ -135,16 +135,19 @@ class PatchProducer:
                     )
                     
                     cache_dir = Path("data/raw/o4a_cache")
-                    flat_cache_dir = Path("/mnt/e/o4a") / str(session_start)
-                    flat_cache_dir.mkdir(parents=True, exist_ok=True)
-                    
-                    # If /mnt/e/o4a exists, we move it there to maintain coherence. 
-                    # Otherwise, we leave it in the default cache dir.
+                    # Move to the raw-data drive ONLY if its mount point already
+                    # exists (WSL /mnt/e). The previous unconditional mkdir
+                    # created a spurious C:\mnt\e\o4a on plain Windows.
+                    raw_mount = Path("/mnt/e/o4a")
+                    flat_cache_dir = raw_mount / str(session_start)
+                    if raw_mount.exists():
+                        flat_cache_dir.mkdir(parents=True, exist_ok=True)
+
                     expected_filename = f"{self.detector}_{session_start}_{session_end}.hdf5"
                     src_file = cache_dir / expected_filename
                     dst_file = flat_cache_dir / expected_filename
-                    
-                    if src_file.exists() and flat_cache_dir.exists():
+
+                    if src_file.exists() and raw_mount.exists() and flat_cache_dir.exists():
                         import shutil
                         shutil.move(str(src_file), str(dst_file))
                         logger.info(f"Moved downloaded block to {dst_file}")

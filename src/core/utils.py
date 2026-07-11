@@ -167,7 +167,9 @@ def get_observing_run(gps_start: int | float) -> str:
         return "O3a"
     elif 1256655618 <= gps <= 1269363618:
         return "O3b"
-    elif 1368973312 <= gps <= 1389452418:
+    elif 1368973312 <= gps <= 1390060818:
+        # end aligned with config.yaml o4a_window.gps_end (2024-01-16 16:00 UTC);
+        # the previous 1389452418 cut the last week of O4a and raised ValueError
         return "O4a"
     elif gps > 1397062818:
         return "O4b"

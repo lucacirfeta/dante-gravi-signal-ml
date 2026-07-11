@@ -186,13 +186,18 @@ class PatchEncoder:
         self.transform = build_dinov2_transform()
 
     def encode_rgb(self, rgb: np.ndarray) -> np.ndarray:
+        return self.encode_batch([rgb])[0]
+
+    def encode_batch(self, rgbs: list[np.ndarray]) -> np.ndarray:
+        """Batch encode: list of (H, W, 3) uint8 -> (B, 1369, 384) L2-normed."""
         from PIL import Image
         import torch.nn.functional as F
 
-        tensor = self.transform(Image.fromarray(rgb)).unsqueeze(0).to(self.device)
+        tensors = self.torch.stack(
+            [self.transform(Image.fromarray(r)) for r in rgbs]).to(self.device)
         with self.torch.inference_mode():
-            feats = self.model.forward_features(tensor)
-            tokens = F.normalize(feats["x_norm_patchtokens"].squeeze(0), p=2, dim=-1)
+            feats = self.model.forward_features(tensors)
+            tokens = F.normalize(feats["x_norm_patchtokens"], p=2, dim=-1)
         return tokens.cpu().numpy().astype(np.float32)
 
 

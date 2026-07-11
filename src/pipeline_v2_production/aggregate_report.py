@@ -919,6 +919,32 @@ class AggregateReporter:
         # Phase 9b: Physics Correlation Defense
         # ----------------------------------------------------------
         taxonomy_csv = self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv"
+
+        # Guarantee the taxonomy file ALWAYS exists, even with 0/1 candidates
+        # (the family-clustering branch above only runs with >1 MIL vectors and
+        # used to silently skip the CSV write, producing hollow final reports).
+        if not taxonomy_csv.exists():
+            logger.error(
+                "Master_Taxonomy was not produced by the clustering branch "
+                f"({len(candidate_metadata) if 'candidate_metadata' in locals() else 0} "
+                "candidates with valid MIL vectors) — writing degraded taxonomy "
+                "so downstream stages and the final report see an explicit, "
+                "consistent (possibly empty) candidate list."
+            )
+            _cols = ["gps_start", "detector", "session_id", "origin_table",
+                     "local_cluster_id", "global_family_id",
+                     "max_similarity_to_3a", "transitivity_status",
+                     "gravity_spy_label", "gravity_spy_confidence"]
+            _records = [{
+                "gps_start": m["gps"], "detector": m["detector"],
+                "session_id": m["session_id"], "origin_table": m["table"],
+                "local_cluster_id": m.get("local_cluster_id", "Unknown"),
+                "global_family_id": "Singleton",
+                "max_similarity_to_3a": "", "transitivity_status": "N/A",
+                "gravity_spy_label": "Not_Queried", "gravity_spy_confidence": 0.0,
+            } for m in (candidate_metadata if 'candidate_metadata' in locals() else [])]
+            pd.DataFrame(_records, columns=_cols).to_csv(taxonomy_csv, index=False)
+
         physics_stats = {}
         physics_stats_json = self.output_dir / "physics" / "physics_correlation_stats.json"
         
@@ -1508,7 +1534,7 @@ class AggregateReporter:
                     try:
                         import shutil
                         import pandas as pd
-                        tax_path = self.output_dir / "Master_Taxonomy_O4a.csv"
+                        tax_path = self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv"
                         if tax_path.exists():
                             tax_df = pd.read_csv(tax_path)
                             row = tax_df[tax_df['global_family_id'] == fam_id]
@@ -1550,8 +1576,37 @@ class AggregateReporter:
         summary = metrics.get('summary', {})
         
         # Load taxonomy to get the session breakdown and counts
-        tax_path = self.output_dir / "Master_Taxonomy_O4a.csv"
+        tax_path = self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv"
         tax_df = pd.read_csv(tax_path) if tax_path.exists() else pd.DataFrame()
+
+        # ---- Report completeness gate -------------------------------------
+        # A scientific report must declare its own gaps: every degraded input
+        # is listed HERE, at the top, instead of silently becoming "N/A" deep
+        # in some section. An empty list means the report is complete.
+        completeness_issues: list[str] = []
+        _summary_probe = metrics.get('summary', {})
+        _tot_probe = _summary_probe.get('total_candidates_after_dedup', 0)
+        if not tax_path.exists():
+            completeness_issues.append(
+                f"Master_Taxonomy_{self.observing_run}.csv MISSING — session "
+                "breakdown, per-detector counts and family tables are degraded.")
+        elif tax_df.empty and _tot_probe > 0:
+            completeness_issues.append(
+                f"INCONSISTENT: summary reports {_tot_probe} candidates but the "
+                "taxonomy is empty — do not trust per-detector counts.")
+        if not _summary_probe:
+            completeness_issues.append("aggregate summary metrics MISSING.")
+        for det in ("l1", "h1"):
+            if _summary_probe.get(det, {}).get('spearman_rho') is None:
+                completeness_issues.append(
+                    f"Spearman stability not computable for {det.upper()} "
+                    "(insufficient sessions).")
+        if not metrics.get('domain_shift_defense'):
+            completeness_issues.append("Domain Shift Defense not executed.")
+        if not metrics.get('sanity_checks'):
+            completeness_issues.append("Strain sanity checks not executed.")
+        for issue in completeness_issues:
+            logger.warning(f"[REPORT COMPLETENESS] {issue}")
         
         visual_dir = self.output_dir / "visual_checks"
         singletons_files = sorted(list(visual_dir.rglob("*Singleton*.png")))
@@ -1561,6 +1616,18 @@ class AggregateReporter:
         md_lines.append("")
         md_lines.append("> **Generated on:** " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"))
         md_lines.append("")
+        if completeness_issues:
+            md_lines.append("> [!WARNING]")
+            md_lines.append("> **REPORT INCOMPLETE — the following inputs were "
+                            "missing or degraded at generation time. Sections "
+                            "below showing N/A derive from these gaps, not from "
+                            "null scientific results:**")
+            for issue in completeness_issues:
+                md_lines.append(f"> - {issue}")
+            md_lines.append("")
+        else:
+            md_lines.append("> **Report completeness:** all pipeline inputs present.")
+            md_lines.append("")
         
         # 1. Pipeline Ingestion Summary
         md_lines.append("## 1. Pipeline Ingestion Summary")
@@ -1571,7 +1638,13 @@ class AggregateReporter:
         h1_cands = len(tax_df[tax_df['detector'] == 'H1']) if not tax_df.empty else 0
         
         md_lines.append(f"- **Valid Sessions:** {tot_sessions}")
-        md_lines.append(f"- **Unique Candidates:** {tot_cands} ({l1_cands} L1, {h1_cands} H1)")
+        if not tax_df.empty:
+            # Single source of truth: the taxonomy the reader can open.
+            md_lines.append(f"- **Unique Candidates:** {len(tax_df)} ({l1_cands} L1, {h1_cands} H1)")
+            if tot_cands != len(tax_df):
+                md_lines.append(f"  - note: summary counted {tot_cands} pre-taxonomy; delta = vetoed/degraded entries.")
+        else:
+            md_lines.append(f"- **Unique Candidates:** {tot_cands} (per-detector breakdown unavailable — taxonomy missing/empty)")
         
         if not tax_df.empty and 'partner_observing_status' in tax_df.columns:
             unobs_count = len(tax_df[tax_df['partner_observing_status'] == 'UNOBSERVABLE'])
@@ -1859,7 +1932,7 @@ class AggregateReporter:
         md_lines.append("| --- | --- | --- |")
         
         tables = [
-            ("Master_Taxonomy_O4a.csv", "1. Master Taxonomy", "Final merged list of all un-vetoed physical transient candidates across all detector sessions."),
+            (f"Master_Taxonomy_{self.observing_run}.csv", "1. Master Taxonomy", "Final merged list of all un-vetoed physical transient candidates across all detector sessions."),
             ("Table_3a_Confirmed_Local_Glitch.csv", f"{sec_num}.a Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
             ("Table_3b_Unverifiable_Unilateral_Detections.csv", f"{sec_num}.b Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
             ("Table_3c_Coincident_Astrophysical.csv", f"{sec_num}.c Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
@@ -1875,7 +1948,7 @@ class AggregateReporter:
         for table_file, section_title, description in [
             ("Table_3a_Confirmed_Local_Glitches.csv", "Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via L1/H1 coincidence resolution. These events appear in both detectors within a ±2s window."),
             ("Table_3b_Unverifiable_Unilateral_Detections.csv", "Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector (no coincident H1 counterpart). Cannot be confirmed as astrophysical without further investigation."),
-            ("Master_Taxonomy_O4a.csv", "Master Taxonomy", "Full candidate list with GPS timestamp, detector, novelty score, assigned family, Gravity Spy label, and domain shift defense result."),
+            (f"Master_Taxonomy_{self.observing_run}.csv", "Master Taxonomy", "Full candidate list with GPS timestamp, detector, novelty score, assigned family, Gravity Spy label, and domain shift defense result."),
         ]:
             table_path = self.output_dir / table_file
             if table_path.exists():
@@ -2050,14 +2123,14 @@ class AggregateReporter:
 
         md_lines.append("- **Absence of O4a Gravity Spy Catalog:** Supervised validation is limited to historical models.")
         md_lines.append("- **Architectural Shift in VQ Dictionary (K=275 vs K=281):** In the legacy O3b pipeline, the VQ dictionary size was treated as a fixed constant ($K=281$). However, the number of centroids is natively a derived parameter, optimized adaptively to bound the 95th percentile reconstruction error below 0.20. With the new anti-edge-artifact preprocessing (`whiten_context`), the cleaner latent space converges at $K=275$. We explicitly declare this an architectural evolution: $K$ is no longer a hardcoded invariant, but a dynamically derived parameter guaranteeing a uniform topological reconstruction error bound. Consequently, absolute intra-cluster coherences are not strictly cross-comparable with legacy O3b publications.")
-        md_lines.append("- **PEM Unavailable in O4a:** The Physical Environment Monitoring (PEM) auxiliary channels are systematically unavailable for the entire O4a public dataset. Consequently, instrumental artifacts cannot be definitively confirmed via environmental coupling. Any candidate routed to `UNCONFIRMED_MORPHOLOGY` lacks both independent detector coincidence and auxiliary channel verification. Human review is strictly required to categorize these events.")
+        md_lines.append(f"- **PEM Unavailable in {self.observing_run}:** The Physical Environment Monitoring (PEM) auxiliary channels are systematically unavailable for the entire {self.observing_run} public dataset. Consequently, instrumental artifacts cannot be definitively confirmed via environmental coupling. Any candidate routed to `UNCONFIRMED_MORPHOLOGY` lacks both independent detector coincidence and auxiliary channel verification. Human review is strictly required to categorize these events.")
         
         md_content = "\n".join(md_lines)
         log_path = self.output_dir / "Final_Discovery_Report.md"
         with open(log_path, "w", encoding="utf-8") as f:
-            f.write("# Final Discovery Report (O4a)\n")
+            f.write(f"# Final Discovery Report ({self.observing_run})\n")
             f.write("## Taxonomy of Comparison: Pre-fix vs Post-fix\n\n")
-            f.write("To prevent post-hoc rationalizations, the candidates from the new O4a scan must be strictly classified against the previous baseline according to the following taxonomy:\n\n")
+            f.write("To prevent post-hoc rationalizations, " + f"the candidates from the new {self.observing_run} scan must be strictly classified" + " against the previous baseline according to the following taxonomy:\n\n")
             f.write("1. **Persistente (Persistent):** The candidate retains the same GPS time and is classified as ROBUST in both the old and new runs. This validates that the candidate is independent of the legacy whitening artifact.\n")
             f.write("2. **Scomparso (Disappeared):** A candidate that was ROBUST or AMBIGUOUS in the old run, but is now SUB_THRESHOLD (or completely undetected) in the new run. These are the false positives explicitly inflated by the edge artifact.\n")
             f.write("3. **Emerso (Emerged):** A candidate that was absent (or SUB_THRESHOLD) in the old run, but is now detected and classified as ROBUST or AMBIGUOUS. This directly quantifies the recovered sensitivity due to the fix.\n")

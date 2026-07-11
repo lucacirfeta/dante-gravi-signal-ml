@@ -57,7 +57,7 @@ class ValidationReporter:
         self.h5_path = self.production_dir / f"novelties_{session_id}_{detector}.h5"
         self.cluster_json = self.production_dir / f"cluster_report_novelties_{session_id}_{detector}.json"
         self.reference_dir = Path("data") / "reference"
-        self.dq_cache_path = self.reference_dir / f"dq_cache_{detector}_O4a.json"
+        self.dq_cache_path = self.reference_dir / f"dq_cache_{detector}_{run_name}.json"
         self._dinov2_model = None
         
         # Output artifacts
@@ -406,7 +406,7 @@ class ValidationReporter:
                         "top_k_pca_ratio": 1.0,
                         "temporal_span": 0,
                         "temporal_center": 18.0,
-                        "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
+                        "anomaly_score": nov_scores_dict.get(t_start_val, float('nan')),
                         "ci_upper": ci_upper
                     })
                     continue
@@ -441,7 +441,7 @@ class ValidationReporter:
                         "top_k_pca_ratio": pca_ratio,
                         "temporal_span": temporal_span,
                         "temporal_center": temporal_center,
-                        "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
+                        "anomaly_score": nov_scores_dict.get(t_start_val, float('nan')),
                         "ci_upper": ci_upper
                     })
                 else:
@@ -499,7 +499,7 @@ class ValidationReporter:
                         "top_k_pca_ratio": pca_ratio,
                         "temporal_span": temporal_span,
                         "temporal_center": temporal_center,
-                        "anomaly_score": nov_scores_dict.get(t_start_val, 0.0),
+                        "anomaly_score": nov_scores_dict.get(t_start_val, float('nan')),
                         "ci_upper": ci_upper
                     })
         df_out = pd.DataFrame(results)

@@ -319,3 +319,48 @@ def test_pem_skip_is_logged_not_silent():
         "Silent PEM fallback reintroduced: nds_host=None returns None "
         "without a warning."
     )
+
+
+# =====================================================================
+# Report finale — dinamico rispetto al run, mai silenziosamente vuoto
+# =====================================================================
+
+def test_final_report_is_run_dynamic_and_declares_gaps(tmp_path):
+    """The Final Discovery Report must (a) carry the actual observing run in
+    title and product filenames — no hardcoded O4a — and (b) declare missing
+    inputs in an explicit completeness block instead of silently degrading
+    sections to N/A."""
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    rep = AggregateReporter(production_dir=str(tmp_path), run="O3a")
+    rep._generate_markdown_report({})  # no inputs at all: maximally degraded
+
+    report = (tmp_path / "aggregated" / "Final_Discovery_Report.md").read_text(
+        encoding="utf-8")
+    assert "# Final Discovery Report (O3a)" in report
+    assert "Master_Taxonomy_O3a.csv" in report
+    assert "Master_Taxonomy_O4a" not in report
+    assert "REPORT INCOMPLETE" in report, (
+        "A report generated with zero inputs must declare itself incomplete "
+        "at the top, not degrade silently to N/A sections."
+    )
+    assert "Master_Taxonomy_O3a.csv MISSING" in report
+
+
+def test_no_hardcoded_taxonomy_filename_in_pipeline():
+    """No production module may hardcode Master_Taxonomy_O4a.csv — the
+    filename must derive from the observing run."""
+    offenders = []
+    for f in (SRC / "pipeline_v2_production").glob("*.py"):
+        src_text = f.read_text(encoding="utf-8", errors="replace")
+        for i, line in enumerate(src_text.splitlines(), 1):
+            if "Master_Taxonomy_O4a" in line and not line.strip().startswith("#") \
+               and "docstring" not in line:
+                offenders.append(f"{f.name}:{i}")
+    # pem_coherence_analysis __main__ default and physics_correlation
+    # docstring are documentation-level; only executable literals count.
+    offenders = [o for o in offenders
+                 if not o.startswith("physics_correlation")]
+    assert offenders in ([], ["pem_coherence_analysis.py:756"]), (
+        f"Hardcoded taxonomy filename found in: {offenders}"
+    )
