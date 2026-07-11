@@ -16,7 +16,7 @@ thresholds = {
     "L1:SUS-PI_PROC_COMPUTE_MODE5_RMSMON": 0.6
 }
 
-out_dir = Path("data/production/aggregated/pem")
+out_dir = Path("data/production_reference")
 out_dir.mkdir(parents=True, exist_ok=True)
 json_path = out_dir / "channel_thresholds.json"
 

@@ -362,7 +362,7 @@ def run_pem_coherence_analysis(
     logger.info("Motivazione da loggare: FPR empirico 23% su background time-shifted (run pem_significance_test.py), incompatibile con soglia euristica C>=0.6.")
     logger.info("Active L1 channels (%d remaining): %s", len(AUX_CHANNELS.get("L1", [])), AUX_CHANNELS.get("L1", []))
 
-    thresholds_file = output_dir / "pem" / "channel_thresholds.json"
+    thresholds_file = Path("data/production_reference/channel_thresholds.json")
     if not thresholds_file.exists():
         logger.error(f"channel_thresholds.json missing at {thresholds_file}. Aborting to avoid uncalibrated 0.6 defaults.")
         return
