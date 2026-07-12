@@ -35,14 +35,18 @@ python main.py fetch-raw --detector L1 --hours 72
 # (e.g. using wget or manually downloading it)
 mkdir -p data/reference/
 
-# 4. Run production inference (MIL Top-68 scoring)
-python main.py patch-production --detector L1 --k 68 --batch-size 32
+# 4. Full per-session pipeline (production -> clustering -> report -> validation)
+python main.py patch-analysis --detector L1 --data-dir data/raw/o4a --resume
 
-# 5. Cluster the discovered anomalies (DPMM)
-python main.py production-cluster --detector L1
+# 5. (modular alternative) inference and clustering as separate steps
+#    python main.py patch-production --detector L1 --k 68 --batch-size 32
+#    python main.py production-cluster --detector L1
 
-# 6. Aggregate cross-session reports and run stability analysis
-python main.py aggregate-report
+# 6. Aggregate cross-session reports, stability analysis, final report
+python main.py aggregate-report --run O4a
+
+# 6b. V3 multiscale characterization of the aggregated candidates
+python main.py multiscale-analysis --run O4a
 
 # 7. Perform PEM coherence analysis on the candidates
 # (Ensure data/production_reference/channel_thresholds.json is present)
@@ -59,10 +63,11 @@ For deep physical and mathematical derivations, refer to the [arXiv preprint (26
 ## 🏗️ Architecture
 - **Preprocessing:** 32-second whitened strain segments → Q-transform ($Q \in [4, 64]$) → $256 \times 256$ `cividis` spectrograms.
 - **Feature Extraction:** Frozen DINOv2 ViT-S/14 yields 1369 overlapping patch embeddings ($384$D) per segment.
-- **Background Dictionary:** VQ-clustered operational memory index ($K=1,216$ centroids) built from 150,000 null segments.
+- **Background Dictionary:** VQ-clustered operational memory index — **$K=275$ centroids** (`patch_compressed_index_o3b.npz`, MD5-pinned in `PatchScorer`). $K$ is a derived parameter (95th-percentile reconstruction-error bound), not a hardcoded constant.
 - **Anomaly Scoring:** Multiple Instance Learning (MIL) Top-$k$ pooling computes the mean $L_2$ distance of the $k=68$ most anomalous patches.
 - **State Tracker:** Dirichlet Process Gaussian Mixture Model (DPMM) absorbs macroscopic state shifts dynamically.
-- **Veto:** Cross-interferometer (H1/L1) cosine similarity matching across Top-$k$ patches suppresses localized artifacts.
+- **Veto:** Cross-interferometer (H1/L1) cosine similarity matching across Top-$k$ patches suppresses localized artifacts. State machine: `ACTIVE_UNVERIFIED` (partner recording, search pending) is never conflated with `ACTIVE_NO_ANOMALY` (search ran, no match) or `UNOBSERVABLE` (no partner data); I/O failures route to *unverifiable*, never to *confirmed local*.
+- **V3 Multiscale Characterization:** V2 candidates are re-scored at {0.5, 1, 2, 4} s scales against per-scale background dictionaries (`multiscale-analysis`), yielding a score-vs-scale duration profile per candidate. By design V3 is a characterization layer, **not** a second discovery trigger (no OR-fusion of per-scale flags → no multiple-testing inflation on discovery claims).
 
 ## ⚙️ Reproducibility
 
@@ -102,6 +107,16 @@ For immediate verification without re-running the feature extraction, the labele
 
 - **Methodological Upper Limit:** $R_{90} < 3.70 \text{ yr}^{-1}$ for H1 ($N=0$) and $R_{90} < 6.52 \text{ yr}^{-1}$ for L1 ($N=1$) on morphologically novel transients.
   *(Conditions: Evaluated over bounding spans of ~227 days and ~218 days respectively during O4a. Limits are structurally driven by the limited observation window rather than pipeline sensitivity).*
+
+## 🧪 Scientific Integrity Guarantees
+Every experimentally-validated invariant of the pipeline is protected by a regression test (`tests/test_regression_hard_constraints.py` + `tests/test_norm_leakage_units.py`, 36 tests). Highlights:
+
+- **Whitening:** `whiten()` on exactly-cropped segments is *forbidden at runtime* (raises); only `whiten_context()` (pad = 4 s, crop after) is legal. Bandpass is applied exactly once, inside `whiten_context` — a static test scans the whole codebase for double-bandpass reintroduction.
+- **Statistics:** empirical p99 thresholds with **moving-block bootstrap** (b = n^{1/3}, B = 1000, seed = 42); GEV/block-maxima fitting is explicitly rejected. No `random.sample()` on time-ordered score series (file-level shuffle + contiguous slice only).
+- **Per-run calibration:** threshold files carry a `calibration_run` tag; applying thresholds across observing runs raises (`assert_threshold_run`), except in explicitly-declared cross-run measurement scripts. The 2026-07 leakage investigation (pre-registered, falsified the per-image-normalization hypothesis, and re-measured cross-run FPR at 0.7–2.9 % vs the 8–9 % artifact of the pre-audit code) is archived under `results/norm_leakage/`.
+- **Reports:** the Final Discovery Report is run-parametric (`Master_Taxonomy_<run>.csv`, no hardcoded epochs) and self-declaring: any missing/degraded input is listed in a completeness block at the top — a hollow report cannot masquerade as a null result.
+- **Multi-run support:** new observing runs (O5, …) are added by declaring GPS bounds in `config.yaml → run_config`; `get_observing_run()` resolves config-first. No code changes required.
+- **Unsafe PEM channels:** `PEM-EX_VMON` / `PEM-EY_MAINSMON` (23 % empirical FPR on time-shifted background) are excluded from production `AUX_CHANNELS` and guarded by test; PEM skips are always logged, never silent.
 
 ## 🛑 Limitations
 1. **Computational Bottleneck:** The $Q$-transform and DINOv2 patch extraction are computationally intensive. DANTE operates strictly offline/high-latency and is **not** capable of real-time, low-latency multi-messenger alerting.

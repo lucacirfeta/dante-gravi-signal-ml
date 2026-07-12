@@ -194,3 +194,33 @@ def test_encode_batch_matches_single(monkeypatch):
     batch = enc.encode_batch(rgbs)
     singles = np.stack([enc.encode_rgb(r) for r in rgbs])
     assert np.allclose(batch, singles, atol=1e-4)
+
+
+# ---------------------------------------------------------------------------
+# data_loader — indice locale dei blocchi (ottimizzazione, coerenza cache)
+# ---------------------------------------------------------------------------
+
+def test_local_block_index_finds_and_registers(tmp_path):
+    """The per-process block index must (a) find pre-existing blocks without
+    re-scanning per call and (b) see blocks saved AFTER the first scan via
+    _register_local_block — otherwise cache_raw writes become invisible for
+    the rest of the process."""
+    from src.core import data_loader as dl
+
+    d = tmp_path / "raw"
+    d.mkdir()
+    (d / "L1_100_200.hdf5").touch()
+    dl._LOCAL_BLOCK_INDEX.clear()
+
+    idx = dl._local_block_index(d, "L1")
+    assert [(s, e) for s, e, _ in idx] == [(100.0, 200.0)]
+
+    newf = d / "L1_300_400.hdf5"
+    newf.touch()
+    # not visible without registration (index is cached)...
+    assert len(dl._local_block_index(d, "L1")) == 1
+    # ...but registration keeps it coherent
+    dl._register_local_block(newf, "L1")
+    assert [(s, e) for s, e, _ in dl._local_block_index(d, "L1")] == [
+        (100.0, 200.0), (300.0, 400.0)]
+    dl._LOCAL_BLOCK_INDEX.clear()

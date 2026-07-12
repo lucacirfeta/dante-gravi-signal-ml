@@ -191,3 +191,21 @@
 | D-FUTURE-04 | Supporto completo V1 (Virgo) in timeslide + full_analysis | Disponibilità dati O4b | [TODO] |
 | D-FUTURE-05 | Embedding da blocchi intermedi DINOv2 (explainability) | Nessuno | [TODO] |
 | D-FUTURE-06 | Fissare random_state in DPMM/UMAP | Nessuno | ✅ DONE — risolto come ARCH-03 |
+
+
+### D-XX — Audit 2026-07: invarianti hard protette da test (aggiunto 2026-07-12)
+- **Bandpass singolo:** applicato UNA sola volta dentro `whiten_context()`; il doppio bandpass nei percorsi V3/veto/batch era un bug (B-1), rimosso ovunque e vietato da scan statico in `tests/test_regression_hard_constraints.py`.
+- **K=275:** dimensione del dizionario di produzione verificata empiricamente (shape + MD5 pinnato in `PatchScorer`). Il K=281 in V3 era residuo mai andato in produzione; K=1216 è il native O4a index del DSD (artefatto distinto).
+- **Semantica coincidenza:** `ACTIVE_UNVERIFIED` (osservabilità) ≠ `ACTIVE_NO_ANOMALY` (ricerca eseguita, nessun match — scrivibile SOLO da `cross_detector_veto`); `COINCIDENT_TRANSIENT` prodotto dal veto (prima irraggiungibile); errori I/O → tabella 3b, mai 3a.
+- **Bootstrap:** moving-block (b=n^(1/3), B=1000, seed=42) anche in V3; GEV rifiutata ovunque.
+- **Fonte:** audit report in conversazione agente 2026-07-09/12; test suite (36 test).
+
+### D-XY — Leakage cross-run: ipotesi normalizzazione FALSIFICATA (aggiunto 2026-07-12)
+- Esperimento pre-registrato (`results/norm_leakage/`): KS sui massimi pre-normalizzazione O3a/O4a p=0.47–0.79; probe run-classification AUC≈0.5 sotto entrambe le normalizzazioni.
+- FPR cross-run rimisurato con codice corretto: 0.71/1.66/1.90/2.85 % (0.5/1/2/4 s), N=421; union compatibile con test multipli (p=0.40); residuo 4s guidato da 3 blocchi non stazionari (CI cluster [0.99, 4.79]%).
+- **Decisione:** rimedio = soglie taggate `calibration_run` + guardia `assert_threshold_run()` (rifiuto del cross-run silenzioso). NON servono dizionari per-run né cambio di normalizzazione.
+
+### D-XZ — V3 = layer di caratterizzazione, non secondo trigger (aggiunto 2026-07-12)
+- `main.py multiscale-analysis`: ri-scoring dei soli candidati V2 alle scale {0.5,1,2,4} s → `Multiscale_Profile_<run>.csv` con scala dominante (stima durata). Niente OR-fusion dei flag per scala (evita inflazione da test multipli sui claim di discovery).
+- Poisson UL: livetime intersecato con `{DET}_CBC_CAT1`; abort esplicito se i flag DQ non sono ottenibili (mai fallback allo span non gated).
+- Run future (O5): bounds GPS in `config.yaml run_config`, risoluzione config-first in `get_observing_run()`.

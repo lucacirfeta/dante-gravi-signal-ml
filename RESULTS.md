@@ -6,6 +6,17 @@ This document tracks the results of the DANTE (Domain-Adaptive Network for Trans
 
 ---
 
+## ⚠️ ADDENDUM POST-AUDIT (2026-07-12) — leggere prima dei risultati storici
+
+I risultati sotto (run del 2026-06-27, 82 sessioni, 434 candidati) sono uno **snapshot pre-audit**: restano validi come registro storico, ma vanno letti alla luce dell'audit completo di luglio 2026:
+
+1. **Bug corretti nella pipeline di misura** (tutti coperti da test di regressione, suite a 36):
+   B-1 doppio bandpass nei percorsi secondari/V3; B-2 bootstrap V3 i.i.d. mascherato da block-bootstrap; B-3 `ACTIVE_NO_ANOMALY` assegnato senza ricerca morfologica (+ ramo `COINCIDENT_TRANSIENT` irraggiungibile); B-6 crash del builder O3a; B-4 guard-time assente nei test FPR; M-4 finestra DQ O3a troncata; M-5 taper asimmetrico.
+2. **Indagine leakage cross-run (pre-registrata, `results/norm_leakage/`)**: l'ipotesi che la normalizzazione min-max per-immagine trasporti la firma del run è stata **falsificata** (KS sui massimi p=0.47–0.79; probe di run-classification AUC≈0.5). L'FPR cross-run 8–9% era in larga parte artefatto dei bug: **rimisurato con codice corretto = 0.71% (0.5s), 1.66% (1s), 1.90% (2s), 2.85% (4s)** su N=421 segmenti O3a indipendenti (guard-time 96 s, full-run window). Il residuo a 4s non è uno shift uniforme: CI95 cluster-bootstrap per blocco [0.99%, 4.79%], guidato da 3 blocchi non stazionari di fine O3a. L'union 4.28% è compatibile con l'atteso da test multipli (3.94%, p=0.40).
+3. **K del dizionario di produzione**: il valore reale, verificato e MD5-pinnato, è **K=275** (`patch_compressed_index_o3b.npz`). Il K=1216 citato sotto si riferisce al *native O4a index* del Domain Shift Defense (artefatto distinto, su Zenodo).
+4. **Upper limit in ricomputazione**: gli R₉₀ storici usavano come denominatore lo span delle sessioni; il livetime è ora intersecato con `{DET}_CBC_CAT1` (denominatore più piccolo → limiti meno ottimistici). I numeri aggiornati arriveranno con la produzione corrente.
+5. **Produzione 2026-07 in corso**: 42 sessioni × H1+L1 con pipeline post-audit (semantica coincidenza corretta, report run-dinamico con gate di completezza, soglie taggate per run) + caratterizzazione multiscala V3 dei candidati (`Multiscale_Profile_O4a.csv`). Questa sezione sarà aggiornata a run conclusa.
+
 ## 📦 Downloaded Data Intervals (HDF5 Cache)
 
 | Run | Session ID | GPS Start | GPS End | Duration (Hours) | Status |

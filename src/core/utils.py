@@ -159,6 +159,20 @@ def get_observing_run(gps_start: int | float) -> str:
         ValueError: If the GPS time falls outside known run epochs.
     """
     gps = float(gps_start)
+
+    # Config-first: any run declared in config.yaml run_config with explicit
+    # gps_start/gps_end bounds wins over the builtin table. This is how FUTURE
+    # runs (O5, ...) are supported without code changes — without an entry,
+    # post-O4a GPS times would silently inherit the open-ended "O4b" label.
+    try:
+        run_cfg = load_config().get("run_config", {})
+        for run_name, entry in run_cfg.items():
+            if isinstance(entry, dict) and "gps_start" in entry and "gps_end" in entry:
+                if float(entry["gps_start"]) <= gps <= float(entry["gps_end"]):
+                    return run_name
+    except Exception:
+        pass  # config unavailable: builtin table below still applies
+
     if 1126051217 <= gps <= 1137254417:
         return "O1"
     elif 1164556817 <= gps <= 1187733618:

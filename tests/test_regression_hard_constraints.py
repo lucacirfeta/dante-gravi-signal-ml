@@ -364,3 +364,46 @@ def test_no_hardcoded_taxonomy_filename_in_pipeline():
     assert offenders in ([], ["pem_coherence_analysis.py:756"]), (
         f"Hardcoded taxonomy filename found in: {offenders}"
     )
+
+
+# =====================================================================
+# Livetime del Poisson UL — solo tempo science-mode nel denominatore
+# =====================================================================
+
+def test_interval_intersection_is_correct():
+    from src.pipeline_v2_production.poisson_upper_limit import intersect_intervals
+
+    a = [(0, 100), (200, 300)]
+    b = [(50, 250), (280, 400)]
+    assert intersect_intervals(a, b) == [(50, 100), (200, 250), (280, 300)]
+    assert intersect_intervals(a, []) == []
+    assert intersect_intervals([(0, 10)], [(10, 20)]) == []  # touching, no overlap
+
+
+def test_poisson_livetime_is_cat1_gated():
+    """The UL denominator must be the intersection with {DET}_CBC_CAT1 —
+    the raw session span inflates livetime and biases the limit optimistic.
+    A GWOSC failure must abort, never fall back to the ungated span."""
+    text = _read("src/pipeline_v2_production/poisson_upper_limit.py")
+    assert "_CBC_CAT1" in text and "intersect_intervals(merged_intervals" in text
+    assert "Refusing to compute an upper limit on the ungated span" in text
+
+
+# =====================================================================
+# Run-agnosticità — le run future (O5) si aggiungono via config, non codice
+# =====================================================================
+
+def test_observing_run_is_config_extensible(monkeypatch):
+    """A run declared in config.yaml run_config with explicit GPS bounds must
+    be resolved by get_observing_run without code changes — this is the O5
+    readiness contract. Config must WIN over the open-ended builtin O4b."""
+    from src.core import utils
+
+    fake_cfg = {"run_config": {"O5": {"start_date": "2027-01-01 00:00:00",
+                                      "gps_start": 1450000000,
+                                      "gps_end": 1500000000}}}
+    monkeypatch.setattr(utils, "load_config", lambda *a, **k: fake_cfg)
+    assert utils.get_observing_run(1460000000) == "O5"
+    # builtin table still intact for known epochs
+    assert utils.get_observing_run(1370000000) == "O4a"
+    assert utils.get_observing_run(1240000000) == "O3a"

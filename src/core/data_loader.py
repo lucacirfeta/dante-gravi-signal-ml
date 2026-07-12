@@ -54,6 +54,45 @@ _DATA_DIRECTORIES: list[Path] = [Path(d) for d in _DATA_DIRECTORIES_CFG]
 # ---------------------------------------------------------------------------
 
 
+# Per-process index of local raw blocks: {(dir, detector): [(start, end, Path)]}.
+# The raw archives (E:/o4a) are immutable during a run, and the previous
+# rglob-per-call scanned ~3600 files on EVERY fetch inside production loops.
+# New cache_raw saves are registered via _register_local_block().
+_LOCAL_BLOCK_INDEX: dict = {}
+
+
+def _local_block_index(dir_path: Path, detector: str) -> list:
+    key = (str(dir_path), detector)
+    if key not in _LOCAL_BLOCK_INDEX:
+        entries = []
+        for file in dir_path.rglob(f"{detector}_*.hdf5"):
+            parts = file.stem.split("_")
+            if len(parts) >= 3:
+                try:
+                    entries.append((float(parts[1]), float(parts[2]), file))
+                except ValueError:
+                    continue
+        entries.sort()
+        _LOCAL_BLOCK_INDEX[key] = entries
+        logger.debug("Indexed %d local %s blocks in %s", len(entries), detector, dir_path)
+    return _LOCAL_BLOCK_INDEX[key]
+
+
+def _register_local_block(file: Path, detector: str) -> None:
+    """Keep the in-process index coherent when cache_raw writes a new block."""
+    parts = file.stem.split("_")
+    if len(parts) < 3:
+        return
+    try:
+        entry = (float(parts[1]), float(parts[2]), file)
+    except ValueError:
+        return
+    for (dir_str, det), entries in _LOCAL_BLOCK_INDEX.items():
+        if det == detector and str(file).startswith(dir_str):
+            entries.append(entry)
+            entries.sort()
+
+
 def fetch_strain_data(
         detector: DetectorID,
         gps_start: int,
@@ -99,34 +138,25 @@ def fetch_strain_data(
 
     # 1. Tenta il caricamento da un blocco locale più grande (es. O4a 4096s) sui drive prioritari
     directories = _DATA_DIRECTORIES
-    
+
     for dir_path in directories:
         if not dir_path.exists():
             continue
-            
-        # Per data/raw evitiamo rglob pesante se non necessario, 
-        # ma per E:/o4a lo usiamo per trovare i blocchi di 4096s
+
         try:
-            for file in dir_path.rglob(f"{detector}_*.hdf5"):
-                parts = file.stem.split("_")
-                if len(parts) >= 3:
+            for f_start, f_end, file in _local_block_index(dir_path, detector):
+                if f_start <= gps_start + edge_tolerance and f_end >= gps_end - edge_tolerance:
                     try:
-                        f_start = float(parts[1])
-                        f_end = float(parts[2])
-                        if f_start <= gps_start + edge_tolerance and f_end >= gps_end - edge_tolerance:
-                            try:
-                                ts = TimeSeries.read(file)
-                                crop_start = max(f_start, gps_start)
-                                crop_end = min(f_end, gps_end)
-                                ts_cropped = ts.crop(crop_start, crop_end)
-                                if ts_cropped.sample_rate.value != sample_rate:
-                                    ts_cropped = ts_cropped.resample(sample_rate)
-                                logger.info("Local block hit for %s covering [%d, %d] in %s", file.name, gps_start, gps_end, dir_path)
-                                return ts_cropped
-                            except Exception as exc:
-                                logger.warning("Failed to read/crop local block %s: %s", file.name, exc)
-                    except ValueError:
-                        continue
+                        ts = TimeSeries.read(file)
+                        crop_start = max(f_start, gps_start)
+                        crop_end = min(f_end, gps_end)
+                        ts_cropped = ts.crop(crop_start, crop_end)
+                        if ts_cropped.sample_rate.value != sample_rate:
+                            ts_cropped = ts_cropped.resample(sample_rate)
+                        logger.info("Local block hit for %s covering [%d, %d] in %s", file.name, gps_start, gps_end, dir_path)
+                        return ts_cropped
+                    except Exception as exc:
+                        logger.warning("Failed to read/crop local block %s: %s", file.name, exc)
         except Exception as exc:
             logger.warning(f"Error while searching in {dir_path}: {exc}")
 
@@ -218,6 +248,7 @@ def fetch_strain_data(
             cache_dir.mkdir(parents=True, exist_ok=True)
             cache_write_path = cache_dir / cache_file_name
             ts.write(cache_write_path, format='hdf5')
+            _register_local_block(cache_write_path, detector)
             logger.info("Saved raw data to cache: %s", cache_write_path.name)
         except Exception as exc:
             logger.warning("Failed to save raw data to cache %s: %s", cache_file_name, exc)

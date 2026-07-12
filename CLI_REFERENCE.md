@@ -25,6 +25,9 @@ Inside the session folder:
 By using the `--session-id` flag, the CLI will automatically infer read/write paths without having to specify them manually.
 
 ### Multi-Run Support
+
+> **Future runs (O5, …):** declare the run in `config.yaml → run_config` with explicit `gps_start`/`gps_end` bounds. `get_observing_run()` resolves config-first (config wins over the builtin epoch table), and every run-parametric artifact (`Master_Taxonomy_<run>.csv`, Final Discovery Report, `dq_cache_<det>_<run>.json`, per-run threshold gating) follows automatically — no code changes. The pipeline fails loudly listing what is missing (reference index, calibrated thresholds, `tau_coh`) instead of producing silently-wrong numbers.
+
 The pipeline supports the analysis of different LIGO/Virgo observational runs. Currently supported and selectable runs via the `--run` flag are:
 - **O2** (Start: 2016-11-30)
 - **O3a** (Start: 2019-04-01)
@@ -46,6 +49,7 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
    - **Primary Commands (Orchestrators)**
      - [`patch-analysis`](#5-patch-analysis) — Automated continuous workflow (Single Session)
      - [`aggregate-report`](#5b-aggregate-report) — Global analysis & Final Report (Multi-Session)
+     - [`multiscale-analysis`](#5b2-multiscale-analysis) — V3 duration profiling of aggregated candidates
    - **Secondary Commands (Modular / Debug)**
      - [`patch-production`](#5c-patch-production) — Core MIL Extraction & Scoring
      - [`production-cluster`](#5d-production-cluster) — 384D DPMM Clustering
@@ -200,11 +204,23 @@ Cross-session reducer. Must be run **after** the full `patch-analysis` scan is c
      - **Table 3b** (Unverifiable Unilateral Detections: partner inactive)
   6. **Domain Shift Defense:** Re-scores surviving anomalies against the extended O4a background (`patch_compressed_index_o4a_ex.npz`) to ensure transients are morphologically true anomalies and not artifacts of inter-run physical detector changes.
   7. Computes **Spearman rank correlation** ($\rho$) between `n_samples_true` and bootstrap ARI **independently per detector** (never mixing H1/L1). Excludes sessions with `n < 100` and requires `≥ 5` eligible sessions.
-  8. Writes `aggregate_summary.json`, `master_candidates.csv`, `Table_3a_*.csv`, `Table_3b_*.csv`, and `stability_synthesis.log` to `data/production/aggregated/`.
+  8. Writes `aggregate_summary.json`, `master_candidates.csv`, `Master_Taxonomy_<run>.csv` (always written, even with 0/1 candidates), `Table_3a_*.csv`, `Table_3b_*.csv`, and `stability_synthesis.log` to `data/production/aggregated/`.
+  9. The `Final_Discovery_Report.md` is **run-parametric** (title, taxonomy filename, prose) and opens with a **completeness block**: any missing/degraded input (taxonomy absent, Spearman not computable, domain-shift skipped, …) is declared at the top instead of silently degrading sections to N/A.
+  10. Automatically spawns the offline validation subprocesses: `poisson-upper-limit` (livetime **gated on `{DET}_CBC_CAT1`** science segments; aborts rather than computing on the ungated span) and `pem-coherence-analysis` (unsafe channels `PEM-EX_VMON`/`PEM-EY_MAINSMON` excluded; skips are logged, never silent). Their failure is logged and does not abort aggregation.
 
 - `--production-dir`: Root production directory. *Default: `data/production/`*.
 - `--run`: Observing run context for EVT thresholds (e.g. O4a, O4b). *Default: `O4a`*.
 - `--nds-host`: NDS2 server hostname for PEM analysis (e.g. `nds.gwosc.org`). If omitted, runs in public NULL-RESULT mode.
+
+### 5b2. `multiscale-analysis` (V3 Characterization)
+Re-scores the aggregated V2 candidates at sub-scales **{0.5, 1, 2, 4} s** against per-scale VQ background dictionaries, producing a score-vs-scale profile and a **dominant scale** (characteristic duration estimate) per candidate. By design this is a *characterization* layer, **not** a second discovery trigger: per-scale exceedances are reported but never OR-fused into detections (no multiple-testing inflation on discovery claims).
+
+* **Prerequisites:** `Master_Taxonomy_<run>.csv` (from `aggregate-report`), per-scale dictionaries `results/micro_mdc/multiscale/<DET>_patch_dict_<scale>s.npz` and thresholds `<DET>_thresholds.json`. Thresholds are **run-gated**: applying thresholds calibrated on a different observing run raises (`assert_threshold_run`).
+* **Output:** `data/production/aggregated/Multiscale_Profile_<run>.csv` — one row per (candidate × scale) with score, p99 threshold, margin, plus `dominant_scale_s` per candidate. Candidates with unavailable strain are profiled `STRAIN_UNAVAILABLE`, never dropped silently.
+
+- `--run`: Observing run of the candidates (selects taxonomy and required threshold calibration). *Default: `O4a`*.
+- `--production-dir`: Root production directory. *Default: `data/production/`*.
+- `--detectors`: Detectors to characterize. *Default: `L1 H1`*.
 
 ### 🧱 SECONDARY COMMANDS (Modular / Debug)
 These commands are invoked automatically in sequence by the Primary Commands. Use them individually only for debugging or step-by-step execution.

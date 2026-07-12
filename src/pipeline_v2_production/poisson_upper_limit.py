@@ -37,6 +37,23 @@ def merge_intervals(intervals):
             
     return merged
 
+def intersect_intervals(a: list, b: list) -> list:
+    """Intersection of two lists of disjoint sorted (start, end) intervals."""
+    out = []
+    i = j = 0
+    a = sorted(a); b = sorted(b)
+    while i < len(a) and j < len(b):
+        lo = max(a[i][0], b[j][0])
+        hi = min(a[i][1], b[j][1])
+        if lo < hi:
+            out.append((lo, hi))
+        if a[i][1] < b[j][1]:
+            i += 1
+        else:
+            j += 1
+    return out
+
+
 def calculate_livetime(aggregated_dir: Path, detector: str = "H1") -> float:
     """
     Calculate the exact livetime in days by reading all valid cluster reports
@@ -74,16 +91,49 @@ def calculate_livetime(aggregated_dir: Path, detector: str = "H1") -> float:
         return 0.0, 0, 0.0  # must match the 3-tuple contract of the happy path
         
     merged_intervals = merge_intervals(intervals)
-    total_seconds = sum(end - start for start, end in merged_intervals)
+    raw_seconds = sum(end - start for start, end in merged_intervals)
+
+    # -----------------------------------------------------------------
+    # Science-mode gating of the denominator.
+    # The Poisson rate denominator must count ONLY time in which the
+    # pipeline could actually have detected a candidate under the same DQ
+    # gate applied to candidates ({DET}_CBC_CAT1). Using the full session
+    # span inflates the livetime and makes the upper limit optimistic.
+    # A GWOSC failure ABORTS: silently falling back to the raw span would
+    # reintroduce the bias we are removing.
+    # -----------------------------------------------------------------
+    from gwosc.timeline import get_segments
+    from tenacity import retry, wait_exponential, stop_after_attempt
+
+    @retry(wait=wait_exponential(multiplier=1, min=2, max=30),
+           stop=stop_after_attempt(5))
+    def _segs(flag, s, e):
+        return get_segments(flag, int(s), int(e))
+
+    span_lo = merged_intervals[0][0]
+    span_hi = merged_intervals[-1][1]
+    try:
+        cat1_segs = _segs(f"{detector}_CBC_CAT1", span_lo, span_hi)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Cannot fetch {detector}_CBC_CAT1 segments for livetime gating: "
+            f"{exc}. Refusing to compute an upper limit on the ungated span."
+        ) from exc
+
+    science_intervals = intersect_intervals(merged_intervals, list(cat1_segs))
+    total_seconds = sum(end - start for start, end in science_intervals)
     total_days = total_seconds / 86400.0
-    
+
     n_sessions = len(intervals)
-    bounding_span_seconds = merged_intervals[-1][1] - merged_intervals[0][0] if merged_intervals else 0
+    bounding_span_seconds = span_hi - span_lo if merged_intervals else 0
     bounding_span_days = bounding_span_seconds / 86400.0
-    
+
     logger.info(f"Found {n_sessions} reports. Merged into {len(merged_intervals)} disjoint segments.")
-    logger.info(f"Exact {detector} Livetime: {total_seconds:,.1f} seconds ({total_days:,.3f} days). Bounding span: {bounding_span_days:,.1f} days.")
-    
+    logger.info(f"Raw session-span livetime: {raw_seconds:,.1f} s ({raw_seconds/86400.0:,.3f} d).")
+    logger.info(f"Science-mode ({detector}_CBC_CAT1) livetime: {total_seconds:,.1f} s "
+                f"({total_days:,.3f} d) — {100.0*total_seconds/raw_seconds if raw_seconds else 0:.1f}% of raw. "
+                f"Bounding span: {bounding_span_days:,.1f} d.")
+
     return total_days, n_sessions, bounding_span_days
 
 def run_poisson_upper_limit(aggregated_dir: Path, target_detector: str = "H1", cl: float = 0.90, run: str = "O4a"):

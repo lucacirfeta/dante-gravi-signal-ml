@@ -1,5 +1,5 @@
 # Architecture State — Stato Corrente dell'Architettura
-<!-- Last updated: 2026-06-11T21:30 | Source: README.md, config.yaml, src/ listing, CLI_REFERENCE.md -->
+<!-- Last updated: 2026-07-12 | Source: README.md, config.yaml, src/ listing, CLI_REFERENCE.md, audit 2026-07 -->
 <!-- Regola: aggiornare solo con informazioni verificabili dalla repository. Non inventare dati. -->
 
 ---
@@ -129,3 +129,29 @@ data/production/
 | BUG-06 | `full_analysis.py` | Default reference path hardcoded | ⬜ Aperto |
 | BUG-07 | Vari | Messaggi log/commenti in italiano | ⬜ Aperto |
 | BUG-08 | DPMM/UMAP | `random_state` non fissato | ✅ Risolto |
+
+
+---
+
+## Aggiornamento 2026-07-12 — post-audit e integrazione V3
+
+### Correzioni all'inventario sopra
+- In `src/pipeline_v2_production/` NON esistono `patch_production.py`/`patch_analysis.py`/`live_umap.py` come moduli: patch production e orchestrazione vivono in `main.py` (cmd_*) con `src/core/patch_producer.py` e `patch_scorer.py`; la dashboard è `live_monitor.py` a root. Moduli reali del package: `production_writer.py`, `production_cluster.py`, `production_report.py`, `aggregate_report.py`, `cross_detector_veto.py`, `pem_coherence_analysis.py`, `pem_significance_test.py`, `physics_correlation.py`, `poisson_upper_limit.py`, `dsd_injection_test.py`, `saliency_map.py`, `query_gravity_spy.py`.
+
+### Nuovi componenti (2026-07)
+| File | Ruolo |
+|------|-------|
+| `src/pipeline_v3_multiscale/sampling.py` | Guard-time (96 s) + `assert_threshold_run` (gating soglie per run) |
+| `src/pipeline_v3_multiscale/multiscale_candidates.py` | Caratterizzazione multiscala dei candidati V2 (`multiscale-analysis`) |
+| `src/pipeline_v3_multiscale/norm_leakage/` | Esperimento pre-registrato leakage (pretest KS, probe, builder fattoriale, analisi) + `PatchEncoder` batch in-memory |
+| `src/pipeline_v3_multiscale/norm_leakage/prefetch_cache.py` | Warmer parallelo (4 thread) della cache strain |
+| `tests/test_regression_hard_constraints.py` | 21 test sugli invarianti hard |
+| `tests/test_norm_leakage_units.py` | 15 test su V3/normalizzazione/guard-time |
+
+### Proprietà architetturali garantite da test
+- `whiten()` diretto vietato a runtime; bandpass solo dentro `whiten_context` (scan statico).
+- Report finale run-parametrico con gate di completezza (un report degradato si auto-dichiara).
+- Soglie V3 taggate per run; applicazione cross-run rifiutata.
+- `get_observing_run` config-first → supporto O5 senza modifiche di codice.
+- Livetime Poisson gated su CBC_CAT1 con abort esplicito.
+- Indice per-processo dei blocchi locali in `data_loader` (niente rglob per chiamata).
