@@ -155,6 +155,10 @@ def _find_json(session_dir: Path, gps: str, det: str) -> Optional[Path]:
 # 3. COINCIDENCE STATUS RESOLVER
 # ===================================================================
 
+_COINC_CACHE_PATH = Path("data/production/aggregated/coincidence_status_cache.json")
+_COINC_CACHE: dict | None = None
+
+
 def _resolve_coincidence_status(
     gps_start: float, detector: str
 ) -> str:
@@ -162,7 +166,22 @@ def _resolve_coincidence_status(
     Determine cross-detector coincidence status for a single candidate.
     Queries GWOSC for {other_det}_DATA at the candidate time.
     Falls back to NOT_CHECKED on errors.
+
+    Results are cached on disk: GWOSC historical segments are immutable, and
+    without the cache every aggregate re-run repays ~1 query/candidate
+    (hours at 10k candidates). NOT_CHECKED (transient failure) is never cached.
     """
+    global _COINC_CACHE
+    if _COINC_CACHE is None:
+        try:
+            _COINC_CACHE = json.loads(_COINC_CACHE_PATH.read_text()) \
+                if _COINC_CACHE_PATH.exists() else {}
+        except Exception:
+            _COINC_CACHE = {}
+    key = f"{int(gps_start)}_{detector}"
+    if key in _COINC_CACHE:
+        return _COINC_CACHE[key]
+
     other_det = "L1" if detector == "H1" else "H1"
     try:
         from gwosc.timeline import get_segments
@@ -173,11 +192,20 @@ def _resolve_coincidence_status(
             # performed here. Only cross_detector_veto may upgrade this to
             # ACTIVE_NO_ANOMALY / ACTIVE_ANOMALY_DETECTED after the actual
             # morphological cross-match.
-            return "ACTIVE_UNVERIFIED"
+            status = "ACTIVE_UNVERIFIED"
         else:
-            return "UNOBSERVABLE"
+            status = "UNOBSERVABLE"
     except Exception:
-        return "NOT_CHECKED"
+        return "NOT_CHECKED"  # transient: never cached
+
+    _COINC_CACHE[key] = status
+    try:
+        _COINC_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        if len(_COINC_CACHE) % 200 == 0 or len(_COINC_CACHE) < 10:
+            _COINC_CACHE_PATH.write_text(json.dumps(_COINC_CACHE))
+    except Exception:
+        pass
+    return status
 
 
 # ===================================================================
@@ -1125,12 +1153,14 @@ class AggregateReporter:
                     ts_w, pad_info = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
                     ts_clean = extract_clean_subwindow(ts_w, seg_start, seg_end)
                     q_gram = generate_qtransform(ts_clean, output_size=(256, 256))
-                    q_gram_uint8 = (q_gram * 255).astype(np.uint8)
-                    if q_gram_uint8.ndim == 2:
-                        q_gram_rgb = np.stack([q_gram_uint8]*3, axis=-1)
-                    else:
-                        q_gram_rgb = q_gram_uint8
-                    
+                    # cividis like the production path — the background must
+                    # live in the SAME chromatic domain as the candidate
+                    # rescoring (audit B-DSD-1, second site: this one biased
+                    # the native calibration itself).
+                    import matplotlib
+                    q_gram_rgb = (matplotlib.colormaps["cividis"](
+                        np.clip(q_gram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
+
                     batch_grams.append(q_gram_rgb)
                     
                     if len(batch_grams) == batch_size:
@@ -1163,7 +1193,11 @@ class AggregateReporter:
         
         result_dict = {}
         for det in ["L1", "H1"]:
-            det_path = self.output_dir / f"background_scores_{det}_{self.observing_run}.npy"
+            # NATIVE-index background scores. Distinct filename from
+            # background_scores_{det}_{run}.npy, which production_report uses
+            # for the PRIMARY (reference-run) index: same file for two score
+            # distributions was a silent cross-contamination (audit B-DSD-2).
+            det_path = self.output_dir / f"background_scores_native_{det}_{self.observing_run}.npy"
             if det_path.exists():
                 scores = np.load(det_path)
             else:
@@ -1305,11 +1339,14 @@ class AggregateReporter:
                 ts_w, pad_info = whiten_context(cand_super, start, end, pad=4.0)
                 cand_ts = extract_clean_subwindow(ts_w, start, end)
                 q_gram = generate_qtransform(cand_ts, output_size=(256, 256))
-                q_gram_uint8 = (q_gram * 255).astype(np.uint8)
-                if q_gram_uint8.ndim == 2:
-                    q_gram_rgb = np.stack([q_gram_uint8]*3, axis=-1)
-                else:
-                    q_gram_rgb = q_gram_uint8
+                # Render via the SAME colormap as the production path: the
+                # native index and its calibration background are built from
+                # cividis-mapped images; feeding grayscale here put candidate
+                # scores in a different chromatic domain than the thresholds
+                # (audit B-DSD-1 — the pre-audit survival rates carried this).
+                import matplotlib
+                q_gram_rgb = (matplotlib.colormaps["cividis"](
+                    np.clip(q_gram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
                     
                 res = scorer.score_spectrogram([q_gram_rgb], threshold=0.0)[0]
                 score = res['novelty_score']

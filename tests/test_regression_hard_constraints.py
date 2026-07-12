@@ -202,6 +202,7 @@ def test_b3_resolver_never_claims_no_anomaly(monkeypatch):
     from src.pipeline_v2_production import aggregate_report as ar
 
     import gwosc.timeline
+    monkeypatch.setattr(ar, "_COINC_CACHE", {})  # isolate from disk cache
     monkeypatch.setattr(gwosc.timeline, "get_segments",
                         lambda flag, s, e: [(s, e)])
     status = ar._resolve_coincidence_status(1369000000.0, "H1")
@@ -215,6 +216,7 @@ def test_b3_resolver_returns_unobservable_when_partner_off(monkeypatch):
     from src.pipeline_v2_production import aggregate_report as ar
 
     import gwosc.timeline
+    monkeypatch.setattr(ar, "_COINC_CACHE", {})  # isolate from disk cache
     monkeypatch.setattr(gwosc.timeline, "get_segments", lambda flag, s, e: [])
     assert ar._resolve_coincidence_status(1369000000.0, "H1") == "UNOBSERVABLE"
 
@@ -407,3 +409,48 @@ def test_observing_run_is_config_extensible(monkeypatch):
     # builtin table still intact for known epochs
     assert utils.get_observing_run(1370000000) == "O4a"
     assert utils.get_observing_run(1240000000) == "O3a"
+
+
+# =====================================================================
+# DSD — coerenza cromatica, separazione background, anti-circolarità
+# =====================================================================
+
+def test_dsd_rescoring_uses_production_colormap():
+    """B-DSD-1: DSD candidate rescoring must render spectrograms with the
+    production colormap (cividis), never grayscale stacking — grayscale vs
+    cividis puts candidate scores in a different chromatic domain than the
+    native thresholds."""
+    text = _read("src/pipeline_v2_production/aggregate_report.py")
+    assert "np.stack([q_gram_uint8]*3" not in text, (
+        "Grayscale RGB stacking reintroduced in DSD rescoring.")
+    assert 'colormaps["cividis"]' in text
+
+
+def test_dsd_native_background_has_distinct_filename():
+    """B-DSD-2: native-index background scores must not share the filename
+    of the primary-index background used by production_report."""
+    text = _read("src/pipeline_v2_production/aggregate_report.py")
+    assert "background_scores_native_" in text
+
+
+def test_native_index_builder_refuses_thin_background(monkeypatch, tmp_path):
+    """The native index builder must refuse to build from an
+    unrepresentative background (too few clean segments collected)."""
+    from src.pipeline_v2_production import build_native_index as bni
+
+    monkeypatch.setattr(bni, "_candidate_exclusions", lambda run, d: [])
+    monkeypatch.setattr(bni, "PatchEncoder", lambda: None)
+    monkeypatch.setattr(bni, "iter_clean_segments",
+                        lambda *a, **k: iter(()))  # zero segments
+    with pytest.raises(RuntimeError, match="unrepresentative background"):
+        bni.build_native_index("O4a", "L1", n_dict=100, out_dir=tmp_path,
+                               aggregated_dir=tmp_path)
+
+
+def test_veto_refuses_uncalibrated_tau(monkeypatch):
+    """cross_detector_veto must refuse heuristic (non-EVT) tau_coh entries
+    unless explicitly overridden — dynamic-run safety: a new run without
+    calibration fails loudly instead of gating claims on 0.85."""
+    text = _read("src/pipeline_v2_production/cross_detector_veto.py")
+    assert "DANTE_ALLOW_HEURISTIC_TAU" in text
+    assert "uncalibrated" in text

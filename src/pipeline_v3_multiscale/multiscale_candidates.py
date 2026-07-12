@@ -73,7 +73,8 @@ def load_thresholds(detector: str, run: str) -> dict:
 def profile_candidates(run: str = "O4a",
                        aggregated_dir: str | Path = "data/production/aggregated",
                        detectors: tuple[str, ...] = ("L1", "H1"),
-                       batch_size: int = 16) -> Path | None:
+                       batch_size: int = 16,
+                       survivors_only: bool = True) -> Path | None:
     aggregated_dir = Path(aggregated_dir)
     tax_path = aggregated_dir / f"Master_Taxonomy_{run}.csv"
     if not tax_path.exists():
@@ -83,6 +84,25 @@ def profile_candidates(run: str = "O4a",
     if tax.empty:
         logger.warning("Taxonomy is empty: nothing to characterize.")
         return None
+
+    if survivors_only:
+        # Characterize only the candidates that survived the funnel: the
+        # full taxonomy is O(10k) rows and re-paying per-candidate strain
+        # ops on vetoed/classified entries adds nothing scientifically.
+        mask = pd.Series(False, index=tax.index)
+        if "transitivity_status" in tax.columns:
+            mask |= tax["transitivity_status"] == "Unclassified_Physical_Anomaly"
+        if "global_family_id" in tax.columns:
+            mask |= tax["global_family_id"].astype(str).str.startswith("Singleton")
+        if "robustness_class" in tax.columns:
+            mask &= tax["robustness_class"].fillna("ROBUST") != "BACKGROUND"
+        n_before = len(tax)
+        tax = tax[mask]
+        logger.info(f"survivors_only: {len(tax)}/{n_before} candidates "
+                    "selected for multiscale characterization.")
+        if tax.empty:
+            logger.warning("No funnel survivors to characterize.")
+            return None
 
     encoder = PatchEncoder()
     rows = []

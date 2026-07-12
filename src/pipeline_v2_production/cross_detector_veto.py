@@ -141,7 +141,22 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
             with open(cfg_path, "r") as f:
                 cfg_data = json.load(f)
                 if run in cfg_data and "tau_coh" in cfg_data[run]:
-                    tau_coh = float(cfg_data[run]["tau_coh"])
+                    entry = cfg_data[run]
+                    # A tau without EVT calibration (legacy heuristic 0.85
+                    # entries for O3a/O3b) must not silently gate a
+                    # scientific claim: calibrate with calibrate_tau_coh.py
+                    # or opt in explicitly.
+                    is_calibrated = entry.get("calibrated", False) or (
+                        "xi" in entry and "sigma" in entry)
+                    import os
+                    if not is_calibrated and os.environ.get(
+                            "DANTE_ALLOW_HEURISTIC_TAU") != "1":
+                        raise RuntimeError(
+                            f"tau_coh for run '{run}' is an uncalibrated "
+                            "heuristic. Run calibrate_tau_coh.py --run "
+                            f"{run}, or set DANTE_ALLOW_HEURISTIC_TAU=1 "
+                            "to proceed at your own risk.")
+                    tau_coh = float(entry["tau_coh"])
                 
         if tau_coh is None:
             logger.error(f"CRITICAL: No EVT cohesion threshold ('tau_coh') explicitly calibrated for run '{run}' in {cfg_path}.")
