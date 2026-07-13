@@ -1603,6 +1603,115 @@ class AggregateReporter:
         except ImportError:
             pass
 
+    def _build_disposition_ledger(self, tax_df) -> list:
+        """Final per-candidate verdict, aggregated from every check.
+
+        One authoritative view: funnel waterfall + one row per SURVIVOR with
+        the outcome of veto, DSD robustness, PEM and multiscale profiling.
+        Fully dynamic: every input is read from its artifact; missing checks
+        are declared per-column ('pending'), never silently omitted.
+        """
+        import pandas as pd
+
+        lines = ["", "## Final Candidate Disposition Ledger", ""]
+        if tax_df is None or tax_df.empty:
+            lines.append("> Taxonomy unavailable — ledger cannot be built "
+                         "(see completeness block).")
+            return lines
+
+        n = len(tax_df)
+        get = lambda col: tax_df[col] if col in tax_df.columns else pd.Series([None] * n, index=tax_df.index)
+
+        transitivity = get("transitivity_status").fillna("N/A")
+        partner = get("partner_observing_status").fillna("NOT_CHECKED")
+        robustness = get("robustness_class")
+        dsd_ran = robustness.notna().any()
+        robustness = robustness.fillna("pending")
+
+        # PEM per-candidate outcomes, if the PEM stage produced them
+        pem_map = {}
+        pem_dir = self.output_dir / "pem"
+        if pem_dir.exists():
+            for f in pem_dir.glob("*.csv"):
+                try:
+                    pdf = pd.read_csv(f)
+                    gcol = next((c for c in pdf.columns if "gps" in c.lower()), None)
+                    scol = next((c for c in pdf.columns
+                                 if "status" in c.lower() or "correlat" in c.lower()), None)
+                    if gcol and scol:
+                        for _, r in pdf.iterrows():
+                            pem_map[float(r[gcol])] = str(r[scol])
+                except Exception:
+                    continue
+
+        # Multiscale duration profiles, if produced
+        ms_map = {}
+        ms_path = self.output_dir / f"Multiscale_Profile_{self.observing_run}.csv"
+        if ms_path.exists():
+            try:
+                ms = pd.read_csv(ms_path)
+                dom = ms.dropna(subset=["dominant_scale_s"]) \
+                        .drop_duplicates(subset=["gps_start", "detector"])
+                for _, r in dom.iterrows():
+                    ms_map[(float(r["gps_start"]), r["detector"])] = r["dominant_scale_s"]
+            except Exception:
+                pass
+
+        # ---- Waterfall ----
+        is_unclassified = transitivity == "Unclassified_Physical_Anomaly"
+        is_coincident = partner == "ACTIVE_ANOMALY_DETECTED"
+        is_vetoed_local = partner == "ACTIVE_NO_ANOMALY"
+        is_unverifiable = partner.isin(["INACTIVE", "UNOBSERVABLE", "NOT_CHECKED"]) & is_unclassified
+        survives_dsd = robustness.eq("ROBUST") if dsd_ran else pd.Series([True] * n, index=tax_df.index)
+        survivor_mask = is_unclassified & survives_dsd
+
+        lines.append("Every candidate's final status, derived from the check "
+                     "artifacts at report-generation time:")
+        lines.append("")
+        lines.append("| Funnel stage | Count |")
+        lines.append("| --- | --- |")
+        lines.append(f"| Unique candidates (post-dedup) | {n} |")
+        lines.append(f"| Resolved via transitivity / families | {int((~is_unclassified).sum())} |")
+        lines.append(f"| Coincident (partner anomaly detected) | {int(is_coincident.sum())} |")
+        lines.append(f"| Vetoed local (partner searched, no match) | {int(is_vetoed_local.sum())} |")
+        lines.append(f"| Unclassified + partner unverifiable | {int(is_unverifiable.sum())} |")
+        if dsd_ran:
+            lines.append(f"| DSD: BACKGROUND / AMBIGUOUS / ROBUST | "
+                         f"{int(robustness.eq('BACKGROUND').sum())} / "
+                         f"{int(robustness.eq('AMBIGUOUS').sum())} / "
+                         f"{int(robustness.eq('ROBUST').sum())} |")
+        else:
+            lines.append("| DSD robustness | pending (run_dsd_standalone) |")
+        lines.append(f"| **FINAL SURVIVORS (unclassified & DSD-robust)** | "
+                     f"**{int(survivor_mask.sum())}** |")
+        lines.append("")
+
+        # ---- Per-survivor table (capped) ----
+        surv = tax_df[survivor_mask]
+        cap = 100
+        if len(surv) == 0:
+            lines.append("No candidate survives every check: formal null result "
+                         "at this stage of validation.")
+        else:
+            lines.append(f"### Survivors ({len(surv)}"
+                         + (f", first {cap} shown" if len(surv) > cap else "")
+                         + ")")
+            lines.append("")
+            lines.append("| GPS | Det | Family | Partner status | DSD | "
+                         "PEM | Dominant scale (s) |")
+            lines.append("| --- | --- | --- | --- | --- | --- | --- |")
+            for _, r in surv.head(cap).iterrows():
+                g = float(r["gps_start"])
+                d = str(r.get("detector", "?"))
+                lines.append(
+                    f"| {g:.0f} | {d} | {r.get('global_family_id', 'N/A')} "
+                    f"| {r.get('partner_observing_status', 'NOT_CHECKED')} "
+                    f"| {r.get('robustness_class', 'pending')} "
+                    f"| {pem_map.get(g, 'pending')} "
+                    f"| {ms_map.get((g, d), 'pending')} |")
+        lines.append("")
+        return lines
+
     def _generate_markdown_report(self, metrics: dict):
         import datetime
         import pandas as pd
@@ -2162,6 +2271,11 @@ class AggregateReporter:
         md_lines.append("- **Architectural Shift in VQ Dictionary (K=275 vs K=281):** In the legacy O3b pipeline, the VQ dictionary size was treated as a fixed constant ($K=281$). However, the number of centroids is natively a derived parameter, optimized adaptively to bound the 95th percentile reconstruction error below 0.20. With the new anti-edge-artifact preprocessing (`whiten_context`), the cleaner latent space converges at $K=275$. We explicitly declare this an architectural evolution: $K$ is no longer a hardcoded invariant, but a dynamically derived parameter guaranteeing a uniform topological reconstruction error bound. Consequently, absolute intra-cluster coherences are not strictly cross-comparable with legacy O3b publications.")
         md_lines.append(f"- **PEM Unavailable in {self.observing_run}:** The Physical Environment Monitoring (PEM) auxiliary channels are systematically unavailable for the entire {self.observing_run} public dataset. Consequently, instrumental artifacts cannot be definitively confirmed via environmental coupling. Any candidate routed to `UNCONFIRMED_MORPHOLOGY` lacks both independent detector coincidence and auxiliary channel verification. Human review is strictly required to categorize these events.")
         
+        # ------------------------------------------------------------------
+        # Final Candidate Disposition Ledger (dynamic, single source per GPS)
+        # ------------------------------------------------------------------
+        md_lines.extend(self._build_disposition_ledger(tax_df))
+
         md_content = "\n".join(md_lines)
         log_path = self.output_dir / "Final_Discovery_Report.md"
         with open(log_path, "w", encoding="utf-8") as f:

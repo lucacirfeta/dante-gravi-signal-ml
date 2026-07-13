@@ -454,3 +454,34 @@ def test_veto_refuses_uncalibrated_tau(monkeypatch):
     text = _read("src/pipeline_v2_production/cross_detector_veto.py")
     assert "DANTE_ALLOW_HEURISTIC_TAU" in text
     assert "uncalibrated" in text
+
+
+def test_disposition_ledger_present_and_dynamic(tmp_path):
+    """The Final Report must close with the per-candidate disposition
+    ledger: funnel waterfall + survivors table, with missing checks
+    declared as 'pending', never omitted."""
+    import pandas as pd
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    rep = AggregateReporter(production_dir=str(tmp_path), run="O3a")
+    # schema mirrors the guaranteed-taxonomy fallback writer
+    tax = pd.DataFrame({
+        "gps_start": [100.0, 200.0],
+        "detector": ["L1", "H1"],
+        "session_id": ["1234567890", "1234567890"],
+        "origin_table": ["3b", "3a"],
+        "local_cluster_id": ["C0", "C1"],
+        "global_family_id": ["Singleton", "Family_01"],
+        "max_similarity_to_3a": ["", ""],
+        "transitivity_status": ["Unclassified_Physical_Anomaly", "Resolved_via_Transitivity"],
+        "gravity_spy_label": ["Not_Queried", "Not_Queried"],
+        "gravity_spy_confidence": [0.0, 0.0],
+        "partner_observing_status": ["UNOBSERVABLE", "ACTIVE_NO_ANOMALY"],
+    })
+    tax.to_csv(rep.output_dir / "Master_Taxonomy_O3a.csv", index=False)
+    rep._generate_markdown_report({})
+    report = (rep.output_dir / "Final_Discovery_Report.md").read_text(encoding="utf-8")
+    assert "Final Candidate Disposition Ledger" in report
+    assert "FINAL SURVIVORS" in report
+    assert "pending" in report          # DSD/PEM/multiscale not run -> declared
+    assert "| 100 | L1 |" in report     # the survivor row exists
