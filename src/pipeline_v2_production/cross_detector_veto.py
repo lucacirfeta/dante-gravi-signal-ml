@@ -28,7 +28,19 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
     coincident_rows = []
     local_rows = []
     unverifiable_rows = []
-    
+
+    # On-disk cache of partner similarities: strain and MIL vectors are
+    # deterministic given (gps, primary detector), so a re-run after a crash
+    # must not re-pay hours of partner fetch+encode. Only successful
+    # similarity computations are cached (failures stay retryable).
+    import json as _json
+    sim_cache_path = Path("data/production/aggregated/veto_similarity_cache.json")
+    try:
+        sim_cache = _json.loads(sim_cache_path.read_text()) if sim_cache_path.exists() else {}
+    except Exception:
+        sim_cache = {}
+    cache_dirty = 0
+
     # Initialize PyTorch Models
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Using device: {device}")
@@ -94,35 +106,47 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
             _unverifiable("primary HDF5 read error")
             continue
 
-        # 2. Fetch partner raw strain
-        try:
-            ts_super = fetch_local_or_remote_strain(partner, gps - 4.0, gps + 36.0, cache_raw=False, edge_tolerance=4.0)
-        except Exception as e:
-            logger.warning(f"Failed to fetch partner strain: {e}. Marking unverifiable.")
-            _unverifiable("partner strain fetch failed")
-            continue
+        cache_key = f"{gps}_{primary}"
+        if cache_key in sim_cache:
+            sim = float(sim_cache[cache_key])
+        else:
+            # 2. Fetch partner raw strain
+            try:
+                ts_super = fetch_local_or_remote_strain(partner, gps - 4.0, gps + 36.0, cache_raw=False, edge_tolerance=4.0)
+            except Exception as e:
+                logger.warning(f"Failed to fetch partner strain: {e}. Marking unverifiable.")
+                _unverifiable("partner strain fetch failed")
+                continue
 
-        # 3. Encode partner
-        try:
-            ts_w_padded, _ = whiten_context(ts_super, gps, gps + 32.0, pad=4.0)
-            ts_white = extract_clean_subwindow(ts_w_padded, gps, gps + 32.0)
-            spectrogram = generate_qtransform(ts_white)
-            # score_spectrogram returns a list of dicts
-            results = scorer.score_spectrogram([spectrogram], threshold=1.0)
-            partner_vec = results[0]["mil_vector"]
-        except Exception as e:
-            logger.warning(f"Failed to encode partner strain: {e}. Marking unverifiable.")
-            _unverifiable("partner encoding failed")
-            continue
-            
-        # 4. Cosine Similarity
-        # Normalize just in case, though they should be L2 normalized
-        v1 = primary_vec.reshape(1, -1)
-        v2 = partner_vec.reshape(1, -1)
-        v1 = v1 / np.linalg.norm(v1)
-        v2 = v2 / np.linalg.norm(v2)
-        
-        sim = cosine_similarity(v1, v2)[0, 0]
+            # 3. Encode partner
+            try:
+                ts_w_padded, _ = whiten_context(ts_super, gps, gps + 32.0, pad=4.0)
+                ts_white = extract_clean_subwindow(ts_w_padded, gps, gps + 32.0)
+                spectrogram = generate_qtransform(ts_white)
+                # score_spectrogram returns a list of dicts
+                results = scorer.score_spectrogram([spectrogram], threshold=1.0)
+                partner_vec = results[0]["mil_vector"]
+            except Exception as e:
+                logger.warning(f"Failed to encode partner strain: {e}. Marking unverifiable.")
+                _unverifiable("partner encoding failed")
+                continue
+
+            # 4. Cosine Similarity
+            # Normalize just in case, though they should be L2 normalized
+            v1 = primary_vec.reshape(1, -1)
+            v2 = partner_vec.reshape(1, -1)
+            v1 = v1 / np.linalg.norm(v1)
+            v2 = v2 / np.linalg.norm(v2)
+
+            sim = float(cosine_similarity(v1, v2)[0, 0])
+            sim_cache[cache_key] = sim
+            cache_dirty += 1
+            if cache_dirty % 100 == 0:
+                try:
+                    sim_cache_path.parent.mkdir(parents=True, exist_ok=True)
+                    sim_cache_path.write_text(_json.dumps(sim_cache))
+                except Exception:
+                    pass
         logger.info(f"Match Similarity: {sim:.3f}")
         
         # 5. Extract run and load empirical threshold (Hard-Fail if missing)
@@ -186,6 +210,12 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
     df_3b = pd.DataFrame(unverifiable_rows) if unverifiable_rows else pd.DataFrame(columns=df.columns)
     df_3c = pd.DataFrame(coincident_rows) if coincident_rows else pd.DataFrame(columns=df.columns)
     
+    if cache_dirty:
+        try:
+            sim_cache_path.parent.mkdir(parents=True, exist_ok=True)
+            sim_cache_path.write_text(_json.dumps(sim_cache))
+        except Exception as e:
+            logger.warning(f"Failed to persist veto similarity cache: {e}")
     logger.info("Veto procedure completed successfully.")
     return df_3a, df_3b, df_3c
 
