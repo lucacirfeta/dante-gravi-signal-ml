@@ -2531,7 +2531,9 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     seed = getattr(args, "seed", 42)
     reference_run = getattr(args, "reference_run", "O3b").lower()
     
-    primary_index_path = f"data/reference/patch_compressed_index_{reference_run}.npz"
+    from src.core.utils import get_reference_dir
+    _ref_dir = get_reference_dir()
+    primary_index_path = str(_ref_dir / f"patch_compressed_index_{reference_run}.npz")
     if not Path(primary_index_path).exists():
         logger.warning(f"Primary reference index {primary_index_path} not found. Ensure it was built.")
         
@@ -2549,9 +2551,9 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     run_str = getattr(args, "run", "O4a").lower()
     
     # Support both Early Release (_ex) and Official data indices
-    index_ex = Path(f"data/reference/patch_compressed_index_{run_str}_ex.npz")
-    index_official = Path(f"data/reference/patch_compressed_index_{run_str}.npz")
-    
+    index_ex = _ref_dir / f"patch_compressed_index_{run_str}_ex.npz"
+    index_official = _ref_dir / f"patch_compressed_index_{run_str}.npz"
+
     auto_native_index = None
     if index_ex.exists():
         auto_native_index = index_ex
@@ -3010,6 +3012,73 @@ def cmd_multiscale_analysis(args: argparse.Namespace) -> None:
         aggregated_dir=Path(args.production_dir) / "aggregated",
         detectors=tuple(args.detectors),
     )
+
+
+def cmd_multiscale_report(args: argparse.Namespace) -> None:
+    """One-shot V3 entrypoint (mirror of aggregate-report for the V3 layer).
+
+    1. Preflight: per-detector patch dictionaries and block-bootstrap
+       thresholds must exist and be tagged for the target run
+       (assert_threshold_run). Missing artifacts abort with the exact
+       command needed to build them — nothing is silently skipped.
+    2. Profiles every V2 survivor at the {0.5,1,2,4}s scales
+       (Multiscale_Profile_{run}.csv).
+    3. Regenerates Final_Discovery_Report.md from aggregate_summary.json
+       so the disposition ledger picks up the new dominant scales —
+       the V3 layer therefore updates the final report dynamically.
+    """
+    import json as _json
+    from src.pipeline_v3_multiscale.multiscale_candidates import profile_candidates
+    from src.pipeline_v3_multiscale.sampling import assert_threshold_run
+
+    v3_dir = Path("results/micro_mdc/multiscale")
+    scales = ["0.5", "1", "2", "4"]
+    problems: list[str] = []
+    for det in args.detectors:
+        for s in scales:
+            dpath = v3_dir / f"{det}_patch_dict_{s}s.npz"
+            if not dpath.exists():
+                problems.append(
+                    f"missing dictionary {dpath} — build with: python -m "
+                    f"src.pipeline_v3_multiscale.build_multiscale_dictionaries "
+                    f"--detector {det}")
+                break
+        tpath = v3_dir / f"{det}_thresholds.json"
+        if not tpath.exists():
+            problems.append(
+                f"missing thresholds {tpath} — calibrate with: python -m "
+                f"src.pipeline_v3_multiscale.micro_mdc_multiscale "
+                f"--detector {det}")
+        else:
+            with open(tpath) as f:
+                assert_threshold_run(_json.load(f), args.run)
+    if problems:
+        for p in problems:
+            logger.error(f"[V3 PREFLIGHT] {p}")
+        raise SystemExit(
+            "multiscale-report aborted: V3 artifacts incomplete (see above).")
+
+    aggregated_dir = Path(args.production_dir) / "aggregated"
+    profile_candidates(
+        run=args.run,
+        aggregated_dir=aggregated_dir,
+        detectors=tuple(args.detectors),
+    )
+
+    if args.skip_report:
+        logger.info("Report regeneration skipped (--skip-report).")
+        return
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+    rep = AggregateReporter(production_dir=args.production_dir, run=args.run)
+    summary_path = rep.output_dir / "aggregate_summary.json"
+    if not summary_path.exists():
+        raise SystemExit(
+            f"{summary_path} not found: run aggregate-report first — the V3 "
+            "layer characterizes V2 output, it cannot precede it.")
+    with open(summary_path) as f:
+        metrics = _json.load(f)
+    rep._generate_markdown_report(metrics)
+    logger.info("Final report regenerated with updated multiscale profiles.")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -4177,6 +4246,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_ms.add_argument("--production-dir", type=str, default="data/production/")
     p_ms.add_argument("--detectors", nargs="*", default=["L1", "H1"])
     p_ms.set_defaults(func=cmd_multiscale_analysis)
+
+    # --- multiscale-report (one-shot V3: preflight + profiling + report) ---
+    p_msr = subparsers.add_parser(
+        "multiscale-report",
+        help="V3 one-shot: preflight dictionaries/thresholds, profile V2 "
+             "survivors at all scales, regenerate the Final Discovery Report.",
+    )
+    p_msr.add_argument("--run", type=str, default="O4a")
+    p_msr.add_argument("--production-dir", type=str, default="data/production/")
+    p_msr.add_argument("--detectors", nargs="*", default=["L1", "H1"])
+    p_msr.add_argument(
+        "--skip-report", action="store_true",
+        help="Only profile; do not regenerate Final_Discovery_Report.md.")
+    p_msr.set_defaults(func=cmd_multiscale_report)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(

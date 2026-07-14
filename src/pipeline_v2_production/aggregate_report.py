@@ -1281,8 +1281,10 @@ class AggregateReporter:
         logger = logging.getLogger("aggregate_report")
         
         run_str = self.observing_run.lower()
-        index_ex = Path(f"data/reference/patch_compressed_index_{run_str}_ex.npz")
-        index_official = Path(f"data/reference/patch_compressed_index_{run_str}.npz")
+        from src.core.utils import get_reference_dir
+        _ref_dir = get_reference_dir()
+        index_ex = _ref_dir / f"patch_compressed_index_{run_str}_ex.npz"
+        index_official = _ref_dir / f"patch_compressed_index_{run_str}.npz"
         
         index_path = None
         if index_ex.exists():

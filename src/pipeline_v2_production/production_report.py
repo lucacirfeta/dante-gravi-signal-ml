@@ -56,7 +56,8 @@ class ValidationReporter:
         self.production_dir = Path(output_dir) / str(session_id)
         self.h5_path = self.production_dir / f"novelties_{session_id}_{detector}.h5"
         self.cluster_json = self.production_dir / f"cluster_report_novelties_{session_id}_{detector}.json"
-        self.reference_dir = Path("data") / "reference"
+        from src.core.utils import get_reference_dir
+        self.reference_dir = get_reference_dir()
         self.dq_cache_path = self.reference_dir / f"dq_cache_{detector}_{run_name}.json"
         self._dinov2_model = None
         

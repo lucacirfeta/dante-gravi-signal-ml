@@ -56,7 +56,18 @@ def temp_workspace(tmp_path):
             labels=np.array(["Blip"] * 5 + ["Tomte"] * 5)
         )
     
+    # Hermeticity: point the production code at the MOCK reference dir.
+    # Without this, tests silently pick up the real data/reference indices
+    # (K=275 / K=1216) from the repo checkout — the old non-hermetic
+    # test_pipeline_end_to_end[O4a] failure mode.
+    old_ref = os.environ.get("DANTE_REFERENCE_DIR")
+    os.environ["DANTE_REFERENCE_DIR"] = str(ref_dir)
+
     yield workspace
-    
+
     # Teardown
+    if old_ref is None:
+        os.environ.pop("DANTE_REFERENCE_DIR", None)
+    else:
+        os.environ["DANTE_REFERENCE_DIR"] = old_ref
     shutil.rmtree(workspace, ignore_errors=True)

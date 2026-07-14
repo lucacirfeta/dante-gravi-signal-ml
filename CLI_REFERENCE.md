@@ -50,6 +50,7 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
      - [`patch-analysis`](#5-patch-analysis) — Automated continuous workflow (Single Session)
      - [`aggregate-report`](#5b-aggregate-report) — Global analysis & Final Report (Multi-Session)
      - [`multiscale-analysis`](#5b2-multiscale-analysis) — V3 duration profiling of aggregated candidates
+     - [`multiscale-report`](#5b3-multiscale-report) — V3 one-shot: preflight + profiling + final-report refresh
    - **Secondary Commands (Modular / Debug)**
      - [`patch-production`](#5c-patch-production) — Core MIL Extraction & Scoring
      - [`production-cluster`](#5d-production-cluster) — 384D DPMM Clustering
@@ -221,6 +222,24 @@ Re-scores the aggregated V2 candidates at sub-scales **{0.5, 1, 2, 4} s** agains
 - `--run`: Observing run of the candidates (selects taxonomy and required threshold calibration). *Default: `O4a`*.
 - `--production-dir`: Root production directory. *Default: `data/production/`*.
 - `--detectors`: Detectors to characterize. *Default: `L1 H1`*.
+
+### 5b3. `multiscale-report` (V3 One-Shot — mirror of `aggregate-report`)
+Single entrypoint for the whole V3 layer, symmetric to `aggregate-report` for V2:
+
+1. **Preflight** — verifies per-detector dictionaries (`<DET>_patch_dict_<scale>s.npz`) and run-tagged thresholds (`<DET>_thresholds.json`, checked with `assert_threshold_run`). If anything is missing it aborts and prints the exact build command (`build_multiscale_dictionaries` / `micro_mdc_multiscale`) — nothing is skipped silently.
+2. **Profiling** — runs `multiscale-analysis` over the V2 survivors, writing `Multiscale_Profile_<run>.csv`.
+3. **Report refresh** — regenerates `Final_Discovery_Report.md` from `aggregate_summary.json`, so the *Final Candidate Disposition Ledger* picks up the new dominant scales. **This is how V3 updates the final report dynamically**: the ledger reads `Multiscale_Profile_<run>.csv` at generation time; running `multiscale-report` after (or any time after) `aggregate-report` keeps the report in sync.
+
+Requires `aggregate-report` to have run first (`aggregate_summary.json` must exist); the V3 layer characterizes V2 output, it cannot precede it.
+
+```bash
+python main.py multiscale-report --run O4a --detectors L1 H1
+```
+
+- `--run`: Observing run. *Default: `O4a`*.
+- `--production-dir`: Root production directory. *Default: `data/production/`*.
+- `--detectors`: Detectors to profile. *Default: `L1 H1`*.
+- `--skip-report`: Profile only, without regenerating the final report.
 
 ### 🧱 SECONDARY COMMANDS (Modular / Debug)
 These commands are invoked automatically in sequence by the Primary Commands. Use them individually only for debugging or step-by-step execution.

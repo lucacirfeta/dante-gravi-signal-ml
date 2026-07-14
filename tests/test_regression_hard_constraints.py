@@ -491,8 +491,9 @@ def test_ledger_pem_veto_and_bonferroni(tmp_path):
     """A candidate with a Bonferroni-significant PEM coupling must be
     REMOVED from the final survivors (not just annotated), listed in the
     'Removed by PEM veto' table, and counted in the funnel. A channel hit
-    whose Bonferroni-corrected analytic p is >= 0.05 stays MARGINAL and
-    survives. The false 'PEM systematically unavailable' prose must be gone."""
+    whose Bonferroni-corrected analytic p is >= 0.05 is reported as
+    NO_CORRELATION (with the p_Bonf shown) and survives — the veto
+    criterion is exclusively p_Bonf < 0.05, never the raw C >= 0.6 flag. The false 'PEM systematically unavailable' prose must be gone."""
     import pandas as pd
     from src.pipeline_v2_production.aggregate_report import AggregateReporter
 
@@ -523,7 +524,7 @@ def test_ledger_pem_veto_and_bonferroni(tmp_path):
                         "H1:CAL-PCALY_RX_PD_OUT_DQ",
                         "L1:ASC-X_TR_A_NSUM_OUT_DQ"],
         # GPS 100: C=0.99 significant -> p_Bonf tiny -> vetoed.
-        # GPS 200: flagged significant but C=0.20 -> p_Bonf >= 0.05 -> MARGINAL, survives.
+        # GPS 200: flagged significant but C=0.20 -> p_Bonf >= 0.05 -> survives.
         "max_coherence": [0.99, 0.30, 0.20],
         "peak_freq": [20.0, 60.0, 60.0],
         "significant": [True, False, True],
@@ -541,6 +542,6 @@ def test_ledger_pem_veto_and_bonferroni(tmp_path):
     surv_block = report.split("### Survivors")[1]
     assert "| 100 | H1 |" not in surv_block
     assert "| 200 | L1 |" in surv_block
-    assert "MARGINAL" in report
+    assert "p_Bonf=1.00 >= 0.05" in report
     # The self-contradicting limitation must never come back
     assert "systematically unavailable" not in report

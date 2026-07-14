@@ -9,6 +9,7 @@ so that long-running O4a batch scans can survive transient failures.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -39,13 +40,13 @@ _SAMPLE_RATE: int = _CFG["preprocessing"]["sample_rate"]
 _DATA_DIRECTORIES_CFG = _CFG.get("data_loading", {}).get("local_directories", [
     "E:/o4a",
     "/mnt/e/o4a",
-    "E:/raw/o4a_cache",
-    "/mnt/e/raw/o4a_cache",
-    "C:/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a",
-    "/mnt/c/Users/atafe/Desktop/dante-test/dante-gravi-signal-ml/data/raw/o4a",
-    "data/raw"
+    "data/raw",
 ])
-_DATA_DIRECTORIES: list[Path] = [Path(d) for d in _DATA_DIRECTORIES_CFG]
+# Machine-specific raw archives (external disks, other checkouts) are
+# supplied via the DANTE_DATA_DIRS environment variable (os.pathsep-
+# separated), searched BEFORE the repo-config directories.
+_ENV_DATA_DIRS = [d for d in os.environ.get("DANTE_DATA_DIRS", "").split(os.pathsep) if d]
+_DATA_DIRECTORIES: list[Path] = [Path(d) for d in _ENV_DATA_DIRS + list(_DATA_DIRECTORIES_CFG)]
 
 
 

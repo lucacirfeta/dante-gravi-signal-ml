@@ -104,6 +104,17 @@ def get_device(verbose: bool = True) -> torch.device:
 _CONFIG_PATH = Path(__file__).resolve().parent.parent.parent / "config.yaml"
 
 
+def get_reference_dir() -> Path:
+    """Directory holding the VQ reference indices (patch_compressed_index_*).
+
+    Defaults to the repo-relative data/reference; tests and alternate
+    checkouts override it with the DANTE_REFERENCE_DIR environment
+    variable so the production code never hardwires a shared path.
+    """
+    import os
+    return Path(os.environ.get("DANTE_REFERENCE_DIR", "data/reference"))
+
+
 def load_config(path: Path | None = None) -> dict[str, Any]:
     """Load the YAML configuration file.
 
