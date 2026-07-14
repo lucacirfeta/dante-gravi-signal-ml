@@ -72,7 +72,7 @@ For deep physical and mathematical derivations, refer to the [arXiv preprint (26
 ## ⚙️ Reproducibility
 
 ### Hardware Requirements
-- **Tested Configuration:** NVIDIA RTX 30XX/40XX series (16GB VRAM minimum for `batch_size: 64`), 64GB RAM, NVMe SSD (critical for HDF5 SWMR writes). Tested with **Python 3.10.12**.
+- **Tested Configuration:** NVIDIA RTX 30XX/40XX series (16GB VRAM minimum for `batch_size: 64`), 32GB+ RAM (WSL cap >=30GB required for 10k-candidate aggregation), NVMe SSD (critical for HDF5 SWMR writes). Tested with **Python 3.10.12**.
 - **Minimum Viable:** Any CPU (x86_64/ARM) or Apple Silicon (M1/M2/MPS). The pipeline auto-detects hardware and dynamically falls back to CPU if no accelerator is found. Default CUDA batch size is explicitly constrained to `32` to prevent Out-of-Memory (OOM) errors on consumer-grade GPUs. 
 - **Blackwell GPUs (RTX 50XX):** Require PyTorch nightly builds (`cu128+`) for `sm_120` kernel support.
 
@@ -105,8 +105,9 @@ For immediate verification without re-running the feature extraction, the labele
 - **Cross-Session Connectivity:** ARI of 0.96 across 72 discontinuous observing sessions.
   *(Conditions: Measured via Single-linkage HAC on DPMM centroids with a cosine distance cutoff of 0.25).*
 
-- **Methodological Upper Limit:** $R_{90} < 3.70 \text{ yr}^{-1}$ for H1 ($N=0$) and $R_{90} < 6.52 \text{ yr}^{-1}$ for L1 ($N=1$) on morphologically novel transients.
-  *(Conditions: Evaluated over bounding spans of ~227 days and ~218 days respectively during O4a. Limits are structurally driven by the limited observation window rather than pipeline sensitivity).*
+- **Methodological Upper Limit (post-audit, 2026-07):** $R_{90} < 5.83 \text{ yr}^{-1}$ for H1 ($N=0$, 144.2 d) and $R_{90} < 5.63 \text{ yr}^{-1}$ for L1 ($N=0$, 149.4 d) on morphologically novel transients.
+  *(Conditions: 42-session O4a production; livetime gated on `{DET}_CBC_CAT1` science segments — less optimistic by construction than the deprecated span-based values (3.70/6.52 yr⁻¹ over ~227/218-day bounding spans), which used an ungated denominator.)*
+- **Final funnel outcome:** 10,372 unique candidates → 2 DSD-robust morphological singletons → 1 survivor after PEM coherence (GPS 1382955228, L1, 4-s dominant scale, no auxiliary coupling, absent from Gravity Spy, no cross-detector coincidence). Classified as an uncatalogued instrumental morphological outlier — no astrophysical claim. Full per-candidate verdicts live in the report's *Final Candidate Disposition Ledger*.
 
 ## 🧪 Scientific Integrity Guarantees
 Every experimentally-validated invariant of the pipeline is protected by a regression test (`tests/test_regression_hard_constraints.py` + `tests/test_norm_leakage_units.py`, 36 tests). Highlights:

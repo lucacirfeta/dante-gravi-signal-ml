@@ -292,6 +292,8 @@ knowledge/
 reports/
 scripts/
 
+.old
+.agents
 .env.example
 memorix.yml
 .env

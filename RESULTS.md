@@ -17,6 +17,13 @@ I risultati sotto (run del 2026-06-27, 82 sessioni, 434 candidati) sono uno **sn
 4. **Upper limit in ricomputazione**: gli R₉₀ storici usavano come denominatore lo span delle sessioni; il livetime è ora intersecato con `{DET}_CBC_CAT1` (denominatore più piccolo → limiti meno ottimistici). I numeri aggiornati arriveranno con la produzione corrente.
 5. **Produzione 2026-07 in corso**: 42 sessioni × H1+L1 con pipeline post-audit (semantica coincidenza corretta, report run-dinamico con gate di completezza, soglie taggate per run) + caratterizzazione multiscala V3 dei candidati (`Multiscale_Profile_O4a.csv`). Questa sezione sarà aggiornata a run conclusa.
 
+
+### Esito produzione post-audit (2026-07-14) — FINALE
+- **Funnel completo su 84 sessioni-detector:** 10.372 candidati unici (6.017 L1 / 4.355 H1) -> transitivita 100% -> DSD (cividis-coerente, indice nativo anti-circolare): 5.661 BACKGROUND / 1.773 AMBIGUOUS / 2.937 ROBUST -> **2 singleton morfologici** -> PEM: il singleton H1 1369305276 risulta COUPLED con H1:LSC-POP_A_LF_OUT_DQ (C=0.99, strumentale confermato) -> **1 superstite finale: GPS 1382955228 (L1)**, scala dominante 4 s, nessun accoppiamento ausiliario (Cmax=0.48), assente da Gravity Spy, nessuna coincidenza nel partner. Classificazione: outlier morfologico strumentale non catalogato — nessun claim astrofisico.
+- **Upper limit CAT1-gated (N=0 inspiegati):** R90 < 5.83 / 5.63 per anno (H1 144.2 d / L1 149.4 d).
+- **Nota DSD:** con la coerenza cromatica corretta il tasso di ROBUST e' 28% (2.937/10.371) contro il 96.3% del pilota grayscale — conferma quantitativa del bug B-DSD-1.
+- Tutti gli esiti per-candidato nel **Final Candidate Disposition Ledger** in coda al Final_Discovery_Report.md.
+
 ## 📦 Downloaded Data Intervals (HDF5 Cache)
 
 | Run | Session ID | GPS Start | GPS End | Duration (Hours) | Status |

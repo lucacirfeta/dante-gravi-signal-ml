@@ -1630,19 +1630,24 @@ class AggregateReporter:
 
         # PEM per-candidate outcomes, if the PEM stage produced them
         pem_map = {}
-        pem_dir = self.output_dir / "pem"
-        if pem_dir.exists():
-            for f in pem_dir.glob("*.csv"):
-                try:
-                    pdf = pd.read_csv(f)
-                    gcol = next((c for c in pdf.columns if "gps" in c.lower()), None)
-                    scol = next((c for c in pdf.columns
-                                 if "status" in c.lower() or "correlat" in c.lower()), None)
-                    if gcol and scol:
-                        for _, r in pdf.iterrows():
-                            pem_map[float(r[gcol])] = str(r[scol])
-                except Exception:
-                    continue
+        pem_csv = self.output_dir / "pem" / "coherence_report.csv"
+        if pem_csv.exists():
+            try:
+                pdf = pd.read_csv(pem_csv)
+                for gps_val, grp in pdf.groupby("gps_start"):
+                    if not grp["data_available"].any():
+                        pem_map[float(gps_val)] = "PEM_UNAVAILABLE"
+                    elif grp["significant"].any():
+                        top = grp[grp["significant"]].sort_values(
+                            "max_coherence", ascending=False).iloc[0]
+                        pem_map[float(gps_val)] = (
+                            f"COUPLED ({top['aux_channel']}, "
+                            f"C={top['max_coherence']:.2f})")
+                    else:
+                        cmax = grp["max_coherence"].max()
+                        pem_map[float(gps_val)] = f"NO_CORRELATION (Cmax={cmax:.2f})"
+            except Exception as e:
+                logger.warning(f"Ledger: cannot parse PEM report: {e}")
 
         # Multiscale duration profiles, if produced
         ms_map = {}
@@ -1659,11 +1664,16 @@ class AggregateReporter:
 
         # ---- Waterfall ----
         is_unclassified = transitivity == "Unclassified_Physical_Anomaly"
+        # Singletons are morphological outliers that never enter the
+        # transitivity resolution: they are survivors-by-construction unless
+        # a downstream check kills them. Excluding them undercounted the
+        # final survivors to zero while the multiscale layer profiled them.
+        is_singleton = get("global_family_id").astype(str).str.startswith("Singleton")
         is_coincident = partner == "ACTIVE_ANOMALY_DETECTED"
         is_vetoed_local = partner == "ACTIVE_NO_ANOMALY"
         is_unverifiable = partner.isin(["INACTIVE", "UNOBSERVABLE", "NOT_CHECKED"]) & is_unclassified
         survives_dsd = robustness.eq("ROBUST") if dsd_ran else pd.Series([True] * n, index=tax_df.index)
-        survivor_mask = is_unclassified & survives_dsd
+        survivor_mask = (is_unclassified | is_singleton) & survives_dsd
 
         lines.append("Every candidate's final status, derived from the check "
                      "artifacts at report-generation time:")
@@ -1682,7 +1692,8 @@ class AggregateReporter:
                          f"{int(robustness.eq('ROBUST').sum())} |")
         else:
             lines.append("| DSD robustness | pending (run_dsd_standalone) |")
-        lines.append(f"| **FINAL SURVIVORS (unclassified & DSD-robust)** | "
+        lines.append(f"| Singleton morphological outliers | {int(is_singleton.sum())} |")
+        lines.append(f"| **FINAL SURVIVORS ((unclassified OR singleton) & DSD-robust)** | "
                      f"**{int(survivor_mask.sum())}** |")
         lines.append("")
 
