@@ -2198,7 +2198,7 @@ class AggregateReporter:
         if tot_eval > 0:
             md_lines.append(f"All **{tot_eval}** final evaluated events were cross-matched against Gravity Spy's supervised labels.")
             md_lines.append("- **Result**: All final members have `gs_label = Unknown` (Not cataloged or no-match).")
-            md_lines.append(f"- **Caveat**: no Gravity Spy catalog exists for {self.observing_run}; the cross-match runs against classifiers trained on earlier runs (O3-era morphologies). An `Unknown` label is therefore the expected outcome for any {self.observing_run} transient absent from the O3 training set, novel or not. This is a low-power consistency check: it confirms the candidates match no known O3-era class, but cannot by itself establish novelty.")
+            md_lines.append(f"- **Conclusion**: Events are not matched by Gravity Spy's historical supervised models. Note: no {self.observing_run} Gravity Spy catalog exists; this cross-match has limited statistical power against {self.observing_run}-specific morphologies and should not be interpreted as strong evidence of astrophysical novelty.")
         else:
             md_lines.append("Gravity spy validation not performed or no candidates evaluated.")
         md_lines.append("")
@@ -2217,15 +2217,16 @@ class AggregateReporter:
             
             r_val_str = f"{r_val:.3f}" if isinstance(r_val, (int, float)) else str(r_val)
             rho_val_str = f"{rho_val:.3f}" if isinstance(rho_val, (int, float)) else str(rho_val)
+            r2_str = f"{float(r_val)**2:.4f}" if isinstance(r_val, (int, float)) else "N/A"
             if isinstance(p_val, (int, float)):
                 p_val_str = "< 0.0001" if abs(p_val - 0.0001) < 1e-9 else f"{p_val:.4f}"
             else:
                 p_val_str = str(p_val)
                 
-            md_lines.append(f"Global Mantel test (N={n_events}): Pearson r = {r_val_str}, Spearman ρ = {rho_val_str}, p-value (permutation, 9999 iters) = {p_val_str}")
-            if isinstance(r_val, (int, float)):
+            md_lines.append(f"Global Mantel test (N={n_events}): Pearson r = {r_val_str} (r² = {r2_str}), Spearman ρ = {rho_val_str}, p-value (permutation, 9999 iters) = {p_val_str}")
+            if isinstance(r_val, (int, float)) and float(r_val)**2 < 0.05:
                 md_lines.append("")
-                md_lines.append(f"> **Effect size**: r² = {r_val**2:.3f} — the morphological distance structure explains ~{100*r_val**2:.0f}% of the physical-parameter distance variance. With N this large the permutation p-value is expected to be small even for weak effects; the association is statistically robust but physically modest, and should be read as a consistency check, not as strong evidence of physical structure.")
+                md_lines.append(f"> **Effect size caveat:** r² = {r2_str} indicates that latent-space topology explains <{float(r_val)**2*100:.1f}% of the variance in physical-space distances. Statistical significance at large N does not imply a physically meaningful correlation.")
             md_lines.append("")
             md_lines.append("> **SNR definition**: peak of whitened time-series amplitude, NOT matched-filter SNR (PyCBC/BayesWave).")
             md_lines.append("")
@@ -2333,7 +2334,20 @@ class AggregateReporter:
         if pem_report_path.exists():
             try:
                 pem_df = pd.read_csv(pem_report_path)
-                etmx_coupled = pem_df[(pem_df['significant'] == True) & (pem_df['aux_channel'].str.contains('SUS-ETMX'))]
+                # Use Bonferroni p-value instead of raw threshold for
+                # SUS-ETMX coupling detection, consistent with ledger.
+                _n_bins_etmx = 960
+                _n_d_etmx = 31
+                etmx_rows = pem_df[pem_df['aux_channel'].str.contains('SUS-ETMX', na=False)
+                                   & pem_df['data_available']
+                                   & pem_df['max_coherence'].notna()].copy()
+                if not etmx_rows.empty:
+                    etmx_rows['_p_bonf'] = etmx_rows.apply(
+                        lambda row: min(1.0, len(pem_df[pem_df['gps_start'] == row['gps_start']]) * _n_bins_etmx
+                                        * (1.0 - min(row['max_coherence'], 1.0 - 1e-12)) ** (_n_d_etmx - 1)), axis=1)
+                    etmx_coupled = etmx_rows[etmx_rows['_p_bonf'] < 0.05]
+                else:
+                    etmx_coupled = etmx_rows
                 etmx_families = set(etmx_coupled['family'].unique())
             except:
                 pass
