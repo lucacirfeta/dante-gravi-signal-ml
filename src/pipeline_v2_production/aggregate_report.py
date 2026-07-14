@@ -1655,25 +1655,41 @@ class AggregateReporter:
                     tested = grp[grp["data_available"]
                                  & grp["max_coherence"].notna()]
                     m_channels = max(1, len(tested))
-                    # Compute p_Bonf UNCONDITIONALLY on the channel with
-                    # the highest coherence, regardless of the legacy raw
-                    # 'significant' flag (C >= 0.6).  The raw flag is kept
-                    # only as informational context in the CSV; the veto
-                    # criterion is exclusively p_Bonf < 0.05.
+                    # DUAL veto criterion, both mandatory:
+                    #  (a) the channel exceeds its EMPIRICALLY calibrated
+                    #      per-channel threshold ('significant' flag, from
+                    #      channel_thresholds.json / pem_significance_test);
+                    #  (b) the analytic coherence null survives Bonferroni
+                    #      across the m tested channels (p_Bonf < 0.05).
+                    # The analytic null alone is NOT sufficient: the same
+                    # significance test measured a 23% FPR at C>=0.6 on
+                    # time-shifted background pairs, while the Gaussian
+                    # analytic tail predicts ~1e-8 there — real coherence
+                    # tails are heavy (spectral lines, non-Gaussianity),
+                    # so an analytic-only veto would kill candidates on a
+                    # null hypothesis the data already falsified. p_Bonf
+                    # is still reported on the top channel for context.
                     verdict = None
+                    hits = tested[tested["significant"].fillna(False)]
                     if len(tested) > 0:
-                        top = tested.sort_values(
+                        top_pool = hits if len(hits) > 0 else tested
+                        top = top_pool.sort_values(
                             "max_coherence", ascending=False).iloc[0]
                         c = float(top["max_coherence"])
                         p_bonf = min(1.0, m_channels * _PEM_N_BINS
                                      * (1.0 - min(c, 1.0 - 1e-12))
                                      ** (_PEM_WELCH_AVERAGES - 1))
-                        if p_bonf < 0.05:
+                        if len(hits) > 0 and p_bonf < 0.05:
                             verdict = (
                                 f"COUPLED ({top['aux_channel']}, "
                                 f"C={c:.3f}, p_Bonf={p_bonf:.1e}, "
                                 f"m={m_channels})")
                             pem_coupled_gps.add(float(gps_val))
+                        elif len(hits) == 0:
+                            verdict = (
+                                f"NO_CORRELATION (Cmax={c:.3f}, "
+                                f"below empirical channel threshold, "
+                                f"p_Bonf={p_bonf:.1e}, m={m_channels})")
                         else:
                             verdict = (
                                 f"NO_CORRELATION (Cmax={c:.3f}, "
@@ -1974,7 +1990,10 @@ class AggregateReporter:
             md_lines.append(f"    - H1: {h1.get('ambiguous', 0)} / L1: {l1.get('ambiguous', 0)}")
             md_lines.append(f"  - **{background}** candidati **BACKGROUND** (Score < CI Lower)")
             md_lines.append(f"    - H1: {h1.get('background', 0)} / L1: {l1.get('background', 0)}")
-            md_lines.append(f"\n  *(Survival rate robusto: {(robust/total_eval)*100:.1f}%)*")
+            if total_eval > 0:
+                md_lines.append(f"\n  *(Survival rate robusto: {(robust/total_eval)*100:.1f}%)*")
+            else:
+                md_lines.append("\n  *(Survival rate robusto: N/A — 0 candidati valutati)*")
         else:
             md_lines.append("- **Native O4a Threshold Test:** Not executed (native index not available).")
         md_lines.append("")

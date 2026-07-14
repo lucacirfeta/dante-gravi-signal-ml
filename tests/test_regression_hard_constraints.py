@@ -499,37 +499,43 @@ def test_ledger_pem_veto_and_bonferroni(tmp_path):
 
     rep = AggregateReporter(production_dir=str(tmp_path), run="O3a")
     tax = pd.DataFrame({
-        "gps_start": [100.0, 200.0],
-        "detector": ["H1", "L1"],
-        "session_id": ["1234567890", "1234567890"],
-        "origin_table": ["3b", "3b"],
-        "local_cluster_id": ["C0", "C1"],
-        "global_family_id": ["Singleton_100", "Singleton_200"],
-        "max_similarity_to_3a": ["", ""],
-        "transitivity_status": ["Unclassified_Physical_Anomaly",
-                                "Unclassified_Physical_Anomaly"],
-        "gravity_spy_label": ["Not_Queried", "Not_Queried"],
-        "gravity_spy_confidence": [0.0, 0.0],
-        "partner_observing_status": ["UNOBSERVABLE", "UNOBSERVABLE"],
+        "gps_start": [100.0, 200.0, 300.0],
+        "detector": ["H1", "L1", "L1"],
+        "session_id": ["1234567890"] * 3,
+        "origin_table": ["3b"] * 3,
+        "local_cluster_id": ["C0", "C1", "C2"],
+        "global_family_id": ["Singleton_100", "Singleton_200",
+                             "Singleton_300"],
+        "max_similarity_to_3a": ["", "", ""],
+        "transitivity_status": ["Unclassified_Physical_Anomaly"] * 3,
+        "gravity_spy_label": ["Not_Queried"] * 3,
+        "gravity_spy_confidence": [0.0] * 3,
+        "partner_observing_status": ["UNOBSERVABLE"] * 3,
     })
     tax.to_csv(rep.output_dir / "Master_Taxonomy_O3a.csv", index=False)
 
     pem_dir = rep.output_dir / "pem"
     pem_dir.mkdir(parents=True, exist_ok=True)
     pem = pd.DataFrame({
-        "detector": ["H1", "H1", "L1"],
-        "gps_start": [100.0, 100.0, 200.0],
-        "family": ["Singleton_100"] * 2 + ["Singleton_200"],
+        "detector": ["H1", "H1", "L1", "L1"],
+        "gps_start": [100.0, 100.0, 200.0, 300.0],
+        "family": ["Singleton_100"] * 2 + ["Singleton_200", "Singleton_300"],
         "aux_channel": ["H1:LSC-POP_A_LF_OUT_DQ",
                         "H1:CAL-PCALY_RX_PD_OUT_DQ",
+                        "L1:ASC-X_TR_A_NSUM_OUT_DQ",
                         "L1:ASC-X_TR_A_NSUM_OUT_DQ"],
-        # GPS 100: C=0.99 significant -> p_Bonf tiny -> vetoed.
+        # GPS 100: C=0.99 empirically significant AND p_Bonf tiny -> vetoed.
         # GPS 200: flagged significant but C=0.20 -> p_Bonf >= 0.05 -> survives.
-        "max_coherence": [0.99, 0.30, 0.20],
-        "peak_freq": [20.0, 60.0, 60.0],
-        "significant": [True, False, True],
-        "data_available": [True, True, True],
-        "note": ["", "", ""],
+        # GPS 300: C=0.48 BELOW the empirical channel threshold
+        #   (significant=False) even though the analytic p_Bonf would be
+        #   < 0.05 — the analytic-only veto is forbidden (the significance
+        #   test measured 23% FPR at C>=0.6, falsifying the Gaussian null),
+        #   so this candidate MUST survive.
+        "max_coherence": [0.99, 0.30, 0.20, 0.48],
+        "peak_freq": [20.0, 60.0, 60.0, 60.0],
+        "significant": [True, False, True, False],
+        "data_available": [True, True, True, True],
+        "note": ["", "", "", ""],
     })
     pem.to_csv(pem_dir / "coherence_report.csv", index=False)
 
@@ -542,6 +548,8 @@ def test_ledger_pem_veto_and_bonferroni(tmp_path):
     surv_block = report.split("### Survivors")[1]
     assert "| 100 | H1 |" not in surv_block
     assert "| 200 | L1 |" in surv_block
+    assert "| 300 | L1 |" in surv_block   # analytic-only veto forbidden
+    assert "below empirical channel threshold" in report
     assert "p_Bonf=1.00 >= 0.05" in report
     # The self-contradicting limitation must never come back
     assert "systematically unavailable" not in report

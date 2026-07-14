@@ -315,3 +315,4 @@ CLAUDE.md
 paper
 skills-lock.json
 .github
+tests/test_review.md
