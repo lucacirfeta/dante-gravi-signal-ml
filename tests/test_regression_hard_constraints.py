@@ -485,3 +485,62 @@ def test_disposition_ledger_present_and_dynamic(tmp_path):
     assert "FINAL SURVIVORS" in report
     assert "pending" in report          # DSD/PEM/multiscale not run -> declared
     assert "| 100 | L1 |" in report     # the survivor row exists
+
+
+def test_ledger_pem_veto_and_bonferroni(tmp_path):
+    """A candidate with a Bonferroni-significant PEM coupling must be
+    REMOVED from the final survivors (not just annotated), listed in the
+    'Removed by PEM veto' table, and counted in the funnel. A channel hit
+    whose Bonferroni-corrected analytic p is >= 0.05 stays MARGINAL and
+    survives. The false 'PEM systematically unavailable' prose must be gone."""
+    import pandas as pd
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    rep = AggregateReporter(production_dir=str(tmp_path), run="O3a")
+    tax = pd.DataFrame({
+        "gps_start": [100.0, 200.0],
+        "detector": ["H1", "L1"],
+        "session_id": ["1234567890", "1234567890"],
+        "origin_table": ["3b", "3b"],
+        "local_cluster_id": ["C0", "C1"],
+        "global_family_id": ["Singleton_100", "Singleton_200"],
+        "max_similarity_to_3a": ["", ""],
+        "transitivity_status": ["Unclassified_Physical_Anomaly",
+                                "Unclassified_Physical_Anomaly"],
+        "gravity_spy_label": ["Not_Queried", "Not_Queried"],
+        "gravity_spy_confidence": [0.0, 0.0],
+        "partner_observing_status": ["UNOBSERVABLE", "UNOBSERVABLE"],
+    })
+    tax.to_csv(rep.output_dir / "Master_Taxonomy_O3a.csv", index=False)
+
+    pem_dir = rep.output_dir / "pem"
+    pem_dir.mkdir(parents=True, exist_ok=True)
+    pem = pd.DataFrame({
+        "detector": ["H1", "H1", "L1"],
+        "gps_start": [100.0, 100.0, 200.0],
+        "family": ["Singleton_100"] * 2 + ["Singleton_200"],
+        "aux_channel": ["H1:LSC-POP_A_LF_OUT_DQ",
+                        "H1:CAL-PCALY_RX_PD_OUT_DQ",
+                        "L1:ASC-X_TR_A_NSUM_OUT_DQ"],
+        # GPS 100: C=0.99 significant -> p_Bonf tiny -> vetoed.
+        # GPS 200: flagged significant but C=0.20 -> p_Bonf >= 0.05 -> MARGINAL, survives.
+        "max_coherence": [0.99, 0.30, 0.20],
+        "peak_freq": [20.0, 60.0, 60.0],
+        "significant": [True, False, True],
+        "data_available": [True, True, True],
+        "note": ["", "", ""],
+    })
+    pem.to_csv(pem_dir / "coherence_report.csv", index=False)
+
+    rep._generate_markdown_report({})
+    report = (rep.output_dir / "Final_Discovery_Report.md").read_text(encoding="utf-8")
+
+    assert "Removed by PEM veto (1)" in report
+    assert "PEM-vetoed (Bonferroni-significant aux coupling) | 1" in report
+    # The vetoed event must not appear in the survivors table
+    surv_block = report.split("### Survivors")[1]
+    assert "| 100 | H1 |" not in surv_block
+    assert "| 200 | L1 |" in surv_block
+    assert "MARGINAL" in report
+    # The self-contradicting limitation must never come back
+    assert "systematically unavailable" not in report

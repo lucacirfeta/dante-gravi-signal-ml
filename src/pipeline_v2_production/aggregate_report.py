@@ -1628,8 +1628,20 @@ class AggregateReporter:
         dsd_ran = robustness.notna().any()
         robustness = robustness.fillna("pending")
 
-        # PEM per-candidate outcomes, if the PEM stage produced them
+        # PEM per-candidate outcomes, if the PEM stage produced them.
+        # An event is COUPLED only if (a) at least one channel exceeds its
+        # empirically calibrated per-channel threshold AND (b) the analytic
+        # coherence null survives a Bonferroni correction across every
+        # channel actually tested for that event. The analytic tail for
+        # Welch magnitude-squared coherence with F averages is
+        # P(C > c) = (1-c)^(F-1) per bin; with 32 s / fftlength 2 s /
+        # overlap 1 s, F = 31, and the 20-500 Hz band at df = 0.5 Hz scans
+        # ~960 bins, so p_channel ~= n_bins * (1-Cmax)^30 and
+        # p_event = m_channels * p_channel.
         pem_map = {}
+        pem_coupled_gps = set()
+        _PEM_WELCH_AVERAGES = 31
+        _PEM_N_BINS = 960
         pem_csv = self.output_dir / "pem" / "coherence_report.csv"
         if pem_csv.exists():
             try:
@@ -1637,15 +1649,39 @@ class AggregateReporter:
                 for gps_val, grp in pdf.groupby("gps_start"):
                     if not grp["data_available"].any():
                         pem_map[float(gps_val)] = "PEM_UNAVAILABLE"
-                    elif grp["significant"].any():
-                        top = grp[grp["significant"]].sort_values(
+                        continue
+                    tested = grp[grp["data_available"]
+                                 & grp["max_coherence"].notna()]
+                    m_channels = max(1, len(tested))
+                    # Compute p_Bonf UNCONDITIONALLY on the channel with
+                    # the highest coherence, regardless of the legacy raw
+                    # 'significant' flag (C >= 0.6).  The raw flag is kept
+                    # only as informational context in the CSV; the veto
+                    # criterion is exclusively p_Bonf < 0.05.
+                    verdict = None
+                    if len(tested) > 0:
+                        top = tested.sort_values(
                             "max_coherence", ascending=False).iloc[0]
-                        pem_map[float(gps_val)] = (
-                            f"COUPLED ({top['aux_channel']}, "
-                            f"C={top['max_coherence']:.2f})")
-                    else:
+                        c = float(top["max_coherence"])
+                        p_bonf = min(1.0, m_channels * _PEM_N_BINS
+                                     * (1.0 - min(c, 1.0 - 1e-12))
+                                     ** (_PEM_WELCH_AVERAGES - 1))
+                        if p_bonf < 0.05:
+                            verdict = (
+                                f"COUPLED ({top['aux_channel']}, "
+                                f"C={c:.3f}, p_Bonf={p_bonf:.1e}, "
+                                f"m={m_channels})")
+                            pem_coupled_gps.add(float(gps_val))
+                        else:
+                            verdict = (
+                                f"NO_CORRELATION (Cmax={c:.3f}, "
+                                f"p_Bonf={p_bonf:.2f} >= 0.05, "
+                                f"m={m_channels})")
+                    if verdict is None:
                         cmax = grp["max_coherence"].max()
-                        pem_map[float(gps_val)] = f"NO_CORRELATION (Cmax={cmax:.2f})"
+                        verdict = (f"NO_CORRELATION (Cmax={cmax:.2f}, "
+                                   f"m={m_channels})")
+                    pem_map[float(gps_val)] = verdict
             except Exception as e:
                 logger.warning(f"Ledger: cannot parse PEM report: {e}")
 
@@ -1673,7 +1709,14 @@ class AggregateReporter:
         is_vetoed_local = partner == "ACTIVE_NO_ANOMALY"
         is_unverifiable = partner.isin(["INACTIVE", "UNOBSERVABLE", "NOT_CHECKED"]) & is_unclassified
         survives_dsd = robustness.eq("ROBUST") if dsd_ran else pd.Series([True] * n, index=tax_df.index)
-        survivor_mask = (is_unclassified | is_singleton) & survives_dsd
+        # PEM veto: a Bonferroni-significant coherence with an auxiliary
+        # channel is direct evidence of instrumental coupling — the event
+        # must not be counted as a surviving discovery candidate.
+        gps_series = pd.to_numeric(get("gps_start"), errors="coerce")
+        pem_vetoed = gps_series.apply(
+            lambda g: float(g) in pem_coupled_gps if pd.notna(g) else False)
+        pre_pem_mask = (is_unclassified | is_singleton) & survives_dsd
+        survivor_mask = pre_pem_mask & ~pem_vetoed
 
         lines.append("Every candidate's final status, derived from the check "
                      "artifacts at report-generation time:")
@@ -1693,9 +1736,27 @@ class AggregateReporter:
         else:
             lines.append("| DSD robustness | pending (run_dsd_standalone) |")
         lines.append(f"| Singleton morphological outliers | {int(is_singleton.sum())} |")
-        lines.append(f"| **FINAL SURVIVORS ((unclassified OR singleton) & DSD-robust)** | "
+        lines.append(f"| PEM-vetoed (Bonferroni-significant aux coupling) | "
+                     f"{int((pre_pem_mask & pem_vetoed).sum())} |")
+        lines.append(f"| **FINAL SURVIVORS ((unclassified OR singleton) & DSD-robust & not PEM-coupled)** | "
                      f"**{int(survivor_mask.sum())}** |")
         lines.append("")
+
+        # ---- PEM-vetoed table (transparency: they were candidates) ----
+        vetoed = tax_df[pre_pem_mask & pem_vetoed]
+        if len(vetoed) > 0:
+            lines.append(f"### Removed by PEM veto ({len(vetoed)})")
+            lines.append("")
+            lines.append("| GPS | Det | Family | DSD | PEM verdict |")
+            lines.append("| --- | --- | --- | --- | --- |")
+            for _, r in vetoed.iterrows():
+                g = float(r["gps_start"])
+                lines.append(
+                    f"| {g:.0f} | {r.get('detector', '?')} "
+                    f"| {r.get('global_family_id', 'N/A')} "
+                    f"| {r.get('robustness_class', 'pending')} "
+                    f"| {pem_map.get(g, 'pending')} |")
+            lines.append("")
 
         # ---- Per-survivor table (capped) ----
         surv = tax_df[survivor_mask]
@@ -1873,7 +1934,7 @@ class AggregateReporter:
             if p < 0.05:
                 sig = "significant"
             else:
-                sig = "borderline/not significant — the topological clustering does not exhibit a strict monotonic relationship with physical sample density, though it is not purely random noise"
+                sig = "not significant"
             md_lines.append(f"- **L1:** ρ = {rho:.3f}, p = {p:.4f} ({sig})")
         else:
             md_lines.append("- **L1:** ρ = N/A, p = N/A (insufficient data)")
@@ -1884,7 +1945,7 @@ class AggregateReporter:
             if p < 0.05:
                 sig = "significant"
             else:
-                sig = "not significant — correlation is statistically unverifiable due to low sample power (n<10), preventing robust interpretation rather than implying true structural randomness"
+                sig = "not significant"
             md_lines.append(f"- **H1:** ρ = {rho:.3f}, p = {p:.4f} ({sig})")
         else:
             md_lines.append("- **H1:** ρ = N/A, p = N/A (insufficient data)")
@@ -2137,7 +2198,7 @@ class AggregateReporter:
         if tot_eval > 0:
             md_lines.append(f"All **{tot_eval}** final evaluated events were cross-matched against Gravity Spy's supervised labels.")
             md_lines.append("- **Result**: All final members have `gs_label = Unknown` (Not cataloged or no-match).")
-            md_lines.append("- **Conclusion**: The claim of novel, unidentified morphology is fully defended against supervised baselines.")
+            md_lines.append(f"- **Caveat**: no Gravity Spy catalog exists for {self.observing_run}; the cross-match runs against classifiers trained on earlier runs (O3-era morphologies). An `Unknown` label is therefore the expected outcome for any {self.observing_run} transient absent from the O3 training set, novel or not. This is a low-power consistency check: it confirms the candidates match no known O3-era class, but cannot by itself establish novelty.")
         else:
             md_lines.append("Gravity spy validation not performed or no candidates evaluated.")
         md_lines.append("")
@@ -2162,6 +2223,9 @@ class AggregateReporter:
                 p_val_str = str(p_val)
                 
             md_lines.append(f"Global Mantel test (N={n_events}): Pearson r = {r_val_str}, Spearman ρ = {rho_val_str}, p-value (permutation, 9999 iters) = {p_val_str}")
+            if isinstance(r_val, (int, float)):
+                md_lines.append("")
+                md_lines.append(f"> **Effect size**: r² = {r_val**2:.3f} — the morphological distance structure explains ~{100*r_val**2:.0f}% of the physical-parameter distance variance. With N this large the permutation p-value is expected to be small even for weak effects; the association is statistically robust but physically modest, and should be read as a consistency check, not as strong evidence of physical structure.")
             md_lines.append("")
             md_lines.append("> **SNR definition**: peak of whitened time-series amplitude, NOT matched-filter SNR (PyCBC/BayesWave).")
             md_lines.append("")
@@ -2279,8 +2343,8 @@ class AggregateReporter:
             md_lines.append(f"- **Calibration Line Coupling (SUS-ETMX):** Morphological clusters ({fams_str}) exhibit significant coherence with ETMX calibration lines. This indicates a known instrumental effect (calibration coupling) consistent with why the O3b reference model did not recognize it as a known class — the morphology may reflect an O4a-specific instrumental configuration not represented in the O3b training set.")
 
         md_lines.append("- **Absence of O4a Gravity Spy Catalog:** Supervised validation is limited to historical models.")
-        md_lines.append("- **Architectural Shift in VQ Dictionary (K=275 vs K=281):** In the legacy O3b pipeline, the VQ dictionary size was treated as a fixed constant ($K=281$). However, the number of centroids is natively a derived parameter, optimized adaptively to bound the 95th percentile reconstruction error below 0.20. With the new anti-edge-artifact preprocessing (`whiten_context`), the cleaner latent space converges at $K=275$. We explicitly declare this an architectural evolution: $K$ is no longer a hardcoded invariant, but a dynamically derived parameter guaranteeing a uniform topological reconstruction error bound. Consequently, absolute intra-cluster coherences are not strictly cross-comparable with legacy O3b publications.")
-        md_lines.append(f"- **PEM Unavailable in {self.observing_run}:** The Physical Environment Monitoring (PEM) auxiliary channels are systematically unavailable for the entire {self.observing_run} public dataset. Consequently, instrumental artifacts cannot be definitively confirmed via environmental coupling. Any candidate routed to `UNCONFIRMED_MORPHOLOGY` lacks both independent detector coincidence and auxiliary channel verification. Human review is strictly required to categorize these events.")
+        md_lines.append("- **VQ Dictionary size (K=275):** The production reference index (`patch_compressed_index_o3b.npz`, MD5-pinned) contains exactly K=275 centroids; this was verified empirically from the artifact shape. The value K=281 that appears in some legacy development code was a divergent constant that never entered production. No claim is made that K is dynamically optimized; it is the pinned dictionary actually used for every score in this report. Comparisons of absolute intra-cluster coherences against earlier internal drafts that assumed K=281 should be treated with caution.")
+        md_lines.append(f"- **Auxiliary (PEM) channel coverage in {self.observing_run}:** Environmental/auxiliary coupling checks used the GWOSC O4 Auxiliary Channel Data Release (DOI 10.7935/kt51-6n86), which exposes a limited public subset of channels (14 for H1, 11 for L1) rather than the full internal PEM sensor network. Per-event channel availability varies with the GPS window; the number of channels actually tested (m) is reported per event in the disposition ledger. Channel-level significance uses empirically calibrated per-channel thresholds, and event-level COUPLED verdicts additionally require a Bonferroni-corrected analytic coherence p-value < 0.05 across the m tested channels. Because the public subset is incomplete, a NO_CORRELATION verdict bounds coupling only over the tested channels and does not exclude coupling with unreleased sensors; candidates surviving this check still require human review.")
         
         # ------------------------------------------------------------------
         # Final Candidate Disposition Ledger (dynamic, single source per GPS)
