@@ -543,7 +543,7 @@ def test_ledger_pem_veto_and_bonferroni(tmp_path):
     report = (rep.output_dir / "Final_Discovery_Report.md").read_text(encoding="utf-8")
 
     assert "Removed by PEM veto (1)" in report
-    assert "PEM-vetoed (Bonferroni-significant aux coupling) | 1" in report
+    assert "PEM-vetoed (family-wise empirical aux coupling) | 1" in report
     # The vetoed event must not appear in the survivors table
     surv_block = report.split("### Survivors")[1]
     assert "| 100 | H1 |" not in surv_block

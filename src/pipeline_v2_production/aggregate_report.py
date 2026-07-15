@@ -1800,7 +1800,7 @@ class AggregateReporter:
         else:
             lines.append("| DSD robustness | pending (run_dsd_standalone) |")
         lines.append(f"| Singleton morphological outliers | {int(is_singleton.sum())} |")
-        lines.append(f"| PEM-vetoed (Bonferroni-significant aux coupling) | "
+        lines.append(f"| PEM-vetoed (family-wise empirical aux coupling) | "
                      f"{int((pre_pem_mask & pem_vetoed).sum())} |")
         lines.append(f"| **FINAL SURVIVORS ((unclassified OR singleton) & DSD-robust & not PEM-coupled)** | "
                      f"**{int(survivor_mask.sum())}** |")
