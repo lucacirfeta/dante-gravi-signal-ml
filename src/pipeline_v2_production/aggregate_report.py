@@ -1644,11 +1644,46 @@ class AggregateReporter:
         pem_coupled_gps = set()
         _PEM_WELCH_AVERAGES = 31
         _PEM_N_BINS = 960
+
+        # PRIMARY criterion: family-wise empirical null (max-statistic over
+        # the event's m channels on time-shift surrogates, see
+        # pem_null_calibration.py). Falls back to the legacy dual criterion
+        # (empirical per-channel threshold AND analytic Bonferroni) ONLY for
+        # events without a calibration, and says so in the verdict string.
+        fw_csv = self.output_dir / "pem" / "pem_family_wise_verdicts.csv"
+        fw_seen = set()
+        if fw_csv.exists():
+            try:
+                fw = pd.read_csv(fw_csv)
+                for _, r in fw.iterrows():
+                    g = float(r["gps_start"])
+                    if r["verdict"] == "UNCALIBRATED":
+                        continue  # legacy fallback below
+                    fw_seen.add(g)
+                    if r["verdict"] == "COUPLED":
+                        pem_coupled_gps.add(g)
+                        pem_map[g] = (
+                            f"COUPLED ({r['top_channel']}, "
+                            f"Cmax={r['cmax_observed']:.3f} > "
+                            f"thr_fw={r['threshold_fw']:.3f}, "
+                            f"m={int(r['m_channels'])}, "
+                            f"N={int(r['n_surrogate_pairs'])})")
+                    else:
+                        pem_map[g] = (
+                            f"NO_CORRELATION (Cmax={r['cmax_observed']:.3f} "
+                            f"<= thr_fw={r['threshold_fw']:.3f}, "
+                            f"m={int(r['m_channels'])}, "
+                            f"N={int(r['n_surrogate_pairs'])})")
+            except Exception as e:
+                logger.warning(f"Ledger: cannot parse family-wise verdicts: {e}")
+
         pem_csv = self.output_dir / "pem" / "coherence_report.csv"
         if pem_csv.exists():
             try:
                 pdf = pd.read_csv(pem_csv)
                 for gps_val, grp in pdf.groupby("gps_start"):
+                    if float(gps_val) in fw_seen:
+                        continue  # family-wise verdict already assigned
                     if not grp["data_available"].any():
                         pem_map[float(gps_val)] = "PEM_UNAVAILABLE"
                         continue
@@ -1681,19 +1716,19 @@ class AggregateReporter:
                                      ** (_PEM_WELCH_AVERAGES - 1))
                         if len(hits) > 0 and p_bonf < 0.05:
                             verdict = (
-                                f"COUPLED ({top['aux_channel']}, "
+                                f"COUPLED [LEGACY dual criterion] ({top['aux_channel']}, "
                                 f"C={c:.3f}, p_Bonf={p_bonf:.1e}, "
                                 f"m={m_channels})")
                             pem_coupled_gps.add(float(gps_val))
                         elif len(hits) == 0:
                             verdict = (
-                                f"NO_CORRELATION (Cmax={c:.3f}, "
-                                f"below empirical channel threshold, "
-                                f"p_Bonf={p_bonf:.1e}, m={m_channels})")
+                                f"NO_CORRELATION [LEGACY dual criterion] "
+                                f"(Cmax={c:.3f}, below empirical channel "
+                                f"threshold, p_Bonf={p_bonf:.1e}, m={m_channels})")
                         else:
                             verdict = (
-                                f"NO_CORRELATION (Cmax={c:.3f}, "
-                                f"p_Bonf={p_bonf:.2f} >= 0.05, "
+                                f"NO_CORRELATION [LEGACY dual criterion] "
+                                f"(Cmax={c:.3f}, p_Bonf={p_bonf:.2f} >= 0.05, "
                                 f"m={m_channels})")
                     if verdict is None:
                         cmax = grp["max_coherence"].max()
@@ -2379,7 +2414,7 @@ class AggregateReporter:
 
         md_lines.append("- **Absence of O4a Gravity Spy Catalog:** Supervised validation is limited to historical models.")
         md_lines.append("- **VQ Dictionary size (K=275):** The production reference index (`patch_compressed_index_o3b.npz`, MD5-pinned) contains exactly K=275 centroids; this was verified empirically from the artifact shape. The value K=281 that appears in some legacy development code was a divergent constant that never entered production. No claim is made that K is dynamically optimized; it is the pinned dictionary actually used for every score in this report. Comparisons of absolute intra-cluster coherences against earlier internal drafts that assumed K=281 should be treated with caution.")
-        md_lines.append(f"- **Auxiliary (PEM) channel coverage in {self.observing_run}:** Environmental/auxiliary coupling checks used the GWOSC O4 Auxiliary Channel Data Release (DOI 10.7935/kt51-6n86), which exposes a limited public subset of channels (14 for H1, 11 for L1) rather than the full internal PEM sensor network. Per-event channel availability varies with the GPS window; the number of channels actually tested (m) is reported per event in the disposition ledger. Channel-level significance uses empirically calibrated per-channel thresholds, and event-level COUPLED verdicts additionally require a Bonferroni-corrected analytic coherence p-value < 0.05 across the m tested channels. Because the public subset is incomplete, a NO_CORRELATION verdict bounds coupling only over the tested channels and does not exclude coupling with unreleased sensors; candidates surviving this check still require human review.")
+        md_lines.append(f"- **Auxiliary (PEM) channel coverage in {self.observing_run}:** Environmental/auxiliary coupling checks used the GWOSC O4 Auxiliary Channel Data Release (DOI 10.7935/kt51-6n86), which exposes a limited public subset of channels (14 for H1, 11 for L1) rather than the full internal PEM sensor network. Per-event channel availability varies with the GPS window; the number of channels actually tested (m) is reported per event in the disposition ledger. Event-level COUPLED/NO_CORRELATION verdicts use a family-wise EMPIRICAL null: for each event, the (1-alpha) quantile (alpha=0.01) of the max-statistic — the maximum coherence over all m tested channels and the 20-500 Hz band — computed on time-shift surrogate pairs (32 s windows, 96 s stride, >= 64 s guard) drawn from a CAT1-clean background block near the event, with candidate windows excluded (+/-96 s). The same shift is applied against all channels simultaneously, preserving inter-channel correlation (e.g. the SUS-ETMX actuator stages); the number of surrogate pairs N and the derived threshold are reported per event in the ledger, with a window-level bootstrap CI in the calibration JSON. Neither the raw per-channel threshold (measured single-channel FPR: 23% at C >= 0.6 on time-shift surrogates) nor the quasi-Gaussian analytic p-value (falsified by that same measurement by ~7 orders of magnitude) determines the verdict; the analytic value survives only as a secondary diagnostic. Events lacking a calibration fall back to the legacy dual criterion and are explicitly tagged [LEGACY dual criterion]. Because the public subset is incomplete, a NO_CORRELATION verdict bounds coupling only over the tested channels and does not exclude coupling with unreleased sensors; candidates surviving this check still require human review.")
         
         # ------------------------------------------------------------------
         # Final Candidate Disposition Ledger (dynamic, single source per GPS)

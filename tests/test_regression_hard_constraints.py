@@ -553,3 +553,116 @@ def test_ledger_pem_veto_and_bonferroni(tmp_path):
     assert "p_Bonf=1.00 >= 0.05" in report
     # The self-contradicting limitation must never come back
     assert "systematically unavailable" not in report
+
+
+def test_ledger_family_wise_pem_veto(tmp_path):
+    """The PRIMARY PEM veto is the family-wise empirical max-statistic
+    threshold (pem_family_wise_verdicts.csv). Covers all four required
+    regimes:
+      GPS 100: Cmax=0.987 > thr_fw=0.93  -> COUPLED (known limit case);
+      GPS 200: Cmax=0.478 <= thr_fw=0.62 -> survives (known limit case);
+      GPS 300: Cmax=0.85 <= thr_fw=0.91  -> survives — a raw C>=0.6 veto
+               would have killed it (raw-based false alarm);
+      GPS 400: Cmax=0.55 > thr_fw=0.50   -> COUPLED — the raw criterion
+               would have MISSED this true coupling.
+    Events without calibration fall back to the legacy dual criterion and
+    are explicitly tagged."""
+    import pandas as pd
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    rep = AggregateReporter(production_dir=str(tmp_path), run="O3a")
+    gps_list = [100.0, 200.0, 300.0, 400.0, 500.0]
+    tax = pd.DataFrame({
+        "gps_start": gps_list,
+        "detector": ["H1", "L1", "L1", "H1", "L1"],
+        "session_id": ["1234567890"] * 5,
+        "origin_table": ["3b"] * 5,
+        "local_cluster_id": [f"C{i}" for i in range(5)],
+        "global_family_id": [f"Singleton_{int(g)}" for g in gps_list],
+        "max_similarity_to_3a": [""] * 5,
+        "transitivity_status": ["Unclassified_Physical_Anomaly"] * 5,
+        "gravity_spy_label": ["Not_Queried"] * 5,
+        "gravity_spy_confidence": [0.0] * 5,
+        "partner_observing_status": ["UNOBSERVABLE"] * 5,
+    })
+    tax.to_csv(rep.output_dir / "Master_Taxonomy_O3a.csv", index=False)
+
+    pem_dir = rep.output_dir / "pem"
+    pem_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({
+        "detector": ["H1", "L1", "L1", "H1", "L1"],
+        "gps_start": gps_list,
+        "family": [f"Singleton_{int(g)}" for g in gps_list],
+        "aux_channel": ["H1:LSC-POP_A_LF_OUT_DQ"] * 5,
+        "max_coherence": [0.987, 0.478, 0.85, 0.55, 0.99],
+        "peak_freq": [20.0] * 5,
+        "significant": [True, False, True, False, True],
+        "data_available": [True] * 5,
+        "note": [""] * 5,
+    }).to_csv(pem_dir / "coherence_report.csv", index=False)
+
+    pd.DataFrame({
+        "detector": ["H1", "L1", "L1", "H1"],
+        "gps_start": [100.0, 200.0, 300.0, 400.0],
+        "family": [f"Singleton_{g}" for g in (100, 200, 300, 400)],
+        "m_channels": [5, 7, 7, 5],
+        "n_surrogate_pairs": [20000] * 4,
+        "threshold_fw": [0.93, 0.62, 0.91, 0.50],
+        "cmax_observed": [0.987, 0.478, 0.85, 0.55],
+        "top_channel": ["H1:LSC-POP_A_LF_OUT_DQ"] * 4,
+        "verdict": ["COUPLED", "NO_CORRELATION",
+                    "NO_CORRELATION", "COUPLED"],
+        # GPS 500 intentionally absent -> legacy fallback
+    }).to_csv(pem_dir / "pem_family_wise_verdicts.csv", index=False)
+
+    rep._generate_markdown_report({})
+    report = (rep.output_dir / "Final_Discovery_Report.md").read_text(encoding="utf-8")
+
+    surv_block = report.split("### Survivors")[1]
+    assert "| 200 | L1 |" in surv_block
+    assert "| 300 | L1 |" in surv_block        # raw C>=0.6 must NOT veto
+    assert "| 100 | H1 |" not in surv_block
+    assert "| 400 | H1 |" not in surv_block    # raw would have missed it
+    assert "thr_fw=0.500" in report and "thr_fw=0.930" in report
+    assert "m=7" in report and "N=20000" in report
+    # Uncalibrated event: legacy path, explicitly tagged
+    assert "[LEGACY dual criterion]" in report
+    assert "Removed by PEM veto (3)" in report  # 100, 400, 500(legacy C=0.99)
+
+
+def test_pem_null_coherence_math():
+    """Sanity of the surrogate coherence estimator: identical signals give
+    coherence ~1; independent white noise stays well below 1 with 31
+    Welch averages."""
+    import numpy as np
+    from gwpy.timeseries import TimeSeries
+    from src.pipeline_v2_production.pem_null_calibration import (
+        _window_segment_ffts, N_WELCH)
+
+    rng = np.random.default_rng(0)
+    fs = 1024
+    # Strain-scale amplitudes (~1e-19): float32 |FFT|^2 would underflow
+    # and any additive eps would swallow the denominator, deflating the
+    # coherence by orders of magnitude (observed threshold_fw=0.003 on
+    # real data). The estimator must be scale-invariant.
+    ts = TimeSeries((1e-19 * rng.normal(size=fs * 40)).astype(np.float64),
+                    sample_rate=fs, t0=1000)
+    X, freqs = _window_segment_ffts(ts, 1000, np.array([1002.0]),
+                                    band=(20.0, 400.0))
+    assert X.shape[1] == N_WELCH and X.shape[0] == 1
+    Px = np.sum(np.abs(X) ** 2, axis=1)
+    cross_same = np.einsum("ikf,jkf->ijf", X, np.conj(X))
+    coh_same = np.abs(cross_same[0, 0]) ** 2 / (Px[0] * Px[0])
+    assert np.allclose(coh_same, 1.0, atol=1e-5)
+
+    ts2 = TimeSeries((1e-19 * rng.normal(size=fs * 40)).astype(np.float64),
+                     sample_rate=fs, t0=1000)
+    Y, _ = _window_segment_ffts(ts2, 1000, np.array([1002.0]),
+                                band=(20.0, 400.0))
+    Py = np.sum(np.abs(Y) ** 2, axis=1)
+    cross = np.einsum("ikf,jkf->ijf", X, np.conj(Y))
+    coh = np.abs(cross[0, 0]) ** 2 / (Px[0] * Py[0])
+    # E[C] = 1/n_d for independent Gaussians; max over ~740 bins stays
+    # far from 1 with 31 averages.
+    assert coh.max() < 0.6
+    assert coh.mean() < 0.1
