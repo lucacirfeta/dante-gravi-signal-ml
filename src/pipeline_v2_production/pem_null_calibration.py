@@ -306,6 +306,7 @@ def apply_family_wise_verdicts(run: str = "O4a") -> Path:
                          "top_channel": None, "verdict": "UNCALIBRATED"})
             continue
         cal = json.loads(cal_path.read_text())
+        n_windows = cal.get("n_windows")
         # Observed max restricted to the channels present in the null:
         # a channel dropped from the null must not contribute to the max.
         obs = tested[tested["aux_channel"].isin(cal["channels"])]
@@ -324,6 +325,7 @@ def apply_family_wise_verdicts(run: str = "O4a") -> Path:
         rows.append({"detector": det, "gps_start": gps,
                      "family": grp["family"].iloc[0],
                      "m_channels": cal["m_channels"],
+                     "n_windows": n_windows,
                      "n_surrogate_pairs": cal["n_surrogate_pairs"],
                      "threshold_fw": cal["threshold_fw"],
                      "cmax_observed": cmax_obs,

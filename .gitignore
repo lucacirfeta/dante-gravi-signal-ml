@@ -292,6 +292,7 @@ knowledge/
 reports/
 scripts/
 
+.gsd
 .old
 .agents
 .env.example
@@ -316,3 +317,8 @@ paper
 skills-lock.json
 .github
 tests/test_review.md
+adapters
+GSD-STYLE.md
+model_capabilities.yaml
+PROJECT_RULES.md
+.mcp.json

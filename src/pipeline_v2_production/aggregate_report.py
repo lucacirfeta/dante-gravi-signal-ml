@@ -1655,25 +1655,36 @@ class AggregateReporter:
         if fw_csv.exists():
             try:
                 fw = pd.read_csv(fw_csv)
+                calibrated = fw[fw["verdict"] != "UNCALIBRATED"]
+                median_pairs = calibrated["n_surrogate_pairs"].median() \
+                    if len(calibrated) else 0
                 for _, r in fw.iterrows():
                     g = float(r["gps_start"])
                     if r["verdict"] == "UNCALIBRATED":
                         continue  # legacy fallback below
                     fw_seen.add(g)
+                    # A visibly smaller surrogate count is not a bug: the
+                    # per-window candidate exclusion (+/-96 s) removes more
+                    # windows where the taxonomy is locally dense. Say so.
+                    low_n_note = ""
+                    if median_pairs and r["n_surrogate_pairs"] < 0.75 * median_pairs:
+                        low_n_note = (", reduced N: candidate-dense region, "
+                                      "per-window exclusion")
+                    detail = (f"thr_fw={r['threshold_fw']:.3f}, "
+                              f"m={int(r['m_channels'])}, "
+                              f"N={int(r['n_surrogate_pairs'])}"
+                              + (f", W={int(r['n_windows'])}"
+                                 if pd.notna(r.get("n_windows")) else "")
+                              + low_n_note)
                     if r["verdict"] == "COUPLED":
                         pem_coupled_gps.add(g)
                         pem_map[g] = (
                             f"COUPLED ({r['top_channel']}, "
-                            f"Cmax={r['cmax_observed']:.3f} > "
-                            f"thr_fw={r['threshold_fw']:.3f}, "
-                            f"m={int(r['m_channels'])}, "
-                            f"N={int(r['n_surrogate_pairs'])})")
+                            f"Cmax={r['cmax_observed']:.3f} > {detail})")
                     else:
                         pem_map[g] = (
                             f"NO_CORRELATION (Cmax={r['cmax_observed']:.3f} "
-                            f"<= thr_fw={r['threshold_fw']:.3f}, "
-                            f"m={int(r['m_channels'])}, "
-                            f"N={int(r['n_surrogate_pairs'])})")
+                            f"<= {detail})")
             except Exception as e:
                 logger.warning(f"Ledger: cannot parse family-wise verdicts: {e}")
 
@@ -1794,6 +1805,17 @@ class AggregateReporter:
         lines.append(f"| **FINAL SURVIVORS ((unclassified OR singleton) & DSD-robust & not PEM-coupled)** | "
                      f"**{int(survivor_mask.sum())}** |")
         lines.append("")
+
+        # ---- Full family-wise PEM verdict table (ALL tested events,
+        # including family members that never reach the survivor stage) ----
+        if pem_map:
+            lines.append(f"### PEM family-wise verdicts ({len(pem_map)} events tested)")
+            lines.append("")
+            lines.append("| GPS | Verdict |")
+            lines.append("| --- | --- |")
+            for g in sorted(pem_map):
+                lines.append(f"| {g:.0f} | {pem_map[g]} |")
+            lines.append("")
 
         # ---- PEM-vetoed table (transparency: they were candidates) ----
         vetoed = tax_df[pre_pem_mask & pem_vetoed]
