@@ -292,7 +292,7 @@ knowledge/
 reports/
 scripts/
 
-.gsd
+.gsd/
 .old
 .agents
 .env.example
@@ -322,3 +322,6 @@ GSD-STYLE.md
 model_capabilities.yaml
 PROJECT_RULES.md
 .mcp.json
+.gsd/ROADMAP.md
+.gsd/SPEC.md
+.gsd/STATE.md
