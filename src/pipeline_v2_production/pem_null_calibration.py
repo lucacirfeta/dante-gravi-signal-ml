@@ -212,12 +212,32 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
         raise RuntimeError("No auxiliary channel could be fetched: "
                            "family-wise null impossible for this event.")
 
-    cmax = np.max(np.stack(cmax_per_channel), axis=0)  # (W, W) over channels
+    stack = np.stack(cmax_per_channel)                 # (m, W, W)
+    cmax = np.max(stack, axis=0)                       # (W, W) over channels
+    argmax_ch = np.argmax(stack, axis=0)               # (W, W)
     ii, jj = np.meshgrid(np.arange(W), np.arange(W), indexing="ij")
     valid = np.abs(window_starts[ii] - window_starts[jj]) >= GUARD_S
     null_sample = cmax[valid]
     n_pairs = int(valid.sum())
     threshold = float(np.quantile(null_sample, 1.0 - alpha))
+
+    # Per-channel diagnostics: which channel drags the family-wise
+    # quantile? A single channel with a persistent spectral line shows
+    # (a) a high per-channel null quantile, (b) a large share of the
+    # argmax among surrogate pairs, (c) high zero-lag (i==j) coherence
+    # inside the background block (deterministic line signature).
+    per_channel = {}
+    argmax_valid = argmax_ch[valid]
+    for ci, ch in enumerate(used_channels):
+        ch_null = stack[ci][valid]
+        per_channel[ch] = {
+            "null_q": float(np.quantile(ch_null, 1.0 - alpha)),
+            "null_median": float(np.median(ch_null)),
+            "argmax_fraction": float(np.mean(argmax_valid == ci)),
+            "zero_lag_median": float(np.median(np.diag(stack[ci]))),
+        }
+    hist_counts, hist_edges = np.histogram(null_sample, bins=50,
+                                           range=(0.0, 1.0))
 
     # Threshold uncertainty: bootstrap over WINDOW indices, because pairs
     # sharing a window are dependent — pair-level bootstrap would be
@@ -245,6 +265,11 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
         "alpha_family_wise": alpha,
         "threshold_fw": threshold,
         "threshold_fw_ci95": ci,
+        "per_channel_null": per_channel,
+        "dominant_null_channel": max(per_channel,
+                                     key=lambda c: per_channel[c]["argmax_fraction"]),
+        "null_histogram": {"bin_edges": hist_edges.tolist(),
+                           "counts": hist_counts.tolist()},
         "method": ("empirical max-statistic over m channels, strain "
                    "time-shift pairs (32s windows, 96s stride, 64s guard), "
                    "channel correlation preserved (single shift vs all "
