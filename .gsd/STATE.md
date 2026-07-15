@@ -1,7 +1,5 @@
 ## Current Position
-- **Phase**: 4
-- **Task**: Execution complete
-- **Status**: Milestone completed
-
-## Next Steps
-1. /execute 1
+- **Milestone**: Nessuna
+- **Phase**: Nessuna
+- **Task**: Nessuna
+- **Status**: Nessun milestone attivo. Usa /new-milestone per iniziare.
