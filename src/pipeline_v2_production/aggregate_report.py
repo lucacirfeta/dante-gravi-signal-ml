@@ -2337,11 +2337,52 @@ class AggregateReporter:
             md_lines.append("")
 
         # ----------------------------------------------------------
-        # Section 16: Poisson Upper Limit Placeholder
+        # Poisson Upper Limit — read the per-detector artifacts written by
+        # poisson_upper_limit.py. These were computed but never linked into
+        # the report (integration gap): the section was a static placeholder.
         # ----------------------------------------------------------
-        md_lines.append(f"## {sec_num}. Poisson Upper Limit (Offline Validation)")
+        md_lines.append(f"## {sec_num}. Poisson Upper Limit (CAT1-gated livetime)")
         sec_num += 1
-        md_lines.append("> Waiting for poisson module injection...")
+        ul_dir = self.output_dir / "upper_limit"
+        ul_rows = []
+        for det in ("H1", "L1"):
+            ul_json = ul_dir / f"poisson_upper_limit_{det}.json"
+            if ul_json.exists():
+                try:
+                    ul = json.loads(ul_json.read_text())
+                    ul_rows.append(ul)
+                except Exception as e:
+                    logger.warning(f"Cannot read {ul_json}: {e}")
+        if ul_rows:
+            md_lines.append(
+                "90% confidence-level frequentist Poisson upper limit on the "
+                "rate of morphologically novel, unexplained transients. "
+                "Livetime is the science-mode span intersected with "
+                "`{DET}_CBC_CAT1` (not the raw session span). With "
+                "N_unexplained = 0 the limit is analytic: "
+                "lambda_90 = -ln(1 - 0.90) = 2.303, R_90 = lambda_90 / livetime.")
+            md_lines.append("")
+            md_lines.append("| Detector | CAT1 livetime (days) | N unexplained | "
+                            "lambda_90 | R_90 (yr^-1) |")
+            md_lines.append("| --- | --- | --- | --- | --- |")
+            for ul in ul_rows:
+                md_lines.append(
+                    f"| {ul['detector']} | {ul['livetime_days']:.1f} | "
+                    f"{ul['observed_unexplained_events']} | "
+                    f"{ul['lambda_upper_limit']:.3f} | "
+                    f"{ul['rate_upper_limit_per_year']:.2f} |")
+            md_lines.append("")
+            md_lines.append(
+                "> Method: " + ul_rows[0].get("methodology", "Analytic -ln(0.1)")
+                + ". These CAT1-gated limits supersede any earlier span-based "
+                "values (which used an ungated, optimistic denominator).")
+        else:
+            md_lines.append(
+                "> Poisson upper-limit artifacts not found under "
+                "`upper_limit/` — run `poisson-upper-limit` "
+                "(REPORT INCOMPLETE for this section).")
+            logger.warning("[REPORT COMPLETENESS] Poisson upper limit "
+                           "artifacts missing under upper_limit/.")
         md_lines.append("")
 
         # ----------------------------------------------------------
@@ -2445,7 +2486,10 @@ class AggregateReporter:
 
         md_content = "\n".join(md_lines)
         log_path = self.output_dir / "Final_Discovery_Report.md"
-        with open(log_path, "w", encoding="utf-8") as f:
+        # newline="\n" forces LF terminators: the default text mode on
+        # Windows emits CRLF, which some rigid Markdown/editorial pipelines
+        # mis-render.
+        with open(log_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(f"# Final Discovery Report ({self.observing_run})\n")
             f.write("## Taxonomy of Comparison: Pre-fix vs Post-fix\n\n")
             f.write("To prevent post-hoc rationalizations, " + f"the candidates from the new {self.observing_run} scan must be strictly classified" + " against the previous baseline according to the following taxonomy:\n\n")

@@ -487,6 +487,49 @@ def test_disposition_ledger_present_and_dynamic(tmp_path):
     assert "| 100 | L1 |" in report     # the survivor row exists
 
 
+def test_poisson_ul_section_reads_artifacts_not_placeholder(tmp_path):
+    """The Poisson UL section must render the numbers from the
+    upper_limit/*.json artifacts, never the static 'Waiting for poisson
+    module injection...' placeholder — that was a computed-but-unlinked
+    integration bug (data on disk, section empty in the report)."""
+    import json
+    import pandas as pd
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    rep = AggregateReporter(production_dir=str(tmp_path), run="O4a")
+    tax = pd.DataFrame({
+        "gps_start": [100.0], "detector": ["L1"],
+        "session_id": ["1234567890"], "origin_table": ["3b"],
+        "local_cluster_id": ["C0"], "global_family_id": ["Singleton"],
+        "max_similarity_to_3a": [""],
+        "transitivity_status": ["Unclassified_Physical_Anomaly"],
+        "gravity_spy_label": ["Not_Queried"], "gravity_spy_confidence": [0.0],
+        "partner_observing_status": ["UNOBSERVABLE"],
+    })
+    tax.to_csv(rep.output_dir / "Master_Taxonomy_O4a.csv", index=False)
+
+    ul_dir = rep.output_dir / "upper_limit"
+    ul_dir.mkdir(parents=True, exist_ok=True)
+    for det, days, rate in [("H1", 144.2, 5.83), ("L1", 149.4, 5.63)]:
+        (ul_dir / f"poisson_upper_limit_{det}.json").write_text(json.dumps({
+            "detector": det, "livetime_days": days,
+            "observed_unexplained_events": 0, "confidence_level": 0.9,
+            "lambda_upper_limit": 2.302585, "rate_upper_limit_per_year": rate,
+            "methodology": "Analytic -ln(0.1)"}))
+
+    rep._generate_markdown_report({})
+    report = (rep.output_dir / "Final_Discovery_Report.md").read_text(encoding="utf-8")
+
+    assert "Waiting for poisson module injection" not in report
+    assert "5.83" in report and "5.63" in report
+    assert "144.2" in report and "149.4" in report
+    assert "CAT1" in report
+
+    # LF line endings: no CRLF in the emitted file
+    raw = (rep.output_dir / "Final_Discovery_Report.md").read_bytes()
+    assert b"\r\n" not in raw
+
+
 def test_ledger_pem_veto_and_bonferroni(tmp_path):
     """A candidate with a Bonferroni-significant PEM coupling must be
     REMOVED from the final survivors (not just annotated), listed in the
