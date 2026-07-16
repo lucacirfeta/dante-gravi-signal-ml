@@ -46,6 +46,15 @@ GLITCH_SET = {
     "Whistle": {"duration_arg": 1.0, "effective_s": 0.6},
     "ScatteredLight": {"duration_arg": 2.0, "effective_s": 1.5},
     "NoiseBlob": {"duration_arg": 4.0, "effective_s": 4.0},
+    # DSD-falsifiability morphologies (mirrors dsd_injection_test.py's
+    # native-index recovery test, run here at all four V3 scales instead
+    # of only the legacy single 32s / K=68 pathway). HarmonicComb and
+    # WallOfLines are persistent (no time-envelope) over their generated
+    # duration_arg window, so injecting them at 4.0s makes them span the
+    # full range of tested analysis scales, exactly like NoiseBlob.
+    "HarmonicComb": {"duration_arg": 4.0, "effective_s": 4.0},
+    "WallOfLines": {"duration_arg": 4.0, "effective_s": 4.0},
+    "KoiFish": {"duration_arg": 1.0, "effective_s": 0.15},
 }
 
 TARGET_SNRS = [8, 12, 16, 24, 32, 48]
@@ -116,11 +125,15 @@ def find_background_centers(detector: str, n_needed: int, seed: int) -> list[tup
     return centers
 
 
-def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_run: str):
+def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_run: str,
+                             morphologies: list[str] | None = None, tag: str = ""):
     np.random.seed(seed)
     output_dir = Path("results/micro_mdc/multiscale")
     temp_dir = output_dir / "temp_injection_eff"
     temp_dir.mkdir(parents=True, exist_ok=True)
+
+    glitch_set = {k: GLITCH_SET[k] for k in (morphologies or GLITCH_SET)}
+    suffix = f"_{tag}" if tag else ""
 
     thresholds = load_thresholds(detector, target_run)
 
@@ -141,12 +154,12 @@ def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_r
     gen = SyntheticGlitchGenerator(sample_rate=4096)
     injector = InjectionEngine(sample_rate=4096)
 
-    n_cells = len(GLITCH_SET) * len(TARGET_SNRS)
+    n_cells = len(glitch_set) * len(TARGET_SNRS)
     n_injections = n_cells * n_per_cell
     centers = find_background_centers(detector, n_injections, seed)
 
     tasks = []
-    for gtype in GLITCH_SET:
+    for gtype in glitch_set:
         for snr in TARGET_SNRS:
             for _ in range(n_per_cell):
                 tasks.append((gtype, snr))
@@ -154,7 +167,7 @@ def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_r
     rng.shuffle(tasks)
 
     results = []
-    resume_path = output_dir / f"{detector}_injection_efficiency_raw.csv"
+    resume_path = output_dir / f"{detector}_injection_efficiency{suffix}_raw.csv"
     done = 0
     if resume_path.exists():
         prev = pd.read_csv(resume_path)
@@ -179,7 +192,7 @@ def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_r
                     detector, block_start, block_end, cache_raw=False)
             ts_raw = block_cache[key]
 
-            spec = GLITCH_SET[gtype]
+            spec = glitch_set[gtype]
             glitch = gen.generate(gtype, amplitude=1.0, duration=spec["duration_arg"])
             # Rescale to target matched-filter SNR against the local PSD
             snr_unit = injector.compute_snr(ts_raw.crop(t_bg - 16, t_bg + 16), glitch)
@@ -242,7 +255,7 @@ def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_r
         lo, hi = wilson_ci(k, n)
         rows.append({
             "glitch_type": gtype,
-            "effective_duration_s": GLITCH_SET[gtype]["effective_s"],
+            "effective_duration_s": glitch_set[gtype]["effective_s"],
             "scale_s": scale,
             "target_snr": snr,
             "n": n,
@@ -253,19 +266,23 @@ def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_r
         })
     summary = pd.DataFrame(rows).sort_values(
         ["effective_duration_s", "scale_s", "target_snr"])
-    summary_path = output_dir / f"{detector}_injection_efficiency_summary.csv"
+    summary_path = output_dir / f"{detector}_injection_efficiency{suffix}_summary.csv"
     summary.to_csv(summary_path, index=False)
     logger.info(f"Summary written to {summary_path}")
 
-    plot_efficiency(summary, detector, output_dir)
+    plot_efficiency(summary, detector, output_dir, glitch_set, suffix)
 
 
-def plot_efficiency(summary: pd.DataFrame, detector: str, output_dir: Path):
+def plot_efficiency(summary: pd.DataFrame, detector: str, output_dir: Path,
+                    glitch_set: dict | None = None, suffix: str = ""):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    gtypes = list(GLITCH_SET.keys())
+    glitch_set = glitch_set or GLITCH_SET
+    # Derive plotted types from the data actually present, in glitch_set's
+    # order, so a partial/custom run only plots what it ran.
+    gtypes = [g for g in glitch_set if g in set(summary["glitch_type"])]
     fig, axes = plt.subplots(1, len(gtypes), figsize=(4 * len(gtypes), 4),
                              sharey=True)
     if len(gtypes) == 1:
@@ -280,7 +297,7 @@ def plot_efficiency(summary: pd.DataFrame, detector: str, output_dir: Path):
                     label=f"{scale}s")
             ax.fill_between(s["target_snr"], s["ci_low"], s["ci_high"],
                             alpha=0.15)
-        dur = GLITCH_SET[gtype]["effective_s"]
+        dur = glitch_set[gtype]["effective_s"]
         ax.set_title(f"{gtype} (~{dur}s)")
         ax.set_xlabel("Matched-filter SNR")
         ax.set_xscale("log")
@@ -289,7 +306,7 @@ def plot_efficiency(summary: pd.DataFrame, detector: str, output_dir: Path):
     axes[0].legend(title="Analysis scale")
     fig.suptitle(f"{detector} per-scale detection efficiency (post-audit V3)")
     fig.tight_layout()
-    out = output_dir / f"fig_{detector}_injection_efficiency_postaudit.png"
+    out = output_dir / f"fig_{detector}_injection_efficiency{suffix}_postaudit.png"
     fig.savefig(out, dpi=150)
     logger.info(f"Figure written to {out}")
 
@@ -300,5 +317,12 @@ if __name__ == "__main__":
     parser.add_argument("--n-per-cell", type=int, default=40)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--run", type=str, default="O4a")
+    parser.add_argument("--morphologies", nargs="+", default=None,
+                        help="Subset of GLITCH_SET keys to run (default: all).")
+    parser.add_argument("--tag", type=str, default="",
+                        help="Suffix for output filenames, to avoid "
+                             "clobbering a prior run with a different "
+                             "morphology subset.")
     args = parser.parse_args()
-    run_injection_efficiency(args.detector, args.n_per_cell, args.seed, args.run)
+    run_injection_efficiency(args.detector, args.n_per_cell, args.seed, args.run,
+                             morphologies=args.morphologies, tag=args.tag)

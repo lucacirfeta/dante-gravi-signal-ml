@@ -32,6 +32,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import torch
@@ -41,6 +42,7 @@ from src.core.data_loader import fetch_local_or_remote_strain, _DATA_DIRECTORIES
 from src.core.patch_scorer import PatchScorer
 from src.core.preprocessor import generate_qtransform, whiten_context, extract_clean_subwindow
 from src.core.injection import InjectionEngine, SyntheticGlitchGenerator
+from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -162,11 +164,11 @@ class DSDControlledRecoveryTest:
                 ts_w, pad_info = whiten_context(ts_super, seg_start, seg_end, pad=4.0)
                 ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
                 q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
-                q_gram_uint8 = (q_gram * 255).astype(np.uint8)
-                if q_gram_uint8.ndim == 2:
-                    q_gram_rgb = np.stack([q_gram_uint8] * 3, axis=-1)
-                else:
-                    q_gram_rgb = q_gram_uint8
+                # cividis, not grayscale-stacked-to-RGB (audit B-DSD-1, third
+                # site: this one silently biased the background calibration
+                # used by every recovery-rate estimate in this experiment).
+                q_gram_rgb = (matplotlib.colormaps["cividis"](
+                    np.clip(q_gram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
                 background_spectrograms.append(q_gram_rgb)
             except Exception as e:
                 logger.debug(f"Failed background segment [{seg_start}, {seg_end}]: {e}")
@@ -264,11 +266,8 @@ class DSDControlledRecoveryTest:
                     ts_w, pad_info = whiten_context(ts_super, seg_start, seg_end, pad=4.0)
                     ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
                     q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
-                    q_gram_uint8 = (q_gram * 255).astype(np.uint8)
-                    if q_gram_uint8.ndim == 2:
-                        q_gram_rgb = np.stack([q_gram_uint8] * 3, axis=-1)
-                    else:
-                        q_gram_rgb = q_gram_uint8
+                    q_gram_rgb = (matplotlib.colormaps["cividis"](
+                        np.clip(q_gram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
                     bg_spectrograms.append(q_gram_rgb)
                 except Exception:
                     pass
@@ -324,13 +323,11 @@ class DSDControlledRecoveryTest:
                         ts_w, pad_info = whiten_context(ts_injected, seg_start, seg_end, pad=4.0)
                         ts_bp = extract_clean_subwindow(ts_w, seg_start, seg_end)
 
-                        # Generate Q-transform
+                        # Generate Q-transform (cividis, matching the
+                        # production/native-index chromatic domain)
                         q_gram = generate_qtransform(ts_bp, output_size=(256, 256))
-                        q_gram_uint8 = (q_gram * 255).astype(np.uint8)
-                        if q_gram_uint8.ndim == 2:
-                            q_gram_rgb = np.stack([q_gram_uint8] * 3, axis=-1)
-                        else:
-                            q_gram_rgb = q_gram_uint8
+                        q_gram_rgb = (matplotlib.colormaps["cividis"](
+                            np.clip(q_gram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
 
                         # Score against NATIVE O4a index
                         res_native = self.native_scorer.score_spectrogram(

@@ -433,6 +433,31 @@ def test_dsd_native_background_has_distinct_filename():
     assert "background_scores_native_" in text
 
 
+def test_dsd_injection_test_module_imports():
+    """dsd_injection_test.py must be importable standalone: a prior refactor
+    dropped `from src.core.utils import setup_logger` while the module-level
+    `logger = setup_logger(__name__)` call remained, making the Controlled
+    Recovery Test crash with NameError on any invocation since."""
+    import importlib
+    importlib.import_module("src.pipeline_v2_production.dsd_injection_test")
+
+
+def test_dsd_injection_test_uses_production_colormap():
+    """B-DSD-1, third site: the Controlled Recovery Test (falsifiability
+    experiment) independently renders spectrograms for both the background
+    calibration and the injected candidates. It was never covered by the
+    aggregate_report.py fix and stacked grayscale to fake RGB in all three
+    call sites, biasing every recovery-rate number the experiment produces
+    against the cividis-rendered native index."""
+    text = _read("src/pipeline_v2_production/dsd_injection_test.py")
+    assert "np.stack([q_gram_uint8]" not in text, (
+        "Grayscale RGB stacking reintroduced in the DSD Controlled "
+        "Recovery Test.")
+    assert text.count('colormaps["cividis"]') >= 3, (
+        "All three rendering sites (background calibration, O3b background, "
+        "injected candidate) must use cividis.")
+
+
 def test_native_index_builder_refuses_thin_background(monkeypatch, tmp_path):
     """The native index builder must refuse to build from an
     unrepresentative background (too few clean segments collected)."""
@@ -671,6 +696,38 @@ def test_ledger_family_wise_pem_veto(tmp_path):
     # Uncalibrated event: legacy path, explicitly tagged
     assert "[LEGACY dual criterion]" in report
     assert "Removed by PEM veto (3)" in report  # 100, 400, 500(legacy C=0.99)
+
+
+def test_injection_efficiency_dsd_check_morphologies():
+    """GLITCH_SET must include the three DSD-falsifiability morphologies
+    (HarmonicComb, WallOfLines, KoiFish) mirroring dsd_injection_test.py's
+    native-index recovery test, so the multi-scale recovery question can
+    be tested without a second, divergent glitch catalogue."""
+    from src.pipeline_v3_multiscale.injection_efficiency import GLITCH_SET
+    for key in ("HarmonicComb", "WallOfLines", "KoiFish"):
+        assert key in GLITCH_SET
+        assert GLITCH_SET[key]["effective_s"] > 0
+
+
+def test_injection_efficiency_subset_and_tag_isolate_output(tmp_path, monkeypatch):
+    """Running a custom --morphologies subset with --tag must not touch the
+    filenames of a full/default run (the 5-morphology L1/H1 results already
+    consumed by the paper's efficiency section)."""
+    import pandas as pd
+    from src.pipeline_v3_multiscale import injection_efficiency as ie
+
+    summary = pd.DataFrame({
+        "glitch_type": ["KoiFish"] * 2,
+        "effective_duration_s": [0.15] * 2,
+        "scale_s": [0.5, 4.0],
+        "target_snr": [8, 8],
+        "n": [10, 10], "n_detected": [1, 9],
+        "recall": [0.1, 0.9], "ci_low": [0.0, 0.6], "ci_high": [0.4, 1.0],
+    })
+    subset = {"KoiFish": ie.GLITCH_SET["KoiFish"]}
+    ie.plot_efficiency(summary, "L1", tmp_path, subset, "_dsd_check")
+    assert (tmp_path / "fig_L1_injection_efficiency_dsd_check_postaudit.png").exists()
+    assert not (tmp_path / "fig_L1_injection_efficiency_postaudit.png").exists()
 
 
 def test_pem_null_coherence_math():

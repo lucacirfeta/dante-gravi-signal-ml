@@ -11,12 +11,17 @@ abstract: >
   Top-K Multiple Instance Learning (MIL) in the spherical cosine
   similarity space against a Vector-Quantized background reference.
   Classification relies on rigorous Extreme Value Theory (EVT)
-  thresholding to guarantee a robust False Positive Rate. The 
+  thresholding to guarantee a robust False Positive Rate. The
   extracted anomaly vectors are then grouped via UMAP and Dirichlet
   Process Mixture Model (DPMM) clustering to discover new transient
-  morphologies without generative fine-tuning. Includes extensive 
-  ablation studies, spatial saliency mapping, and cross-validation 
-  against the Gravity Spy catalog.
+  morphologies without generative fine-tuning. Version 3 (v3.4.0)
+  adds a multi-scale (0.5-4.0 s) sensitization layer, a block-bootstrap
+  Domain Shift Defense, and an empirically calibrated family-wise
+  PEM auxiliary-channel coherence veto, replacing raw per-channel
+  thresholds and analytic Bonferroni corrections that were found to
+  be falsified by direct false-positive-rate measurement. Includes
+  extensive ablation studies, spatial saliency mapping, and
+  cross-validation against the Gravity Spy catalog.
 
 authors:
   - family-names: "Cirfeta"
@@ -26,10 +31,10 @@ authors:
     city: "Rome"
     country: "IT"
 
-version: "2.0.0"
-date-released: "2026-06-23"
+version: "3.4.0"
+date-released: "2026-07-15"
 
-doi: "10.5281/zenodo.20543811"
+doi: "10.5281/zenodo.21383406"
 url: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 repository-code: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 
@@ -47,6 +52,9 @@ keywords:
   - open science
   - machine learning
   - O4a
+  - multi-scale
+  - PEM coherence veto
+  - domain shift defense
 
 references:
   - type: article
