@@ -803,15 +803,22 @@ class AggregateReporter:
                 labels = [f"{candidate_metadata[i]['gps']}_{candidate_metadata[i]['detector']}" for i in order]
                 
                 plt.figure(figsize=(12, 10))
-                ax = sns.heatmap(
-                    sim_matrix_ordered, 
-                    cmap="viridis", 
-                    xticklabels=labels, 
-                    yticklabels=labels,
-                    cbar_kws={'label': 'Cosine Similarity'}
-                )
-                ax.set_xticklabels(ax.get_xticklabels(), rotation=90, fontsize=4)
-                ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=4)
+                if n_valid <= 500:
+                    ax = sns.heatmap(
+                        sim_matrix_ordered, 
+                        cmap="viridis", 
+                        xticklabels=labels, 
+                        yticklabels=labels,
+                        cbar_kws={'label': 'Cosine Similarity'}
+                    )
+                    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, fontsize=4)
+                    ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=4)
+                else:
+                    plt.imshow(sim_matrix_ordered, cmap="viridis", aspect="auto", interpolation="none")
+                    plt.colorbar(label='Cosine Similarity')
+                    plt.xticks([])
+                    plt.yticks([])
+                
                 plt.title(f"Cross-Session Morphological Similarity (n={n_valid})")
                 plt.tight_layout()
                 plt.savefig(self.output_dir / "candidate_similarity_heatmap.png", dpi=300)
