@@ -53,6 +53,7 @@ def _candidate_exclusions(run: str, aggregated_dir: Path) -> list[float]:
 def build_native_index(run: str, detector: str, n_dict: int = 1500,
                        k_clusters: int = DEFAULT_K, seed: int = 42,
                        exclusion_pad: float = 96.0,
+                       raw_sample_size: int = 50000,
                        aggregated_dir: str | Path = "data/production/aggregated",
                        out_dir: str | Path = "data/reference") -> Path:
     from sklearn.cluster import MiniBatchKMeans
@@ -113,6 +114,25 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
     cents = km.cluster_centers_
     cents = cents / (np.linalg.norm(cents, axis=1, keepdims=True) + 1e-12)
 
+    # Persist a seeded, L2-normalized subsample of the RAW pre-quantization
+    # patch tokens. The K-means centroids are well separated by construction,
+    # so a point-to-point comparison against them (e.g. the morphological
+    # diffusivity test) over-estimates the true background spread. Retaining
+    # raw points makes that comparison, and index-stability re-clustering,
+    # reproducible for this and every future run. Set raw_sample_size=0 to
+    # opt out. Does not affect the existing `embeddings` (centroid) key.
+    raw_sample = np.empty((0, embs.shape[1]), dtype=np.float32)
+    if raw_sample_size and raw_sample_size > 0:
+        rng = np.random.default_rng(seed)
+        n_take = min(int(raw_sample_size), embs.shape[0])
+        idx = rng.choice(embs.shape[0], size=n_take, replace=False)
+        raw_sample = embs[idx].astype(np.float32)
+        raw_sample = raw_sample / (
+            np.linalg.norm(raw_sample, axis=1, keepdims=True) + 1e-12)
+        logger.info(f"Persisting {n_take} raw pre-quantization background "
+                    f"tokens (of {embs.shape[0]}) for reproducible "
+                    "point-to-point analyses.")
+
     try:
         git = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
                              capture_output=True, text=True).stdout.strip()
@@ -124,11 +144,15 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
         out,
         embeddings=cents.astype(np.float32),
         labels=np.array([f"BG_{run}"] * k_clusters),
+        raw_embeddings_sample=raw_sample,
         meta=json.dumps({
             "run": run, "detector": detector, "K": k_clusters, "seed": seed,
             "n_segments": len(used_t_bgs), "n_candidate_excluded": n_excluded,
             "exclusion_pad_s": exclusion_pad, "colormap": "cividis",
             "preprocessing": "whiten_context_v1_single_bandpass", "git": git,
+            "raw_sample_size": int(raw_sample.shape[0]),
+            "raw_sample_total_tokens": int(embs.shape[0]),
+            "raw_sample_seed": seed,
         }),
     )
     with open(out.with_suffix(".t_bg.json"), "w") as f:
@@ -144,5 +168,9 @@ if __name__ == "__main__":
     p.add_argument("--n_dict", type=int, default=1500)
     p.add_argument("--k", type=int, default=DEFAULT_K)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--raw_sample_size", type=int, default=50000,
+                   help="Rows of raw pre-quantization tokens to persist "
+                        "for reproducible point-to-point analyses (0=off).")
     a = p.parse_args()
-    build_native_index(a.run, a.detector, n_dict=a.n_dict, k_clusters=a.k, seed=a.seed)
+    build_native_index(a.run, a.detector, n_dict=a.n_dict, k_clusters=a.k,
+                       seed=a.seed, raw_sample_size=a.raw_sample_size)
