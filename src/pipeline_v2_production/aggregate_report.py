@@ -2279,18 +2279,36 @@ class AggregateReporter:
             if cp.get("patch_iou_mean") is not None:
                 md_lines.append(f"| Patch-overlap IoU (complementary check, mean) | {cp['patch_iou_mean']:.4f} |")
             md_lines.append("")
-            if n_exc == 0:
+            # The threshold is the P99 of the null max-statistic, so ~1% of
+            # candidates land above it BY CONSTRUCTION. A bare count is not a
+            # detection claim; only an excess over that 1% expectation is.
+            n_tot = cp.get("n") or 0
+            n_expected = 0.01 * n_tot
+            if n_tot and n_exc is not None:
+                frac = 100.0 * n_exc / n_tot
                 md_lines.append(
-                    "**No cross-detector coincident event.** Unlike the morphological "
-                    "veto, this is a statement with demonstrated power: a genuine "
-                    "coincidence would have produced a cross-correlation near unity."
+                    f"| Expected above threshold by chance (1% of {n_tot}) | {n_expected:.1f} |"
                 )
-            elif n_exc:
-                md_lines.append(
-                    f"**{n_exc} candidate(s) exceed the coincidence threshold and "
-                    "require manual review** — see the per-event records in "
-                    f"`coincidence_physical_{self.observing_run.lower()}.json`."
-                )
+                md_lines.append("")
+                if n_exc <= n_expected:
+                    md_lines.append(
+                        f"**No cross-detector coincident event.** {n_exc} candidates "
+                        f"({frac:.2f}%) exceed the threshold against {n_expected:.1f} "
+                        "expected by chance — a deficit, not an excess. Unlike the "
+                        "morphological veto this is a statement with demonstrated "
+                        "power: a genuine coincidence would have produced a "
+                        "cross-correlation near unity."
+                    )
+                else:
+                    md_lines.append(
+                        f"**{n_exc} candidates ({frac:.2f}%) exceed the coincidence "
+                        f"threshold against {n_expected:.1f} expected by chance.** "
+                        "The excess is not by itself a detection — review the loudest "
+                        "events individually, checking each on-source value against "
+                        "its OWN null maximum and against the null maxima of the "
+                        "wider pool, in the per-event records of "
+                        f"`coincidence_physical_{self.observing_run.lower()}.json`."
+                    )
             md_lines.append("")
             md_lines.append(
                 f"Full per-event records: `coincidence_physical_{self.observing_run.lower()}.json`."
