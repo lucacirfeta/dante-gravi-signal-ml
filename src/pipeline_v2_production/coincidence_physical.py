@@ -125,9 +125,14 @@ def _max_normxcorr(x: np.ndarray, y: np.ndarray, fs: float,
     return best
 
 
-def _topk_idx(scorer: PatchScorer, detector: str, gps: float):
-    """Top-k patch indices of a detector window (cividis domain, as production)."""
-    tsw = _whitened(detector, gps)
+def _topk_idx(scorer: PatchScorer, detector: str, gps: float, tsw=None):
+    """Top-k patch indices of a detector window (cividis domain, as production).
+
+    ``tsw`` lets the caller pass an already-whitened series, avoiding a second
+    fetch+whitening of the same window.
+    """
+    if tsw is None:
+        tsw = _whitened(detector, gps)
     q = generate_qtransform(tsw)
     rgb = (matplotlib.colormaps['cividis'](np.clip(q, 0.0, 1.0))[..., :3]
            * 255).astype(np.uint8)
@@ -178,7 +183,7 @@ def analyze_candidate(scorer, det: str, partner: str, gps: float,
     out['patch_iou'] = None
     if with_iou:
         try:
-            p_idx = _topk_idx(scorer, partner, gps)
+            p_idx = _topk_idx(scorer, partner, gps, tsw=ts_p)
             a, b = set(np.asarray(top_k_idx).tolist()), set(p_idx.tolist())
             out['patch_iou'] = len(a & b) / max(1, len(a | b))
         except Exception as e:
