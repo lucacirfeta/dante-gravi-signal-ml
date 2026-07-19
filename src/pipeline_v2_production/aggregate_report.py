@@ -571,6 +571,42 @@ class AggregateReporter:
         logger.info(f"Table 3c: {len(table_3c)} coincident/astrophysical candidates")
 
         # ----------------------------------------------------------
+        # Phase 3b: PHYSICAL cross-detector coincidence test.
+        # The morphological (embedding-similarity) veto above cannot
+        # separate a true coincidence from its own null: injected
+        # coincident waveforms reach ~0.9 while the non-coincident null
+        # extends to ~0.94 (audit COINC-3). The authoritative coincidence
+        # statement therefore comes from the physical test — normalized
+        # cross-correlation of the whitened strains scanned over the
+        # light-travel lag window — which is validated at 1.00 for an
+        # identical waveform vs 0.043 for independent noise.
+        # Results are written standalone AND summarised in the final report.
+        # ----------------------------------------------------------
+        self.coincidence_physical = {}
+        try:
+            from src.pipeline_v2_production.coincidence_physical import (
+                run as run_physical_coincidence,
+            )
+            n_phys = int(os.environ.get("DANTE_COINC_PHYSICAL_N", "0"))  # 0 = full pool
+            self.coincidence_physical = run_physical_coincidence(
+                self.observing_run,
+                n_candidates=n_phys,
+                aggregated_dir=self.output_dir,
+                production_dir=self.output_dir.parent,
+            )
+            logger.info(
+                "Physical coincidence test: "
+                f"{self.coincidence_physical.get('n_exceeding')} of "
+                f"{self.coincidence_physical.get('n')} candidates exceed the "
+                f"null threshold {self.coincidence_physical.get('cc_null_max_p99')}"
+            )
+        except Exception as e:
+            logger.error(
+                f"Physical coincidence test failed: {e}. The morphological veto "
+                "alone does NOT establish a coincidence result (see COINC-3)."
+            )
+
+        # ----------------------------------------------------------
         # Phase 4: Spearman Stability Defense
         # ----------------------------------------------------------
         spearman_results = {}
@@ -2201,8 +2237,76 @@ class AggregateReporter:
             md_lines.append("- No isolated events.")
         md_lines.append("")
         
+        # ----------------------------------------------------------
+        # Physical cross-detector coincidence test (authoritative).
+        # ----------------------------------------------------------
+        cp = getattr(self, "coincidence_physical", None) or {}
+        if not cp:
+            cp_path = self.output_dir / f"coincidence_physical_{self.observing_run.lower()}.json"
+            if cp_path.exists():
+                try:
+                    cp = json.loads(cp_path.read_text()).get("summary", {})
+                except Exception:
+                    cp = {}
+        md_lines.append("## 6b. Physical Cross-Detector Coincidence Test")
+        if cp:
+            thr = cp.get("cc_null_max_p99")
+            n_exc = cp.get("n_exceeding")
+            md_lines.append(
+                "Authoritative coincidence result. The morphological "
+                "(embedding-similarity) veto reported in the tables above cannot "
+                "separate a true coincidence from its own null (injected coincident "
+                "waveforms reach ~0.9 while the non-coincident null extends to ~0.94; "
+                "audit COINC-3), so the coincidence statement rests on the physical "
+                "test: normalized cross-correlation of the whitened strains, "
+                "band-passed to each candidate's own band and scanned over the "
+                "light-travel lag window "
+                f"(|dt| <= {cp.get('light_travel_s', 0.010002)*1e3:.2f} ms + "
+                f"{cp.get('lag_margin_s', 0.002)*1e3:.0f} ms). Validation: 1.00 for an "
+                "identical waveform, 0.043 for independent noise."
+            )
+            md_lines.append("")
+            md_lines.append("| Quantity | Value |")
+            md_lines.append("|---|---|")
+            md_lines.append(f"| Candidates tested | {cp.get('n')} |")
+            md_lines.append(f"| On-source cross-correlation (mean) | {cp.get('cc_onsource_mean'):.4f} |"
+                            if cp.get("cc_onsource_mean") is not None else "| On-source (mean) | n/a |")
+            md_lines.append(f"| On-source cross-correlation (max) | {cp.get('cc_onsource_max'):.4f} |"
+                            if cp.get("cc_onsource_max") is not None else "| On-source (max) | n/a |")
+            md_lines.append(f"| Null threshold (P99 of time-shifted max-statistic) | {thr:.4f} |"
+                            if thr is not None else "| Null threshold | n/a |")
+            md_lines.append(f"| **Candidates exceeding threshold** | **{n_exc}** |")
+            if cp.get("patch_iou_mean") is not None:
+                md_lines.append(f"| Patch-overlap IoU (complementary check, mean) | {cp['patch_iou_mean']:.4f} |")
+            md_lines.append("")
+            if n_exc == 0:
+                md_lines.append(
+                    "**No cross-detector coincident event.** Unlike the morphological "
+                    "veto, this is a statement with demonstrated power: a genuine "
+                    "coincidence would have produced a cross-correlation near unity."
+                )
+            elif n_exc:
+                md_lines.append(
+                    f"**{n_exc} candidate(s) exceed the coincidence threshold and "
+                    "require manual review** — see the per-event records in "
+                    f"`coincidence_physical_{self.observing_run.lower()}.json`."
+                )
+            md_lines.append("")
+            md_lines.append(
+                f"Full per-event records: `coincidence_physical_{self.observing_run.lower()}.json`."
+            )
+        else:
+            md_lines.append(
+                "NOT AVAILABLE for this run. Without it the coincidence tables above "
+                "do not establish a coincidence result, because the morphological "
+                "statistic lacks discriminating power (audit COINC-3). Run "
+                "`python -m src.pipeline_v2_production.coincidence_physical --run "
+                f"{self.observing_run} --n 0`."
+            )
+        md_lines.append("")
+
         # RESTORE THE DELETED SECTIONS
-        
+
         sec_num = 7
         
         # Distribution Plot
@@ -2239,7 +2343,8 @@ class AggregateReporter:
             ("Table_3a_Confirmed_Local_Glitch.csv", f"{sec_num}.a Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
             ("Table_3b_Unverifiable_Unilateral_Detections.csv", f"{sec_num}.b Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
             ("Table_3c_Coincident_Astrophysical.csv", f"{sec_num}.c Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
-            ("physics/singleton_physics.csv", f"{sec_num}.d Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies.")
+            ("physics/singleton_physics.csv", f"{sec_num}.d Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies."),
+            (f"coincidence_physical_{self.observing_run.lower()}.json", f"{sec_num}.e Physical Coincidence Test", "AUTHORITATIVE coincidence result (section 6b): per-event normalized cross-correlation of the whitened strains over the light-travel lag window, with the per-event time-shifted null. Supersedes the embedding-similarity statistic behind Tables 3a/3c, which lacks discriminating power (COINC-3).")
         ]
         for file_name, title, desc in tables:
             md_lines.append(f"| {file_name} | {title} | {desc} |")

@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import h5py
 import logging
+import matplotlib
 from pathlib import Path
 from sklearn.metrics.pairwise import cosine_similarity
 import argparse
@@ -123,6 +124,16 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
                 ts_w_padded, _ = whiten_context(ts_super, gps, gps + 32.0, pad=4.0)
                 ts_white = extract_clean_subwindow(ts_w_padded, gps, gps + 32.0)
                 spectrogram = generate_qtransform(ts_white)
+                # Render with the SAME colormap as the production path that
+                # produced the stored candidate vector v1 (aggregate_report
+                # renders cividis before scoring). Feeding the raw q-transform
+                # here put v2 in a different chromatic domain than v1, so every
+                # cross-detector similarity was computed between mismatched
+                # domains and was systematically depressed by ~0.21 in the mean
+                # (audit COINC-2 — the same failure mode as B-DSD-1, which was
+                # fixed in the DSD rescoring path but not here).
+                spectrogram = (matplotlib.colormaps["cividis"](
+                    np.clip(spectrogram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
                 # score_spectrogram returns a list of dicts
                 results = scorer.score_spectrogram([spectrogram], threshold=1.0)
                 partner_vec = results[0]["mil_vector"]
