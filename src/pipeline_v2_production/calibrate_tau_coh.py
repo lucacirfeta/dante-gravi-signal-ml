@@ -1,5 +1,14 @@
 """Run-agnostic calibration of the cross-detector cohesion threshold tau_coh.
 
+    !!! RETIRED STATISTIC — DO NOT USE FOR A COINCIDENCE RESULT !!!
+    tau_coh thresholds the Top-k MIL embedding similarity, which audit COINC-3
+    showed cannot separate a true coincidence from its own null (injections land
+    at ~0.9, the null reaches ~0.94). This module is kept for reproducibility of
+    the superseded analysis only. The authoritative coincidence test is
+    `coincidence_physical.py`; its efficiency is measured by
+    `coincidence_physical_efficiency.py`.
+
+
 The cross-detector veto (cross_detector_veto.py) flags a candidate as
 coincident when the cosine similarity between the candidate's Top-k MIL vector
 (v1) and the partner detector's Top-k MIL vector (v2) exceeds tau_coh. This

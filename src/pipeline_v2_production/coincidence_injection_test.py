@@ -1,5 +1,15 @@
 """P3 --- Dual-detector coincidence-veto power test.
 
+    !!! MEASURES THE RETIRED STATISTIC — NOT A SUBSTITUTE FOR epsilon_coh !!!
+    This module measures recovery of the Top-k MIL embedding similarity against
+    tau_coh. That statistic was retired under audit COINC-3, so these numbers do
+    NOT characterise the coincidence test the pipeline actually applies. For the
+    recovery efficiency of the statistic in force, use
+    `coincidence_physical_efficiency.py` — and note that it must localize the
+    transient to the same +-0.5 s window production uses, or short morphologies
+    are diluted to zero recovery. Kept here to reproduce the superseded analysis.
+
+
 The cross-detector coincidence veto (calibrate_tau_coh.py, cross_detector_veto.py)
 flags a candidate as coincident when the cosine similarity between the H1 and L1
 MIL vectors exceeds tau_coh = 0.975. The zero-detection result over the O4a pool

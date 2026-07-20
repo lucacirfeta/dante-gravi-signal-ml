@@ -201,6 +201,7 @@ def run(run_name: str = "O4a", morphologies=DEFAULT_MORPHOLOGIES,
                             "rows": rows}, indent=1))
 
     out = {"run": run_name, "tau_cc": tau, "band": list(band),
+           "null_n": int(len(nulls)),
            "null_cc_mean": float(np.nanmean(nulls)),
            "null_cc_max": float(np.nanmax(nulls)),
            "null_exceeding_frac": float(np.nanmean(nulls > tau)),

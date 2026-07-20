@@ -607,6 +607,92 @@ class AggregateReporter:
             )
 
         # ----------------------------------------------------------
+        # Phase 3c: coherent recovery efficiency of the coincidence test
+        # ----------------------------------------------------------
+        # A null coincidence count is uninterpretable without epsilon_coh: it
+        # says nothing unless the test would have registered a real
+        # coincidence. Measured against the statistic actually in force (the
+        # physical cross-correlation), NOT the retired embedding similarity of
+        # coincidence_injection_test.py.
+        # DANTE_EPS_COH_TRIALS=0 skips the stage.
+        # ----------------------------------------------------------
+        self.coincidence_efficiency = {}
+        n_eps = int(os.environ.get("DANTE_EPS_COH_TRIALS", "60"))
+        if n_eps > 0:
+            try:
+                from src.pipeline_v2_production.coincidence_physical_efficiency import (
+                    run as run_eps_coh,
+                )
+                self.coincidence_efficiency = run_eps_coh(
+                    self.observing_run,
+                    n_trials=n_eps,
+                    n_null=int(os.environ.get("DANTE_EPS_COH_NULL", "200")),
+                    aggregated_dir=self.output_dir,
+                )
+                rows = self.coincidence_efficiency.get("rows", [])
+                n_sat = len({r["morphology"] for r in rows
+                             if r.get("epsilon_coh", 0) >= 1.0})
+                n_morph = len({r["morphology"] for r in rows})
+                logger.info(
+                    f"Coincidence efficiency: {n_sat}/{n_morph} morphologies reach "
+                    f"epsilon_coh=100%; null exceeding "
+                    f"{self.coincidence_efficiency.get('null_exceeding_frac', float('nan')):.1%}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Coincidence efficiency test failed: {e}. Without it the null "
+                    "coincidence result has no measured power and must NOT be "
+                    "quoted as evidence of absence."
+                )
+        else:
+            logger.warning(
+                "Coincidence efficiency stage skipped (DANTE_EPS_COH_TRIALS=0): "
+                "the coincidence result will have no measured power for this run."
+            )
+
+        # ----------------------------------------------------------
+        # Phase 3d: macro-cluster cohesion vs. unselected native background
+        # ----------------------------------------------------------
+        # Falsification test. The survivors collapse into one macro-cluster —
+        # but so does pristine background, so the topology carries NO
+        # information about anomaly status and must not be quoted as a
+        # characterization of the survivor family. Re-measured per run because
+        # the answer is a property of the embedding geometry on THAT run's data.
+        # DANTE_COHESION_SEGMENTS=0 skips the stage.
+        # ----------------------------------------------------------
+        self.background_cohesion = {}
+        n_coh = int(os.environ.get("DANTE_COHESION_SEGMENTS", "3000"))
+        if n_coh > 0:
+            try:
+                from src.pipeline_v2_production.background_cohesion_test import (
+                    run as run_cohesion,
+                )
+                self.background_cohesion = run_cohesion(
+                    self.observing_run,
+                    n_segments=n_coh,
+                    aggregated_dir=self.output_dir,
+                    production_dir=self.output_dir.parent,
+                )
+                sm = self.background_cohesion.get("size_matched", {})
+                bg = sm.get("NATIVE_BACKGROUND", {}).get("largest_frac_mean")
+                ro = sm.get("ROBUST", {}).get("largest_frac_mean")
+                if bg is not None and ro is not None:
+                    logger.info(
+                        f"Cohesion falsification: native background {bg:.3%} vs "
+                        f"ROBUST {ro:.3%} in the largest cluster"
+                    )
+            except Exception as e:
+                logger.error(
+                    f"Background cohesion test failed: {e}. Without it, any claim "
+                    "that the survivor macro-cluster is morphologically meaningful "
+                    "is unfalsified — do not make one."
+                )
+        else:
+            logger.warning(
+                "Background cohesion stage skipped (DANTE_COHESION_SEGMENTS=0)."
+            )
+
+        # ----------------------------------------------------------
         # Phase 4: Spearman Stability Defense
         # ----------------------------------------------------------
         spearman_results = {}
@@ -2343,6 +2429,117 @@ class AggregateReporter:
             )
         md_lines.append("")
 
+        # ---- 6c. Coherent recovery efficiency of the coincidence test ----
+        md_lines.append("## 6c. Coincidence Test: Coherent Recovery Efficiency")
+        md_lines.append("")
+        ce = getattr(self, "coincidence_efficiency", None) or {}
+        rows = ce.get("rows") or []
+        if rows:
+            by_morph = {}
+            for r in rows:
+                by_morph.setdefault(r["morphology"], []).append(r)
+            md_lines.append(
+                f"Threshold tau_cc = {ce.get('tau_cc'):.4f} (measured on real candidates). "
+                f"Null ({int(ce.get('null_n', 0)) or 'n'} trials, injection in one "
+                f"detector only): mean cc {ce.get('null_cc_mean'):.3f}, max "
+                f"{ce.get('null_cc_max'):.3f}, exceeding threshold "
+                f"{ce.get('null_exceeding_frac'):.1%}."
+            )
+            md_lines.append("")
+            md_lines.append("| Morphology | saturation SNR (eps=100%) | max eps_coh |")
+            md_lines.append("|---|---|---|")
+            for m, rs in sorted(by_morph.items(),
+                                key=lambda kv: min([r["snr_mean"] for r in kv[1]
+                                                    if r["epsilon_coh"] >= 1.0] or [1e9])):
+                sat = [r["snr_mean"] for r in rs if r["epsilon_coh"] >= 1.0]
+                md_lines.append(
+                    f"| {m} | {('%.0f' % min(sat)) if sat else 'not reached'} | "
+                    f"{max(r['epsilon_coh'] for r in rs):.0%} |"
+                )
+            md_lines.append("")
+            n_sat = sum(1 for rs in by_morph.values()
+                        if max(r["epsilon_coh"] for r in rs) >= 1.0)
+            if n_sat == len(by_morph) and (ce.get("null_exceeding_frac") or 0) == 0:
+                md_lines.append(
+                    f"**The coincidence test has demonstrated power**: all {n_sat} "
+                    "morphologies are fully recovered at sufficient SNR and no null "
+                    "trial exceeds the threshold. A null coincidence result on this "
+                    "run is therefore evidence of absence, bounded by the saturation "
+                    "SNR of each morphology."
+                )
+            else:
+                md_lines.append(
+                    f"**Caution**: only {n_sat} of {len(by_morph)} morphologies reach "
+                    "full recovery. A null coincidence result is correspondingly weak "
+                    "for the morphologies that do not."
+                )
+            md_lines.append("")
+            md_lines.append(
+                "Full records: "
+                f"`coincidence_physical_efficiency_{self.observing_run.lower()}.json`."
+            )
+        else:
+            md_lines.append(
+                "NOT AVAILABLE for this run. Without it the null coincidence result "
+                "of section 6b has no measured power and must NOT be quoted as "
+                "evidence of absence. Run `python -m "
+                "src.pipeline_v2_production.coincidence_physical_efficiency --run "
+                f"{self.observing_run}`."
+            )
+        md_lines.append("")
+
+        # ---- 6d. Macro-cluster cohesion vs. unselected native background ----
+        md_lines.append("## 6d. Macro-Cluster Cohesion: Falsification vs. Native Background")
+        md_lines.append("")
+        bc = getattr(self, "background_cohesion", None) or {}
+        sm = bc.get("size_matched") or {}
+        if sm:
+            md_lines.append(
+                f"Identical clustering (single-linkage, cosine, D_cut = {bc.get('D_cut')}) "
+                f"applied to each DSD outcome class AND to unselected native background, "
+                f"size-matched at n = {bc.get('n_matched')}."
+            )
+            md_lines.append("")
+            md_lines.append("| Population | largest cluster | clusters |")
+            md_lines.append("|---|---|---|")
+            for k in ["NATIVE_BACKGROUND", "BACKGROUND", "AMBIGUOUS", "ROBUST"]:
+                v = sm.get(k)
+                if not v:
+                    continue
+                md_lines.append(
+                    f"| {k} | {v['largest_frac_mean']:.3%} +/- {v['largest_frac_std']:.3%} "
+                    f"| {v['n_clusters_mean']:.1f} +/- {v['n_clusters_std']:.1f} |"
+                )
+            md_lines.append("")
+            bgf = (sm.get("NATIVE_BACKGROUND") or {}).get("largest_frac_mean")
+            rof = (sm.get("ROBUST") or {}).get("largest_frac_mean")
+            if bgf is not None and rof is not None and bgf >= rof:
+                md_lines.append(
+                    "**The macro-cluster topology is NOT specific to the survivors.** "
+                    "Unselected native background is at least as monolithic, so the "
+                    "topology reflects the embedding geometry rather than anomaly "
+                    "status. Do NOT quote it as a characterization of the survivor "
+                    "family."
+                )
+            elif bgf is not None and rof is not None:
+                md_lines.append(
+                    "**Note**: the survivors are more cohesive than unselected native "
+                    "background on this run — unlike O4a. This is a genuine "
+                    "discriminator and warrants direct investigation."
+                )
+            md_lines.append("")
+            md_lines.append(
+                f"Full records: `background_cohesion_{self.observing_run.lower()}.json`."
+            )
+        else:
+            md_lines.append(
+                "NOT AVAILABLE for this run. Without it, any claim that the survivor "
+                "macro-cluster is morphologically meaningful is unfalsified. Run "
+                "`python -m src.pipeline_v2_production.background_cohesion_test --run "
+                f"{self.observing_run}`."
+            )
+        md_lines.append("")
+
         # RESTORE THE DELETED SECTIONS
 
         sec_num = 7
@@ -2382,7 +2579,10 @@ class AggregateReporter:
             ("Table_3b_Unverifiable_Unilateral_Detections.csv", f"{sec_num}.b Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
             ("Table_3c_Coincident_Astrophysical.csv", f"{sec_num}.c Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
             ("physics/singleton_physics.csv", f"{sec_num}.d Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies."),
-            (f"coincidence_physical_{self.observing_run.lower()}.json", f"{sec_num}.e Physical Coincidence Test", "AUTHORITATIVE coincidence result (section 6b): per-event normalized cross-correlation of the whitened strains over the light-travel lag window, with the per-event time-shifted null. Supersedes the embedding-similarity statistic behind Tables 3a/3c, which lacks discriminating power (COINC-3).")
+            (f"coincidence_physical_{self.observing_run.lower()}.json", f"{sec_num}.e Physical Coincidence Test", "AUTHORITATIVE coincidence result (section 6b): per-event normalized cross-correlation of the whitened strains over the light-travel lag window, with the per-event time-shifted null. Supersedes the embedding-similarity statistic behind Tables 3a/3c, which lacks discriminating power (COINC-3)."),
+            (f"coincidence_physical_efficiency_{self.observing_run.lower()}.json", f"{sec_num}.f Coincidence Recovery Efficiency", "Measured epsilon_coh of the physical coincidence statistic (section 6c): dual-detector injections across morphologies and amplitudes, plus a single-detector null. Required to interpret a null coincidence count as evidence of absence. NOTE: coincidence_injection_test.py measures the RETIRED embedding statistic and is not a substitute."),
+            (f"background_cohesion_{self.observing_run.lower()}.json", f"{sec_num}.g Macro-Cluster Cohesion Falsification", "Identical clustering applied to each DSD outcome class AND to unselected native background, size-matched (section 6d). Establishes whether the survivor macro-cluster topology carries any information about anomaly status. On O4a it did not."),
+            (f"background_mil_vectors_{self.observing_run.lower()}.npy", f"{sec_num}.h Native Background MIL Vectors", "Unselected native background segments encoded through the production MIL path (cividis Q-transform, Top-k pooling, one L2-normalized 384-d vector per 32 s segment). Directly comparable to candidate MIL vectors; reusable for any like-for-like background comparison."),
         ]
         for file_name, title, desc in tables:
             md_lines.append(f"| {file_name} | {title} | {desc} |")
