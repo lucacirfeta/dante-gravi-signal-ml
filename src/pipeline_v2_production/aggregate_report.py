@@ -786,7 +786,27 @@ class AggregateReporter:
                 })
                 
             master_df = pd.DataFrame(master_records)
-            
+
+            # A uniform "Not_Found" is NOT evidence of novelty: if the released
+            # Gravity Spy catalogs do not cover this run's epoch, every query
+            # fails by construction (O4a candidates sit ~100 Ms after the end of
+            # the O3b catalog, so the O4a run scored 0/10372). Relabel so that
+            # no downstream reader -- or manuscript -- can mistake a coverage
+            # gap for a measured non-match.
+            n_gs_hits = int((master_df["gravity_spy_label"]
+                             .isin(["Not_Found", "Not_Queried"]) == False).sum())
+            if len(master_df) >= 100 and n_gs_hits == 0:
+                logger.error(
+                    f"Gravity Spy returned ZERO matches for all {len(master_df)} "
+                    f"candidates of {self.observing_run}. This almost certainly means "
+                    "no released Gravity Spy catalog covers this run's GPS range, not "
+                    "that the candidates are novel. Relabelling as "
+                    "'No_Catalog_Coverage' — do NOT cite the absence of a Gravity Spy "
+                    "match as evidence of novelty for this run."
+                )
+                master_df["gravity_spy_label"] = "No_Catalog_Coverage"
+            self._gs_no_coverage = (len(master_df) >= 100 and n_gs_hits == 0)
+
             # Final output paths parameterised with self.observing_run
             master_df.to_csv(self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv", index=False)
             md_content = f"# Master Anomaly Taxonomy - {self.observing_run}\n\n"
