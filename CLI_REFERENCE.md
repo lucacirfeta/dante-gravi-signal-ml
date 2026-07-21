@@ -87,6 +87,11 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
     - [`pem-coherence-analysis`](#23-pem-coherence-analysis) — Validate instrumental anomalies against GWOSC Safety List
     - [`poisson-upper-limit`](#24-poisson-upper-limit) — Calculate methodological upper limit on irreducible anomalies
 
+7. **Validation & Falsification Tests** *(run automatically inside `aggregate-report`)*
+    - [`coincidence-physical`](#25-coincidence-physical) — Authoritative cross-detector coincidence test
+    - [`coincidence-efficiency`](#26-coincidence-efficiency) — Measure ε_coh of the physical statistic
+    - [`background-cohesion`](#27-background-cohesion) — Falsify the survivor macro-cluster against true background
+
 ---
 
 ## Core & Data Acquisition
@@ -709,6 +714,81 @@ Calculates the 90% C.L. Poisson Upper Limit on the rate of morphologically novel
   3. Uses strict analytical formulation (lambda_90 = ~2.303 for N=0) to establish an upper bound on DANTE's failure to characterize novel morphological transients.
 
 - --detector **(Optional)**: The target detector to compute the upper limit on (default: H1).
+
+---
+
+## Validation & Falsification Tests
+
+These three stages run **automatically** as phases 3b/3c/3d of `aggregate-report`
+and are summarised in sections 6b/6c/6d of `Final_Discovery_Report.md`. They are
+exposed as standalone commands so they can be re-run without regenerating the
+whole report.
+
+### 25. coincidence-physical
+The **authoritative** cross-detector coincidence test. For each candidate it
+localizes the transient inside its 32 s window from the stored Top-k patch
+columns, band-passes both detectors to the candidate's own frequency band, and
+scans the normalized cross-correlation over the physically allowed lag range
+(|Δt| ≤ light travel time 10.002 ms + 2 ms margin). The null is built per event
+by displacing the partner window by ±1, 2, 4, 8 s.
+
+> **Why this replaced the embedding statistic (audit COINC-3):** the Top-k MIL
+> aggregate similarity places injected coincident waveforms at ≈0.90, *inside*
+> its own null which reaches ≈0.94 — no threshold on it can separate signal from
+> background. The physical statistic is validated at 1.00 for an identical
+> waveform against 0.043 for independent noise.
+
+- `--run` (default `O4a`)
+- `--n` — candidates to test; **0 = the full pool** (default)
+- `--no-iou` — skip the complementary patch-overlap check (faster)
+- `--aggregated-dir` (default `data/production/aggregated`)
+
+Output: `coincidence_physical_{run}.json` — self-describing per-event records
+(`cc_onsource`, `cc_null_max`, `patch_iou`, `t_offset_s`, band). Resumable.
+
+### 26. coincidence-efficiency
+Measures the coherent recovery efficiency **ε_coh** of the physical statistic:
+the same waveform is injected into independent clean H1 and L1 background with a
+relative lag drawn from the light-travel window, then whitened, band-passed and
+cross-correlated exactly as in production — **including the same ±0.5 s
+localization**. Correlating the full 32 s window instead dilutes a short glitch
+by more than an order of magnitude and understates the efficiency.
+
+> **Do not substitute `coincidence_injection_test.py` for this.** That module
+> measures the *retired* embedding statistic against `tau_coh` and says nothing
+> about the test the pipeline actually applies.
+
+- `--run` (default `O4a`), `--n-trials` (default 60), `--n-null` (default 200), `--seed`
+
+Output: `coincidence_physical_efficiency_{run}.json`. A null coincidence result
+is uninterpretable without this: it bounds what the test *could* have seen.
+
+### 27. background-cohesion
+Falsification test for the survivor macro-cluster. Applies the identical global
+clustering procedure (single-linkage, cosine distance, D_cut = 0.25) to each DSD
+outcome class **and** to unselected native background segments, drawn with the
+same selection the native index uses and encoded through the same production MIL
+path. Populations are compared at matched sample size because single-linkage
+chaining is strongly n-dependent.
+
+> **On O4a the topology proved NOT specific to the survivors:** unselected native
+> background is the most monolithic population of all (100.000% in one cluster
+> against 99.774% for ROBUST), so the macro-cluster reflects embedding geometry
+> rather than anomaly status.
+
+- `--run` (default `O4a`), `--n-segments` (default 3000), `--n-draws` (default 5), `--seed`
+
+Output: `background_cohesion_{run}.json`, `background_mil_vectors_{run}.npy`
+(background MIL vectors, reusable for any like-for-like comparison).
+
+> **Three traps, all nearly hit during development:**
+> 1. Do **not** cluster the K=1216 VQ centroids — their within-cluster spread is
+>    removed by construction, so they fragment and flatter the conclusion by
+>    artifact (the same confound that retired the diffusivity test).
+> 2. Do **not** use `build_native_index --raw_sample_size` for this — it persists
+>    raw *patch tokens*, not MIL *segment* vectors; the two are not comparable.
+> 3. Do **not** run `build_native_index --run O4a` at all — it **overwrites** the
+>    frozen, MD5-pinned reference index underpinning every published DSD result.
 
 ---
 

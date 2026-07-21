@@ -1,8 +1,8 @@
 # DANTE: Domain-Adaptive Network for Transient Evaluation
 > Unsupervised morphological characterization of gravitational-wave transients using frozen Vision Transformers and Multiple Instance Learning.
 
-[![arXiv](https://img.shields.io/badge/arXiv-2605.25702-b31b1b.svg)](https://arxiv.org/abs/2606.25702)
-[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.20960011-blue.svg)](https://doi.org/10.5281/zenodo.20960011)
+[![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
+[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21451803-blue.svg)](https://doi.org/10.5281/zenodo.21451803)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -31,9 +31,13 @@ pip install -r requirements.txt
 python main.py fetch-raw --detector L1 --hours 72
 
 # 3. Obtain the baseline memory dictionary (Vector Quantization)
-# Download the required patch_compressed_index.npz from Zenodo into data/reference/
-# (e.g. using wget or manually downloading it)
+#    NOTHING RUNS WITHOUT THIS FILE. Download the reference index from the
+#    Zenodo record (DOI 10.5281/zenodo.21451803) into data/reference/:
+#      data/reference/patch_compressed_index_o4a_ex.npz   (native O4a, K=1216)
+#      data/reference/patch_compressed_index_o3b.npz      (primary O3b, K=275)
 mkdir -p data/reference/
+# Verify your setup before going further (takes ~10 s):
+pytest -m smoke
 
 # 4. Full per-session pipeline (production -> clustering -> report -> validation)
 python main.py patch-analysis --detector L1 --data-dir data/raw/o4a --resume
@@ -58,7 +62,7 @@ python main.py poisson-upper-limit
 
 ## 🔭 Scientific Context
 LIGO detectors suffer from continuously drifting instrumental noise ("domain shift") between observing runs. Supervised models trained on historical data often collapse when deployed on new runs due to unseen noise topologies. DANTE circumvents this by modeling the steady-state background as a continuous manifold and detecting anomalies purely via unsupervised structural distance, requiring zero labeled data or fine-tuning. 
-For deep physical and mathematical derivations, refer to the [arXiv preprint (2605.28572)](https://arxiv.org/abs/2605.28572).
+For deep physical and mathematical derivations, refer to the [arXiv preprint (2607.18136)](https://arxiv.org/abs/2607.18136).
 
 ## 🏗️ Architecture
 - **Preprocessing:** 32-second whitened strain segments → Q-transform ($Q \in [4, 64]$) → $256 \times 256$ `cividis` spectrograms.
@@ -134,17 +138,34 @@ See [LICENSE](LICENSE) for details.
 If you use this software in your research, please cite our preprint:
 
 ```bibtex
-@software{gravi_signal_ml_arxiv,
-  title  = {DANTE: A Reference-Guided Unsupervised Pipeline for Extended-Transient Anomaly Characterization in LIGO O4a},
+@misc{dante_v3_arxiv,
+  title  = {An Unsupervised Search for Novel Instrumental Glitches in LIGO O4a:
+            Multi-Scale Sensitization, Empirical Physical Vetoes, and Rate Upper Limits},
   author = {Cirfeta, Luca},
   year   = {2026},
-  eprint = {2605.28572},
+  eprint = {2607.18136},
   archivePrefix = {arXiv},
   primaryClass = {astro-ph.IM},
-  doi    = {10.5281/zenodo.20960011},
-  url    = {https://arxiv.org/abs/2605.28572}
+  url    = {https://arxiv.org/abs/2607.18136}
 }
 ```
+
+To cite the archived software and analysis artifacts:
+
+```bibtex
+@software{dante_v3_zenodo,
+  title     = {DANTE (Domain-Adaptive Network for Transient Evaluation)},
+  author    = {Cirfeta, Luca},
+  year      = {2026},
+  version   = {3.5.0},
+  doi       = {10.5281/zenodo.21451803},
+  publisher = {Zenodo},
+  url       = {https://doi.org/10.5281/zenodo.21451803}
+}
+```
+
+> The exact version used for every number in the manuscripts is pinned at git
+> tag [`3.5.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.5.0).
 
 ### LLM Disclosure
 The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.

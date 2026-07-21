@@ -2988,6 +2988,74 @@ def cmd_pem_coherence_analysis(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_coincidence_physical(args: argparse.Namespace) -> None:
+    """Authoritative cross-detector coincidence test (audit COINC-3).
+
+    Normally runs automatically as phase 3b of `aggregate-report`; exposed here
+    so it can be re-run standalone without regenerating the whole report.
+    """
+    from src.pipeline_v2_production.coincidence_physical import run as run_coinc
+
+    summary = run_coinc(
+        args.run,
+        n_candidates=args.n,
+        aggregated_dir=Path(args.aggregated_dir),
+        production_dir=Path(args.aggregated_dir).parent,
+        with_iou=not args.no_iou,
+    )
+    logger.info(
+        f"{summary.get('n_exceeding')} of {summary.get('n')} candidates exceed "
+        f"the pooled null threshold {summary.get('cc_null_max_p99')}"
+    )
+
+
+def cmd_coincidence_efficiency(args: argparse.Namespace) -> None:
+    """Measure epsilon_coh of the PHYSICAL coincidence statistic.
+
+    Note: `coincidence_injection_test.py` measures the RETIRED embedding
+    statistic and is not a substitute for this.
+    """
+    from src.pipeline_v2_production.coincidence_physical_efficiency import run as run_eps
+
+    out = run_eps(
+        args.run,
+        n_trials=args.n_trials,
+        n_null=args.n_null,
+        seed=args.seed,
+        aggregated_dir=Path(args.aggregated_dir),
+    )
+    rows = out.get("rows", [])
+    n_sat = len({r["morphology"] for r in rows if r.get("epsilon_coh", 0) >= 1.0})
+    n_morph = len({r["morphology"] for r in rows})
+    logger.info(
+        f"{n_sat}/{n_morph} morphologies reach epsilon_coh=100%; "
+        f"null exceeding {out.get('null_exceeding_frac', float('nan')):.1%}"
+    )
+
+
+def cmd_background_cohesion(args: argparse.Namespace) -> None:
+    """Falsification test: is the survivor macro-cluster specific to survivors?
+
+    On O4a it is not -- unselected native background is the most monolithic
+    population of all, so the topology carries no anomaly information.
+    """
+    from src.pipeline_v2_production.background_cohesion_test import run as run_cohesion
+
+    out = run_cohesion(
+        args.run,
+        n_segments=args.n_segments,
+        n_draws=args.n_draws,
+        seed=args.seed,
+        aggregated_dir=Path(args.aggregated_dir),
+        production_dir=Path(args.aggregated_dir).parent,
+    )
+    sm = out.get("size_matched", {})
+    bg = sm.get("NATIVE_BACKGROUND", {}).get("largest_frac_mean")
+    ro = sm.get("ROBUST", {}).get("largest_frac_mean")
+    if bg is not None and ro is not None:
+        logger.info(f"native background {bg:.3%} vs ROBUST {ro:.3%} in largest cluster")
+
+
 def cmd_poisson_upper_limit(args: argparse.Namespace) -> None:
     from src.pipeline_v2_production.poisson_upper_limit import run_poisson_upper_limit
     from src.core.utils import load_config
@@ -4260,6 +4328,54 @@ def build_parser() -> argparse.ArgumentParser:
         "--skip-report", action="store_true",
         help="Only profile; do not regenerate Final_Discovery_Report.md.")
     p_msr.set_defaults(func=cmd_multiscale_report)
+
+    # --- coincidence-physical ---
+    p_cph = subparsers.add_parser(
+        "coincidence-physical",
+        help="Authoritative cross-detector coincidence test (physical "
+             "cross-correlation over the light-travel lag window).",
+    )
+    p_cph.add_argument("--run", type=str, default="O4a")
+    p_cph.add_argument(
+        "--n", type=int, default=0,
+        help="Number of candidates to test; 0 = the full pool (default).")
+    p_cph.add_argument(
+        "--aggregated-dir", type=str, default="data/production/aggregated")
+    p_cph.add_argument(
+        "--no-iou", action="store_true",
+        help="Skip the complementary patch-overlap check (faster).")
+    p_cph.set_defaults(func=cmd_coincidence_physical)
+
+    # --- coincidence-efficiency ---
+    p_ceff = subparsers.add_parser(
+        "coincidence-efficiency",
+        help="Measure coherent recovery efficiency (epsilon_coh) of the "
+             "physical coincidence statistic across morphologies.",
+    )
+    p_ceff.add_argument("--run", type=str, default="O4a")
+    p_ceff.add_argument("--n-trials", type=int, default=60,
+                        help="Injections per morphology and amplitude.")
+    p_ceff.add_argument("--n-null", type=int, default=200)
+    p_ceff.add_argument("--seed", type=int, default=42)
+    p_ceff.add_argument(
+        "--aggregated-dir", type=str, default="data/production/aggregated")
+    p_ceff.set_defaults(func=cmd_coincidence_efficiency)
+
+    # --- background-cohesion ---
+    p_bch = subparsers.add_parser(
+        "background-cohesion",
+        help="Falsification test: cluster each DSD outcome class AND "
+             "unselected native background with the identical procedure.",
+    )
+    p_bch.add_argument("--run", type=str, default="O4a")
+    p_bch.add_argument("--n-segments", type=int, default=3000,
+                       help="Native background segments to encode.")
+    p_bch.add_argument("--n-draws", type=int, default=5,
+                       help="Random subsamples for the size-matched comparison.")
+    p_bch.add_argument("--seed", type=int, default=42)
+    p_bch.add_argument(
+        "--aggregated-dir", type=str, default="data/production/aggregated")
+    p_bch.set_defaults(func=cmd_background_cohesion)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(

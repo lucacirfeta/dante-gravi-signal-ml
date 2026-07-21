@@ -14,14 +14,19 @@ abstract: >
   thresholding to guarantee a robust False Positive Rate. The
   extracted anomaly vectors are then grouped via UMAP and Dirichlet
   Process Mixture Model (DPMM) clustering to discover new transient
-  morphologies without generative fine-tuning. Version 3 (v3.4.0)
+  morphologies without generative fine-tuning. Version 3 (3.5.0)
   adds a multi-scale (0.5-4.0 s) sensitization layer, a block-bootstrap
   Domain Shift Defense, and an empirically calibrated family-wise
   PEM auxiliary-channel coherence veto, replacing raw per-channel
   thresholds and analytic Bonferroni corrections that were found to
-  be falsified by direct false-positive-rate measurement. Includes
-  extensive ablation studies, spatial saliency mapping, and
-  cross-validation against the Gravity Spy catalog.
+  be falsified by direct false-positive-rate measurement. It further
+  replaces the embedding-similarity cross-detector coincidence test
+  with a physical cross-correlation test over the light-travel lag
+  window, whose coherent recovery efficiency is measured across ten
+  morphologies. Includes extensive ablation studies and spatial
+  saliency mapping. Note that no cross-validation against the Gravity
+  Spy catalog was possible: no released Gravity Spy classification set
+  covers the O4a epoch.
 
 authors:
   - family-names: "Cirfeta"
@@ -31,10 +36,10 @@ authors:
     city: "Rome"
     country: "IT"
 
-version: "3.4.0"
-date-released: "2026-07-15"
+version: "3.5.0"
+date-released: "2026-07-20"
 
-doi: "10.5281/zenodo.21383406"
+doi: "10.5281/zenodo.21451803"
 url: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 repository-code: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 
@@ -102,3 +107,14 @@ references:
     title: "Gravity Spy ML Classifications O3b"
     url: "https://zenodo.org/records/5649212"
     doi: "10.5281/zenodo.5649212"
+
+  - type: article
+    title: >
+      An Unsupervised Search for Novel Instrumental Glitches in LIGO O4a:
+      Multi-Scale Sensitization, Empirical Physical Vetoes, and Rate
+      Upper Limits
+    authors:
+      - family-names: "Cirfeta"
+        given-names: "Luca"
+    year: 2026
+    url: "https://arxiv.org/abs/2607.18136"
