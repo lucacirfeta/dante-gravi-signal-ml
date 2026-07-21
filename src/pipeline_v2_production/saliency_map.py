@@ -24,9 +24,18 @@ def generate_saliency_map(
     device: str = 'cuda',
     segment_length: float = 32.0,
     frange: tuple[float, float] = EFFECTIVE_FRANGE,
+    scorer=None,
 ) -> dict:
     """
-    Generates a 3-panel Topological Saliency Map using purely spatial background distances.
+    Generates a 3-panel Topological Saliency Map of a candidate spectrogram.
+
+    ``scorer`` should be a :class:`~src.core.patch_scorer.PatchScorer`. **Pass it
+    for any figure that will be published.** With it, the highlighted patches
+    are the production Top-$k$ -- the ones actually pooled into the novelty
+    score -- because the scoring is delegated to the same code path. Without it
+    the function falls back to a session-local spatial background, which ranks
+    patches differently; that fallback is a diagnostic only and its panels must
+    never be captioned as showing "the Top-k patches".
 
     ``segment_length`` and ``frange`` exist only to label the axes in physical
     units. Before 2026-07-21 the panels were drawn with ``extent=[0, w, 0, h]``
@@ -62,21 +71,30 @@ def generate_saliency_map(
     # Normalizzazione L2 ESPLICITA obbligatoria
     patch_tokens = F.normalize(patch_tokens, p=2, dim=-1)
 
-    # 3. Anomaly score per patch (doppia metrica)
-    # background_vector ora è una matrice (1369, 384)
-    bg_vec_tensor = torch.tensor(background_vector, dtype=torch.float32, device=device) # (1369, 384)
-    bg_vec_tensor = F.normalize(bg_vec_tensor, p=2, dim=-1)
-
-    # Metrica A - distanza dal background spaziale (calcolo puntuale 1-a-1)
-    cos_sim_bg = torch.sum(patch_tokens * bg_vec_tensor, dim=1) # (1369,)
-    score_bg = 1.0 - cos_sim_bg
-
-    # Score combinato ORA E' ESCLUSIVAMENTE LO SCORE SPAZIALE
-    anomaly_score = score_bg # (1369,)
-
-    # Convert to numpy for downstream processing
-    score_bg_np = score_bg.cpu().numpy()
-    anomaly_score_np = anomaly_score.cpu().numpy()
+    # 3. Anomaly score per patch.
+    #
+    # When a production `scorer` is supplied we delegate to it, so the patches
+    # highlighted here are *by construction* the same ones the pipeline pooled
+    # to produce the candidate's novelty score: distance to the nearest centroid
+    # of the frozen VQ dictionary.
+    #
+    # The `background_vector` branch below is a DIFFERENT quantity -- distance
+    # to a position-matched median of session-local background. It ranks patches
+    # differently, so a figure drawn from it must not be captioned as showing
+    # "the Top-k patches". That mislabelling reached a published figure; see
+    # CORRECTIONS_2026-07-21.md.
+    if scorer is not None:
+        res = scorer.score_spectrogram([rgb_spectrogram_uint8], threshold=0.0)[0]
+        anomaly_score_np = np.asarray(res["patch_anomaly_scores"], dtype=np.float32)
+        production_top_k = np.asarray(res["top_k_indices"], dtype=np.int64).ravel()
+        score_source = "VQ dictionary (production)"
+    else:
+        bg_vec_tensor = torch.tensor(background_vector, dtype=torch.float32, device=device) # (1369, 384)
+        bg_vec_tensor = F.normalize(bg_vec_tensor, p=2, dim=-1)
+        cos_sim_bg = torch.sum(patch_tokens * bg_vec_tensor, dim=1) # (1369,)
+        anomaly_score_np = (1.0 - cos_sim_bg).cpu().numpy()
+        production_top_k = None
+        score_source = "session-local spatial background (NOT the production score)"
 
     # 4. Rimappatura spaziale 37x37
     grid = anomaly_score_np.reshape(37, 37)
@@ -97,8 +115,13 @@ def generate_saliency_map(
     saliency_max = saliency_upsampled.max()
     saliency_norm = (saliency_upsampled - saliency_min) / (saliency_max - saliency_min + 1e-8)
 
-    # Estrazione dei Top-K
-    top_k_indices = np.argsort(anomaly_score_np)[-k_highlight:][::-1]
+    # Estrazione dei Top-K. With a production scorer we take ITS selection
+    # verbatim rather than re-deriving it, so the boxes cannot drift from what
+    # the pipeline actually pooled.
+    if production_top_k is not None:
+        top_k_indices = production_top_k
+    else:
+        top_k_indices = np.argsort(anomaly_score_np)[-k_highlight:][::-1]
     top_k_positions = [(int(idx // 37), int(idx % 37)) for idx in top_k_indices]
     
     max_anomaly_score = float(anomaly_score_np.max())
@@ -130,9 +153,9 @@ def generate_saliency_map(
     axs[0].grid(False)
 
     # Pannello 2 - Saliency (score_bg unicamente spaziale)
-    grid_bg = score_bg_np.reshape(37, 37)
+    grid_bg = anomaly_score_np.reshape(37, 37)
     axs[1].imshow(grid_bg, extent=extent, origin='lower', cmap='hot', aspect='auto')
-    axs[1].set_title("Patch Saliency (Spatial Background)")
+    axs[1].set_title("Patch anomaly score\n[" + score_source + "]", fontsize=9)
     axs[1].grid(False)
     
     # Sovrapponi griglia 37x37 (dx now in seconds, matching the new extent)
@@ -177,7 +200,9 @@ def generate_saliency_map(
         'saliency_2d': grid,
         'top_k_indices': top_k_indices,
         'top_k_positions': top_k_positions,
-        'score_bg': score_bg_np,
+        'score_source': score_source,
+        'top_k_indices': np.asarray(top_k_indices, dtype=np.int32),
+        'patch_anomaly_scores': anomaly_score_np,
         'max_anomaly_score': max_anomaly_score,
         'mean_topk_score': mean_topk_score,
     }

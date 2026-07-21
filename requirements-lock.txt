@@ -1,0 +1,19 @@
+# Environment lock — exact versions of the numerically relevant stack.
+# Generated 2026-07-21 after discovering that published artifacts could not be
+# regenerated: requirements.txt pins only 2 of 25 packages, and gwpy had moved
+# 3.x -> 4.0.1 since the production run. gwpy implements the whitening and the
+# Q-transform, so a major bump changes the spectrogram the encoder sees.
+# Reproducing a published run requires the versions IT used, not these.
+
+gwpy==4.0.1
+scipy==1.17.1
+numpy==2.4.5
+torch==2.12.0.dev20260408+cu128
+torchvision==0.27.0.dev20260407+cu128
+h5py==3.16.0
+matplotlib==3.10.9
+scikit-learn==1.8.0
+pandas==3.0.3
+astropy==7.2.0
+Pillow==12.2.0
+umap-learn==0.5.12
