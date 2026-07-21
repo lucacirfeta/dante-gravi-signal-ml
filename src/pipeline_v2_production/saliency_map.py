@@ -7,6 +7,14 @@ import matplotlib.patches as patches
 from PIL import Image
 from torchvision import transforms
 
+# gwpy silently lowers the requested upper frequency when the Q range cannot
+# support it: asking for (20, 2048) with qrange=(4, 64) over a 32 s window
+# yields an axis that actually stops at ~1291 Hz, and only a UserWarning says
+# so. Every patch-row -> Hz conversion must use the EFFECTIVE range or it
+# overestimates frequency by +12% at the bottom and +57% at the top.
+REQUESTED_FRANGE = (20.0, 2048.0)
+EFFECTIVE_FRANGE = (20.0, 1291.0)
+
 def generate_saliency_map(
     spectrogram_matrix: np.ndarray,
     background_vector: np.ndarray,
@@ -14,9 +22,18 @@ def generate_saliency_map(
     model,
     k_highlight: int = 68,
     device: str = 'cuda',
+    segment_length: float = 32.0,
+    frange: tuple[float, float] = EFFECTIVE_FRANGE,
 ) -> dict:
     """
     Generates a 3-panel Topological Saliency Map using purely spatial background distances.
+
+    ``segment_length`` and ``frange`` exist only to label the axes in physical
+    units. Before 2026-07-21 the panels were drawn with ``extent=[0, w, 0, h]``
+    -- raw pixel indices -- while the y-axis was labelled "Frequency (Hz)", so a
+    feature at pixel row 220 read as "220 Hz" when it actually sits near
+    1150 Hz. Pass the *effective* frange, not the requested one (see
+    EFFECTIVE_FRANGE).
     """
     # 1. (Rimosso il caricamento dell'indice VQ globale per disaccoppiamento architetturale)
 
@@ -90,13 +107,26 @@ def generate_saliency_map(
     # 6. Figura pubblicabile (3 pannelli)
     fig, axs = plt.subplots(1, 3, figsize=(11, 4), dpi=150)
     
-    extent = [0, w, 0, h]
+    # Time is linear across the window; frequency rows are LOG-spaced over the
+    # effective frange, so the y axis is kept in pixel units and tick LABELS
+    # carry the physical frequency. Using a linear Hz extent here would be the
+    # very error this function used to make.
+    extent = [0, segment_length, 0, h]
+    f_lo, f_hi = frange
+
+    def _row_to_hz(row: float) -> float:
+        return f_lo * (f_hi / f_lo) ** (row / h)
+
+    y_rows = np.linspace(0, h, 6)
+    y_labels = [f"{_row_to_hz(r):.0f}" for r in y_rows]
 
     # Pannello 1
     axs[0].imshow(spectrogram_matrix, extent=extent, origin='lower', aspect='auto', cmap='cividis')
     axs[0].set_title("Original Q-Transform")
-    axs[0].set_xlabel("Time samples")
-    axs[0].set_ylabel("Frequency (Hz)")
+    axs[0].set_xlabel("Time from window start (s)")
+    axs[0].set_ylabel("Frequency (Hz, log-spaced)")
+    axs[0].set_yticks(y_rows)
+    axs[0].set_yticklabels(y_labels)
     axs[0].grid(False)
 
     # Pannello 2 - Saliency (score_bg unicamente spaziale)
@@ -105,8 +135,8 @@ def generate_saliency_map(
     axs[1].set_title("Patch Saliency (Spatial Background)")
     axs[1].grid(False)
     
-    # Sovrapponi griglia 37x37
-    dx = w / 37.0
+    # Sovrapponi griglia 37x37 (dx now in seconds, matching the new extent)
+    dx = segment_length / 37.0
     dy = h / 37.0
     for x in range(38):
         axs[1].axhline(x * dy, color='white', alpha=0.15, linewidth=0.5)
@@ -119,14 +149,14 @@ def generate_saliency_map(
         rect = patches.Rectangle((c * dx, r * dy), dx, dy, linewidth=1.5, edgecolor='red', facecolor='none')
         axs[1].add_patch(rect)
         
-    axs[1].set_xticks([])
+    axs[1].set_xlabel("Time from window start (s)")
     axs[1].set_yticks([])
 
     # Pannello 3 - Overlay combinato
     im1 = axs[2].imshow(spectrogram_matrix, extent=extent, origin='lower', aspect='auto', cmap='cividis')
     im2 = axs[2].imshow(saliency_norm, extent=extent, origin='lower', aspect='auto', cmap='RdYlGn_r', alpha=0.55)
     axs[2].set_title("Anomaly Saliency Overlay")
-    axs[2].set_xticks([])
+    axs[2].set_xlabel("Time from window start (s)")
     axs[2].set_yticks([])
     axs[2].grid(False)
     

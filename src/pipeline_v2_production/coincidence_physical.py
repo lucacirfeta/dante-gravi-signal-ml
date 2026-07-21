@@ -55,7 +55,14 @@ logger = setup_logger(__name__)
 
 SEGMENT_LENGTH = 32.0
 PATCH_GRID = 37                  # 37x37 = 1369 patches
-SPEC_FRANGE = (20.0, 2048.0)     # q-transform frequency span
+# EFFECTIVE, not requested. The pipeline asks gwpy for (20, 2048) Hz, but with
+# qrange=(4, 64) over a 32 s window gwpy cannot honour the upper bound and
+# silently resets it to ~1291 Hz, announcing it only through a UserWarning.
+# Mapping patch rows onto the requested span therefore overestimates frequency
+# by +12% at the bottom of the grid and +57% at the top. Measured 2026-07-21;
+# verify with `q.frequencies.max()` if the Q range or segment length changes.
+SPEC_FRANGE_REQUESTED = (20.0, 2048.0)
+SPEC_FRANGE = (20.0, 1291.0)     # q-transform frequency span actually produced
 LIGHT_TRAVEL_S = 0.010002        # LHO <-> LLO
 LAG_MARGIN_S = 0.002             # tolerance on top of light travel
 NULL_SHIFTS_S = (1.0, 2.0, 4.0, 8.0, -1.0, -2.0, -4.0, -8.0)
