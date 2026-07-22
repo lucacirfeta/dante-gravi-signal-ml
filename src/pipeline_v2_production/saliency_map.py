@@ -138,21 +138,29 @@ def generate_saliency_map(
     # 6. Figura pubblicabile (3 pannelli)
     fig, axs = plt.subplots(1, 3, figsize=(11, 4), dpi=150)
     
-    # Time is linear across the window; frequency rows are LOG-spaced over the
-    # effective frange, so the y axis is kept in pixel units and tick LABELS
-    # carry the physical frequency. Using a linear Hz extent here would be the
-    # very error this function used to make.
-    extent = [0, segment_length, 0, h]
+    # AXIS ORDER. gwpy's Spectrogram.value is (n_times, n_frequencies) --
+    # verified directly: a 32 s Q-transform gives shape (1000, 500) against
+    # len(times) == 1000. The array reaches the encoder unchanged, so axis 0 is
+    # TIME and axis 1 is FREQUENCY, and patch index p maps to
+    # row = p // 37 = time, col = p % 37 = frequency.
+    #
+    # Both axes are 256 px after resizing, which is why the transposition here
+    # went unnoticed until 2026-07-22: the panels were drawn straight from the
+    # array, putting time on the vertical axis under a "Frequency (Hz)" label
+    # and vice versa. Transpose for display so the figure reads conventionally.
+    disp = spectrogram_matrix.T                 # (freq, time)
+    n_f = disp.shape[0]
+    extent = [0, segment_length, 0, n_f]
     f_lo, f_hi = frange
 
-    def _row_to_hz(row: float) -> float:
-        return f_lo * (f_hi / f_lo) ** (row / h)
+    def _pix_to_hz(pix: float) -> float:
+        return f_lo * (f_hi / f_lo) ** (pix / n_f)
 
-    y_rows = np.linspace(0, h, 6)
-    y_labels = [f"{_row_to_hz(r):.0f}" for r in y_rows]
+    y_rows = np.linspace(0, n_f, 6)
+    y_labels = [f"{_pix_to_hz(r):.0f}" for r in y_rows]
 
     # Pannello 1
-    axs[0].imshow(spectrogram_matrix, extent=extent, origin='lower', aspect='auto', cmap='cividis')
+    axs[0].imshow(disp, extent=extent, origin='lower', aspect='auto', cmap='cividis')
     axs[0].set_title("Original Q-Transform")
     axs[0].set_xlabel("Time from window start (s)")
     axs[0].set_ylabel("Frequency (Hz, log-spaced)")
@@ -160,32 +168,31 @@ def generate_saliency_map(
     axs[0].set_yticklabels(y_labels)
     axs[0].grid(False)
 
-    # Pannello 2 - Saliency (score_bg unicamente spaziale)
-    grid_bg = anomaly_score_np.reshape(37, 37)
-    axs[1].imshow(grid_bg, extent=extent, origin='lower', cmap='hot', aspect='auto')
+    # Pannello 2 - Saliency. grid is (time, freq) like the spectrogram, so it
+    # transposes the same way.
+    axs[1].imshow(grid.T, extent=extent, origin='lower', cmap='hot', aspect='auto')
     axs[1].set_title("Patch anomaly score\n[" + score_source + "]", fontsize=9)
     axs[1].grid(False)
-    
-    # Sovrapponi griglia 37x37 (dx now in seconds, matching the new extent)
+
+    # Sovrapponi griglia 37x37: dx along time, dy along frequency.
     dx = segment_length / 37.0
-    dy = h / 37.0
+    dy = n_f / 37.0
     for x in range(38):
         axs[1].axhline(x * dy, color='white', alpha=0.15, linewidth=0.5)
         axs[1].axvline(x * dx, color='white', alpha=0.15, linewidth=0.5)
-    
-    # Evidenzia i top-k_highlight patch sulla heatmap spaziale
+
+    # Evidenzia i top-k_highlight patch. (r, c) = (time cell, frequency cell),
+    # so r drives x and c drives y.
     for (r, c) in top_k_positions:
-        # origin='lower' on a 37x37 matrix means row 0 is at bottom (y=0 to y=dy)
-        # So r corresponds directly to the y grid cell. 
-        rect = patches.Rectangle((c * dx, r * dy), dx, dy, linewidth=1.5, edgecolor='red', facecolor='none')
+        rect = patches.Rectangle((r * dx, c * dy), dx, dy, linewidth=1.5, edgecolor='red', facecolor='none')
         axs[1].add_patch(rect)
-        
+
     axs[1].set_xlabel("Time from window start (s)")
     axs[1].set_yticks([])
 
     # Pannello 3 - Overlay combinato
-    im1 = axs[2].imshow(spectrogram_matrix, extent=extent, origin='lower', aspect='auto', cmap='cividis')
-    im2 = axs[2].imshow(saliency_norm, extent=extent, origin='lower', aspect='auto', cmap='RdYlGn_r', alpha=0.55)
+    im1 = axs[2].imshow(disp, extent=extent, origin='lower', aspect='auto', cmap='cividis')
+    im2 = axs[2].imshow(saliency_norm.T, extent=extent, origin='lower', aspect='auto', cmap='RdYlGn_r', alpha=0.55)
     axs[2].set_title("Anomaly Saliency Overlay")
     axs[2].set_xlabel("Time from window start (s)")
     axs[2].set_yticks([])

@@ -71,17 +71,24 @@ NULL_SHIFTS_S = (1.0, 2.0, 4.0, 8.0, -1.0, -2.0, -4.0, -8.0)
 def _patch_time_band(top_k_idx: np.ndarray) -> tuple[float, float, float]:
     """Localize a trigger from its Top-k patch indices.
 
-    Returns (t_offset_s within the 32 s window, f_lo, f_hi) using the median
-    patch column for time and the patch row span for the frequency band.
+    Returns (t_offset_s within the 32 s window, f_lo, f_hi).
+
+    **Axis order.** ``gwpy``'s ``Spectrogram.value`` is ``(n_times,
+    n_frequencies)`` -- verified directly: a 32 s Q-transform gives shape
+    ``(1000, 500)`` against ``len(times) == 1000``. The array reaches the
+    encoder unchanged, so patch index ``p`` maps to **row = p // 37 = time**
+    and **col = p % 37 = frequency**. This function had the two swapped until
+    2026-07-22, which localized every candidate at a time derived from its
+    frequency content and band-passed a band derived from its timing.
     """
-    cols = np.asarray(top_k_idx) % PATCH_GRID
-    rows = np.asarray(top_k_idx) // PATCH_GRID
-    t_off = float((np.median(cols) + 0.5) / PATCH_GRID * SEGMENT_LENGTH)
+    rows = np.asarray(top_k_idx) // PATCH_GRID      # time
+    cols = np.asarray(top_k_idx) % PATCH_GRID       # frequency
+    t_off = float((np.median(rows) + 0.5) / PATCH_GRID * SEGMENT_LENGTH)
     # q-transform frequency axis is log-spaced over SPEC_FRANGE
     lo_f, hi_f = np.log10(SPEC_FRANGE[0]), np.log10(SPEC_FRANGE[1])
-    r_lo, r_hi = np.percentile(rows, [10, 90])
-    f_lo = 10 ** (lo_f + (r_lo / PATCH_GRID) * (hi_f - lo_f))
-    f_hi = 10 ** (lo_f + ((r_hi + 1) / PATCH_GRID) * (hi_f - lo_f))
+    c_lo, c_hi = np.percentile(cols, [10, 90])
+    f_lo = 10 ** (lo_f + (c_lo / PATCH_GRID) * (hi_f - lo_f))
+    f_hi = 10 ** (lo_f + ((c_hi + 1) / PATCH_GRID) * (hi_f - lo_f))
     # widen and clamp: the band only suppresses out-of-band noise
     f_lo = max(SPEC_FRANGE[0], f_lo / 1.5)
     f_hi = min(SPEC_FRANGE[1] * 0.95, f_hi * 1.5)
