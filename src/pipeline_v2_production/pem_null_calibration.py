@@ -275,6 +275,30 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
             "argmax_fraction": float(np.mean(argmax_valid == ci)),
             "zero_lag_median": float(np.median(np.diag(stack[ci]))),
         }
+    # ZERO-LAG CONTROL. The null above is built from time-shifted pairs, but
+    # the observed statistic is measured at zero lag, where persistent spectral
+    # lines make strain and auxiliary channels coherent at *every* time. Without
+    # this control a high observed C_max cannot be told apart from "this
+    # detector is simply like that", and the COUPLED fraction is uninterpretable.
+    #
+    # The diagonal of the (W, W) coherence matrix is exactly that: zero-lag
+    # C_max on quiet, candidate-free background windows. Persist its
+    # distribution, not only the per-channel median, so the fraction of quiet
+    # windows exceeding the veto threshold can be quoted directly.
+    zero_lag_cmax = np.diag(cmax)
+    zero_lag = {
+        "n_windows": int(len(zero_lag_cmax)),
+        "median": float(np.median(zero_lag_cmax)),
+        "q90": float(np.quantile(zero_lag_cmax, 0.90)),
+        "q99": float(np.quantile(zero_lag_cmax, 1.0 - alpha)),
+        "max": float(zero_lag_cmax.max()),
+        # The number that matters: how often does an ordinary quiet window
+        # already fire the veto? If this is not small, the veto is measuring
+        # the detector, not the candidate.
+        "fraction_above_threshold": float(np.mean(zero_lag_cmax > threshold)),
+        "values": [float(x) for x in zero_lag_cmax],
+    }
+
     hist_counts, hist_edges = np.histogram(null_sample, bins=50,
                                            range=(0.0, 1.0))
 
@@ -305,6 +329,7 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
         "threshold_fw": threshold,
         "threshold_fw_ci95": ci,
         "per_channel_null": per_channel,
+        "zero_lag_control": zero_lag,
         "dominant_null_channel": max(per_channel,
                                      key=lambda c: per_channel[c]["argmax_fraction"]),
         "null_histogram": {"bin_edges": hist_edges.tolist(),
