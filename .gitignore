@@ -290,7 +290,21 @@ tmp_repro_images
 # Local workspace memory structure
 knowledge/
 reports/
-scripts/
+
+# scripts/ is mostly throwaway one-offs, but the scripts that produce
+# published figures and numbers have to be in the repository: without them a
+# clone cannot regenerate the paper artifacts, which is the same
+# reproducibility gap as the unpinned dependencies (CORRECTIONS_2026-07-21, C4).
+scripts/*
+!scripts/cross_session_unification.py
+!scripts/gen_domain_shift_plot.py
+!scripts/generate_gallery.py
+!scripts/plot_parameter_space.py
+!scripts/regenerate_heatmap.py
+!scripts/regenerate_paper_images.py
+!scripts/regenerate_singleton_saliency.py
+!scripts/run_raw_diffusivity.py
+!scripts/verify_cohesion.py
 
 .gsd/
 .old
