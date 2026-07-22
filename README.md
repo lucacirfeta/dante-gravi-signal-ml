@@ -54,7 +54,18 @@ python main.py multiscale-analysis --run O4a
 
 # 7. Perform PEM coherence analysis on the candidates
 # (Ensure data/production_reference/channel_thresholds.json is present)
+#
+# REQUIRES the NDS2 client, which pip cannot install — this step is the one
+# part of the pipeline that does not run in the venv above:
+#     conda install -c conda-forge nds2-client python-nds2-client
+# Without it gwpy reports every auxiliary channel as "no valid sources found",
+# which looks identical to a genuine coverage gap. The pipeline now detects
+# this and refuses rather than producing a report full of false absences.
 python main.py pem-coherence-analysis --nds-host nds.gwosc.org
+
+# 7b. Family-wise empirical null for the PEM veto (large batches: add
+#     --purge-cache, each event pulls ~0.5 GB of auxiliary background)
+python -m src.pipeline_v2_production.pem_null_calibration --run O4a --purge-cache
 
 # 8. Calculate Poisson Upper Limit for null-result periods
 python main.py poisson-upper-limit

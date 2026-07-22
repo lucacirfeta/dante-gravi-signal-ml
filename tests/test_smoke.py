@@ -210,3 +210,23 @@ def test_artifact_writers_record_the_environment() -> None:
     assert not missing, (
         f"These write artifacts without recording the environment: {missing}"
     )
+
+
+def test_pem_reports_a_missing_nds2_client_as_such() -> None:
+    """A missing NDS2 client must not masquerade as absent auxiliary data.
+
+    Without `nds2`, gwpy answers every auxiliary fetch with "no valid sources
+    found", which reads as "this channel has no data here". That is how a
+    whole PEM batch gets written off as a coverage gap when the real cause is
+    a package that pip cannot install (conda-forge: nds2-client).
+    """
+    from src.pipeline_v2_production.pem_coherence_analysis import require_nds2
+
+    available = require_nds2()
+    assert isinstance(available, bool)
+    if not available:
+        pytest.skip(
+            "nds2 not importable in this interpreter, so the PEM veto cannot "
+            "run here. Use the conda environment that has it:\n"
+            "  conda install -c conda-forge nds2-client python-nds2-client"
+        )

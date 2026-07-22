@@ -117,7 +117,17 @@ def _pick_background_span(detector: str, event_gps: float, block_s: float,
 
 
 def _fetch_aux_block(channel: str, start: int, end: int,
-                     nds_host: str) -> TimeSeries:
+                     nds_host: str, max_fs: float | None = None) -> TimeSeries:
+    """Fetch (and cache) one background block of an auxiliary channel.
+
+    ``max_fs`` caps the cached sample rate. Pass the strain rate: the
+    coherence below already resamples every channel to ``min(fs_strain,
+    fs_aux)``, so decimating at fetch time is the same operation moved
+    earlier — while cutting the 16384 Hz channels, which dominate the cache
+    at ~800 MB per 4 h block, by 4x. Measured effect on the window FFTs:
+    1.6e-6 relative, from doing the float32 cast after the decimation
+    instead of before, against a threshold CI of order 0.03.
+    """
     NULL_CACHE.mkdir(parents=True, exist_ok=True)
     safe = channel.replace(":", "_")
     cache = NULL_CACHE / f"{safe}_{start}_{end}.npz"
@@ -126,9 +136,30 @@ def _fetch_aux_block(channel: str, start: int, end: int,
         return TimeSeries(d["data"], t0=start, sample_rate=float(d["fs"]),
                           name=channel)
     ts = TimeSeries.fetch(channel, start=start, end=end, host=nds_host)
+    if max_fs is not None and float(ts.sample_rate.value) > max_fs:
+        ts = ts.resample(max_fs)
     np.savez_compressed(cache, data=ts.value.astype(np.float32),
                         fs=float(ts.sample_rate.value))
     return ts
+
+
+def _purge_span_cache(channels: list[str], start: int, end: int) -> float:
+    """Delete one background block from the cache. Returns the GB freed.
+
+    Each event needs ~0.5 GB of auxiliary background even after decimation,
+    and spans rarely repeat across events, so a 60-event batch would otherwise
+    leave ~30 GB behind for no reuse.
+    """
+    freed = 0
+    for ch in channels:
+        p = NULL_CACHE / f"{ch.replace(':', '_')}_{start}_{end}.npz"
+        if p.exists():
+            freed += p.stat().st_size
+            try:
+                p.unlink()
+            except OSError as e:
+                logger.warning(f"Could not purge {p.name}: {e}")
+    return freed / 1e9
 
 
 def _window_segment_ffts(ts: TimeSeries, block_start: int,
@@ -166,7 +197,8 @@ def _window_segment_ffts(ts: TimeSeries, block_start: int,
 def calibrate_event(detector: str, event_gps: float, channels: list[str],
                     run: str = "O4a", block_s: float = 14400.0,
                     alpha: float = 0.01, nds_host: str = "nds.gwosc.org",
-                    n_boot: int = 200, seed: int = 42) -> dict:
+                    n_boot: int = 200, seed: int = 42,
+                    purge_cache: bool = False) -> dict:
     """Empirical family-wise null for one event. Writes and returns the JSON."""
     rng = np.random.default_rng(seed)
     bstart, bend, window_starts = _pick_background_span(
@@ -187,7 +219,8 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
     used_channels = []
     for ch in channels:
         try:
-            aux = _fetch_aux_block(ch, bstart, bend, nds_host)
+            aux = _fetch_aux_block(ch, bstart, bend, nds_host,
+                                   max_fs=fs_strain)
         except Exception as e:
             logger.warning(f"Aux fetch failed for {ch}: {e} — channel "
                            "dropped from the null (and must then be "
@@ -282,6 +315,11 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
     logger.info(f"[{detector} {event_gps:.0f}] m={len(used_channels)} "
                 f"N_pairs={n_pairs} threshold_fw={threshold:.3f} "
                 f"CI95=({ci[0]:.3f}, {ci[1]:.3f}) -> {out}")
+
+    if purge_cache:
+        freed = _purge_span_cache(used_channels, bstart, bend)
+        logger.info(f"[{detector} {event_gps:.0f}] purged {freed:.2f} GB of "
+                    "auxiliary background cache.")
     return result
 
 
@@ -346,9 +384,22 @@ def main():
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--apply-only", action="store_true",
                    help="Skip calibration; only regenerate the verdicts CSV.")
+    p.add_argument("--purge-cache", action="store_true",
+                   help="Delete each event's auxiliary background block once "
+                        "its null is computed. Spans rarely repeat across "
+                        "events, so a large batch otherwise leaves tens of GB "
+                        "on disk for no reuse.")
     args = p.parse_args()
 
     if not args.apply_only:
+        from src.pipeline_v2_production.pem_coherence_analysis import require_nds2
+        if not require_nds2():
+            raise SystemExit(
+                "Aborting: without the NDS2 client every channel would be "
+                "dropped from the null and each event would fail with "
+                "'No auxiliary channel could be fetched', which is a missing "
+                "package, not a property of the data."
+            )
         rep = pd.read_csv(PEM_DIR / "coherence_report.csv")
         for (det, gps), grp in rep.groupby(["detector", "gps_start"]):
             tested = grp[grp["data_available"] & grp["max_coherence"].notna()]
@@ -366,7 +417,7 @@ def main():
                                 run=args.run,
                                 block_s=args.block_hours * 3600,
                                 alpha=args.alpha, nds_host=args.nds_host,
-                                seed=args.seed)
+                                seed=args.seed, purge_cache=args.purge_cache)
             except Exception as e:
                 # One transient failure (e.g. GWOSC HTTP 500) must not kill
                 # the whole batch: the event stays UNCALIBRATED (explicit

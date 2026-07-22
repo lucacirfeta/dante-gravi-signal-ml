@@ -71,6 +71,30 @@ AUX_CHANNELS = {
 # Auxiliary channel fetch (requires LVC credentials / internal NDS)
 # ---------------------------------------------------------------------------
 
+def require_nds2() -> bool:
+    """True if the NDS2 client bindings are importable.
+
+    Without them gwpy has no NDS source at all and reports every auxiliary
+    fetch as ``ValueError: no valid sources found`` — which reads exactly like
+    "this channel has no data at this time" and is how a whole batch can be
+    written off as a coverage gap when the real problem is a missing package.
+    `nds2` is not pip-installable; it comes from conda-forge:
+
+        conda install -c conda-forge nds2-client python-nds2-client
+    """
+    try:
+        import nds2  # noqa: F401
+        return True
+    except ImportError:
+        logger.error(
+            "NDS2 client bindings not importable: every auxiliary fetch will "
+            "fail with 'no valid sources found', which is NOT evidence that "
+            "the channels lack data. Install with:  conda install -c "
+            "conda-forge nds2-client python-nds2-client"
+        )
+        return False
+
+
 def fetch_auxiliary_data(
     channel: str,
     gps_start: int,
@@ -378,6 +402,16 @@ def run_pem_coherence_analysis(
         channel_thresholds = json.load(f)
     logger.info("Loaded calibrated channel thresholds.")
 
+    # A configured host with no client is worse than no host: it silently
+    # produces a run full of "unavailable" rows that look like real coverage
+    # gaps. Fall back to null-result mode explicitly instead.
+    if nds_host is not None and not require_nds2():
+        logger.error(
+            "Falling back to NULL-RESULT mode because the NDS2 client is "
+            "missing. Do not read the resulting report as a coverage limit."
+        )
+        nds_host = None
+
     public_mode = (nds_host is None)
     if public_mode:
         logger.warning(
@@ -399,29 +433,41 @@ def run_pem_coherence_analysis(
         if fam_df.empty:
             continue
             
+        # Split the budget across the robustness classes present, so a large
+        # budget does not get spent entirely on ROBUST members. The priority
+        # order takes the remainder.
+        present = [c for c in MEDOID_PRIORITY
+                   if not fam_df[fam_df["robustness_class"] == c].empty]
+        if not present:
+            continue
+        base, extra = divmod(max_events_per_family, len(present))
+        budget = {c: base + (1 if i < extra else 0) for i, c in enumerate(present)}
+
         spots_left = max_events_per_family
-        for pclass in MEDOID_PRIORITY:
+        for pclass in present:
             if spots_left <= 0:
                 break
             class_df = fam_df[fam_df["robustness_class"] == pclass]
-            if class_df.empty:
-                continue
-            
+
             # Sort by native_o4a_score to cover the distribution
             class_df = class_df.sort_values("native_o4a_score")
             n_cands = len(class_df)
-            
-            if n_cands <= spots_left:
+            n_take = min(budget[pclass], spots_left, n_cands)
+            if n_take <= 0:
+                continue
+
+            if n_cands <= n_take:
                 selected = class_df
             else:
-                if spots_left == 3:
-                    indices = [0, n_cands // 2, n_cands - 1]
-                elif spots_left == 2:
-                    indices = [0, n_cands - 1]
-                else:
-                    indices = [n_cands // 2]
+                # Evenly spaced in score rank, endpoints included: covers the
+                # whole distribution instead of collapsing to the median, which
+                # is what the previous hardcoded branches did for any budget
+                # above 3 -- one event per class no matter how large the budget.
+                indices = np.unique(
+                    np.linspace(0, n_cands - 1, n_take).round().astype(int)
+                )
                 selected = class_df.iloc[indices]
-                
+
             for _, row in selected.iterrows():
                 targets.append({
                     "detector": row["detector"],
