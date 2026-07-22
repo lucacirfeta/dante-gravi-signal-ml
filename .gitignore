@@ -235,6 +235,9 @@ data/reference/*.npz
 data/reference/*.csv
 data/reference/*.tar.gz
 data/production/
+# Re-downloadable scratch, kept out of the artifacts tree on purpose
+# (see NULL_CACHE in pem_null_calibration.py).
+data/cache/
 
 # Logs
 logs/

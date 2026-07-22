@@ -52,7 +52,13 @@ from src.core.data_loader import fetch_strain_data
 logger = setup_logger(__name__)
 
 PEM_DIR = Path("data/production/aggregated/pem")
-NULL_CACHE = PEM_DIR / "null_cache"
+
+# Deliberately OUTSIDE the artifacts directory. This is re-downloadable
+# auxiliary strain, ~0.5 GB per event, and it used to sit inside
+# aggregated/pem/ where it made up 9.1 GB of a 9.6 GB "results" folder --
+# large enough to dominate any archive or upload of that directory. The
+# results are the JSONs; this is scratch.
+NULL_CACHE = Path("data/cache/pem_null")
 
 WINDOW_S = 32.0
 STRIDE_S = 96.0          # >= 64 s guard between window starts
