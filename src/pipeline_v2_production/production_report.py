@@ -60,6 +60,8 @@ class ValidationReporter:
         self.reference_dir = get_reference_dir()
         self.dq_cache_path = self.reference_dir / f"dq_cache_{detector}_{run_name}.json"
         self._dinov2_model = None
+        self._patch_scorer = None
+        self._scorer_unavailable = False
         
         # Output artifacts
         self.report_dir = self.production_dir / "report"
@@ -67,6 +69,9 @@ class ValidationReporter:
         self.saliency_dir = self.report_dir / "saliency_gallery"
         self.saliency_dir.mkdir(parents=True, exist_ok=True)
         
+        from src.core.utils import record_environment
+        record_environment(self.report_dir, f"report_{self.session_id}_{self.detector}")
+
         self.status_file = self.report_dir / f"report_status_{self.session_id}_{self.detector}.json"
         self.status = self._load_status()
         self.status["MD5_index"] = "1080afa809964011e398c44fb24b73c6"
@@ -82,8 +87,44 @@ class ValidationReporter:
         with open(self.status_file, "w") as f:
             json.dump(self.status, f, indent=4)
             
+    def _get_scorer(self):
+        """The production PatchScorer, or None if its index is unavailable.
+
+        Saliency figures must highlight the patches the pipeline actually
+        pooled -- distance to the nearest centroid of the frozen VQ dictionary
+        -- and not the session-local spatial background that
+        `generate_saliency_map` falls back to. Passing this scorer is what makes
+        the two agree; omitting it is how a mislabelled panel reached a
+        published figure (see paper_draft/CORRECTIONS_2026-07-21.md, C2).
+        """
+        if self._patch_scorer is None and not self._scorer_unavailable:
+            from src.core.patch_scorer import PatchScorer
+            idx = self.reference_dir / f"patch_compressed_index_{self.reference_run.lower()}.npz"
+            if not idx.exists():
+                logger.error(
+                    f"Production index {idx.name} not found. Saliency panels will fall "
+                    "back to the session-local background, which ranks patches "
+                    "differently and must NOT be captioned as the production Top-k."
+                )
+                self._scorer_unavailable = True
+                return None
+            self._patch_scorer = PatchScorer(
+                reference_index_path=str(idx),
+                device=self.device,
+                # The MD5 pin inside PatchScorer is the O3b dictionary; another
+                # reference run legitimately hashes differently.
+                verify_md5=(self.reference_run.lower() == "o3b"),
+            )
+        return self._patch_scorer
+
     def _get_model(self):
         if self._dinov2_model is None:
+            # Reuse the scorer's frozen encoder when we have one, so a report
+            # run holds a single DINOv2 instance rather than two.
+            scorer = self._get_scorer()
+            if scorer is not None:
+                self._dinov2_model = scorer.model
+                return self._dinov2_model
             import torch
             try:
                 self._dinov2_model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
@@ -155,15 +196,8 @@ class ValidationReporter:
             df_out = pd.read_csv(csv_path)
         novelties = df_out[df_out["status"] == "TRUE_NOVEL_CANDIDATE"] if len(df_out) > 0 else pd.DataFrame()
         
-        try:
-            model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-        except Exception as e:
-            logger.warning(f"GitHub API failed ({e}), loading from local cache...")
-            cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
-            model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
-        model.eval()
-        model.to(self.device)
-        
+        model = self._get_model()
+
         # Process Clusters
         for cid in sorted_cids:
             gps_list = clusters[cid].get("gps_times", [])[:3]
@@ -183,7 +217,8 @@ class ValidationReporter:
                         output_path_prefix=str(out_prefix),
                         model=model,
                         k_highlight=68,
-                        device=self.device
+                        device=self.device,
+                        scorer=self._get_scorer()
                     )
                 except Exception as e:
                     logger.warning(f"Failed to generate plot for C{cid} {t_start}: {e}")
@@ -206,7 +241,8 @@ class ValidationReporter:
                     output_path_prefix=str(out_prefix),
                     model=model,
                     k_highlight=68,
-                    device=self.device
+                    device=self.device,
+                    scorer=self._get_scorer()
                 )
             except Exception as e:
                 logger.warning(f"Failed to generate plot for NOVEL {t_start}: {e}")
@@ -783,7 +819,8 @@ class ValidationReporter:
                     output_path_prefix=str(out_prefix),
                     model=model,
                     k_highlight=68,
-                    device=self.device
+                    device=self.device,
+                    scorer=self._get_scorer()
                 )
                 
                 # Add watermark
@@ -1035,7 +1072,10 @@ class ValidationReporter:
                 
                 out_prefix = self.saliency_dir / f"NOVEL_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
                 sal_img = f"{out_prefix.name}_saliency.png"
-                if not (self.saliency_dir / sal_img).exists() and model is not None and hasattr(self, 'spatial_median'):
+                # With a production scorer the spatial median is not needed;
+                # without one it is the fallback's only input.
+                can_draw = self._get_scorer() is not None or hasattr(self, 'spatial_median')
+                if not (self.saliency_dir / sal_img).exists() and model is not None and can_draw:
                     try:
                         ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0, edge_tolerance=4.0)
                         ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
@@ -1044,11 +1084,12 @@ class ValidationReporter:
                         
                         generate_saliency_map(
                             spectrogram_matrix=spec_matrix,
-                            background_vector=self.spatial_median,
+                            background_vector=getattr(self, 'spatial_median', None),
                             output_path_prefix=str(out_prefix),
                             model=model,
                             k_highlight=68,
-                            device=self.device
+                            device=self.device,
+                            scorer=self._get_scorer()
                         )
                     except Exception as e:
                         logger.warning(f"Could not generate Saliency for novel candidate {t_start}: {e}")

@@ -510,3 +510,107 @@ def compute_bbox(top_k_indices: np.ndarray, grid_size: int = 37) -> float:
     
     return (bbox_area.float() / (grid_size * grid_size)).item()
 
+
+
+# ---------------------------------------------------------------------------
+# Environment provenance
+# ---------------------------------------------------------------------------
+
+def record_environment(
+    out_dir: Path | str, context: str = "run", note: str | None = None
+) -> Path | None:
+    """Write the exact software environment of this run next to its artifacts.
+
+    Every score in this pipeline passes through ``gwpy``'s ``whiten`` and
+    ``q_transform``, so the encoder's input -- and therefore every downstream
+    number -- depends on the installed version of that library. Because
+    ``requirements.txt`` bounded versions from below rather than pinning them,
+    a later ``gwpy`` major release reproduces the analysis qualitatively but
+    not numerically, and the artifacts published in 2026 cannot be regenerated
+    from the repository alone. See paper_draft/CORRECTIONS_2026-07-21.md (C4).
+
+    This function exists so that never happens again: a run that writes results
+    also writes the version set that produced them. Recording is best-effort
+    and never interrupts an analysis -- a missing provenance file is bad, a
+    crashed 12-hour run is worse.
+
+    Returns the path written, or None if recording failed.
+    """
+    import hashlib
+    import json
+    import platform
+    import subprocess
+    from datetime import datetime, timezone
+    from importlib.metadata import distributions
+
+    logger = logging.getLogger(__name__)
+    try:
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        dest = out_dir / f"environment_{context}.json"
+
+        packages = {}
+        for dist in distributions():
+            name = dist.metadata["Name"]
+            if name:
+                packages[name.lower()] = dist.version
+        packages = dict(sorted(packages.items()))
+
+        try:
+            commit = subprocess.run(
+                ["git", "rev-parse", "HEAD"], capture_output=True, text=True,
+                timeout=10, cwd=Path(__file__).resolve().parents[2],
+            ).stdout.strip() or None
+            dirty = bool(subprocess.run(
+                ["git", "status", "--porcelain"], capture_output=True, text=True,
+                timeout=10, cwd=Path(__file__).resolve().parents[2],
+            ).stdout.strip())
+        except Exception:
+            commit, dirty = None, None
+
+        # The VQ dictionaries are inputs, not code: hash whichever are present
+        # so a mismatched index is detectable after the fact.
+        indices = {}
+        try:
+            for path in sorted(get_reference_dir().glob("patch_compressed_index*.npz")):
+                h = hashlib.md5()
+                with open(path, "rb") as f:
+                    for chunk in iter(lambda: f.read(1 << 20), b""):
+                        h.update(chunk)
+                indices[path.name] = h.hexdigest()
+        except Exception:
+            pass
+
+        record = {
+            "context": context,
+            "note": note,
+            "recorded_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "git_commit": commit,
+            "git_dirty": dirty,
+            "python": sys.version.split()[0],
+            "executable": sys.executable,
+            "platform": platform.platform(),
+            "torch": {
+                "version": torch.__version__,
+                "cuda_available": torch.cuda.is_available(),
+                "cuda_version": torch.version.cuda,
+                "device_name": (
+                    torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+                ),
+            },
+            "reference_index_md5": indices,
+            "packages": packages,
+        }
+
+        with open(dest, "w", encoding="utf-8") as f:
+            json.dump(record, f, indent=2)
+
+        gwpy_version = packages.get("gwpy", "NOT INSTALLED")
+        logger.info(
+            "Environment recorded in %s (gwpy %s, %d packages)",
+            dest.name, gwpy_version, len(packages),
+        )
+        return dest
+    except Exception as e:  # never let provenance break an analysis
+        logger.warning("Could not record environment provenance: %s", e)
+        return None

@@ -336,6 +336,11 @@ class AggregateReporter:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._cluster_reports_cache = {}
 
+        # This directory holds the artifacts the manuscripts cite, so it must
+        # also hold the version set that produced them.
+        from src.core.utils import record_environment
+        record_environment(self.output_dir, f"aggregate_{self.observing_run}")
+
     def _get_local_cluster_id(self, session_id: str, detector: str, gps: float) -> str:
         """Fetch the cluster ID for a specific GPS candidate from the session's JSON."""
         cache_key = f"{session_id}_{detector}"

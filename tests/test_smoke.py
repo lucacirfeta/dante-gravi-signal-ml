@@ -129,3 +129,84 @@ def test_reference_index_present_or_explains_itself() -> None:
     assert emb.ndim == 2 and emb.shape[1] == 384, (
         f"Expected (K, 384) DINOv2 embeddings, got {emb.shape}"
     )
+
+
+def test_saliency_callers_pass_the_production_scorer() -> None:
+    """Published saliency panels must show the patches the pipeline pooled.
+
+    `generate_saliency_map` falls back to a session-local spatial background
+    when no `scorer` is given. That fallback ranks patches by a different
+    quantity than the novelty score, so its boxes are not the production
+    Top-k. Every call site that can produce a figure for publication therefore
+    has to pass the scorer explicitly; this test exists because they all
+    silently did not (see paper_draft/CORRECTIONS_2026-07-21.md, C2).
+    """
+    import re
+
+    targets = [
+        ROOT / "src" / "pipeline_v2_production" / "production_report.py",
+        ROOT / "scripts" / "regenerate_singleton_saliency.py",
+    ]
+    offenders = []
+    for path in targets:
+        if not path.exists():
+            continue  # scripts/ is gitignored, so a fresh clone has no copy
+        text = path.read_text(encoding="utf-8")
+        for m in re.finditer(r"generate_saliency_map\(", text):
+            if text[m.end()] == ")":
+                continue  # prose mention like ``generate_saliency_map()``
+            # Take the call's argument list by matching parentheses.
+            depth, i = 1, m.end()
+            while i < len(text) and depth:
+                depth += (text[i] == "(") - (text[i] == ")")
+                i += 1
+            if "scorer=" not in text[m.end():i]:
+                line = text.count("\n", 0, m.start()) + 1
+                offenders.append(f"{path.name}:{line}")
+
+    assert not offenders, (
+        "generate_saliency_map called without scorer= at: "
+        + ", ".join(offenders)
+        + ". Pass the production PatchScorer, or the panel shows the "
+        "diagnostic spatial-background ranking instead of the Top-k."
+    )
+
+
+def test_environment_is_recorded_with_artifacts(tmp_path) -> None:
+    """A run that writes results must also write the versions that made them.
+
+    The published O4a artifacts cannot be regenerated because the dependency
+    set that produced them was never recorded and gwpy has since gone 3.x ->
+    4.x, changing both the whitening and the Q-transform. Provenance is
+    therefore a pipeline output, not a convenience.
+    """
+    import json
+
+    from src.core.utils import record_environment
+
+    dest = record_environment(tmp_path, "smoke")
+    assert dest is not None and dest.exists(), "record_environment wrote nothing"
+
+    record = json.loads(dest.read_text(encoding="utf-8"))
+    assert "gwpy" in record["packages"], (
+        "gwpy version missing from the provenance record — it supplies both "
+        "whiten() and q_transform(), so its version is the one that matters most."
+    )
+    for key in ("git_commit", "python", "platform", "torch", "reference_index_md5"):
+        assert key in record, f"provenance record has no '{key}'"
+
+
+def test_artifact_writers_record_the_environment() -> None:
+    """The three classes that write artifacts all call record_environment."""
+    writers = {
+        "production_writer.py": "src/pipeline_v2_production/production_writer.py",
+        "production_report.py": "src/pipeline_v2_production/production_report.py",
+        "aggregate_report.py": "src/pipeline_v2_production/aggregate_report.py",
+    }
+    missing = [
+        name for name, rel in writers.items()
+        if "record_environment(" not in (ROOT / rel).read_text(encoding="utf-8")
+    ]
+    assert not missing, (
+        f"These write artifacts without recording the environment: {missing}"
+    )

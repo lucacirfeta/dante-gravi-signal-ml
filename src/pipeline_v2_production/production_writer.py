@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import h5py
 import numpy as np
 
-from src.core.utils import setup_logger
+from src.core.utils import record_environment, setup_logger
 
 logger = setup_logger(__name__)
 
@@ -25,6 +25,11 @@ class ProductionWriter:
         
         self.hdf5_path = self.output_dir / f"novelties_{self.session_id}_{self.detector}.h5"
         self.checkpoint_path = self.checkpoints_dir / f"last_gps_{self.session_id}_{self.detector}.txt"
+
+        # The scores about to be written depend on the installed gwpy, which
+        # supplies both the whitening and the Q-transform. Record the version
+        # set alongside them so this session stays regenerable.
+        record_environment(self.output_dir, f"scan_{self.session_id}_{self.detector}")
         
     def _init_hdf5(self, metadata: dict, background_scores: np.ndarray, threshold: float, background_gps: np.ndarray = None):
         """Initializes the HDF5 structure if it doesn't exist."""

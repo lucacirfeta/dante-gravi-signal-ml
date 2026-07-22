@@ -17,9 +17,9 @@ EFFECTIVE_FRANGE = (20.0, 1291.0)
 
 def generate_saliency_map(
     spectrogram_matrix: np.ndarray,
-    background_vector: np.ndarray,
     output_path_prefix: str,
     model,
+    background_vector: np.ndarray | None = None,
     k_highlight: int = 68,
     device: str = 'cuda',
     segment_length: float = 32.0,
@@ -36,6 +36,9 @@ def generate_saliency_map(
     the function falls back to a session-local spatial background, which ranks
     patches differently; that fallback is a diagnostic only and its panels must
     never be captioned as showing "the Top-k patches".
+
+    ``background_vector`` is needed only by that fallback, so it may be omitted
+    whenever a ``scorer`` is supplied.
 
     ``segment_length`` and ``frange`` exist only to label the axes in physical
     units. Before 2026-07-21 the panels were drawn with ``extent=[0, w, 0, h]``
@@ -89,6 +92,11 @@ def generate_saliency_map(
         production_top_k = np.asarray(res["top_k_indices"], dtype=np.int64).ravel()
         score_source = "VQ dictionary (production)"
     else:
+        if background_vector is None:
+            raise ValueError(
+                "generate_saliency_map needs either a production `scorer` "
+                "(preferred) or a `background_vector` for the diagnostic fallback."
+            )
         bg_vec_tensor = torch.tensor(background_vector, dtype=torch.float32, device=device) # (1369, 384)
         bg_vec_tensor = F.normalize(bg_vec_tensor, p=2, dim=-1)
         cos_sim_bg = torch.sum(patch_tokens * bg_vec_tensor, dim=1) # (1369,)

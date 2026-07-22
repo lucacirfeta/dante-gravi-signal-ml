@@ -81,11 +81,15 @@ For deep physical and mathematical derivations, refer to the [arXiv preprint (26
 - **Blackwell GPUs (RTX 50XX):** Require PyTorch nightly builds (`cu128+`) for `sm_120` kernel support.
 
 ### Software Dependencies
-The pipeline relies on strictly version-controlled libraries. See `requirements.txt` for the full list. Core dependencies include:
+See `requirements.txt` for the full list. Core dependencies include:
 - `gwpy>=3.0.13` and `gwosc>=0.7.1` (Strain data ingestion)
 - `torch>=2.1.0` and `torchvision>=0.16.0` (DINOv2 inference)
 - `h5py>=3.10` (SWMR I/O for production scans)
 - `scikit-learn>=1.3.0` and `umap-learn>=0.5.6` (HDBSCAN/DPMM clustering and projection)
+
+> ⚠️ **Scores are environment-dependent.** `gwpy` provides both the whitening and the constant-Q transform, so it builds the encoder's input and every downstream score depends on its exact version. The bounds above are lower bounds, not pins: a run under `gwpy` 4.x reproduces the analysis qualitatively but **not numerically** against one run under 3.x. Use `requirements-lock.txt` for a byte-comparable environment, and note that regenerating a *published* run needs the versions that run used — which for the 2026 O4a artifacts were never recorded.
+
+**Every run now records its own provenance.** Scanning, per-session reporting and cross-session aggregation each write an `environment_*.json` next to their outputs, holding the full installed package set, the git commit, and the MD5 of each VQ reference index. Quote that file, not `requirements.txt`, when reporting where a number came from.
 
 ### Data Access (GWOSC)
 Raw O4a strain data is fetched programmatically from the Gravitational Wave Open Science Center (GWOSC). DANTE uses `gwpy` to stream the data automatically. 
