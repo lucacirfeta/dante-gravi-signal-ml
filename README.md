@@ -63,9 +63,10 @@ python main.py multiscale-analysis --run O4a
 # this and refuses rather than producing a report full of false absences.
 python main.py pem-coherence-analysis --nds-host nds.gwosc.org
 
-# 7b. Family-wise empirical null for the PEM veto (large batches: add
-#     --purge-cache, each event pulls ~0.5 GB of auxiliary background)
-python -m src.pipeline_v2_production.pem_null_calibration --run O4a --purge-cache
+# 7b. Family-wise empirical null for the PEM veto. Each event pulls ~0.5 GB of
+#     auxiliary background, purged once its null is computed; pass --keep-cache
+#     only if you are re-running events that share a background span.
+python -m src.pipeline_v2_production.pem_null_calibration --run O4a
 
 # 8. Calculate Poisson Upper Limit for null-result periods
 python main.py poisson-upper-limit

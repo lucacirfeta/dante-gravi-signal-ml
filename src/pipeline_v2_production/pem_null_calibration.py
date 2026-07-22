@@ -415,11 +415,17 @@ def main():
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--apply-only", action="store_true",
                    help="Skip calibration; only regenerate the verdicts CSV.")
+    # Purging is the default: background spans rarely repeat across events, so
+    # the cache is almost never reused, and a 63-event batch leaves ~30 GB
+    # behind for nothing. Kept as an explicit opt-out rather than a silent one.
+    p.add_argument("--keep-cache", action="store_true",
+                   help="Keep each event's auxiliary background block after its "
+                        "null is computed (~0.5 GB per event). Useful only when "
+                        "re-running events that share a background span; "
+                        "otherwise the blocks are never read again.")
     p.add_argument("--purge-cache", action="store_true",
-                   help="Delete each event's auxiliary background block once "
-                        "its null is computed. Spans rarely repeat across "
-                        "events, so a large batch otherwise leaves tens of GB "
-                        "on disk for no reuse.")
+                   help="Deprecated and now the default; accepted so existing "
+                        "commands keep working. Use --keep-cache to opt out.")
     args = p.parse_args()
 
     if not args.apply_only:
@@ -448,7 +454,8 @@ def main():
                                 run=args.run,
                                 block_s=args.block_hours * 3600,
                                 alpha=args.alpha, nds_host=args.nds_host,
-                                seed=args.seed, purge_cache=args.purge_cache)
+                                seed=args.seed,
+                                purge_cache=not args.keep_cache)
             except Exception as e:
                 # One transient failure (e.g. GWOSC HTTP 500) must not kill
                 # the whole batch: the event stays UNCALIBRATED (explicit
