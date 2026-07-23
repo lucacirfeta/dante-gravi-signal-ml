@@ -190,6 +190,9 @@ def run(run_name: str = "O4a", morphologies=DEFAULT_MORPHOLOGIES,
                 "cc_max": float(ccs.max()),
                 "epsilon_coh": float(np.mean(ccs > tau)),
                 "n": int(len(ccs)),
+                # Per-injection values so recovery can be re-thresholded if
+                # tau_cc changes, without re-running the campaign.
+                "cc_values": [float(c) for c in ccs],
             })
             logger.info(f"{morph} amp={amp:.1e} SNR~{rows[-1]['snr_mean']:.0f} "
                         f"cc_mean={ccs.mean():.3f} eps_coh={rows[-1]['epsilon_coh']:.1%}")

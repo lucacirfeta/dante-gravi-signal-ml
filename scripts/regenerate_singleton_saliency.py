@@ -51,8 +51,8 @@ SINGLETONS = [
 ]
 
 PAPER_IMG_DIRS = [
-    PROJECT_ROOT / "paper_draft" / "v5_15072026_arvix" / "img",
-    PROJECT_ROOT / "paper_draft" / "v5_15072026_cqg" / "img",
+    PROJECT_ROOT / "paper_draft" / "v5_15072026_arvix_v3" / "img",
+    PROJECT_ROOT / "paper_draft" / "v5_15072026_cqg_v3" / "img",
 ]
 
 VISUAL_CHECKS_DIR = PROJECT_ROOT / "data" / "production" / "aggregated" / "visual_checks"
