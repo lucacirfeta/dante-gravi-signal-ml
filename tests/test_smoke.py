@@ -48,6 +48,7 @@ DOCUMENTED_COMMANDS = [
     "coincidence-efficiency",
     "background-cohesion",
     "dsd-absorption",
+    "inter-session-recurrence",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]

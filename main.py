@@ -3085,6 +3085,24 @@ def cmd_dsd_absorption(args: argparse.Namespace) -> None:
         )
 
 
+def cmd_inter_session_recurrence(args: argparse.Namespace) -> None:
+    """Does any morphology recur across widely separated sessions?
+
+    A glitch class recurs months apart; noise does not. Tested on the stored
+    MIL vectors, against the baseline set by how candidates are distributed
+    over sessions.
+    """
+    from src.pipeline_v2_production.inter_session_recurrence import run as run_isr
+
+    out = run_isr(args.run, top_n=args.top_n, k_neighbours=args.k_neighbours,
+                  seed=args.seed)
+    for det, r in out.get("detectors", {}).items():
+        logger.info(
+            f"{det}: cross-session enrichment x{r['enrichment_top_vs_baseline']:.2f}, "
+            f"neighbour-span z={r['neighbour_session_span_z']:+.1f}"
+        )
+
+
 def cmd_poisson_upper_limit(args: argparse.Namespace) -> None:
     from src.pipeline_v2_production.poisson_upper_limit import run_poisson_upper_limit
     from src.core.utils import load_config
@@ -4422,6 +4440,19 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Background segments forming the index (default 300).")
     p_abs.add_argument("--seed", type=int, default=42)
     p_abs.set_defaults(func=cmd_dsd_absorption)
+
+    # --- inter-session-recurrence ---
+    p_isr = subparsers.add_parser(
+        "inter-session-recurrence",
+        help="Test whether any morphology recurs across widely separated "
+             "observing sessions, as a glitch class would and noise would not.",
+    )
+    p_isr.add_argument("--run", type=str, default="O4a")
+    p_isr.add_argument("--top-n", type=int, default=2000,
+                       help="Most-similar pairs examined (default 2000).")
+    p_isr.add_argument("--k-neighbours", type=int, default=10)
+    p_isr.add_argument("--seed", type=int, default=42)
+    p_isr.set_defaults(func=cmd_inter_session_recurrence)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(

@@ -74,6 +74,10 @@ python -m src.pipeline_v2_production.pem_null_calibration --run O4a
 #     This sweeps injected prevalence against a same-size all-background control.
 python main.py dsd-absorption --morphology Blip
 
+# 7d. Does any morphology recur across widely separated sessions, as a glitch
+#     class would and noise would not? Uses the stored MIL vectors.
+python main.py inter-session-recurrence --run O4a
+
 # 8. Calculate Poisson Upper Limit for null-result periods
 python main.py poisson-upper-limit
 ```
