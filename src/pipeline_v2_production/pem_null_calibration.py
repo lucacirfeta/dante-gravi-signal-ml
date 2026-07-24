@@ -354,6 +354,63 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
     return result
 
 
+def channel_class(channel: str) -> str:
+    """Subsystem of an auxiliary channel. Descriptive metadata only.
+
+    Recorded so a reader with collaboration knowledge can apply their own
+    safety judgement. It deliberately does **not** drive the verdict: grouping
+    by subsystem would assert which channels can witness strain, and the
+    measured baselines contradict the obvious grouping -- the input mode
+    cleaner (nominally auxiliary) shows a higher quiet-time coherence than the
+    length-sensing pick-off port. Tiering uses the measurement instead, see
+    `tier_verdict`.
+    """
+    sub = channel.split(":")[-1] if ":" in channel else channel
+    if sub.startswith("LSC"):
+        return "LSC"
+    if sub.startswith("CAL-PCAL") or "CAL_LINE" in sub:
+        return "CAL_LINE"
+    if sub.startswith("ASC"):
+        return "ASC"
+    if sub.startswith("IMC"):
+        return "IMC"
+    return "UNCLASSIFIED"
+
+
+def tier_verdict(cmax: float | None, thr_shift: float | None,
+                 thr_zero_lag: float | None) -> str:
+    """Grade a coupling by which of the two nulls it survives.
+
+    The family-wise null is built from *time-shifted* pairs, but the observed
+    statistic is measured at zero lag, where persistent lines make strain and
+    auxiliary channels coherent whether or not a glitch is present. Measured
+    over 63 events, 17.6% of quiet zero-lag windows already exceed the
+    time-shift threshold, so that threshold alone is too permissive.
+
+    The zero-lag null fixes this and needs no assumption about which channels
+    are safe: a channel with a high quiet-time coherence simply gets a high
+    zero-lag quantile and must clear a correspondingly larger excess.
+
+        COUPLED         exceeds the zero-lag quantile -- coherent well beyond
+                        what this channel does on quiet data
+        SUSPECT         exceeds the time-shift threshold but not the zero-lag
+                        one -- looks coupled under the naive null, and stops
+                        looking coupled once the channel's own baseline is
+                        accounted for
+        NO_CORRELATION  exceeds neither
+
+    SUSPECT is where the unverified-safety assumption bites hardest, so those
+    events should not be used to support an instrumental origin.
+    """
+    if cmax is None or not np.isfinite(cmax):
+        return "UNCALIBRATED"
+    if thr_zero_lag is not None and np.isfinite(thr_zero_lag) and cmax > thr_zero_lag:
+        return "COUPLED"
+    if thr_shift is not None and np.isfinite(thr_shift) and cmax > thr_shift:
+        return "SUSPECT"
+    return "NO_CORRELATION"
+
+
 def apply_family_wise_verdicts(run: str = "O4a") -> Path:
     """Join coherence_report.csv with the per-event calibrations.
 
@@ -399,10 +456,25 @@ def apply_family_wise_verdicts(run: str = "O4a") -> Path:
                      "threshold_fw": cal["threshold_fw"],
                      "cmax_observed": cmax_obs,
                      "top_channel": top["aux_channel"],
+                     "top_channel_baseline": cal["per_channel_null"]
+                        .get(top["aux_channel"], {}).get("zero_lag_median"),
+                     "threshold_zero_lag": (cal.get("zero_lag_control") or {}).get("q99"),
                      "verdict": verdict})
     out = PEM_DIR / "pem_family_wise_verdicts.csv"
-    pd.DataFrame(rows).to_csv(out, index=False)
-    logger.info(f"Wrote {out} ({len(rows)} events)")
+    df = pd.DataFrame(rows)
+    # Make the unverified-safety assumption explicit per verdict rather than
+    # implicit for all of them: a coupling driven by the length-sensing chain
+    # is downgraded to SUSPECT (see channel_class).
+    df["top_channel_class"] = df["top_channel"].map(
+        lambda c: channel_class(c) if isinstance(c, str) else None)
+    df["verdict_tier"] = [
+        tier_verdict(c, s, z) for c, s, z
+        in zip(df["cmax_observed"], df["threshold_fw"], df["threshold_zero_lag"])
+    ]
+    df.to_csv(out, index=False)
+    n_susp = int((df["verdict_tier"] == "SUSPECT").sum())
+    logger.info(f"Wrote {out} ({len(rows)} events; {n_susp} COUPLED downgraded "
+                "look coupled only under the time-shift null)")
     return out
 
 
