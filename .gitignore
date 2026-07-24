@@ -308,6 +308,7 @@ scripts/*
 !scripts/regenerate_singleton_saliency.py
 !scripts/run_raw_diffusivity.py
 !scripts/verify_cohesion.py
+!scripts/pem_background_batch.sh
 
 .gsd/
 .old
