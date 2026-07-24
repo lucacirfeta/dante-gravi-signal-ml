@@ -109,7 +109,19 @@ See `requirements.txt` for the full list. Core dependencies include:
 - `h5py>=3.10` (SWMR I/O for production scans)
 - `scikit-learn>=1.3.0` and `umap-learn>=0.5.6` (HDBSCAN/DPMM clustering and projection)
 
-> ⚠️ **Scores are environment-dependent.** `gwpy` provides both the whitening and the constant-Q transform, so it builds the encoder's input and every downstream score depends on its exact version. The bounds above are lower bounds, not pins: a run under `gwpy` 4.x reproduces the analysis qualitatively but **not numerically** against one run under 3.x. Use `requirements-lock.txt` for a byte-comparable environment, and note that regenerating a *published* run needs the versions that run used — which for the 2026 O4a artifacts were never recorded.
+> ℹ️ **Reproducing a published score: use `[gps + 4, gps + 36]`.** The pipeline is
+> deterministic and its stored scores reproduce **exactly**, but catalogues written
+> before 2026-07-24 label each candidate with the start of the *padded crop*, four
+> seconds before the window actually analysed. Re-scoring `[gps, gps+32]` analyses a
+> window shifted by 4 s and misses by ~0.07 in score; `[gps + 4, gps + 36]` reproduces
+> the archived value to four decimal places. Runs from 2026-07-24 onward label the
+> analysis window directly.
+>
+> An earlier version of this note blamed `gwpy` major-version drift. That was tested
+> directly and is **false**: `gwpy` 3.0.13 and 4.0.1 give spectrograms agreeing to
+> 4.7e-10 and identical scores to six decimals, and the same score is returned on CPU,
+> on GPU, and with TF32 disabled. `requirements-lock.txt` is still worth using, and every
+> run now writes an `environment_*.json` beside its artifacts, but neither was the cause.
 
 **Every run now records its own provenance.** Scanning, per-session reporting and cross-session aggregation each write an `environment_*.json` next to their outputs, holding the full installed package set, the git commit, and the MD5 of each VQ reference index. Quote that file, not `requirements.txt`, when reporting where a number came from.
 
