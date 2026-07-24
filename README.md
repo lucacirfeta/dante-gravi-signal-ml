@@ -68,6 +68,12 @@ python main.py pem-coherence-analysis --nds-host nds.gwosc.org
 #     only if you are re-running events that share a background span.
 python -m src.pipeline_v2_production.pem_null_calibration --run O4a
 
+# 7c. Measure where the DSD stops seeing a morphology. The native index is built
+#     from the run's own background, so a morphology common enough there is
+#     learned by the dictionary and re-scored as background by construction.
+#     This sweeps injected prevalence against a same-size all-background control.
+python main.py dsd-absorption --morphology Blip
+
 # 8. Calculate Poisson Upper Limit for null-result periods
 python main.py poisson-upper-limit
 ```

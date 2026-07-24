@@ -3056,6 +3056,34 @@ def cmd_background_cohesion(args: argparse.Namespace) -> None:
         logger.info(f"native background {bg:.3%} vs ROBUST {ro:.3%} in largest cluster")
 
 
+def cmd_dsd_absorption(args: argparse.Namespace) -> None:
+    """At what prevalence does the DSD stop seeing a glitch morphology?
+
+    The native index is built from the run's own background, so a morphology
+    common enough there is learned by the dictionary and re-scored as background
+    by construction. This measures where that happens, against a same-size
+    all-background control.
+    """
+    from src.pipeline_v2_production.dsd_absorption_threshold import run as run_absorption
+
+    out = run_absorption(
+        morphology=args.morphology,
+        amplitude=args.amplitude,
+        duration=args.duration,
+        n_background=args.n_background,
+        run_name=args.run,
+        seed=args.seed,
+    )
+    rows = out.get("rows", [])
+    if rows:
+        z0 = rows[0]["z_injected_vs_background"]
+        zn = rows[-1]["z_injected_vs_background"]
+        logger.info(
+            f"{out['morphology']}: separation {z0:.2f} -> {zn:.2f} sigma "
+            f"between {rows[0]['prevalence']:.0%} and {rows[-1]['prevalence']:.0%} prevalence"
+        )
+
+
 def cmd_poisson_upper_limit(args: argparse.Namespace) -> None:
     from src.pipeline_v2_production.poisson_upper_limit import run_poisson_upper_limit
     from src.core.utils import load_config
@@ -4376,6 +4404,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_bch.add_argument(
         "--aggregated-dir", type=str, default="data/production/aggregated")
     p_bch.set_defaults(func=cmd_background_cohesion)
+
+    # --- dsd-absorption ---
+    p_abs = subparsers.add_parser(
+        "dsd-absorption",
+        help="Measure the prevalence at which the DSD absorbs a glitch "
+             "morphology into its own background dictionary.",
+    )
+    p_abs.add_argument("--run", type=str, default="O4a")
+    p_abs.add_argument("--morphology", type=str, default="Blip",
+                       help="Synthetic morphology to inject (default: Blip).")
+    p_abs.add_argument("--amplitude", type=float, default=12.0,
+                       help="Peak amplitude on whitened (~unit-variance) noise.")
+    p_abs.add_argument("--duration", type=float, default=1.0)
+    p_abs.add_argument("--n-background", type=int, default=300,
+                       help="Background segments forming the index (default 300).")
+    p_abs.add_argument("--seed", type=int, default=42)
+    p_abs.set_defaults(func=cmd_dsd_absorption)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(

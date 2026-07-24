@@ -47,6 +47,7 @@ DOCUMENTED_COMMANDS = [
     "coincidence-physical",
     "coincidence-efficiency",
     "background-cohesion",
+    "dsd-absorption",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]
