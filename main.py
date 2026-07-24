@@ -2985,6 +2985,7 @@ def cmd_pem_coherence_analysis(args: argparse.Namespace) -> None:
         include_singletons=not args.no_singletons,
         max_events_per_family=args.max_events,
         nds_host=args.nds_host,
+        robustness_class=args.robustness_class,
     )
 
 
@@ -4474,6 +4475,18 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=5,
         help="Max events to process per family.",
+    )
+    p_pem.add_argument(
+        "--robustness-class",
+        type=str,
+        default=None,
+        choices=["ROBUST", "AMBIGUOUS", "BACKGROUND"],
+        help=(
+            "Restrict selection to one robustness class. Use to interrogate a "
+            "single population: the DSD-rejected (BACKGROUND) pool is either "
+            "drift or pervasive glitches absorbed by the native dictionary, and "
+            "auxiliary coupling discriminates between the two."
+        ),
     )
     p_pem.add_argument(
         "--nds-host",

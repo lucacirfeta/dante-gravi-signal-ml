@@ -363,6 +363,7 @@ def run_pem_coherence_analysis(
     include_singletons: bool = True,
     max_events_per_family: int = 5,
     nds_host: Optional[str] = None,
+    robustness_class: Optional[str] = None,
 ) -> None:
     """Orchestrate the PEM coherence analysis.
 
@@ -384,6 +385,12 @@ def run_pem_coherence_analysis(
     nds_host:
         NDS2 server hostname for auxiliary channels.  If ``None`` (default),
         the module runs in null-result mode (public GWOSC data only).
+    robustness_class:
+        Restrict selection to a single robustness class (``ROBUST``,
+        ``AMBIGUOUS``, ``BACKGROUND``).  Used to interrogate one population
+        without re-running the others: the DSD-rejected pool is either drift or
+        pervasive glitches the native dictionary absorbed, and auxiliary
+        coupling is the discriminant between those two hypotheses.
     """
     if not taxonomy_csv.exists():
         logger.error("Taxonomy CSV not found: %s", taxonomy_csv)
@@ -435,8 +442,10 @@ def run_pem_coherence_analysis(
             
         # Split the budget across the robustness classes present, so a large
         # budget does not get spent entirely on ROBUST members. The priority
-        # order takes the remainder.
-        present = [c for c in MEDOID_PRIORITY
+        # order takes the remainder. With `robustness_class` set, the whole
+        # budget goes to that one class.
+        classes = MEDOID_PRIORITY if robustness_class is None else [robustness_class]
+        present = [c for c in classes
                    if not fam_df[fam_df["robustness_class"] == c].empty]
         if not present:
             continue
@@ -478,6 +487,13 @@ def run_pem_coherence_analysis(
                 logger.info(f"Selected {pclass} member for {fam}: GPS {int(row['gps_start'])} (score: {row.get('native_o4a_score', 0):.3f})")
                 
             spots_left -= len(selected)
+
+    # The singletons are ROBUST, so including them while interrogating another
+    # class would mix populations in the very comparison being made.
+    if include_singletons and robustness_class not in (None, "ROBUST"):
+        logger.info(f"Singletons skipped: they are ROBUST and this run targets "
+                    f"{robustness_class}.")
+        include_singletons = False
 
     if include_singletons:
         for _, row in df[df["global_family_id"] == "Singleton"].iterrows():
