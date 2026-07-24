@@ -37,9 +37,16 @@ def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str, se
             rgb_spectrogram = cmap(spectrogram)[:, :, :3]
             rgb_spectrogram_uint8 = (rgb_spectrogram * 255).astype(np.uint8)
             
-            return int(t0), rgb_spectrogram_uint8
+            # Label the ANALYSIS WINDOW, not the padded crop. This returned
+            # `t0` (= seg_start - 4, the crop start) until 2026-07-24, so every
+            # catalogued GPS in runs before that date is 4 s earlier than the
+            # window actually scored. That offset is why those runs appeared
+            # irreproducible: re-scoring [gps, gps+32] analyses a window shifted
+            # by 4 s. Scored with [gps+4, gps+36] the stored values reproduce
+            # exactly (verified to four decimals across 10 candidates).
+            return int(seg_start), rgb_spectrogram_uint8
     except Exception as e:
-        return int(t0), None
+        return int(seg_start), None
 
 class PatchProducer:
     """CPU-bound Data Producer for Patch-Level production pipeline.

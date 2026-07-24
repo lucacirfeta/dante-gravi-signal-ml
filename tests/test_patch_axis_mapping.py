@@ -85,3 +85,27 @@ def test_band_stays_inside_the_effective_frange() -> None:
         assert SPEC_FRANGE[0] <= f_lo < f_hi <= SPEC_FRANGE[1], (
             f"band {f_lo:.1f}-{f_hi:.1f} Hz outside {SPEC_FRANGE}"
         )
+
+
+def test_producer_labels_the_analysis_window_not_the_crop() -> None:
+    """The GPS recorded with each spectrogram is the analysis window start.
+
+    `_worker_preprocess` used to return `t0` -- the start of the *padded crop*,
+    i.e. `seg_start - 4` -- so every catalogued GPS was 4 s earlier than the
+    window actually scored. That single offset is what made pre-2026-07-24 runs
+    look irreproducible: re-scoring `[gps, gps+32]` analyses a window shifted by
+    4 s and lands nowhere near the stored value, while `[gps+4, gps+36]`
+    reproduces it exactly.
+    """
+    import inspect
+
+    from src.core import patch_producer
+
+    src = inspect.getsource(patch_producer._worker_preprocess)
+    assert "return int(seg_start)" in src, (
+        "_worker_preprocess must label the analysis window (seg_start), not the "
+        "padded crop (t0) -- see the 4 s catalogue offset it caused."
+    )
+    assert "return int(t0), rgb" not in src, (
+        "_worker_preprocess still returns the crop start as the GPS label"
+    )

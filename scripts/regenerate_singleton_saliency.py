@@ -169,9 +169,16 @@ def main() -> None:
 
         # 1. Fetch + whiten + Q-transform the event window
         print("  Fetching strain data...")
-        ts_super = fetch_strain_data(det, gps - 4.0, gps + 36.0, edge_tolerance=4.0)
-        ts_w, _ = whiten_context(ts_super, gps, gps + 32.0, pad=4.0)
-        ts_clean = extract_clean_subwindow(ts_w, gps, gps + 32.0)
+        # Catalogued GPS labels the start of the PADDED CROP, not the analysis
+        # window: the production worker records `ts_context.t0`, which is
+        # `segment_start - 4`. The window actually scored is therefore
+        # [gps + 4, gps + 36]. Using [gps, gps + 32] here analyses a window
+        # shifted by 4 s and does not reproduce the stored score (verified: the
+        # stored scores reproduce exactly, to four decimals, only with +4).
+        win0 = gps + 4.0
+        ts_super = fetch_strain_data(det, win0 - 4.0, win0 + 36.0, edge_tolerance=4.0)
+        ts_w, _ = whiten_context(ts_super, win0, win0 + 32.0, pad=4.0)
+        ts_clean = extract_clean_subwindow(ts_w, win0, win0 + 32.0)
         spec_matrix = generate_qtransform(ts_clean, save_path=None, output_size=(256, 256))
         print(f"  Spectrogram shape: {spec_matrix.shape}")
 
