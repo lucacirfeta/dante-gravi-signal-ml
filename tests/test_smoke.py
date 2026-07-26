@@ -49,6 +49,7 @@ DOCUMENTED_COMMANDS = [
     "background-cohesion",
     "dsd-absorption",
     "inter-session-recurrence",
+    "dsd-index-stability",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]

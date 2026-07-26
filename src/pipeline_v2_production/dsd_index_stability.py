@@ -6,22 +6,28 @@ survivor population -- the central object of the survey -- is partly an artifact
 of a random draw rather than a property of the candidates.
 
 The test builds several independent native indices from disjoint bootstrap draws
-of the background pool, and re-scores the same candidates against each, with each
-index carrying its *own* P99-of-held-out-background threshold (scores are not
-comparable across indices, so a fixed threshold would be meaningless). Two
-things are then measured:
+of the background pool (raw_qgram, vetoed background -- matching
+``build_native_index``), and re-scores the same candidates against each. The
+answer is read from three threshold-independent statistics:
 
-* **Verdict agreement** -- for each candidate, does the survive/reject decision
-  agree across draws? If the survivors were a draw artifact, near-threshold
-  candidates would flip.
 * **Score rank correlation** across draws -- if a candidate scores high against
   one draw and high against another, the ordering is a property of the
   candidate, not of the reference.
+* **Per-candidate score std** across draws -- how much a single candidate's
+  score wobbles when the reference is resampled.
+* **ROBUST vs rejected separation** under the rebuilt indices -- if survivors
+  still score above rejected candidates against a fresh index, the boundary is
+  a property of the candidates.
 
-The sample deliberately concentrates near the DSD threshold, where a flip is
-possible; candidates far above or below cannot flip and would inflate agreement.
-A rejected (BACKGROUND) contrast set is included: a stable method keeps rejected
-below and survivors above.
+All three avoid a threshold on purpose. Reproducing the *production* survive/
+reject threshold is subtle -- production calibrates it on un-vetoed
+(glitch-inclusive) background while it builds the index on vetoed background
+(LAB_NOTEBOOK section 19) -- so the verdict metrics are reported only as
+diagnostics, not as production-faithful decisions. The rank correlation is the
+headline result and needs no threshold.
+
+The sample concentrates near the DSD threshold, where the survivor/reject
+distinction is most fragile; a rejected (BACKGROUND) contrast set is included.
 
 Candidate patch tokens are not stored, so candidates are re-encoded. Catalogues
 before 2026-07-24 label the padded crop, so the analysis window is
@@ -163,35 +169,53 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
                     f"{int(survive[k].sum())}/{len(cs)}")
 
     is_rob = (cands.robustness_class == "ROBUST").to_numpy()
-    # Verdict agreement: fraction of candidates with the same verdict in all draws.
-    all_survive = survive.all(axis=0)
-    all_reject = (~survive).all(axis=0)
-    stable = all_survive | all_reject
-    # Rank correlation of scores across draws (mean of pairwise Spearman).
+
+    # PRIMARY, threshold-independent metrics. The survive/reject verdict needs a
+    # threshold, and reproducing the production threshold is subtle: production
+    # calibrates it on UN-VETOED background (glitch-inclusive, P99=0.447) while
+    # the index is built on VETOED background (see LAB_NOTEBOOK §19). The
+    # held-out threshold here uses vetoed background and lands at ~0.10, far
+    # below where the candidates sit, so the verdict metrics are not
+    # production-faithful and are reported only as diagnostics. These three do
+    # not depend on any threshold and answer the stability question directly:
     from scipy.stats import spearmanr
     rhos = [spearmanr(cand_scores[i], cand_scores[j]).statistic
             for i in range(n_draws) for j in range(i + 1, n_draws)]
+    per_cand_std = cand_scores.std(axis=0)          # score wobble across draws
+    rob_mean = float(cand_scores.mean(axis=0)[is_rob].mean())
+    rej_mean = float(cand_scores.mean(axis=0)[~is_rob].mean())
+
+    # Diagnostic verdict metrics (NOT production-faithful, see above).
+    all_survive = survive.all(axis=0)
+    all_reject = (~survive).all(axis=0)
 
     out = {
         "run": run_name, "n_candidates": int(len(cand_tok)),
         "n_robust": int(is_rob.sum()), "n_rejected": int((~is_rob).sum()),
         "n_draws": n_draws, "n_background": n_bg, "seed": seed,
-        "thresholds": thresholds,
-        "verdict_stable_fraction": float(stable.mean()),
-        "robust_survive_all_fraction": float(all_survive[is_rob].mean()),
-        "rejected_reject_all_fraction": float(all_reject[~is_rob].mean()),
-        "robust_flipped": int((is_rob & ~all_survive & ~all_reject).sum()),
-        "rejected_flipped": int((~is_rob & ~all_survive & ~all_reject).sum()),
+        # --- primary, threshold-independent ---
         "score_rank_correlation_mean": float(np.mean(rhos)),
         "score_rank_correlation_min": float(np.min(rhos)),
+        "per_candidate_score_std_median": float(np.median(per_cand_std)),
+        "per_candidate_score_std_max": float(per_cand_std.max()),
+        "robust_mean_score": rob_mean,
+        "rejected_mean_score": rej_mean,
+        "robust_rejected_separation": rob_mean - rej_mean,
+        # --- diagnostic only: threshold not production-faithful (§19) ---
+        "_diagnostic_thresholds": thresholds,
+        "_diagnostic_verdict_note": (
+            "held-out threshold uses vetoed background (~0.10) not the "
+            "un-vetoed production calibration (~0.447); verdict metrics below "
+            "are not production-faithful, see LAB_NOTEBOOK section 19"),
+        "_diagnostic_verdict_stable_fraction": float((all_survive | all_reject).mean()),
     }
     dest = AGG / f"dsd_index_stability_{run_name.lower()}.json"
     dest.write_text(json.dumps(out, indent=2))
     logger.info(
-        f"verdict stable {out['verdict_stable_fraction']:.0%} | "
-        f"ROBUST survive-all {out['robust_survive_all_fraction']:.0%} | "
-        f"rejected reject-all {out['rejected_reject_all_fraction']:.0%} | "
-        f"score rank-corr {out['score_rank_correlation_mean']:.3f}")
+        f"score rank-corr {out['score_rank_correlation_mean']:.3f} "
+        f"(min {out['score_rank_correlation_min']:.3f}) | per-candidate std "
+        f"median {out['per_candidate_score_std_median']:.4f} | ROBUST "
+        f"{rob_mean:.3f} vs rejected {rej_mean:.3f} across independent draws")
     logger.info(f"wrote {dest}")
     record_environment(AGG, f"dsd_index_stability_{run_name.lower()}")
     return out

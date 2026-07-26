@@ -3085,6 +3085,24 @@ def cmd_dsd_absorption(args: argparse.Namespace) -> None:
         )
 
 
+def cmd_dsd_index_stability(args: argparse.Namespace) -> None:
+    """Are the DSD survivors an artifact of which background built the index?
+
+    Rebuilds the native index from independent background draws and re-scores
+    near-threshold candidates. Reports threshold-independent stability metrics.
+    """
+    from src.pipeline_v2_production.dsd_index_stability import run as run_stab
+
+    out = run_stab(args.run, n_candidates=args.n_candidates,
+                   n_draws=args.n_draws, seed=args.seed)
+    logger.info(
+        f"rank correlation {out['score_rank_correlation_mean']:.3f}, "
+        f"per-candidate std {out['per_candidate_score_std_median']:.4f}, "
+        f"ROBUST {out['robust_mean_score']:.3f} vs rejected "
+        f"{out['rejected_mean_score']:.3f}"
+    )
+
+
 def cmd_inter_session_recurrence(args: argparse.Namespace) -> None:
     """Does any morphology recur across widely separated sessions?
 
@@ -4453,6 +4471,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_isr.add_argument("--k-neighbours", type=int, default=10)
     p_isr.add_argument("--seed", type=int, default=42)
     p_isr.set_defaults(func=cmd_inter_session_recurrence)
+
+    # --- dsd-index-stability ---
+    p_stab = subparsers.add_parser(
+        "dsd-index-stability",
+        help="Test whether the DSD survivors are an artifact of which "
+             "background sample built the native index.",
+    )
+    p_stab.add_argument("--run", type=str, default="O4a")
+    p_stab.add_argument("--n-candidates", type=int, default=40,
+                        help="Near-threshold candidates per (class, detector).")
+    p_stab.add_argument("--n-draws", type=int, default=4)
+    p_stab.add_argument("--seed", type=int, default=42)
+    p_stab.set_defaults(func=cmd_dsd_index_stability)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(
