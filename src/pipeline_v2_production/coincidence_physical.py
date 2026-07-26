@@ -274,6 +274,11 @@ def run(run_name: str = 'O4a', n_candidates: int = 200, seed: int = 42,
     out.write_text(json.dumps({'summary': summary, 'events': rows}, indent=1))
     logger.info(json.dumps(summary, indent=2))
     logger.info(f'saved {out}')
+    try:
+        from src.core.utils import record_environment
+        record_environment(agg, f'coincidence_physical_{run_name.lower()}')
+    except Exception:
+        pass
     return summary
 
 
