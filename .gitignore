@@ -310,6 +310,8 @@ scripts/*
 !scripts/verify_cohesion.py
 !scripts/pem_background_batch.sh
 
+.claude
+.codex
 .gsd/
 .old
 .agents
