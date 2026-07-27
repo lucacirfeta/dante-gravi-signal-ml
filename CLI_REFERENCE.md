@@ -102,6 +102,7 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
     - [`catalog-cross-match`](#33-catalog-cross-match) — DANTE's recall of the real GWTC-4 O4a catalogue (P11)
     - [`blind-spot-map`](#34-blind-spot-map) — Empirical time-frequency blind-spot map vs T=Q_max/f
     - [`whitening-context-sensitivity`](#35-whitening-context-sensitivity) — DSD verdict flips vs whitening context
+    - [`characterize-candidate`](#36-characterize-candidate) — Independent per-candidate descriptors (on-demand, not part of the Tier-2 sequence)
 
 ---
 
@@ -136,6 +137,9 @@ whitening-context-sensitivity --run O4a    # reads Master_Taxonomy + dsd_thresho
 catalog-cross-match --run O4a              # P11: reads Master_Taxonomy + per-session cluster reports
 blind-spot-map --run O4a                   # reads only the frozen O3b + native indices
 astrophysical-injection --run O4a          # P9: reads coincidence_physical + dsd_threshold_mc_error (WSL/lalsuite)
+
+# On demand, any time — not part of the sequence above
+characterize-candidate --detector L1 --gps <gps> --feature-gps <t>  # independent per-candidate descriptors
 ```
 
 **Prerequisite summary** (what each Tier-2 command reads, beyond the frozen
@@ -945,6 +949,32 @@ Output: `whitening_context_sensitivity_{run}.json`.
 > **Result:** median context swing 0.007; 14% of candidates swing >0.02; ~5%
 > near-threshold verdict flip rate (an upper bound). The section-12 singleton
 > swing is a minority property, not a survey-wide instability.
+
+### 36. characterize-candidate
+Independent, single-candidate descriptors: in-band peak frequency (raw-strain
+ASD of a 4 s feature window), in-band loudness ratio vs adjacent 32 s windows,
+and a raw cross-detector correlation over ±12 ms. Deliberately does **not**
+reuse the production preprocessing or the coincidence test — independent
+agreement is the point of the cross-check. `--detector`, `--gps` (start of the
+32 s window), `--feature-gps` (centres the 4 s peak/correlation windows),
+`--band` (default 26–42 Hz), `--partner`, `--n-background`, `--bg-spacing`.
+Optional `--catalog-gps` looks up the stored **production** coincidence-veto
+result for the same candidate and reports it alongside — never recomputed,
+never conflated with the raw descriptor. Output: `characterize_{detector}_{gps}.json`.
+
+> **Provenance:** the recipe is adapted from an independent reproduction by
+> GitHub user **Kretski** (gist `d0f17ae69cd8fc40093cb4a4e372b7be`) on the L1
+> singleton at GPS 1382955253 — see `paper_draft/reply_3_codex.html`. Verified
+> against the production artifact for that candidate: `cc_onsource=0.0716`
+> vs a time-shift null mean 0.1970 / max 0.2864 over 7 shifts — same
+> conclusion as the raw descriptor (no robust H1 counterpart), via a
+> different, independent statistic.
+>
+> **Caveats enforced in the code, not left in prose:** the loudness ratio is a
+> plain order-of-magnitude descriptor, not a calibrated significance (whitening
+> self-inflates against an isolated loud feature); the raw correlation is
+> unstable near zero — a small value close to the search-window edge is
+> consistent with zero, not a stable measurement.
 
 ---
 

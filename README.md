@@ -90,6 +90,14 @@ python main.py catalog-cross-match --run O4a           # recall of the real GWTC
 python main.py blind-spot-map --run O4a                # empirical time-frequency blind-spot map
 python main.py whitening-context-sensitivity --run O4a # DSD verdict flips vs whitening context
 
+# 7f. On demand, any single candidate: independent descriptors (peak frequency,
+#     loudness ratio, raw cross-detector correlation), deliberately NOT reusing
+#     production preprocessing. --catalog-gps looks up the authoritative
+#     production coincidence veto alongside, without conflating the two.
+#     Recipe adapted from an independent reproduction by GitHub user Kretski.
+python main.py characterize-candidate --detector L1 --gps <gps> \
+    --feature-gps <feature_gps> --band 26 42 --catalog-gps <catalog_gps>
+
 # 8. Calculate Poisson Upper Limit for null-result periods
 python main.py poisson-upper-limit
 ```
