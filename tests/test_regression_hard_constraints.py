@@ -363,7 +363,7 @@ def test_no_hardcoded_taxonomy_filename_in_pipeline():
     # docstring are documentation-level; only executable literals count.
     offenders = [o for o in offenders
                  if not o.startswith("physics_correlation")]
-    assert offenders in ([], ["pem_coherence_analysis.py:756"]), (
+    assert offenders in ([], ["pem_coherence_analysis.py:818"]), (
         f"Hardcoded taxonomy filename found in: {offenders}"
     )
 

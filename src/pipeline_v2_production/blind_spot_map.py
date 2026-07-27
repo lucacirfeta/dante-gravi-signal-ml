@@ -50,13 +50,17 @@ AGG = Path("data/production/aggregated")
 SEGMENT_LENGTH = 32.0
 SAMPLE_RATE = 4096
 FLAG_THRESHOLD = 0.3783          # O3b session flagging threshold
-Q_MAX = 32.0                     # DANTE Q-transform Qrange upper bound
+# Upper bound of the PRIMARY flag path's Q-transform (config.yaml preprocessing
+# qrange = [4, 64], used by generate_qtransform). NOT the V3 multiscale Q=32; the
+# scoring here goes through the primary O3b path, so 64 is the boundary that
+# applies. A sine-Gaussian with Q > Q_MAX cannot be concentrated by any tile.
+Q_MAX = 64.0
 TARGET_SNR = 20.0                # loud enough that a miss is morphological
 
 # Grid: f0 across the analysis band (log-spaced), Q from broadband to very
 # narrowband, straddling Q_MAX so the analytic boundary sits inside the map.
 DEFAULT_F0 = (35.0, 60.0, 100.0, 170.0, 300.0)
-DEFAULT_Q = (2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0)
+DEFAULT_Q = (2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0)
 
 
 def _sine_gaussian(f0: float, q: float) -> np.ndarray:
