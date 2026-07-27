@@ -51,6 +51,7 @@ DOCUMENTED_COMMANDS = [
     "inter-session-recurrence",
     "dsd-index-stability",
     "pca-baseline",
+    "catalog-cross-match",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]

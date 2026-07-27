@@ -3123,6 +3123,23 @@ def cmd_pca_baseline(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_catalog_cross_match(args: argparse.Namespace) -> None:
+    """Does DANTE flag the real O4a gravitational-wave catalogue? (P11)
+
+    Cross-matches the confirmed GWTC-4.0/4.1 O4a events against DANTE's flagged
+    windows, separating coverage from recall, as a ground-truth check on the
+    instrumental framing.
+    """
+    from src.pipeline_v2_production.catalog_cross_match import run as run_xm
+
+    out = run_xm(args.run, refresh=args.refresh)
+    rc = out["recall_among_covered"]
+    logger.info(
+        f"{rc['covered']} covered events, {rc['flagged_any_detector']} flagged, "
+        f"{rc['flagged_coincident_both']} coincident"
+    )
+
+
 def cmd_inter_session_recurrence(args: argparse.Namespace) -> None:
     """Does any morphology recur across widely separated sessions?
 
@@ -4518,6 +4535,17 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Vetoed background segments the PCA subspace is fit on.")
     p_pca.add_argument("--seed", type=int, default=42)
     p_pca.set_defaults(func=cmd_pca_baseline)
+
+    # --- catalog-cross-match ---
+    p_xm = subparsers.add_parser(
+        "catalog-cross-match",
+        help="Cross-match DANTE's flagged windows against the confirmed "
+             "GWTC-4.0/4.1 O4a gravitational-wave catalogue (real-event recall).",
+    )
+    p_xm.add_argument("--run", type=str, default="O4a")
+    p_xm.add_argument("--refresh", action="store_true",
+                      help="Re-fetch the GWTC event list from GWOSC (else cached).")
+    p_xm.set_defaults(func=cmd_catalog_cross_match)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(
