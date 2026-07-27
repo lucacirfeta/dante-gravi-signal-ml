@@ -52,6 +52,7 @@ DOCUMENTED_COMMANDS = [
     "dsd-index-stability",
     "pca-baseline",
     "catalog-cross-match",
+    "dsd-k-sensitivity",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]

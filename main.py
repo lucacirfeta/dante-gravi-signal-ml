@@ -3123,6 +3123,22 @@ def cmd_pca_baseline(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_dsd_k_sensitivity(args: argparse.Namespace) -> None:
+    """Is the DSD survivor population an artifact of the dictionary size K? (P4)
+
+    Rebuilds the native index at several K from P5's cached background tokens and
+    re-scores the same candidates. Reports threshold-independent stability.
+    """
+    from src.pipeline_v2_production.dsd_k_sensitivity import run as run_k
+
+    out = run_k(args.run, n_candidates=args.n_candidates,
+                k_values=args.k_values, seed=args.seed)
+    logger.info(
+        f"rank-corr vs production K {out['rank_correlation_vs_production_k']}, "
+        f"per-candidate std {out['per_candidate_score_std_median']:.4f}"
+    )
+
+
 def cmd_catalog_cross_match(args: argparse.Namespace) -> None:
     """Does DANTE flag the real O4a gravitational-wave catalogue? (P11)
 
@@ -4535,6 +4551,20 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Vetoed background segments the PCA subspace is fit on.")
     p_pca.add_argument("--seed", type=int, default=42)
     p_pca.set_defaults(func=cmd_pca_baseline)
+
+    # --- dsd-k-sensitivity ---
+    p_ksen = subparsers.add_parser(
+        "dsd-k-sensitivity",
+        help="Sweep the native-index dictionary size K and test whether the DSD "
+             "survivor population is an artifact of the K=1216 choice.",
+    )
+    p_ksen.add_argument("--run", type=str, default="O4a")
+    p_ksen.add_argument("--n-candidates", type=int, default=40,
+                        help="Must match the P5 token cache this test reuses.")
+    p_ksen.add_argument("--k-values", type=int, nargs="+",
+                        default=[512, 1024, 1216, 2048])
+    p_ksen.add_argument("--seed", type=int, default=42)
+    p_ksen.set_defaults(func=cmd_dsd_k_sensitivity)
 
     # --- catalog-cross-match ---
     p_xm = subparsers.add_parser(
