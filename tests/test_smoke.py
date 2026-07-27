@@ -49,6 +49,7 @@ DOCUMENTED_COMMANDS = [
     "background-cohesion",
     "dsd-absorption",
     "inter-session-recurrence",
+    "dsd-threshold-mc-error",
     "dsd-index-stability",
     "pca-baseline",
     "catalog-cross-match",

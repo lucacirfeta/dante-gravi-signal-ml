@@ -95,12 +95,65 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
 8. **Robustness & Characterization (standalone, reviewer-driven)**
     - [`dsd-absorption`](#28-dsd-absorption) — Prevalence at which a morphology is absorbed into the native index
     - [`inter-session-recurrence`](#29-inter-session-recurrence) — Does any morphology recur across separated sessions?
+    - [`dsd-threshold-mc-error`](#295-dsd-threshold-mc-error) — Monte-Carlo error on the DSD thresholds (R3, prerequisite)
     - [`dsd-index-stability`](#30-dsd-index-stability) — Are the DSD survivors an artifact of the background draw? (P5)
     - [`dsd-k-sensitivity`](#31-dsd-k-sensitivity) — Are the survivors an artifact of the dictionary size K? (P4)
     - [`pca-baseline`](#32-pca-baseline) — What the frozen encoder buys over a classical baseline (P10)
     - [`catalog-cross-match`](#33-catalog-cross-match) — DANTE's recall of the real GWTC-4 O4a catalogue (P11)
     - [`blind-spot-map`](#34-blind-spot-map) — Empirical time-frequency blind-spot map vs T=Q_max/f
     - [`whitening-context-sensitivity`](#35-whitening-context-sensitivity) — DSD verdict flips vs whitening context
+
+---
+
+## Execution Order
+
+There are two tiers, and they run in this order. The **core discovery chain**
+is orchestrated: `aggregate-report` runs the validation subprocesses itself, so
+you do not invoke them by hand. The **robustness & characterization suite** is
+standalone and runs *after* the core chain, because every test reads artifacts
+the core chain produces.
+
+```
+# Tier 1 — core discovery chain (orchestrated)
+fetch-raw                                  # raw strain -> data/raw/<run>/
+patch-analysis --detector H1 --run O4a     # per-session novelties + native scores
+patch-analysis --detector L1 --run O4a
+aggregate-report --run O4a                 # -> Master_Taxonomy_<run>.csv,
+                                           #    background_scores_native_<det>_<run>.npy,
+                                           #    and auto-runs (in order):
+                                           #      coincidence-physical -> coincidence-efficiency
+                                           #      -> background-cohesion -> poisson-upper-limit
+                                           #      -> pem-coherence-analysis
+
+# Tier 2 — robustness & characterization suite (standalone, run after Tier 1)
+dsd-threshold-mc-error --run O4a           # R3: reads native scores -> dsd_threshold_mc_error.json
+                                           #     PREREQUISITE of every test below (the
+                                           #     near-threshold candidate sampler reads it)
+dsd-index-stability --run O4a              # P5: writes a reusable candidate/background token cache
+dsd-k-sensitivity --run O4a                # P4: REQUIRES the P5 token cache
+pca-baseline --run O4a                     # P10
+whitening-context-sensitivity --run O4a    # reads Master_Taxonomy + dsd_threshold_mc_error + native index
+catalog-cross-match --run O4a              # P11: reads Master_Taxonomy + per-session cluster reports
+blind-spot-map --run O4a                   # reads only the frozen O3b + native indices
+astrophysical-injection --run O4a          # P9: reads coincidence_physical + dsd_threshold_mc_error (WSL/lalsuite)
+```
+
+**Prerequisite summary** (what each Tier-2 command reads, beyond the frozen
+reference indices from `download-all-references`):
+
+| command | needs |
+|---|---|
+| `dsd-threshold-mc-error` | `background_scores_native_{det}_{run}.npy` (from `aggregate-report`) |
+| `dsd-index-stability` | `Master_Taxonomy`, `dsd_threshold_mc_error.json` |
+| `dsd-k-sensitivity` | the `dsd-index-stability` token cache |
+| `pca-baseline` | `Master_Taxonomy`, `dsd_threshold_mc_error.json` |
+| `whitening-context-sensitivity` | `Master_Taxonomy`, `dsd_threshold_mc_error.json`, native index |
+| `catalog-cross-match` | `Master_Taxonomy`, per-session `cluster_report_novelties_*.json` |
+| `blind-spot-map` | O3b + native indices only |
+| `astrophysical-injection` | `coincidence_physical_{run}.json`, `dsd_threshold_mc_error.json` |
+
+Each Tier-2 command aborts with a clear message if a prerequisite is missing;
+none rebuild or overwrite the frozen index.
 
 ---
 
@@ -821,6 +874,18 @@ Tests whether any morphology recurs across widely separated sessions (a glitch
 class recurs; noise does not), on the stored MIL vectors, against a
 session-shuffle null. `--run`, `--top-n`, `--k-neighbours`, `--seed`.
 Output: `inter_session_recurrence_{run}.json`.
+
+### 29.5. dsd-threshold-mc-error
+**(R3)** Bootstraps the Monte-Carlo error on the per-detector DSD thresholds
+(`tau_hi`, `tau_lo`) from the stored native background scores. **This is the
+prerequisite the rest of the suite reads** — the near-threshold candidate
+sampler pulls `tau_hi` from its output. `--run`, `--reps` (default 200), `--B`
+(replicas per run, default 1000). Requires
+`background_scores_native_{det}_{run}.npy` from `aggregate-report`.
+Output: `dsd_threshold_mc_error.json`.
+
+> **Result:** tau_hi MC std 0.003–0.006 — the threshold reproduces because it is
+> computed from stored score arrays that never re-pass through whitening/encoder.
 
 ### 30. dsd-index-stability
 **(P5)** Are the DSD survivors an artifact of *which* background sample built the

@@ -78,11 +78,13 @@ python main.py dsd-absorption --morphology Blip
 #     class would and noise would not? Uses the stored MIL vectors.
 python main.py inter-session-recurrence --run O4a
 
-# 7e. Robustness & characterization suite (reviewer-driven, standalone). Each
-#     writes a JSON + provenance record to data/production/aggregated/ and is
-#     covered by the smoke test. Full descriptions in CLI_REFERENCE.md (28–35).
-python main.py dsd-index-stability --run O4a           # survivors vs background draw (P5)
-python main.py dsd-k-sensitivity --run O4a             # survivors vs dictionary size K (P4)
+# 7e. Robustness & characterization suite (reviewer-driven, standalone). Runs
+#     AFTER aggregate-report; each writes a JSON + provenance record to
+#     data/production/aggregated/ and is covered by the smoke test. Full order
+#     and prerequisites in CLI_REFERENCE.md → "Execution Order".
+python main.py dsd-threshold-mc-error --run O4a        # R3: DSD threshold MC error — PREREQUISITE of the rest
+python main.py dsd-index-stability --run O4a           # survivors vs background draw (P5); writes token cache
+python main.py dsd-k-sensitivity --run O4a             # survivors vs dictionary size K (P4); needs the P5 cache
 python main.py pca-baseline --run O4a                  # what the encoder buys vs a classical baseline (P10)
 python main.py catalog-cross-match --run O4a           # recall of the real GWTC-4 O4a catalogue (P11)
 python main.py blind-spot-map --run O4a                # empirical time-frequency blind-spot map

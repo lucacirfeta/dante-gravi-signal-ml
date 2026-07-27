@@ -95,25 +95,20 @@ def measure(scores: np.ndarray, reps: int, B: int = B_PRODUCTION) -> dict:
     }
 
 
-def main() -> None:
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--run", default="O4a")
-    p.add_argument("--reps", type=int, default=200,
-                   help="Independent bootstrap runs used to estimate the spread.")
-    p.add_argument("--B", type=int, default=B_PRODUCTION,
-                   help="Replicas per bootstrap run (production value: 1000).")
-    args = p.parse_args()
-
-    out: dict = {"run": args.run, "detectors": {}}
+def run(run_name: str = "O4a", reps: int = 200, B: int = B_PRODUCTION) -> dict:
+    """Measure the Monte-Carlo error on the DSD thresholds from stored native
+    background scores. Requires ``background_scores_native_{det}_{run}.npy``,
+    written by ``aggregate-report``'s native-threshold calibration."""
+    out: dict = {"run": run_name, "detectors": {}}
     for det in ("H1", "L1"):
-        path = AGG_DIR / f"background_scores_native_{det}_{args.run}.npy"
+        path = AGG_DIR / f"background_scores_native_{det}_{run_name}.npy"
         if not path.exists():
-            logger.error(f"{path} missing — cannot measure {det}.")
+            logger.error(f"{path} missing — cannot measure {det}. Run "
+                         "aggregate-report first to produce the native scores.")
             continue
         scores = np.load(path).astype(float)
-        logger.info(f"[{det}] {len(scores)} background scores, "
-                    f"{args.reps} runs of B={args.B}")
-        res = measure(scores, reps=args.reps, B=args.B)
+        logger.info(f"[{det}] {len(scores)} background scores, {reps} runs of B={B}")
+        res = measure(scores, reps=reps, B=B)
         out["detectors"][det] = res
         logger.info(
             f"[{det}] tau_lo={res['tau_lo']['mean']:.5f}+/-{res['tau_lo']['mc_std']:.5f}  "
@@ -125,6 +120,18 @@ def main() -> None:
     dest.write_text(json.dumps(out, indent=2))
     logger.info(f"Wrote {dest}")
     record_environment(AGG_DIR, "dsd_threshold_mc_error")
+    return out
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--run", default="O4a")
+    p.add_argument("--reps", type=int, default=200,
+                   help="Independent bootstrap runs used to estimate the spread.")
+    p.add_argument("--B", type=int, default=B_PRODUCTION,
+                   help="Replicas per bootstrap run (production value: 1000).")
+    args = p.parse_args()
+    run(args.run, reps=args.reps, B=args.B)
 
 
 if __name__ == "__main__":

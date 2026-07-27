@@ -3157,6 +3157,22 @@ def cmd_blind_spot_map(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_dsd_threshold_mc_error(args: argparse.Namespace) -> None:
+    """Monte-Carlo error on the DSD thresholds (R3).
+
+    Bootstraps the per-detector tau_hi/tau_lo from the stored native background
+    scores. Produces dsd_threshold_mc_error.json, the prerequisite the
+    robustness suite reads (via the near-threshold candidate sampler).
+    """
+    from src.pipeline_v2_production.dsd_threshold_mc_error import run as run_mc
+
+    out = run_mc(args.run, reps=args.reps, B=args.B)
+    for det, r in out.get("detectors", {}).items():
+        logger.info(
+            f"{det}: tau_hi={r['tau_hi']['mean']:.5f}+/-{r['tau_hi']['mc_std']:.5f}"
+        )
+
+
 def cmd_dsd_k_sensitivity(args: argparse.Namespace) -> None:
     """Is the DSD survivor population an artifact of the dictionary size K? (P4)
 
@@ -4585,6 +4601,20 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Vetoed background segments the PCA subspace is fit on.")
     p_pca.add_argument("--seed", type=int, default=42)
     p_pca.set_defaults(func=cmd_pca_baseline)
+
+    # --- dsd-threshold-mc-error ---
+    p_mc = subparsers.add_parser(
+        "dsd-threshold-mc-error",
+        help="Bootstrap the Monte-Carlo error on the per-detector DSD thresholds "
+             "(R3). Produces dsd_threshold_mc_error.json, read by the robustness "
+             "suite. Requires aggregate-report to have written native scores.",
+    )
+    p_mc.add_argument("--run", type=str, default="O4a")
+    p_mc.add_argument("--reps", type=int, default=200,
+                      help="Independent bootstrap runs used to estimate the spread.")
+    p_mc.add_argument("--B", type=int, default=1000,
+                      help="Replicas per bootstrap run (production value: 1000).")
+    p_mc.set_defaults(func=cmd_dsd_threshold_mc_error)
 
     # --- dsd-k-sensitivity ---
     p_ksen = subparsers.add_parser(
