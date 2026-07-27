@@ -3157,6 +3157,22 @@ def cmd_blind_spot_map(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_characterize_candidate(args: argparse.Namespace) -> None:
+    """Per-candidate descriptors: in-band peak, loudness ratio, cross-corr.
+
+    Cross-detector correlation reuses coincidence-physical (no reimplementation).
+    Attribution: cross-check recipe from GitHub user Kretski.
+    """
+    from src.pipeline_v2_production.characterize_candidate import run as run_char
+
+    out = run_char(args.detector, args.gps, band=args.band, partner=args.partner,
+                   n_background=args.n_background, bg_spacing=args.bg_spacing)
+    logger.info(
+        f"peak {out['peak_frequency_hz']:.1f} Hz | loudness "
+        f"{out['loudness_ratio']:.0f}x | cross-corr {out['cross_detector_max_corr']:.3f}"
+    )
+
+
 def cmd_dsd_threshold_mc_error(args: argparse.Namespace) -> None:
     """Monte-Carlo error on the DSD thresholds (R3).
 
@@ -4601,6 +4617,25 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Vetoed background segments the PCA subspace is fit on.")
     p_pca.add_argument("--seed", type=int, default=42)
     p_pca.set_defaults(func=cmd_pca_baseline)
+
+    # --- characterize-candidate ---
+    p_char = subparsers.add_parser(
+        "characterize-candidate",
+        help="Per-candidate descriptors (in-band peak frequency, loudness ratio, "
+             "cross-detector correlation) for one 32 s window. The correlation "
+             "reuses coincidence-physical. Cross-check recipe: GitHub user Kretski.",
+    )
+    p_char.add_argument("--detector", required=True, choices=("H1", "L1"))
+    p_char.add_argument("--gps", type=float, required=True,
+                        help="Start of the 32 s window (gps_start+4 for "
+                             "catalogues before 2026-07-24).")
+    p_char.add_argument("--band", type=float, nargs=2, default=[20.0, 1291.0],
+                        metavar=("F_LO", "F_HI"), help="In-band range (Hz), "
+                        "default = the q-transform span actually produced.")
+    p_char.add_argument("--partner", choices=("H1", "L1"), default=None)
+    p_char.add_argument("--n-background", type=int, default=16)
+    p_char.add_argument("--bg-spacing", type=float, default=40.0)
+    p_char.set_defaults(func=cmd_characterize_candidate)
 
     # --- dsd-threshold-mc-error ---
     p_mc = subparsers.add_parser(

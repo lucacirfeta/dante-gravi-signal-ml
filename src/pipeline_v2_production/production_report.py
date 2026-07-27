@@ -807,10 +807,26 @@ class ValidationReporter:
             for t_start in gps_list:
                 t_start = int(t_start)
                 out_prefix = self.saliency_dir / f"C{cid}_{self.detector}_{self.session_id}_{t_start}_{t_start+32}"
-                
+
                 ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0, edge_tolerance=4.0)
                 ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
                 ts = extract_clean_subwindow(ts_w, t_start, t_start + 32.0)
+
+                # Near a data-gap boundary the crop can come back short or empty
+                # (whiten_context clamps to available data), and generate_qtransform
+                # then fails inside gwpy's FFT with "Invalid number of FFT data
+                # points (0)". A saliency panel is a visual aid, not a result, so
+                # skip this prototype rather than aborting the whole gallery. (The
+                # other saliency call sites are already inside try/except; this one
+                # was not.)
+                if ts.size == 0 or float(ts.duration.value) < 31.0 \
+                        or not np.isfinite(np.asarray(ts.value)).all():
+                    logger.warning(
+                        f"Saliency: skipping {self.detector} {t_start} — analysis "
+                        f"window is empty/short ({float(ts.duration.value):.1f}s of "
+                        "32s) or non-finite, likely a data-gap boundary.")
+                    continue
+
                 spec_matrix = generate_qtransform(ts, save_path=None, output_size=(256, 256))
                 
                 res = generate_saliency_map(
@@ -874,8 +890,16 @@ class ValidationReporter:
             ts_super = fetch_strain_data(self.detector, t_start - 4.0, t_start + 36.0, edge_tolerance=4.0)
             ts_w, pad_info = whiten_context(ts_super, t_start, t_start + 32.0, pad=4.0)
             ts = extract_clean_subwindow(ts_w, t_start, t_start + 32.0)
+            # Skip prototypes whose window fell in a data gap (empty/short crop),
+            # which would otherwise crash generate_qtransform in gwpy's FFT.
+            if ts.size == 0 or float(ts.duration.value) < 31.0 \
+                    or not np.isfinite(np.asarray(ts.value)).all():
+                logger.warning(
+                    f"Pooling comparison: skipping {self.detector} {t_start} — "
+                    f"window empty/short ({float(ts.duration.value):.1f}s of 32s).")
+                continue
             spec_matrix = generate_qtransform(ts, save_path=None)
-            
+
             spec_8bit = np.uint8(spec_matrix * 255.0)
             img = Image.fromarray(spec_8bit).convert("RGB")
             tensor = transform(img).unsqueeze(0).to(self.device)

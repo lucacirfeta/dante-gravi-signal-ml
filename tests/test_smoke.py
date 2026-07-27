@@ -49,6 +49,7 @@ DOCUMENTED_COMMANDS = [
     "background-cohesion",
     "dsd-absorption",
     "inter-session-recurrence",
+    "characterize-candidate",
     "dsd-threshold-mc-error",
     "dsd-index-stability",
     "pca-baseline",
