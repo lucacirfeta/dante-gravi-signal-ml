@@ -3158,18 +3158,24 @@ def cmd_blind_spot_map(args: argparse.Namespace) -> None:
 
 
 def cmd_characterize_candidate(args: argparse.Namespace) -> None:
-    """Per-candidate descriptors: in-band peak, loudness ratio, cross-corr.
-
-    Cross-detector correlation reuses coincidence-physical (no reimplementation).
-    Attribution: cross-check recipe from GitHub user Kretski.
-    """
+    """Generic independent descriptors plus a production-veto lookup."""
     from src.pipeline_v2_production.characterize_candidate import run as run_char
 
-    out = run_char(args.detector, args.gps, band=args.band, partner=args.partner,
-                   n_background=args.n_background, bg_spacing=args.bg_spacing)
+    out = run_char(
+        args.detector,
+        args.gps,
+        args.feature_gps,
+        band=args.band,
+        partner=args.partner,
+        n_background=args.n_background,
+        bg_spacing=args.bg_spacing,
+        catalog_gps=args.catalog_gps,
+        coincidence_artifact=args.coincidence_artifact,
+    )
     logger.info(
         f"peak {out['peak_frequency_hz']:.1f} Hz | loudness "
-        f"{out['loudness_ratio']:.0f}x | cross-corr {out['cross_detector_max_corr']:.3f}"
+        f"{out['loudness_ratio_to_background_mean']:.0f}x | raw cross-corr "
+        f"{out['raw_cross_detector_max_corr']:.3f}"
     )
 
 
@@ -4621,20 +4627,26 @@ def build_parser() -> argparse.ArgumentParser:
     # --- characterize-candidate ---
     p_char = subparsers.add_parser(
         "characterize-candidate",
-        help="Per-candidate descriptors (in-band peak frequency, loudness ratio, "
-             "cross-detector correlation) for one 32 s window. The correlation "
-             "reuses coincidence-physical. Cross-check recipe: GitHub user Kretski.",
+        help="Generic independent Kretski-style descriptors, with optional "
+             "lookup of the separate production coincidence-veto result.",
     )
     p_char.add_argument("--detector", required=True, choices=("H1", "L1"))
     p_char.add_argument("--gps", type=float, required=True,
-                        help="Start of the 32 s window (gps_start+4 for "
-                             "catalogues before 2026-07-24).")
-    p_char.add_argument("--band", type=float, nargs=2, default=[20.0, 1291.0],
+                        help="Start of the 32 s descriptor window.")
+    p_char.add_argument("--feature-gps", type=float, required=True,
+                        help="Feature time centring the 4 s peak/correlation windows.")
+    p_char.add_argument("--band", type=float, nargs=2, default=[26.0, 42.0],
                         metavar=("F_LO", "F_HI"), help="In-band range (Hz), "
-                        "default = the q-transform span actually produced.")
+                        "default = forum cross-check band.")
     p_char.add_argument("--partner", choices=("H1", "L1"), default=None)
     p_char.add_argument("--n-background", type=int, default=16)
     p_char.add_argument("--bg-spacing", type=float, default=40.0)
+    p_char.add_argument("--catalog-gps", type=float,
+                        help="GPS key in the stored production coincidence artifact.")
+    p_char.add_argument(
+        "--coincidence-artifact", type=Path,
+        default=Path("data/production/aggregated/coincidence_physical_o4a.json"),
+    )
     p_char.set_defaults(func=cmd_characterize_candidate)
 
     # --- dsd-threshold-mc-error ---
