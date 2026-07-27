@@ -50,6 +50,7 @@ DOCUMENTED_COMMANDS = [
     "dsd-absorption",
     "inter-session-recurrence",
     "dsd-index-stability",
+    "pca-baseline",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]

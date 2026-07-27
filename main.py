@@ -3103,6 +3103,26 @@ def cmd_dsd_index_stability(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_pca_baseline(args: argparse.Namespace) -> None:
+    """What does the frozen DINOv2 encoder buy over a classical baseline?
+
+    Scores the same near-threshold candidate pool with a PCA subspace novelty
+    detector and raw spectral energy, then measures how their ranking agrees
+    with DANTE's. Bounds the value of the natural-image transfer (B2).
+    """
+    from src.pipeline_v2_production.pca_baseline import run as run_pca
+
+    out = run_pca(args.run, n_candidates=args.n_candidates,
+                  n_background=args.n_background, seed=args.seed)
+    pr, se = out["pca_reconstruction_residual"], out["spectral_energy"]
+    logger.info(
+        f"PCA-residual rank-corr {pr['rank_correlation_with_dante']:.3f} "
+        f"AUC {pr['auc_robust_vs_rejected']:.3f} | spectral-energy rank-corr "
+        f"{se['rank_correlation_with_dante']:.3f} AUC "
+        f"{se['auc_robust_vs_rejected']:.3f}"
+    )
+
+
 def cmd_inter_session_recurrence(args: argparse.Namespace) -> None:
     """Does any morphology recur across widely separated sessions?
 
@@ -4484,6 +4504,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_stab.add_argument("--n-draws", type=int, default=4)
     p_stab.add_argument("--seed", type=int, default=42)
     p_stab.set_defaults(func=cmd_dsd_index_stability)
+
+    # --- pca-baseline ---
+    p_pca = subparsers.add_parser(
+        "pca-baseline",
+        help="Measure what the frozen DINOv2 encoder buys over a classical "
+             "PCA + spectral-energy baseline on the same candidate pool.",
+    )
+    p_pca.add_argument("--run", type=str, default="O4a")
+    p_pca.add_argument("--n-candidates", type=int, default=40,
+                       help="Near-threshold candidates per (class, detector).")
+    p_pca.add_argument("--n-background", type=int, default=1300,
+                       help="Vetoed background segments the PCA subspace is fit on.")
+    p_pca.add_argument("--seed", type=int, default=42)
+    p_pca.set_defaults(func=cmd_pca_baseline)
 
     # --- poisson-upper-limit ---
     p_poisson = subparsers.add_parser(
