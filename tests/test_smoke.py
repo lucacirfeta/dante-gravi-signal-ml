@@ -54,6 +54,7 @@ DOCUMENTED_COMMANDS = [
     "catalog-cross-match",
     "dsd-k-sensitivity",
     "blind-spot-map",
+    "whitening-context-sensitivity",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]

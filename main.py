@@ -3123,6 +3123,23 @@ def cmd_pca_baseline(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_whitening_context_sensitivity(args: argparse.Namespace) -> None:
+    """How many DSD verdicts flip when the whitening context changes?
+
+    Re-scores near-threshold candidates at several whitening pad lengths and
+    counts verdict flips vs the production pad=4 context, quantifying the
+    LAB_NOTEBOOK section 12 single-candidate swing at the population level.
+    """
+    from src.pipeline_v2_production.whitening_context_sensitivity import run as run_wc
+
+    out = run_wc(args.run, n_candidates=args.n_candidates, seed=args.seed)
+    logger.info(
+        f"context swing median {out['per_candidate_swing_median']:.4f}, "
+        f"{out['n_large_swing']} large-swing candidates; flip rates "
+        f"{ {p: round(f['flip_rate'], 3) for p, f in out['verdict_flips_vs_production'].items()} }"
+    )
+
+
 def cmd_blind_spot_map(args: argparse.Namespace) -> None:
     """Where in the time-frequency plane is DANTE blind? An empirical map.
 
@@ -4594,6 +4611,18 @@ def build_parser() -> argparse.ArgumentParser:
                       help="Background segments injected per grid cell.")
     p_bs.add_argument("--seed", type=int, default=42)
     p_bs.set_defaults(func=cmd_blind_spot_map)
+
+    # --- whitening-context-sensitivity ---
+    p_wc = subparsers.add_parser(
+        "whitening-context-sensitivity",
+        help="Re-score near-threshold candidates at several whitening context "
+             "lengths and count DSD verdict flips vs the production pad=4.",
+    )
+    p_wc.add_argument("--run", type=str, default="O4a")
+    p_wc.add_argument("--n-candidates", type=int, default=15,
+                      help="Near-threshold candidates per (class, detector).")
+    p_wc.add_argument("--seed", type=int, default=42)
+    p_wc.set_defaults(func=cmd_whitening_context_sensitivity)
 
     # --- catalog-cross-match ---
     p_xm = subparsers.add_parser(
