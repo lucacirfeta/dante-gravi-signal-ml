@@ -3123,6 +3123,23 @@ def cmd_pca_baseline(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_blind_spot_map(args: argparse.Namespace) -> None:
+    """Where in the time-frequency plane is DANTE blind? An empirical map.
+
+    Injects sine-Gaussian bursts on a (f0, Q) grid at fixed SNR and maps the
+    flag rate, validating the analytic T=Q_max/f blind-spot boundary against
+    what actually happens near it.
+    """
+    from src.pipeline_v2_production.blind_spot_map import run as run_bs
+
+    out = run_bs(args.run, n_realizations=args.n_realizations, seed=args.seed)
+    logger.info(
+        f"mean flag rate Q<=Qmax {out['mean_flag_rate_Q_le_Qmax']} vs "
+        f"Q>Qmax {out['mean_flag_rate_Q_gt_Qmax']}, "
+        f"{len(out['blind_cells'])} blind cells"
+    )
+
+
 def cmd_dsd_k_sensitivity(args: argparse.Namespace) -> None:
     """Is the DSD survivor population an artifact of the dictionary size K? (P4)
 
@@ -4565,6 +4582,18 @@ def build_parser() -> argparse.ArgumentParser:
                         default=[512, 1024, 1216, 2048])
     p_ksen.add_argument("--seed", type=int, default=42)
     p_ksen.set_defaults(func=cmd_dsd_k_sensitivity)
+
+    # --- blind-spot-map ---
+    p_bs = subparsers.add_parser(
+        "blind-spot-map",
+        help="Map DANTE's flag rate over a sine-Gaussian (f0, Q) grid at fixed "
+             "SNR to validate the analytic T=Q_max/f blind-spot boundary.",
+    )
+    p_bs.add_argument("--run", type=str, default="O4a")
+    p_bs.add_argument("--n-realizations", type=int, default=6,
+                      help="Background segments injected per grid cell.")
+    p_bs.add_argument("--seed", type=int, default=42)
+    p_bs.set_defaults(func=cmd_blind_spot_map)
 
     # --- catalog-cross-match ---
     p_xm = subparsers.add_parser(

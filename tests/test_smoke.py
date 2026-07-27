@@ -53,6 +53,7 @@ DOCUMENTED_COMMANDS = [
     "pca-baseline",
     "catalog-cross-match",
     "dsd-k-sensitivity",
+    "blind-spot-map",
     "pem-coherence-analysis",
     "poisson-upper-limit",
 ]
