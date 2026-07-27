@@ -92,6 +92,16 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
     - [`coincidence-efficiency`](#26-coincidence-efficiency) — Measure ε_coh of the physical statistic
     - [`background-cohesion`](#27-background-cohesion) — Falsify the survivor macro-cluster against true background
 
+8. **Robustness & Characterization (standalone, reviewer-driven)**
+    - [`dsd-absorption`](#28-dsd-absorption) — Prevalence at which a morphology is absorbed into the native index
+    - [`inter-session-recurrence`](#29-inter-session-recurrence) — Does any morphology recur across separated sessions?
+    - [`dsd-index-stability`](#30-dsd-index-stability) — Are the DSD survivors an artifact of the background draw? (P5)
+    - [`dsd-k-sensitivity`](#31-dsd-k-sensitivity) — Are the survivors an artifact of the dictionary size K? (P4)
+    - [`pca-baseline`](#32-pca-baseline) — What the frozen encoder buys over a classical baseline (P10)
+    - [`catalog-cross-match`](#33-catalog-cross-match) — DANTE's recall of the real GWTC-4 O4a catalogue (P11)
+    - [`blind-spot-map`](#34-blind-spot-map) — Empirical time-frequency blind-spot map vs T=Q_max/f
+    - [`whitening-context-sensitivity`](#35-whitening-context-sensitivity) — DSD verdict flips vs whitening context
+
 ---
 
 ## Core & Data Acquisition
@@ -789,6 +799,87 @@ Output: `background_cohesion_{run}.json`, `background_mil_vectors_{run}.npy`
 >    raw *patch tokens*, not MIL *segment* vectors; the two are not comparable.
 > 3. Do **not** run `build_native_index --run O4a` at all — it **overwrites** the
 >    frozen, MD5-pinned reference index underpinning every published DSD result.
+
+---
+
+## Robustness & Characterization
+
+Standalone tests answering specific reviewer critiques. Each writes a JSON
+artifact plus an `environment_*.json` provenance record to
+`data/production/aggregated/`, and is registered in the `smoke` test so a
+missing wiring fails fast. None of them rebuild or overwrite the frozen index.
+
+### 28. dsd-absorption
+Measures the prevalence at which a glitch morphology, injected at rising density
+into the background that builds a native index, stops being flagged — the
+structural DSD critique turned into a number. Control arm holds prevalence at
+zero. `--morphology` (e.g. `Blip`, `ScatteredLight`), `--run` (default `O4a`),
+`--seed`. Output: `dsd_absorption_{run}.json`.
+
+### 29. inter-session-recurrence
+Tests whether any morphology recurs across widely separated sessions (a glitch
+class recurs; noise does not), on the stored MIL vectors, against a
+session-shuffle null. `--run`, `--top-n`, `--k-neighbours`, `--seed`.
+Output: `inter_session_recurrence_{run}.json`.
+
+### 30. dsd-index-stability
+**(P5)** Are the DSD survivors an artifact of *which* background sample built the
+native index? Rebuilds the index from independent bootstrap draws and re-scores
+near-threshold candidates, reporting threshold-independent metrics (score rank
+correlation, per-candidate std, ROBUST-vs-rejected separation). `--run`,
+`--n-candidates`, `--n-draws`, `--seed`. Output: `dsd_index_stability_{run}.json`
+plus a reusable candidate/background token cache.
+
+> **Result:** rank correlation 0.98 across draws; the survivor boundary is a
+> property of the candidates, not of the draw.
+
+### 31. dsd-k-sensitivity
+**(P4)** Are the survivors an artifact of the dictionary size K=1216? Rebuilds
+the native index at several K from the P5 token cache (no re-encoding) and
+re-scores. `--run`, `--n-candidates`, `--k-values` (default `512 1024 1216
+2048`), `--seed`. Output: `dsd_k_sensitivity_{run}.json`. Requires the P5 token
+cache — run `dsd-index-stability` first.
+
+> **Result:** rank correlation 0.98 vs production K; the boundary is not a K
+> artifact.
+
+### 32. pca-baseline
+**(P10)** What does the frozen DINOv2 encoder buy over a representation-free
+baseline? Scores the same near-threshold pool with a PCA pixel-subspace novelty
+detector and raw spectral energy, measured against DANTE's stored native score.
+`--run`, `--n-candidates`, `--n-background`, `--seed`.
+Output: `pca_baseline_{run}.json`.
+
+> **Result:** raw energy reproduces the survive/reject split at AUC 0.87; the PCA
+> residual does not (0.52); the encoder's score correlates only 0.51 with energy.
+
+### 33. catalog-cross-match
+**(P11)** Does DANTE flag the *real* O4a gravitational-wave catalogue? Cross-
+matches the confirmed GWTC-4.0/4.1 events against DANTE's flagged windows,
+separating coverage from recall. `--run`, `--refresh` (re-fetch the GWTC list
+from GWOSC; else cached). Output: `catalog_cross_match_{run}.json`.
+
+> **Result:** of 126 covered events, 2 flagged, 0 coincident — the ground-truth
+> confirmation of the instrumental framing.
+
+### 34. blind-spot-map
+Injects sine-Gaussian bursts on a `(f0, Q)` grid at fixed matched-filter SNR and
+maps DANTE's flag rate against the analytic `T = Q_max/f` boundary. `--run`,
+`--n-realizations`, `--seed`. Output: `blind_spot_map_{run}.json`.
+
+> **Result:** flag rate rises monotonically with Q (0% for Q≤4 broadband, ~65%
+> for Q≥16); the narrowband region the figure marks as blind still flags — the
+> empirical blind spot is the opposite corner.
+
+### 35. whitening-context-sensitivity
+Re-scores near-threshold candidates against the native index at several whitening
+pad lengths and counts DSD verdict flips vs the production `pad=4` context.
+`--run`, `--n-candidates`, `--seed`.
+Output: `whitening_context_sensitivity_{run}.json`.
+
+> **Result:** median context swing 0.007; 14% of candidates swing >0.02; ~5%
+> near-threshold verdict flip rate (an upper bound). The section-12 singleton
+> swing is a minority property, not a survey-wide instability.
 
 ---
 
