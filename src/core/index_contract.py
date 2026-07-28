@@ -77,6 +77,215 @@ class IndexContract:
         return qrange_tag(self.qrange)
 
 
+def taxonomy_representation(
+    index_qrange,
+    query_qrange=None,
+) -> str:
+    """Version tag shared by a DSD index, taxonomy, scores, and analyses."""
+    index_qrange = normalize_qrange(index_qrange)
+    query_qrange = normalize_qrange(
+        index_qrange if query_qrange is None else query_qrange
+    )
+    return (
+        f"idx{qrange_tag(index_qrange)}_"
+        f"query{qrange_tag(query_qrange)}"
+    )
+
+
+def _resolve_recorded_path(value: str | Path) -> Path:
+    """Resolve artifact paths written on either Windows or WSL.
+
+    Scientific JSONs are shared across the Windows host and WSL.  A relative
+    path persisted with Windows backslashes must not become a different literal
+    filename when the same audit is consumed on Linux.
+    """
+    text = str(value).replace("\\", "/")
+    path = Path(text)
+    if path.is_absolute():
+        return path.resolve()
+    if (
+        len(text) >= 3
+        and text[1] == ":"
+        and text[2] == "/"
+    ):
+        # POSIX Path does not recognize a Windows drive as absolute. Under WSL
+        # the stable translation is /mnt/<drive>/<rest>.
+        path = Path("/mnt") / text[0].lower() / text[3:]
+        return path.resolve()
+    return (Path.cwd() / path).resolve()
+
+
+@dataclass(frozen=True)
+class TaxonomyContract:
+    """Resolved DSD taxonomy and the exact columns safe for scientific use."""
+
+    path: Path
+    run_name: str
+    representation: str
+    class_column: str
+    score_column: str
+    audit_path: Path | None
+    audit: dict
+    legacy: bool
+
+    @property
+    def cache_tag(self) -> str:
+        return self.representation
+
+
+def load_taxonomy_contract(
+    aggregated_dir: str | Path,
+    run_name: str,
+    *,
+    index_qrange=None,
+    query_qrange=None,
+    taxonomy_path: str | Path | None = None,
+    allow_legacy: bool = False,
+    require_complete_audit: bool = True,
+) -> TaxonomyContract:
+    """Resolve a taxonomy without silently using legacy DSD classes.
+
+    The historical ``robustness_class`` and ``native_o4a_score`` columns were
+    produced in a Q32-index/Q64-query score space. They remain available only
+    through the explicit ``allow_legacy`` audit escape hatch. Normal scientific
+    consumers must load the representation-versioned taxonomy and its matching
+    DSD transition audit.
+    """
+    aggregated_dir = Path(aggregated_dir)
+    if index_qrange is None:
+        from src.core.utils import load_config
+
+        index_qrange = tuple(
+            int(value)
+            for value in load_config()["preprocessing"]["qrange"]
+        )
+    index_qrange = normalize_qrange(index_qrange)
+    query_qrange = normalize_qrange(
+        index_qrange if query_qrange is None else query_qrange
+    )
+    representation = taxonomy_representation(index_qrange, query_qrange)
+    variant_column = representation.replace("-", "_")
+    class_column = f"robustness_class_{variant_column}"
+    score_column = f"native_score_{variant_column}"
+    expected_path = aggregated_dir / (
+        f"Master_Taxonomy_{run_name}_{representation}.csv"
+    )
+    path = Path(taxonomy_path) if taxonomy_path is not None else expected_path
+
+    if not path.exists():
+        if not allow_legacy:
+            raise RuntimeError(
+                "Coherent DSD taxonomy is missing. Refusing legacy "
+                f"robustness classes: {path}"
+            )
+        legacy_path = (
+            Path(taxonomy_path)
+            if taxonomy_path is not None
+            else aggregated_dir / f"Master_Taxonomy_{run_name}.csv"
+        )
+        if not legacy_path.exists():
+            raise FileNotFoundError(legacy_path)
+        return TaxonomyContract(
+            path=legacy_path,
+            run_name=run_name,
+            representation="legacy_idxq4-32_queryq4-64",
+            class_column="robustness_class",
+            score_column="native_o4a_score",
+            audit_path=None,
+            audit={},
+            legacy=True,
+        )
+
+    audit_path = aggregated_dir / (
+        f"dsd_transition_audit_{run_name.lower()}_{representation}.json"
+    )
+    audit = {}
+    if require_complete_audit:
+        if not audit_path.exists():
+            raise RuntimeError(
+                f"Matching DSD transition audit is missing: {audit_path}"
+            )
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        rep = audit.get("representation", {})
+        if (
+            not audit.get("experiment_run")
+            or not rep.get("coherent")
+            or rep.get("variant") != representation
+        ):
+            raise RuntimeError(
+                f"DSD audit does not certify coherent {representation}"
+            )
+        if int(audit.get("total_failed", -1)) != 0:
+            raise RuntimeError(
+                "DSD audit contains failed candidate evaluations; refusing "
+                "an incomplete scientific population"
+            )
+        artifact = audit.get("taxonomy_artifact")
+        if artifact and _resolve_recorded_path(artifact) != path.resolve():
+            raise RuntimeError(
+                "DSD audit taxonomy artifact does not match the requested "
+                f"file: {artifact} != {path}"
+            )
+
+    return TaxonomyContract(
+        path=path,
+        run_name=run_name,
+        representation=representation,
+        class_column=class_column,
+        score_column=score_column,
+        audit_path=audit_path if require_complete_audit else None,
+        audit=audit,
+        legacy=False,
+    )
+
+
+def load_taxonomy_view(
+    aggregated_dir: str | Path,
+    run_name: str,
+    **contract_kwargs,
+):
+    """Load a validated taxonomy with representation-neutral DSD aliases."""
+    import pandas as pd
+
+    contract = load_taxonomy_contract(
+        aggregated_dir,
+        run_name,
+        **contract_kwargs,
+    )
+    frame = pd.read_csv(contract.path)
+    missing = {
+        contract.class_column,
+        contract.score_column,
+        "gps_start",
+        "detector",
+    }.difference(frame.columns)
+    if missing:
+        raise RuntimeError(
+            f"Taxonomy {contract.path} lacks columns: {sorted(missing)}"
+        )
+    frame = frame.copy()
+    frame["dsd_class"] = frame[contract.class_column].astype(str)
+    frame["dsd_score"] = pd.to_numeric(
+        frame[contract.score_column],
+        errors="coerce",
+    )
+    if frame["dsd_class"].eq("NOT_EVALUATED").any():
+        raise RuntimeError(
+            f"Taxonomy {contract.path} contains NOT_EVALUATED candidates"
+        )
+    if not np.isfinite(frame["dsd_score"].to_numpy(dtype=float)).all():
+        raise RuntimeError(
+            f"Taxonomy {contract.path} contains non-finite DSD scores"
+        )
+    if contract.audit:
+        expected = int(contract.audit.get("total_evaluated", -1))
+        if expected != len(frame):
+            raise RuntimeError(
+                f"Taxonomy rows {len(frame)} != audited evaluations {expected}"
+            )
+    return frame, contract
+
+
 def load_index_contract(
     path: str | Path,
     *,

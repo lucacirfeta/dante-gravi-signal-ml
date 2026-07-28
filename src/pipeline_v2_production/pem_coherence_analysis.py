@@ -184,7 +184,7 @@ def calculate_coherence_and_plot(
                 channel_name, gps_start, max_coh, peak_freq,
             )
             if save_plot:
-                plot_dir = output_dir / "pem" / "coherence_plots"
+                plot_dir = output_dir / "coherence_plots"
                 plot_dir.mkdir(parents=True, exist_ok=True)
                 safe_chan = channel_name.replace(":", "_")
                 plot_path = plot_dir / f"coh_{detector}_{safe_chan}_{gps_start}.png"
@@ -224,7 +224,7 @@ def _plot_strain_asd(
     freq_bounds: tuple = (20, 500),
 ) -> Path:
     """Compute and save the ASD of the strain segment as a diagnostic plot."""
-    plot_dir = output_dir / "pem" / "strain_asd"
+    plot_dir = output_dir / "strain_asd"
     plot_dir.mkdir(parents=True, exist_ok=True)
     plot_path = plot_dir / f"asd_{detector}_{gps_start}_{family}.png"
 
@@ -355,22 +355,32 @@ def evaluate_candidate_pem(
 
 import json
 
+from src.core.index_contract import load_taxonomy_view, sha256_file
+
 def run_pem_coherence_analysis(
-    taxonomy_csv: Path,
     cache_dir: Path,
     output_dir: Path,
+    taxonomy_csv: Path | None = None,
     target_families: list = None,
     include_singletons: bool = True,
     max_events_per_family: int = 5,
     nds_host: Optional[str] = None,
     robustness_class: Optional[str] = None,
-) -> None:
+    run_name: str = "O4a",
+    inject_final_report: bool = False,
+    events_per_class: Optional[dict[str, int]] = None,
+    reuse_existing_dir: Optional[Path] = None,
+    selection_only: bool = False,
+) -> dict:
     """Orchestrate the PEM coherence analysis.
 
     Parameters
     ----------
     taxonomy_csv:
-        Path to the Master Taxonomy CSV produced by ``aggregate-report``.
+        Optional explicit path to the representation-versioned Master
+        Taxonomy CSV.  When omitted, the coherent Q-range contract resolves
+        it from ``output_dir``.  A legacy taxonomy is never selected
+        implicitly.
     cache_dir:
         Local cache directory for auxiliary HDF5 files.
     output_dir:
@@ -391,10 +401,30 @@ def run_pem_coherence_analysis(
         without re-running the others: the DSD-rejected pool is either drift or
         pervasive glitches the native dictionary absorbed, and auxiliary
         coupling is the discriminant between those two hypotheses.
+    events_per_class:
+        Optional per-family quotas keyed by DSD class.  This is the preferred
+        interface for a power-matched stratified rerun.  When omitted,
+        ``max_events_per_family`` is divided over the classes present.
+    reuse_existing_dir:
+        Optional legacy PEM directory whose already measured coherence rows and
+        per-event empirical-null JSONs may be reused for selected GPS events.
+        Reuse is explicit, keyed by detector and GPS, and recorded in the
+        selection manifest.
+    selection_only:
+        Persist the coherent target ledger and reuse audit without fetching
+        strain or auxiliary data.  This is a planning/provenance mode, not a
+        PEM result.
     """
-    if not taxonomy_csv.exists():
-        logger.error("Taxonomy CSV not found: %s", taxonomy_csv)
-        return
+    output_dir = Path(output_dir)
+    cache_root = Path(cache_dir)
+    df, taxonomy_contract = load_taxonomy_view(
+        output_dir,
+        run_name,
+        taxonomy_path=taxonomy_csv,
+    )
+    pem_out_dir = output_dir / "pem" / taxonomy_contract.representation
+    pem_out_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir = cache_root / taxonomy_contract.representation
 
     logger.info("Excluding L1:PEM-EX_VMON_ETMX_ESDPOWER24_DQ and L1:PEM-EY_MAINSMON_EBAY_1_DQ.")
     logger.info("Motivazione da loggare: FPR empirico 23% su background time-shifted (run pem_significance_test.py), incompatibile con soglia euristica C>=0.6.")
@@ -402,8 +432,10 @@ def run_pem_coherence_analysis(
 
     thresholds_file = Path("data/production_reference/channel_thresholds.json")
     if not thresholds_file.exists():
-        logger.error(f"channel_thresholds.json missing at {thresholds_file}. Aborting to avoid uncalibrated 0.6 defaults.")
-        return
+        raise FileNotFoundError(
+            "channel_thresholds.json missing at "
+            f"{thresholds_file}; refusing uncalibrated 0.6 defaults"
+        )
 
     with open(thresholds_file, "r") as f:
         channel_thresholds = json.load(f)
@@ -427,10 +459,12 @@ def run_pem_coherence_analysis(
             "Strain ASD plots will be generated as a diagnostic sanity check."
         )
 
-    df = pd.read_csv(taxonomy_csv)
-
     if not target_families:
-        target_families = [f for f in df["global_family_id"].unique() if f != "Singleton"]
+        target_families = [
+            family
+            for family in df["global_family_id"].astype(str).unique()
+            if not family.startswith("Singleton")
+        ]
         logger.info("Auto-detected %d families from taxonomy.", len(target_families))
 
     # Build event list
@@ -446,20 +480,32 @@ def run_pem_coherence_analysis(
         # budget goes to that one class.
         classes = MEDOID_PRIORITY if robustness_class is None else [robustness_class]
         present = [c for c in classes
-                   if not fam_df[fam_df["robustness_class"] == c].empty]
+                   if not fam_df[fam_df["dsd_class"] == c].empty]
         if not present:
             continue
-        base, extra = divmod(max_events_per_family, len(present))
-        budget = {c: base + (1 if i < extra else 0) for i, c in enumerate(present)}
+        if events_per_class is None:
+            base, extra = divmod(max_events_per_family, len(present))
+            budget = {
+                class_name: base + (1 if i < extra else 0)
+                for i, class_name in enumerate(present)
+            }
+        else:
+            budget = {
+                class_name: max(
+                    0,
+                    int(events_per_class.get(class_name, 0)),
+                )
+                for class_name in present
+            }
 
-        spots_left = max_events_per_family
+        spots_left = sum(budget.values())
         for pclass in present:
             if spots_left <= 0:
                 break
-            class_df = fam_df[fam_df["robustness_class"] == pclass]
+            class_df = fam_df[fam_df["dsd_class"] == pclass]
 
-            # Sort by native_o4a_score to cover the distribution
-            class_df = class_df.sort_values("native_o4a_score")
+            # Sort by the coherent native score to cover the distribution.
+            class_df = class_df.sort_values("dsd_score")
             n_cands = len(class_df)
             n_take = min(budget[pclass], spots_left, n_cands)
             if n_take <= 0:
@@ -483,31 +529,152 @@ def run_pem_coherence_analysis(
                     "gps_start": int(row["gps_start"]),
                     "family": row["global_family_id"],
                     "source": "family",
+                    "dsd_class": row["dsd_class"],
+                    "dsd_score": float(row["dsd_score"]),
                 })
-                logger.info(f"Selected {pclass} member for {fam}: GPS {int(row['gps_start'])} (score: {row.get('native_o4a_score', 0):.3f})")
+                logger.info(
+                    "Selected %s member for %s: GPS %d (coherent score: %.3f)",
+                    pclass,
+                    fam,
+                    int(row["gps_start"]),
+                    float(row["dsd_score"]),
+                )
                 
             spots_left -= len(selected)
 
-    # The singletons are ROBUST, so including them while interrogating another
-    # class would mix populations in the very comparison being made.
-    if include_singletons and robustness_class not in (None, "ROBUST"):
-        logger.info(f"Singletons skipped: they are ROBUST and this run targets "
-                    f"{robustness_class}.")
-        include_singletons = False
-
     if include_singletons:
-        for _, row in df[df["global_family_id"] == "Singleton"].iterrows():
+        singleton_mask = df["global_family_id"].astype(str).str.startswith(
+            "Singleton"
+        )
+        if robustness_class is not None:
+            singleton_mask &= df["dsd_class"].eq(robustness_class)
+        for _, row in df[singleton_mask].iterrows():
             targets.append({
                 "detector": row["detector"],
                 "gps_start": int(row["gps_start"]),
                 "family": "Singleton",
                 "source": "singleton",
+                "dsd_class": row["dsd_class"],
+                "dsd_score": float(row["dsd_score"]),
             })
-            logger.info(f"Selected Singleton member: GPS {int(row['gps_start'])} (score: {row.get('native_o4a_score', 0):.3f})")
+            logger.info(
+                "Selected %s Singleton member: GPS %d "
+                "(coherent score: %.3f)",
+                row["dsd_class"],
+                int(row["gps_start"]),
+                float(row["dsd_score"]),
+            )
 
+    unique_targets = {}
+    for target in targets:
+        key = (str(target["detector"]), int(target["gps_start"]))
+        unique_targets[key] = target
+    targets = list(unique_targets.values())
     logger.info("Selected %d candidate events for coherence analysis.", len(targets))
-
+    targets_path = pem_out_dir / "selected_targets.csv"
+    pd.DataFrame(targets).to_csv(targets_path, index=False)
+    selection_manifest = {
+        "run": run_name,
+        "taxonomy_path": str(taxonomy_contract.path),
+        "taxonomy_representation": taxonomy_contract.representation,
+        "taxonomy_audit_path": (
+            str(taxonomy_contract.audit_path)
+            if taxonomy_contract.audit_path is not None
+            else None
+        ),
+        "target_families": list(target_families),
+        "include_singletons": bool(include_singletons),
+        "max_events_per_family": int(max_events_per_family),
+        "events_per_class": events_per_class,
+        "robustness_class": robustness_class,
+        "n_targets": len(targets),
+        "nds_host": nds_host,
+        "public_mode": bool(public_mode),
+        "selected_targets_path": str(targets_path),
+        "channel_thresholds_path": str(thresholds_file),
+        "channel_thresholds_sha256": sha256_file(thresholds_file),
+        "ephemeral_cache_dir": str(cache_dir),
+    }
     results = []
+    reused_event_keys = set()
+    reused_calibrations = []
+    if reuse_existing_dir is not None:
+        reuse_existing_dir = Path(reuse_existing_dir)
+        reuse_report = reuse_existing_dir / "coherence_report.csv"
+        if not reuse_report.exists():
+            raise FileNotFoundError(reuse_report)
+        previous = pd.read_csv(reuse_report)
+        target_by_key = {
+            (str(target["detector"]), int(target["gps_start"])): target
+            for target in targets
+        }
+        for (detector, gps_start), group in previous.groupby(
+            ["detector", "gps_start"]
+        ):
+            key = (str(detector), int(gps_start))
+            target = target_by_key.get(key)
+            if target is None:
+                continue
+            copied_rows = group.copy()
+            copied_rows["family"] = target["family"]
+            copied_rows["dsd_class"] = target["dsd_class"]
+            copied_rows["dsd_score"] = target["dsd_score"]
+            copied_rows["taxonomy_representation"] = (
+                taxonomy_contract.representation
+            )
+            results.extend(copied_rows.to_dict("records"))
+            reused_event_keys.add(key)
+            source_calibration = reuse_existing_dir / (
+                f"null_calibration_{key[0]}_{key[1]}.json"
+            )
+            if source_calibration.exists():
+                destination_calibration = pem_out_dir / source_calibration.name
+                if not destination_calibration.exists():
+                    shutil.copy2(
+                        source_calibration,
+                        destination_calibration,
+                    )
+                reused_calibrations.append(
+                    {
+                        "source": str(source_calibration),
+                        "source_sha256": sha256_file(source_calibration),
+                        "destination": str(destination_calibration),
+                    }
+                )
+        selection_manifest.update(
+            {
+                "reuse_existing_dir": str(reuse_existing_dir),
+                "reuse_report_path": str(reuse_report),
+                "reuse_report_sha256": sha256_file(reuse_report),
+                "n_reused_events": len(reused_event_keys),
+                "reused_calibrations": reused_calibrations,
+            }
+        )
+        logger.info(
+            "Reused measured PEM rows for %d/%d selected events",
+            len(reused_event_keys),
+            len(targets),
+        )
+    else:
+        selection_manifest.update(
+            {
+                "reuse_existing_dir": None,
+                "n_reused_events": 0,
+                "reused_calibrations": [],
+            }
+        )
+    (pem_out_dir / "selection_manifest.json").write_text(
+        json.dumps(selection_manifest, indent=2),
+        encoding="utf-8",
+    )
+    if selection_only:
+        return {
+            **selection_manifest,
+            "coherence_report_path": None,
+            "n_result_rows": len(results),
+            "selection_only": True,
+        }
+
     asd_plots = []
 
     for i, target in enumerate(targets):
@@ -515,7 +682,11 @@ def run_pem_coherence_analysis(
         gps_start = target["gps_start"]
         gps_end = gps_start + 32
         fam = target["family"]
+        target_class = target["dsd_class"]
+        target_score = target["dsd_score"]
         channels = AUX_CHANNELS.get(det, [])
+        if (str(det), int(gps_start)) in reused_event_keys:
+            continue
 
         logger.info("[%d/%d] Analysing %s event at GPS %d (%s)", i + 1, len(targets), det, gps_start, fam)
 
@@ -540,9 +711,20 @@ def run_pem_coherence_analysis(
                     "significant": False,
                     "data_available": False,
                     "note": "Aux channel not available on public GWOSC NDS",
+                    "dsd_class": target_class,
+                    "dsd_score": target_score,
+                    "taxonomy_representation": (
+                        taxonomy_contract.representation
+                    ),
                 })
 
-            p = _plot_strain_asd(strain_ts, det, gps_start, fam, output_dir)
+            p = _plot_strain_asd(
+                strain_ts,
+                det,
+                gps_start,
+                fam,
+                pem_out_dir,
+            )
             asd_plots.append(p)
         else:
             # ---------- FULL COHERENCE MODE ----------
@@ -559,6 +741,11 @@ def run_pem_coherence_analysis(
                         "significant": False,
                         "data_available": False,
                         "note": f"Fetch failed from {nds_host}",
+                        "dsd_class": target_class,
+                        "dsd_score": target_score,
+                        "taxonomy_representation": (
+                            taxonomy_contract.representation
+                        ),
                     })
                     continue
 
@@ -573,10 +760,19 @@ def run_pem_coherence_analysis(
                     logger.warning(f"No calibrated threshold for {ch}. Skipping channel.")
                     results.append({
                         "detector": det,
-                        "channel": ch,
+                        "gps_start": gps_start,
+                        "family": fam,
+                        "aux_channel": ch,
                         "max_coherence": np.nan,
                         "peak_freq": np.nan,
-                        "significant": False
+                        "significant": False,
+                        "data_available": True,
+                        "note": "No calibrated per-channel threshold",
+                        "dsd_class": target_class,
+                        "dsd_score": target_score,
+                        "taxonomy_representation": (
+                            taxonomy_contract.representation
+                        ),
                     })
                     continue
                 metrics = calculate_coherence_and_plot(
@@ -585,7 +781,7 @@ def run_pem_coherence_analysis(
                     channel_name=ch,
                     detector=det,
                     gps_start=gps_start,
-                    output_dir=output_dir,
+                    output_dir=pem_out_dir,
                     threshold=thresh,
                 )
                 results.append({
@@ -598,6 +794,11 @@ def run_pem_coherence_analysis(
                     "significant": metrics["significant"],
                     "data_available": True,
                     "note": "",
+                    "dsd_class": target_class,
+                    "dsd_score": target_score,
+                    "taxonomy_representation": (
+                        taxonomy_contract.representation
+                    ),
                 })
 
     # ---------------------------------------------------------------------------
@@ -605,8 +806,6 @@ def run_pem_coherence_analysis(
     # ---------------------------------------------------------------------------
     if results:
         res_df = pd.DataFrame(results)
-        pem_out_dir = output_dir / "pem"
-        pem_out_dir.mkdir(parents=True, exist_ok=True)
         report_path = pem_out_dir / "coherence_report.csv"
         res_df.to_csv(report_path, index=False)
         logger.info("Saved coherence report to %s", report_path)
@@ -635,20 +834,34 @@ def run_pem_coherence_analysis(
 
         # Empirical Bonferroni calculations for the remaining clean channels
         # Max empirical FPR <= 0.001 per channel after adaptive thresholds
-        n_active_channels = len(AUX_CHANNELS.get("L1", []))
-        p_cumulata = 1 - (1 - 0.001)**n_active_channels
-        n_expected_false = p_cumulata * 388  # 388 robust candidates
-
-        _inject_into_final_report(
-            output_dir=output_dir,
-            res_df=res_df,
-            plots_dir=pem_out_dir / ("strain_asd" if public_mode else "coherence_plots"),
-            public_mode=public_mode,
-            p_cumulata=p_cumulata,
-            n_expected_false=n_expected_false,
+        n_active_channels = max(
+            (len(AUX_CHANNELS.get(det, [])) for det in AUX_CHANNELS),
+            default=0,
         )
+        p_cumulata = 1 - (1 - 0.001)**n_active_channels
+        n_tested_events = len(
+            {
+                (str(r["detector"]), int(r["gps_start"]))
+                for r in results
+                if r.get("data_available", False)
+            }
+        )
+        n_expected_false = p_cumulata * n_tested_events
+
+        if inject_final_report:
+            _inject_into_final_report(
+                output_dir=output_dir,
+                res_df=res_df,
+                plots_dir=pem_out_dir / (
+                    "strain_asd" if public_mode else "coherence_plots"
+                ),
+                public_mode=public_mode,
+                p_cumulata=p_cumulata,
+                n_expected_false=n_expected_false,
+            )
     else:
         logger.warning("No results to save.")
+        report_path = None
 
     # Cleanup auxiliary data cache to free disk space
     if cache_dir.exists():
@@ -657,6 +870,14 @@ def run_pem_coherence_analysis(
             shutil.rmtree(cache_dir)
         except Exception as exc:
             logger.error("Failed to clean up cache directory %s: %s", cache_dir, exc)
+
+    return {
+        **selection_manifest,
+        "coherence_report_path": (
+            str(report_path) if report_path is not None else None
+        ),
+        "n_result_rows": len(results),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -806,18 +1027,45 @@ def _inject_into_final_report(
 
 
 if __name__ == "__main__":
-    import sys
     import argparse
     
     parser = argparse.ArgumentParser(description="Run PEM Coherence Analysis")
     parser.add_argument("--nds-host", type=str, default=None, help="NDS2 server hostname")
-    args, unknown = parser.parse_known_args()
+    parser.add_argument("--run", default="O4a")
+    parser.add_argument("--taxonomy-csv", type=Path, default=None)
+    parser.add_argument("--max-events", type=int, default=3)
+    parser.add_argument("--robust-events", type=int, default=None)
+    parser.add_argument("--ambiguous-events", type=int, default=None)
+    parser.add_argument("--background-events", type=int, default=None)
+    parser.add_argument("--reuse-existing-dir", type=Path, default=None)
+    parser.add_argument("--selection-only", action="store_true")
+    parser.add_argument("--inject-final-report", action="store_true")
+    args = parser.parse_args()
     
     project_root = Path(__file__).resolve().parent.parent.parent
+    events_per_class = None
+    if any(
+        value is not None
+        for value in (
+            args.robust_events,
+            args.ambiguous_events,
+            args.background_events,
+        )
+    ):
+        events_per_class = {
+            "ROBUST": args.robust_events or 0,
+            "AMBIGUOUS": args.ambiguous_events or 0,
+            "BACKGROUND": args.background_events or 0,
+        }
     run_pem_coherence_analysis(
-        taxonomy_csv=project_root / "data" / "production" / "aggregated" / "Master_Taxonomy_O4a.csv",
+        taxonomy_csv=args.taxonomy_csv,
         cache_dir=project_root / "data" / "raw" / "auxiliary",
         output_dir=project_root / "data" / "production" / "aggregated",
-        max_events_per_family=3,
-        nds_host=args.nds_host
+        max_events_per_family=args.max_events,
+        nds_host=args.nds_host,
+        run_name=args.run,
+        inject_final_report=args.inject_final_report,
+        events_per_class=events_per_class,
+        reuse_existing_dir=args.reuse_existing_dir,
+        selection_only=args.selection_only,
     )

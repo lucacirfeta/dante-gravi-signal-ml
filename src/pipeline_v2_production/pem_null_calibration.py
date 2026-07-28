@@ -25,10 +25,10 @@ Design (adapted POT-style, same philosophy as calibrate_tau_coh):
   the threshold uncertainty is therefore quantified with a block
   bootstrap over WINDOW indices (not over pairs) and reported as a CI.
 
-Outputs one JSON per event:
-    data/production/aggregated/pem/null_calibration_{det}_{gps}.json
+Outputs one JSON per event under the coherent taxonomy representation:
+    data/production/aggregated/pem/<representation>/null_calibration_{det}_{gps}.json
 and, via `apply_family_wise_verdicts`, a consolidated
-    data/production/aggregated/pem/pem_family_wise_verdicts.csv
+    data/production/aggregated/pem/<representation>/pem_family_wise_verdicts.csv
 consumed by the aggregate report ledger.
 
 The analytic p-value is kept ONLY as a secondary diagnostic column; it
@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from functools import lru_cache
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -48,10 +49,11 @@ from gwpy.timeseries import TimeSeries
 
 from src.core.utils import setup_logger
 from src.core.data_loader import fetch_strain_data
+from src.core.index_contract import load_taxonomy_view
 
 logger = setup_logger(__name__)
 
-PEM_DIR = Path("data/production/aggregated/pem")
+AGGREGATED_DIR = Path("data/production/aggregated")
 
 # Deliberately OUTSIDE the artifacts directory. This is re-downloadable
 # auxiliary strain, ~0.5 GB per event, and it used to sit inside
@@ -70,17 +72,19 @@ F_LOW, F_HIGH = 20.0, 500.0
 CANDIDATE_EXCLUSION_S = 96.0
 
 
-def _candidate_gps(run: str) -> np.ndarray:
-    tax = Path(f"data/production/aggregated/Master_Taxonomy_{run}.csv")
-    if not tax.exists():
-        logger.warning(f"{tax} missing: no candidate exclusion applied.")
-        return np.array([])
-    df = pd.read_csv(tax)
+def _coherent_pem_dir(run: str, aggregated_dir: Path) -> Path:
+    _, contract = load_taxonomy_view(aggregated_dir, run)
+    return aggregated_dir / "pem" / contract.representation
+
+
+@lru_cache(maxsize=8)
+def _candidate_gps(run: str, aggregated_dir: Path) -> np.ndarray:
+    df, _ = load_taxonomy_view(aggregated_dir, run)
     return pd.to_numeric(df["gps_start"], errors="coerce").dropna().values
 
 
 def _pick_background_span(detector: str, event_gps: float, block_s: float,
-                          run: str,
+                          run: str, aggregated_dir: Path = AGGREGATED_DIR,
                           min_clean_windows: int = 60) -> tuple[int, int, np.ndarray]:
     """Nearest CAT1-clean span of block_s seconds with enough clean windows.
 
@@ -89,7 +93,7 @@ def _pick_background_span(detector: str, event_gps: float, block_s: float,
     ~10^4 candidates in the run, no multi-hour span is candidate-free, but
     plenty of individual windows are. Returns (start, end, window_starts).
     """
-    cands = _candidate_gps(run)
+    cands = _candidate_gps(run, Path(aggregated_dir))
     search_half = 7 * 86400
     segs = get_segments(f"{detector}_BURST_CAT1",
                         int(event_gps - search_half),
@@ -204,11 +208,19 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
                     run: str = "O4a", block_s: float = 14400.0,
                     alpha: float = 0.01, nds_host: str = "nds.gwosc.org",
                     n_boot: int = 200, seed: int = 42,
-                    purge_cache: bool = False) -> dict:
+                    purge_cache: bool = False,
+                    pem_dir: Path | None = None,
+                    aggregated_dir: Path = AGGREGATED_DIR) -> dict:
     """Empirical family-wise null for one event. Writes and returns the JSON."""
+    aggregated_dir = Path(aggregated_dir)
+    pem_dir = (
+        _coherent_pem_dir(run, aggregated_dir)
+        if pem_dir is None
+        else Path(pem_dir)
+    )
     rng = np.random.default_rng(seed)
     bstart, bend, window_starts = _pick_background_span(
-        detector, event_gps, block_s, run)
+        detector, event_gps, block_s, run, aggregated_dir)
     W = len(window_starts)
     logger.info(f"[{detector} {event_gps:.0f}] background span "
                 f"[{bstart}, {bend}] ({(bend-bstart)/3600:.1f} h, "
@@ -339,8 +351,8 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
                    "channel correlation preserved (single shift vs all "
                    "channels), window-level bootstrap CI"),
     }
-    PEM_DIR.mkdir(parents=True, exist_ok=True)
-    out = PEM_DIR / f"null_calibration_{detector}_{int(event_gps)}.json"
+    pem_dir.mkdir(parents=True, exist_ok=True)
+    out = pem_dir / f"null_calibration_{detector}_{int(event_gps)}.json"
     with open(out, "w") as f:
         json.dump(result, f, indent=2)
     logger.info(f"[{detector} {event_gps:.0f}] m={len(used_channels)} "
@@ -411,25 +423,44 @@ def tier_verdict(cmax: float | None, thr_shift: float | None,
     return "NO_CORRELATION"
 
 
-def apply_family_wise_verdicts(run: str = "O4a") -> Path:
+def apply_family_wise_verdicts(
+    run: str = "O4a",
+    pem_dir: Path | None = None,
+    aggregated_dir: Path = AGGREGATED_DIR,
+) -> Path:
     """Join coherence_report.csv with the per-event calibrations.
 
     Writes pem_family_wise_verdicts.csv: one row per event with m, N,
     threshold, observed Cmax and the verdict. Events without a
     calibration JSON are marked UNCALIBRATED — never silently classified.
     """
-    rep = pd.read_csv(PEM_DIR / "coherence_report.csv")
+    aggregated_dir = Path(aggregated_dir)
+    pem_dir = (
+        _coherent_pem_dir(run, aggregated_dir)
+        if pem_dir is None
+        else Path(pem_dir)
+    )
+    rep = pd.read_csv(pem_dir / "coherence_report.csv")
     rows = []
     for (det, gps), grp in rep.groupby(["detector", "gps_start"]):
         tested = grp[grp["data_available"] & grp["max_coherence"].notna()]
-        cal_path = PEM_DIR / f"null_calibration_{det}_{int(gps)}.json"
+        metadata = {
+            "dsd_class": grp["dsd_class"].iloc[0],
+            "dsd_score": grp["dsd_score"].iloc[0],
+            "taxonomy_representation": (
+                grp["taxonomy_representation"].iloc[0]
+            ),
+        }
+        cal_path = pem_dir / f"null_calibration_{det}_{int(gps)}.json"
         if not cal_path.exists():
             rows.append({"detector": det, "gps_start": gps,
                          "family": grp["family"].iloc[0],
                          "m_channels": len(tested), "n_surrogate_pairs": None,
                          "threshold_fw": None, "cmax_observed":
                          tested["max_coherence"].max() if len(tested) else None,
-                         "top_channel": None, "verdict": "UNCALIBRATED"})
+                         "top_channel": None,
+                         "threshold_zero_lag": None,
+                         "verdict": "UNCALIBRATED", **metadata})
             continue
         cal = json.loads(cal_path.read_text())
         n_windows = cal.get("n_windows")
@@ -443,7 +474,10 @@ def apply_family_wise_verdicts(run: str = "O4a") -> Path:
                          "n_surrogate_pairs": cal["n_surrogate_pairs"],
                          "threshold_fw": cal["threshold_fw"],
                          "cmax_observed": None, "top_channel": None,
-                         "verdict": "UNCALIBRATED"})
+                         "threshold_zero_lag": (
+                             (cal.get("zero_lag_control") or {}).get("q99")
+                         ),
+                         "verdict": "UNCALIBRATED", **metadata})
             continue
         top = obs.sort_values("max_coherence", ascending=False).iloc[0]
         cmax_obs = float(top["max_coherence"])
@@ -459,8 +493,8 @@ def apply_family_wise_verdicts(run: str = "O4a") -> Path:
                      "top_channel_baseline": cal["per_channel_null"]
                         .get(top["aux_channel"], {}).get("zero_lag_median"),
                      "threshold_zero_lag": (cal.get("zero_lag_control") or {}).get("q99"),
-                     "verdict": verdict})
-    out = PEM_DIR / "pem_family_wise_verdicts.csv"
+                     "verdict": verdict, **metadata})
+    out = pem_dir / "pem_family_wise_verdicts.csv"
     df = pd.DataFrame(rows)
     # Make the unverified-safety assumption explicit per verdict rather than
     # implicit for all of them: a coupling driven by the length-sensing chain
@@ -485,6 +519,21 @@ def main():
     p.add_argument("--block-hours", type=float, default=4.0)
     p.add_argument("--nds-host", type=str, default="nds.gwosc.org")
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument(
+        "--aggregated-dir",
+        type=Path,
+        default=AGGREGATED_DIR,
+        help="Directory containing the coherent taxonomy and DSD audit.",
+    )
+    p.add_argument(
+        "--pem-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Representation-versioned PEM directory. Defaults to "
+            "aggregated/pem/<coherent taxonomy representation>."
+        ),
+    )
     p.add_argument("--apply-only", action="store_true",
                    help="Skip calibration; only regenerate the verdicts CSV.")
     # Purging is the default: background spans rarely repeat across events, so
@@ -499,6 +548,11 @@ def main():
                    help="Deprecated and now the default; accepted so existing "
                         "commands keep working. Use --keep-cache to opt out.")
     args = p.parse_args()
+    pem_dir = (
+        _coherent_pem_dir(args.run, args.aggregated_dir)
+        if args.pem_dir is None
+        else args.pem_dir
+    )
 
     if not args.apply_only:
         from src.pipeline_v2_production.pem_coherence_analysis import require_nds2
@@ -509,13 +563,13 @@ def main():
                 "'No auxiliary channel could be fetched', which is a missing "
                 "package, not a property of the data."
             )
-        rep = pd.read_csv(PEM_DIR / "coherence_report.csv")
+        rep = pd.read_csv(pem_dir / "coherence_report.csv")
         for (det, gps), grp in rep.groupby(["detector", "gps_start"]):
             tested = grp[grp["data_available"] & grp["max_coherence"].notna()]
             if len(tested) == 0:
                 logger.warning(f"{det} {gps}: no tested channels, skipped.")
                 continue
-            out = PEM_DIR / f"null_calibration_{det}_{int(gps)}.json"
+            out = pem_dir / f"null_calibration_{det}_{int(gps)}.json"
             if out.exists():
                 logger.info(f"{det} {gps}: calibration exists, skipped "
                             "(delete the JSON to redo).")
@@ -527,13 +581,19 @@ def main():
                                 block_s=args.block_hours * 3600,
                                 alpha=args.alpha, nds_host=args.nds_host,
                                 seed=args.seed,
-                                purge_cache=not args.keep_cache)
+                                purge_cache=not args.keep_cache,
+                                pem_dir=pem_dir,
+                                aggregated_dir=args.aggregated_dir)
             except Exception as e:
                 # One transient failure (e.g. GWOSC HTTP 500) must not kill
                 # the whole batch: the event stays UNCALIBRATED (explicit
                 # in the verdicts CSV) and can be retried by re-running.
                 logger.error(f"{det} {gps}: calibration failed: {e}")
-    apply_family_wise_verdicts(args.run)
+    apply_family_wise_verdicts(
+        args.run,
+        pem_dir=pem_dir,
+        aggregated_dir=args.aggregated_dir,
+    )
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import inspect
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -12,6 +13,7 @@ import pandas as pd
 
 from src.core.index_contract import (
     load_index_contract,
+    load_taxonomy_view,
     qrange_tag,
     validate_native_index,
 )
@@ -57,6 +59,130 @@ def test_declared_qrange_round_trip(tmp_path) -> None:
     assert contract.declared is True
     assert contract.legacy_inferred is False
     assert len(contract.sha256) == 64
+
+
+def _write_coherent_taxonomy_contract(
+    aggregated,
+    rows,
+    *,
+    total_failed: int = 0,
+) -> tuple:
+    representation = "idxq4-64_queryq4-64"
+    taxonomy = aggregated / (
+        f"Master_Taxonomy_O4a_{representation}.csv"
+    )
+    pd.DataFrame(rows).to_csv(taxonomy, index=False)
+    audit = aggregated / (
+        f"dsd_transition_audit_o4a_{representation}.json"
+    )
+    audit.write_text(
+        json.dumps(
+            {
+                "experiment_run": True,
+                "total_evaluated": len(rows),
+                "total_failed": total_failed,
+                "taxonomy_artifact": str(taxonomy),
+                "representation": {
+                    "coherent": True,
+                    "variant": representation,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return taxonomy, audit
+
+
+def test_taxonomy_contract_exposes_only_coherent_scientific_aliases(
+    tmp_path,
+) -> None:
+    taxonomy, _ = _write_coherent_taxonomy_contract(
+        tmp_path,
+        [
+            {
+                "detector": "H1",
+                "gps_start": 100,
+                "robustness_class": "BACKGROUND",
+                "native_o4a_score": 0.1,
+                "robustness_class_idxq4_64_queryq4_64": "ROBUST",
+                "native_score_idxq4_64_queryq4_64": 0.5,
+            }
+        ],
+    )
+
+    frame, contract = load_taxonomy_view(tmp_path, "O4a")
+
+    assert contract.path == taxonomy
+    assert contract.representation == "idxq4-64_queryq4-64"
+    assert frame.loc[0, "robustness_class"] == "BACKGROUND"
+    assert frame.loc[0, "dsd_class"] == "ROBUST"
+    assert frame.loc[0, "dsd_score"] == pytest.approx(0.5)
+
+
+def test_taxonomy_contract_refuses_incomplete_dsd_population(tmp_path) -> None:
+    _write_coherent_taxonomy_contract(
+        tmp_path,
+        [
+            {
+                "detector": "H1",
+                "gps_start": 100,
+                "robustness_class_idxq4_64_queryq4_64": "ROBUST",
+                "native_score_idxq4_64_queryq4_64": 0.5,
+            }
+        ],
+        total_failed=1,
+    )
+
+    with pytest.raises(RuntimeError, match="failed candidate evaluations"):
+        load_taxonomy_view(tmp_path, "O4a")
+
+
+def test_taxonomy_contract_never_falls_back_to_legacy_implicitly(
+    tmp_path,
+) -> None:
+    pd.DataFrame(
+        [
+            {
+                "detector": "H1",
+                "gps_start": 100,
+                "robustness_class": "ROBUST",
+                "native_o4a_score": 0.5,
+            }
+        ]
+    ).to_csv(tmp_path / "Master_Taxonomy_O4a.csv", index=False)
+
+    with pytest.raises(RuntimeError, match="Refusing legacy"):
+        load_taxonomy_view(tmp_path, "O4a")
+
+
+def test_taxonomy_audit_accepts_windows_relative_path_under_shared_fs(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    aggregated = tmp_path / "data" / "production" / "aggregated"
+    aggregated.mkdir(parents=True)
+    taxonomy, audit = _write_coherent_taxonomy_contract(
+        aggregated,
+        [
+            {
+                "detector": "H1",
+                "gps_start": 100,
+                "robustness_class_idxq4_64_queryq4_64": "ROBUST",
+                "native_score_idxq4_64_queryq4_64": 0.5,
+            }
+        ],
+    )
+    payload = json.loads(audit.read_text(encoding="utf-8"))
+    payload["taxonomy_artifact"] = (
+        "data\\production\\aggregated\\" + taxonomy.name
+    )
+    audit.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    frame, contract = load_taxonomy_view(aggregated, "O4a")
+
+    assert len(frame) == 1
+    assert contract.path == taxonomy
 
 
 def test_native_index_validation_checks_shape_norms_and_time_sidecar(
@@ -289,7 +415,8 @@ def test_blind_spot_injection_is_centred_and_qmax_text_is_current() -> None:
         gps + blind_spot_map.SEGMENT_LENGTH / 2.0
     )
     assert blind_spot_map.Q_MAX == 64.0
-    assert blind_spot_map.ANALYSIS_VERSION == "centered_v2"
+    assert blind_spot_map.ANALYSIS_VERSION == "centered_q64_v3"
+    assert blind_spot_map.QRANGE == (4, 64)
     assert "Qrange 4-64" in blind_spot_map.__doc__
 
 
@@ -497,3 +624,172 @@ def test_patch_production_refuses_silent_legacy_native_dual_scoring() -> None:
     assert "load_index_contract(candidate_index)" in source
     assert "allow_legacy_inference=True" not in source
     assert "No declared native index matches PatchProducer qrange" in source
+
+
+def test_near_threshold_sampling_uses_coherent_nonrobust_boundary() -> None:
+    from src.pipeline_v2_production.dsd_index_stability import _sample
+
+    rows = []
+    for detector in ("H1", "L1"):
+        rows.extend(
+            [
+                {
+                    "detector": detector,
+                    "gps_start": 1,
+                    "dsd_class": "BACKGROUND",
+                    "dsd_score": 0.20,
+                },
+                {
+                    "detector": detector,
+                    "gps_start": 2,
+                    "dsd_class": "AMBIGUOUS",
+                    "dsd_score": 0.41,
+                },
+                {
+                    "detector": detector,
+                    "gps_start": 3,
+                    "dsd_class": "ROBUST",
+                    "dsd_score": 0.43,
+                },
+                {
+                    "detector": detector,
+                    "gps_start": 4,
+                    "dsd_class": "ROBUST",
+                    "dsd_score": 0.50,
+                },
+            ]
+        )
+    selected = _sample(
+        pd.DataFrame(rows),
+        1,
+        {
+            "H1": {"ci_upper": 0.42},
+            "L1": {"ci_upper": 0.42},
+        },
+    )
+
+    assert len(selected) == 4
+    assert set(selected.dsd_class) == {"ROBUST", "AMBIGUOUS"}
+    assert not selected.dsd_class.eq("BACKGROUND").any()
+
+
+def test_class_dependent_v6_modules_resolve_coherent_taxonomy() -> None:
+    from src.pipeline_v2_production import (
+        background_cohesion_test,
+        catalog_cross_match,
+        dsd_index_stability,
+        dsd_k_sensitivity,
+        inter_session_recurrence,
+        pca_baseline,
+        pem_coherence_analysis,
+    )
+
+    modules = (
+        background_cohesion_test,
+        catalog_cross_match,
+        dsd_index_stability,
+        dsd_k_sensitivity,
+        inter_session_recurrence,
+        pca_baseline,
+        pem_coherence_analysis,
+    )
+    for module in modules:
+        source = inspect.getsource(module)
+        assert "load_taxonomy_view" in source, module.__name__
+        assert "native_o4a_score" not in source, module.__name__
+        assert '["robustness_class"]' not in source, module.__name__
+
+
+def test_injection_controls_do_not_open_the_legacy_native_index() -> None:
+    from src.pipeline_v2_production import (
+        astrophysical_injection,
+        blind_spot_map,
+    )
+
+    for module in (astrophysical_injection, blind_spot_map):
+        source = inspect.getsource(module)
+        assert "patch_compressed_index_o4a_ex.npz" not in source
+        assert "patch_compressed_index_o4a_q4-64_ex.npz" in source
+        assert "idxq4-64_queryq4-64" not in source
+
+
+def test_report_uses_coherent_aliases_and_versioned_pem_without_fallback() -> None:
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    report_source = inspect.getsource(
+        AggregateReporter._generate_markdown_report
+    )
+    ledger_source = inspect.getsource(
+        AggregateReporter._build_disposition_ledger
+    )
+    assert 'tax_df["robustness_class"] = tax_df["dsd_class"]' in report_source
+    assert 'tax_df["native_o4a_score"] = tax_df["dsd_score"]' in report_source
+    assert '"taxonomy_representation"' in report_source
+    assert "coherent_pem" in ledger_source
+    assert "no legacy " in ledger_source
+    assert "analytic fallback permitted)" in ledger_source
+
+
+def test_pem_existing_sample_propagation_changes_the_inference(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    from src.pipeline_v2_production import pem_class_propagation
+
+    rows = []
+    verdicts = []
+    # Legacy: ROBUST 2/3 coupled, BACKGROUND 0/3.
+    # Coherent: one coupled legacy ROBUST moves to BACKGROUND, so the apparent
+    # enrichment disappears. The test checks the exact join, not a hardcoded
+    # production number.
+    specifications = [
+        ("ROBUST", "ROBUST", "COUPLED"),
+        ("ROBUST", "BACKGROUND", "COUPLED"),
+        ("ROBUST", "ROBUST", "NO_CORRELATION"),
+        ("BACKGROUND", "BACKGROUND", "NO_CORRELATION"),
+        ("BACKGROUND", "ROBUST", "NO_CORRELATION"),
+        ("BACKGROUND", "BACKGROUND", "NO_CORRELATION"),
+    ]
+    for gps, (legacy, coherent, verdict) in enumerate(
+        specifications,
+        start=100,
+    ):
+        rows.append(
+            {
+                "detector": "H1",
+                "gps_start": gps,
+                "robustness_class": legacy,
+                "native_o4a_score": 0.1,
+                "robustness_class_idxq4_64_queryq4_64": coherent,
+                "native_score_idxq4_64_queryq4_64": 0.5,
+            }
+        )
+        verdicts.append(
+            {
+                "detector": "H1",
+                "gps_start": gps,
+                "verdict_tier": verdict,
+            }
+        )
+    _write_coherent_taxonomy_contract(tmp_path, rows)
+    verdict_path = tmp_path / "legacy_verdicts.csv"
+    pd.DataFrame(verdicts).to_csv(verdict_path, index=False)
+    monkeypatch.setattr(
+        pem_class_propagation,
+        "record_environment",
+        lambda *_args, **_kwargs: None,
+    )
+
+    result = pem_class_propagation.run(
+        "O4a",
+        aggregated_dir=tmp_path,
+        legacy_verdicts=verdict_path,
+    )
+
+    assert result["n_matched"] == 6
+    assert result["n_class_changed"] == 2
+    assert (
+        result["legacy_class_result"]["odds_ratio"]
+        != result["coherent_class_result"]["odds_ratio"]
+    )
+    assert Path(result["rows_path"]).exists()

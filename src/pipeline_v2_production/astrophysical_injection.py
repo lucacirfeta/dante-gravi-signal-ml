@@ -42,7 +42,8 @@ Usage
 Requires ``lalsuite``, which lives in the WSL conda environment alongside
 ``nds2``; see the README note on the PEM branch.
 
-Writes ``data/production/aggregated/astrophysical_injection_{run}.json``.
+Writes a representation-versioned
+``data/production/aggregated/astrophysical_injection_{run}_{representation}.json``.
 """
 
 from __future__ import annotations
@@ -113,8 +114,15 @@ def _score(spectrogram_rgb, scorers: dict) -> dict:
             for name, sc in scorers.items()}
 
 
-def _trial(gps: int, hp: np.ndarray, hc: np.ndarray, rng, scorers: dict,
-           band: tuple[float, float]) -> dict | None:
+def _trial(
+    gps: int,
+    hp: np.ndarray,
+    hc: np.ndarray,
+    rng,
+    scorers: dict,
+    band: tuple[float, float],
+    qrange: tuple[int, int],
+) -> dict | None:
     """One injection into both detectors at the same GPS time."""
     import matplotlib
 
@@ -152,7 +160,11 @@ def _trial(gps: int, hp: np.ndarray, hc: np.ndarray, rng, scorers: dict,
         # The pair gives both the production decision and the sensitive delta.
         tw0, _ = whiten_context(ts, gps, gps + SEGMENT_LENGTH, pad=4.0)
         spec0 = generate_qtransform(extract_clean_subwindow(
-            tw0, gps, gps + SEGMENT_LENGTH), save_path=None, cmap="cividis")
+            tw0, gps, gps + SEGMENT_LENGTH),
+            save_path=None,
+            cmap="cividis",
+            qrange=qrange,
+        )
         rgb0 = (matplotlib.colormaps["cividis"](spec0)[:, :, :3] * 255).astype(np.uint8)
         clean_scores[det] = _score(rgb0, scorers)
 
@@ -169,7 +181,12 @@ def _trial(gps: int, hp: np.ndarray, hc: np.ndarray, rng, scorers: dict,
         tw, _ = whiten_context(ts, gps, gps + SEGMENT_LENGTH, pad=4.0)
         clean = extract_clean_subwindow(tw, gps, gps + SEGMENT_LENGTH)
         whitened[det] = clean
-        spec = generate_qtransform(clean, save_path=None, cmap="cividis")
+        spec = generate_qtransform(
+            clean,
+            save_path=None,
+            cmap="cividis",
+            qrange=qrange,
+        )
         rgb = (matplotlib.colormaps["cividis"](spec)[:, :, :3] * 255).astype(np.uint8)
         out[det] = _score(rgb, scorers)
 
@@ -198,22 +215,53 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
         n_trials: int = 20, seed: int = 42,
         band: tuple[float, float] = (20.0, 1024.0)) -> dict:
     from src.core.patch_scorer import PatchScorer
-    from src.core.utils import get_reference_dir
+    from src.core.index_contract import (
+        load_index_contract,
+        taxonomy_representation,
+    )
+    from src.core.utils import get_reference_dir, load_config
     from src.pipeline_v3_multiscale.norm_leakage.common import iter_clean_segments
 
     rng = np.random.default_rng(seed)
     ref = get_reference_dir()
+    qrange = tuple(
+        int(value)
+        for value in load_config()["preprocessing"]["qrange"]
+    )
+    representation = taxonomy_representation(qrange, qrange)
+    native_index = ref / "patch_compressed_index_o4a_q4-64_ex.npz"
+    index_contract = load_index_contract(native_index)
     scorers = {
         "o3b": PatchScorer(reference_index_path=str(ref / "patch_compressed_index_o3b.npz"),
                            verify_md5=True),
-        "native": PatchScorer(reference_index_path=str(ref / "patch_compressed_index_o4a_ex.npz"),
+        "native": PatchScorer(reference_index_path=str(native_index),
                               verify_md5=False),
     }
     tau_cc = json.loads((AGG / f"coincidence_physical_{run_name.lower()}.json")
                         .read_text())["summary"]["cc_null_max_p99"]
+    threshold_path = (
+        AGG
+        / f"dsd_thresholds_{run_name.lower()}_{representation}.json"
+    )
+    threshold_artifact = json.loads(threshold_path.read_text(encoding="utf-8"))
+    threshold_representation = threshold_artifact.get("representation", {})
+    if (
+        not threshold_representation.get("coherent")
+        or threshold_representation.get("variant") != representation
+        or threshold_representation.get("index_sha256")
+        != index_contract.sha256
+    ):
+        raise RuntimeError(
+            "DSD threshold artifact does not match the coherent native index"
+        )
     thresholds = {
         "flag_o3b": 0.3783,          # session flagging threshold, O3b dictionary
-        "dsd_H1": 0.41432, "dsd_L1": 0.44721,   # tau_hi, dsd_threshold_mc_error
+        "dsd_H1": float(
+            threshold_artifact["thresholds"]["H1"]["ci_upper"]
+        ),
+        "dsd_L1": float(
+            threshold_artifact["thresholds"]["L1"]["ci_upper"]
+        ),
         "tau_cc": float(tau_cc),
     }
     logger.info(f"thresholds: {thresholds}")
@@ -244,7 +292,7 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
                     logger.warning(f"{sysd['name']}: waveform {len(hp)/SAMPLE_RATE:.0f}s "
                                    f"exceeds the {SEGMENT_LENGTH:.0f}s window, skipped")
                     break
-                r = _trial(gps, hp, hc, rng, scorers, band)
+                r = _trial(gps, hp, hc, rng, scorers, band, qrange)
                 if r is not None:
                     trials.append(r)
             if not trials:
@@ -288,12 +336,22 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
 
     out = {"run": run_name, "thresholds": thresholds, "n_trials": n_trials,
            "seed": seed, "band": list(band),
+           "taxonomy_representation": representation,
+           "qrange": list(qrange),
+           "native_index_path": str(native_index),
+           "native_index_sha256": index_contract.sha256,
+           "dsd_threshold_path": str(threshold_path),
            "waveform_model": "IMRPhenomD", "rows": rows}
     AGG.mkdir(parents=True, exist_ok=True)
-    dest = AGG / f"astrophysical_injection_{run_name.lower()}.json"
+    dest = AGG / (
+        f"astrophysical_injection_{run_name.lower()}_{representation}.json"
+    )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"astrophysical_injection_{run_name.lower()}")
+    record_environment(
+        AGG,
+        f"astrophysical_injection_{run_name.lower()}_{representation}",
+    )
     return out
 
 

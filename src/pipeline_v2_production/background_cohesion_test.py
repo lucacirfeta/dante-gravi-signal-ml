@@ -43,6 +43,7 @@ import pandas as pd
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist
 
+from src.core.index_contract import load_taxonomy_view
 from src.core.patch_scorer import PatchScorer
 from src.core.preprocessor import generate_qtransform
 from src.core.utils import setup_logger, get_reference_dir
@@ -66,19 +67,23 @@ def _mil_vector(scorer: PatchScorer, tsw) -> np.ndarray:
     return np.asarray(res['mil_vector'], dtype=np.float32).ravel()
 
 
-def _make_scorer(run: str) -> PatchScorer:
+def _make_scorer() -> PatchScorer:
     """Same reference index and construction as the production scoring path."""
     return PatchScorer(
         reference_index_path=str(get_reference_dir()
-                                 / f'patch_compressed_index_{run.lower()}_ex.npz'),
-        verify_md5=False)
+                                 / 'patch_compressed_index_o3b.npz'),
+        verify_md5=True)
 
 
 def collect_background_mil(run: str, n_segments: int = 3000, seed: int = 42,
                            aggregated_dir: Path = Path('data/production/aggregated'),
-                           resume: bool = True) -> np.ndarray:
+                           resume: bool = True,
+                           representation: str = "coherent") -> np.ndarray:
     """Encode unselected native background segments through the MIL path."""
-    out = Path(aggregated_dir) / f'background_mil_vectors_{run.lower()}.npy'
+    out = Path(aggregated_dir) / (
+        f'background_mil_vectors_{run.lower()}_{representation}_'
+        'primary_o3b.npy'
+    )
     if resume and out.exists():
         prev = np.load(out)
         if len(prev) >= n_segments:
@@ -96,7 +101,7 @@ def collect_background_mil(run: str, n_segments: int = 3000, seed: int = 42,
         return bool(np.any((exclusions - EXCLUSION_PAD - 16 <= t_bg)
                            & (t_bg <= exclusions + 32 + EXCLUSION_PAD + 16)))
 
-    scorer = _make_scorer(run)
+    scorer = _make_scorer()
     vecs = list(prev)
     per_det = n_segments // 2
     n_excluded = n_failed = 0
@@ -130,7 +135,10 @@ def collect_background_mil(run: str, n_segments: int = 3000, seed: int = 42,
     return X
 
 
-def _load_candidate_mil(production_dir: Path, aggregated_dir: Path, run_name: str):
+def _load_candidate_mil(
+    production_dir: Path,
+    taxonomy: pd.DataFrame,
+):
     """Candidate MIL vectors keyed by (gps, detector), joined to the taxonomy."""
     vec = {}
     for f in sorted(Path(production_dir).glob('*/novelties_*.h5')):
@@ -141,7 +149,7 @@ def _load_candidate_mil(production_dir: Path, aggregated_dir: Path, run_name: st
             g = h['novelties']
             for t, v in zip(g['gps_times'][:], g['mil_vectors'][:]):
                 vec[(int(round(t)), det)] = v
-    m = pd.read_csv(Path(aggregated_dir) / f'Master_Taxonomy_{run_name}.csv')
+    m = taxonomy.copy()
     m['key'] = list(zip(m.gps_start.round().astype(int), m.detector))
     m = m[m.key.map(lambda k: k in vec)]
     return m, vec
@@ -166,17 +174,29 @@ def run(run_name: str = 'O4a', n_segments: int = 3000, n_draws: int = 5,
         aggregated_dir: str | Path = 'data/production/aggregated',
         production_dir: str | Path = 'data/production') -> dict:
     agg = Path(aggregated_dir)
+    taxonomy, contract = load_taxonomy_view(agg, run_name)
 
-    bg = collect_background_mil(run_name, n_segments, seed, agg)
-    m, vec = _load_candidate_mil(Path(production_dir), agg, run_name)
+    bg = collect_background_mil(
+        run_name,
+        n_segments,
+        seed,
+        agg,
+        representation=contract.representation,
+    )
+    m, vec = _load_candidate_mil(Path(production_dir), taxonomy)
 
     groups = {'NATIVE_BACKGROUND': bg}
     for cls in ['ROBUST', 'AMBIGUOUS', 'BACKGROUND']:
-        sel = m[m.robustness_class == cls]
+        sel = m[m.dsd_class == cls]
         if len(sel):
             groups[cls] = np.stack([vec[k] for k in sel.key])
 
-    out = {'run': run_name, 'D_cut': D_CUT, 'rho_trans': 1 - D_CUT,
+    out = {
+           'run': run_name,
+           'representation': contract.representation,
+           'taxonomy_path': str(contract.path),
+           'vector_space': 'primary_o3b_topk68_mil_queryq4-64',
+           'D_cut': D_CUT, 'rho_trans': 1 - D_CUT,
            'full': {}, 'size_matched': {}}
     for cls, X in groups.items():
         out['full'][cls] = cluster_profile(X)
@@ -201,7 +221,10 @@ def run(run_name: str = 'O4a', n_segments: int = 3000, n_draws: int = 5,
         logger.info(f"MATCHED {cls:18s} largest={lf.mean():.3%} +/- {lf.std():.3%} "
                     f"clusters={nc.mean():.1f}")
 
-    dest = agg / f'background_cohesion_{run_name.lower()}.json'
+    dest = agg / (
+        f'background_cohesion_{run_name.lower()}_'
+        f'{contract.representation}.json'
+    )
     dest.write_text(json.dumps(out, indent=1))
     logger.info(f"saved -> {dest}")
     return out

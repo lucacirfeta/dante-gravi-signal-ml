@@ -127,16 +127,14 @@ aggregate-report --run O4a                 # -> Master_Taxonomy_<run>.csv,
                                            #      -> pem-coherence-analysis
 
 # Tier 2 — robustness & characterization suite (standalone, run after Tier 1)
-dsd-threshold-mc-error --run O4a           # R3: reads native scores -> dsd_threshold_mc_error.json
-                                           #     PREREQUISITE of every test below (the
-                                           #     near-threshold candidate sampler reads it)
+dsd-threshold-mc-error --run O4a           # R3: reads coherent native-score arrays
 dsd-index-stability --run O4a              # P5: writes a reusable candidate/background token cache
 dsd-k-sensitivity --run O4a                # P4: REQUIRES the P5 token cache
 pca-baseline --run O4a                     # P10
-whitening-context-sensitivity --run O4a    # reads Master_Taxonomy + dsd_threshold_mc_error + native index
-catalog-cross-match --run O4a              # P11: reads Master_Taxonomy + per-session cluster reports
-blind-spot-map --run O4a                   # reads only the frozen O3b + native indices
-astrophysical-injection --run O4a          # P9: reads coincidence_physical + dsd_threshold_mc_error (WSL/lalsuite)
+whitening-context-sensitivity --run O4a    # coherent taxonomy + DSD thresholds + Q64 native index
+catalog-cross-match --run O4a              # P11 circular-shift overlap null
+blind-spot-map --run O4a                   # frozen O3b + coherent Q64 native diagnostic
+astrophysical-injection --run O4a          # P9: coherent DSD thresholds (WSL/lalsuite)
 
 # On demand, any time — not part of the sequence above
 characterize-candidate --detector L1 --gps <gps> --feature-gps <t>  # independent per-candidate descriptors
@@ -147,14 +145,14 @@ reference indices from `download-all-references`):
 
 | command | needs |
 |---|---|
-| `dsd-threshold-mc-error` | `background_scores_native_{det}_{run}.npy` (from `aggregate-report`) |
-| `dsd-index-stability` | `Master_Taxonomy`, `dsd_threshold_mc_error.json` |
+| `dsd-threshold-mc-error` | coherent `dsd_thresholds_*_<representation>.json` and its background-score arrays |
+| `dsd-index-stability` | coherent versioned taxonomy + matching DSD threshold artifact |
 | `dsd-k-sensitivity` | the `dsd-index-stability` token cache |
-| `pca-baseline` | `Master_Taxonomy`, `dsd_threshold_mc_error.json` |
-| `whitening-context-sensitivity` | `Master_Taxonomy`, `dsd_threshold_mc_error.json`, native index |
-| `catalog-cross-match` | `Master_Taxonomy`, per-session `cluster_report_novelties_*.json` |
-| `blind-spot-map` | O3b + native indices only |
-| `astrophysical-injection` | `coincidence_physical_{run}.json`, `dsd_threshold_mc_error.json` |
+| `pca-baseline` | coherent versioned taxonomy + matching DSD threshold artifact |
+| `whitening-context-sensitivity` | coherent versioned taxonomy, matching DSD thresholds, Q64 native index |
+| `catalog-cross-match` | coherent versioned taxonomy, processed-coverage source, cached GWTC list |
+| `blind-spot-map` | frozen O3b index + coherent Q64 native index |
+| `astrophysical-injection` | `coincidence_physical_{run}.json`, coherent DSD threshold artifact |
 
 Each Tier-2 command aborts with a clear message if a prerequisite is missing;
 none rebuild or overwrite the frozen index.
@@ -770,7 +768,28 @@ python live_monitor.py --file data/production/<session_id>/novelties_<session_id
 
 ### 23. pem-coherence-analysis
 Offline validation of instrumental anomalies using GWOSC safe auxiliary channels. It computes spectral coherence to determine if anomalies are environmental rather than astrophysical.
-Results are automatically injected into Final_Discovery_Report.md if present.
+The command resolves the coherent representation-versioned taxonomy and writes
+under `pem/<representation>/`; it never falls back silently to the historical
+`robustness_class`. Results are injected into `Final_Discovery_Report.md` only
+with the explicit `--inject-final-report` flag.
+
+For a class-stratified run use `--robust-events`, `--ambiguous-events` and
+`--background-events`. `--reuse-existing-dir` may reuse an older measurement
+only on an exact detector/GPS match; reused rows and empirical-null JSONs are
+hashed in `selection_manifest.json`. `--selection-only` writes this target/reuse
+ledger without contacting NDS.
+
+Example matching the v6 23/20/98 design (the two singletons add two ROBUST
+events to the 21 recurring-family quota):
+
+```bash
+python main.py pem-coherence-analysis --run O4a \
+  --robust-events 21 --ambiguous-events 20 --background-events 98 \
+  --reuse-existing-dir data/production/aggregated/pem \
+  --nds-host nds.gwosc.org
+python -m src.pipeline_v2_production.pem_null_calibration --run O4a \
+  --pem-dir data/production/aggregated/pem/idxq4-64_queryq4-64
+```
 
 ### 24. poisson-upper-limit
 Calculates the 90% C.L. Poisson Upper Limit on the rate of morphologically novel, instrumentally unclassified transients. 
@@ -871,84 +890,94 @@ Measures the prevalence at which a glitch morphology, injected at rising density
 into the background that builds a native index, stops being flagged — the
 structural DSD critique turned into a number. Control arm holds prevalence at
 zero. `--morphology` (e.g. `Blip`, `ScatteredLight`), `--run` (default `O4a`),
-`--seed`. Output: `dsd_absorption_{run}.json`.
+`--seed`. Output filenames include the Q-range tag. Historical Q32 results are
+not valid substitutes for the queued Q64 rerun.
 
 ### 29. inter-session-recurrence
 Tests whether any morphology recurs across widely separated sessions (a glitch
 class recurs; noise does not), on the stored MIL vectors, against a
 session-shuffle null. `--run`, `--top-n`, `--k-neighbours`, `--seed`.
-Output: `inter_session_recurrence_{run}.json`.
+Output: `inter_session_recurrence_{run}_{representation}.json`.
 
 ### 29.5. dsd-threshold-mc-error
 **(R3)** Bootstraps the Monte-Carlo error on the per-detector DSD thresholds
-(`tau_hi`, `tau_lo`) from the stored native background scores. **This is the
-prerequisite the rest of the suite reads** — the near-threshold candidate
-sampler pulls `tau_hi` from its output. `--run`, `--reps` (default 200), `--B`
+(`tau_hi`, `tau_lo`) from the stored coherent native background scores.
+`--run`, `--reps` (default 200), `--B`
 (replicas per run, default 1000). Requires
-`background_scores_native_{det}_{run}.npy` from `aggregate-report`.
-Output: `dsd_threshold_mc_error.json`.
+the representation-versioned DSD threshold JSON, which identifies the exact
+background arrays. Output:
+`dsd_threshold_mc_error_{run}_{representation}.json`.
 
-> **Result:** tau_hi MC std 0.003–0.006 — the threshold reproduces because it is
-> computed from stored score arrays that never re-pass through whitening/encoder.
+> **Current coherent result:** tau_hi MC std 0.00042 (H1) / 0.00089 (L1);
+> tau_lo MC std 0.00546 / 0.01156. The upper boundary is stable, but the old
+> statement that both endpoint errors are below a histogram-bin width is false.
 
 ### 30. dsd-index-stability
 **(P5)** Are the DSD survivors an artifact of *which* background sample built the
 native index? Rebuilds the index from independent bootstrap draws and re-scores
 near-threshold candidates, reporting threshold-independent metrics (score rank
 correlation, per-candidate std, ROBUST-vs-rejected separation). `--run`,
-`--n-candidates`, `--n-draws`, `--seed`. Output: `dsd_index_stability_{run}.json`
-plus a reusable candidate/background token cache.
+`--n-candidates`, `--n-draws`, `--seed`. The contrast is ROBUST versus the
+highest-scoring non-ROBUST population; under the coherent wide interval this is
+normally AMBIGUOUS, not BACKGROUND. Output:
+`dsd_index_stability_{run}_{representation}.json` plus a
+representation-versioned candidate/background token cache.
 
-> **Result:** rank correlation 0.98 across draws; the survivor boundary is a
-> property of the candidates, not of the draw.
+> **Status:** the historical rank-correlation result used the legacy classes and
+> is superseded until the coherent rerun finishes.
 
 ### 31. dsd-k-sensitivity
 **(P4)** Are the survivors an artifact of the dictionary size K=1216? Rebuilds
 the native index at several K from the P5 token cache (no re-encoding) and
 re-scores. `--run`, `--n-candidates`, `--k-values` (default `512 1024 1216
-2048`), `--seed`. Output: `dsd_k_sensitivity_{run}.json`. Requires the P5 token
-cache — run `dsd-index-stability` first.
+2048`), `--seed`. Output: `dsd_k_sensitivity_{run}_{representation}.json`.
+Requires the P5 token cache — run `dsd-index-stability` first. Historical
+unversioned caches are rejected.
 
-> **Result:** rank correlation 0.98 vs production K; the boundary is not a K
-> artifact.
+> **Status:** the historical result used the legacy P5 cache and is superseded
+> until the coherent rerun finishes.
 
 ### 32. pca-baseline
 **(P10)** What does the frozen DINOv2 encoder buy over a representation-free
 baseline? Scores the same near-threshold pool with a PCA pixel-subspace novelty
 detector and raw spectral energy, measured against DANTE's stored native score.
 `--run`, `--n-candidates`, `--n-background`, `--seed`.
-Output: `pca_baseline_{run}.json`.
+Output: `pca_baseline_{run}_{representation}.json`.
 
-> **Result:** raw energy reproduces the survive/reject split at AUC 0.87; the PCA
-> residual does not (0.52); the encoder's score correlates only 0.51 with energy.
+> **Status:** AUC 0.87/0.52 belongs to the legacy class/sample and must not be
+> quoted for Q64/Q64 until the coherent rerun finishes.
 
 ### 33. catalog-cross-match
-**(P11)** Does DANTE flag the *real* O4a gravitational-wave catalogue? Cross-
-matches the confirmed GWTC-4.0/4.1 events against DANTE's flagged windows,
-separating coverage from recall. `--run`, `--refresh` (re-fetch the GWTC list
-from GWOSC; else cached). Output: `catalog_cross_match_{run}.json`.
+**(P11)** Tests whether confirmed GWTC-4.0/4.1 event windows overlap DANTE
+candidates more often than expected under common-offset circular shifts of the
+complete catalogue. Coverage, observed overlap and the null are separate.
+`--run`, `--refresh`, `--n-shifts`, `--coverage-source`.
+Output filenames include the analysis and taxonomy representation.
 
-> **Result:** of 126 covered events, 2 flagged, 0 coincident — the ground-truth
-> confirmation of the instrumental framing.
+> **Coherent result:** 2 observed any-detector overlaps versus null
+> 2.068 +/- 1.428, p=0.6148; no excess is resolved. This is not recall,
+> efficiency, or causal attribution. The second event is coherent AMBIGUOUS,
+> not legacy ROBUST.
 
 ### 34. blind-spot-map
 Injects sine-Gaussian bursts on a `(f0, Q)` grid at fixed matched-filter SNR and
 maps DANTE's flag rate against the analytic `T = Q_max/f` boundary. `--run`,
-`--n-realizations`, `--seed`. Output: `blind_spot_map_{run}.json`.
+`--n-realizations`, `--seed`. Output:
+`blind_spot_map_centered_q64_v3_{run}.json`.
 
-> **Result:** flag rate rises monotonically with Q (0% for Q≤4 broadband, ~65%
-> for Q≥16); the narrowband region the figure marks as blind still flags — the
-> empirical blind spot is the opposite corner.
+> **Status:** the pre-centering result is invalid. The centred-v2 primary O3b
+> result exists, but v3 also removes the ancillary native-Q32 mismatch and is
+> the artifact required for the paper.
 
 ### 35. whitening-context-sensitivity
 Re-scores near-threshold candidates against the native index at several whitening
 pad lengths and counts DSD verdict flips vs the production `pad=4` context.
 `--run`, `--n-candidates`, `--seed`.
-Output: `whitening_context_sensitivity_{run}.json`.
+Output filenames include the coherent taxonomy representation.
 
-> **Result:** median context swing 0.007; 14% of candidates swing >0.02; ~5%
-> near-threshold verdict flip rate (an upper bound). The section-12 singleton
-> swing is a minority property, not a survey-wide instability.
+> **Status:** the old ~5% flip claim failed its pad=4 reproduction anchor and is
+> withdrawn. The replacement run hard-gates that anchor and recalibrates the
+> background threshold separately for every detector and pad.
 
 ### 36. characterize-candidate
 Independent, single-candidate descriptors: in-band peak frequency (raw-strain

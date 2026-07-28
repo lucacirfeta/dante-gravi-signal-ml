@@ -18,7 +18,7 @@ stability test (P5), so the two are directly comparable. The question is read
 from three numbers:
 
 * **Rank correlation** between each classical score and DANTE's stored
-  ``native_o4a_score``. High correlation means a dumb pixel method already ranks
+  coherent ``dsd_score``. High correlation means a dumb pixel method already ranks
   candidates the way DANTE does -- the transfer buys little. Low correlation
   means DANTE responds to structure the classical method is blind to.
 * **ROBUST vs rejected separation** under each classical score -- does the
@@ -41,7 +41,8 @@ Usage
     python -m src.pipeline_v2_production.pca_baseline --pilot
     python -m src.pipeline_v2_production.pca_baseline --n-candidates 40
 
-Writes ``data/production/aggregated/pca_baseline_{run}.json``.
+Writes
+``data/production/aggregated/pca_baseline_{run}_{representation}.json``.
 """
 
 from __future__ import annotations
@@ -53,8 +54,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.core.utils import setup_logger
-from src.core.utils import record_environment
+from src.core.index_contract import load_taxonomy_view, qrange_tag
+from src.core.utils import load_config, record_environment, setup_logger
 from src.pipeline_v2_production.dsd_index_stability import _sample
 from src.pipeline_v3_multiscale.norm_leakage.common import (
     iter_clean_segments, raw_qgram)
@@ -92,7 +93,10 @@ def _spectral_energy(spec: np.ndarray) -> float:
     return float(np.clip(np.asarray(spec, dtype=np.float64), 0.0, None).sum())
 
 
-def _encode_candidates(cands: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _encode_candidates(
+    cands: pd.DataFrame,
+    qrange: tuple[int, int],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Pixel features + spectral energy for each candidate, [gps+4, gps+36]."""
     import warnings
 
@@ -109,7 +113,7 @@ def _encode_candidates(cands: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.
                                        w0 + SEGMENT_LENGTH + 4.0, edge_tolerance=4.0)
                 tw, _ = whiten_context(ts, w0, w0 + SEGMENT_LENGTH, pad=4.0)
                 clean = extract_clean_subwindow(tw, w0, w0 + SEGMENT_LENGTH)
-                spec = raw_qgram(clean)
+                spec = raw_qgram(clean, qrange=qrange)
             feats.append(_features(spec))
             energy.append(_spectral_energy(spec))
             kept.append(True)
@@ -121,11 +125,14 @@ def _encode_candidates(cands: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.
             np.asarray(kept))
 
 
-def _encode_background(segs) -> tuple[np.ndarray, np.ndarray]:
+def _encode_background(
+    segs,
+    qrange: tuple[int, int],
+) -> tuple[np.ndarray, np.ndarray]:
     """Pixel features + spectral energy for the vetoed background pool."""
     feats, energy = [], []
     for s in segs:
-        spec = raw_qgram(s.ts_whitened)
+        spec = raw_qgram(s.ts_whitened, qrange=qrange)
         feats.append(_features(spec))
         energy.append(_spectral_energy(spec))
     return (np.asarray(feats, dtype=np.float32),
@@ -182,47 +189,102 @@ def _compare(score: np.ndarray, dante: np.ndarray, is_rob: np.ndarray,
 
 def run(run_name: str = "O4a", n_candidates: int = 40,
         n_background: int = 1300, seed: int = 42) -> dict:
-    tax = pd.read_csv(AGG / f"Master_Taxonomy_{run_name.lower()}.csv")
+    qrange = tuple(
+        int(value) for value in load_config()["preprocessing"]["qrange"]
+    )
+    tax, contract = load_taxonomy_view(
+        AGG,
+        run_name,
+        index_qrange=qrange,
+        query_qrange=qrange,
+    )
     tax["gps_start"] = tax.gps_start.astype(int)
+    threshold_path = AGG / (
+        f"dsd_thresholds_{run_name.lower()}_{contract.representation}.json"
+    )
+    threshold_record = json.loads(threshold_path.read_text(encoding="utf-8"))
+    if (
+        threshold_record.get("representation", {}).get("variant")
+        != contract.representation
+    ):
+        raise RuntimeError("DSD threshold representation mismatch")
 
-    cands = _sample(tax, n_candidates, seed)
+    cands = _sample(
+        tax,
+        n_candidates,
+        threshold_record["thresholds"],
+    )
     logger.info(f"{len(cands)} candidates "
-                f"({(cands.robustness_class=='ROBUST').sum()} ROBUST, "
-                f"{(cands.robustness_class=='BACKGROUND').sum()} rejected)")
+                f"({(cands.dsd_class=='ROBUST').sum()} ROBUST, "
+                f"{(cands.dsd_class!='ROBUST').sum()} non-ROBUST)")
 
-    cache = AGG / f"pca_baseline_feats_{run_name.lower()}_n{n_candidates}_s{seed}.npz"
+    cache = AGG / (
+        f"pca_baseline_feats_{run_name.lower()}_"
+        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_candidates}_s{seed}.npz"
+    )
+    candidate_keys = np.asarray(
+        [
+            f"{detector}:{gps}"
+            for detector, gps in zip(cands.detector, cands.gps_start)
+        ]
+    )
     if cache.exists():
         logger.info(f"loading cached features from {cache.name}")
         z = np.load(cache, allow_pickle=True)
         cand_feat, cand_energy, kept = z["cand_feat"], z["cand_energy"], z["kept"]
         bg_feat = z["bg_feat"]
+        if (
+            tuple(int(value) for value in z["qrange"].tolist()) != qrange
+            or str(z["representation"].item()) != contract.representation
+            or not np.array_equal(z["candidate_keys"], candidate_keys)
+        ):
+            raise RuntimeError(
+                f"PCA feature cache contract mismatch: {cache}"
+            )
         cands = cands[kept].reset_index(drop=True)
     else:
-        logger.info("encoding candidate spectrograms (raw_qgram, [gps+4, gps+36])")
-        cand_feat, cand_energy, kept = _encode_candidates(cands)
+        logger.info(
+            "encoding candidate spectrograms "
+            "(raw_qgram Q=%s, [gps+4, gps+36])",
+            qrange,
+        )
+        cand_feat, cand_energy, kept = _encode_candidates(cands, qrange)
         cands = cands[kept].reset_index(drop=True)
         logger.info(f"collecting {n_background} vetoed background segments")
         segs = list(iter_clean_segments(run_name.lower(), "L1", n_background, seed=seed))
         logger.info("encoding background spectrograms (raw_qgram)")
-        bg_feat, _ = _encode_background(segs)
+        bg_feat, _ = _encode_background(segs, qrange)
         for name, arr in (("cand_feat", cand_feat), ("bg_feat", bg_feat),
                           ("cand_energy", cand_energy)):
             if not np.isfinite(arr).all():
                 raise ValueError(f"{name} has non-finite values; refusing to "
                                  "cache poisoned features (see _features clip).")
-        np.savez_compressed(cache, cand_feat=cand_feat, cand_energy=cand_energy,
-                            kept=kept, bg_feat=bg_feat)
+        np.savez_compressed(
+            cache,
+            cand_feat=cand_feat,
+            cand_energy=cand_energy,
+            kept=kept,
+            bg_feat=bg_feat,
+            candidate_keys=candidate_keys,
+            qrange=np.asarray(qrange),
+            representation=np.asarray(contract.representation),
+        )
         logger.info(f"cached features to {cache.name}")
 
-    is_rob = (cands.robustness_class == "ROBUST").to_numpy()
-    dante = cands.native_o4a_score.to_numpy()
+    is_rob = (cands.dsd_class == "ROBUST").to_numpy()
+    dante = cands.dsd_score.to_numpy()
     det = cands.detector.to_numpy()
 
     resid, n_comp = _pca_residual(bg_feat, cand_feat)
     logger.info(f"PCA subspace: {n_comp} components for {VAR_KEPT:.0%} variance")
 
     out = {
-        "run": run_name, "n_candidates": int(len(cand_feat)),
+        "run": run_name,
+        "representation": contract.representation,
+        "taxonomy_path": str(contract.path),
+        "qrange": list(qrange),
+        "n_candidates": int(len(cand_feat)),
         "n_robust": int(is_rob.sum()), "n_rejected": int((~is_rob).sum()),
         "n_background": int(len(bg_feat)), "seed": seed,
         "feature_dim": int(cand_feat.shape[1]),
@@ -237,7 +299,9 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
             "the classical score alone cannot tell survivors from rejected. This "
             "bounds the transfer's value; it does not reduce its cost (B2)."),
     }
-    dest = AGG / f"pca_baseline_{run_name.lower()}.json"
+    dest = AGG / (
+        f"pca_baseline_{run_name.lower()}_{contract.representation}.json"
+    )
     dest.write_text(json.dumps(out, indent=2))
     pr = out["pca_reconstruction_residual"]
     se = out["spectral_energy"]
@@ -246,7 +310,10 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         f"AUC {pr['auc_robust_vs_rejected']:.3f} | spectral-energy: rank-corr "
         f"{se['rank_correlation_with_dante']:.3f}, AUC {se['auc_robust_vs_rejected']:.3f}")
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"pca_baseline_{run_name.lower()}")
+    record_environment(
+        AGG,
+        f"pca_baseline_{run_name.lower()}_{contract.representation}",
+    )
     return out
 
 

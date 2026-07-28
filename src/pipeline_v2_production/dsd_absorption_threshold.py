@@ -35,7 +35,8 @@ Usage
     python -m src.pipeline_v2_production.dsd_absorption_threshold \
         --morphology Blip --n-background 300
 
-Writes ``data/production/aggregated/dsd_absorption_{morphology}.json``.
+Writes a Q-range-versioned
+``data/production/aggregated/dsd_absorption_{morphology}_{qrange}.json``.
 """
 
 from __future__ import annotations
@@ -46,7 +47,13 @@ from pathlib import Path
 
 import numpy as np
 
-from src.core.utils import normalize_spectrogram, record_environment, setup_logger
+from src.core.index_contract import qrange_tag
+from src.core.utils import (
+    load_config,
+    normalize_spectrogram,
+    record_environment,
+    setup_logger,
+)
 from src.pipeline_v3_multiscale.norm_leakage.common import (
     PatchEncoder, iter_clean_segments, raw_qgram, spectrogram_to_rgb, topk_score,
 )
@@ -77,7 +84,13 @@ def _inject(ts_whitened, glitch: np.ndarray, rng) -> np.ndarray:
     return x
 
 
-def _encode_segments(encoder, segments, glitch_fn=None, rng=None) -> np.ndarray:
+def _encode_segments(
+    encoder,
+    segments,
+    glitch_fn=None,
+    rng=None,
+    qrange=(4, 64),
+) -> np.ndarray:
     """Encode segments to (n_segments, 1369, 384) patch tokens."""
     out = []
     for seg in segments:
@@ -87,7 +100,12 @@ def _encode_segments(encoder, segments, glitch_fn=None, rng=None) -> np.ndarray:
                 from gwpy.timeseries import TimeSeries
                 arr = _inject(ts, glitch_fn(), rng)
                 ts = TimeSeries(arr, t0=ts.t0, dt=ts.dt)
-            spec = normalize_spectrogram(raw_qgram(ts.crop(seg.t_bg - 16, seg.t_bg + 16)))
+            spec = normalize_spectrogram(
+                raw_qgram(
+                    ts.crop(seg.t_bg - 16, seg.t_bg + 16),
+                    qrange=qrange,
+                )
+            )
             out.append(encoder.encode_rgb(spectrogram_to_rgb(spec)))
         except Exception as e:  # noqa: BLE001 - a dropped segment is not fatal
             logger.debug(f"segment {seg.t_bg} failed: {e}")
@@ -110,10 +128,17 @@ def _build_index(tokens: np.ndarray, seed: int) -> np.ndarray:
 def run(morphology: str = "Blip", amplitude: float = 6.0, duration: float = 1.0,
         n_background: int = 300, n_holdout_bg: int = 150, n_holdout_inj: int = 60,
         prevalences=(0.0, 0.02, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40),
-        run_name: str = "O4a", seed: int = 42) -> dict:
+        run_name: str = "O4a", seed: int = 42,
+        qrange: tuple[int, int] | None = None) -> dict:
     from src.core.injection import SyntheticGlitchGenerator
 
     rng = np.random.default_rng(seed)
+    if qrange is None:
+        qrange = tuple(
+            int(value)
+            for value in load_config()["preprocessing"]["qrange"]
+        )
+    qrange = tuple(int(value) for value in qrange)
     gen = SyntheticGlitchGenerator(sample_rate=4096)
     encoder = PatchEncoder()
 
@@ -136,8 +161,11 @@ def run(morphology: str = "Blip", amplitude: float = 6.0, duration: float = 1.0,
     # Encoding is ~90% of the runtime and depends only on (morphology, amplitude,
     # duration, n_background, seed). Cache it so re-running the sweep with a
     # different prevalence grid, control arm or metric costs seconds.
-    cache = AGG / (f"dsd_absorption_tokens_{morphology.lower()}_a{amplitude:g}"
-                   f"_n{n_background}_s{seed}.npz")
+    cache = AGG / (
+        f"dsd_absorption_tokens_{morphology.lower()}_"
+        f"{qrange_tag(qrange)}_a{amplitude:g}_"
+        f"n{n_background}_s{seed}.npz"
+    )
     if cache.exists():
         logger.info(f"loading cached patch tokens from {cache.name}")
         z_ = np.load(cache)
@@ -145,13 +173,33 @@ def run(morphology: str = "Blip", amplitude: float = 6.0, duration: float = 1.0,
         hold_bg_tok, hold_inj_tok = z_["hold_bg"], z_["hold_inj"]
     else:
         logger.info("encoding background pool")
-        bg_tokens = _encode_segments(encoder, bg_pool)
+        bg_tokens = _encode_segments(
+            encoder,
+            bg_pool,
+            qrange=qrange,
+        )
         logger.info("encoding injected pool")
-        inj_tokens = _encode_segments(encoder, inj_pool_src, make_glitch, rng)
+        inj_tokens = _encode_segments(
+            encoder,
+            inj_pool_src,
+            make_glitch,
+            rng,
+            qrange=qrange,
+        )
         logger.info("encoding held-out background")
-        hold_bg_tok = _encode_segments(encoder, hold_bg)
+        hold_bg_tok = _encode_segments(
+            encoder,
+            hold_bg,
+            qrange=qrange,
+        )
         logger.info("encoding held-out injections")
-        hold_inj_tok = _encode_segments(encoder, hold_inj_src, make_glitch, rng)
+        hold_inj_tok = _encode_segments(
+            encoder,
+            hold_inj_src,
+            make_glitch,
+            rng,
+            qrange=qrange,
+        )
         np.savez_compressed(cache, bg=bg_tokens, inj=inj_tokens,
                             hold_bg=hold_bg_tok, hold_inj=hold_inj_tok)
         logger.info(f"cached patch tokens to {cache.name}")
@@ -204,16 +252,25 @@ def run(morphology: str = "Blip", amplitude: float = 6.0, duration: float = 1.0,
                     f"z={z:+6.2f} (control {z_ctrl:+6.2f}) | flagged {flagged:.0%}")
 
     out = {
-        "run": run_name, "morphology": morphology, "amplitude": amplitude,
+        "run": run_name,
+        "qrange": list(qrange),
+        "morphology": morphology,
+        "amplitude": amplitude,
         "duration_s": duration, "n_background": n_background,
         "n_holdout_bg": len(hold_bg_tok), "n_holdout_inj": len(hold_inj_tok),
         "seed": seed, "top_k": TOP_K, "rows": rows,
     }
     AGG.mkdir(parents=True, exist_ok=True)
-    dest = AGG / f"dsd_absorption_{morphology.lower()}.json"
+    dest = AGG / (
+        f"dsd_absorption_{morphology.lower()}_"
+        f"{qrange_tag(qrange)}.json"
+    )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"dsd_absorption_{morphology.lower()}")
+    record_environment(
+        AGG,
+        f"dsd_absorption_{morphology.lower()}_{qrange_tag(qrange)}",
+    )
     return out
 
 

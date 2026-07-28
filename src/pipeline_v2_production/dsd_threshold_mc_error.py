@@ -24,7 +24,8 @@ Usage
 -----
     python -m src.pipeline_v2_production.dsd_threshold_mc_error --reps 200
 
-Writes ``data/production/aggregated/dsd_threshold_mc_error.json``.
+Writes a representation-versioned
+``data/production/aggregated/dsd_threshold_mc_error_{run}_{representation}.json``.
 """
 
 from __future__ import annotations
@@ -35,6 +36,7 @@ from pathlib import Path
 
 import numpy as np
 
+from src.core.index_contract import load_taxonomy_contract
 from src.core.utils import record_environment, setup_logger
 
 logger = setup_logger(__name__)
@@ -53,12 +55,14 @@ def _bootstrap_p99(scores: np.ndarray, B: int, seed: int) -> np.ndarray:
     """
     n = len(scores)
     b = max(1, int(n ** (1 / 3)))
-    num_blocks = int(np.ceil(n / b))
+    num_blocks = n // b
+    if num_blocks < 2:
+        raise RuntimeError("Too few complete temporal blocks")
+    aligned = np.asarray(scores[:num_blocks * b]).reshape(num_blocks, b)
 
     rng = np.random.default_rng(seed)
-    starts = rng.integers(0, n - b + 1, size=(B, num_blocks))
-    idx = starts[:, :, None] + np.arange(b)[None, None, :]
-    boot = scores[idx.reshape(B, -1)[:, :n]]
+    chosen = rng.integers(0, num_blocks, size=(B, num_blocks))
+    boot = aligned[chosen].reshape(B, -1)
     return np.percentile(boot, P_TAIL, axis=1)
 
 
@@ -99,9 +103,29 @@ def run(run_name: str = "O4a", reps: int = 200, B: int = B_PRODUCTION) -> dict:
     """Measure the Monte-Carlo error on the DSD thresholds from stored native
     background scores. Requires ``background_scores_native_{det}_{run}.npy``,
     written by ``aggregate-report``'s native-threshold calibration."""
-    out: dict = {"run": run_name, "detectors": {}}
+    contract = load_taxonomy_contract(AGG_DIR, run_name)
+    threshold_path = AGG_DIR / (
+        f"dsd_thresholds_{run_name.lower()}_{contract.representation}.json"
+    )
+    threshold_record = json.loads(threshold_path.read_text(encoding="utf-8"))
+    if (
+        threshold_record.get("representation", {}).get("variant")
+        != contract.representation
+    ):
+        raise RuntimeError("DSD threshold representation mismatch")
+    out: dict = {
+        "run": run_name,
+        "representation": contract.representation,
+        "taxonomy_path": str(contract.path),
+        "bootstrap_strategy": "aligned_temporal_blocks_v2",
+        "detectors": {},
+    }
     for det in ("H1", "L1"):
-        path = AGG_DIR / f"background_scores_native_{det}_{run_name}.npy"
+        path = Path(
+            threshold_record["thresholds"][det][
+                "background_scores_path"
+            ]
+        )
         if not path.exists():
             logger.error(f"{path} missing — cannot measure {det}. Run "
                          "aggregate-report first to produce the native scores.")
@@ -109,6 +133,7 @@ def run(run_name: str = "O4a", reps: int = 200, B: int = B_PRODUCTION) -> dict:
         scores = np.load(path).astype(float)
         logger.info(f"[{det}] {len(scores)} background scores, {reps} runs of B={B}")
         res = measure(scores, reps=reps, B=B)
+        res["background_scores_path"] = str(path)
         out["detectors"][det] = res
         logger.info(
             f"[{det}] tau_lo={res['tau_lo']['mean']:.5f}+/-{res['tau_lo']['mc_std']:.5f}  "
@@ -116,10 +141,19 @@ def run(run_name: str = "O4a", reps: int = 200, B: int = B_PRODUCTION) -> dict:
             f"MC/FD-bin={res['mc_std_over_fd_bin']:.3f}"
         )
 
-    dest = AGG_DIR / "dsd_threshold_mc_error.json"
+    dest = AGG_DIR / (
+        f"dsd_threshold_mc_error_{run_name.lower()}_"
+        f"{contract.representation}.json"
+    )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(f"Wrote {dest}")
-    record_environment(AGG_DIR, "dsd_threshold_mc_error")
+    record_environment(
+        AGG_DIR,
+        (
+            f"dsd_threshold_mc_error_{run_name.lower()}_"
+            f"{contract.representation}"
+        ),
+    )
     return out
 
 

@@ -61,12 +61,16 @@ python main.py multiscale-analysis --run O4a
 # Without it gwpy reports every auxiliary channel as "no valid sources found",
 # which looks identical to a genuine coverage gap. The pipeline now detects
 # this and refuses rather than producing a report full of false absences.
-python main.py pem-coherence-analysis --nds-host nds.gwosc.org
+python main.py pem-coherence-analysis --run O4a \
+  --robust-events 21 --ambiguous-events 20 --background-events 98 \
+  --reuse-existing-dir data/production/aggregated/pem \
+  --nds-host nds.gwosc.org
 
 # 7b. Family-wise empirical null for the PEM veto. Each event pulls ~0.5 GB of
 #     auxiliary background, purged once its null is computed; pass --keep-cache
 #     only if you are re-running events that share a background span.
-python -m src.pipeline_v2_production.pem_null_calibration --run O4a
+python -m src.pipeline_v2_production.pem_null_calibration --run O4a \
+  --pem-dir data/production/aggregated/pem/idxq4-64_queryq4-64
 
 # 7c. Measure where the DSD stops seeing a morphology. The native index is built
 #     from the run's own background, so a morphology common enough there is
@@ -86,7 +90,7 @@ python main.py dsd-threshold-mc-error --run O4a        # R3: DSD threshold MC er
 python main.py dsd-index-stability --run O4a           # survivors vs background draw (P5); writes token cache
 python main.py dsd-k-sensitivity --run O4a             # survivors vs dictionary size K (P4); needs the P5 cache
 python main.py pca-baseline --run O4a                  # what the encoder buys vs a classical baseline (P10)
-python main.py catalog-cross-match --run O4a           # recall of the real GWTC-4 O4a catalogue (P11)
+python main.py catalog-cross-match --run O4a           # overlap vs circular-shift null (P11; not recall)
 python main.py blind-spot-map --run O4a                # empirical time-frequency blind-spot map
 python main.py whitening-context-sensitivity --run O4a # DSD verdict flips vs whitening context
 
@@ -147,7 +151,11 @@ See `requirements.txt` for the full list. Core dependencies include:
 
 ### Data Access (GWOSC)
 Raw O4a strain data is fetched programmatically from the Gravitational Wave Open Science Center (GWOSC). DANTE uses `gwpy` to stream the data automatically. 
-> ⚠️ **RESTRICTED ACCESS FLAG:** While O4a data is being released publicly on GWOSC, low-latency auxiliary Physical Environment Monitoring (PEM) channels and sub-threshold zero-lag H1/L1 pairs used in the Cross-Detector Veto may require active LIGO Scientific Collaboration (LSC) computing credentials (e.g., access to `/cvmfs/` directories on CIT clusters). If you lack LSC credentials, the pipeline will gracefully fall back to processing public GWOSC open data.
+> ⚠️ **RESTRICTED ACCESS FLAG:** While O4a strain is public on GWOSC, Physical
+> Environment Monitoring (PEM) channel coverage varies and some channels may
+> require collaboration access. Missing NDS2 software is treated as an error,
+> never as a physical coverage gap. A strain-only null-result mode is explicitly
+> labelled and cannot produce a PEM coupling verdict.
 
 ### Pre-Computed Artifacts (Zenodo)
 For immediate verification without re-running the feature extraction, the labeled benchmark sets and O4a reference indices are permanently hosted on Zenodo:
@@ -158,24 +166,34 @@ For immediate verification without re-running the feature extraction, the labele
 ## 📊 Key Results
 *Note: All empirical claims are strictly bounded by the conditions under which they were measured.*
 
+> **v6 audit gate (2026-07-28):** O4a results stratified by the historical
+> Q32-index/Q64-query DSD classes are superseded. The coherent Q64/Q64 funnel is
+> 3,593 ROBUST / 2,109 AMBIGUOUS / 4,670 BACKGROUND over 10,372 candidates.
+> P11 resolves no catalogue-overlap excess (2 observed, null 2.068 +/- 1.428,
+> p=0.6148). PEM/P4/P5/P10/P9 and the final funnel remain under coherent rerun;
+> do not quote their legacy values as v6 results.
+
 - **O3b Benchmark Novelty Detection:** AUC > 0.98. 
   *(Conditions: Evaluated exclusively on the labeled O3b benchmark dataset, contrasting DINOv2 vs. ResNet baselines).*
-- **Domain Shift Defense (DSD):** 0% false-recovery rate during macroscopic topological domain shifts (e.g., "Family_01").
-  *(Conditions: Evaluated on 180 days of unlabelled O4a strain using frozen DINOv2, MIL Top-68 pooling, and adaptive threshold $\tau_{\rm op}^{\rm Det}$ calibrated at the 99th empirical percentile).*
-- **Transient Recovery:** >95% efficiency for matched-filter SNRs $> 15$.
-  *(Conditions: Synthetic injections of 5 morphologies—HarmonicComb, WallOfLines, ScatteredLight, KoiFish, Whistle—into real O4a noise).*
-- **Cross-Session Connectivity:** ARI of 0.96 across 72 discontinuous observing sessions.
-  *(Conditions: Measured via Single-linkage HAC on DPMM centroids with a cosine distance cutoff of 0.25).*
+- **Coherent Domain Shift Defense:** Q=[4,64] is enforced for both native index
+  and queries; the production-scale native index has K=1216 and SHA256
+  `0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744`.
+  The historical Q32/Q64 class columns remain available only for transition
+  audit.
 
 - **Methodological Upper Limit (post-audit, 2026-07):** $R_{90} < 5.83 \text{ yr}^{-1}$ for H1 ($N=0$, 144.2 d) and $R_{90} < 5.63 \text{ yr}^{-1}$ for L1 ($N=0$, 149.4 d) on morphologically novel transients.
   *(Conditions: 42-session O4a production; livetime gated on `{DET}_CBC_CAT1` science segments — less optimistic by construction than the deprecated span-based values (3.70/6.52 yr⁻¹ over ~227/218-day bounding spans), which used an ungated denominator.)*
-- **Final funnel outcome:** 10,372 unique candidates → 2 DSD-robust morphological singletons → 1 survivor after PEM coherence (GPS 1382955228, L1, 4-s dominant scale, no auxiliary coupling, absent from Gravity Spy, no cross-detector coincidence). Classified as an uncatalogued instrumental morphological outlier — no astrophysical claim. Full per-candidate verdicts live in the report's *Final Candidate Disposition Ledger*.
+- **Final funnel outcome:** pending the coherent 141-event PEM rerun. The legacy
+  one-survivor funnel must not be used as the v6 result.
 
 ## 🧪 Scientific Integrity Guarantees
 Every experimentally-validated invariant of the pipeline is protected by a regression test (`tests/test_regression_hard_constraints.py` + `tests/test_norm_leakage_units.py`, 36 tests). Highlights:
 
 - **Whitening:** `whiten()` on exactly-cropped segments is *forbidden at runtime* (raises); only `whiten_context()` (pad = 4 s, crop after) is legal. Bandpass is applied exactly once, inside `whiten_context` — a static test scans the whole codebase for double-bandpass reintroduction.
-- **Statistics:** empirical p99 thresholds with **moving-block bootstrap** (b = n^{1/3}, B = 1000, seed = 42); GEV/block-maxima fitting is explicitly rejected. No `random.sample()` on time-ordered score series (file-level shuffle + contiguous slice only).
+- **Statistics:** empirical p99 thresholds with aligned temporal-block bootstrap
+  (b = n^{1/3}, B = 1000, seed = 42); GEV/block-maxima fitting is explicitly
+  rejected. The Q64 threshold JSON identifies the exact score arrays and
+  representation used.
 - **Per-run calibration:** threshold files carry a `calibration_run` tag; applying thresholds across observing runs raises (`assert_threshold_run`), except in explicitly-declared cross-run measurement scripts. The 2026-07 leakage investigation (pre-registered, falsified the per-image-normalization hypothesis, and re-measured cross-run FPR at 0.7–2.9 % vs the 8–9 % artifact of the pre-audit code) is archived under `results/norm_leakage/`.
 - **Reports:** the Final Discovery Report is run-parametric (`Master_Taxonomy_<run>.csv`, no hardcoded epochs) and self-declaring: any missing/degraded input is listed in a completeness block at the top — a hollow report cannot masquerade as a null result.
 - **Multi-run support:** new observing runs (O5, …) are added by declaring GPS bounds in `config.yaml → run_config`; `get_observing_run()` resolves config-first. No code changes required.
@@ -183,7 +201,9 @@ Every experimentally-validated invariant of the pipeline is protected by a regre
 
 ## 🛑 Limitations
 1. **Computational Bottleneck:** The $Q$-transform and DINOv2 patch extraction are computationally intensive. DANTE operates strictly offline/high-latency and is **not** capable of real-time, low-latency multi-messenger alerting.
-2. **Frequency Domain Truncation:** The $Q$-transform upper bound of 2048 Hz prevents characterization of ultra-high frequency anomalies.
+2. **Frequency Domain Truncation:** 2048 Hz is requested, but GWpy clamps the
+   realized upper Q-transform axis to about 1291.05 Hz for the production
+   32-second, 4096-Hz, Q=[4,64] configuration.
 3. **Patch-Size Blindness:** The Top-$k$ pooling parameter ($k=68$) is a strong prior tuned for extended transients. Extremely brief transients (e.g., micro-blips lasting $\mathcal{O}(1)$ ms) affecting $\ll 68$ patches are severely penalized (False Negatives). Lowering $k \le 8$ degrades specificity (False Positives).
 4. **Detector Specificity:** Background indices must be constructed independently for each interferometer. An L1 index cannot be naively transferred to H1 without recalibration.
 

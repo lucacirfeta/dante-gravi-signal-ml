@@ -29,7 +29,8 @@ Usage
 -----
     python -m src.pipeline_v2_production.inter_session_recurrence --run O4a
 
-Writes ``data/production/aggregated/inter_session_recurrence_{run}.json``.
+Writes
+``data/production/aggregated/inter_session_recurrence_{run}_{representation}.json``.
 """
 
 from __future__ import annotations
@@ -42,6 +43,7 @@ import h5py
 import numpy as np
 import pandas as pd
 
+from src.core.index_contract import load_taxonomy_view
 from src.core.utils import record_environment, setup_logger
 
 logger = setup_logger(__name__)
@@ -141,9 +143,15 @@ def analyse(detector: str, taxonomy: pd.DataFrame, top_n: int = 2000,
 
 def run(run_name: str = "O4a", top_n: int = 2000, k_neighbours: int = 10,
         seed: int = 42) -> dict:
-    tax = pd.read_csv(AGG / f"Master_Taxonomy_{run_name}.csv")
-    tax = tax[tax.robustness_class == "ROBUST"]
-    out = {"run": run_name, "population": "ROBUST", "detectors": {}}
+    tax, contract = load_taxonomy_view(AGG, run_name)
+    tax = tax[tax.dsd_class == "ROBUST"]
+    out = {
+        "run": run_name,
+        "population": "ROBUST",
+        "representation": contract.representation,
+        "taxonomy_path": str(contract.path),
+        "detectors": {},
+    }
     for det in ("H1", "L1"):
         out["detectors"][det] = analyse(det, tax, top_n, k_neighbours, seed)
         r = out["detectors"][det]
@@ -154,10 +162,19 @@ def run(run_name: str = "O4a", top_n: int = 2000, k_neighbours: int = 10,
             f"{r['neighbour_session_span_mean']:.2f} vs null "
             f"{r['neighbour_session_span_null_mean']:.2f} (z={r['neighbour_session_span_z']:+.1f})"
         )
-    dest = AGG / f"inter_session_recurrence_{run_name.lower()}.json"
+    dest = AGG / (
+        f"inter_session_recurrence_{run_name.lower()}_"
+        f"{contract.representation}.json"
+    )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"inter_session_recurrence_{run_name.lower()}")
+    record_environment(
+        AGG,
+        (
+            f"inter_session_recurrence_{run_name.lower()}_"
+            f"{contract.representation}"
+        ),
+    )
     return out
 
 

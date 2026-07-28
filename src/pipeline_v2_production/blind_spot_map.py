@@ -32,7 +32,7 @@ Usage
     python -m src.pipeline_v2_production.blind_spot_map --n-realizations 6
 
 Writes
-``data/production/aggregated/blind_spot_map_centered_v2_{run}.json``.
+``data/production/aggregated/blind_spot_map_centered_q64_v3_{run}.json``.
 The invalid pre-audit artifact is never overwritten.
 """
 
@@ -58,7 +58,8 @@ FLAG_THRESHOLD = 0.3783          # O3b session flagging threshold
 # applies. A sine-Gaussian with Q > Q_MAX cannot be concentrated by any tile.
 Q_MAX = 64.0
 TARGET_SNR = 20.0                # loud enough that a miss is morphological
-ANALYSIS_VERSION = "centered_v2"
+ANALYSIS_VERSION = "centered_q64_v3"
+QRANGE = (4, 64)
 
 # Grid: f0 across the analysis band (log-spaced), Q from broadband to very
 # narrowband, straddling Q_MAX so the analytic boundary sits inside the map.
@@ -111,7 +112,11 @@ def _cell(f0: float, q: float, times, rng, scorers, n_real: int) -> dict:
                 # clean baseline: same segment, no injection
                 tw0, _ = whiten_context(ts, gps, gps + SEGMENT_LENGTH, pad=4.0)
                 spec0 = generate_qtransform(extract_clean_subwindow(
-                    tw0, gps, gps + SEGMENT_LENGTH), save_path=None, cmap="cividis")
+                    tw0, gps, gps + SEGMENT_LENGTH),
+                    save_path=None,
+                    cmap="cividis",
+                    qrange=QRANGE,
+                )
                 rgb0 = (matplotlib.colormaps["cividis"](spec0)[:, :, :3] * 255).astype(np.uint8)
 
                 # scale the burst to a fixed matched-filter SNR, then inject at centre
@@ -125,7 +130,11 @@ def _cell(f0: float, q: float, times, rng, scorers, n_real: int) -> dict:
                 tsi = eng.inject(ts, h, t_place)
                 twi, _ = whiten_context(tsi, gps, gps + SEGMENT_LENGTH, pad=4.0)
                 speci = generate_qtransform(extract_clean_subwindow(
-                    twi, gps, gps + SEGMENT_LENGTH), save_path=None, cmap="cividis")
+                    twi, gps, gps + SEGMENT_LENGTH),
+                    save_path=None,
+                    cmap="cividis",
+                    qrange=QRANGE,
+                )
                 rgbi = (matplotlib.colormaps["cividis"](speci)[:, :, :3] * 255).astype(np.uint8)
         except Exception as e:  # noqa: BLE001
             logger.debug(f"cell f0={f0} Q={q} gps={gps} failed: {e}")
@@ -155,15 +164,22 @@ def _cell(f0: float, q: float, times, rng, scorers, n_real: int) -> dict:
 def run(run_name: str = "O4a", f0_values=DEFAULT_F0, q_values=DEFAULT_Q,
         n_realizations: int = 6, seed: int = 42) -> dict:
     from src.core.patch_scorer import PatchScorer
+    from src.core.index_contract import (
+        load_index_contract,
+        taxonomy_representation,
+    )
     from src.core.utils import get_reference_dir
     from src.pipeline_v3_multiscale.norm_leakage.common import iter_clean_segments
 
     rng = np.random.default_rng(seed)
     ref = get_reference_dir()
+    native_index = ref / "patch_compressed_index_o4a_q4-64_ex.npz"
+    native_contract = load_index_contract(native_index)
+    representation = taxonomy_representation(QRANGE, QRANGE)
     scorers = {
         "o3b": PatchScorer(reference_index_path=str(ref / "patch_compressed_index_o3b.npz"),
                            verify_md5=True),
-        "native": PatchScorer(reference_index_path=str(ref / "patch_compressed_index_o4a_ex.npz"),
+        "native": PatchScorer(reference_index_path=str(native_index),
                               verify_md5=False),
     }
     # A pool of vetted L1 times, reused across every grid cell so the map differs
@@ -194,6 +210,10 @@ def run(run_name: str = "O4a", f0_values=DEFAULT_F0, q_values=DEFAULT_Q,
     out = {
         "run": run_name, "seed": seed, "target_snr": TARGET_SNR,
         "flag_threshold": FLAG_THRESHOLD, "q_max": Q_MAX,
+        "qrange": list(QRANGE),
+        "native_representation": representation,
+        "native_index_path": str(native_index),
+        "native_index_sha256": native_contract.sha256,
         "n_realizations": n_realizations,
         "injection_time_semantics": "waveform_center_at_analysis_window_center",
         "f0_values": list(f0_values), "q_values": list(q_values),

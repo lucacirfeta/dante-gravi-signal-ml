@@ -26,8 +26,11 @@ reject threshold is subtle -- production calibrates it on un-vetoed
 diagnostics, not as production-faithful decisions. The rank correlation is the
 headline result and needs no threshold.
 
-The sample concentrates near the DSD threshold, where the survivor/reject
-distinction is most fragile; a rejected (BACKGROUND) contrast set is included.
+The sample concentrates near the upper DSD threshold, where the
+survivor/non-survivor distinction is most fragile.  The contrast population is
+the highest-scoring non-ROBUST set (normally AMBIGUOUS), not ``BACKGROUND``:
+after the coherent Q64/Q64 calibration the uncertainty interval is wide enough
+that the closest non-survivors are correctly labelled AMBIGUOUS.
 
 Candidate patch tokens are not stored, so candidates are re-encoded. Catalogues
 before 2026-07-24 label the padded crop, so the analysis window is
@@ -38,7 +41,8 @@ Usage
     python -m src.pipeline_v2_production.dsd_index_stability --pilot
     python -m src.pipeline_v2_production.dsd_index_stability --n-candidates 60
 
-Writes ``data/production/aggregated/dsd_index_stability_{run}.json``.
+Writes
+``data/production/aggregated/dsd_index_stability_{run}_{representation}.json``.
 """
 
 from __future__ import annotations
@@ -50,7 +54,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.core.utils import normalize_spectrogram, record_environment, setup_logger
+from src.core.index_contract import load_taxonomy_view, qrange_tag
+from src.core.utils import (
+    load_config,
+    normalize_spectrogram,
+    record_environment,
+    setup_logger,
+)
 from src.pipeline_v2_production.dsd_absorption_threshold import (
     _build_index, _encode_segments)
 from src.pipeline_v3_multiscale.norm_leakage.common import (
@@ -65,13 +75,15 @@ WINDOW_OFFSET = 4.0          # catalogue GPS labels the padded crop
 TOP_K = 68
 
 
-def _encode_candidates(cands: pd.DataFrame) -> np.ndarray:
+def _encode_candidates(
+    cands: pd.DataFrame,
+    qrange: tuple[int, int],
+) -> np.ndarray:
     """Patch tokens for each candidate, from the true [gps+4, gps+36] window."""
     import warnings
 
     from src.core.data_loader import fetch_strain_data
-    from src.core.preprocessor import (whiten_context, extract_clean_subwindow,
-                                       generate_qtransform)
+    from src.core.preprocessor import whiten_context, extract_clean_subwindow
 
     enc = PatchEncoder()
     toks, kept = [], []
@@ -84,7 +96,10 @@ def _encode_candidates(cands: pd.DataFrame) -> np.ndarray:
                                        edge_tolerance=4.0)
                 tw, _ = whiten_context(ts, w0, w0 + SEGMENT_LENGTH, pad=4.0)
                 clean = extract_clean_subwindow(tw, w0, w0 + SEGMENT_LENGTH)
-                spec = generate_qtransform(clean, save_path=None, cmap="cividis")
+                # The candidate and rebuilt-background dictionaries must use
+                # the same raw Q-gram representation. The historical test mixed
+                # generate_qtransform candidates with raw_qgram backgrounds.
+                spec = raw_qgram(clean, qrange=qrange)
             toks.append(enc.encode_rgb(spectrogram_to_rgb(normalize_spectrogram(spec))))
             kept.append(True)
         except Exception as e:  # noqa: BLE001
@@ -93,18 +108,24 @@ def _encode_candidates(cands: pd.DataFrame) -> np.ndarray:
     return np.asarray(toks, dtype=np.float32), np.asarray(kept)
 
 
-def _sample(tax: pd.DataFrame, n_each: int, seed: int) -> pd.DataFrame:
-    """Near-threshold ROBUST survivors and near-threshold rejected, both detectors."""
-    import json as _json
-    mc = _json.loads((AGG / "dsd_threshold_mc_error.json").read_text())["detectors"]
+def _sample(
+    tax: pd.DataFrame,
+    n_each: int,
+    thresholds: dict,
+) -> pd.DataFrame:
+    """Near-threshold ROBUST and non-ROBUST candidates, both detectors."""
     picks = []
     for det in ("H1", "L1"):
-        thr = mc[det]["tau_hi"]["mean"]
+        thr = float(thresholds[det]["ci_upper"])
         d = tax[tax.detector == det]
-        rob = d[(d.robustness_class == "ROBUST") &
-                (d.native_o4a_score < thr + 0.04)].nsmallest(n_each, "native_o4a_score")
-        rej = d[(d.robustness_class == "BACKGROUND") &
-                (d.native_o4a_score > thr - 0.06)].nlargest(n_each, "native_o4a_score")
+        rob = d[
+            (d.dsd_class == "ROBUST")
+            & (d.dsd_score < thr + 0.04)
+        ].nsmallest(n_each, "dsd_score")
+        rej = d[
+            d.dsd_class.ne("ROBUST")
+            & (d.dsd_score <= thr)
+        ].nlargest(n_each, "dsd_score")
         picks += [rob, rej]
     out = pd.concat(picks).drop_duplicates(["detector", "gps_start"]).reset_index(drop=True)
     return out
@@ -121,33 +142,95 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         n_background: int = PRODUCTION_N_BACKGROUND,
         n_holdout_bg: int = 300, n_draws: int = 4, seed: int = 42) -> dict:
     rng = np.random.default_rng(seed)
-    tax = pd.read_csv(AGG / f"Master_Taxonomy_{run_name.lower()}.csv")
+    qrange = tuple(
+        int(value) for value in load_config()["preprocessing"]["qrange"]
+    )
+    tax, taxonomy_contract = load_taxonomy_view(
+        AGG,
+        run_name,
+        index_qrange=qrange,
+        query_qrange=qrange,
+    )
     tax["gps_start"] = tax.gps_start.astype(int)
+    threshold_path = AGG / (
+        f"dsd_thresholds_{run_name.lower()}_"
+        f"{taxonomy_contract.representation}.json"
+    )
+    if not threshold_path.exists():
+        raise RuntimeError(
+            f"Coherent DSD thresholds are missing: {threshold_path}"
+        )
+    threshold_record = json.loads(threshold_path.read_text(encoding="utf-8"))
+    if (
+        threshold_record.get("representation", {}).get("variant")
+        != taxonomy_contract.representation
+    ):
+        raise RuntimeError("DSD threshold representation mismatch")
+    thresholds = threshold_record["thresholds"]
 
-    cands = _sample(tax, n_candidates, seed)
+    cands = _sample(tax, n_candidates, thresholds)
     logger.info(f"{len(cands)} candidates "
-                f"({(cands.robustness_class=='ROBUST').sum()} ROBUST, "
-                f"{(cands.robustness_class=='BACKGROUND').sum()} rejected)")
+                f"({(cands.dsd_class=='ROBUST').sum()} ROBUST, "
+                f"{(cands.dsd_class!='ROBUST').sum()} non-ROBUST)")
 
-    cache = AGG / f"dsd_index_stability_tokens_{run_name.lower()}_n{n_candidates}_s{seed}.npz"
+    cache = AGG / (
+        f"dsd_index_stability_tokens_{run_name.lower()}_"
+        f"{taxonomy_contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_candidates}_s{seed}.npz"
+    )
+    candidate_keys = np.asarray(
+        [
+            f"{detector}:{gps}"
+            for detector, gps in zip(cands.detector, cands.gps_start)
+        ]
+    )
     if cache.exists():
         logger.info(f"loading cached tokens from {cache.name}")
         z = np.load(cache, allow_pickle=True)
         cand_tok, kept = z["cand"], z["kept"]
         bg_tok, hold_tok = z["bg"], z["hold"]
+        if (
+            tuple(int(value) for value in z["qrange"].tolist()) != qrange
+            or str(z["representation"].item())
+            != taxonomy_contract.representation
+            or not np.array_equal(z["candidate_keys"], candidate_keys)
+        ):
+            raise RuntimeError(
+                f"Token cache contract mismatch: {cache}"
+            )
         cands = cands[kept].reset_index(drop=True)
     else:
-        logger.info("encoding candidates (true [gps+4, gps+36] window)")
-        cand_tok, kept = _encode_candidates(cands)
+        logger.info(
+            "encoding candidates (true [gps+4, gps+36] window, Q=%s)",
+            qrange,
+        )
+        cand_tok, kept = _encode_candidates(cands, qrange)
         cands = cands[kept].reset_index(drop=True)
         enc = PatchEncoder()
         logger.info(f"collecting {n_background + n_holdout_bg} background segments")
         segs = list(iter_clean_segments(run_name.lower(), "L1",
                                         n_background + n_holdout_bg + 40, seed=seed))
         logger.info("encoding background pool + held-out background")
-        bg_tok = _encode_segments(enc, segs[:n_background])
-        hold_tok = _encode_segments(enc, segs[n_background:n_background + n_holdout_bg])
-        np.savez_compressed(cache, cand=cand_tok, kept=kept, bg=bg_tok, hold=hold_tok)
+        bg_tok = _encode_segments(
+            enc,
+            segs[:n_background],
+            qrange=qrange,
+        )
+        hold_tok = _encode_segments(
+            enc,
+            segs[n_background:n_background + n_holdout_bg],
+            qrange=qrange,
+        )
+        np.savez_compressed(
+            cache,
+            cand=cand_tok,
+            kept=kept,
+            bg=bg_tok,
+            hold=hold_tok,
+            candidate_keys=candidate_keys,
+            qrange=np.asarray(qrange),
+            representation=np.asarray(taxonomy_contract.representation),
+        )
         logger.info(f"cached tokens to {cache.name}")
 
     # Independent index draws: disjoint bootstrap resamples of the background
@@ -168,7 +251,7 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         logger.info(f"draw {k}: threshold {thr:.4f}, survivors "
                     f"{int(survive[k].sum())}/{len(cs)}")
 
-    is_rob = (cands.robustness_class == "ROBUST").to_numpy()
+    is_rob = (cands.dsd_class == "ROBUST").to_numpy()
 
     # PRIMARY, threshold-independent metrics. The survive/reject verdict needs a
     # threshold, and reproducing the production threshold is subtle: production
@@ -190,7 +273,11 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
     all_reject = (~survive).all(axis=0)
 
     out = {
-        "run": run_name, "n_candidates": int(len(cand_tok)),
+        "run": run_name,
+        "representation": taxonomy_contract.representation,
+        "taxonomy_path": str(taxonomy_contract.path),
+        "qrange": list(qrange),
+        "n_candidates": int(len(cand_tok)),
         "n_robust": int(is_rob.sum()), "n_rejected": int((~is_rob).sum()),
         "n_draws": n_draws, "n_background": n_bg, "seed": seed,
         # --- primary, threshold-independent ---
@@ -209,7 +296,10 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
             "are not production-faithful, see LAB_NOTEBOOK section 19"),
         "_diagnostic_verdict_stable_fraction": float((all_survive | all_reject).mean()),
     }
-    dest = AGG / f"dsd_index_stability_{run_name.lower()}.json"
+    dest = AGG / (
+        f"dsd_index_stability_{run_name.lower()}_"
+        f"{taxonomy_contract.representation}.json"
+    )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(
         f"score rank-corr {out['score_rank_correlation_mean']:.3f} "
@@ -217,7 +307,13 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         f"median {out['per_candidate_score_std_median']:.4f} | ROBUST "
         f"{rob_mean:.3f} vs rejected {rej_mean:.3f} across independent draws")
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"dsd_index_stability_{run_name.lower()}")
+    record_environment(
+        AGG,
+        (
+            f"dsd_index_stability_{run_name.lower()}_"
+            f"{taxonomy_contract.representation}"
+        ),
+    )
     return out
 
 

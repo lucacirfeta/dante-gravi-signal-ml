@@ -3030,7 +3030,11 @@ def cmd_pem_coherence_analysis(args: argparse.Namespace) -> None:
 
     logger.info("=== PEM COHERENCE ANALYSIS ===")
     
-    tax_csv = Path(args.taxonomy_csv)
+    tax_csv = (
+        Path(args.taxonomy_csv)
+        if args.taxonomy_csv is not None
+        else None
+    )
     cache_d = Path(args.cache_dir)
     out_d = Path(args.output_dir)
     
@@ -3043,6 +3047,26 @@ def cmd_pem_coherence_analysis(args: argparse.Namespace) -> None:
         max_events_per_family=args.max_events,
         nds_host=args.nds_host,
         robustness_class=args.robustness_class,
+        run_name=args.run,
+        inject_final_report=args.inject_final_report,
+        events_per_class=(
+            {
+                "ROBUST": args.robust_events or 0,
+                "AMBIGUOUS": args.ambiguous_events or 0,
+                "BACKGROUND": args.background_events or 0,
+            }
+            if any(
+                value is not None
+                for value in (
+                    args.robust_events,
+                    args.ambiguous_events,
+                    args.background_events,
+                )
+            )
+            else None
+        ),
+        reuse_existing_dir=args.reuse_existing_dir,
+        selection_only=args.selection_only,
     )
 
 
@@ -3249,8 +3273,9 @@ def cmd_dsd_threshold_mc_error(args: argparse.Namespace) -> None:
     """Monte-Carlo error on the DSD thresholds (R3).
 
     Bootstraps the per-detector tau_hi/tau_lo from the stored native background
-    scores. Produces dsd_threshold_mc_error.json, the prerequisite the
-    robustness suite reads (via the near-threshold candidate sampler).
+    scores. Produces a representation-versioned MC-error diagnostic. The
+    robustness samplers read the authoritative coherent DSD threshold artifact,
+    not this diagnostic.
     """
     from src.pipeline_v2_production.dsd_threshold_mc_error import run as run_mc
 
@@ -4753,8 +4778,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_mc = subparsers.add_parser(
         "dsd-threshold-mc-error",
         help="Bootstrap the Monte-Carlo error on the per-detector DSD thresholds "
-             "(R3). Produces dsd_threshold_mc_error.json, read by the robustness "
-             "suite. Requires aggregate-report to have written native scores.",
+             "(R3). Reads the coherent threshold artifact and its exact stored "
+             "native score arrays.",
     )
     p_mc.add_argument("--run", type=str, default="O4a")
     p_mc.add_argument("--reps", type=int, default=200,
@@ -4854,10 +4879,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_pem.add_argument(
         "--taxonomy-csv",
-        type=str,
-        default="data/production/aggregated/Master_Taxonomy_O4a.csv",
-        help="Path to the Master Taxonomy CSV.",
+        type=Path,
+        default=None,
+        help=(
+            "Explicit coherent Master Taxonomy CSV. By default the Q-range "
+            "contract resolves the representation-versioned artifact."
+        ),
     )
+    p_pem.add_argument("--run", type=str, default="O4a")
     p_pem.add_argument(
         "--cache-dir",
         type=str,
@@ -4907,6 +4936,32 @@ def build_parser() -> argparse.ArgumentParser:
             "NDS2 server hostname for auxiliary channels "
             "(e.g. nds.gwosc.org). "
             "Requires LVC credentials. If omitted, runs in null-result mode."
+        ),
+    )
+    p_pem.add_argument("--robust-events", type=int, default=None)
+    p_pem.add_argument("--ambiguous-events", type=int, default=None)
+    p_pem.add_argument("--background-events", type=int, default=None)
+    p_pem.add_argument(
+        "--reuse-existing-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Explicit PEM directory from which matching detector/GPS "
+            "measurements and null calibrations may be reused."
+        ),
+    )
+    p_pem.add_argument(
+        "--selection-only",
+        action="store_true",
+        help="Write the coherent target/reuse ledger without fetching data.",
+    )
+    p_pem.add_argument(
+        "--inject-final-report",
+        action="store_true",
+        help=(
+            "Explicitly update Final_Discovery_Report.md. Disabled by "
+            "default so a characterization rerun cannot silently mutate "
+            "the legacy report."
         ),
     )
     p_pem.set_defaults(func=cmd_pem_coherence_analysis)

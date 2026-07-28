@@ -24,6 +24,7 @@ import urllib.request
 import numpy as np
 import pandas as pd
 
+from src.core.index_contract import load_taxonomy_view
 from src.core.utils import load_config, record_environment, setup_logger
 from src.pipeline_v2_production.processed_window_ledger import (
     merge_intervals,
@@ -229,7 +230,7 @@ def _flag_detail(
     if not mask.any():
         return None
     row = detector_taxonomy[mask].iloc[0]
-    return str(row.robustness_class), float(row.native_o4a_score)
+    return str(row.dsd_class), float(row.dsd_score)
 
 
 def _json_number(value):
@@ -248,6 +249,7 @@ def _write_manifest(
     destination: Path,
     *,
     run_name: str,
+    analysis_tag: str = ANALYSIS_VERSION,
     inputs: list[Path],
     outputs: list[Path],
 ) -> Path:
@@ -270,7 +272,7 @@ def _write_manifest(
                 }
             )
     manifest = destination.with_name(
-        f"catalog_cross_match_manifest_{ANALYSIS_VERSION}_"
+        f"catalog_cross_match_manifest_{analysis_tag}_"
         f"{run_name.lower()}.json"
     )
     manifest.write_text(
@@ -325,8 +327,15 @@ def run(
         detector: _intervals(coverage_records[detector])
         for detector in ("H1", "L1")
     }
+    taxonomy, taxonomy_contract = load_taxonomy_view(
+        aggregated_dir,
+        run_name,
+    )
+    analysis_tag = (
+        f"{ANALYSIS_VERSION}_{taxonomy_contract.representation}"
+    )
     coverage_artifact = aggregated_dir / (
-        f"processed_coverage_{ANALYSIS_VERSION}_{run_name.lower()}.json"
+        f"processed_coverage_{analysis_tag}_{run_name.lower()}.json"
     )
     coverage_artifact.write_text(
         json.dumps(
@@ -340,10 +349,6 @@ def run(
         encoding="utf-8",
     )
 
-    taxonomy_path = aggregated_dir / f"Master_Taxonomy_{run_name}.csv"
-    if not taxonomy_path.exists():
-        taxonomy_path = aggregated_dir / f"Master_Taxonomy_{run_name.lower()}.csv"
-    taxonomy = pd.read_csv(taxonomy_path)
     taxonomy["gps_start"] = taxonomy.gps_start.astype(float)
     detector_taxonomy = {
         detector: taxonomy[taxonomy.detector == detector]
@@ -368,7 +373,7 @@ def run(
         minimum_shift_s=minimum_shift_s,
     )
     null_path = aggregated_dir / (
-        f"catalog_cross_match_null_{ANALYSIS_VERSION}_"
+        f"catalog_cross_match_null_{analysis_tag}_"
         f"{run_name.lower()}.csv"
     )
     null_frame.to_csv(null_path, index=False)
@@ -403,7 +408,7 @@ def run(
             flagged_events.append(row)
 
     event_ledger_path = aggregated_dir / (
-        f"catalog_cross_match_events_{ANALYSIS_VERSION}_"
+        f"catalog_cross_match_events_{analysis_tag}_"
         f"{run_name.lower()}.csv"
     )
     pd.DataFrame(event_rows).to_csv(event_ledger_path, index=False)
@@ -425,6 +430,8 @@ def run(
 
     out = {
         "run": run_name,
+        "representation": taxonomy_contract.representation,
+        "taxonomy_path": str(taxonomy_contract.path),
         "catalogs": list(CATALOGS),
         "n_events_in_window": int(len(events)),
         "coverage": {
@@ -444,7 +451,7 @@ def run(
         "interpretation_note": conclusion,
     }
     destination = aggregated_dir / (
-        f"catalog_cross_match_{ANALYSIS_VERSION}_{run_name.lower()}.json"
+        f"catalog_cross_match_{analysis_tag}_{run_name.lower()}.json"
     )
     destination.write_text(json.dumps(out, indent=2), encoding="utf-8")
     logger.info(
@@ -458,7 +465,7 @@ def run(
     logger.info("wrote %s", destination)
     environment_path = record_environment(
         aggregated_dir,
-        f"catalog_cross_match_{ANALYSIS_VERSION}_{run_name.lower()}",
+        f"catalog_cross_match_{analysis_tag}_{run_name.lower()}",
         note=(
             f"coverage_source={coverage_source}; n_shifts={n_shifts}; "
             f"seed={seed}"
@@ -484,9 +491,10 @@ def run(
     manifest_path = _write_manifest(
         destination,
         run_name=run_name,
+        analysis_tag=analysis_tag,
         inputs=[
             aggregated_dir / f"gwtc_{run_name.lower()}_events.json",
-            taxonomy_path,
+            taxonomy_contract.path,
         ],
         outputs=manifest_outputs,
     )

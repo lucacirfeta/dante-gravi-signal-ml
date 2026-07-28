@@ -8,12 +8,12 @@ characteristic duration (blips ~O(0.1 s), scattered-light arches ~O(s)).
 No OR-fusion of flags -> no multiplicity inflation on discovery claims.
 
 Inputs:
-  - Master_Taxonomy_{run}.csv from the V2 aggregate stage,
+  - coherent Master_Taxonomy_{run}_{representation}.csv plus its DSD audit,
   - per-scale dictionaries + thresholds from results/micro_mdc/multiscale
     (thresholds are gated by assert_threshold_run: same-run only).
 
 Output:
-  - Multiscale_Profile_{run}.csv (one row per candidate x scale),
+  - Multiscale_Profile_{run}_{representation}.csv (one row per candidate x scale),
   - a per-candidate summary with dominant scale and per-scale exceedance
     (exceedance reported for characterization, NOT as a veto/promotion).
 
@@ -29,6 +29,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from src.core.index_contract import load_taxonomy_view
 from src.core.data_loader import fetch_strain_data
 from src.core.preprocessor import whiten_context, extract_clean_subwindow
 from src.core.utils import setup_logger
@@ -74,13 +75,26 @@ def profile_candidates(run: str = "O4a",
                        aggregated_dir: str | Path = "data/production/aggregated",
                        detectors: tuple[str, ...] = ("L1", "H1"),
                        batch_size: int = 16,
-                       survivors_only: bool = True) -> Path | None:
+    survivors_only: bool = True,
+    window_offset: float = 4.0) -> Path | None:
     aggregated_dir = Path(aggregated_dir)
-    tax_path = aggregated_dir / f"Master_Taxonomy_{run}.csv"
-    if not tax_path.exists():
-        logger.error(f"Taxonomy not found: {tax_path} — run aggregate-report first.")
-        return None
-    tax = pd.read_csv(tax_path)
+    try:
+        tax, taxonomy_contract = load_taxonomy_view(
+            aggregated_dir,
+            run,
+        )
+    except RuntimeError:
+        if not any(
+            aggregated_dir.glob(f"Master_Taxonomy_{run}*.csv")
+        ):
+            logger.warning(
+                "No taxonomy found for %s: nothing to characterize.",
+                run,
+            )
+            return None
+        # A legacy taxonomy exists but the coherent one does not. That is a
+        # representation failure, not an empty-input condition.
+        raise
     if tax.empty:
         logger.warning("Taxonomy is empty: nothing to characterize.")
         return None
@@ -94,8 +108,7 @@ def profile_candidates(run: str = "O4a",
             mask |= tax["transitivity_status"] == "Unclassified_Physical_Anomaly"
         if "global_family_id" in tax.columns:
             mask |= tax["global_family_id"].astype(str).str.startswith("Singleton")
-        if "robustness_class" in tax.columns:
-            mask &= tax["robustness_class"].fillna("ROBUST") != "BACKGROUND"
+        mask &= tax["dsd_class"] != "BACKGROUND"
         n_before = len(tax)
         tax = tax[mask]
         logger.info(f"survivors_only: {len(tax)}/{n_before} candidates "
@@ -122,12 +135,25 @@ def profile_candidates(run: str = "O4a",
                     f"scales {SCALES}...")
         for _, row in cand.iterrows():
             gps = float(row["gps_start"])
-            center = gps + 16.0  # V2 windows are [gps, gps+32]
+            analysis_start = gps + float(window_offset)
+            center = analysis_start + 16.0
             try:
-                ts_super = fetch_strain_data(det, gps - 4.0, gps + 36.0,
+                ts_super = fetch_strain_data(
+                    det,
+                    analysis_start - 4.0,
+                    analysis_start + 36.0,
                                              cache_raw=False, edge_tolerance=4.0)
-                ts_w, _ = whiten_context(ts_super, gps, gps + 32.0, pad=4.0)
-                ts_bp = extract_clean_subwindow(ts_w, gps, gps + 32.0)
+                ts_w, _ = whiten_context(
+                    ts_super,
+                    analysis_start,
+                    analysis_start + 32.0,
+                    pad=4.0,
+                )
+                ts_bp = extract_clean_subwindow(
+                    ts_w,
+                    analysis_start,
+                    analysis_start + 32.0,
+                )
             except Exception as e:
                 logger.warning(f"[{det}] fetch/whiten failed at {gps}: {e} — "
                                "candidate profiled as UNAVAILABLE.")
@@ -177,7 +203,11 @@ def profile_candidates(run: str = "O4a",
                             "margin": "dominant_margin"}))
     out = out.merge(dom, on=["gps_start", "detector"], how="left")
 
-    out_path = aggregated_dir / f"Multiscale_Profile_{run}.csv"
+    out["taxonomy_representation"] = taxonomy_contract.representation
+    out["catalog_gps_to_analysis_window_offset_s"] = float(window_offset)
+    out_path = aggregated_dir / (
+        f"Multiscale_Profile_{run}_{taxonomy_contract.representation}.csv"
+    )
     out.to_csv(out_path, index=False)
     n_cand = out.groupby(["gps_start", "detector"]).ngroups
     logger.info(f"Multiscale characterization complete: {n_cand} candidates "

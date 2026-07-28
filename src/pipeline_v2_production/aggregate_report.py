@@ -2149,6 +2149,14 @@ class AggregateReporter:
         robustness = get("robustness_class")
         dsd_ran = robustness.notna().any()
         robustness = robustness.fillna("pending")
+        taxonomy_representation = tax_df.attrs.get(
+            "taxonomy_representation",
+            "legacy",
+        )
+        pem_dir = self.output_dir / "pem"
+        coherent_pem = taxonomy_representation != "legacy"
+        if coherent_pem:
+            pem_dir = pem_dir / taxonomy_representation
 
         # PEM per-candidate outcomes, if the PEM stage produced them.
         # An event is COUPLED only if (a) at least one channel exceeds its
@@ -2170,7 +2178,7 @@ class AggregateReporter:
         # pem_null_calibration.py). Falls back to the legacy dual criterion
         # (empirical per-channel threshold AND analytic Bonferroni) ONLY for
         # events without a calibration, and says so in the verdict string.
-        fw_csv = self.output_dir / "pem" / "pem_family_wise_verdicts.csv"
+        fw_csv = pem_dir / "pem_family_wise_verdicts.csv"
         fw_seen = set()
         if fw_csv.exists():
             try:
@@ -2208,13 +2216,19 @@ class AggregateReporter:
             except Exception as e:
                 logger.warning(f"Ledger: cannot parse family-wise verdicts: {e}")
 
-        pem_csv = self.output_dir / "pem" / "coherence_report.csv"
+        pem_csv = pem_dir / "coherence_report.csv"
         if pem_csv.exists():
             try:
                 pdf = pd.read_csv(pem_csv)
                 for gps_val, grp in pdf.groupby("gps_start"):
                     if float(gps_val) in fw_seen:
                         continue  # family-wise verdict already assigned
+                    if coherent_pem:
+                        pem_map[float(gps_val)] = (
+                            "UNCALIBRATED (coherent PEM sample; no legacy "
+                            "analytic fallback permitted)"
+                        )
+                        continue
                     if not grp["data_available"].any():
                         pem_map[float(gps_val)] = "PEM_UNAVAILABLE"
                         continue
@@ -2271,7 +2285,12 @@ class AggregateReporter:
 
         # Multiscale duration profiles, if produced
         ms_map = {}
-        ms_path = self.output_dir / f"Multiscale_Profile_{self.observing_run}.csv"
+        ms_path = self.output_dir / (
+            f"Multiscale_Profile_{self.observing_run}_"
+            f"{taxonomy_representation}.csv"
+            if taxonomy_representation != "legacy"
+            else f"Multiscale_Profile_{self.observing_run}.csv"
+        )
         if ms_path.exists():
             try:
                 ms = pd.read_csv(ms_path)
@@ -2391,6 +2410,37 @@ class AggregateReporter:
         # Load taxonomy to get the session breakdown and counts
         tax_path = self.output_dir / f"Master_Taxonomy_{self.observing_run}.csv"
         tax_df = pd.read_csv(tax_path) if tax_path.exists() else pd.DataFrame()
+        report_taxonomy_representation = "legacy"
+        representation = ds_metrics.get("representation", {})
+        coherent_variant = representation.get("variant")
+        coherent_path = ds_metrics.get("taxonomy_artifact")
+        if (
+            representation.get("coherent")
+            and coherent_variant
+            and coherent_path
+        ):
+            from src.core.index_contract import load_taxonomy_view
+
+            tax_df, coherent_contract = load_taxonomy_view(
+                self.output_dir,
+                self.observing_run,
+                index_qrange=representation.get("index_qrange"),
+                query_qrange=representation.get("query_qrange"),
+                taxonomy_path=coherent_path,
+                require_complete_audit=False,
+            )
+            # Report-local aliases are intentional. The historical columns in
+            # both CSV artifacts remain untouched, while every class-dependent
+            # report section consumes the coherent representation.
+            tax_df["robustness_class"] = tax_df["dsd_class"]
+            tax_df["native_o4a_score"] = tax_df["dsd_score"]
+            tax_df.attrs["taxonomy_representation"] = (
+                coherent_contract.representation
+            )
+            tax_path = coherent_contract.path
+            report_taxonomy_representation = (
+                coherent_contract.representation
+            )
 
         # ---- Report completeness gate -------------------------------------
         # A scientific report must declare its own gaps: every degraded input
@@ -2428,6 +2478,10 @@ class AggregateReporter:
         md_lines.append("# Final Discovery Report – Production Scan")
         md_lines.append("")
         md_lines.append("> **Generated on:** " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"))
+        md_lines.append(
+            "> **DSD taxonomy representation:** "
+            f"`{report_taxonomy_representation}`"
+        )
         md_lines.append("")
         if completeness_issues:
             md_lines.append("> [!WARNING]")
@@ -3111,7 +3165,12 @@ class AggregateReporter:
         # ----------------------------------------------------------
         md_lines.append(f"## {sec_num}. PEM Offline Coherence Defense")
         sec_num += 1
-        pem_report_path = self.output_dir / "pem" / "coherence_report.csv"
+        pem_report_dir = self.output_dir / "pem"
+        if report_taxonomy_representation != "legacy":
+            pem_report_dir = (
+                pem_report_dir / report_taxonomy_representation
+            )
+        pem_report_path = pem_report_dir / "coherence_report.csv"
         if pem_report_path.exists():
             md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
             md_lines.append("")

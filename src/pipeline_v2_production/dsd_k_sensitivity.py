@@ -32,7 +32,8 @@ Usage
     python -m src.pipeline_v2_production.dsd_k_sensitivity
     python -m src.pipeline_v2_production.dsd_k_sensitivity --k-values 512 1024 1216 2048
 
-Writes ``data/production/aggregated/dsd_k_sensitivity_{run}.json``.
+Writes
+``data/production/aggregated/dsd_k_sensitivity_{run}_{representation}.json``.
 """
 
 from __future__ import annotations
@@ -44,7 +45,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.core.utils import record_environment, setup_logger
+from src.core.index_contract import load_taxonomy_view, qrange_tag
+from src.core.utils import load_config, record_environment, setup_logger
 from src.pipeline_v2_production.dsd_index_stability import _sample
 from src.pipeline_v3_multiscale.norm_leakage.common import topk_score
 
@@ -70,7 +72,42 @@ def _build_index_k(tokens: np.ndarray, k: int, seed: int) -> np.ndarray:
 
 def run(run_name: str = "O4a", n_candidates: int = 40,
         k_values=DEFAULT_K_VALUES, seed: int = 42) -> dict:
-    cache = AGG / f"dsd_index_stability_tokens_{run_name.lower()}_n{n_candidates}_s{seed}.npz"
+    qrange = tuple(
+        int(value) for value in load_config()["preprocessing"]["qrange"]
+    )
+    taxonomy, contract = load_taxonomy_view(
+        AGG,
+        run_name,
+        index_qrange=qrange,
+        query_qrange=qrange,
+    )
+    threshold_path = AGG / (
+        f"dsd_thresholds_{run_name.lower()}_{contract.representation}.json"
+    )
+    threshold_record = json.loads(threshold_path.read_text(encoding="utf-8"))
+    if (
+        threshold_record.get("representation", {}).get("variant")
+        != contract.representation
+    ):
+        raise RuntimeError("DSD threshold representation mismatch")
+    cands = _sample(
+        taxonomy.assign(
+            gps_start=lambda data: data.gps_start.astype(int)
+        ),
+        n_candidates,
+        threshold_record["thresholds"],
+    )
+    candidate_keys = np.asarray(
+        [
+            f"{detector}:{gps}"
+            for detector, gps in zip(cands.detector, cands.gps_start)
+        ]
+    )
+    cache = AGG / (
+        f"dsd_index_stability_tokens_{run_name.lower()}_"
+        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_candidates}_s{seed}.npz"
+    )
     if not cache.exists():
         raise FileNotFoundError(
             f"{cache.name} missing. Run `dsd-index-stability` first to build the "
@@ -78,12 +115,14 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
     logger.info(f"loading cached tokens from {cache.name}")
     z = np.load(cache, allow_pickle=True)
     cand_tok, kept, bg_tok = z["cand"], z["kept"], z["bg"]
-
-    cands = _sample(pd.read_csv(AGG / f"Master_Taxonomy_{run_name.lower()}.csv")
-                    .assign(gps_start=lambda d: d.gps_start.astype(int)),
-                    n_candidates, seed)
+    if (
+        tuple(int(value) for value in z["qrange"].tolist()) != qrange
+        or str(z["representation"].item()) != contract.representation
+        or not np.array_equal(z["candidate_keys"], candidate_keys)
+    ):
+        raise RuntimeError(f"Token cache contract mismatch: {cache}")
     cands = cands[kept].reset_index(drop=True)
-    is_rob = (cands.robustness_class == "ROBUST").to_numpy()
+    is_rob = (cands.dsd_class == "ROBUST").to_numpy()
     logger.info(f"{len(cand_tok)} candidates ({int(is_rob.sum())} ROBUST, "
                 f"{int((~is_rob).sum())} rejected); sweeping K={list(k_values)}")
 
@@ -111,7 +150,11 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
     per_cand_std = scores.std(axis=0)
 
     out = {
-        "run": run_name, "n_candidates": int(len(cand_tok)),
+        "run": run_name,
+        "representation": contract.representation,
+        "taxonomy_path": str(contract.path),
+        "qrange": list(qrange),
+        "n_candidates": int(len(cand_tok)),
         "n_robust": int(is_rob.sum()), "n_rejected": int((~is_rob).sum()),
         "k_values": k_values, "production_k": PRODUCTION_K, "seed": seed,
         "n_background_segments": int(bg_tok.shape[0]),
@@ -125,7 +168,10 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         "rejected_mean_by_k": rej_mean,
         "separation_by_k": {k: rob_mean[k] - rej_mean[k] for k in k_values},
     }
-    dest = AGG / f"dsd_k_sensitivity_{run_name.lower()}.json"
+    dest = AGG / (
+        f"dsd_k_sensitivity_{run_name.lower()}_"
+        f"{contract.representation}.json"
+    )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(
         f"rank-corr vs production K: { {k: round(v, 3) for k, v in vs_prod.items()} } | "
@@ -133,7 +179,10 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         f"(min {out['rank_correlation_pairwise_min']:.3f}) | per-candidate std "
         f"median {out['per_candidate_score_std_median']:.4f}")
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"dsd_k_sensitivity_{run_name.lower()}")
+    record_environment(
+        AGG,
+        f"dsd_k_sensitivity_{run_name.lower()}_{contract.representation}",
+    )
     return out
 
 
