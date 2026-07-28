@@ -6,13 +6,18 @@ from unittest.mock import patch
 from main import cmd_patch_analysis, cmd_aggregate_report
 
 @pytest.mark.parametrize("obs_run", ["O4a", "O3b"])
-def test_pipeline_end_to_end(temp_workspace, obs_run):
+def test_pipeline_end_to_end(temp_workspace, obs_run, monkeypatch):
     """
     Test the full patch-analysis and aggregate-report pipeline for multiple runs.
     Uses temp_workspace fixture which provides mock HDF5 and NPZ indices.
     """
     raw_dir = temp_workspace / "raw" / obs_run.lower()
     prod_dir = temp_workspace / "production"
+    # Keep the integration test scoped to the discovery/aggregation contract;
+    # expensive scientific experiments have their own tests and must never
+    # fetch full-run data from an integration fixture.
+    monkeypatch.setenv("DANTE_EPS_COH_TRIALS", "0")
+    monkeypatch.setenv("DANTE_COHESION_SEGMENTS", "0")
     
     # 1. Run Patch Analysis (Phase 4 & 5)
     class Args:
@@ -28,15 +33,14 @@ def test_pipeline_end_to_end(temp_workspace, obs_run):
     args.reference_run = "O3b"
     args.k = 68
     args.fpr = 0.01
-    args.n_background = 10
+    args.n_background = 4
     args.seed = 42
     args.workers = 1
     args.batch_size = 1
     
     # Override global data directories to point to our temp workspace for background sampling
     from src.core import data_loader
-    original_dirs = data_loader._DATA_DIRECTORIES.copy()
-    data_loader._DATA_DIRECTORIES = [raw_dir]
+    monkeypatch.setattr(data_loader, "_DATA_DIRECTORIES", [raw_dir])
     
     # We must patch sys.exit so validate_reports doesn't kill the test suite
     def mock_verify_md5(self):
@@ -45,15 +49,20 @@ def test_pipeline_end_to_end(temp_workspace, obs_run):
     def mock_fetch_strain_data(*args, **kwargs):
         from gwpy.timeseries import TimeSeries
         import numpy as np
-        return TimeSeries(np.random.randn(4096 * 32), sample_rate=4096, t0=1234567890)
+        start = float(args[1])
+        end = float(args[2])
+        n_samples = int(round((end - start) * 4096))
+        rng = np.random.default_rng(int(start) % (2**32))
+        return TimeSeries(
+            rng.standard_normal(n_samples),
+            sample_rate=4096,
+            t0=start,
+        )
         
     with patch("sys.exit") as mock_exit, \
          patch("src.core.patch_scorer.PatchScorer._verify_md5", mock_verify_md5), \
          patch("src.pipeline_v2_production.production_report.fetch_strain_data", mock_fetch_strain_data):
         cmd_patch_analysis(args)
-        
-    # Restore global data directories
-    data_loader._DATA_DIRECTORIES = original_dirs
         
     # Verify outputs of patch analysis
     session_prod = prod_dir / "1234567890"
@@ -67,7 +76,12 @@ def test_pipeline_end_to_end(temp_workspace, obs_run):
     agg_args.production_dir = str(prod_dir)
     agg_args.run = obs_run
     agg_args.nds_host = None # Skip PEM for unit tests
+    agg_args.dsd_background_n = 2
+    agg_args.candidate_window_offset = 0.0
     
+    # Keep the monkeypatched data directories through aggregation: DSD
+    # background extraction must remain hermetic and must never scan configured
+    # real-data drives.
     with patch("subprocess.run") as mock_subprocess: # Mock offline validation scripts
         cmd_aggregate_report(agg_args)
         

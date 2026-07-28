@@ -134,6 +134,37 @@ class ProductionWriter:
             # Flush changes to disk
             f.flush()
 
+    def append_processed(self, gps_starts) -> None:
+        """Append analysis-window starts that completed scoring successfully.
+
+        This ledger is distinct from the novelty table: coverage requires every
+        processed window, including those classified as background. The dataset
+        is append-only; readers de-duplicate GPS values to make crash/resume
+        replay harmless.
+        """
+        values = np.asarray(list(gps_starts), dtype=np.float64)
+        if values.size == 0:
+            return
+        with h5py.File(self.hdf5_path, "a", libver="latest") as handle:
+            group = handle.require_group("processed_windows")
+            group.attrs["schema_version"] = 1
+            group.attrs["window_length_s"] = 32.0
+            group.attrs["gps_semantics"] = "analysis_window_start"
+            group.attrs["detector"] = self.detector
+            if "gps_times" not in group:
+                group.create_dataset(
+                    "gps_times",
+                    shape=(0,),
+                    maxshape=(None,),
+                    dtype="float64",
+                    chunks=True,
+                )
+            dataset = group["gps_times"]
+            start = dataset.shape[0]
+            dataset.resize(start + values.size, axis=0)
+            dataset[start:] = values
+            handle.flush()
+
     def save_checkpoint(self, gps_start: int):
         """Saves the last processed GPS to the checkpoint file."""
         with open(self.checkpoint_path, "w") as f:

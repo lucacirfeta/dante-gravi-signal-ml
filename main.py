@@ -2550,18 +2550,50 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     native_scorer = None
     run_str = getattr(args, "run", "O4a").lower()
     
-    # Support both Early Release (_ex) and Official data indices
+    # Native dual-scoring must use the same representation as PatchProducer.
+    # Historical unversioned Q32 indices are not silently accepted.
+    from src.core.index_contract import load_index_contract, qrange_tag
+    from src.core.utils import load_config
+    production_qrange = tuple(
+        int(value) for value in load_config()["preprocessing"]["qrange"]
+    )
+    coherent_index = (
+        _ref_dir
+        / f"patch_compressed_index_{run_str}_"
+          f"{qrange_tag(production_qrange)}_ex.npz"
+    )
     index_ex = _ref_dir / f"patch_compressed_index_{run_str}_ex.npz"
     index_official = _ref_dir / f"patch_compressed_index_{run_str}.npz"
 
     auto_native_index = None
-    if index_ex.exists():
-        auto_native_index = index_ex
-    elif index_official.exists():
-        auto_native_index = index_official
+    for candidate_index in (coherent_index, index_ex, index_official):
+        if not candidate_index.exists():
+            continue
+        try:
+            contract = load_index_contract(candidate_index)
+        except Exception as exc:
+            logger.warning(
+                "Skipping native dual-scoring index %s: %s",
+                candidate_index,
+                exc,
+            )
+            continue
+        if tuple(contract.qrange) != production_qrange:
+            logger.warning(
+                "Skipping native dual-scoring index %s: qrange %s != %s",
+                candidate_index,
+                contract.qrange,
+                production_qrange,
+            )
+            continue
+        auto_native_index = candidate_index
+        break
         
     if auto_native_index is not None:
-        logger.info(f"Loading native index for dual-scoring automatically: {auto_native_index}")
+        logger.info(
+            "Loading representation-matched native index for dual-scoring: %s",
+            auto_native_index,
+        )
         native_scorer = PatchScorer(
             reference_index_path=str(auto_native_index),
             k=k,
@@ -2569,6 +2601,12 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             fpr=fpr,
             n_background=0,  # Optimization: skip empirical background modeling for the secondary scorer
             seed=seed
+        )
+    else:
+        logger.warning(
+            "No declared native index matches PatchProducer qrange %s; "
+            "secondary native dual-scoring is disabled.",
+            production_qrange,
         )
     
     if not sessions:
@@ -2709,6 +2747,10 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 native_results = native_scorer.score_spectrogram(valid_spec, 1.0)
                 for nr in native_results:
                     native_scores_log.append(nr["novelty_score"])
+
+            # Coverage ledger: every window that reached a successful score,
+            # not only windows classified as novel.
+            writer.append_processed(valid_gps)
             
             processed += len(valid_gps)
             
@@ -2866,7 +2908,22 @@ def cmd_aggregate_report(args):
     logger.info("=== Starting Aggregate Report ===")
     run = _resolve_run(args)
     from src.pipeline_v2_production.aggregate_report import AggregateReporter
-    reporter = AggregateReporter(production_dir=args.production_dir, run=run)
+    reporter = AggregateReporter(
+        production_dir=args.production_dir,
+        run=run,
+        native_index_path=getattr(args, "native_index", None),
+        allow_legacy_cross_representation=getattr(
+            args,
+            "allow_legacy_cross_representation",
+            False,
+        ),
+        candidate_window_offset=getattr(
+            args,
+            "candidate_window_offset",
+            4.0,
+        ),
+        native_background_n=getattr(args, "dsd_background_n", 5000),
+    )
     reporter.run()
 
     # Automatically run offline validation scripts
@@ -3132,11 +3189,20 @@ def cmd_whitening_context_sensitivity(args: argparse.Namespace) -> None:
     """
     from src.pipeline_v2_production.whitening_context_sensitivity import run as run_wc
 
-    out = run_wc(args.run, n_candidates=args.n_candidates, seed=args.seed)
+    out = run_wc(
+        args.run,
+        n_candidates=args.n_candidates,
+        pads=args.pads,
+        seed=args.seed,
+        native_index_path=args.native_index,
+        n_background=args.n_background,
+        anchor_tolerance=args.anchor_tolerance,
+        window_offset=args.window_offset,
+    )
     logger.info(
         f"context swing median {out['per_candidate_swing_median']:.4f}, "
-        f"{out['n_large_swing']} large-swing candidates; flip rates "
-        f"{ {p: round(f['flip_rate'], 3) for p, f in out['verdict_flips_vs_production'].items()} }"
+        f"{out['n_large_swing']} large-swing candidates; recalibrated flip rates "
+        f"{ {p: round(f['flip_rate'], 3) for p, f in out['pad_recalibrated_pipeline_flips'].items()} }"
     )
 
 
@@ -3212,19 +3278,24 @@ def cmd_dsd_k_sensitivity(args: argparse.Namespace) -> None:
 
 
 def cmd_catalog_cross_match(args: argparse.Namespace) -> None:
-    """Does DANTE flag the real O4a gravitational-wave catalogue? (P11)
-
-    Cross-matches the confirmed GWTC-4.0/4.1 O4a events against DANTE's flagged
-    windows, separating coverage from recall, as a ground-truth check on the
-    instrumental framing.
-    """
+    """Catalogue-window overlap control with a circular-shift null (P11)."""
     from src.pipeline_v2_production.catalog_cross_match import run as run_xm
 
-    out = run_xm(args.run, refresh=args.refresh)
-    rc = out["recall_among_covered"]
+    out = run_xm(
+        args.run,
+        refresh=args.refresh,
+        coverage_source=args.coverage_source,
+        n_shifts=args.n_shifts,
+        seed=args.seed,
+        minimum_shift_s=args.minimum_shift_s,
+        production_dir=args.production_dir,
+    )
+    observed = out["observed"]
+    null = out["circular_shift_null"]["overlap_any"]
     logger.info(
-        f"{rc['covered']} covered events, {rc['flagged_any_detector']} flagged, "
-        f"{rc['flagged_coincident_both']} coincident"
+        f"observed overlap={observed['overlap_any']}, "
+        f"null mean={null['null_mean']:.3f}, "
+        f"empirical p={null['empirical_p_ge_observed']:.4g}"
     )
 
 
@@ -4493,6 +4564,35 @@ def build_parser() -> argparse.ArgumentParser:
         default="nds.gwosc.org", 
         help="NDS2 server hostname for PEM analysis (e.g. nds.gwosc.org). If omitted, runs in public NULL-RESULT mode."
     )
+    p_aggregate.add_argument(
+        "--native-index",
+        type=str,
+        default=None,
+        help="Explicit versioned native DSD index. By default the coherent "
+             "qrange-tagged index for the production representation is preferred.",
+    )
+    p_aggregate.add_argument(
+        "--allow-legacy-cross-representation",
+        action="store_true",
+        help="Audit-only opt-in for the historical Q32-index/Q64-query path. "
+             "Never enabled silently.",
+    )
+    p_aggregate.add_argument(
+        "--candidate-window-offset",
+        type=float,
+        default=4.0,
+        help="Seconds to add to catalogue GPS before candidate rescoring. "
+             "Use 4 for the historical pre-2026-07-24 O4a catalogue and 0 "
+             "for catalogues produced after the PatchProducer label fix.",
+    )
+    p_aggregate.add_argument(
+        "--dsd-background-n",
+        type=int,
+        default=5000,
+        help="Representation-matched background scores per detector for DSD "
+             "calibration. The paper protocol uses 5000; smaller values are "
+             "for hermetic integration tests only.",
+    )
     p_aggregate.set_defaults(func=cmd_aggregate_report)
 
     # --- multiscale-analysis (V3 characterization) ---
@@ -4698,18 +4798,40 @@ def build_parser() -> argparse.ArgumentParser:
     p_wc.add_argument("--run", type=str, default="O4a")
     p_wc.add_argument("--n-candidates", type=int, default=15,
                       help="Near-threshold candidates per (class, detector).")
+    p_wc.add_argument("--pads", type=float, nargs="+",
+                      default=[4.0, 16.0, 64.0, 128.0])
+    p_wc.add_argument("--native-index", type=str, default=None)
+    p_wc.add_argument("--n-background", type=int, default=5000)
+    p_wc.add_argument("--anchor-tolerance", type=float, default=1e-3)
+    p_wc.add_argument(
+        "--window-offset",
+        type=float,
+        default=4.0,
+        help="Historical O4a catalogue offset; use 0 for post-label-fix data.",
+    )
     p_wc.add_argument("--seed", type=int, default=42)
     p_wc.set_defaults(func=cmd_whitening_context_sensitivity)
 
     # --- catalog-cross-match ---
     p_xm = subparsers.add_parser(
         "catalog-cross-match",
-        help="Cross-match DANTE's flagged windows against the confirmed "
-             "GWTC-4.0/4.1 O4a gravitational-wave catalogue (real-event recall).",
+        help="Test GWTC/DANTE candidate-window overlap against a common-offset "
+             "circular-shift null; this is not a recall estimate.",
     )
     p_xm.add_argument("--run", type=str, default="O4a")
     p_xm.add_argument("--refresh", action="store_true",
                       help="Re-fetch the GWTC event list from GWOSC (else cached).")
+    p_xm.add_argument(
+        "--coverage-source",
+        choices=("auto", "exact", "raw-blocks", "legacy-spans"),
+        default="auto",
+        help="Coverage hierarchy. auto prefers exact processed-window ledgers "
+             "and labels historical proxies explicitly.",
+    )
+    p_xm.add_argument("--n-shifts", type=int, default=10000)
+    p_xm.add_argument("--seed", type=int, default=42)
+    p_xm.add_argument("--minimum-shift-s", type=float, default=86400.0)
+    p_xm.add_argument("--production-dir", type=Path, default=Path("data/production"))
     p_xm.set_defaults(func=cmd_catalog_cross_match)
 
     # --- poisson-upper-limit ---

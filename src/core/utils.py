@@ -540,6 +540,7 @@ def record_environment(
     import json
     import platform
     import subprocess
+    import zipfile
     from datetime import datetime, timezone
     from importlib.metadata import distributions
 
@@ -556,17 +557,88 @@ def record_environment(
                 packages[name.lower()] = dist.version
         packages = dict(sorted(packages.items()))
 
+        repo_root = Path(__file__).resolve().parents[2]
         try:
             commit = subprocess.run(
                 ["git", "rev-parse", "HEAD"], capture_output=True, text=True,
-                timeout=10, cwd=Path(__file__).resolve().parents[2],
+                timeout=10, cwd=repo_root,
             ).stdout.strip() or None
             dirty = bool(subprocess.run(
                 ["git", "status", "--porcelain"], capture_output=True, text=True,
-                timeout=10, cwd=Path(__file__).resolve().parents[2],
+                timeout=10, cwd=repo_root,
             ).stdout.strip())
         except Exception:
             commit, dirty = None, None
+
+        # A dirty commit hash is not a reproducible source identifier. Capture
+        # the complete scientific-code delta and relevant untracked source files
+        # so a no-commit audit run can still be reconstructed exactly.
+        source_snapshot = None
+        source_snapshot_sha256 = None
+        if dirty:
+            try:
+                source_roots = (
+                    "main.py",
+                    "config.yaml",
+                    "pyproject.toml",
+                    "requirements.txt",
+                    "src",
+                    "tests",
+                    "scripts",
+                )
+                diff_proc = subprocess.run(
+                    ["git", "diff", "--binary", "HEAD", "--", *source_roots],
+                    capture_output=True,
+                    timeout=30,
+                    cwd=repo_root,
+                )
+                untracked_proc = subprocess.run(
+                    [
+                        "git",
+                        "ls-files",
+                        "--others",
+                        "--exclude-standard",
+                        "--",
+                        *source_roots,
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    cwd=repo_root,
+                )
+                untracked = [
+                    line.strip()
+                    for line in untracked_proc.stdout.splitlines()
+                    if line.strip()
+                ]
+                snapshot_path = out_dir / f"source_state_{context}.zip"
+                with zipfile.ZipFile(
+                    snapshot_path,
+                    "w",
+                    compression=zipfile.ZIP_DEFLATED,
+                ) as archive:
+                    archive.writestr("tracked_changes.patch", diff_proc.stdout)
+                    archive.writestr(
+                        "snapshot_manifest.json",
+                        json.dumps(
+                            {
+                                "base_commit": commit,
+                                "source_roots": list(source_roots),
+                                "untracked_files": untracked,
+                            },
+                            indent=2,
+                        ),
+                    )
+                    for relative in untracked:
+                        source = repo_root / relative
+                        if source.is_file():
+                            archive.write(source, f"untracked/{relative}")
+                source_snapshot = str(snapshot_path)
+                source_snapshot_sha256 = hashlib.sha256(
+                    snapshot_path.read_bytes()
+                ).hexdigest()
+            except Exception as exc:
+                logger.warning("Could not capture dirty source snapshot: %s", exc)
 
         # The VQ dictionaries are inputs, not code: hash whichever are present
         # so a mismatched index is detectable after the fact.
@@ -587,6 +659,8 @@ def record_environment(
             "recorded_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "git_commit": commit,
             "git_dirty": dirty,
+            "dirty_source_snapshot": source_snapshot,
+            "dirty_source_snapshot_sha256": source_snapshot_sha256,
             "python": sys.version.split()[0],
             "executable": sys.executable,
             "platform": platform.platform(),

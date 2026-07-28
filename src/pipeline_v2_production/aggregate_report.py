@@ -329,17 +329,39 @@ def _compute_spearman(
 class AggregateReporter:
     """Cross-session read-only aggregation pipeline."""
 
-    def __init__(self, production_dir: str = "data/production", run: str = "O4a"):
+    def __init__(
+        self,
+        production_dir: str = "data/production",
+        run: str = "O4a",
+        native_index_path: str | Path | None = None,
+        allow_legacy_cross_representation: bool = False,
+        candidate_window_offset: float = 4.0,
+        native_background_n: int = 5000,
+    ):
         self.production_dir = Path(production_dir)
         self.observing_run = run
         self.output_dir = self.production_dir / "aggregated"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._cluster_reports_cache = {}
+        self.native_index_path = (
+            Path(native_index_path) if native_index_path is not None else None
+        )
+        self.allow_legacy_cross_representation = bool(
+            allow_legacy_cross_representation
+        )
+        self.candidate_window_offset = float(candidate_window_offset)
+        self.native_background_n = int(native_background_n)
+        if self.native_background_n < 2:
+            raise ValueError("native_background_n must be at least 2")
 
         # This directory holds the artifacts the manuscripts cite, so it must
         # also hold the version set that produced them.
         from src.core.utils import record_environment
         record_environment(self.output_dir, f"aggregate_{self.observing_run}")
+
+    def _analysis_window_start(self, catalog_gps: float) -> float:
+        """Resolve a catalogue label to the actual 32 s analysis-window start."""
+        return float(catalog_gps) + self.candidate_window_offset
 
     def _get_local_cluster_id(self, session_id: str, detector: str, gps: float) -> str:
         """Fetch the cluster ID for a specific GPS candidate from the session's JSON."""
@@ -1259,9 +1281,16 @@ class AggregateReporter:
         logger.info(f"Wrote stability_synthesis.log")
 
 
-    def _extract_detector_background(self, scorer, det_name, target_n=5000) -> np.ndarray:
+    def _extract_detector_background(
+        self,
+        scorer,
+        det_name,
+        target_n=5000,
+        qrange=(4, 64),
+        pad=4.0,
+    ) -> np.ndarray:
         import numpy as np
-        import random
+        import re
         from gwpy.timeseries import TimeSeries
         from src.core.data_loader import _DATA_DIRECTORIES
         from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
@@ -1276,69 +1305,147 @@ class AggregateReporter:
         if not valid_files:
             return np.array([])
             
-        random.seed(42)
-        random.shuffle(valid_files)
-        scores = []
-        batch_size = 64
-        batch_grams = []
-        
-        logger.info(f"Extracting {target_n} background scores from raw data for {det_name}...")
-        for file_path in valid_files:
-            if len(scores) >= target_n:
+        file_records = {}
+        pattern = re.compile(
+            rf"{re.escape(det_name)}_(\d+(?:\.\d+)?)_"
+            r"(\d+(?:\.\d+)?)"
+        )
+        for path in sorted(set(valid_files), key=lambda item: str(item)):
+            match = pattern.search(path.stem)
+            if not match:
+                continue
+            start, end = float(match.group(1)), float(match.group(2))
+            if end <= start:
+                continue
+            # Duplicate mirrors of one raw block must not give that epoch
+            # extra calibration weight.
+            file_records.setdefault((start, end), path)
+
+        block_len = max(1, int(target_n ** (1 / 3)))
+        first_offset = int(np.ceil(float(pad)))
+        block_specs = []
+        for (file_start, file_end), path in sorted(file_records.items()):
+            duration = int(file_end - file_start)
+            offsets = list(
+                range(
+                    first_offset,
+                    duration - 32 - int(np.ceil(pad)) + 1,
+                    64,
+                )
+            )
+            for block_start in range(0, len(offsets), block_len):
+                block_offsets = offsets[block_start:block_start + block_len]
+                if len(block_offsets) == block_len:
+                    block_specs.append(
+                        (file_start + block_offsets[0], path, block_offsets)
+                    )
+
+        n_blocks_needed = int(np.ceil(target_n / block_len))
+        if not block_specs:
+            return np.array([])
+        n_select = min(n_blocks_needed, len(block_specs))
+        selected_indices = np.unique(
+            np.linspace(
+                0,
+                len(block_specs) - 1,
+                num=n_select,
+                dtype=int,
+            )
+        ).tolist()
+        selected = set(selected_indices)
+        # Evenly spaced temporal blocks cover the full run. Remaining blocks
+        # are deterministic fallbacks if a selected file is unreadable.
+        priority = selected_indices + [
+            index for index in range(len(block_specs))
+            if index not in selected
+        ]
+
+        import matplotlib
+
+        score_pairs = []
+        logger.info(
+            "Extracting %d %s background scores as %d-window temporal "
+            "blocks stratified across %d available blocks...",
+            target_n,
+            det_name,
+            block_len,
+            len(block_specs),
+        )
+        for spec_index in priority:
+            if len(score_pairs) >= target_n:
                 break
+            _, file_path, offsets = block_specs[spec_index]
             try:
                 ts = TimeSeries.read(file_path)
-                duration = int(ts.duration.value)
-                
-                # Use a step of 64s: 32s segment + 32s guard time
-                for start_offset in range(0, duration, 64):
-                    if start_offset + 32 > duration:
-                        break
-                    
-                    pad = 4.0
-                    seg_start = ts.t0.value + start_offset
+                block_images = []
+                block_gps = []
+                for start_offset in offsets:
+                    seg_start = float(ts.t0.value) + start_offset
                     seg_end = seg_start + 32
-                    
-                    crop_start = max(ts.t0.value, seg_start - pad)
-                    crop_end = min(ts.t0.value + duration, seg_end + pad)
-                    ts_context = ts.crop(crop_start, crop_end)
-                    
-                    from src.core.preprocessor import whiten_context, extract_clean_subwindow
-                    ts_w, pad_info = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
-                    ts_clean = extract_clean_subwindow(ts_w, seg_start, seg_end)
-                    q_gram = generate_qtransform(ts_clean, output_size=(256, 256))
-                    # cividis like the production path — the background must
-                    # live in the SAME chromatic domain as the candidate
-                    # rescoring (audit B-DSD-1, second site: this one biased
-                    # the native calibration itself).
-                    import matplotlib
-                    q_gram_rgb = (matplotlib.colormaps["cividis"](
-                        np.clip(q_gram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
+                    ts_context = ts.crop(
+                        seg_start - float(pad),
+                        seg_end + float(pad),
+                    )
+                    ts_w, pad_info = whiten_context(
+                        ts_context,
+                        seg_start,
+                        seg_end,
+                        pad=float(pad),
+                    )
+                    if pad_info["left"] or pad_info["right"]:
+                        raise RuntimeError(
+                            f"incomplete background context: {pad_info}"
+                        )
+                    ts_clean = extract_clean_subwindow(
+                        ts_w,
+                        seg_start,
+                        seg_end,
+                    )
+                    q_gram = generate_qtransform(
+                        ts_clean,
+                        qrange=qrange,
+                        output_size=(256, 256),
+                    )
+                    rgb = (
+                        matplotlib.colormaps["cividis"](
+                            np.clip(q_gram, 0.0, 1.0)
+                        )[..., :3]
+                        * 255
+                    ).astype(np.uint8)
+                    block_images.append(rgb)
+                    block_gps.append(seg_start)
+                block_result = scorer.score_spectrogram(
+                    block_images,
+                    threshold=1.0,
+                )
+                if len(block_result) != block_len:
+                    raise RuntimeError("scorer returned an incomplete block")
+                score_pairs.extend(
+                    (gps, float(result["novelty_score"]))
+                    for gps, result in zip(block_gps, block_result)
+                )
+            except Exception as exc:
+                logger.debug(
+                    "background block %s failed: %s",
+                    file_path,
+                    exc,
+                )
+                continue
 
-                    batch_grams.append(q_gram_rgb)
-                    
-                    if len(batch_grams) == batch_size:
-                        batch_res = scorer.score_spectrogram(batch_grams, threshold=1.0)
-                        for r in batch_res:
-                            scores.append(r['novelty_score'])
-                            if len(scores) >= target_n:
-                                break
-                        batch_grams = []
-                        if len(scores) >= target_n:
-                            break
-            except Exception:
-                pass
-                
-        if len(batch_grams) > 0 and len(scores) < target_n:
-            batch_res = scorer.score_spectrogram(batch_grams, threshold=1.0)
-            for r in batch_res:
-                scores.append(r['novelty_score'])
-                if len(scores) >= target_n:
-                    break
-                    
-        return np.array(scores[:target_n], dtype=np.float32)
+        score_pairs.sort(key=lambda item: item[0])
+        return np.asarray(
+            [score for _, score in score_pairs[:target_n]],
+            dtype=np.float32,
+        )
 
-    def _calibrate_native_threshold(self, scorer) -> dict:
+    def _calibrate_native_threshold(
+        self,
+        scorer,
+        *,
+        index_contract,
+        query_qrange,
+        detectors=("L1", "H1"),
+    ) -> dict:
         import numpy as np
         import os
         from pathlib import Path
@@ -1346,72 +1453,124 @@ class AggregateReporter:
         logger = logging.getLogger("aggregate_report")
         
         result_dict = {}
-        for det in ["L1", "H1"]:
+        from src.core.index_contract import qrange_tag
+
+        index_tag = index_contract.tag
+        query_tag = qrange_tag(query_qrange)
+        cache_key = (
+            f"idx{index_tag}_query{query_tag}_"
+            f"pad4_n{self.native_background_n}_bgv2_"
+            f"{index_contract.sha256[:12]}"
+        )
+        for det in detectors:
             # NATIVE-index background scores. Distinct filename from
             # background_scores_{det}_{run}.npy, which production_report uses
             # for the PRIMARY (reference-run) index: same file for two score
             # distributions was a silent cross-contamination (audit B-DSD-2).
-            det_path = self.output_dir / f"background_scores_native_{det}_{self.observing_run}.npy"
+            det_path = self.output_dir / (
+                f"background_scores_native_{det}_{self.observing_run}_"
+                f"{cache_key}.npy"
+            )
+            metadata_path = det_path.with_suffix(".json")
             if det_path.exists():
+                if not metadata_path.exists():
+                    raise RuntimeError(
+                        f"Background cache {det_path} has no representation "
+                        "sidecar; refusing unverified reuse."
+                    )
+                cache_meta = json.loads(
+                    metadata_path.read_text(encoding="utf-8")
+                )
+                expected = {
+                    "index_sha256": index_contract.sha256,
+                    "index_qrange": list(index_contract.qrange),
+                    "query_qrange": list(query_qrange),
+                    "whitening_pad_s": 4.0,
+                    "requested_n_scores": self.native_background_n,
+                    "sampling_strategy": (
+                        "stratified_full_run_aligned_temporal_blocks_v2"
+                    ),
+                }
+                for key, value in expected.items():
+                    if cache_meta.get(key) != value:
+                        raise RuntimeError(
+                            f"Background cache contract mismatch for {det}: "
+                            f"{key}={cache_meta.get(key)!r}, expected {value!r}"
+                        )
                 scores = np.load(det_path)
             else:
-                # Option A: Check for Dual-Scoring native scores
-                native_files = list(self.production_dir.rglob(f"{self.observing_run}_*_{det}_native_scores.npy"))
-                
-                import random
-                random.seed(42)
-                random.shuffle(native_files)
-                
-                scores_list = []
-                files_used = 0
-                for f in native_files:
-                    try:
-                        file_scores = np.load(f)
-                        scores_list.extend(file_scores[:500])
-                        files_used += 1
-                        if len(scores_list) >= 5000:
-                            break
-                    except:
-                        pass
-                
-                if len(scores_list) >= 5000:
-                    # FIX: Prendiamo uno slice contiguo invece di un random.sample per preservare 
-                    # l'autocorrelazione temporale necessaria al block-bootstrap.
-                    scores = np.array(scores_list[:5000], dtype=np.float32)
+                # Historical dual-scoring files have no index/qrange sidecar,
+                # so reusing them here would silently contaminate a new
+                # representation. Recompute once and cache under the complete
+                # index+query fingerprint instead.
+                scores = self._extract_detector_background(
+                    scorer,
+                    det,
+                    self.native_background_n,
+                    qrange=query_qrange,
+                    pad=4.0,
+                )
+                if len(scores) != self.native_background_n:
+                    raise RuntimeError(
+                        f"Only {len(scores)}/{self.native_background_n} "
+                        "representation-matched "
+                        f"background scores obtained for {det}; refusing a "
+                        "partial DSD calibration."
+                    )
+                if len(scores) > 0:
                     np.save(det_path, scores)
-                    logger.info(f"Sampled 5000 contiguous dual-scoring backgrounds for {det} from {files_used} unique files, saved to {det_path}")
-                    
-                    # Clean up temporary native_scores files
-                    for f in native_files:
-                        try:
-                            f.unlink()
-                        except Exception as e:
-                            logger.warning(f"Failed to delete temporary file {f}: {e}")
-                    logger.info(f"Cleaned up {len(native_files)} temporary dual-scoring files for {det}.")
-                else:
-                    # Option C: Fallback to compute from raw data
-                    scores = self._extract_detector_background(scorer, det, 5000)
-                    if len(scores) > 0:
-                        np.save(det_path, scores)
-                        logger.info(f"Extracted {len(scores)} backgrounds from raw data for {det} and saved to {det_path}")
+                    metadata_path.write_text(
+                        json.dumps(
+                            {
+                                "detector": det,
+                                "run": self.observing_run,
+                                "index_path": str(index_contract.path),
+                                "index_sha256": index_contract.sha256,
+                                "index_qrange": list(index_contract.qrange),
+                                "query_qrange": list(query_qrange),
+                                "whitening_pad_s": 4.0,
+                                "requested_n_scores": self.native_background_n,
+                                "sampling_strategy": (
+                                    "stratified_full_run_aligned_temporal_blocks_v2"
+                                ),
+                                "n_scores": int(len(scores)),
+                            },
+                            indent=2,
+                        ),
+                        encoding="utf-8",
+                    )
+                    logger.info(
+                        "Extracted %d representation-matched backgrounds for "
+                        "%s and saved to %s",
+                        len(scores),
+                        det,
+                        det_path,
+                    )
                         
             if len(scores) == 0:
                 logger.error(f"Failed to obtain background scores for {det}.")
                 continue
                 
             def block_bootstrap_p99_ci(scores_arr, B=1000, seed=42):
-                np.random.seed(seed)
+                rng = np.random.default_rng(seed)
                 n = len(scores_arr)
                 b = max(1, int(n**(1/3)))
-                num_blocks = int(np.ceil(n / b))
-                
+                num_blocks = n // b
+                if num_blocks < 2:
+                    raise RuntimeError(
+                        "Too few complete temporal blocks for bootstrap"
+                    )
+                aligned = np.asarray(
+                    scores_arr[:num_blocks * b]
+                ).reshape(num_blocks, b)
                 bootstrap_p99 = np.zeros(B)
                 for i in range(B):
-                    block_starts = np.random.randint(0, n - b + 1, size=num_blocks)
-                    boot_sample = []
-                    for start in block_starts:
-                        boot_sample.extend(scores_arr[start:start+b])
-                    boot_sample = np.array(boot_sample[:n])
+                    chosen = rng.integers(
+                        0,
+                        num_blocks,
+                        size=num_blocks,
+                    )
+                    boot_sample = aligned[chosen].reshape(-1)
                     bootstrap_p99[i] = np.percentile(boot_sample, 99)
                     
                 ci_upper = np.percentile(bootstrap_p99, 97.5)
@@ -1420,16 +1579,29 @@ class AggregateReporter:
                 
             ci_lower, ci_upper = block_bootstrap_p99_ci(scores)
             p99 = np.percentile(scores, 99)
-            result_dict[det] = {"ci_lower": float(ci_lower), "ci_upper": float(ci_upper), "p99": float(p99)}
+            result_dict[det] = {
+                "ci_lower": float(ci_lower),
+                "ci_upper": float(ci_upper),
+                "p99": float(p99),
+                "n_background": int(len(scores)),
+                "background_scores_path": str(det_path),
+                "index_qrange": list(index_contract.qrange),
+                "query_qrange": list(query_qrange),
+            }
             
         return result_dict
 
     def _run_domain_shift_defense(self, master_df) -> dict:
         import numpy as np
         from tqdm import tqdm
+        from src.core.index_contract import (
+            load_index_contract,
+            qrange_tag,
+        )
         from src.core.data_loader import fetch_local_or_remote_strain
         from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
         from src.core.patch_scorer import PatchScorer
+        from src.core.utils import load_config
         from pathlib import Path
         import logging
         logger = logging.getLogger("aggregate_report")
@@ -1437,11 +1609,22 @@ class AggregateReporter:
         run_str = self.observing_run.lower()
         from src.core.utils import get_reference_dir
         _ref_dir = get_reference_dir()
+        production_qrange = tuple(
+            int(v) for v in load_config()["preprocessing"]["qrange"]
+        )
+        coherent_index = _ref_dir / (
+            f"patch_compressed_index_{run_str}_"
+            f"{qrange_tag(production_qrange)}_ex.npz"
+        )
         index_ex = _ref_dir / f"patch_compressed_index_{run_str}_ex.npz"
         index_official = _ref_dir / f"patch_compressed_index_{run_str}.npz"
         
         index_path = None
-        if index_ex.exists():
+        if self.native_index_path is not None:
+            index_path = self.native_index_path
+        elif coherent_index.exists():
+            index_path = coherent_index
+        elif index_ex.exists():
             index_path = index_ex
         elif index_official.exists():
             index_path = index_official
@@ -1455,17 +1638,81 @@ class AggregateReporter:
         }
         
         if index_path is None:
-            logger.warning(f"Native {self.observing_run} index not found (checked _ex and official). Skipping Domain Shift Defense.")
+            logger.warning(
+                "Native %s index not found (checked explicit, %s, _ex and "
+                "official). Skipping Domain Shift Defense.",
+                self.observing_run,
+                coherent_index.name,
+            )
             return metrics
+
+        try:
+            index_contract = load_index_contract(
+                index_path,
+                allow_legacy_inference=self.allow_legacy_cross_representation,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                "Domain Shift Defense representation contract failed. "
+                "The historical Q32 index may only be used with the explicit "
+                "--allow-legacy-cross-representation audit flag."
+            ) from exc
+
+        if index_contract.legacy_inferred:
+            query_qrange = production_qrange
+            representation_mode = "legacy_cross_representation"
+        else:
+            query_qrange = index_contract.qrange
+            representation_mode = "coherent"
+
+        representation_coherent = tuple(index_contract.qrange) == tuple(
+            query_qrange
+        )
+        variant = (
+            f"idx{qrange_tag(index_contract.qrange)}_"
+            f"query{qrange_tag(query_qrange)}"
+        )
+        variant_column = variant.replace("-", "_")
+        metrics["representation"] = {
+            "mode": representation_mode,
+            "coherent": representation_coherent,
+            "variant": variant,
+            "index_path": str(index_path),
+            "index_sha256": index_contract.sha256,
+            "index_qrange": list(index_contract.qrange),
+            "query_qrange": list(query_qrange),
+            "index_qrange_declared": index_contract.declared,
+            "legacy_qrange_inferred": index_contract.legacy_inferred,
+            "catalog_gps_to_analysis_window_offset_s": (
+                self.candidate_window_offset
+            ),
+        }
             
-        logger.info(f"Loading native {self.observing_run} index for domain shift defense...")
+        logger.info(
+            "Loading native %s index for DSD: %s; index qrange=%s, "
+            "query qrange=%s, mode=%s",
+            self.observing_run,
+            index_path,
+            index_contract.qrange,
+            query_qrange,
+            representation_mode,
+        )
         try:
             scorer = PatchScorer(reference_index_path=str(index_path), verify_md5=False)
         except Exception as e:
             logger.error(f"Failed to load native index: {e}")
             return metrics
             
-        threshold_dict = self._calibrate_native_threshold(scorer)
+        threshold_dict = self._calibrate_native_threshold(
+            scorer,
+            index_contract=index_contract,
+            query_qrange=query_qrange,
+            detectors=tuple(
+                detector
+                for detector in ("H1", "L1")
+                if detector in set(master_df["detector"].astype(str))
+            ),
+        )
         if not threshold_dict:
             return metrics
             
@@ -1478,89 +1725,219 @@ class AggregateReporter:
         if tax_path.exists():
             import pandas as pd
             tax_df = pd.read_csv(tax_path)
-            
-        for idx, row in tqdm(master_df.iterrows(), total=total, desc="Domain Shift Defense"):
+
+        family_lookup = {}
+        if tax_df is not None and "global_family_id" in tax_df.columns:
+            family_lookup = {
+                (float(row.gps_start), str(row.detector)): row.global_family_id
+                for row in tax_df.itertuples()
+            }
+
+        import matplotlib
+
+        batch_size = 32
+        batch_items = []
+        batch_images = []
+
+        def score_candidate_batch() -> None:
+            if not batch_images:
+                return
             try:
-                det = row['detector']
-                cid = f"{row['gps_start']}_{det}"
-                fam = "Unknown"
-                if tax_df is not None:
-                    match = tax_df[(tax_df['gps_start'] == row['gps_start']) & (tax_df['detector'] == det)]
-                    if not match.empty:
-                        fam = match.iloc[0]['global_family_id']
-                
-                start = float(row['gps_start'])
+                results = scorer.score_spectrogram(
+                    batch_images,
+                    threshold=0.0,
+                )
+                if len(results) != len(batch_items):
+                    raise RuntimeError(
+                        "candidate scorer returned an incomplete batch"
+                    )
+                for item, res in zip(batch_items, results):
+                    det, cid, fam = item
+                    det_thresholds = threshold_dict.get(det)
+                    if not det_thresholds:
+                        continue
+                    score = float(res["novelty_score"])
+                    ci_upper_bound = det_thresholds["ci_upper"]
+                    ci_lower_bound = det_thresholds["ci_lower"]
+                    metrics[det]["total"] += 1
+                    if score > ci_upper_bound:
+                        metrics[det]["robust"] += 1
+                        klass = "ROBUST"
+                    elif score >= ci_lower_bound:
+                        metrics[det]["ambiguous"] += 1
+                        klass = "AMBIGUOUS"
+                    else:
+                        metrics[det]["background"] += 1
+                        klass = "BACKGROUND"
+                    if klass == "ROBUST":
+                        new_mil_vectors[cid] = {
+                            "fam": fam,
+                            "vector": res["mil_vector"],
+                        }
+                    robustness_records[cid] = {
+                        "score": score,
+                        "robustness_class": klass,
+                    }
+            except Exception as exc:
+                logger.error(
+                    "Failed to score candidate batch (%s): %s",
+                    [item[1] for item in batch_items],
+                    exc,
+                )
+            finally:
+                batch_items.clear()
+                batch_images.clear()
+
+        for _, row in tqdm(
+            master_df.iterrows(),
+            total=total,
+            desc="Domain Shift Defense",
+        ):
+            det = str(row["detector"])
+            cid = f"{row['gps_start']}_{det}"
+            try:
+                fam = family_lookup.get(
+                    (float(row["gps_start"]), det),
+                    "Unknown",
+                )
+                # Historical O4a catalogues stored the padded-crop start,
+                # 4 s before the analysis window. The offset is an explicit
+                # run contract so a Q-range rerun cannot silently score the
+                # wrong 32 s interval. Use 0 for catalogues produced after the
+                # PatchProducer label fix.
+                start = self._analysis_window_start(row["gps_start"])
                 end = start + 32
                 cand_super = fetch_local_or_remote_strain(det, start - 4.0, end + 4.0, cache_raw=True, edge_tolerance=4.0)
                 ts_w, pad_info = whiten_context(cand_super, start, end, pad=4.0)
                 cand_ts = extract_clean_subwindow(ts_w, start, end)
-                q_gram = generate_qtransform(cand_ts, output_size=(256, 256))
+                q_gram = generate_qtransform(
+                    cand_ts,
+                    qrange=query_qrange,
+                    output_size=(256, 256),
+                )
                 # Render via the SAME colormap as the production path: the
                 # native index and its calibration background are built from
                 # cividis-mapped images; feeding grayscale here put candidate
                 # scores in a different chromatic domain than the thresholds
                 # (audit B-DSD-1 — the pre-audit survival rates carried this).
-                import matplotlib
                 q_gram_rgb = (matplotlib.colormaps["cividis"](
                     np.clip(q_gram, 0.0, 1.0))[..., :3] * 255).astype(np.uint8)
-                    
-                res = scorer.score_spectrogram([q_gram_rgb], threshold=0.0)[0]
-                score = res['novelty_score']
-                
-                det_thresholds = threshold_dict.get(det)
-                if not det_thresholds:
-                    continue
-                    
-                ci_upper_bound = det_thresholds['ci_upper']
-                ci_lower_bound = det_thresholds['ci_lower']
-                
-                metrics[det]["total"] += 1
-                
-                if score > ci_upper_bound:
-                    metrics[det]["robust"] += 1
-                    is_robust = True
-                elif score >= ci_lower_bound:
-                    metrics[det]["ambiguous"] += 1
-                    is_robust = False
-                else:
-                    metrics[det]["background"] += 1
-                    is_robust = False
-
-                if is_robust:
-                    new_mil_vectors[cid] = {
-                        "fam": fam,
-                        "vector": res["mil_vector"]
-                    }
-                
-                robustness_records[cid] = {
-                    "score": score,
-                    "robustness_class": "ROBUST" if is_robust else ("AMBIGUOUS" if score >= ci_lower_bound else "BACKGROUND")
-                }
+                batch_items.append((det, cid, fam))
+                batch_images.append(q_gram_rgb)
+                if len(batch_images) >= batch_size:
+                    score_candidate_batch()
             except Exception as e:
                 logger.error(f"Failed to process candidate {cid}: {e}")
-                
+        score_candidate_batch()
+
         if tax_df is not None and not tax_df.empty:
             def get_robustness(row):
                 cid = f"{row['gps_start']}_{row['detector']}"
-                return robustness_records.get(cid, {}).get("robustness_class", "BACKGROUND")
+                return robustness_records.get(cid, {}).get(
+                    "robustness_class",
+                    "NOT_EVALUATED",
+                )
             def get_native_score(row):
                 cid = f"{row['gps_start']}_{row['detector']}"
-                return robustness_records.get(cid, {}).get("score", 0.0)
-                
-            tax_df["robustness_class"] = tax_df.apply(get_robustness, axis=1)
-            tax_df["native_o4a_score"] = tax_df.apply(get_native_score, axis=1)
-            tax_df.to_csv(tax_path, index=False)
-            logger.info(f"Updated {tax_path.name} with native domain shift scores and robustness classification.")
+                return robustness_records.get(cid, {}).get("score", np.nan)
+
+            class_column = f"robustness_class_{variant_column}"
+            score_column = f"native_score_{variant_column}"
+            tax_df[class_column] = tax_df.apply(get_robustness, axis=1)
+            tax_df[score_column] = tax_df.apply(get_native_score, axis=1)
+
+            # Preserve the published legacy verdict for a transition audit.
+            # A new run with no prior verdict may adopt the coherent result.
+            if "robustness_class" not in tax_df.columns:
+                tax_df["robustness_class"] = tax_df[class_column]
+            if "native_o4a_score" not in tax_df.columns:
+                tax_df["native_o4a_score"] = tax_df[score_column]
+
+            variant_tax_path = self.output_dir / (
+                f"Master_Taxonomy_{self.observing_run}_{variant}.csv"
+            )
+            if variant_tax_path.exists():
+                raise FileExistsError(
+                    f"Refusing to overwrite DSD transition taxonomy "
+                    f"{variant_tax_path}"
+                )
+            temporary_tax_path = variant_tax_path.with_suffix(".csv.tmp")
+            tax_df.to_csv(temporary_tax_path, index=False)
+            temporary_tax_path.replace(variant_tax_path)
+            metrics["taxonomy_artifact"] = str(variant_tax_path)
+            score_rows = []
+            for _, tax_row in tax_df.iterrows():
+                cid = f"{tax_row['gps_start']}_{tax_row['detector']}"
+                rec = robustness_records.get(cid)
+                if rec is None:
+                    continue
+                score_rows.append(
+                    {
+                        "candidate_id": cid,
+                        "gps_start": float(tax_row["gps_start"]),
+                        "detector": str(tax_row["detector"]),
+                        "legacy_class": tax_row.get("robustness_class"),
+                        "score": float(rec["score"]),
+                        "class": rec["robustness_class"],
+                        "variant": variant,
+                    }
+                )
+            long_path = self.output_dir / (
+                f"dsd_scores_{run_str}_{variant}.csv"
+            )
+            pd.DataFrame(score_rows).to_csv(long_path, index=False)
+            metrics["long_form_scores"] = str(long_path)
+
+            if "legacy_class" in pd.DataFrame(score_rows).columns:
+                transition = pd.crosstab(
+                    pd.DataFrame(score_rows)["legacy_class"],
+                    pd.DataFrame(score_rows)["class"],
+                )
+                metrics["transition_from_existing_class"] = {
+                    str(old): {
+                        str(new): int(value)
+                        for new, value in row.items()
+                    }
+                    for old, row in transition.to_dict(orient="index").items()
+                }
+            logger.info(
+                "Updated %s with separate DSD variant columns %s / %s",
+                variant_tax_path.name,
+                class_column,
+                score_column,
+            )
             
         metrics["experiment_run"] = True
-        metrics["total_evaluated"] = total
+        evaluated_total = metrics["H1"]["total"] + metrics["L1"]["total"]
+        metrics["total_requested"] = total
+        metrics["total_evaluated"] = evaluated_total
+        metrics["total_failed"] = total - evaluated_total
         
         robust_total = metrics["H1"]["robust"] + metrics["L1"]["robust"]
         metrics["survived_native_threshold"] = robust_total
-        metrics["survival_rate"] = float(robust_total / total) if total > 0 else 0.0
+        metrics["survival_rate"] = (
+            float(robust_total / evaluated_total)
+            if evaluated_total > 0
+            else 0.0
+        )
         metrics["robust_count"] = robust_total
         metrics["ambiguous_count"] = metrics["H1"]["ambiguous"] + metrics["L1"]["ambiguous"]
         metrics["background_count"] = metrics["H1"]["background"] + metrics["L1"]["background"]
+        threshold_path = self.output_dir / (
+            f"dsd_thresholds_{run_str}_{variant}.json"
+        )
+        threshold_path.write_text(
+            json.dumps(
+                {
+                    "run": self.observing_run,
+                    "representation": metrics["representation"],
+                    "thresholds": threshold_dict,
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        metrics["threshold_artifact"] = str(threshold_path)
         
         families = {}
         for cid, data in new_mil_vectors.items():
@@ -1584,17 +1961,6 @@ class AggregateReporter:
                     "n": n,
                     "mean_internal_similarity": mean_sim
                 }
-                
-        # Append robustness to taxonomy and save
-        if tax_df is not None:
-            tax_df["robustness_class"] = tax_df.apply(
-                lambda row: robustness_records.get(f"{row['gps_start']}_{row['detector']}", {}).get("robustness_class", "UNKNOWN"), axis=1
-            )
-            tax_df["native_score"] = tax_df.apply(
-                lambda row: robustness_records.get(f"{row['gps_start']}_{row['detector']}", {}).get("score", -1), axis=1
-            )
-            tax_df.to_csv(tax_path, index=False)
-            logger.info(f"Updated {tax_path.name} with robustness classification.")
                 
         return metrics
 

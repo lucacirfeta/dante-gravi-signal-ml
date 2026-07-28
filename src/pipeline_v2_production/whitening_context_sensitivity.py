@@ -11,16 +11,20 @@ never measured.
 
 This measures it. A sample of near-threshold candidates is re-scored against the
 native O4a index (K=1216) at several whitening pad lengths, and the DSD verdict
-(score vs the per-detector tau_hi) is recomputed at each. The result is:
+is recomputed both at the fixed production boundary and at a separately
+calibrated per-pad boundary. The result is:
 
 * **Per-candidate score std across contexts** -- how much the DSD score itself
   moves when only the whitening context changes.
 * **Verdict flip rate** -- of the near-threshold candidates, how many change
   ROBUST/not-ROBUST relative to the production pad=4 context.
 
-The production context (pad=4) is the reference. A reproduction check is built in:
-at pad=4 the re-scored native value must match the stored ``native_o4a_score``,
-or the encoding here differs from production and the sweep means nothing.
+The production context (pad=4) is the reference. A hard reproduction gate is
+built in: at pad=4 the re-scored native value must match the stored score from
+the same versioned index/query representation within a declared tolerance, or
+the experiment aborts. Each pad also receives its own background calibration;
+fixed-threshold score sensitivity and recalibrated-pipeline verdict changes are
+reported separately.
 
 Catalogues before 2026-07-24 label the padded crop, so the analysis window is
 [gps + 4, gps + 36] (the reproducibility note).
@@ -30,7 +34,9 @@ Usage
     python -m src.pipeline_v2_production.whitening_context_sensitivity --pilot
     python -m src.pipeline_v2_production.whitening_context_sensitivity --n-candidates 15
 
-Writes ``data/production/aggregated/whitening_context_sensitivity_{run}.json``.
+Writes a representation-versioned summary JSON plus a long-form candidate x
+pad score matrix and representation-matched background score arrays. The
+invalid pre-audit summary is never overwritten.
 """
 
 from __future__ import annotations
@@ -43,8 +49,6 @@ import numpy as np
 import pandas as pd
 
 from src.core.utils import record_environment, setup_logger
-from src.pipeline_v2_production.dsd_index_stability import _sample
-
 logger = setup_logger(__name__)
 
 AGG = Path("data/production/aggregated")
@@ -53,34 +57,60 @@ WINDOW_OFFSET = 4.0          # catalogue GPS labels the padded crop
 PRODUCTION_PAD = 4.0
 DEFAULT_PADS = (4.0, 16.0, 64.0, 128.0)
 LARGE_SWING = 0.02          # a score swing this size can cross the DSD spacing
-# Per-detector DSD threshold tau_hi (dsd_threshold_mc_error).
-TAU_HI = {"H1": 0.41432, "L1": 0.44721}
+ANCHOR_TOLERANCE = 1e-3
+MIN_BACKGROUND = 100
 
 
-def _score_at_pads(cands: pd.DataFrame, pads, scorer) -> tuple[np.ndarray, np.ndarray]:
+def _score_at_pads(
+    cands: pd.DataFrame,
+    pads,
+    scorer,
+    *,
+    qrange: tuple[int, int],
+    window_offset: float,
+) -> tuple[np.ndarray, np.ndarray]:
     """Native score for each candidate at each whitening pad; kept mask."""
     import warnings
     import matplotlib
 
-    from src.core.data_loader import fetch_strain_data
+    from src.core.data_loader import fetch_local_or_remote_strain
     from src.core.preprocessor import (whiten_context, extract_clean_subwindow,
                                        generate_qtransform)
 
     scores = np.full((len(cands), len(pads)), np.nan)
     kept = np.zeros(len(cands), dtype=bool)
     for r, (_, c) in enumerate(cands.iterrows()):
-        w0 = float(c.gps_start) + WINDOW_OFFSET
+        w0 = float(c.gps_start) + float(window_offset)
         ok = True
         for j, pad in enumerate(pads):
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    ts = fetch_strain_data(c.detector, w0 - pad - 4.0,
-                                           w0 + SEGMENT_LENGTH + pad + 4.0,
-                                           edge_tolerance=4.0)
-                    tw, _ = whiten_context(ts, w0, w0 + SEGMENT_LENGTH, pad=pad)
+                    ts = fetch_local_or_remote_strain(
+                        c.detector,
+                        w0 - pad,
+                        w0 + SEGMENT_LENGTH + pad,
+                        edge_tolerance=pad,
+                        cache_raw=True,
+                    )
+                    tw, pad_info = whiten_context(
+                        ts,
+                        w0,
+                        w0 + SEGMENT_LENGTH,
+                        pad=pad,
+                    )
+                    if pad_info["left"] or pad_info["right"]:
+                        raise RuntimeError(
+                            f"incomplete whitening context: {pad_info}"
+                        )
                     clean = extract_clean_subwindow(tw, w0, w0 + SEGMENT_LENGTH)
-                    spec = generate_qtransform(clean, save_path=None, cmap="cividis")
+                    spec = generate_qtransform(
+                        clean,
+                        qrange=qrange,
+                        output_size=(256, 256),
+                        save_path=None,
+                        cmap="cividis",
+                    )
                 rgb = (matplotlib.colormaps["cividis"](spec)[:, :, :3] * 255).astype(np.uint8)
                 scores[r, j] = float(scorer.score_spectrogram([rgb], threshold=0.0)[0]
                                      ["novelty_score"])
@@ -92,76 +122,406 @@ def _score_at_pads(cands: pd.DataFrame, pads, scorer) -> tuple[np.ndarray, np.nd
     return scores, kept
 
 
-def run(run_name: str = "O4a", n_candidates: int = 15, pads=DEFAULT_PADS,
-        seed: int = 42) -> dict:
+def _block_bootstrap_p99_ci(
+    scores: np.ndarray,
+    *,
+    B: int = 1000,
+    seed: int = 42,
+) -> tuple[float, float, float]:
+    """P99 and percentile bootstrap CI using contiguous score blocks."""
+    values = np.asarray(scores, dtype=np.float64)
+    if values.ndim != 1 or len(values) < 2:
+        raise ValueError("At least two background scores are required")
+    rng = np.random.default_rng(seed)
+    n = len(values)
+    block = max(1, int(n ** (1 / 3)))
+    n_blocks = n // block
+    if n_blocks < 2:
+        raise ValueError("At least two complete temporal blocks are required")
+    aligned = values[:n_blocks * block].reshape(n_blocks, block)
+    boot = np.empty(B, dtype=np.float64)
+    for i in range(B):
+        chosen = rng.integers(0, n_blocks, size=n_blocks)
+        sample = aligned[chosen].reshape(-1)
+        boot[i] = np.percentile(sample, 99)
+    return (
+        float(np.percentile(values, 99)),
+        float(np.percentile(boot, 2.5)),
+        float(np.percentile(boot, 97.5)),
+    )
+
+
+def _classify(score: float, lower: float, upper: float) -> str:
+    if score > upper:
+        return "ROBUST"
+    if score >= lower:
+        return "AMBIGUOUS"
+    return "BACKGROUND"
+
+
+def _sample_near_threshold(
+    taxonomy: pd.DataFrame,
+    *,
+    n_each: int,
+    thresholds: dict,
+    score_column: str,
+    class_column: str,
+) -> pd.DataFrame:
+    """Balanced near-boundary sample under the representation being tested."""
+    picks = []
+    for det in ("H1", "L1"):
+        d = taxonomy[taxonomy.detector == det]
+        lower = thresholds[det]["ci_lower"]
+        upper = thresholds[det]["ci_upper"]
+        robust = d[
+            (d[class_column] == "ROBUST")
+            & (d[score_column] < upper + 0.04)
+        ].nsmallest(n_each, score_column)
+        rejected = d[
+            (d[class_column] == "BACKGROUND")
+            & (d[score_column] > lower - 0.06)
+        ].nlargest(n_each, score_column)
+        picks.extend([robust, rejected])
+    return (
+        pd.concat(picks)
+        .drop_duplicates(["detector", "gps_start"])
+        .reset_index(drop=True)
+    )
+
+
+def run(
+    run_name: str = "O4a",
+    n_candidates: int = 15,
+    pads=DEFAULT_PADS,
+    seed: int = 42,
+    *,
+    native_index_path: str | Path | None = None,
+    n_background: int = 5000,
+    anchor_tolerance: float = ANCHOR_TOLERANCE,
+    window_offset: float = WINDOW_OFFSET,
+) -> dict:
     from src.core.patch_scorer import PatchScorer
-    from src.core.utils import get_reference_dir
+    from src.core.index_contract import load_index_contract, qrange_tag
+    from src.core.utils import get_reference_dir, load_config
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
 
     pads = tuple(float(p) for p in pads)
     if PRODUCTION_PAD not in pads:
         pads = (PRODUCTION_PAD,) + pads
+    if n_background < MIN_BACKGROUND:
+        raise ValueError(
+            f"n_background={n_background} is below the machinery floor "
+            f"{MIN_BACKGROUND}"
+        )
     ref = get_reference_dir()
+    production_qrange = tuple(
+        int(v) for v in load_config()["preprocessing"]["qrange"]
+    )
+    if native_index_path is None:
+        native_index_path = (
+            ref
+            / f"patch_compressed_index_{run_name.lower()}_"
+              f"{qrange_tag(production_qrange)}_ex.npz"
+        )
+    contract = load_index_contract(native_index_path)
+    if tuple(contract.qrange) != production_qrange:
+        raise RuntimeError(
+            "Whitening experiment requires an index/query coherent with the "
+            f"production qrange {production_qrange}; got {contract.qrange}"
+        )
     scorer = PatchScorer(
-        reference_index_path=str(ref / "patch_compressed_index_o4a_ex.npz"),
+        reference_index_path=str(contract.path),
         verify_md5=False)
 
-    tax = pd.read_csv(AGG / f"Master_Taxonomy_{run_name.lower()}.csv")
+    reporter = AggregateReporter(
+        production_dir=AGG.parent,
+        run=run_name,
+        native_index_path=contract.path,
+        candidate_window_offset=window_offset,
+    )
+    representation = (
+        f"idx{contract.tag}_query{qrange_tag(production_qrange)}"
+    )
+    variant_column = representation.replace("-", "_")
+    score_column = f"native_score_{variant_column}"
+    class_column = f"robustness_class_{variant_column}"
+
+    thresholds_by_pad: dict[str, dict] = {}
+    for pad in pads:
+        det_thresholds = {}
+        for det in ("H1", "L1"):
+            cache = AGG / (
+                f"background_scores_whitening_{det}_{run_name}_"
+                f"{representation}_pad{pad:g}_bgv2_"
+                f"{contract.sha256[:12]}.npy"
+            )
+            cache_meta_path = cache.with_suffix(".json")
+            if cache.exists():
+                if not cache_meta_path.exists():
+                    raise RuntimeError(
+                        f"Whitening background cache {cache} has no sidecar"
+                    )
+                cache_meta = json.loads(
+                    cache_meta_path.read_text(encoding="utf-8")
+                )
+                expected = {
+                    "detector": det,
+                    "run": run_name,
+                    "index_sha256": contract.sha256,
+                    "index_qrange": list(contract.qrange),
+                    "query_qrange": list(production_qrange),
+                    "whitening_pad_s": float(pad),
+                    "n_background": int(n_background),
+                    "sampling_strategy": (
+                        "stratified_full_run_aligned_temporal_blocks_v2"
+                    ),
+                }
+                for key, value in expected.items():
+                    if cache_meta.get(key) != value:
+                        raise RuntimeError(
+                            f"Whitening cache contract mismatch for {det}, "
+                            f"pad={pad:g}: {key}"
+                        )
+                bg_scores = np.load(cache)
+            else:
+                bg_scores = reporter._extract_detector_background(
+                    scorer,
+                    det,
+                    n_background,
+                    qrange=production_qrange,
+                    pad=pad,
+                )
+                if len(bg_scores) == n_background:
+                    np.save(cache, bg_scores)
+                    cache_meta_path.write_text(
+                        json.dumps(
+                            {
+                                "detector": det,
+                                "run": run_name,
+                                "index_path": str(contract.path),
+                                "index_sha256": contract.sha256,
+                                "index_qrange": list(contract.qrange),
+                                "query_qrange": list(production_qrange),
+                                "whitening_pad_s": float(pad),
+                                "n_background": int(n_background),
+                                "sampling_strategy": (
+                                    "stratified_full_run_aligned_temporal_blocks_v2"
+                                ),
+                            },
+                            indent=2,
+                        ),
+                        encoding="utf-8",
+                    )
+            if len(bg_scores) < n_background:
+                raise RuntimeError(
+                    f"Only {len(bg_scores)}/{n_background} background scores "
+                    f"for {det}, pad={pad:g}; refusing partial calibration"
+                )
+            p99, lower, upper = _block_bootstrap_p99_ci(
+                bg_scores,
+                seed=seed,
+            )
+            det_thresholds[det] = {
+                "p99": p99,
+                "ci_lower": lower,
+                "ci_upper": upper,
+                "n_background": int(len(bg_scores)),
+                "scores_path": str(cache),
+            }
+        thresholds_by_pad[str(pad)] = det_thresholds
+
+    tax_path = AGG / (
+        f"Master_Taxonomy_{run_name}_{representation}.csv"
+    )
+    if not tax_path.exists():
+        raise RuntimeError(
+            "Versioned coherent taxonomy is missing; run the DSD transition "
+            f"audit first: {tax_path}"
+        )
+    tax = pd.read_csv(tax_path)
     tax["gps_start"] = tax.gps_start.astype(int)
-    cands = _sample(tax, n_candidates, seed).reset_index(drop=True)
+    missing = [
+        col for col in (score_column, class_column)
+        if col not in tax.columns
+    ]
+    if missing:
+        raise RuntimeError(
+            "Run the coherent DSD transition audit before the whitening "
+            f"experiment; missing taxonomy columns: {missing}"
+        )
+    cands = _sample_near_threshold(
+        tax,
+        n_each=n_candidates,
+        thresholds=thresholds_by_pad[str(PRODUCTION_PAD)],
+        score_column=score_column,
+        class_column=class_column,
+    )
     logger.info(f"{len(cands)} near-threshold candidates; pads {list(pads)}")
 
-    scores, kept = _score_at_pads(cands, pads, scorer)
+    scores, kept = _score_at_pads(
+        cands,
+        pads,
+        scorer,
+        qrange=production_qrange,
+        window_offset=window_offset,
+    )
     cands = cands[kept].reset_index(drop=True)
     scores = scores[kept]
+    if len(cands) == 0:
+        raise RuntimeError("No candidate was scored at every requested pad")
     logger.info(f"{len(cands)} candidates scored at all pads")
 
     pad_idx = pads.index(PRODUCTION_PAD)
     prod_score = scores[:, pad_idx]
-    stored = cands.native_o4a_score.to_numpy()
+    stored = cands[score_column].to_numpy(dtype=np.float64)
 
     # Reproduction anchor: pad=4 re-score must match the stored production score.
     repro_abs = np.abs(prod_score - stored)
     logger.info(f"pad=4 reproduction vs stored: max |delta| {repro_abs.max():.4f}, "
                 f"median {np.median(repro_abs):.4f}")
+    anchor_pass = bool(np.all(repro_abs <= anchor_tolerance))
 
-    tau = cands.detector.map(TAU_HI).to_numpy()
-    verdict = scores > tau[:, None]                 # (n_cand, n_pad)
-    prod_verdict = verdict[:, pad_idx]
+    rows = []
+    fixed_verdict = np.empty(scores.shape, dtype=object)
+    recalibrated_verdict = np.empty(scores.shape, dtype=object)
+    for r, c in cands.iterrows():
+        det = str(c.detector)
+        prod_thr = thresholds_by_pad[str(PRODUCTION_PAD)][det]
+        for j, pad in enumerate(pads):
+            pad_thr = thresholds_by_pad[str(pad)][det]
+            fixed_class = _classify(
+                scores[r, j],
+                prod_thr["ci_lower"],
+                prod_thr["ci_upper"],
+            )
+            recal_class = _classify(
+                scores[r, j],
+                pad_thr["ci_lower"],
+                pad_thr["ci_upper"],
+            )
+            fixed_verdict[r, j] = fixed_class
+            recalibrated_verdict[r, j] = recal_class
+            rows.append(
+                {
+                    "gps_start": int(c.gps_start),
+                    "analysis_start": (
+                        float(c.gps_start) + float(window_offset)
+                    ),
+                    "detector": det,
+                    "pad_s": float(pad),
+                    "score": float(scores[r, j]),
+                    "stored_pad4_score": float(stored[r]),
+                    "pad4_anchor_abs_delta": (
+                        float(repro_abs[r]) if pad == PRODUCTION_PAD else None
+                    ),
+                    "fixed_pad4_threshold_class": fixed_class,
+                    "pad_specific_threshold_class": recal_class,
+                    "pad_specific_ci_lower": pad_thr["ci_lower"],
+                    "pad_specific_ci_upper": pad_thr["ci_upper"],
+                    "representation": representation,
+                }
+            )
+    matrix_path = AGG / (
+        f"whitening_context_scores_{run_name.lower()}_{representation}.csv"
+    )
+    pd.DataFrame(rows).to_csv(matrix_path, index=False)
+
+    anchor_status = {
+        "passed": anchor_pass,
+        "tolerance": float(anchor_tolerance),
+        "n_failed": int((repro_abs > anchor_tolerance).sum()),
+        "max_abs_delta": float(repro_abs.max()),
+        "median_abs_delta": float(np.median(repro_abs)),
+    }
+    if not anchor_pass:
+        failed_path = AGG / (
+            f"whitening_context_anchor_failure_{run_name.lower()}_"
+            f"{representation}.json"
+        )
+        failed_path.write_text(
+            json.dumps(
+                {
+                    "run": run_name,
+                    "representation": representation,
+                    "index_path": str(contract.path),
+                    "index_sha256": contract.sha256,
+                    "window_offset_s": float(window_offset),
+                    "anchor": anchor_status,
+                    "score_matrix": str(matrix_path),
+                    "status": "INVALID_REPRODUCTION_ANCHOR",
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        raise RuntimeError(
+            "Whitening reproduction anchor failed: "
+            f"{anchor_status['n_failed']}/{len(cands)} exceed "
+            f"{anchor_tolerance:g}; diagnostics: {failed_path}"
+        )
+
+    fixed_prod = fixed_verdict[:, pad_idx]
+    recal_prod = recalibrated_verdict[:, pad_idx]
 
     # Context swing = full range of a candidate's score across the pad ladder.
     per_cand_std = np.nanstd(scores, axis=1)
     per_cand_swing = np.nanmax(scores, axis=1) - np.nanmin(scores, axis=1)
     n_large_swing = int((per_cand_swing > LARGE_SWING).sum())
-    flips = {}
+    fixed_flips = {}
+    recalibrated_flips = {}
     for j, pad in enumerate(pads):
         if pad == PRODUCTION_PAD:
             continue
-        changed = verdict[:, j] != prod_verdict
-        flips[pad] = {
-            "n_flipped": int(changed.sum()),
-            "flip_rate": float(changed.mean()),
-            "flipped_gps": [int(g) for g in cands.gps_start[changed].tolist()],
+        fixed_changed = fixed_verdict[:, j] != fixed_prod
+        recal_changed = recalibrated_verdict[:, j] != recal_prod
+        fixed_flips[str(pad)] = {
+            "n_flipped": int(fixed_changed.sum()),
+            "flip_rate": float(fixed_changed.mean()),
+            "flipped_gps": [
+                int(g) for g in cands.gps_start[fixed_changed].tolist()
+            ],
         }
-        logger.info(f"pad={pad}: {int(changed.sum())}/{len(cands)} verdicts flip "
-                    f"vs production pad=4")
+        recalibrated_flips[str(pad)] = {
+            "n_flipped": int(recal_changed.sum()),
+            "flip_rate": float(recal_changed.mean()),
+            "flipped_gps": [
+                int(g) for g in cands.gps_start[recal_changed].tolist()
+            ],
+        }
+        logger.info(
+            "pad=%s: fixed-threshold flips %d/%d; recalibrated flips %d/%d",
+            pad,
+            int(fixed_changed.sum()),
+            len(cands),
+            int(recal_changed.sum()),
+            len(cands),
+        )
 
     out = {
         "run": run_name, "seed": seed, "pads": list(pads),
-        "production_pad": PRODUCTION_PAD, "tau_hi": TAU_HI,
-        "n_candidates": int(len(cands)),
-        "n_robust": int((cands.robustness_class == "ROBUST").sum()),
-        "n_rejected": int((cands.robustness_class == "BACKGROUND").sum()),
-        "reproduction_pad4_vs_stored": {
-            "max_abs_delta": float(repro_abs.max()),
-            "median_abs_delta": float(np.median(repro_abs)),
+        "production_pad": PRODUCTION_PAD,
+        "window_offset_s": float(window_offset),
+        "representation": {
+            "variant": representation,
+            "index_path": str(contract.path),
+            "index_sha256": contract.sha256,
+            "index_qrange": list(contract.qrange),
+            "query_qrange": list(production_qrange),
         },
+        "thresholds_by_pad": thresholds_by_pad,
+        "n_candidates": int(len(cands)),
+        "n_robust": int((cands[class_column] == "ROBUST").sum()),
+        "n_rejected": int((cands[class_column] == "BACKGROUND").sum()),
+        "reproduction_pad4_vs_stored": anchor_status,
         "per_candidate_score_std_median": float(np.median(per_cand_std)),
         "per_candidate_score_std_max": float(per_cand_std.max()),
         "per_candidate_swing_median": float(np.median(per_cand_swing)),
         "per_candidate_swing_max": float(per_cand_swing.max()),
         "n_large_swing": n_large_swing,
         "large_swing_threshold": LARGE_SWING,
-        "verdict_flips_vs_production": flips,
+        "fixed_pad4_threshold_flips": fixed_flips,
+        "pad_recalibrated_pipeline_flips": recalibrated_flips,
+        "score_matrix": str(matrix_path),
         "interpretation_note": (
             "per_candidate_swing is a candidate's score range across pad 4->128, "
             "i.e. how much the native DSD score moves when only the whitening "
@@ -170,21 +530,32 @@ def run(run_name: str = "O4a", n_candidates: int = 15, pads=DEFAULT_PADS,
             "LAB_NOTEBOOK section 12 singleton's kind, and the point is whether "
             "they are typical or rare. verdict flip rate is the fraction of "
             "near-threshold candidates that cross the DSD cut between production "
-            "pad=4 and a longer context; because the sample is deliberately "
-            "near-threshold, it is an UPPER bound on the survey-wide rate. The "
-            "reproduction delta (pad=4 vs stored) is small for typical candidates "
-            "and large only for the same context-sensitive ones, confirming the "
-            "sensitivity is confined, not general."),
+            "pad=4 and a longer context. fixed_pad4_threshold_flips isolates "
+            "score sensitivity at a fixed decision boundary; "
+            "pad_recalibrated_pipeline_flips uses a separately calibrated "
+            "background threshold at every pad. Because the sample is selected "
+            "near the production boundary, neither rate is a survey-wide upper "
+            "bound."),
     }
-    dest = AGG / f"whitening_context_sensitivity_{run_name.lower()}.json"
+    dest = AGG / (
+        f"whitening_context_sensitivity_{run_name.lower()}_"
+        f"{representation}.json"
+    )
+    if dest.exists():
+        raise FileExistsError(
+            f"Refusing to overwrite whitening artifact {dest}"
+        )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(
         f"context swing median {out['per_candidate_swing_median']:.4f} "
         f"(max {out['per_candidate_swing_max']:.4f}); {n_large_swing}/{len(cands)} "
-        f"exceed {LARGE_SWING}; flip rates "
-        f"{ {p: round(f['flip_rate'], 3) for p, f in flips.items()} }")
+        f"exceed {LARGE_SWING}; recalibrated flip rates "
+        f"{ {p: round(f['flip_rate'], 3) for p, f in recalibrated_flips.items()} }")
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"whitening_context_sensitivity_{run_name.lower()}")
+    record_environment(
+        AGG,
+        f"whitening_context_sensitivity_{run_name.lower()}_{representation}",
+    )
     return out
 
 
@@ -195,13 +566,35 @@ def main() -> None:
                    help="Near-threshold candidates per (class, detector).")
     p.add_argument("--pads", type=float, nargs="+", default=list(DEFAULT_PADS))
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--native-index", default=None)
+    p.add_argument("--n-background", type=int, default=5000)
+    p.add_argument("--anchor-tolerance", type=float, default=ANCHOR_TOLERANCE)
+    p.add_argument("--window-offset", type=float, default=WINDOW_OFFSET)
     p.add_argument("--pilot", action="store_true",
                    help="Fast machinery + reproduction check on a few candidates.")
     a = p.parse_args()
     if a.pilot:
-        run(a.run, n_candidates=2, pads=(4.0, 64.0), seed=a.seed)
+        run(
+            a.run,
+            n_candidates=2,
+            pads=(4.0, 64.0),
+            seed=a.seed,
+            native_index_path=a.native_index,
+            n_background=max(MIN_BACKGROUND, min(a.n_background, 200)),
+            anchor_tolerance=a.anchor_tolerance,
+            window_offset=a.window_offset,
+        )
     else:
-        run(a.run, n_candidates=a.n_candidates, pads=a.pads, seed=a.seed)
+        run(
+            a.run,
+            n_candidates=a.n_candidates,
+            pads=a.pads,
+            seed=a.seed,
+            native_index_path=a.native_index,
+            n_background=a.n_background,
+            anchor_tolerance=a.anchor_tolerance,
+            window_offset=a.window_offset,
+        )
 
 
 if __name__ == "__main__":

@@ -148,16 +148,21 @@ def test_b2_v3_bootstrap_preserves_block_structure():
 # =====================================================================
 
 def test_no_random_sample_on_timeseries_scores():
-    """aggregate_report must keep the file-level shuffle + contiguous slice.
-    random.sample() on the concatenated score series would destroy the
-    temporal autocorrelation required by the block bootstrap."""
+    """Background extraction must preserve temporal ordering within its scan.
+
+    The representation-contract fix no longer reuses unlabelled historical
+    dual-scoring arrays. It recomputes matched scores and takes the contiguous
+    prefix requested by the caller.
+    """
     text = _read("src/pipeline_v2_production/aggregate_report.py")
     assert "random.sample(" not in text, (
         "random.sample() reintroduced in aggregate_report.py — this destroys "
         "temporal ordering needed by the block bootstrap."
     )
-    # The contiguous-slice fix must remain
-    assert "scores_list[:5000]" in text
+    assert "random.shuffle(valid_files)" not in text
+    assert "score_pairs[:target_n]" in text
+    assert "stratified across %d available blocks" in text
+    assert "Historical dual-scoring files have no index/qrange sidecar" in text
 
 
 # =====================================================================

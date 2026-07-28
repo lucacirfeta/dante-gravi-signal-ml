@@ -1,7 +1,7 @@
 """Where in the time-frequency plane is DANTE blind? An empirical map.
 
 Both manuscripts show an *analytic* blind-spot boundary, T = Q_max/f (Figure 14):
-DANTE's Q-transform uses a bounded quality factor (Qrange 4-32), so a transient
+DANTE's primary Q-transform uses a bounded quality factor (Qrange 4-64), so a transient
 that is simultaneously short and narrowband cannot be concentrated by any tile
 and its morphology degrades. The boundary has never been validated empirically --
 "no measurement of what actually happens near it" is a standing reviewer point.
@@ -14,7 +14,7 @@ blind spot:
 
 so central frequency f0 and quality factor Q give duration ~ Q/f0 and fractional
 bandwidth df/f = 1/Q. Sweeping (f0, Q) traverses the (duration, bandwidth) plane
-and crosses the Q_max=32 boundary.
+and crosses the Q_max=64 boundary.
 
 Each cell is injected into real vetoed O4a background at a fixed matched-filter
 SNR -- fixed, so a non-detection is a statement about morphology, not loudness --
@@ -31,7 +31,9 @@ Usage
     python -m src.pipeline_v2_production.blind_spot_map --pilot
     python -m src.pipeline_v2_production.blind_spot_map --n-realizations 6
 
-Writes ``data/production/aggregated/blind_spot_map_{run}.json``.
+Writes
+``data/production/aggregated/blind_spot_map_centered_v2_{run}.json``.
+The invalid pre-audit artifact is never overwritten.
 """
 
 from __future__ import annotations
@@ -56,6 +58,7 @@ FLAG_THRESHOLD = 0.3783          # O3b session flagging threshold
 # applies. A sine-Gaussian with Q > Q_MAX cannot be concentrated by any tile.
 Q_MAX = 64.0
 TARGET_SNR = 20.0                # loud enough that a miss is morphological
+ANALYSIS_VERSION = "centered_v2"
 
 # Grid: f0 across the analysis band (log-spaced), Q from broadband to very
 # narrowband, straddling Q_MAX so the analytic boundary sits inside the map.
@@ -69,6 +72,11 @@ def _sine_gaussian(f0: float, q: float) -> np.ndarray:
     half = max(4.0 * tau, 3.0 / f0)          # cover the envelope and a few cycles
     t = np.arange(-half, half, 1.0 / SAMPLE_RATE)
     return np.sin(2.0 * np.pi * f0 * t) * np.exp(-t * t / (2.0 * tau * tau))
+
+
+def _injection_center(gps: float) -> float:
+    """GPS time at which InjectionEngine must place the waveform centre."""
+    return float(gps) + SEGMENT_LENGTH / 2.0
 
 
 def _score(rgb, scorers: dict) -> dict:
@@ -111,7 +119,9 @@ def _cell(f0: float, q: float, times, rng, scorers, n_real: int) -> dict:
                 if not np.isfinite(snr_unit) or snr_unit <= 0:
                     continue
                 h = sg * (TARGET_SNR / snr_unit)
-                t_place = gps + SEGMENT_LENGTH / 2.0 - (len(h) / SAMPLE_RATE) / 2.0
+                # InjectionEngine interprets t_inject as the waveform centre.
+                # Do not subtract half the waveform duration here.
+                t_place = _injection_center(gps)
                 tsi = eng.inject(ts, h, t_place)
                 twi, _ = whiten_context(tsi, gps, gps + SEGMENT_LENGTH, pad=4.0)
                 speci = generate_qtransform(extract_clean_subwindow(
@@ -185,6 +195,7 @@ def run(run_name: str = "O4a", f0_values=DEFAULT_F0, q_values=DEFAULT_Q,
         "run": run_name, "seed": seed, "target_snr": TARGET_SNR,
         "flag_threshold": FLAG_THRESHOLD, "q_max": Q_MAX,
         "n_realizations": n_realizations,
+        "injection_time_semantics": "waveform_center_at_analysis_window_center",
         "f0_values": list(f0_values), "q_values": list(q_values),
         "cells": cells,
         "mean_flag_rate_Q_le_Qmax": float(np.mean([c["flag_rate"] for c in wide])) if wide else None,
@@ -195,16 +206,25 @@ def run(run_name: str = "O4a", f0_values=DEFAULT_F0, q_values=DEFAULT_Q,
             "Cells with flag_rate<0.5 at fixed SNR 20 are where the morphology, "
             "not the loudness, keeps DANTE from flagging. Compare "
             "mean_flag_rate_Q_le_Qmax vs _Q_gt_Qmax: if flagging drops sharply for "
-            "Q>Q_max=32, the analytic T=Q_max/f boundary is empirically real; if it "
+            f"Q>Q_max={Q_MAX:g}, the analytic T=Q_max/f boundary is empirically real; if it "
             "drops elsewhere, the true blind spot differs from the drawn boundary."),
     }
-    dest = AGG / f"blind_spot_map_{run_name.lower()}.json"
+    dest = AGG / (
+        f"blind_spot_map_{ANALYSIS_VERSION}_{run_name.lower()}.json"
+    )
+    if dest.exists():
+        raise FileExistsError(
+            f"Refusing to overwrite blind-spot artifact {dest}"
+        )
     dest.write_text(json.dumps(out, indent=2))
     logger.info(
         f"mean flag rate: Q<=Qmax {out['mean_flag_rate_Q_le_Qmax']} vs "
         f"Q>Qmax {out['mean_flag_rate_Q_gt_Qmax']}; {len(blind)} blind cells")
     logger.info(f"wrote {dest}")
-    record_environment(AGG, f"blind_spot_map_{run_name.lower()}")
+    record_environment(
+        AGG,
+        f"blind_spot_map_{ANALYSIS_VERSION}_{run_name.lower()}",
+    )
     return out
 
 

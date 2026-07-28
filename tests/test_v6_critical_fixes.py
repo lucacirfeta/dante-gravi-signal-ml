@@ -1,0 +1,499 @@
+"""Regression guards for the v6 critical scientific corrections."""
+
+from __future__ import annotations
+
+import json
+import inspect
+
+import numpy as np
+import pytest
+import h5py
+import pandas as pd
+
+from src.core.index_contract import (
+    load_index_contract,
+    qrange_tag,
+    validate_native_index,
+)
+
+
+def _write_index(path, *, qrange=None) -> None:
+    payload = {
+        "embeddings": np.ones((2, 384), dtype=np.float32),
+        "labels": np.array(["BG", "BG"]),
+    }
+    if qrange is not None:
+        payload["meta"] = json.dumps({"qrange": list(qrange)})
+    np.savez(path, **payload)
+
+
+def test_index_contract_refuses_silent_legacy_inference(tmp_path) -> None:
+    index = tmp_path / "patch_compressed_index_o4a_ex.npz"
+    _write_index(index)
+
+    with pytest.raises(RuntimeError, match="no qrange contract"):
+        load_index_contract(index)
+
+
+def test_index_contract_legacy_mode_is_explicit_and_labelled(tmp_path) -> None:
+    index = tmp_path / "patch_compressed_index_o4a_ex.npz"
+    _write_index(index)
+
+    contract = load_index_contract(index, allow_legacy_inference=True)
+
+    assert contract.qrange == (4, 32)
+    assert contract.legacy_inferred is True
+    assert contract.declared is False
+
+
+def test_declared_qrange_round_trip(tmp_path) -> None:
+    index = tmp_path / "patch_compressed_index_o4a_q4-64_ex.npz"
+    _write_index(index, qrange=(4, 64))
+
+    contract = load_index_contract(index)
+
+    assert contract.qrange == (4, 64)
+    assert contract.tag == "q4-64"
+    assert contract.declared is True
+    assert contract.legacy_inferred is False
+    assert len(contract.sha256) == 64
+
+
+def test_native_index_validation_checks_shape_norms_and_time_sidecar(
+    tmp_path,
+) -> None:
+    path = tmp_path / "patch_compressed_index_o4a_q4-64_ex.npz"
+    embeddings = np.eye(3, 384, dtype=np.float32)
+    raw = np.eye(2, 384, dtype=np.float32)
+    np.savez(
+        path,
+        embeddings=embeddings,
+        labels=np.array(["BG"] * 3),
+        raw_embeddings_sample=raw,
+        meta=json.dumps(
+            {
+                "qrange": [4, 64],
+                "K": 3,
+                "detector": "both",
+                "n_segments": 2,
+            }
+        ),
+    )
+    path.with_suffix(".t_bg.json").write_text(
+        json.dumps([100.0, 200.0]),
+        encoding="utf-8",
+    )
+
+    result = validate_native_index(
+        path,
+        expected_qrange=(4, 64),
+        expected_k=3,
+    )
+    assert result["K"] == 3
+    assert result["n_segments"] == 2
+    assert result["max_centroid_norm_error"] == pytest.approx(0.0)
+
+    embeddings[0] *= 2
+    np.savez(
+        path,
+        embeddings=embeddings,
+        labels=np.array(["BG"] * 3),
+        raw_embeddings_sample=raw,
+        meta=json.dumps(
+            {
+                "qrange": [4, 64],
+                "K": 3,
+                "detector": "both",
+                "n_segments": 2,
+            }
+        ),
+    )
+    with pytest.raises(RuntimeError, match="not L2-normalized"):
+        validate_native_index(
+            path,
+            expected_qrange=(4, 64),
+            expected_k=3,
+        )
+
+
+def test_qrange_tag_validates_order() -> None:
+    assert qrange_tag((4, 64)) == "q4-64"
+    with pytest.raises(ValueError, match="Invalid qrange"):
+        qrange_tag((64, 4))
+
+
+def test_native_builder_default_name_is_versioned(monkeypatch, tmp_path) -> None:
+    from src.pipeline_v2_production import build_native_index as builder
+
+    monkeypatch.setattr(builder, "_candidate_exclusions", lambda *_args: [])
+    monkeypatch.setattr(builder, "PatchEncoder", lambda: None)
+    monkeypatch.setattr(
+        builder,
+        "iter_clean_segments",
+        lambda *_args, **_kwargs: iter(()),
+    )
+
+    # The thin-background guard fires after the versioned path is resolved.
+    with pytest.raises(RuntimeError, match="unrepresentative background"):
+        builder.build_native_index(
+            "O4a",
+            "both",
+            n_dict=100,
+            qrange=(4, 64),
+            out_dir=tmp_path,
+            aggregated_dir=tmp_path,
+        )
+
+    assert not (tmp_path / "patch_compressed_index_o4a_ex.npz").exists()
+
+
+def test_processed_window_ledger_is_exact_and_deduplicated(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    from src.pipeline_v2_production import production_writer
+    from src.pipeline_v2_production.processed_window_ledger import (
+        load_exact_processed_coverage,
+    )
+
+    monkeypatch.setattr(production_writer, "record_environment", lambda *_a, **_k: None)
+    writer = production_writer.ProductionWriter(tmp_path, "1234567890", "H1")
+    writer.verify_and_init(
+        {"reference_md5": "test", "k": 2},
+        np.array([0.1], dtype=np.float32),
+        0.5,
+    )
+    writer.append_processed([100.0, 132.0])
+    writer.append_processed([132.0, 164.0])
+
+    coverage = load_exact_processed_coverage(tmp_path, "H1")
+
+    assert coverage is not None
+    assert coverage["quality"] == "exact_successfully_scored_windows"
+    assert coverage["n_windows"] == 3
+    assert coverage["intervals"] == [[100.0, 196.0]]
+
+    with h5py.File(writer.hdf5_path, "r") as handle:
+        assert handle["processed_windows"].attrs["gps_semantics"] == (
+            "analysis_window_start"
+        )
+
+
+def test_raw_block_coverage_is_labelled_as_proxy(tmp_path) -> None:
+    from src.pipeline_v2_production.processed_window_ledger import (
+        reconstruct_raw_block_coverage,
+    )
+
+    checkpoint = (
+        tmp_path
+        / "production"
+        / "1234567890"
+        / "checkpoints"
+        / "last_gps_1234567890_H1.txt"
+    )
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_text("DONE", encoding="utf-8")
+    raw = tmp_path / "raw" / "1234567890"
+    raw.mkdir(parents=True)
+    (raw / "H1_100_196.hdf5").touch()
+
+    coverage = reconstruct_raw_block_coverage(
+        tmp_path / "production",
+        "H1",
+        data_directories=[tmp_path / "raw"],
+    )
+
+    assert coverage is not None
+    assert coverage["source"] == "completed_session_raw_blocks"
+    assert coverage["quality"].startswith("upper_bound_proxy")
+    assert coverage["n_windows"] == 3
+    assert coverage["livetime_s"] == pytest.approx(96.0)
+
+
+def test_catalog_circular_shift_null_is_deterministic_and_long_form() -> None:
+    from src.pipeline_v2_production.catalog_cross_match import (
+        _circular_shift_null,
+    )
+
+    times = np.array([105.0, 405.0])
+    coverage = {
+        "H1": [(0.0, 1000.0)],
+        "L1": [(0.0, 1000.0)],
+    }
+    candidates = {
+        "H1": [(100.0, 132.0)],
+        "L1": [],
+    }
+
+    first, summary_first = _circular_shift_null(
+        times,
+        coverage,
+        candidates,
+        run_bounds=(0.0, 1000.0),
+        observed_any=1,
+        observed_both=0,
+        n_shifts=100,
+        seed=11,
+        minimum_shift_s=32.0,
+    )
+    second, summary_second = _circular_shift_null(
+        times,
+        coverage,
+        candidates,
+        run_bounds=(0.0, 1000.0),
+        observed_any=1,
+        observed_both=0,
+        n_shifts=100,
+        seed=11,
+        minimum_shift_s=32.0,
+    )
+
+    assert first.equals(second)
+    assert summary_first == summary_second
+    assert len(first) == 100
+    assert set(first.columns) == {
+        "shift_id",
+        "offset_s",
+        "covered_any",
+        "covered_both",
+        "overlap_any",
+        "overlap_both",
+    }
+    p_value = summary_first["overlap_any"]["empirical_p_ge_observed"]
+    assert 1 / 101 <= p_value <= 1.0
+
+
+def test_catalog_manifest_hashes_inputs_and_outputs(tmp_path) -> None:
+    from src.pipeline_v2_production.catalog_cross_match import _write_manifest
+
+    source = tmp_path / "input.json"
+    result = tmp_path / "result.csv"
+    source.write_text('{"x": 1}', encoding="utf-8")
+    result.write_text("value\n2\n", encoding="utf-8")
+    manifest = _write_manifest(
+        result,
+        run_name="O4a",
+        inputs=[source],
+        outputs=[result],
+    )
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    assert [row["role"] for row in payload["files"]] == ["input", "output"]
+    assert all(len(row["sha256"]) == 64 for row in payload["files"])
+
+
+def test_blind_spot_injection_is_centred_and_qmax_text_is_current() -> None:
+    from src.pipeline_v2_production import blind_spot_map
+
+    gps = 1_382_955_253.0
+    assert blind_spot_map._injection_center(gps) == pytest.approx(
+        gps + blind_spot_map.SEGMENT_LENGTH / 2.0
+    )
+    assert blind_spot_map.Q_MAX == 64.0
+    assert blind_spot_map.ANALYSIS_VERSION == "centered_v2"
+    assert "Qrange 4-64" in blind_spot_map.__doc__
+
+
+def test_historical_catalog_offset_is_an_explicit_dsd_contract(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    from src.pipeline_v2_production import aggregate_report
+
+    monkeypatch.setattr(
+        "src.core.utils.record_environment",
+        lambda *_args, **_kwargs: None,
+    )
+    reporter = aggregate_report.AggregateReporter(
+        production_dir=tmp_path,
+        run="O4a",
+        candidate_window_offset=4.0,
+    )
+    assert reporter._analysis_window_start(100.0) == 104.0
+
+    current = aggregate_report.AggregateReporter(
+        production_dir=tmp_path,
+        run="O4a",
+        candidate_window_offset=0.0,
+    )
+    assert current._analysis_window_start(100.0) == 100.0
+
+
+def test_whitening_recalibration_helpers_are_deterministic_and_stratified() -> None:
+    from src.pipeline_v2_production.whitening_context_sensitivity import (
+        _block_bootstrap_p99_ci,
+        _classify,
+        _sample_near_threshold,
+    )
+
+    background = np.linspace(0.0, 1.0, 250)
+    first = _block_bootstrap_p99_ci(background, B=100, seed=7)
+    second = _block_bootstrap_p99_ci(background, B=100, seed=7)
+    assert first == second
+    assert first[1] <= first[2]
+    assert first[0] == pytest.approx(np.percentile(background, 99))
+    assert _classify(0.9, 0.4, 0.6) == "ROBUST"
+    assert _classify(0.5, 0.4, 0.6) == "AMBIGUOUS"
+    assert _classify(0.3, 0.4, 0.6) == "BACKGROUND"
+
+    rows = []
+    for det in ("H1", "L1"):
+        for idx, (score, klass) in enumerate(
+            [(0.35, "BACKGROUND"), (0.39, "BACKGROUND"),
+             (0.61, "ROBUST"), (0.65, "ROBUST")]
+        ):
+            rows.append(
+                {
+                    "gps_start": idx + (0 if det == "H1" else 10),
+                    "detector": det,
+                    "score_v": score,
+                    "class_v": klass,
+                }
+            )
+    sample = _sample_near_threshold(
+        pd.DataFrame(rows),
+        n_each=1,
+        thresholds={
+            "H1": {"ci_lower": 0.4, "ci_upper": 0.6},
+            "L1": {"ci_lower": 0.4, "ci_upper": 0.6},
+        },
+        score_column="score_v",
+        class_column="class_v",
+    )
+    assert len(sample) == 4
+    assert set(sample.class_v) == {"ROBUST", "BACKGROUND"}
+
+
+def test_background_recalibration_does_not_override_requested_pad() -> None:
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    source = inspect.getsource(AggregateReporter._extract_detector_background)
+    assert "pad = 4.0" not in source
+    assert "random.shuffle(valid_files)" not in source
+    assert 'pad=float(pad)' in source
+    assert "np.linspace(" in source
+    assert "block_len" in source
+
+
+def test_dsd_transition_does_not_overwrite_legacy_taxonomy_columns() -> None:
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    source = inspect.getsource(AggregateReporter._run_domain_shift_defense)
+    assert 'tax_df["robustness_class"] = tax_df.apply' not in source
+    assert 'tax_df["native_score"] = tax_df.apply' not in source
+    assert 'class_column = f"robustness_class_{variant_column}"' in source
+    assert 'score_column = f"native_score_{variant_column}"' in source
+    assert '"NOT_EVALUATED"' in source
+    assert 'metrics["total_failed"] = total - evaluated_total' in source
+    assert "variant_tax_path" in source
+    assert "temporary_tax_path.replace(variant_tax_path)" in source
+    assert "batch_size = 32" in source
+    assert "scorer.score_spectrogram(\n                    batch_images" in source
+
+
+def test_dsd_transition_entrypoint_writes_a_separate_audit(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    from src.pipeline_v2_production import dsd_transition_audit
+
+    aggregated = tmp_path / "aggregated"
+    aggregated.mkdir()
+    pd.DataFrame(
+        [{"gps_start": 100, "detector": "H1", "robustness_class": "ROBUST"}]
+    ).to_csv(aggregated / "Master_Taxonomy_O4a.csv", index=False)
+
+    class DummyReporter:
+        def __init__(self, **kwargs):
+            assert kwargs["candidate_window_offset"] == 4.0
+
+        def _run_domain_shift_defense(self, taxonomy):
+            assert len(taxonomy) == 1
+            return {
+                "experiment_run": True,
+                "representation": {"variant": "idxq4-64_queryq4-64"},
+            }
+
+    monkeypatch.setattr(dsd_transition_audit, "AggregateReporter", DummyReporter)
+    monkeypatch.setattr(
+        dsd_transition_audit,
+        "validate_native_index",
+        lambda *_args, **_kwargs: {
+            "validated": True,
+            "qrange": [4, 64],
+        },
+    )
+    monkeypatch.setattr(
+        dsd_transition_audit,
+        "_validate_builder_provenance",
+        lambda *_args, **_kwargs: {"validated": True},
+    )
+    monkeypatch.setattr(
+        dsd_transition_audit,
+        "record_environment",
+        lambda *_args, **_kwargs: None,
+    )
+    metrics = dsd_transition_audit.run(
+        run_name="O4a",
+        production_dir=tmp_path,
+        native_index_path=tmp_path / "index.npz",
+    )
+
+    assert metrics["experiment_run"] is True
+    assert (
+        aggregated
+        / "dsd_transition_audit_o4a_idxq4-64_queryq4-64.json"
+    ).exists()
+
+
+def test_dirty_builder_provenance_requires_and_hashes_source_snapshot(
+    tmp_path,
+) -> None:
+    from src.pipeline_v2_production.dsd_transition_audit import (
+        _validate_builder_provenance,
+    )
+
+    index = tmp_path / "patch_compressed_index_o4a_q4-64_ex.npz"
+    index.touch()
+    snapshot = tmp_path / "source_state_build_native_index_o4a_q4-64.zip"
+    snapshot.write_bytes(b"source-state")
+    digest = __import__("hashlib").sha256(snapshot.read_bytes()).hexdigest()
+    environment = tmp_path / "environment_build_native_index_o4a_q4-64.json"
+    environment.write_text(
+        json.dumps(
+            {
+                "context": "build_native_index_o4a_q4-64",
+                "note": f"native index {index.name}",
+                "git_commit": "abc",
+                "git_dirty": True,
+                "dirty_source_snapshot": str(snapshot),
+                "dirty_source_snapshot_sha256": digest,
+                "python": "3.11",
+                "packages": {"gwpy": "4.0.1"},
+                "torch": {"version": "test"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = _validate_builder_provenance(
+        index,
+        run_name="O4a",
+        qrange=(4, 64),
+    )
+    assert result["dirty_source_snapshot_sha256"] == digest
+    snapshot.write_bytes(b"tampered")
+    with pytest.raises(RuntimeError, match="does not match"):
+        _validate_builder_provenance(
+            index,
+            run_name="O4a",
+            qrange=(4, 64),
+        )
+
+
+def test_patch_production_refuses_silent_legacy_native_dual_scoring() -> None:
+    import main
+
+    source = inspect.getsource(main.cmd_patch_production)
+    assert "load_index_contract(candidate_index)" in source
+    assert "allow_legacy_inference=True" not in source
+    assert "No declared native index matches PatchProducer qrange" in source

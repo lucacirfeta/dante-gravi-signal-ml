@@ -1,10 +1,8 @@
 """Run-agnostic builder for the NATIVE background index (Domain Shift Defense).
 
-Produces data/reference/patch_compressed_index_{run}_ex.npz — the artifact
-that enables (a) dual-scoring in patch production and (b) the Domain Shift
-Defense phase of aggregate-report. Both consumers already resolve the
-filename from the observing run, so building the index for a new run (O5,
-...) requires no code changes.
+Produces a versioned
+``data/reference/patch_compressed_index_{run}_q{min}-{max}_ex.npz`` artifact.
+The historical unversioned Q32 index is never overwritten.
 
 Scientific guards:
   - Sampling protocol identical to the V3/leakage machinery
@@ -14,6 +12,7 @@ Scientific guards:
     Master_Taxonomy (if present) are EXCLUDED (+/- exclusion_pad) from the
     background sampling, so the dictionary cannot absorb the very anomalies
     it is meant to re-test. The exclusion list is recorded in the metadata.
+  - The Q-transform range is explicit in the filename and NPZ metadata.
   - Images rendered with the production colormap (cividis) — the same
     domain used by the DSD candidate rescoring after fix B-DSD-1.
 """
@@ -28,7 +27,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.core.utils import setup_logger, normalize_spectrogram
+from src.core.index_contract import normalize_qrange, qrange_tag
+from src.core.utils import (
+    load_config,
+    normalize_spectrogram,
+    record_environment,
+    setup_logger,
+)
 from src.pipeline_v3_multiscale.norm_leakage.common import (
     PatchEncoder, iter_clean_segments, raw_qgram, spectrogram_to_rgb,
 )
@@ -54,12 +59,27 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
                        k_clusters: int = DEFAULT_K, seed: int = 42,
                        exclusion_pad: float = 96.0,
                        raw_sample_size: int = 50000,
+                       qrange: tuple[int, int] | list[int] | None = None,
                        aggregated_dir: str | Path = "data/production/aggregated",
-                       out_dir: str | Path = "data/reference") -> Path:
+                       out_dir: str | Path = "data/reference",
+                       output_name: str | None = None,
+                       overwrite: bool = False) -> Path:
     from sklearn.cluster import MiniBatchKMeans
 
+    if qrange is None:
+        qrange = load_config()["preprocessing"]["qrange"]
+    qrange = normalize_qrange(qrange)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    output_name = output_name or (
+        f"patch_compressed_index_{run.lower()}_{qrange_tag(qrange)}_ex.npz"
+    )
+    out = out_dir / output_name
+    if out.exists() and not overwrite:
+        raise FileExistsError(
+            f"Refusing to overwrite existing native index {out}. "
+            "Use a new representation tag or pass overwrite=True explicitly."
+        )
     exclusions = np.array(_candidate_exclusions(run, Path(aggregated_dir)))
 
     def is_excluded(t_bg: float) -> bool:
@@ -80,8 +100,15 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
     detectors = ["H1", "L1"] if detector.lower() == "both" else [detector]
     per_det = n_dict // len(detectors)
 
-    logger.info(f"[{run}/{'+'.join(detectors)}] Building native index: "
-                f"n_dict={n_dict}, K={k_clusters}, seed={seed}")
+    logger.info(
+        "[%s/%s] Building native index: n_dict=%d, K=%d, seed=%d, qrange=%s",
+        run,
+        "+".join(detectors),
+        n_dict,
+        k_clusters,
+        seed,
+        qrange,
+    )
     for det_i, det in enumerate(detectors):
         for seg in iter_clean_segments(run.lower(), det, per_det,
                                        seed=seed + det_i):
@@ -90,7 +117,9 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
                 continue
             try:
                 spec = normalize_spectrogram(raw_qgram(
-                    seg.ts_whitened.crop(seg.t_bg - 16, seg.t_bg + 16)))
+                    seg.ts_whitened.crop(seg.t_bg - 16, seg.t_bg + 16),
+                    qrange=qrange,
+                ))
                 tokens = encoder.encode_rgb(spectrogram_to_rgb(spec))
             except Exception as e:
                 logger.debug(f"[{det}] segment {seg.t_bg} failed: {e}")
@@ -139,7 +168,6 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
     except Exception:
         git = "unknown"
 
-    out = out_dir / f"patch_compressed_index_{run.lower()}_ex.npz"
     np.savez_compressed(
         out,
         embeddings=cents.astype(np.float32),
@@ -150,6 +178,11 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
             "n_segments": len(used_t_bgs), "n_candidate_excluded": n_excluded,
             "exclusion_pad_s": exclusion_pad, "colormap": "cividis",
             "preprocessing": "whiten_context_v1_single_bandpass", "git": git,
+            "schema_version": 2,
+            "qrange": list(qrange),
+            "qtransform_frange_hz": [20.0, 2048.0],
+            "qtransform_logf": True,
+            "qtransform_output_size": [256, 256],
             "raw_sample_size": int(raw_sample.shape[0]),
             "raw_sample_total_tokens": int(embs.shape[0]),
             "raw_sample_seed": seed,
@@ -157,6 +190,11 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
     )
     with open(out.with_suffix(".t_bg.json"), "w") as f:
         json.dump(used_t_bgs, f)
+    record_environment(
+        out_dir,
+        f"build_native_index_{run.lower()}_{qrange_tag(qrange)}",
+        note=f"native index {out.name}",
+    )
     logger.info(f"Native index saved -> {out}")
     return out
 
@@ -164,13 +202,32 @@ def build_native_index(run: str, detector: str, n_dict: int = 1500,
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Build run-native background index (DSD)")
     p.add_argument("--run", type=str, required=True)
-    p.add_argument("--detector", type=str, default="L1")
+    p.add_argument("--detector", type=str, default="both",
+                   choices=("H1", "L1", "both"))
     p.add_argument("--n_dict", type=int, default=1500)
     p.add_argument("--k", type=int, default=DEFAULT_K)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--raw_sample_size", type=int, default=50000,
                    help="Rows of raw pre-quantization tokens to persist "
                         "for reproducible point-to-point analyses (0=off).")
+    p.add_argument("--qrange", type=int, nargs=2, metavar=("Q_MIN", "Q_MAX"),
+                   default=None,
+                   help="Q-transform range. Default: config preprocessing.qrange.")
+    p.add_argument("--output-name",
+                   help="Optional NPZ filename; default includes the qrange.")
+    p.add_argument("--out-dir", type=Path, default=Path("data/reference"),
+                   help="Destination directory for the versioned index.")
+    p.add_argument(
+        "--aggregated-dir",
+        type=Path,
+        default=Path("data/production/aggregated"),
+        help="Taxonomy directory used for anti-circularity exclusions.",
+    )
+    p.add_argument("--overwrite", action="store_true",
+                   help="Explicitly replace an artifact with the same versioned name.")
     a = p.parse_args()
     build_native_index(a.run, a.detector, n_dict=a.n_dict, k_clusters=a.k,
-                       seed=a.seed, raw_sample_size=a.raw_sample_size)
+                       seed=a.seed, raw_sample_size=a.raw_sample_size,
+                       qrange=a.qrange, output_name=a.output_name,
+                       overwrite=a.overwrite, out_dir=a.out_dir,
+                       aggregated_dir=a.aggregated_dir)
