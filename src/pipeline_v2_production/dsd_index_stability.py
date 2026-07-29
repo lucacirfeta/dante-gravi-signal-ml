@@ -48,6 +48,7 @@ Writes
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -61,8 +62,7 @@ from src.core.utils import (
     record_environment,
     setup_logger,
 )
-from src.pipeline_v2_production.dsd_absorption_threshold import (
-    _build_index, _encode_segments)
+from src.pipeline_v2_production.dsd_absorption_threshold import _build_index
 from src.pipeline_v3_multiscale.norm_leakage.common import (
     PatchEncoder, iter_clean_segments, raw_qgram, spectrogram_to_rgb, topk_score)
 
@@ -75,18 +75,43 @@ WINDOW_OFFSET = 4.0          # catalogue GPS labels the padded crop
 TOP_K = 68
 
 
+def _sha256_file(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _candidate_key_digest(keys: np.ndarray) -> str:
+    payload = "\n".join(str(value) for value in keys.tolist()).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _encode_candidates(
     cands: pd.DataFrame,
     qrange: tuple[int, int],
-) -> np.ndarray:
-    """Patch tokens for each candidate, from the true [gps+4, gps+36] window."""
+    encoder: PatchEncoder | None = None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """DINO tokens and pixel features from the same candidate Q-grams."""
     import warnings
 
     from src.core.data_loader import fetch_strain_data
     from src.core.preprocessor import whiten_context, extract_clean_subwindow
+    from src.pipeline_v2_production.pca_baseline import (
+        _features,
+        _spectral_energy,
+    )
 
-    enc = PatchEncoder()
-    toks, kept = [], []
+    enc = encoder or PatchEncoder()
+    toks, pixel_features, energy, kept = [], [], [], []
+    rgb_batch = []
+
+    def flush() -> None:
+        if rgb_batch:
+            toks.extend(enc.encode_batch(rgb_batch))
+            rgb_batch.clear()
+
     for _, c in cands.iterrows():
         w0 = float(c.gps_start) + WINDOW_OFFSET
         try:
@@ -100,12 +125,73 @@ def _encode_candidates(
                 # the same raw Q-gram representation. The historical test mixed
                 # generate_qtransform candidates with raw_qgram backgrounds.
                 spec = raw_qgram(clean, qrange=qrange)
-            toks.append(enc.encode_rgb(spectrogram_to_rgb(normalize_spectrogram(spec))))
+            rgb_batch.append(
+                spectrogram_to_rgb(normalize_spectrogram(spec))
+            )
+            pixel_features.append(_features(spec))
+            energy.append(_spectral_energy(spec))
             kept.append(True)
+            if len(rgb_batch) >= 8:
+                flush()
         except Exception as e:  # noqa: BLE001
             logger.debug(f"candidate {c.gps_start} failed: {e}")
             kept.append(False)
-    return np.asarray(toks, dtype=np.float32), np.asarray(kept)
+    flush()
+    return (
+        np.asarray(toks, dtype=np.float32),
+        np.asarray(pixel_features, dtype=np.float32),
+        np.asarray(energy, dtype=np.float32),
+        np.asarray(kept),
+    )
+
+
+def _encode_background_products(
+    encoder: PatchEncoder,
+    segments,
+    *,
+    qrange: tuple[int, int],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Encode DINO and PCA products once from each identical raw Q-gram."""
+    from src.pipeline_v2_production.pca_baseline import (
+        _features,
+        _spectral_energy,
+    )
+
+    toks, pixel_features, energy = [], [], []
+    rgb_batch = []
+
+    def flush() -> None:
+        if rgb_batch:
+            toks.extend(encoder.encode_batch(rgb_batch))
+            rgb_batch.clear()
+
+    for segment in segments:
+        try:
+            spec = raw_qgram(
+                segment.ts_whitened.crop(
+                    segment.t_bg - SEGMENT_LENGTH / 2,
+                    segment.t_bg + SEGMENT_LENGTH / 2,
+                ),
+                qrange=qrange,
+            )
+            rgb_batch.append(
+                spectrogram_to_rgb(normalize_spectrogram(spec))
+            )
+            pixel_features.append(_features(spec))
+            energy.append(_spectral_energy(spec))
+            if len(rgb_batch) >= 8:
+                flush()
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to encode shared P5/P10 background "
+                f"{segment.t_bg}"
+            ) from exc
+    flush()
+    return (
+        np.asarray(toks, dtype=np.float32),
+        np.asarray(pixel_features, dtype=np.float32),
+        np.asarray(energy, dtype=np.float32),
+    )
 
 
 def _sample(
@@ -173,30 +259,49 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
                 f"({(cands.dsd_class=='ROBUST').sum()} ROBUST, "
                 f"{(cands.dsd_class!='ROBUST').sum()} non-ROBUST)")
 
-    cache = AGG / (
-        f"dsd_index_stability_tokens_{run_name.lower()}_"
-        f"{taxonomy_contract.cache_tag}_{qrange_tag(qrange)}_"
-        f"n{n_candidates}_s{seed}.npz"
-    )
     candidate_keys = np.asarray(
         [
             f"{detector}:{gps}"
             for detector, gps in zip(cands.detector, cands.gps_start)
         ]
     )
-    if cache.exists():
-        logger.info(f"loading cached tokens from {cache.name}")
-        z = np.load(cache, allow_pickle=True)
+    candidate_key_sha256 = _candidate_key_digest(candidate_keys)
+    candidate_cache = AGG / (
+        f"dsd_index_stability_candidate_tokens_{run_name.lower()}_"
+        f"{taxonomy_contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_candidates}_s{seed}_{candidate_key_sha256[:12]}.npz"
+    )
+    background_cache = AGG / (
+        f"dsd_index_stability_background_tokens_{run_name.lower()}_"
+        f"{taxonomy_contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_background}_h{n_holdout_bg}_s{seed}.npz"
+    )
+    background_ledger = background_cache.with_name(
+        f"{background_cache.stem}_ledger.csv"
+    )
+
+    encoder = None
+    if candidate_cache.exists():
+        logger.info(
+            "loading cached candidate tokens from %s",
+            candidate_cache.name,
+        )
+        z = np.load(candidate_cache, allow_pickle=False)
         cand_tok, kept = z["cand"], z["kept"]
-        bg_tok, hold_tok = z["bg"], z["hold"]
+        candidate_pixel_features = z["pca_feat"]
+        candidate_energy = z["pca_energy"]
         if (
             tuple(int(value) for value in z["qrange"].tolist()) != qrange
             or str(z["representation"].item())
             != taxonomy_contract.representation
             or not np.array_equal(z["candidate_keys"], candidate_keys)
+            or str(z["candidate_keys_sha256"].item())
+            != candidate_key_sha256
+            or len(candidate_pixel_features) != len(cand_tok)
+            or len(candidate_energy) != len(cand_tok)
         ):
             raise RuntimeError(
-                f"Token cache contract mismatch: {cache}"
+                f"Candidate token cache contract mismatch: {candidate_cache}"
             )
         cands = cands[kept].reset_index(drop=True)
     else:
@@ -204,34 +309,144 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
             "encoding candidates (true [gps+4, gps+36] window, Q=%s)",
             qrange,
         )
-        cand_tok, kept = _encode_candidates(cands, qrange)
+        encoder = PatchEncoder()
+        (
+            cand_tok,
+            candidate_pixel_features,
+            candidate_energy,
+            kept,
+        ) = _encode_candidates(cands, qrange, encoder)
         cands = cands[kept].reset_index(drop=True)
-        enc = PatchEncoder()
-        logger.info(f"collecting {n_background + n_holdout_bg} background segments")
-        segs = list(iter_clean_segments(run_name.lower(), "L1",
-                                        n_background + n_holdout_bg + 40, seed=seed))
-        logger.info("encoding background pool + held-out background")
-        bg_tok = _encode_segments(
-            enc,
-            segs[:n_background],
-            qrange=qrange,
-        )
-        hold_tok = _encode_segments(
-            enc,
-            segs[n_background:n_background + n_holdout_bg],
-            qrange=qrange,
-        )
+        if not all(
+            np.isfinite(array).all()
+            for array in (
+                cand_tok,
+                candidate_pixel_features,
+                candidate_energy,
+            )
+        ):
+            raise RuntimeError(
+                "Shared P5/P10 candidate products contain non-finite values"
+            )
         np.savez_compressed(
-            cache,
+            candidate_cache,
             cand=cand_tok,
+            pca_feat=candidate_pixel_features,
+            pca_energy=candidate_energy,
             kept=kept,
-            bg=bg_tok,
-            hold=hold_tok,
             candidate_keys=candidate_keys,
+            candidate_keys_sha256=np.asarray(candidate_key_sha256),
             qrange=np.asarray(qrange),
             representation=np.asarray(taxonomy_contract.representation),
         )
-        logger.info(f"cached tokens to {cache.name}")
+        logger.info("cached candidate tokens to %s", candidate_cache.name)
+
+    if background_cache.exists():
+        logger.info(
+            "loading cached background tokens from %s",
+            background_cache.name,
+        )
+        if not background_ledger.exists():
+            raise RuntimeError(
+                f"Background token cache lacks ledger: {background_ledger}"
+            )
+        z_bg = np.load(background_cache, allow_pickle=False)
+        bg_tok, hold_tok = z_bg["bg"], z_bg["hold"]
+        background_pixel_features = z_bg["pca_bg_feat"]
+        background_energy = z_bg["pca_bg_energy"]
+        ledger = pd.read_csv(background_ledger)
+        expected_roles = (
+            ["index_pool"] * n_background
+            + ["held_out"] * n_holdout_bg
+        )
+        if (
+            tuple(int(value) for value in z_bg["qrange"].tolist()) != qrange
+            or str(z_bg["representation"].item())
+            != taxonomy_contract.representation
+            or str(z_bg["detector"].item()) != "L1"
+            or len(bg_tok) != n_background
+            or len(hold_tok) != n_holdout_bg
+            or len(background_pixel_features) != n_background
+            or len(background_energy) != n_background
+            or len(ledger) != n_background + n_holdout_bg
+            or ledger["role"].astype(str).tolist() != expected_roles
+            or not np.array_equal(
+                ledger["t_bg"].to_numpy(dtype=float),
+                z_bg["t_bg"].astype(float),
+            )
+            or str(z_bg["ledger_sha256"].item())
+            != _sha256_file(background_ledger)
+        ):
+            raise RuntimeError(
+                f"Background token cache contract mismatch: {background_cache}"
+            )
+    else:
+        if encoder is None:
+            encoder = PatchEncoder()
+        logger.info(f"collecting {n_background + n_holdout_bg} background segments")
+        segs = list(iter_clean_segments(run_name.lower(), "L1",
+                                        n_background + n_holdout_bg + 40, seed=seed))
+        if len(segs) < n_background + n_holdout_bg:
+            raise RuntimeError(
+                "Insufficient clean segments for P5 background and holdout"
+            )
+        logger.info("encoding background pool + held-out background")
+        (
+            bg_tok,
+            background_pixel_features,
+            background_energy,
+        ) = _encode_background_products(
+            encoder,
+            segs[:n_background],
+            qrange=qrange,
+        )
+        hold_tok, _, _ = _encode_background_products(
+            encoder,
+            segs[n_background:n_background + n_holdout_bg],
+            qrange=qrange,
+        )
+        background_times = np.asarray(
+            [
+                segment.t_bg
+                for segment in segs[: n_background + n_holdout_bg]
+            ],
+            dtype=np.float64,
+        )
+        if len(np.unique(background_times)) != len(background_times):
+            raise RuntimeError("P5 background ledger contains duplicate GPS")
+        ledger = pd.DataFrame(
+            {
+                "ordinal": np.arange(len(background_times), dtype=int),
+                "role": (
+                    ["index_pool"] * n_background
+                    + ["held_out"] * n_holdout_bg
+                ),
+                "detector": "L1",
+                "t_bg": background_times,
+                "segment_start": background_times - SEGMENT_LENGTH / 2,
+                "segment_end": background_times + SEGMENT_LENGTH / 2,
+                "run": run_name,
+                "seed": seed,
+            }
+        )
+        ledger.to_csv(background_ledger, index=False)
+        ledger_sha256 = _sha256_file(background_ledger)
+        np.savez_compressed(
+            background_cache,
+            bg=bg_tok,
+            hold=hold_tok,
+            pca_bg_feat=background_pixel_features,
+            pca_bg_energy=background_energy,
+            t_bg=background_times,
+            ledger_sha256=np.asarray(ledger_sha256),
+            detector=np.asarray("L1"),
+            qrange=np.asarray(qrange),
+            representation=np.asarray(taxonomy_contract.representation),
+        )
+        logger.info(
+            "cached background tokens and GPS ledger to %s",
+            background_cache.name,
+        )
 
     # Independent index draws: disjoint bootstrap resamples of the background
     # pool. Each gets its own threshold from the held-out background.
@@ -279,7 +494,18 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         "qrange": list(qrange),
         "n_candidates": int(len(cand_tok)),
         "n_robust": int(is_rob.sum()), "n_rejected": int((~is_rob).sum()),
+        "sample_class_counts": {
+            str(label): int(count)
+            for label, count in cands["dsd_class"].value_counts().items()
+        },
         "n_draws": n_draws, "n_background": n_bg, "seed": seed,
+        "candidate_token_cache": str(candidate_cache),
+        "candidate_token_cache_sha256": _sha256_file(candidate_cache),
+        "candidate_keys_sha256": candidate_key_sha256,
+        "background_token_cache": str(background_cache),
+        "background_token_cache_sha256": _sha256_file(background_cache),
+        "background_ledger": str(background_ledger),
+        "background_ledger_sha256": _sha256_file(background_ledger),
         # --- primary, threshold-independent ---
         "score_rank_correlation_mean": float(np.mean(rhos)),
         "score_rank_correlation_min": float(np.min(rhos)),
@@ -291,9 +517,12 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         # --- diagnostic only: threshold not production-faithful (§19) ---
         "_diagnostic_thresholds": thresholds,
         "_diagnostic_verdict_note": (
-            "held-out threshold uses vetoed background (~0.10) not the "
-            "un-vetoed production calibration (~0.447); verdict metrics below "
-            "are not production-faithful, see LAB_NOTEBOOK section 19"),
+            "held-out thresholds use vetoed clean background, whereas the "
+            "production calibration uses its frozen chronological background "
+            "ledger and detector-specific B=1,000,000 bootstrap upper endpoint. "
+            "The populations and decision boundaries are therefore different; "
+            "verdict metrics below are diagnostic only, see LAB_NOTEBOOK "
+            "section 19"),
         "_diagnostic_verdict_stable_fraction": float((all_survive | all_reject).mean()),
     }
     dest = AGG / (

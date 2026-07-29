@@ -42,6 +42,13 @@ Usage
 Requires ``lalsuite``, which lives in the WSL conda environment alongside
 ``nds2``; see the README note on the PEM branch.
 
+The primary coincidence endpoint is production-faithful: the O3b Top-k patches
+localize the time and frequency band independently in each detector, and a
+trial is recovered end to end only if that detector first crosses the primary
+candidate threshold and the localized cross-detector statistic then crosses
+its empirical null threshold. A centre-known, broad-band statistic is retained
+only as an explicitly labelled oracle diagnostic.
+
 Writes a representation-versioned
 ``data/production/aggregated/astrophysical_injection_{run}_{representation}.json``.
 """
@@ -78,6 +85,14 @@ SYSTEMS = (
 DISTANCES_MPC = (100.0, 200.0, 400.0, 800.0, 1600.0)
 
 
+def _dsd_class(score: float, lower: float, upper: float) -> str:
+    if score > upper:
+        return "ROBUST"
+    if score >= lower:
+        return "AMBIGUOUS"
+    return "BACKGROUND"
+
+
 def _waveform(m1: float, m2: float, distance_mpc: float, inclination: float,
               f_low: float):
     """IMRPhenomD plus/cross polarizations, as numpy arrays at SAMPLE_RATE."""
@@ -109,9 +124,30 @@ def _project(hp: np.ndarray, hc: np.ndarray, detector: str,
 
 
 def _score(spectrogram_rgb, scorers: dict) -> dict:
-    return {name: float(sc.score_spectrogram([spectrogram_rgb], threshold=0.0)[0]
-                        ["novelty_score"])
-            for name, sc in scorers.items()}
+    return {
+        name: details["score"]
+        for name, details in _score_details(
+            spectrogram_rgb,
+            scorers,
+        ).items()
+    }
+
+
+def _score_details(spectrogram_rgb, scorers: dict) -> dict:
+    out = {}
+    for name, scorer in scorers.items():
+        result = scorer.score_spectrogram(
+            [spectrogram_rgb],
+            threshold=0.0,
+        )[0]
+        out[name] = {
+            "score": float(result["novelty_score"]),
+            "top_k_indices": np.asarray(
+                result["top_k_indices"],
+                dtype=np.int32,
+            ).ravel(),
+        }
+    return out
 
 
 def _trial(
@@ -138,7 +174,7 @@ def _trial(
     psi = float(rng.uniform(0, np.pi))
     t_geo = gps + SEGMENT_LENGTH / 2.0
 
-    out, snr, whitened, clean_scores = {}, {}, {}, {}
+    out, top_k, snr, whitened, clean_scores = {}, {}, {}, {}, {}
     for det in ("H1", "L1"):
         h, delay = _project(hp, hc, det, ra, dec, psi, t_geo)
         try:
@@ -188,27 +224,96 @@ def _trial(
             qrange=qrange,
         )
         rgb = (matplotlib.colormaps["cividis"](spec)[:, :, :3] * 255).astype(np.uint8)
-        out[det] = _score(rgb, scorers)
+        details = _score_details(rgb, scorers)
+        out[det] = {
+            scorer_name: result["score"]
+            for scorer_name, result in details.items()
+        }
+        top_k[det] = details["o3b"]["top_k_indices"]
 
-    # Coincidence, exactly as production: band-pass, excerpt +-0.5 s about the
-    # signal, scan the normalized cross-correlation over the light-travel lag.
+    # Production-faithful coincidence: localize time and frequency from each
+    # detector's O3b Top-k patches. Each direction corresponds to the candidate
+    # detector that would trigger the physical partner check in production.
+    from src.pipeline_v2_production.coincidence_physical import _patch_time_band
+
     fs = float(1.0 / whitened["H1"].dt.value)
-    seg = {}
-    for det, ts in whitened.items():
-        x = np.asarray(ts.value, dtype=float)
-        x = _bandpass(x, fs, *band)
-        c = len(x) // 2
+    max_lag = LIGHT_TRAVEL_S + LAG_MARGIN_S
+    localized_cc = {}
+    localizations = {}
+    for source, partner in (("H1", "L1"), ("L1", "H1")):
+        t_offset, f_lo, f_hi = _patch_time_band(top_k[source])
+        localizations[source] = {
+            "t_offset_s": float(t_offset),
+            "f_lo": float(f_lo),
+            "f_hi": float(f_hi),
+        }
+        c = int(round(t_offset * fs))
         half = int(round(HALF_WINDOW_S * fs))
-        seg[det] = x[max(0, c - half): min(len(x), c + half)]
-    n = min(len(seg["H1"]), len(seg["L1"]))
-    cc = float(_max_normxcorr(seg["H1"][:n], seg["L1"][:n], fs,
-                              LIGHT_TRAVEL_S + LAG_MARGIN_S))
+        source_values = _bandpass(
+            np.asarray(whitened[source].value, dtype=float),
+            fs,
+            f_lo,
+            f_hi,
+        )
+        partner_values = _bandpass(
+            np.asarray(whitened[partner].value, dtype=float),
+            fs,
+            f_lo,
+            f_hi,
+        )
+        source_segment = source_values[
+            max(0, c - half): min(len(source_values), c + half)
+        ]
+        partner_segment = partner_values[
+            max(0, c - half): min(len(partner_values), c + half)
+        ]
+        n = min(len(source_segment), len(partner_segment))
+        localized_cc[source] = float(
+            _max_normxcorr(
+                source_segment[:n],
+                partner_segment[:n],
+                fs,
+                max_lag,
+            )
+        )
+
+    # Oracle diagnostic only: the injection centre and requested broad band are
+    # known by construction but are unavailable to the production pipeline.
+    oracle_segments = {}
+    for detector, series in whitened.items():
+        values = _bandpass(
+            np.asarray(series.value, dtype=float),
+            fs,
+            *band,
+        )
+        centre = len(values) // 2
+        half = int(round(HALF_WINDOW_S * fs))
+        oracle_segments[detector] = values[
+            max(0, centre - half): min(len(values), centre + half)
+        ]
+    n_oracle = min(
+        len(oracle_segments["H1"]),
+        len(oracle_segments["L1"]),
+    )
+    cc_oracle = float(
+        _max_normxcorr(
+            oracle_segments["H1"][:n_oracle],
+            oracle_segments["L1"][:n_oracle],
+            fs,
+            max_lag,
+        )
+    )
 
     return {"gps": int(gps), "ra": ra, "dec": dec, "psi": psi,
             "snr_H1": snr["H1"], "snr_L1": snr["L1"],
             "snr_network": float(np.hypot(snr["H1"], snr["L1"])),
             "score_H1": out["H1"], "score_L1": out["L1"],
-            "clean_H1": clean_scores["H1"], "clean_L1": clean_scores["L1"], "cc": cc}
+            "clean_H1": clean_scores["H1"], "clean_L1": clean_scores["L1"],
+            "cc_localized_H1": localized_cc["H1"],
+            "cc_localized_L1": localized_cc["L1"],
+            "localization_H1": localizations["H1"],
+            "localization_L1": localizations["L1"],
+            "cc_oracle_center": cc_oracle}
 
 
 def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
@@ -217,6 +322,7 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
     from src.core.patch_scorer import PatchScorer
     from src.core.index_contract import (
         load_index_contract,
+        sha256_file,
         taxonomy_representation,
     )
     from src.core.utils import get_reference_dir, load_config
@@ -259,8 +365,14 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
         "dsd_H1": float(
             threshold_artifact["thresholds"]["H1"]["ci_upper"]
         ),
+        "dsd_H1_lower": float(
+            threshold_artifact["thresholds"]["H1"]["ci_lower"]
+        ),
         "dsd_L1": float(
             threshold_artifact["thresholds"]["L1"]["ci_upper"]
+        ),
+        "dsd_L1_lower": float(
+            threshold_artifact["thresholds"]["L1"]["ci_lower"]
         ),
         "tau_cc": float(tau_cc),
     }
@@ -276,6 +388,7 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
     t_iter = iter(times)
 
     rows = []
+    trial_rows = []
     for sysd in systems:
         for dist in distances:
             trials, attempts = [], 0
@@ -294,17 +407,45 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
                     break
                 r = _trial(gps, hp, hc, rng, scorers, band, qrange)
                 if r is not None:
+                    r["inclination"] = inc
                     trials.append(r)
             if not trials:
                 continue
-            cc = np.array([t["cc"] for t in trials])
+            cc_h1 = np.array([t["cc_localized_H1"] for t in trials])
+            cc_l1 = np.array([t["cc_localized_L1"] for t in trials])
+            cc_oracle = np.array([t["cc_oracle_center"] for t in trials])
             snr = np.array([t["snr_network"] for t in trials])
             f_h1 = np.array([t["score_H1"]["o3b"] for t in trials])
             f_l1 = np.array([t["score_L1"]["o3b"] for t in trials])
             d_h1 = np.array([t["score_H1"]["native"] for t in trials])
             d_l1 = np.array([t["score_L1"]["native"] for t in trials])
+            dsd_class_h1 = np.asarray([
+                _dsd_class(
+                    score,
+                    thresholds["dsd_H1_lower"],
+                    thresholds["dsd_H1"],
+                )
+                for score in d_h1
+            ])
+            dsd_class_l1 = np.asarray([
+                _dsd_class(
+                    score,
+                    thresholds["dsd_L1_lower"],
+                    thresholds["dsd_L1"],
+                )
+                for score in d_l1
+            ])
             c_h1 = np.array([t["clean_H1"]["o3b"] for t in trials])
             c_l1 = np.array([t["clean_L1"]["o3b"] for t in trials])
+            flag_h1 = f_h1 > thresholds["flag_o3b"]
+            flag_l1 = f_l1 > thresholds["flag_o3b"]
+            localized_h1 = cc_h1 > thresholds["tau_cc"]
+            localized_l1 = cc_l1 > thresholds["tau_cc"]
+            primary_flag = flag_h1 | flag_l1
+            end_to_end = (
+                (flag_h1 & localized_h1)
+                | (flag_l1 & localized_l1)
+            )
             delta = np.concatenate([f_h1 - c_h1, f_l1 - c_l1])
             row = {
                 "system": sysd["name"], "distance_mpc": dist,
@@ -312,27 +453,179 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
                 "waveform_duration_s": float(len(hp) / SAMPLE_RATE),
                 "snr_network_mean": float(snr.mean()),
                 "snr_network_median": float(np.median(snr)),
-                "flag_rate_H1": float((f_h1 > thresholds["flag_o3b"]).mean()),
-                "flag_rate_L1": float((f_l1 > thresholds["flag_o3b"]).mean()),
-                "flag_rate_either": float(((f_h1 > thresholds["flag_o3b"]) |
-                                           (f_l1 > thresholds["flag_o3b"])).mean()),
+                "flag_rate_H1": float(flag_h1.mean()),
+                "flag_rate_L1": float(flag_l1.mean()),
+                "flag_rate_either": float(primary_flag.mean()),
                 "dsd_survive_H1": float((d_h1 > thresholds["dsd_H1"]).mean()),
                 "dsd_survive_L1": float((d_l1 > thresholds["dsd_L1"]).mean()),
+                "dsd_class_rate_H1": {
+                    klass: float((dsd_class_h1 == klass).mean())
+                    for klass in ("ROBUST", "AMBIGUOUS", "BACKGROUND")
+                },
+                "dsd_class_rate_L1": {
+                    klass: float((dsd_class_l1 == klass).mean())
+                    for klass in ("ROBUST", "AMBIGUOUS", "BACKGROUND")
+                },
                 "clean_score_mean": float(np.concatenate([c_h1, c_l1]).mean()),
                 "delta_score_mean": float(delta.mean()),
                 "delta_score_std": float(delta.std(ddof=1)) if len(delta) > 1 else 0.0,
                 "delta_score_positive_frac": float((delta > 0).mean()),
-                "cc_mean": float(cc.mean()), "cc_median": float(np.median(cc)),
-                "coincidence_recovery": float((cc > thresholds["tau_cc"]).mean()),
-                "cc_values": [float(x) for x in cc],
+                "cc_localized_H1_mean": float(cc_h1.mean()),
+                "cc_localized_L1_mean": float(cc_l1.mean()),
+                "coincidence_localized_any": float(
+                    (localized_h1 | localized_l1).mean()
+                ),
+                "coincidence_recovery": float(end_to_end.mean()),
+                "coincidence_given_primary_flag": (
+                    float(end_to_end[primary_flag].mean())
+                    if primary_flag.any()
+                    else None
+                ),
+                "coincidence_oracle_recovery": float(
+                    (cc_oracle > thresholds["tau_cc"]).mean()
+                ),
+                "cc_oracle_mean": float(cc_oracle.mean()),
+                "cc_localized_H1_values": [float(x) for x in cc_h1],
+                "cc_localized_L1_values": [float(x) for x in cc_l1],
+                "cc_oracle_values": [float(x) for x in cc_oracle],
             }
             rows.append(row)
+            for trial_index, trial in enumerate(trials):
+                flag_h1_trial = bool(
+                    trial["score_H1"]["o3b"] > thresholds["flag_o3b"]
+                )
+                flag_l1_trial = bool(
+                    trial["score_L1"]["o3b"] > thresholds["flag_o3b"]
+                )
+                localized_h1_trial = bool(
+                    trial["cc_localized_H1"] > thresholds["tau_cc"]
+                )
+                localized_l1_trial = bool(
+                    trial["cc_localized_L1"] > thresholds["tau_cc"]
+                )
+                recovered_h1_trial = flag_h1_trial and localized_h1_trial
+                recovered_l1_trial = flag_l1_trial and localized_l1_trial
+                trial_rows.append(
+                    {
+                        "system": sysd["name"],
+                        "distance_mpc": float(dist),
+                        "trial_index": int(trial_index),
+                        "gps": int(trial["gps"]),
+                        "ra": float(trial["ra"]),
+                        "dec": float(trial["dec"]),
+                        "psi": float(trial["psi"]),
+                        "inclination": float(trial["inclination"]),
+                        "snr_H1": float(trial["snr_H1"]),
+                        "snr_L1": float(trial["snr_L1"]),
+                        "snr_network": float(trial["snr_network"]),
+                        "score_H1_o3b": float(trial["score_H1"]["o3b"]),
+                        "score_L1_o3b": float(trial["score_L1"]["o3b"]),
+                        "score_H1_native": float(
+                            trial["score_H1"]["native"]
+                        ),
+                        "score_L1_native": float(
+                            trial["score_L1"]["native"]
+                        ),
+                        "clean_H1_o3b": float(trial["clean_H1"]["o3b"]),
+                        "clean_L1_o3b": float(trial["clean_L1"]["o3b"]),
+                        "clean_H1_native": float(
+                            trial["clean_H1"]["native"]
+                        ),
+                        "clean_L1_native": float(
+                            trial["clean_L1"]["native"]
+                        ),
+                        "cc_localized_H1": float(
+                            trial["cc_localized_H1"]
+                        ),
+                        "cc_localized_L1": float(
+                            trial["cc_localized_L1"]
+                        ),
+                        "cc_oracle_center": float(
+                            trial["cc_oracle_center"]
+                        ),
+                        "localization_H1_t_offset_s": float(
+                            trial["localization_H1"]["t_offset_s"]
+                        ),
+                        "localization_H1_f_lo": float(
+                            trial["localization_H1"]["f_lo"]
+                        ),
+                        "localization_H1_f_hi": float(
+                            trial["localization_H1"]["f_hi"]
+                        ),
+                        "localization_L1_t_offset_s": float(
+                            trial["localization_L1"]["t_offset_s"]
+                        ),
+                        "localization_L1_f_lo": float(
+                            trial["localization_L1"]["f_lo"]
+                        ),
+                        "localization_L1_f_hi": float(
+                            trial["localization_L1"]["f_hi"]
+                        ),
+                        "flag_H1": flag_h1_trial,
+                        "flag_L1": flag_l1_trial,
+                        "dsd_survive_H1": bool(
+                            trial["score_H1"]["native"]
+                            > thresholds["dsd_H1"]
+                        ),
+                        "dsd_survive_L1": bool(
+                            trial["score_L1"]["native"]
+                            > thresholds["dsd_L1"]
+                        ),
+                        "dsd_class_H1": _dsd_class(
+                            trial["score_H1"]["native"],
+                            thresholds["dsd_H1_lower"],
+                            thresholds["dsd_H1"],
+                        ),
+                        "dsd_class_L1": _dsd_class(
+                            trial["score_L1"]["native"],
+                            thresholds["dsd_L1_lower"],
+                            thresholds["dsd_L1"],
+                        ),
+                        "coincidence_localized_H1": localized_h1_trial,
+                        "coincidence_localized_L1": localized_l1_trial,
+                        "coincidence_recovered_H1": recovered_h1_trial,
+                        "coincidence_recovered_L1": recovered_l1_trial,
+                        "coincidence_recovered": bool(
+                            recovered_h1_trial or recovered_l1_trial
+                        ),
+                        "coincidence_oracle_recovered": bool(
+                            trial["cc_oracle_center"] > thresholds["tau_cc"]
+                        ),
+                        "threshold_flag_o3b": float(
+                            thresholds["flag_o3b"]
+                        ),
+                        "threshold_dsd_H1": float(thresholds["dsd_H1"]),
+                        "threshold_dsd_H1_lower": float(
+                            thresholds["dsd_H1_lower"]
+                        ),
+                        "threshold_dsd_L1": float(thresholds["dsd_L1"]),
+                        "threshold_dsd_L1_lower": float(
+                            thresholds["dsd_L1_lower"]
+                        ),
+                        "threshold_tau_cc": float(thresholds["tau_cc"]),
+                        "taxonomy_representation": representation,
+                        "q_min": int(qrange[0]),
+                        "q_max": int(qrange[1]),
+                        "seed": int(seed),
+                    }
+                )
             logger.info(
                 f"{sysd['name']:12s} {dist:6.0f} Mpc | SNR~{snr.mean():6.1f} | "
                 f"flag {row['flag_rate_either']:5.0%} | dScore "
                 f"{row['delta_score_mean']:+.4f} | DSD "
                 f"{row['dsd_survive_H1']:4.0%}/{row['dsd_survive_L1']:4.0%} | "
-                f"coinc {row['coincidence_recovery']:5.0%} (cc {cc.mean():.3f})")
+                f"end-to-end coinc {row['coincidence_recovery']:5.0%} | "
+                f"oracle {row['coincidence_oracle_recovery']:5.0%}")
+
+    import pandas as pd
+
+    AGG.mkdir(parents=True, exist_ok=True)
+    trial_path = AGG / (
+        f"astrophysical_injection_trials_{run_name.lower()}_"
+        f"{representation}.csv"
+    )
+    trial_frame = pd.DataFrame(trial_rows)
+    trial_frame.to_csv(trial_path, index=False)
 
     out = {"run": run_name, "thresholds": thresholds, "n_trials": n_trials,
            "seed": seed, "band": list(band),
@@ -341,8 +634,10 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
            "native_index_path": str(native_index),
            "native_index_sha256": index_contract.sha256,
            "dsd_threshold_path": str(threshold_path),
+           "trial_level_path": str(trial_path),
+           "trial_level_sha256": sha256_file(trial_path),
+           "n_trial_rows": int(len(trial_frame)),
            "waveform_model": "IMRPhenomD", "rows": rows}
-    AGG.mkdir(parents=True, exist_ok=True)
     dest = AGG / (
         f"astrophysical_injection_{run_name.lower()}_{representation}.json"
     )

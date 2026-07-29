@@ -1519,6 +1519,7 @@ class AggregateReporter:
         from src.core.utils import load_config
         from src.pipeline_v2_production.background_calibration import (
             CalibrationWindow,
+            block_bootstrap_p99_ci,
             resolve_run_bounds,
             validate_calibration_ledger,
         )
@@ -1728,38 +1729,19 @@ class AggregateReporter:
                 logger.error(f"Failed to obtain background scores for {det}.")
                 continue
                 
-            def block_bootstrap_p99_ci(scores_arr, B=1000, seed=42):
-                rng = np.random.default_rng(seed)
-                n = len(scores_arr)
-                b = max(1, int(n**(1/3)))
-                num_blocks = n // b
-                if num_blocks < 2:
-                    raise RuntimeError(
-                        "Too few complete temporal blocks for bootstrap"
-                    )
-                aligned = np.asarray(
-                    scores_arr[:num_blocks * b]
-                ).reshape(num_blocks, b)
-                bootstrap_p99 = np.zeros(B)
-                for i in range(B):
-                    chosen = rng.integers(
-                        0,
-                        num_blocks,
-                        size=num_blocks,
-                    )
-                    boot_sample = aligned[chosen].reshape(-1)
-                    bootstrap_p99[i] = np.percentile(boot_sample, 99)
-                    
-                ci_upper = np.percentile(bootstrap_p99, 97.5)
-                ci_lower = np.percentile(bootstrap_p99, 2.5)
-                return ci_lower, ci_upper
-                
-            ci_lower, ci_upper = block_bootstrap_p99_ci(scores)
-            p99 = np.percentile(scores, 99)
+            bootstrap = block_bootstrap_p99_ci(scores)
             result_dict[det] = {
-                "ci_lower": float(ci_lower),
-                "ci_upper": float(ci_upper),
-                "p99": float(p99),
+                "ci_lower": bootstrap["ci_lower"],
+                "ci_upper": bootstrap["ci_upper"],
+                "p99": bootstrap["p99"],
+                "bootstrap_replicates": bootstrap[
+                    "bootstrap_replicates"
+                ],
+                "bootstrap_seed": bootstrap["bootstrap_seed"],
+                "bootstrap_block_length": bootstrap["block_length"],
+                "bootstrap_complete_blocks": bootstrap[
+                    "n_complete_blocks"
+                ],
                 "n_background": int(len(scores)),
                 "background_scores_path": str(det_path),
                 "background_ledger_path": str(ledger_path),

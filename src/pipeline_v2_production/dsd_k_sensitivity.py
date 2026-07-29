@@ -47,7 +47,12 @@ import pandas as pd
 
 from src.core.index_contract import load_taxonomy_view, qrange_tag
 from src.core.utils import load_config, record_environment, setup_logger
-from src.pipeline_v2_production.dsd_index_stability import _sample
+from src.pipeline_v2_production.dsd_index_stability import (
+    PRODUCTION_N_BACKGROUND,
+    _candidate_key_digest,
+    _sample,
+    _sha256_file,
+)
 from src.pipeline_v3_multiscale.norm_leakage.common import topk_score
 
 logger = setup_logger(__name__)
@@ -56,6 +61,7 @@ AGG = Path("data/production/aggregated")
 TOP_K = 68
 PRODUCTION_K = 1216
 DEFAULT_K_VALUES = (512, 1024, 1216, 2048)
+P5_HOLDOUT_BACKGROUND = 300
 
 
 def _build_index_k(tokens: np.ndarray, k: int, seed: int) -> np.ndarray:
@@ -103,24 +109,41 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
             for detector, gps in zip(cands.detector, cands.gps_start)
         ]
     )
-    cache = AGG / (
-        f"dsd_index_stability_tokens_{run_name.lower()}_"
+    candidate_key_sha256 = _candidate_key_digest(candidate_keys)
+    candidate_cache = AGG / (
+        f"dsd_index_stability_candidate_tokens_{run_name.lower()}_"
         f"{contract.cache_tag}_{qrange_tag(qrange)}_"
-        f"n{n_candidates}_s{seed}.npz"
+        f"n{n_candidates}_s{seed}_{candidate_key_sha256[:12]}.npz"
     )
-    if not cache.exists():
+    background_cache = AGG / (
+        f"dsd_index_stability_background_tokens_{run_name.lower()}_"
+        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{PRODUCTION_N_BACKGROUND}_h{P5_HOLDOUT_BACKGROUND}_s{seed}.npz"
+    )
+    if not candidate_cache.exists() or not background_cache.exists():
         raise FileNotFoundError(
-            f"{cache.name} missing. Run `dsd-index-stability` first to build the "
-            "candidate/background token cache this test reuses.")
-    logger.info(f"loading cached tokens from {cache.name}")
-    z = np.load(cache, allow_pickle=True)
-    cand_tok, kept, bg_tok = z["cand"], z["kept"], z["bg"]
+            "P5 split token caches are missing. Run `dsd-index-stability` "
+            "first to build the candidate/background token caches this test "
+            "reuses."
+        )
+    logger.info(
+        "loading P5 candidate/background tokens from %s and %s",
+        candidate_cache.name,
+        background_cache.name,
+    )
+    z = np.load(candidate_cache, allow_pickle=False)
+    z_bg = np.load(background_cache, allow_pickle=False)
+    cand_tok, kept, bg_tok = z["cand"], z["kept"], z_bg["bg"]
     if (
         tuple(int(value) for value in z["qrange"].tolist()) != qrange
         or str(z["representation"].item()) != contract.representation
         or not np.array_equal(z["candidate_keys"], candidate_keys)
+        or str(z["candidate_keys_sha256"].item()) != candidate_key_sha256
+        or tuple(int(value) for value in z_bg["qrange"].tolist()) != qrange
+        or str(z_bg["representation"].item()) != contract.representation
+        or len(bg_tok) != PRODUCTION_N_BACKGROUND
     ):
-        raise RuntimeError(f"Token cache contract mismatch: {cache}")
+        raise RuntimeError("P5 split token cache contract mismatch")
     cands = cands[kept].reset_index(drop=True)
     is_rob = (cands.dsd_class == "ROBUST").to_numpy()
     logger.info(f"{len(cand_tok)} candidates ({int(is_rob.sum())} ROBUST, "
@@ -156,8 +179,17 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         "qrange": list(qrange),
         "n_candidates": int(len(cand_tok)),
         "n_robust": int(is_rob.sum()), "n_rejected": int((~is_rob).sum()),
+        "sample_class_counts": {
+            str(label): int(count)
+            for label, count in cands["dsd_class"].value_counts().items()
+        },
         "k_values": k_values, "production_k": PRODUCTION_K, "seed": seed,
         "n_background_segments": int(bg_tok.shape[0]),
+        "candidate_token_cache": str(candidate_cache),
+        "candidate_token_cache_sha256": _sha256_file(candidate_cache),
+        "candidate_keys_sha256": candidate_key_sha256,
+        "background_token_cache": str(background_cache),
+        "background_token_cache_sha256": _sha256_file(background_cache),
         # --- primary, threshold-independent ---
         "rank_correlation_vs_production_k": vs_prod,
         "rank_correlation_pairwise_mean": float(np.mean(rhos)),

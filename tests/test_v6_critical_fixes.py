@@ -601,6 +601,39 @@ def test_calibration_plan_deduplicates_overlapping_raw_archives() -> None:
     assert audit["self_overlap"] == 0
 
 
+def test_block_bootstrap_is_batched_deterministic_and_production_sized() -> None:
+    from src.pipeline_v2_production.background_calibration import (
+        DEFAULT_BOOTSTRAP_REPLICATES,
+        block_bootstrap_p99_ci,
+    )
+
+    scores = np.linspace(0.0, 1.0, 250, dtype=np.float64)
+    small_chunks = block_bootstrap_p99_ci(
+        scores,
+        B=200,
+        seed=7,
+        chunk_size=7,
+    )
+    large_chunks = block_bootstrap_p99_ci(
+        scores,
+        B=200,
+        seed=7,
+        chunk_size=200,
+    )
+
+    assert small_chunks == large_chunks
+    assert small_chunks["ci_lower"] <= small_chunks["ci_upper"]
+    assert small_chunks["p99"] == pytest.approx(np.percentile(scores, 99))
+    assert small_chunks["block_length"] == int(len(scores) ** (1 / 3))
+    assert DEFAULT_BOOTSTRAP_REPLICATES == 1_000_000
+
+    from src.pipeline_v2_production.dsd_threshold_mc_error import (
+        _bootstrap_p99,
+    )
+
+    assert _bootstrap_p99(scores, B=200, seed=7).shape == (200,)
+
+
 def test_calibration_ledger_audit_detects_leakage() -> None:
     from src.pipeline_v2_production.background_calibration import (
         CalibrationWindow,
@@ -751,6 +784,83 @@ def test_dirty_builder_provenance_requires_and_hashes_source_snapshot(
         )
 
 
+def test_verified_dsd_score_reuse_requires_exact_scientific_population(
+    tmp_path,
+) -> None:
+    from src.pipeline_v2_production.dsd_transition_audit import (
+        _validate_reusable_candidate_scores,
+    )
+
+    representation = "idxq4-64_queryq4-64"
+    index_sha256 = "a" * 64
+    taxonomy = pd.DataFrame(
+        {
+            "gps_start": [100.0, 200.0],
+            "detector": ["H1", "L1"],
+        }
+    )
+    scores = pd.DataFrame(
+        {
+            "candidate_id": ["100.0_H1", "200.0_L1"],
+            "gps_start": [100.0, 200.0],
+            "detector": ["H1", "L1"],
+            "score": [0.1, 0.2],
+            "variant": [representation, representation],
+        }
+    )
+    score_path = tmp_path / "scores.csv"
+    scores.to_csv(score_path, index=False)
+    source_taxonomy_path = tmp_path / (
+        "Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv"
+    )
+    taxonomy.assign(
+        native_score_idxq4_64_queryq4_64=[0.1, 0.2]
+    ).to_csv(source_taxonomy_path, index=False)
+    audit_path = tmp_path / "audit.json"
+    audit_path.write_text(
+        json.dumps(
+            {
+                "experiment_run": True,
+                "total_failed": 0,
+                "total_evaluated": 2,
+                "long_form_scores": str(score_path),
+                "taxonomy_artifact": str(source_taxonomy_path),
+                "representation": {
+                    "variant": representation,
+                    "coherent": True,
+                    "index_sha256": index_sha256,
+                    "catalog_gps_to_analysis_window_offset_s": 4.0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    validated, provenance = _validate_reusable_candidate_scores(
+        taxonomy,
+        score_path,
+        audit_path,
+        representation=representation,
+        index_sha256=index_sha256,
+        candidate_window_offset=4.0,
+    )
+    assert len(validated) == 2
+    assert provenance["exact_candidate_key_match"] is True
+    assert provenance["all_scores_finite"] is True
+
+    scores.loc[1, "gps_start"] = 300.0
+    scores.to_csv(score_path, index=False)
+    with pytest.raises(RuntimeError, match="population mismatch"):
+        _validate_reusable_candidate_scores(
+            taxonomy,
+            score_path,
+            audit_path,
+            representation=representation,
+            index_sha256=index_sha256,
+            candidate_window_offset=4.0,
+        )
+
+
 def test_patch_production_refuses_silent_legacy_native_dual_scoring() -> None:
     import main
 
@@ -845,6 +955,33 @@ def test_injection_controls_do_not_open_the_legacy_native_index() -> None:
         assert "patch_compressed_index_o4a_ex.npz" not in source
         assert "patch_compressed_index_o4a_q4-64_ex.npz" in source
         assert "idxq4-64_queryq4-64" not in source
+
+
+def test_p9_dsd_classification_uses_both_c2_interval_endpoints() -> None:
+    from src.pipeline_v2_production.astrophysical_injection import _dsd_class
+
+    assert _dsd_class(0.10, 0.15, 0.22) == "BACKGROUND"
+    assert _dsd_class(0.15, 0.15, 0.22) == "AMBIGUOUS"
+    assert _dsd_class(0.22, 0.15, 0.22) == "AMBIGUOUS"
+    assert _dsd_class(0.220001, 0.15, 0.22) == "ROBUST"
+
+
+def test_c2_queue_has_a_fail_closed_artifact_gate_after_each_gpu_stage() -> None:
+    script = Path("scripts/run_c2_bgv3_gpu_queue.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    for stage in (
+        "p5",
+        "p4",
+        "p10",
+        "multiscale",
+        "cohesion",
+        "whitening",
+        "p9",
+    ):
+        assert f'"--stage", "{stage}"' in script
+    assert "verify_c2_bgv3_artifacts.py" in script
 
 
 def test_report_uses_coherent_aliases_and_versioned_pem_without_fallback() -> None:

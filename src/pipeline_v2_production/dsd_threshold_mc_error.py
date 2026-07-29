@@ -1,11 +1,11 @@
 """Monte Carlo error of the DSD block-bootstrap thresholds.
 
 The DSD thresholds are the 2.5th and 97.5th percentiles of the $P_{99}$
-distribution over $B=1000$ moving-block bootstrap replicas of the native
+distribution over moving-block bootstrap replicas of the native
 background scores (``block_bootstrap_p99_ci`` in ``aggregate_report.py``). Both
-manuscripts assert that $B=1000$ keeps the Monte Carlo error on
-$\\tau_{\\mathrm{lo}}, \\tau_{\\mathrm{hi}}$ "well below the bin width of the
-underlying score histogram" -- an argument, never a measurement.
+manuscripts require the finite-replica Monte Carlo error on
+$\\tau_{\\mathrm{lo}}, \\tau_{\\mathrm{hi}}$ to be measured rather than
+assumed.
 
 This measures it. The bootstrap is repeated ``--reps`` times with independent
 seeds; the spread of the resulting thresholds *across seeds* is the Monte Carlo
@@ -22,7 +22,7 @@ Two reference scales are reported alongside it:
 
 Usage
 -----
-    python -m src.pipeline_v2_production.dsd_threshold_mc_error --reps 200
+    python -m src.pipeline_v2_production.dsd_threshold_mc_error --reps 10
 
 Writes a representation-versioned
 ``data/production/aggregated/dsd_threshold_mc_error_{run}_{representation}.json``.
@@ -38,32 +38,25 @@ import numpy as np
 
 from src.core.index_contract import load_taxonomy_contract
 from src.core.utils import record_environment, setup_logger
+from src.pipeline_v2_production.background_calibration import (
+    DEFAULT_BOOTSTRAP_REPLICATES,
+    block_bootstrap_p99_distribution,
+)
 
 logger = setup_logger(__name__)
 
 AGG_DIR = Path("data/production/aggregated")
-B_PRODUCTION = 1000
-P_TAIL = 99.0
+B_PRODUCTION = DEFAULT_BOOTSTRAP_REPLICATES
 
 
 def _bootstrap_p99(scores: np.ndarray, B: int, seed: int) -> np.ndarray:
-    """`B` moving-block bootstrap replicas of the P99, vectorised.
-
-    Same scheme as production: block length ``b = n^(1/3)``, ``ceil(n / b)``
-    blocks drawn with replacement from uniformly random starts, concatenated
-    and truncated back to ``n``.
-    """
-    n = len(scores)
-    b = max(1, int(n ** (1 / 3)))
-    num_blocks = n // b
-    if num_blocks < 2:
-        raise RuntimeError("Too few complete temporal blocks")
-    aligned = np.asarray(scores[:num_blocks * b]).reshape(num_blocks, b)
-
-    rng = np.random.default_rng(seed)
-    chosen = rng.integers(0, num_blocks, size=(B, num_blocks))
-    boot = aligned[chosen].reshape(B, -1)
-    return np.percentile(boot, P_TAIL, axis=1)
+    """`B` production-identical, memory-bounded moving-block replicas."""
+    distribution, _, _ = block_bootstrap_p99_distribution(
+        scores,
+        B=B,
+        seed=seed,
+    )
+    return distribution
 
 
 def measure(scores: np.ndarray, reps: int, B: int = B_PRODUCTION) -> dict:
@@ -99,7 +92,7 @@ def measure(scores: np.ndarray, reps: int, B: int = B_PRODUCTION) -> dict:
     }
 
 
-def run(run_name: str = "O4a", reps: int = 200, B: int = B_PRODUCTION) -> dict:
+def run(run_name: str = "O4a", reps: int = 10, B: int = B_PRODUCTION) -> dict:
     """Measure the Monte-Carlo error on the DSD thresholds from stored native
     background scores. Requires ``background_scores_native_{det}_{run}.npy``,
     written by ``aggregate-report``'s native-threshold calibration."""
@@ -160,10 +153,13 @@ def run(run_name: str = "O4a", reps: int = 200, B: int = B_PRODUCTION) -> dict:
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--run", default="O4a")
-    p.add_argument("--reps", type=int, default=200,
+    p.add_argument("--reps", type=int, default=10,
                    help="Independent bootstrap runs used to estimate the spread.")
     p.add_argument("--B", type=int, default=B_PRODUCTION,
-                   help="Replicas per bootstrap run (production value: 1000).")
+                   help=(
+                       "Replicas per bootstrap run "
+                       f"(production value: {B_PRODUCTION})."
+                   ))
     args = p.parse_args()
     run(args.run, reps=args.reps, B=args.B)
 

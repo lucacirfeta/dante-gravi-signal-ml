@@ -15,6 +15,8 @@ from typing import Mapping, Sequence
 
 import numpy as np
 
+DEFAULT_BOOTSTRAP_REPLICATES = 1_000_000
+
 
 @dataclass(frozen=True)
 class RawBlock:
@@ -304,4 +306,82 @@ def validate_calibration_ledger(
         "outside_run": outside,
         "forbidden_overlap": forbidden,
         "self_overlap": self_overlap,
+    }
+
+
+def block_bootstrap_p99_distribution(
+    scores: np.ndarray,
+    *,
+    B: int = DEFAULT_BOOTSTRAP_REPLICATES,
+    seed: int = 42,
+    chunk_size: int = 500,
+) -> tuple[np.ndarray, int, int]:
+    """Return a memory-bounded temporal-block bootstrap distribution.
+
+    The implementation consumes one deterministic RNG stream independently of
+    ``chunk_size``. This permits production-scale replication counts without
+    allocating ``B x n_scores`` in memory.
+    """
+
+    values = np.asarray(scores, dtype=np.float64)
+    if values.ndim != 1 or len(values) < 2:
+        raise ValueError("At least two one-dimensional scores are required")
+    if not np.isfinite(values).all():
+        raise ValueError("Bootstrap scores must all be finite")
+    if B < 2 or chunk_size < 1:
+        raise ValueError("B must be at least 2 and chunk_size must be positive")
+
+    block_length = max(1, int(len(values) ** (1 / 3)))
+    n_blocks = len(values) // block_length
+    if n_blocks < 2:
+        raise ValueError("At least two complete temporal blocks are required")
+    aligned = values[: n_blocks * block_length].reshape(
+        n_blocks,
+        block_length,
+    )
+
+    rng = np.random.default_rng(seed)
+    distribution = np.empty(B, dtype=np.float64)
+    for start in range(0, B, chunk_size):
+        batch_size = min(chunk_size, B - start)
+        chosen = rng.integers(
+            0,
+            n_blocks,
+            size=(batch_size, n_blocks),
+        )
+        samples = aligned[chosen].reshape(batch_size, -1)
+        distribution[start : start + batch_size] = np.percentile(
+            samples,
+            99,
+            axis=1,
+        )
+    return distribution, block_length, n_blocks
+
+
+def block_bootstrap_p99_ci(
+    scores: np.ndarray,
+    *,
+    B: int = DEFAULT_BOOTSTRAP_REPLICATES,
+    seed: int = 42,
+    chunk_size: int = 500,
+) -> dict[str, float | int]:
+    """P99 and its percentile interval under temporal-block resampling."""
+
+    values = np.asarray(scores, dtype=np.float64)
+    distribution, block_length, n_blocks = (
+        block_bootstrap_p99_distribution(
+            values,
+            B=B,
+            seed=seed,
+            chunk_size=chunk_size,
+        )
+    )
+    return {
+        "p99": float(np.percentile(values, 99)),
+        "ci_lower": float(np.percentile(distribution, 2.5)),
+        "ci_upper": float(np.percentile(distribution, 97.5)),
+        "bootstrap_replicates": int(B),
+        "bootstrap_seed": int(seed),
+        "block_length": int(block_length),
+        "n_complete_blocks": int(n_blocks),
     }

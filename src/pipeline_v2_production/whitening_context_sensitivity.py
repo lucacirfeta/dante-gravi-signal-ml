@@ -125,29 +125,22 @@ def _score_at_pads(
 def _block_bootstrap_p99_ci(
     scores: np.ndarray,
     *,
-    B: int = 1000,
+    B: int | None = None,
     seed: int = 42,
 ) -> tuple[float, float, float]:
     """P99 and percentile bootstrap CI using contiguous score blocks."""
-    values = np.asarray(scores, dtype=np.float64)
-    if values.ndim != 1 or len(values) < 2:
-        raise ValueError("At least two background scores are required")
-    rng = np.random.default_rng(seed)
-    n = len(values)
-    block = max(1, int(n ** (1 / 3)))
-    n_blocks = n // block
-    if n_blocks < 2:
-        raise ValueError("At least two complete temporal blocks are required")
-    aligned = values[:n_blocks * block].reshape(n_blocks, block)
-    boot = np.empty(B, dtype=np.float64)
-    for i in range(B):
-        chosen = rng.integers(0, n_blocks, size=n_blocks)
-        sample = aligned[chosen].reshape(-1)
-        boot[i] = np.percentile(sample, 99)
+    from src.pipeline_v2_production.background_calibration import (
+        block_bootstrap_p99_ci,
+    )
+
+    kwargs = {"seed": seed}
+    if B is not None:
+        kwargs["B"] = B
+    result = block_bootstrap_p99_ci(scores, **kwargs)
     return (
-        float(np.percentile(values, 99)),
-        float(np.percentile(boot, 2.5)),
-        float(np.percentile(boot, 97.5)),
+        result["p99"],
+        result["ci_lower"],
+        result["ci_upper"],
     )
 
 
@@ -292,21 +285,46 @@ def run(
         )
         for det in ("H1", "L1")
     }
+    dsd_threshold_path = AGG / (
+        f"dsd_thresholds_{run_name.lower()}_{representation}.json"
+    )
+    if not dsd_threshold_path.exists():
+        raise RuntimeError(
+            f"Canonical DSD thresholds are missing: {dsd_threshold_path}"
+        )
+    dsd_threshold_record = json.loads(
+        dsd_threshold_path.read_text(encoding="utf-8")
+    )
+    dsd_representation = dsd_threshold_record.get("representation", {})
+    if (
+        dsd_representation.get("variant") != representation
+        or dsd_representation.get("index_sha256") != contract.sha256
+        or not dsd_representation.get("coherent")
+    ):
+        raise RuntimeError(
+            "Canonical DSD threshold representation/index mismatch"
+        )
 
     thresholds_by_pad: dict[str, dict] = {}
     for pad in pads:
         det_thresholds = {}
         for det in ("H1", "L1"):
             forbidden_intervals, exclusion_meta = exclusion_by_detector[det]
-            cache = AGG / (
-                f"background_scores_whitening_{det}_{run_name}_"
-                f"{representation}_pad{pad:g}_bgv3_"
-                f"{contract.sha256[:8]}_"
-                f"{exclusion_meta['candidate_windows_sha256'][:8]}_"
-                f"{exclusion_meta['index_training_ledger_sha256'][:8]}.npy"
-            )
-            cache_meta_path = cache.with_suffix(".json")
-            ledger_path = cache.with_name(f"{cache.stem}_ledger.csv")
+            if pad == PRODUCTION_PAD:
+                canonical = dsd_threshold_record["thresholds"][det]
+                cache = Path(canonical["background_scores_path"])
+                ledger_path = Path(canonical["background_ledger_path"])
+                cache_meta_path = cache.with_suffix(".json")
+            else:
+                cache = AGG / (
+                    f"background_scores_whitening_{det}_{run_name}_"
+                    f"{representation}_pad{pad:g}_bgv3_"
+                    f"{contract.sha256[:8]}_"
+                    f"{exclusion_meta['candidate_windows_sha256'][:8]}_"
+                    f"{exclusion_meta['index_training_ledger_sha256'][:8]}.npy"
+                )
+                cache_meta_path = cache.with_suffix(".json")
+                ledger_path = cache.with_name(f"{cache.stem}_ledger.csv")
             expected = {
                 "schema_version": 3,
                 "detector": det,
@@ -459,10 +477,15 @@ def run(
                 "p99": p99,
                 "ci_lower": lower,
                 "ci_upper": upper,
+                "bootstrap_replicates": 1_000_000,
+                "bootstrap_seed": int(seed),
                 "n_background": int(len(bg_scores)),
                 "scores_path": str(cache),
                 "ledger_path": str(ledger_path),
                 "ledger_sha256": file_sha256(ledger_path),
+                "pad4_reuses_canonical_dsd_calibration": bool(
+                    pad == PRODUCTION_PAD
+                ),
             }
         thresholds_by_pad[str(pad)] = det_thresholds
     cands = _sample_near_threshold(

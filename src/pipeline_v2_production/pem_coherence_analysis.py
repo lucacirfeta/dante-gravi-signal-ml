@@ -598,12 +598,47 @@ def run_pem_coherence_analysis(
     results = []
     reused_event_keys = set()
     reused_calibrations = []
+    rejected_calibration_reuse = []
     if reuse_existing_dir is not None:
         reuse_existing_dir = Path(reuse_existing_dir)
         reuse_report = reuse_existing_dir / "coherence_report.csv"
+        reuse_manifest_path = reuse_existing_dir / "selection_manifest.json"
         if not reuse_report.exists():
             raise FileNotFoundError(reuse_report)
+        if not reuse_manifest_path.exists():
+            raise RuntimeError(
+                "PEM reuse requires the source selection manifest: "
+                f"{reuse_manifest_path}"
+            )
+        reuse_manifest = json.loads(
+            reuse_manifest_path.read_text(encoding="utf-8")
+        )
+        if (
+            reuse_manifest.get("taxonomy_representation")
+            != taxonomy_contract.representation
+        ):
+            raise RuntimeError("PEM reuse representation mismatch")
+        if (
+            reuse_manifest.get("channel_thresholds_sha256")
+            != sha256_file(thresholds_file)
+        ):
+            raise RuntimeError("PEM reuse channel-threshold hash mismatch")
         previous = pd.read_csv(reuse_report)
+        required_reuse_columns = {
+            "detector",
+            "gps_start",
+            "aux_channel",
+            "max_coherence",
+            "data_available",
+        }
+        missing_reuse_columns = required_reuse_columns.difference(
+            previous.columns
+        )
+        if missing_reuse_columns:
+            raise RuntimeError(
+                "PEM reuse report lacks required columns: "
+                f"{sorted(missing_reuse_columns)}"
+            )
         target_by_key = {
             (str(target["detector"]), int(target["gps_start"])): target
             for target in targets
@@ -615,6 +650,16 @@ def run_pem_coherence_analysis(
             target = target_by_key.get(key)
             if target is None:
                 continue
+            if group["aux_channel"].astype(str).duplicated().any():
+                raise RuntimeError(
+                    f"PEM reuse contains duplicate channel rows for {key}"
+                )
+            expected_channels = set(AUX_CHANNELS.get(key[0], []))
+            observed_channels = set(group["aux_channel"].astype(str))
+            if not observed_channels.issubset(expected_channels):
+                raise RuntimeError(
+                    f"PEM reuse channel inventory mismatch for {key}"
+                )
             copied_rows = group.copy()
             copied_rows["family"] = target["family"]
             copied_rows["dsd_class"] = target["dsd_class"]
@@ -628,26 +673,84 @@ def run_pem_coherence_analysis(
                 f"null_calibration_{key[0]}_{key[1]}.json"
             )
             if source_calibration.exists():
-                destination_calibration = pem_out_dir / source_calibration.name
-                if not destination_calibration.exists():
-                    shutil.copy2(
-                        source_calibration,
-                        destination_calibration,
-                    )
-                reused_calibrations.append(
-                    {
-                        "source": str(source_calibration),
-                        "source_sha256": sha256_file(source_calibration),
-                        "destination": str(destination_calibration),
-                    }
+                calibration = json.loads(
+                    source_calibration.read_text(encoding="utf-8")
                 )
+                tested_channels = set(
+                    group.loc[
+                        group["data_available"].astype(bool)
+                        & group["max_coherence"].notna(),
+                        "aux_channel",
+                    ].astype(str)
+                )
+                calibration_channels = set(
+                    str(channel)
+                    for channel in calibration.get("channels", [])
+                )
+                calibration_valid = (
+                    str(calibration.get("detector")) == key[0]
+                    and int(float(calibration.get("event_gps", -1)))
+                    == key[1]
+                    and str(calibration.get("run")) == run_name
+                    and calibration_channels.issubset(tested_channels)
+                    and int(calibration.get("m_channels", -1))
+                    == len(calibration_channels)
+                    and float(
+                        calibration.get("alpha_family_wise", np.nan)
+                    )
+                    == 0.01
+                )
+                if calibration_valid:
+                    destination_calibration = (
+                        pem_out_dir / source_calibration.name
+                    )
+                    if not destination_calibration.exists():
+                        shutil.copy2(
+                            source_calibration,
+                            destination_calibration,
+                        )
+                    reused_calibrations.append(
+                        {
+                            "detector": key[0],
+                            "gps_start": key[1],
+                            "source": str(source_calibration),
+                            "source_sha256": sha256_file(source_calibration),
+                            "destination": str(destination_calibration),
+                            "validated_event_identity": True,
+                            "validated_channel_subset": True,
+                            "validated_alpha_family_wise": True,
+                        }
+                    )
+                else:
+                    rejected_calibration_reuse.append(
+                        {
+                            "detector": key[0],
+                            "gps_start": key[1],
+                            "source": str(source_calibration),
+                            "reason": (
+                                "detector/GPS/run/channel/alpha contract "
+                                "mismatch"
+                            ),
+                        }
+                    )
         selection_manifest.update(
             {
                 "reuse_existing_dir": str(reuse_existing_dir),
                 "reuse_report_path": str(reuse_report),
                 "reuse_report_sha256": sha256_file(reuse_report),
+                "reuse_source_manifest_path": str(reuse_manifest_path),
+                "reuse_source_manifest_sha256": sha256_file(
+                    reuse_manifest_path
+                ),
+                "reuse_validation": {
+                    "exact_detector_gps_join": True,
+                    "channel_inventory_subset": True,
+                    "channel_thresholds_sha256_match": True,
+                    "representation_match": True,
+                },
                 "n_reused_events": len(reused_event_keys),
                 "reused_calibrations": reused_calibrations,
+                "rejected_calibration_reuse": rejected_calibration_reuse,
             }
         )
         logger.info(

@@ -56,7 +56,11 @@ import pandas as pd
 
 from src.core.index_contract import load_taxonomy_view, qrange_tag
 from src.core.utils import load_config, record_environment, setup_logger
-from src.pipeline_v2_production.dsd_index_stability import _sample
+from src.pipeline_v2_production.dsd_index_stability import (
+    _candidate_key_digest,
+    _sample,
+    _sha256_file,
+)
 from src.pipeline_v3_multiscale.norm_leakage.common import (
     iter_clean_segments, raw_qgram)
 
@@ -218,31 +222,99 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
                 f"({(cands.dsd_class=='ROBUST').sum()} ROBUST, "
                 f"{(cands.dsd_class!='ROBUST').sum()} non-ROBUST)")
 
-    cache = AGG / (
-        f"pca_baseline_feats_{run_name.lower()}_"
-        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
-        f"n{n_candidates}_s{seed}.npz"
-    )
     candidate_keys = np.asarray(
         [
             f"{detector}:{gps}"
             for detector, gps in zip(cands.detector, cands.gps_start)
         ]
     )
-    if cache.exists():
-        logger.info(f"loading cached features from {cache.name}")
-        z = np.load(cache, allow_pickle=True)
+    candidate_key_sha256 = _candidate_key_digest(candidate_keys)
+    candidate_cache = AGG / (
+        f"pca_baseline_candidate_feats_{run_name.lower()}_"
+        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_candidates}_s{seed}_{candidate_key_sha256[:12]}.npz"
+    )
+    background_cache = AGG / (
+        f"pca_baseline_background_feats_{run_name.lower()}_"
+        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_background}_s{seed}.npz"
+    )
+    background_ledger = background_cache.with_name(
+        f"{background_cache.stem}_ledger.csv"
+    )
+    p5_candidate_cache = AGG / (
+        f"dsd_index_stability_candidate_tokens_{run_name.lower()}_"
+        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_candidates}_s{seed}_{candidate_key_sha256[:12]}.npz"
+    )
+    p5_background_cache = AGG / (
+        f"dsd_index_stability_background_tokens_{run_name.lower()}_"
+        f"{contract.cache_tag}_{qrange_tag(qrange)}_"
+        f"n{n_background}_h300_s{seed}.npz"
+    )
+    p5_background_ledger = p5_background_cache.with_name(
+        f"{p5_background_cache.stem}_ledger.csv"
+    )
+    if candidate_cache.exists():
+        logger.info(
+            "loading cached candidate features from %s",
+            candidate_cache.name,
+        )
+        z = np.load(candidate_cache, allow_pickle=False)
         cand_feat, cand_energy, kept = z["cand_feat"], z["cand_energy"], z["kept"]
-        bg_feat = z["bg_feat"]
         if (
             tuple(int(value) for value in z["qrange"].tolist()) != qrange
             or str(z["representation"].item()) != contract.representation
             or not np.array_equal(z["candidate_keys"], candidate_keys)
+            or str(z["candidate_keys_sha256"].item())
+            != candidate_key_sha256
         ):
             raise RuntimeError(
-                f"PCA feature cache contract mismatch: {cache}"
+                f"PCA candidate feature cache contract mismatch: "
+                f"{candidate_cache}"
             )
         cands = cands[kept].reset_index(drop=True)
+    elif p5_candidate_cache.exists():
+        logger.info(
+            "deriving candidate pixel cache from shared P5 products in %s",
+            p5_candidate_cache.name,
+        )
+        shared = np.load(p5_candidate_cache, allow_pickle=False)
+        required_shared = {"pca_feat", "pca_energy"}
+        if not required_shared.issubset(shared.files):
+            raise RuntimeError(
+                "P5 candidate cache predates shared P5/P10 feature encoding"
+            )
+        cand_feat = shared["pca_feat"]
+        cand_energy = shared["pca_energy"]
+        kept = shared["kept"]
+        if (
+            tuple(int(value) for value in shared["qrange"].tolist())
+            != qrange
+            or str(shared["representation"].item())
+            != contract.representation
+            or not np.array_equal(shared["candidate_keys"], candidate_keys)
+            or str(shared["candidate_keys_sha256"].item())
+            != candidate_key_sha256
+            or len(cand_feat) != int(kept.sum())
+            or len(cand_energy) != int(kept.sum())
+        ):
+            raise RuntimeError("Shared P5 candidate feature contract mismatch")
+        cands = cands[kept].reset_index(drop=True)
+        np.savez_compressed(
+            candidate_cache,
+            cand_feat=cand_feat,
+            cand_energy=cand_energy,
+            kept=kept,
+            candidate_keys=candidate_keys,
+            candidate_keys_sha256=np.asarray(candidate_key_sha256),
+            qrange=np.asarray(qrange),
+            representation=np.asarray(contract.representation),
+            derived_from=np.asarray(str(p5_candidate_cache)),
+            derived_from_sha256=np.asarray(
+                _sha256_file(p5_candidate_cache)
+            ),
+        )
     else:
         logger.info(
             "encoding candidate spectrograms "
@@ -251,26 +323,178 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         )
         cand_feat, cand_energy, kept = _encode_candidates(cands, qrange)
         cands = cands[kept].reset_index(drop=True)
-        logger.info(f"collecting {n_background} vetoed background segments")
-        segs = list(iter_clean_segments(run_name.lower(), "L1", n_background, seed=seed))
-        logger.info("encoding background spectrograms (raw_qgram)")
-        bg_feat, _ = _encode_background(segs, qrange)
-        for name, arr in (("cand_feat", cand_feat), ("bg_feat", bg_feat),
-                          ("cand_energy", cand_energy)):
+        for name, arr in (
+            ("cand_feat", cand_feat),
+            ("cand_energy", cand_energy),
+        ):
             if not np.isfinite(arr).all():
-                raise ValueError(f"{name} has non-finite values; refusing to "
-                                 "cache poisoned features (see _features clip).")
+                raise ValueError(
+                    f"{name} has non-finite values; refusing to cache "
+                    "poisoned features (see _features clip)."
+                )
         np.savez_compressed(
-            cache,
+            candidate_cache,
             cand_feat=cand_feat,
             cand_energy=cand_energy,
             kept=kept,
-            bg_feat=bg_feat,
             candidate_keys=candidate_keys,
+            candidate_keys_sha256=np.asarray(candidate_key_sha256),
             qrange=np.asarray(qrange),
             representation=np.asarray(contract.representation),
         )
-        logger.info(f"cached features to {cache.name}")
+        logger.info(
+            "cached candidate features to %s",
+            candidate_cache.name,
+        )
+
+    if background_cache.exists():
+        logger.info(
+            "loading cached background features from %s",
+            background_cache.name,
+        )
+        if not background_ledger.exists():
+            raise RuntimeError(
+                f"PCA background feature cache lacks ledger: "
+                f"{background_ledger}"
+            )
+        z_bg = np.load(background_cache, allow_pickle=False)
+        bg_feat = z_bg["bg_feat"]
+        ledger = pd.read_csv(background_ledger)
+        if (
+            tuple(int(value) for value in z_bg["qrange"].tolist()) != qrange
+            or str(z_bg["representation"].item())
+            != contract.representation
+            or str(z_bg["detector"].item()) != "L1"
+            or len(bg_feat) != n_background
+            or len(ledger) != n_background
+            or not np.array_equal(
+                ledger["t_bg"].to_numpy(dtype=float),
+                z_bg["t_bg"].astype(float),
+            )
+            or str(z_bg["ledger_sha256"].item())
+            != _sha256_file(background_ledger)
+        ):
+            raise RuntimeError(
+                f"PCA background feature cache contract mismatch: "
+                f"{background_cache}"
+            )
+    elif p5_background_cache.exists():
+        logger.info(
+            "deriving PCA background cache from shared P5 products in %s",
+            p5_background_cache.name,
+        )
+        if not p5_background_ledger.exists():
+            raise RuntimeError(
+                "Shared P5 background products lack their GPS ledger"
+            )
+        shared_bg = np.load(p5_background_cache, allow_pickle=False)
+        required_shared = {"pca_bg_feat", "pca_bg_energy", "t_bg"}
+        if not required_shared.issubset(shared_bg.files):
+            raise RuntimeError(
+                "P5 background cache predates shared P5/P10 feature encoding"
+            )
+        shared_ledger = pd.read_csv(p5_background_ledger)
+        bg_feat = shared_bg["pca_bg_feat"]
+        bg_energy = shared_bg["pca_bg_energy"]
+        background_times = shared_bg["t_bg"][:n_background].astype(float)
+        if (
+            tuple(int(value) for value in shared_bg["qrange"].tolist())
+            != qrange
+            or str(shared_bg["representation"].item())
+            != contract.representation
+            or str(shared_bg["detector"].item()) != "L1"
+            or str(shared_bg["ledger_sha256"].item())
+            != _sha256_file(p5_background_ledger)
+            or len(bg_feat) != n_background
+            or len(bg_energy) != n_background
+            or len(shared_ledger) < n_background
+            or not np.array_equal(
+                shared_ledger["t_bg"].to_numpy(dtype=float)[:n_background],
+                background_times,
+            )
+            or not shared_ledger["role"].astype(str).iloc[
+                :n_background
+            ].eq("index_pool").all()
+        ):
+            raise RuntimeError("Shared P5 background feature contract mismatch")
+        ledger = pd.DataFrame(
+            {
+                "ordinal": np.arange(n_background, dtype=int),
+                "role": "pca_fit",
+                "detector": "L1",
+                "t_bg": background_times,
+                "segment_start": background_times - SEGMENT_LENGTH / 2,
+                "segment_end": background_times + SEGMENT_LENGTH / 2,
+                "run": run_name,
+                "seed": seed,
+            }
+        )
+        ledger.to_csv(background_ledger, index=False)
+        ledger_sha256 = _sha256_file(background_ledger)
+        np.savez_compressed(
+            background_cache,
+            bg_feat=bg_feat,
+            bg_energy=bg_energy,
+            t_bg=background_times,
+            ledger_sha256=np.asarray(ledger_sha256),
+            detector=np.asarray("L1"),
+            qrange=np.asarray(qrange),
+            representation=np.asarray(contract.representation),
+            derived_from=np.asarray(str(p5_background_cache)),
+            derived_from_sha256=np.asarray(
+                _sha256_file(p5_background_cache)
+            ),
+        )
+    else:
+        logger.info(f"collecting {n_background} vetoed background segments")
+        segs = list(iter_clean_segments(run_name.lower(), "L1", n_background, seed=seed))
+        if len(segs) != n_background:
+            raise RuntimeError(
+                f"Only {len(segs)}/{n_background} clean P10 backgrounds "
+                "were available"
+            )
+        logger.info("encoding background spectrograms (raw_qgram)")
+        bg_feat, bg_energy = _encode_background(segs, qrange)
+        for name, arr in (("bg_feat", bg_feat), ("bg_energy", bg_energy)):
+            if not np.isfinite(arr).all():
+                raise ValueError(
+                    f"{name} has non-finite values; refusing to cache "
+                    "poisoned features (see _features clip)."
+                )
+        background_times = np.asarray(
+            [segment.t_bg for segment in segs],
+            dtype=np.float64,
+        )
+        if len(np.unique(background_times)) != len(background_times):
+            raise RuntimeError("P10 background ledger contains duplicate GPS")
+        ledger = pd.DataFrame(
+            {
+                "ordinal": np.arange(n_background, dtype=int),
+                "role": "pca_fit",
+                "detector": "L1",
+                "t_bg": background_times,
+                "segment_start": background_times - SEGMENT_LENGTH / 2,
+                "segment_end": background_times + SEGMENT_LENGTH / 2,
+                "run": run_name,
+                "seed": seed,
+            }
+        )
+        ledger.to_csv(background_ledger, index=False)
+        ledger_sha256 = _sha256_file(background_ledger)
+        np.savez_compressed(
+            background_cache,
+            bg_feat=bg_feat,
+            bg_energy=bg_energy,
+            t_bg=background_times,
+            ledger_sha256=np.asarray(ledger_sha256),
+            detector=np.asarray("L1"),
+            qrange=np.asarray(qrange),
+            representation=np.asarray(contract.representation),
+        )
+        logger.info(
+            "cached background features and GPS ledger to %s",
+            background_cache.name,
+        )
 
     is_rob = (cands.dsd_class == "ROBUST").to_numpy()
     dante = cands.dsd_score.to_numpy()
@@ -286,9 +510,20 @@ def run(run_name: str = "O4a", n_candidates: int = 40,
         "qrange": list(qrange),
         "n_candidates": int(len(cand_feat)),
         "n_robust": int(is_rob.sum()), "n_rejected": int((~is_rob).sum()),
+        "sample_class_counts": {
+            str(label): int(count)
+            for label, count in cands["dsd_class"].value_counts().items()
+        },
         "n_background": int(len(bg_feat)), "seed": seed,
         "feature_dim": int(cand_feat.shape[1]),
         "pca_components": n_comp, "pca_variance_kept": VAR_KEPT,
+        "candidate_feature_cache": str(candidate_cache),
+        "candidate_feature_cache_sha256": _sha256_file(candidate_cache),
+        "candidate_keys_sha256": candidate_key_sha256,
+        "background_feature_cache": str(background_cache),
+        "background_feature_cache_sha256": _sha256_file(background_cache),
+        "background_ledger": str(background_ledger),
+        "background_ledger_sha256": _sha256_file(background_ledger),
         "pca_reconstruction_residual": _compare(resid, dante, is_rob, det),
         "spectral_energy": _compare(cand_energy.astype(np.float64), dante, is_rob, det),
         "interpretation_note": (
