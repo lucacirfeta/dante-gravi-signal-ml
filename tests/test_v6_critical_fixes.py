@@ -793,3 +793,79 @@ def test_pem_existing_sample_propagation_changes_the_inference(
         != result["coherent_class_result"]["odds_ratio"]
     )
     assert Path(result["rows_path"]).exists()
+
+
+def test_gpu_queue_uses_native_exit_codes_not_stderr_warnings() -> None:
+    script = Path("scripts/run_v6_coherent_gpu_queue.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    assert '$ErrorActionPreference = "Continue"' in script
+    assert "$stepExitCode = $LASTEXITCODE" in script
+    assert "if ($stepExitCode -ne 0)" in script
+    assert "$p9ExitCode = $LASTEXITCODE" in script
+    assert "if ($p9ExitCode -ne 0)" in script
+
+
+def test_pem_class_association_excludes_uncalibrated_events() -> None:
+    from src.pipeline_v2_production.pem_null_calibration import (
+        _pem_class_association_summary,
+    )
+
+    rows = []
+    for klass, coupled, suspect, negative, uncalibrated in (
+        ("ROBUST", 3, 3, 17, 0),
+        ("AMBIGUOUS", 4, 5, 11, 0),
+        ("BACKGROUND", 5, 21, 65, 7),
+    ):
+        rows.extend(
+            {
+                "dsd_class": klass,
+                "verdict": "COUPLED",
+                "verdict_tier": "COUPLED",
+                "taxonomy_representation": "idxq4-64_queryq4-64",
+            }
+            for _ in range(coupled)
+        )
+        rows.extend(
+            {
+                "dsd_class": klass,
+                "verdict": "COUPLED",
+                "verdict_tier": "SUSPECT",
+                "taxonomy_representation": "idxq4-64_queryq4-64",
+            }
+            for _ in range(suspect)
+        )
+        rows.extend(
+            {
+                "dsd_class": klass,
+                "verdict": "NO_CORRELATION",
+                "verdict_tier": "NO_CORRELATION",
+                "taxonomy_representation": "idxq4-64_queryq4-64",
+            }
+            for _ in range(negative)
+        )
+        rows.extend(
+            {
+                "dsd_class": klass,
+                "verdict": "UNCALIBRATED",
+                "verdict_tier": "UNCALIBRATED",
+                "taxonomy_representation": "idxq4-64_queryq4-64",
+            }
+            for _ in range(uncalibrated)
+        )
+
+    summary = _pem_class_association_summary(pd.DataFrame(rows))
+    primary = summary["endpoints"]["zero_lag_confirmed"]
+
+    assert summary["n_events"] == 141
+    assert summary["n_calibrated"] == 134
+    assert summary["n_uncalibrated"] == 7
+    assert primary["by_class"]["ROBUST"]["n_positive"] == 3
+    assert primary["by_class"]["ROBUST"]["n_calibrated"] == 23
+    assert primary["by_class"]["BACKGROUND"]["n_positive"] == 5
+    assert primary["by_class"]["BACKGROUND"]["n_calibrated"] == 91
+    assert primary["robust_vs_background"]["table_positive_negative"] == [
+        [3, 20],
+        [5, 86],
+    ]

@@ -423,6 +423,119 @@ def tier_verdict(cmax: float | None, thr_shift: float | None,
     return "NO_CORRELATION"
 
 
+def _wilson_interval(k: int, n: int) -> list[float | None]:
+    """Two-sided 95% Wilson interval for a binomial proportion."""
+    if n <= 0:
+        return [None, None]
+    z = 1.959963984540054
+    p = k / n
+    denom = 1.0 + z**2 / n
+    centre = (p + z**2 / (2.0 * n)) / denom
+    margin = (
+        z
+        * np.sqrt((p * (1.0 - p) + z**2 / (4.0 * n)) / n)
+        / denom
+    )
+    return [float(centre - margin), float(centre + margin)]
+
+
+def _pem_class_association_summary(df: pd.DataFrame) -> dict:
+    """Reproducible class-rate and Fisher summaries for the PEM endpoints.
+
+    Rates use only calibrated events. Missing calibration is never treated as
+    NO_CORRELATION. ``zero_lag_confirmed`` is the primary endpoint; the
+    time-shift-only result is retained to quantify how much the persistent-line
+    control changes the inference.
+    """
+    from scipy.stats import fisher_exact
+
+    calibrated = df[df["verdict_tier"] != "UNCALIBRATED"].copy()
+    classes = ("ROBUST", "AMBIGUOUS", "BACKGROUND")
+    endpoint_masks = {
+        "time_shift_only": calibrated["verdict"].eq("COUPLED"),
+        "zero_lag_confirmed": calibrated["verdict_tier"].eq("COUPLED"),
+    }
+    endpoint_notes = {
+        "time_shift_only": (
+            "Observed Cmax exceeds the family-wise time-shift null. Diagnostic "
+            "only: persistent zero-lag coherence is not controlled."
+        ),
+        "zero_lag_confirmed": (
+            "Observed Cmax exceeds both the family-wise time-shift threshold "
+            "and the quiet-background zero-lag q99. Primary endpoint."
+        ),
+    }
+
+    endpoints = {}
+    for endpoint, positive in endpoint_masks.items():
+        by_class = {}
+        for klass in classes:
+            idx = calibrated.index[calibrated["dsd_class"].eq(klass)]
+            n = int(len(idx))
+            k = int(positive.loc[idx].sum())
+            by_class[klass] = {
+                "n_positive": k,
+                "n_calibrated": n,
+                "rate": float(k / n) if n else None,
+                "wilson_ci95": _wilson_interval(k, n),
+            }
+
+        robust = by_class["ROBUST"]
+        background = by_class["BACKGROUND"]
+        table = [
+            [
+                robust["n_positive"],
+                robust["n_calibrated"] - robust["n_positive"],
+            ],
+            [
+                background["n_positive"],
+                background["n_calibrated"] - background["n_positive"],
+            ],
+        ]
+        odds_ratio, p_value = fisher_exact(table, alternative="two-sided")
+        endpoints[endpoint] = {
+            "definition": endpoint_notes[endpoint],
+            "by_class": by_class,
+            "robust_vs_background": {
+                "table_positive_negative": table,
+                "odds_ratio": float(odds_ratio),
+                "fisher_exact_two_sided_p": float(p_value),
+            },
+        }
+
+    coverage = {}
+    for klass in classes:
+        class_rows = df[df["dsd_class"].eq(klass)]
+        n_total = int(len(class_rows))
+        n_calibrated = int(
+            class_rows["verdict_tier"].ne("UNCALIBRATED").sum()
+        )
+        coverage[klass] = {
+            "n_total": n_total,
+            "n_calibrated": n_calibrated,
+            "n_uncalibrated": n_total - n_calibrated,
+        }
+
+    return {
+        "taxonomy_representation": str(
+            df["taxonomy_representation"].dropna().iloc[0]
+        ),
+        "n_events": int(len(df)),
+        "n_calibrated": int(len(calibrated)),
+        "n_uncalibrated": int(len(df) - len(calibrated)),
+        "calibration_coverage_by_class": coverage,
+        "n_suspect_time_shift_only": int(
+            df["verdict_tier"].eq("SUSPECT").sum()
+        ),
+        "primary_endpoint": "zero_lag_confirmed",
+        "denominator_note": (
+            "Class rates and Fisher tables exclude UNCALIBRATED events; "
+            "missing calibration is never counted as a negative."
+        ),
+        "endpoints": endpoints,
+    }
+
+
 def apply_family_wise_verdicts(
     run: str = "O4a",
     pem_dir: Path | None = None,
@@ -506,9 +619,16 @@ def apply_family_wise_verdicts(
         in zip(df["cmax_observed"], df["threshold_fw"], df["threshold_zero_lag"])
     ]
     df.to_csv(out, index=False)
+    association = _pem_class_association_summary(df)
+    association_path = pem_dir / "pem_class_association.json"
+    association_path.write_text(
+        json.dumps(association, indent=2),
+        encoding="utf-8",
+    )
     n_susp = int((df["verdict_tier"] == "SUSPECT").sum())
     logger.info(f"Wrote {out} ({len(rows)} events; {n_susp} COUPLED downgraded "
                 "look coupled only under the time-shift null)")
+    logger.info(f"Wrote {association_path}")
     return out
 
 
