@@ -123,7 +123,8 @@ def test_reference_index_present_or_explains_itself() -> None:
     if not indices:
         pytest.skip(
             "No reference index in data/reference/. Nothing will run without it.\n"
-            "Download it from the Zenodo record (DOI 10.5281/zenodo.21451803):\n"
+            "The Zenodo software snapshot does not bundle this data artifact.\n"
+            "Obtain a validated reference index from the project artifact store:\n"
             "  data/reference/patch_compressed_index_o4a_ex.npz  (native O4a, K=1216)\n"
             "  data/reference/patch_compressed_index_o3b.npz     (primary O3b, K=275)"
         )

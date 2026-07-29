@@ -2,7 +2,7 @@
 > Unsupervised morphological characterization of gravitational-wave transients using frozen Vision Transformers and Multiple Instance Learning.
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
-[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21451803-blue.svg)](https://doi.org/10.5281/zenodo.21451803)
+[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21676289-blue.svg)](https://doi.org/10.5281/zenodo.21676289)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -32,7 +32,9 @@ python main.py fetch-raw --detector L1 --hours 72
 
 # 3. Obtain the baseline memory dictionary (Vector Quantization)
 #    NOTHING RUNS WITHOUT THIS FILE. Download the reference index from the
-#    Zenodo record (DOI 10.5281/zenodo.21451803) into data/reference/:
+#    These data artifacts are not bundled in the Zenodo software snapshot.
+#    Obtain the validated indices from the project artifact store and place them
+#    into data/reference/:
 #      data/reference/patch_compressed_index_o4a_ex.npz   (native O4a, K=1216)
 #      data/reference/patch_compressed_index_o3b.npz      (primary O3b, K=275)
 mkdir -p data/reference/
@@ -157,11 +159,16 @@ Raw O4a strain data is fetched programmatically from the Gravitational Wave Open
 > never as a physical coverage gap. A strain-only null-result mode is explicitly
 > labelled and cannot produce a PEM coupling verdict.
 
-### Pre-Computed Artifacts (Zenodo)
-For immediate verification without re-running the feature extraction, the labeled benchmark sets and O4a reference indices are permanently hosted on Zenodo:
-- **In-Domain Reference Index:** `10.5281/zenodo.5649212`
-- **Gravity Spy Training Set:** `10.5281/zenodo.1476551`
-- The pipeline will automatically fetch the necessary `.npz` indices for V1 legacy if they are missing from `data/reference/`. For V2 production, ensure `patch_compressed_index.npz` is manually placed in `data/reference/`.
+### Reference inputs (Zenodo)
+The public source datasets used to construct and benchmark reference indices are:
+- **Gravity Spy O1--O3 classifications:** `10.5281/zenodo.5649212`
+- **Gravity Spy image training set (legacy benchmark):** `10.5281/zenodo.1476551`
+
+These records do **not** contain DANTE's validated `.npz` dictionaries, and the
+DANTE software snapshot does not bundle them either. Exact production
+reproduction therefore requires the separately archived reference-index
+artifacts and their recorded hashes; a newly calibrated run must build and
+record its own native index.
 
 ## 📊 Key Results
 *Note: All empirical claims are strictly bounded by the conditions under which they were measured.*
@@ -235,15 +242,15 @@ To cite the archived software and analysis artifacts:
   title     = {DANTE (Domain-Adaptive Network for Transient Evaluation)},
   author    = {Cirfeta, Luca},
   year      = {2026},
-  version   = {3.5.0},
-  doi       = {10.5281/zenodo.21451803},
+  version   = {3.6.0},
+  doi       = {10.5281/zenodo.21676289},
   publisher = {Zenodo},
-  url       = {https://doi.org/10.5281/zenodo.21451803}
+  url       = {https://doi.org/10.5281/zenodo.21676289}
 }
 ```
 
 > The exact version used for every number in the manuscripts is pinned at git
-> tag [`3.5.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.5.0).
+> tag [`3.6.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.6.0).
 
 ### LLM Disclosure
 The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.
