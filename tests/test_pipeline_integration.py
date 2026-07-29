@@ -58,10 +58,30 @@ def test_pipeline_end_to_end(temp_workspace, obs_run, monkeypatch):
             sample_rate=4096,
             t0=start,
         )
+
+    def mock_aggregate_scorer_init(self, *args, **kwargs):
+        """Keep aggregation focused on orchestration, not DINOv2 latency."""
+
+    def mock_aggregate_score(self, images, threshold=0.0):
+        import numpy as np
+
+        vector = np.full(384, 1.0 / np.sqrt(384), dtype=np.float32)
+        return [
+            {
+                "novelty_score": 0.5,
+                "mil_vector": vector.copy(),
+            }
+            for _image in images
+        ]
         
     with patch("sys.exit") as mock_exit, \
          patch("src.core.patch_scorer.PatchScorer._verify_md5", mock_verify_md5), \
-         patch("src.pipeline_v2_production.production_report.fetch_strain_data", mock_fetch_strain_data):
+         patch(
+             "src.pipeline_v2_production.production_report.fetch_strain_data",
+             mock_fetch_strain_data,
+         ), \
+         patch("gwosc.datasets.find_datasets", return_value=[]), \
+         patch("gwosc.timeline.get_segments", return_value=[]):
         cmd_patch_analysis(args)
         
     # Verify outputs of patch analysis
@@ -82,7 +102,30 @@ def test_pipeline_end_to_end(temp_workspace, obs_run, monkeypatch):
     # Keep the monkeypatched data directories through aggregation: DSD
     # background extraction must remain hermetic and must never scan configured
     # real-data drives.
-    with patch("subprocess.run") as mock_subprocess: # Mock offline validation scripts
+    # Synthetic GPS values intentionally do not belong to the named observing
+    # runs; patch the run contract to the fixture interval only.
+    with patch("subprocess.run") as mock_subprocess, \
+         patch(
+             "src.core.patch_scorer.PatchScorer.__init__",
+             mock_aggregate_scorer_init,
+         ), \
+         patch(
+             "src.core.patch_scorer.PatchScorer.score_spectrogram",
+             mock_aggregate_score,
+         ), \
+         patch(
+             "src.core.data_loader.fetch_local_or_remote_strain",
+             mock_fetch_strain_data,
+         ), \
+         patch(
+             "src.pipeline_v2_production.cross_detector_veto."
+             "fetch_local_or_remote_strain",
+             mock_fetch_strain_data,
+         ), \
+         patch(
+             "src.pipeline_v2_production.background_calibration.resolve_run_bounds",
+             return_value=(1234567800.0, 1234570300.0),
+         ):
         cmd_aggregate_report(agg_args)
         
     # Verify outputs of aggregate report

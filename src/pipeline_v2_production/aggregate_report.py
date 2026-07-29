@@ -1281,6 +1281,62 @@ class AggregateReporter:
         logger.info(f"Wrote stability_synthesis.log")
 
 
+    def _calibration_forbidden_intervals(
+        self,
+        candidate_frame,
+        detector,
+        index_contract,
+    ):
+        """Build candidate/index exclusions and their cache fingerprints."""
+        import hashlib
+        import json
+
+        detector_rows = candidate_frame[
+            candidate_frame["detector"].astype(str).str.upper()
+            == str(detector).upper()
+        ]
+        candidate_starts = sorted(
+            self._analysis_window_start(float(value))
+            for value in detector_rows["gps_start"]
+        )
+        intervals = [
+            (start, start + 32.0, "candidate")
+            for start in candidate_starts
+        ]
+        candidate_payload = json.dumps(
+            candidate_starts,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        candidate_sha256 = hashlib.sha256(candidate_payload).hexdigest()
+
+        index_ledger_path = index_contract.path.with_suffix(".t_bg.json")
+        if not index_ledger_path.exists():
+            raise RuntimeError(
+                "Native index has no training-window ledger; refusing a "
+                "threshold calibration whose index/threshold disjointness "
+                f"cannot be audited: {index_ledger_path}"
+            )
+        index_centers = [
+            float(value)
+            for value in json.loads(
+                index_ledger_path.read_text(encoding="utf-8")
+            )
+        ]
+        intervals.extend(
+            (center - 16.0, center + 16.0, "native_index")
+            for center in index_centers
+        )
+        index_ledger_sha256 = hashlib.sha256(
+            index_ledger_path.read_bytes()
+        ).hexdigest()
+        return intervals, {
+            "candidate_windows": len(candidate_starts),
+            "candidate_windows_sha256": candidate_sha256,
+            "index_training_windows": len(index_centers),
+            "index_training_ledger": str(index_ledger_path),
+            "index_training_ledger_sha256": index_ledger_sha256,
+        }
+
     def _extract_detector_background(
         self,
         scorer,
@@ -1288,12 +1344,24 @@ class AggregateReporter:
         target_n=5000,
         qrange=(4, 64),
         pad=4.0,
-    ) -> np.ndarray:
+        *,
+        run_bounds,
+        forbidden_intervals,
+        guard_s=96.0,
+    ):
         import numpy as np
         import re
         from gwpy.timeseries import TimeSeries
         from src.core.data_loader import _DATA_DIRECTORIES
-        from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
+        from src.core.preprocessor import (
+            extract_clean_subwindow,
+            generate_qtransform,
+            whiten_context,
+        )
+        from src.pipeline_v2_production.background_calibration import (
+            RawBlock,
+            build_calibration_block_plan,
+        )
         import logging
         logger = logging.getLogger("aggregate_report")
         
@@ -1303,7 +1371,7 @@ class AggregateReporter:
                 valid_files.extend(list(dir_path.rglob(f"{det_name}_*.hdf5")))
                 
         if not valid_files:
-            return np.array([])
+            return np.array([]), []
             
         file_records = {}
         pattern = re.compile(
@@ -1322,66 +1390,42 @@ class AggregateReporter:
             file_records.setdefault((start, end), path)
 
         block_len = max(1, int(target_n ** (1 / 3)))
-        first_offset = int(np.ceil(float(pad)))
-        block_specs = []
-        for (file_start, file_end), path in sorted(file_records.items()):
-            duration = int(file_end - file_start)
-            offsets = list(
-                range(
-                    first_offset,
-                    duration - 32 - int(np.ceil(pad)) + 1,
-                    64,
-                )
-            )
-            for block_start in range(0, len(offsets), block_len):
-                block_offsets = offsets[block_start:block_start + block_len]
-                if len(block_offsets) == block_len:
-                    block_specs.append(
-                        (file_start + block_offsets[0], path, block_offsets)
-                    )
-
-        n_blocks_needed = int(np.ceil(target_n / block_len))
-        if not block_specs:
-            return np.array([])
-        n_select = min(n_blocks_needed, len(block_specs))
-        selected_indices = np.unique(
-            np.linspace(
-                0,
-                len(block_specs) - 1,
-                num=n_select,
-                dtype=int,
-            )
-        ).tolist()
-        selected = set(selected_indices)
-        # Evenly spaced temporal blocks cover the full run. Remaining blocks
-        # are deterministic fallbacks if a selected file is unreadable.
-        priority = selected_indices + [
-            index for index in range(len(block_specs))
-            if index not in selected
-        ]
+        block_plan = build_calibration_block_plan(
+            [
+                RawBlock(start, end, path)
+                for (start, end), path in file_records.items()
+            ],
+            target_n=target_n,
+            run_bounds=run_bounds,
+            forbidden_intervals=forbidden_intervals,
+            guard_s=guard_s,
+            block_length=block_len,
+            pad_s=float(pad),
+            window_s=32.0,
+            stride_s=64.0,
+        )
 
         import matplotlib
 
-        score_pairs = []
+        score_rows = []
         logger.info(
             "Extracting %d %s background scores as %d-window temporal "
             "blocks stratified across %d available blocks...",
             target_n,
             det_name,
             block_len,
-            len(block_specs),
+            len(block_plan),
         )
-        for spec_index in priority:
-            if len(score_pairs) >= target_n:
+        for block_index, calibration_block in enumerate(block_plan):
+            if len(score_rows) >= target_n:
                 break
-            _, file_path, offsets = block_specs[spec_index]
+            file_path = calibration_block.windows[0].source_path
             try:
                 ts = TimeSeries.read(file_path)
                 block_images = []
-                block_gps = []
-                for start_offset in offsets:
-                    seg_start = float(ts.t0.value) + start_offset
-                    seg_end = seg_start + 32
+                for window in calibration_block.windows:
+                    seg_start = window.gps_start
+                    seg_end = window.gps_end
                     ts_context = ts.crop(
                         seg_start - float(pad),
                         seg_end + float(pad),
@@ -1413,16 +1457,23 @@ class AggregateReporter:
                         * 255
                     ).astype(np.uint8)
                     block_images.append(rgb)
-                    block_gps.append(seg_start)
                 block_result = scorer.score_spectrogram(
                     block_images,
                     threshold=1.0,
                 )
                 if len(block_result) != block_len:
                     raise RuntimeError("scorer returned an incomplete block")
-                score_pairs.extend(
-                    (gps, float(result["novelty_score"]))
-                    for gps, result in zip(block_gps, block_result)
+                score_rows.extend(
+                    (
+                        window.gps_start,
+                        float(result["novelty_score"]),
+                        window,
+                        block_index,
+                    )
+                    for window, result in zip(
+                        calibration_block.windows,
+                        block_result,
+                    )
                 )
             except Exception as exc:
                 logger.debug(
@@ -1432,11 +1483,25 @@ class AggregateReporter:
                 )
                 continue
 
-        score_pairs.sort(key=lambda item: item[0])
-        return np.asarray(
-            [score for _, score in score_pairs[:target_n]],
+        score_rows.sort(key=lambda item: item[0])
+        selected_rows = score_rows[:target_n]
+        scores = np.asarray(
+            [score for _, score, _window, _block in selected_rows],
             dtype=np.float32,
         )
+        ledger = []
+        for _gps, score, window, block_index in selected_rows:
+            record = window.as_record()
+            record.update(
+                {
+                    "detector": str(det_name),
+                    "run": str(self.observing_run),
+                    "calibration_score": float(score),
+                    "bootstrap_block_index": int(block_index),
+                }
+            )
+            ledger.append(record)
+        return scores, ledger
 
     def _calibrate_native_threshold(
         self,
@@ -1444,25 +1509,51 @@ class AggregateReporter:
         *,
         index_contract,
         query_qrange,
+        candidate_frame,
         detectors=("L1", "H1"),
     ) -> dict:
+        import hashlib
         import numpy as np
-        import os
-        from pathlib import Path
+        import pandas as pd
         import logging
+        from src.core.utils import load_config
+        from src.pipeline_v2_production.background_calibration import (
+            CalibrationWindow,
+            resolve_run_bounds,
+            validate_calibration_ledger,
+        )
         logger = logging.getLogger("aggregate_report")
-        
+
         result_dict = {}
         from src.core.index_contract import qrange_tag
 
         index_tag = index_contract.tag
         query_tag = qrange_tag(query_qrange)
-        cache_key = (
-            f"idx{index_tag}_query{query_tag}_"
-            f"pad4_n{self.native_background_n}_bgv2_"
-            f"{index_contract.sha256[:12]}"
-        )
+        run_bounds = resolve_run_bounds(load_config(), self.observing_run)
+        guard_s = 96.0
+
+        def file_sha256(path):
+            digest = hashlib.sha256()
+            with open(path, "rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            return digest.hexdigest()
+
         for det in detectors:
+            forbidden_intervals, exclusion_meta = (
+                self._calibration_forbidden_intervals(
+                    candidate_frame,
+                    det,
+                    index_contract,
+                )
+            )
+            cache_key = (
+                f"idx{index_tag}_query{query_tag}_"
+                f"pad4_n{self.native_background_n}_bgv3_"
+                f"{index_contract.sha256[:8]}_"
+                f"{exclusion_meta['candidate_windows_sha256'][:8]}_"
+                f"{exclusion_meta['index_training_ledger_sha256'][:8]}"
+            )
             # NATIVE-index background scores. Distinct filename from
             # background_scores_{det}_{run}.npy, which production_report uses
             # for the PRIMARY (reference-run) index: same file for two score
@@ -1472,6 +1563,32 @@ class AggregateReporter:
                 f"{cache_key}.npy"
             )
             metadata_path = det_path.with_suffix(".json")
+            ledger_path = det_path.with_name(
+                f"{det_path.stem}_ledger.csv"
+            )
+            expected = {
+                "schema_version": 3,
+                "calibration_run": self.observing_run,
+                "index_sha256": index_contract.sha256,
+                "index_qrange": list(index_contract.qrange),
+                "query_qrange": list(query_qrange),
+                "whitening_pad_s": 4.0,
+                "requested_n_scores": self.native_background_n,
+                "run_bounds_gps": list(run_bounds),
+                "guard_s": guard_s,
+                "candidate_window_offset_s": float(
+                    self.candidate_window_offset
+                ),
+                "sampling_strategy": (
+                    "run_bounded_candidate_index_guarded_blocks_v3"
+                ),
+                "candidate_windows_sha256": exclusion_meta[
+                    "candidate_windows_sha256"
+                ],
+                "index_training_ledger_sha256": exclusion_meta[
+                    "index_training_ledger_sha256"
+                ],
+            }
             if det_path.exists():
                 if not metadata_path.exists():
                     raise RuntimeError(
@@ -1481,34 +1598,65 @@ class AggregateReporter:
                 cache_meta = json.loads(
                     metadata_path.read_text(encoding="utf-8")
                 )
-                expected = {
-                    "index_sha256": index_contract.sha256,
-                    "index_qrange": list(index_contract.qrange),
-                    "query_qrange": list(query_qrange),
-                    "whitening_pad_s": 4.0,
-                    "requested_n_scores": self.native_background_n,
-                    "sampling_strategy": (
-                        "stratified_full_run_aligned_temporal_blocks_v2"
-                    ),
-                }
                 for key, value in expected.items():
                     if cache_meta.get(key) != value:
                         raise RuntimeError(
                             f"Background cache contract mismatch for {det}: "
                             f"{key}={cache_meta.get(key)!r}, expected {value!r}"
                         )
+                if not ledger_path.exists():
+                    raise RuntimeError(
+                        f"Background cache {det_path} has no GPS ledger"
+                    )
+                if cache_meta.get("ledger_sha256") != file_sha256(ledger_path):
+                    raise RuntimeError(
+                        f"Background ledger hash mismatch for {det}"
+                    )
+                ledger_frame = pd.read_csv(ledger_path)
+                ledger_windows = [
+                    CalibrationWindow(
+                        gps_start=float(row.gps_start),
+                        gps_end=float(row.gps_end),
+                        source_path=Path(str(row.source_path)),
+                        source_start=float(row.source_start),
+                        source_end=float(row.source_end),
+                    )
+                    for row in ledger_frame.itertuples(index=False)
+                ]
+                audit = validate_calibration_ledger(
+                    ledger_windows,
+                    run_bounds=run_bounds,
+                    forbidden_intervals=forbidden_intervals,
+                    guard_s=guard_s,
+                )
+                if (
+                    audit["outside_run"]
+                    or audit["forbidden_overlap"]
+                    or audit["self_overlap"]
+                ):
+                    raise RuntimeError(
+                        f"Background ledger audit failed for {det}: {audit}"
+                    )
                 scores = np.load(det_path)
+                if len(scores) != len(ledger_frame):
+                    raise RuntimeError(
+                        f"Score/ledger length mismatch for {det}: "
+                        f"{len(scores)} != {len(ledger_frame)}"
+                    )
             else:
                 # Historical dual-scoring files have no index/qrange sidecar,
                 # so reusing them here would silently contaminate a new
                 # representation. Recompute once and cache under the complete
                 # index+query fingerprint instead.
-                scores = self._extract_detector_background(
+                scores, ledger_records = self._extract_detector_background(
                     scorer,
                     det,
                     self.native_background_n,
                     qrange=query_qrange,
                     pad=4.0,
+                    run_bounds=run_bounds,
+                    forbidden_intervals=forbidden_intervals,
+                    guard_s=guard_s,
                 )
                 if len(scores) != self.native_background_n:
                     raise RuntimeError(
@@ -1518,22 +1666,51 @@ class AggregateReporter:
                         "partial DSD calibration."
                     )
                 if len(scores) > 0:
+                    ledger_frame = pd.DataFrame(ledger_records)
+                    if len(ledger_frame) != len(scores):
+                        raise RuntimeError(
+                            f"Score/ledger length mismatch for {det}"
+                        )
+                    ledger_windows = [
+                        CalibrationWindow(
+                            gps_start=float(row.gps_start),
+                            gps_end=float(row.gps_end),
+                            source_path=Path(str(row.source_path)),
+                            source_start=float(row.source_start),
+                            source_end=float(row.source_end),
+                        )
+                        for row in ledger_frame.itertuples(index=False)
+                    ]
+                    audit = validate_calibration_ledger(
+                        ledger_windows,
+                        run_bounds=run_bounds,
+                        forbidden_intervals=forbidden_intervals,
+                        guard_s=guard_s,
+                    )
+                    if (
+                        audit["outside_run"]
+                        or audit["forbidden_overlap"]
+                        or audit["self_overlap"]
+                    ):
+                        raise RuntimeError(
+                            f"New background ledger audit failed for {det}: "
+                            f"{audit}"
+                        )
                     np.save(det_path, scores)
+                    ledger_frame.to_csv(ledger_path, index=False)
+                    ledger_sha256 = file_sha256(ledger_path)
                     metadata_path.write_text(
                         json.dumps(
                             {
+                                **expected,
                                 "detector": det,
                                 "run": self.observing_run,
                                 "index_path": str(index_contract.path),
-                                "index_sha256": index_contract.sha256,
-                                "index_qrange": list(index_contract.qrange),
-                                "query_qrange": list(query_qrange),
-                                "whitening_pad_s": 4.0,
-                                "requested_n_scores": self.native_background_n,
-                                "sampling_strategy": (
-                                    "stratified_full_run_aligned_temporal_blocks_v2"
-                                ),
                                 "n_scores": int(len(scores)),
+                                "ledger_path": str(ledger_path),
+                                "ledger_sha256": ledger_sha256,
+                                "ledger_audit": audit,
+                                **exclusion_meta,
                             },
                             indent=2,
                         ),
@@ -1585,6 +1762,11 @@ class AggregateReporter:
                 "p99": float(p99),
                 "n_background": int(len(scores)),
                 "background_scores_path": str(det_path),
+                "background_ledger_path": str(ledger_path),
+                "background_ledger_sha256": file_sha256(ledger_path),
+                "calibration_run": self.observing_run,
+                "run_bounds_gps": list(run_bounds),
+                "guard_s": guard_s,
                 "index_qrange": list(index_contract.qrange),
                 "query_qrange": list(query_qrange),
             }
@@ -1707,6 +1889,7 @@ class AggregateReporter:
             scorer,
             index_contract=index_contract,
             query_qrange=query_qrange,
+            candidate_frame=master_df,
             detectors=tuple(
                 detector
                 for detector in ("H1", "L1")

@@ -26,13 +26,13 @@ reference_events:
     detector: "H1"
 
 # O4a observing run window (GPS times)
-# May 24, 2023 00:00:00 UTC → Jan 16, 2024 16:00:00 UTC
+# May 24, 2023 15:00:00 UTC to Jan 16, 2024 16:00:00 UTC
 # Defines the hard limits for the O4a run, while run_config provides defaults for scans.
 o4a_window:
-  gps_start: 1369598418
-  gps_start_H1: 1369598418
-  gps_start_L1: 1369598418
-  gps_end: 1390060818
+  gps_start: 1368975618
+  gps_start_H1: 1368975618
+  gps_start_L1: 1368975618
+  gps_end: 1389456018
 
 # Multi-run configuration — observing run start dates and scan defaults
 # GPS start is computed at runtime as to_gps(start_date).
@@ -40,7 +40,8 @@ run_config:
   O2:  {start_date: "2016-11-30 16:00:00", hours_per_detector: 72}
   O3a: {start_date: "2019-04-01 15:00:00", hours_per_detector: 144}
   O3b: {start_date: "2019-11-01 15:00:00", hours_per_detector: 144}
-  O4a: {start_date: "2023-05-24 15:00:00", hours_per_detector: 144}
+  O4a: {start_date: "2023-05-24 15:00:00", hours_per_detector: 144,
+        gps_start: 1368975618, gps_end: 1389456018}
   # Future runs: add an entry with explicit GPS bounds and it is picked up
   # by get_observing_run() (config wins over the builtin epoch table), by
   # the report writers (Master_Taxonomy_<run>.csv, Final Discovery Report)

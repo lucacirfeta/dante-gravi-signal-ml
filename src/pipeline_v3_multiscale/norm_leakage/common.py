@@ -28,7 +28,7 @@ DETECTOR = "L1"
 RUN_WINDOWS = {
     # full run windows (GPS) — never sub-windows (audit M-4)
     "o3a": (1238166018, 1253977218),
-    "o4a": (1369598418, 1390060818),
+    "o4a": (1368975618, 1389456018),
 }
 
 OUT_ROOT = Path("results/norm_leakage")

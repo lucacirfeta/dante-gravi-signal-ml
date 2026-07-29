@@ -200,10 +200,17 @@ def run(
     anchor_tolerance: float = ANCHOR_TOLERANCE,
     window_offset: float = WINDOW_OFFSET,
 ) -> dict:
+    import hashlib
+
     from src.core.patch_scorer import PatchScorer
     from src.core.index_contract import load_index_contract, qrange_tag
     from src.core.utils import get_reference_dir, load_config
     from src.pipeline_v2_production.aggregate_report import AggregateReporter
+    from src.pipeline_v2_production.background_calibration import (
+        CalibrationWindow,
+        resolve_run_bounds,
+        validate_calibration_ledger,
+    )
 
     pads = tuple(float(p) for p in pads)
     if PRODUCTION_PAD not in pads:
@@ -214,8 +221,9 @@ def run(
             f"{MIN_BACKGROUND}"
         )
     ref = get_reference_dir()
+    config = load_config()
     production_qrange = tuple(
-        int(v) for v in load_config()["preprocessing"]["qrange"]
+        int(v) for v in config["preprocessing"]["qrange"]
     )
     if native_index_path is None:
         native_index_path = (
@@ -246,16 +254,81 @@ def run(
     score_column = f"native_score_{variant_column}"
     class_column = f"robustness_class_{variant_column}"
 
+    tax_path = AGG / (
+        f"Master_Taxonomy_{run_name}_{representation}.csv"
+    )
+    if not tax_path.exists():
+        raise RuntimeError(
+            "Versioned coherent taxonomy is missing; run the DSD transition "
+            f"audit first: {tax_path}"
+        )
+    tax = pd.read_csv(tax_path)
+    tax["gps_start"] = tax.gps_start.astype(int)
+    missing = [
+        col for col in (score_column, class_column)
+        if col not in tax.columns
+    ]
+    if missing:
+        raise RuntimeError(
+            "Run the coherent DSD transition audit before the whitening "
+            f"experiment; missing taxonomy columns: {missing}"
+        )
+
+    run_bounds = resolve_run_bounds(config, run_name)
+    guard_s = 96.0
+
+    def file_sha256(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    exclusion_by_detector = {
+        det: reporter._calibration_forbidden_intervals(
+            tax,
+            det,
+            contract,
+        )
+        for det in ("H1", "L1")
+    }
+
     thresholds_by_pad: dict[str, dict] = {}
     for pad in pads:
         det_thresholds = {}
         for det in ("H1", "L1"):
+            forbidden_intervals, exclusion_meta = exclusion_by_detector[det]
             cache = AGG / (
                 f"background_scores_whitening_{det}_{run_name}_"
-                f"{representation}_pad{pad:g}_bgv2_"
-                f"{contract.sha256[:12]}.npy"
+                f"{representation}_pad{pad:g}_bgv3_"
+                f"{contract.sha256[:8]}_"
+                f"{exclusion_meta['candidate_windows_sha256'][:8]}_"
+                f"{exclusion_meta['index_training_ledger_sha256'][:8]}.npy"
             )
             cache_meta_path = cache.with_suffix(".json")
+            ledger_path = cache.with_name(f"{cache.stem}_ledger.csv")
+            expected = {
+                "schema_version": 3,
+                "detector": det,
+                "calibration_run": run_name,
+                "index_sha256": contract.sha256,
+                "index_qrange": list(contract.qrange),
+                "query_qrange": list(production_qrange),
+                "whitening_pad_s": float(pad),
+                "requested_n_scores": int(n_background),
+                "run_bounds_gps": list(run_bounds),
+                "guard_s": guard_s,
+                "candidate_window_offset_s": float(window_offset),
+                "sampling_strategy": (
+                    "run_bounded_candidate_index_guarded_blocks_v3"
+                ),
+                "candidate_windows_sha256": exclusion_meta[
+                    "candidate_windows_sha256"
+                ],
+                "index_training_ledger_sha256": exclusion_meta[
+                    "index_training_ledger_sha256"
+                ],
+            }
             if cache.exists():
                 if not cache_meta_path.exists():
                     raise RuntimeError(
@@ -264,49 +337,110 @@ def run(
                 cache_meta = json.loads(
                     cache_meta_path.read_text(encoding="utf-8")
                 )
-                expected = {
-                    "detector": det,
-                    "run": run_name,
-                    "index_sha256": contract.sha256,
-                    "index_qrange": list(contract.qrange),
-                    "query_qrange": list(production_qrange),
-                    "whitening_pad_s": float(pad),
-                    "n_background": int(n_background),
-                    "sampling_strategy": (
-                        "stratified_full_run_aligned_temporal_blocks_v2"
-                    ),
-                }
                 for key, value in expected.items():
                     if cache_meta.get(key) != value:
                         raise RuntimeError(
                             f"Whitening cache contract mismatch for {det}, "
                             f"pad={pad:g}: {key}"
                         )
+                if not ledger_path.exists():
+                    raise RuntimeError(
+                        f"Whitening background cache {cache} has no GPS ledger"
+                    )
+                if cache_meta.get("ledger_sha256") != file_sha256(ledger_path):
+                    raise RuntimeError(
+                        f"Whitening background ledger hash mismatch for "
+                        f"{det}, pad={pad:g}"
+                    )
+                ledger_frame = pd.read_csv(ledger_path)
+                ledger_windows = [
+                    CalibrationWindow(
+                        gps_start=float(row.gps_start),
+                        gps_end=float(row.gps_end),
+                        source_path=Path(str(row.source_path)),
+                        source_start=float(row.source_start),
+                        source_end=float(row.source_end),
+                    )
+                    for row in ledger_frame.itertuples(index=False)
+                ]
+                ledger_audit = validate_calibration_ledger(
+                    ledger_windows,
+                    run_bounds=run_bounds,
+                    forbidden_intervals=forbidden_intervals,
+                    guard_s=guard_s,
+                )
+                if (
+                    ledger_audit["outside_run"]
+                    or ledger_audit["forbidden_overlap"]
+                    or ledger_audit["self_overlap"]
+                ):
+                    raise RuntimeError(
+                        f"Whitening background ledger audit failed for "
+                        f"{det}, pad={pad:g}: {ledger_audit}"
+                    )
                 bg_scores = np.load(cache)
+                if len(bg_scores) != len(ledger_frame):
+                    raise RuntimeError(
+                        f"Whitening score/ledger length mismatch for {det}, "
+                        f"pad={pad:g}"
+                    )
             else:
-                bg_scores = reporter._extract_detector_background(
-                    scorer,
-                    det,
-                    n_background,
-                    qrange=production_qrange,
-                    pad=pad,
+                bg_scores, ledger_records = (
+                    reporter._extract_detector_background(
+                        scorer,
+                        det,
+                        n_background,
+                        qrange=production_qrange,
+                        pad=pad,
+                        run_bounds=run_bounds,
+                        forbidden_intervals=forbidden_intervals,
+                        guard_s=guard_s,
+                    )
                 )
                 if len(bg_scores) == n_background:
+                    ledger_frame = pd.DataFrame(ledger_records)
+                    if len(ledger_frame) != len(bg_scores):
+                        raise RuntimeError(
+                            f"Whitening score/ledger length mismatch for "
+                            f"{det}, pad={pad:g}"
+                        )
+                    ledger_windows = [
+                        CalibrationWindow(
+                            gps_start=float(row.gps_start),
+                            gps_end=float(row.gps_end),
+                            source_path=Path(str(row.source_path)),
+                            source_start=float(row.source_start),
+                            source_end=float(row.source_end),
+                        )
+                        for row in ledger_frame.itertuples(index=False)
+                    ]
+                    ledger_audit = validate_calibration_ledger(
+                        ledger_windows,
+                        run_bounds=run_bounds,
+                        forbidden_intervals=forbidden_intervals,
+                        guard_s=guard_s,
+                    )
+                    if (
+                        ledger_audit["outside_run"]
+                        or ledger_audit["forbidden_overlap"]
+                        or ledger_audit["self_overlap"]
+                    ):
+                        raise RuntimeError(
+                            f"New whitening background ledger audit failed "
+                            f"for {det}, pad={pad:g}: {ledger_audit}"
+                        )
                     np.save(cache, bg_scores)
+                    ledger_frame.to_csv(ledger_path, index=False)
                     cache_meta_path.write_text(
                         json.dumps(
                             {
-                                "detector": det,
-                                "run": run_name,
+                                **expected,
                                 "index_path": str(contract.path),
-                                "index_sha256": contract.sha256,
-                                "index_qrange": list(contract.qrange),
-                                "query_qrange": list(production_qrange),
-                                "whitening_pad_s": float(pad),
-                                "n_background": int(n_background),
-                                "sampling_strategy": (
-                                    "stratified_full_run_aligned_temporal_blocks_v2"
-                                ),
+                                "n_scores": int(len(bg_scores)),
+                                "ledger_path": str(ledger_path),
+                                "ledger_sha256": file_sha256(ledger_path),
+                                "ledger_audit": ledger_audit,
+                                **exclusion_meta,
                             },
                             indent=2,
                         ),
@@ -327,28 +461,10 @@ def run(
                 "ci_upper": upper,
                 "n_background": int(len(bg_scores)),
                 "scores_path": str(cache),
+                "ledger_path": str(ledger_path),
+                "ledger_sha256": file_sha256(ledger_path),
             }
         thresholds_by_pad[str(pad)] = det_thresholds
-
-    tax_path = AGG / (
-        f"Master_Taxonomy_{run_name}_{representation}.csv"
-    )
-    if not tax_path.exists():
-        raise RuntimeError(
-            "Versioned coherent taxonomy is missing; run the DSD transition "
-            f"audit first: {tax_path}"
-        )
-    tax = pd.read_csv(tax_path)
-    tax["gps_start"] = tax.gps_start.astype(int)
-    missing = [
-        col for col in (score_column, class_column)
-        if col not in tax.columns
-    ]
-    if missing:
-        raise RuntimeError(
-            "Run the coherent DSD transition audit before the whitening "
-            f"experiment; missing taxonomy columns: {missing}"
-        )
     cands = _sample_near_threshold(
         tax,
         n_each=n_candidates,

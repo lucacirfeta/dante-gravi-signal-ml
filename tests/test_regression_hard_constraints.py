@@ -160,7 +160,7 @@ def test_no_random_sample_on_timeseries_scores():
         "temporal ordering needed by the block bootstrap."
     )
     assert "random.shuffle(valid_files)" not in text
-    assert "score_pairs[:target_n]" in text
+    assert "selected_rows = score_rows[:target_n]" in text
     assert "stratified across %d available blocks" in text
     assert "Historical dual-scoring files have no index/qrange sidecar" in text
 

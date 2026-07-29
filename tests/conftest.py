@@ -40,6 +40,24 @@ def temp_workspace(tmp_path):
     ts = TimeSeries(rng.standard_normal(4096 * 128), sample_rate=4096, t0=1234567890, name="H1:GWOSC-4KHZ_R1_STRAIN")
     ts.write(raw_dir_o4a / "H1_1234567890_1234568018.hdf5", format="hdf5", overwrite=True)
     ts.write(raw_dir_o3b / "H1_1234567890_1234568018.hdf5", format="hdf5", overwrite=True)
+
+    # Independent calibration block outside the candidate guard interval.
+    ts_background = TimeSeries(
+        rng.standard_normal(4096 * 256),
+        sample_rate=4096,
+        t0=1234570000,
+        name="H1:GWOSC-4KHZ_R1_STRAIN",
+    )
+    ts_background.write(
+        raw_dir_o4a / "H1_1234570000_1234570256.hdf5",
+        format="hdf5",
+        overwrite=True,
+    )
+    ts_background.write(
+        raw_dir_o3b / "H1_1234570000_1234570256.hdf5",
+        format="hdf5",
+        overwrite=True,
+    )
         
     # 2. Create dummy npz reference indices
     # Primary index
@@ -63,6 +81,10 @@ def temp_workspace(tmp_path):
                 "qrange": [4, 64],
                 "colormap": "cividis",
             }),
+        )
+        native_index.with_suffix(".t_bg.json").write_text(
+            json.dumps([1234580000.0]),
+            encoding="utf-8",
         )
 
     # Keep production-report morphcheck offline and hermetic.

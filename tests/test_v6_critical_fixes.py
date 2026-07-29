@@ -492,13 +492,147 @@ def test_whitening_recalibration_helpers_are_deterministic_and_stratified() -> N
 
 def test_background_recalibration_does_not_override_requested_pad() -> None:
     from src.pipeline_v2_production.aggregate_report import AggregateReporter
+    from src.pipeline_v2_production.background_calibration import (
+        build_calibration_block_plan,
+    )
 
     source = inspect.getsource(AggregateReporter._extract_detector_background)
+    planner_source = inspect.getsource(build_calibration_block_plan)
     assert "pad = 4.0" not in source
     assert "random.shuffle(valid_files)" not in source
     assert 'pad=float(pad)' in source
-    assert "np.linspace(" in source
+    assert "build_calibration_block_plan(" in source
+    assert "np.linspace(" in planner_source
     assert "block_len" in source
+    assert "run_bounds=run_bounds" in source
+    assert "forbidden_intervals=forbidden_intervals" in source
+
+
+def test_o4a_calibration_bounds_match_the_gwosc_release() -> None:
+    from src.core.utils import load_config
+    from src.pipeline_v2_production.background_calibration import (
+        resolve_run_bounds,
+    )
+
+    bounds = resolve_run_bounds(load_config(), "O4a")
+
+    assert bounds == (1368975618.0, 1389456018.0)
+
+
+def test_calibration_plan_rejects_cross_run_and_guarded_windows() -> None:
+    from src.pipeline_v2_production.background_calibration import (
+        RawBlock,
+        build_calibration_block_plan,
+        validate_calibration_ledger,
+    )
+
+    records = [
+        RawBlock(100.0, 900.0, Path("L1_old.hdf5")),
+        RawBlock(1000.0, 9000.0, Path("L1_o4a.hdf5")),
+    ]
+    forbidden = [
+        (1200.0, 1232.0, "candidate"),
+        (2000.0, 2032.0, "native_index"),
+    ]
+
+    blocks = build_calibration_block_plan(
+        records,
+        target_n=12,
+        run_bounds=(1000.0, 9000.0),
+        forbidden_intervals=forbidden,
+        guard_s=96.0,
+        block_length=2,
+        pad_s=4.0,
+        window_s=32.0,
+        stride_s=64.0,
+    )
+    ledger = [window for block in blocks for window in block.windows][:12]
+    audit = validate_calibration_ledger(
+        ledger,
+        run_bounds=(1000.0, 9000.0),
+        forbidden_intervals=forbidden,
+        guard_s=96.0,
+    )
+
+    assert len(ledger) == 12
+    assert {window.source_path.name for window in ledger} == {"L1_o4a.hdf5"}
+    assert all(len(block.windows) == 2 for block in blocks)
+    assert all(
+        block.windows[1].gps_start - block.windows[0].gps_start == 64.0
+        for block in blocks
+    )
+    assert audit == {
+        "n_windows": 12,
+        "outside_run": 0,
+        "forbidden_overlap": 0,
+        "self_overlap": 0,
+    }
+
+
+def test_calibration_plan_deduplicates_overlapping_raw_archives() -> None:
+    from src.pipeline_v2_production.background_calibration import (
+        RawBlock,
+        build_calibration_block_plan,
+        validate_calibration_ledger,
+    )
+
+    records = [
+        RawBlock(1000.0, 9000.0, Path("primary/L1_1000_9000.hdf5")),
+        RawBlock(1000.0, 9000.0, Path("mirror/L1_1000_9000.hdf5")),
+        RawBlock(5000.0, 13000.0, Path("overlap/L1_5000_13000.hdf5")),
+    ]
+    blocks = build_calibration_block_plan(
+        records,
+        target_n=40,
+        run_bounds=(1000.0, 13000.0),
+        forbidden_intervals=[],
+        guard_s=96.0,
+        block_length=4,
+    )
+    windows = [window for block in blocks[:10] for window in block.windows]
+    audit = validate_calibration_ledger(
+        windows,
+        run_bounds=(1000.0, 13000.0),
+        forbidden_intervals=[],
+        guard_s=96.0,
+    )
+
+    assert len(windows) == 40
+    assert audit["self_overlap"] == 0
+
+
+def test_calibration_ledger_audit_detects_leakage() -> None:
+    from src.pipeline_v2_production.background_calibration import (
+        CalibrationWindow,
+        validate_calibration_ledger,
+    )
+
+    ledger = [
+        CalibrationWindow(
+            gps_start=900.0,
+            gps_end=932.0,
+            source_path=Path("old.hdf5"),
+            source_start=800.0,
+            source_end=1200.0,
+        ),
+        CalibrationWindow(
+            gps_start=1200.0,
+            gps_end=1232.0,
+            source_path=Path("candidate.hdf5"),
+            source_start=1000.0,
+            source_end=2000.0,
+        ),
+    ]
+
+    audit = validate_calibration_ledger(
+        ledger,
+        run_bounds=(1000.0, 2000.0),
+        forbidden_intervals=[(1210.0, 1242.0, "candidate")],
+        guard_s=0.0,
+    )
+
+    assert audit["outside_run"] == 1
+    assert audit["forbidden_overlap"] == 1
 
 
 def test_dsd_transition_does_not_overwrite_legacy_taxonomy_columns() -> None:
