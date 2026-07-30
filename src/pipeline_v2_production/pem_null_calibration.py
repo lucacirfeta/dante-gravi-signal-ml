@@ -43,13 +43,14 @@ from functools import lru_cache
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from typing import Any
 
 from gwosc.timeline import get_segments
 from gwpy.timeseries import TimeSeries
 
-from src.core.utils import setup_logger
+from src.core.utils import record_environment, setup_logger
 from src.core.data_loader import fetch_strain_data
-from src.core.index_contract import load_taxonomy_view
+from src.core.index_contract import load_taxonomy_view, sha256_file
 
 logger = setup_logger(__name__)
 
@@ -632,6 +633,109 @@ def apply_family_wise_verdicts(
     return out
 
 
+def write_pem_provenance_manifest(
+    pem_dir: Path,
+    *,
+    run: str,
+    aggregated_dir: Path = AGGREGATED_DIR,
+    environment_path: Path | None = None,
+    parameters: dict[str, Any] | None = None,
+    execution_log: Path | None = None,
+) -> Path:
+    """Hash every scientific PEM input/output after a completed run.
+
+    The manifest is intentionally written last and does not hash itself.
+    A partial calibration therefore cannot acquire a complete manifest, and
+    any later mutation of a null JSON, verdict ledger, or upstream selection
+    artifact is detected by the C2 verification gate.
+    """
+    pem_dir = Path(pem_dir)
+    aggregated_dir = Path(aggregated_dir)
+    selection_path = pem_dir / "selection_manifest.json"
+    selection = json.loads(selection_path.read_text(encoding="utf-8"))
+
+    def resolve(raw: str | Path) -> Path:
+        text = str(raw)
+        if text.startswith("/mnt/c/") and Path.cwd().drive:
+            return Path("C:/" + text[len("/mnt/c/"):])
+        path = Path(text)
+        return path if path.is_absolute() else Path.cwd() / path
+
+    inputs = [
+        selection_path,
+        pem_dir / "selected_targets.csv",
+        pem_dir / "coherence_report.csv",
+        resolve(selection["taxonomy_path"]),
+        resolve(selection["taxonomy_audit_path"]),
+        resolve(selection["channel_thresholds_path"]),
+    ]
+    outputs = [
+        *sorted(pem_dir.glob("null_calibration_*.json")),
+        pem_dir / "pem_family_wise_verdicts.csv",
+        pem_dir / "pem_class_association.json",
+    ]
+    if environment_path is not None:
+        environment_path = Path(environment_path)
+        outputs.append(environment_path)
+        environment = json.loads(
+            environment_path.read_text(encoding="utf-8")
+        )
+        snapshot = environment.get("dirty_source_snapshot")
+        if snapshot:
+            outputs.append(resolve(snapshot))
+
+    records = []
+    for role, paths in (("input", inputs), ("output", outputs)):
+        for path in paths:
+            path = Path(path)
+            if not path.is_file():
+                raise FileNotFoundError(
+                    f"Cannot manifest missing PEM {role}: {path}"
+                )
+            records.append(
+                {
+                    "role": role,
+                    "path": str(path),
+                    "bytes": int(path.stat().st_size),
+                    "sha256": sha256_file(path),
+                }
+            )
+    if execution_log is not None:
+        execution_log = Path(execution_log)
+        if not execution_log.is_file():
+            raise FileNotFoundError(execution_log)
+        records.append(
+            {
+                "role": "execution_log",
+                "path": str(execution_log),
+                "bytes": int(execution_log.stat().st_size),
+                "sha256": sha256_file(execution_log),
+            }
+        )
+
+    manifest = pem_dir / "pem_provenance_manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "run": run,
+                "taxonomy_representation": selection[
+                    "taxonomy_representation"
+                ],
+                "n_targets": int(selection["n_targets"]),
+                "n_null_calibrations": len(
+                    list(pem_dir.glob("null_calibration_*.json"))
+                ),
+                "parameters": parameters or {},
+                "files": records,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    return manifest
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--run", type=str, default="O4a")
@@ -713,6 +817,29 @@ def main():
         args.run,
         pem_dir=pem_dir,
         aggregated_dir=args.aggregated_dir,
+    )
+    environment_path = record_environment(
+        pem_dir,
+        f"pem_{args.run.lower()}_{pem_dir.name}",
+        note=(
+            f"alpha={args.alpha}; block_hours={args.block_hours}; "
+            f"nds_host={args.nds_host}; seed={args.seed}; "
+            f"apply_only={args.apply_only}; keep_cache={args.keep_cache}"
+        ),
+    )
+    write_pem_provenance_manifest(
+        pem_dir,
+        run=args.run,
+        aggregated_dir=args.aggregated_dir,
+        environment_path=environment_path,
+        parameters={
+            "alpha": args.alpha,
+            "block_hours": args.block_hours,
+            "nds_host": args.nds_host,
+            "seed": args.seed,
+            "apply_only": args.apply_only,
+            "keep_cache": args.keep_cache,
+        },
     )
 
 

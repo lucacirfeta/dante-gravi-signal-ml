@@ -407,6 +407,68 @@ def test_catalog_manifest_hashes_inputs_and_outputs(tmp_path) -> None:
     assert all(len(row["sha256"]) == 64 for row in payload["files"])
 
 
+def test_pem_manifest_hashes_complete_inputs_and_outputs(tmp_path) -> None:
+    from src.pipeline_v2_production.pem_null_calibration import (
+        write_pem_provenance_manifest,
+    )
+
+    pem_dir = tmp_path / "pem" / "idxq4-64_queryq4-64"
+    pem_dir.mkdir(parents=True)
+    taxonomy = tmp_path / "taxonomy.csv"
+    audit = tmp_path / "audit.json"
+    thresholds = tmp_path / "thresholds.json"
+    taxonomy.write_text("detector,gps_start\nH1,100\n", encoding="utf-8")
+    audit.write_text('{"ok": true}', encoding="utf-8")
+    thresholds.write_text('{"ok": true}', encoding="utf-8")
+    (pem_dir / "selection_manifest.json").write_text(
+        json.dumps(
+            {
+                "taxonomy_representation": "idxq4-64_queryq4-64",
+                "taxonomy_path": str(taxonomy),
+                "taxonomy_audit_path": str(audit),
+                "channel_thresholds_path": str(thresholds),
+                "n_targets": 1,
+            }
+        ),
+        encoding="utf-8",
+    )
+    (pem_dir / "selected_targets.csv").write_text(
+        "detector,gps_start\nH1,100\n",
+        encoding="utf-8",
+    )
+    (pem_dir / "coherence_report.csv").write_text(
+        "detector,gps_start\nH1,100\n",
+        encoding="utf-8",
+    )
+    (pem_dir / "null_calibration_H1_100.json").write_text(
+        '{"event_gps": 100}',
+        encoding="utf-8",
+    )
+    (pem_dir / "pem_family_wise_verdicts.csv").write_text(
+        "detector,gps_start\nH1,100\n",
+        encoding="utf-8",
+    )
+    (pem_dir / "pem_class_association.json").write_text(
+        '{"n_events": 1}',
+        encoding="utf-8",
+    )
+
+    manifest = write_pem_provenance_manifest(
+        pem_dir,
+        run="O4a",
+        aggregated_dir=tmp_path,
+        parameters={"alpha": 0.01},
+    )
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+
+    assert payload["n_targets"] == 1
+    assert payload["n_null_calibrations"] == 1
+    assert payload["parameters"]["alpha"] == 0.01
+    assert len(payload["files"]) == 9
+    assert {row["role"] for row in payload["files"]} == {"input", "output"}
+    assert all(len(row["sha256"]) == 64 for row in payload["files"])
+
+
 def test_blind_spot_injection_is_centred_and_qmax_text_is_current() -> None:
     from src.pipeline_v2_production import blind_spot_map
 

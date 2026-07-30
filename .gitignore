@@ -310,6 +310,7 @@ scripts/*
 !scripts/verify_cohesion.py
 !scripts/pem_background_batch.sh
 
+tmp
 .claude
 .codex
 .gsd/
