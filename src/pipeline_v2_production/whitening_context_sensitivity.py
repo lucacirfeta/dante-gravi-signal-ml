@@ -59,6 +59,7 @@ DEFAULT_PADS = (4.0, 16.0, 64.0, 128.0)
 LARGE_SWING = 0.02          # a score swing this size can cross the DSD spacing
 ANCHOR_TOLERANCE = 1e-3
 MIN_BACKGROUND = 100
+RESERVE_PER_STRATUM = 5
 
 
 def _score_at_pads(
@@ -68,8 +69,14 @@ def _score_at_pads(
     *,
     qrange: tuple[int, int],
     window_offset: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Native score for each candidate at each whitening pad; kept mask."""
+) -> tuple[np.ndarray, np.ndarray, list[dict]]:
+    """Native score at each pad, plus the kept mask and failure ledger.
+
+    Whitening requires the complete requested context.  The data loader's
+    ``edge_tolerance`` is therefore deliberately zero: setting it to ``pad``
+    can select a shorter local block and defer the missing edge to
+    ``whiten_context``, which used to make candidates disappear silently.
+    """
     import warnings
     import matplotlib
 
@@ -79,6 +86,7 @@ def _score_at_pads(
 
     scores = np.full((len(cands), len(pads)), np.nan)
     kept = np.zeros(len(cands), dtype=bool)
+    failures: list[dict] = []
     for r, (_, c) in enumerate(cands.iterrows()):
         w0 = float(c.gps_start) + float(window_offset)
         ok = True
@@ -90,7 +98,7 @@ def _score_at_pads(
                         c.detector,
                         w0 - pad,
                         w0 + SEGMENT_LENGTH + pad,
-                        edge_tolerance=pad,
+                        edge_tolerance=0.0,
                         cache_raw=True,
                     )
                     tw, pad_info = whiten_context(
@@ -115,11 +123,123 @@ def _score_at_pads(
                 scores[r, j] = float(scorer.score_spectrogram([rgb], threshold=0.0)[0]
                                      ["novelty_score"])
             except Exception as e:  # noqa: BLE001
-                logger.debug(f"candidate {c.gps_start} pad {pad} failed: {e}")
+                failure = {
+                    "detector": str(c.detector),
+                    "gps_start": int(c.gps_start),
+                    "analysis_start": float(w0),
+                    "pad_s": float(pad),
+                    "error_type": type(e).__name__,
+                    "error": str(e),
+                }
+                failures.append(failure)
+                logger.warning(
+                    "candidate %s/%s pad %s failed: %s",
+                    c.detector,
+                    c.gps_start,
+                    pad,
+                    e,
+                )
                 ok = False
                 break
         kept[r] = ok
-    return scores, kept
+    return scores, kept, failures
+
+
+def _score_balanced_at_pads(
+    candidate_pool: pd.DataFrame,
+    pads,
+    scorer,
+    *,
+    qrange: tuple[int, int],
+    window_offset: float,
+    class_column: str,
+    score_column: str,
+    n_each: int,
+    anchor_tolerance: float,
+) -> tuple[pd.DataFrame, np.ndarray, list[dict], dict, dict]:
+    """Select the nearest fully usable candidates within each stratum.
+
+    Candidates remain ordered by distance from their class boundary as emitted
+    by :func:`_sample_near_threshold`.  A candidate with incomplete/non-finite
+    raw context, or whose pad-4 score does not reproduce its stored production
+    score, is recorded and the next candidate in the same detector/class
+    stratum is tried.  This preserves the balanced design without silently
+    reducing a stratum or substituting across strata.
+    """
+    selected_frames = []
+    selected_scores = []
+    failures: list[dict] = []
+    attempted_counts: dict[str, dict[str, int]] = {}
+    selected_counts: dict[str, dict[str, int]] = {}
+    production_pad_index = tuple(pads).index(PRODUCTION_PAD)
+
+    for detector in ("H1", "L1"):
+        attempted_counts[detector] = {}
+        selected_counts[detector] = {}
+        for klass in ("ROBUST", "BACKGROUND"):
+            stratum = candidate_pool[
+                (candidate_pool.detector == detector)
+                & (candidate_pool[class_column] == klass)
+            ]
+            attempted = 0
+            selected = 0
+            for _, candidate in stratum.iterrows():
+                one = candidate.to_frame().T
+                one_scores, kept, one_failures = _score_at_pads(
+                    one,
+                    pads,
+                    scorer,
+                    qrange=qrange,
+                    window_offset=window_offset,
+                )
+                attempted += 1
+                failures.extend(one_failures)
+                if bool(kept[0]):
+                    stored_score = float(candidate[score_column])
+                    anchor_delta = abs(
+                        float(one_scores[0, production_pad_index])
+                        - stored_score
+                    )
+                    if anchor_delta > anchor_tolerance:
+                        failures.append(
+                            {
+                                "detector": str(candidate.detector),
+                                "gps_start": int(candidate.gps_start),
+                                "analysis_start": (
+                                    float(candidate.gps_start)
+                                    + float(window_offset)
+                                ),
+                                "pad_s": float(PRODUCTION_PAD),
+                                "error_type": "AnchorMismatch",
+                                "error": (
+                                    "pad-4 score does not reproduce stored "
+                                    f"production score: abs_delta={anchor_delta:.12g}, "
+                                    f"tolerance={anchor_tolerance:.12g}"
+                                ),
+                            }
+                        )
+                    else:
+                        selected_frames.append(one)
+                        selected_scores.append(one_scores[0])
+                        selected += 1
+                if selected == n_each:
+                    break
+            attempted_counts[detector][klass] = attempted
+            selected_counts[detector][klass] = selected
+
+    if selected_frames:
+        selected_frame = pd.concat(selected_frames).reset_index(drop=True)
+        score_matrix = np.vstack(selected_scores)
+    else:
+        selected_frame = candidate_pool.iloc[0:0].copy()
+        score_matrix = np.empty((0, len(pads)), dtype=float)
+    return (
+        selected_frame,
+        score_matrix,
+        failures,
+        attempted_counts,
+        selected_counts,
+    )
 
 
 def _block_bootstrap_p99_ci(
@@ -488,26 +608,83 @@ def run(
                 ),
             }
         thresholds_by_pad[str(pad)] = det_thresholds
-    cands = _sample_near_threshold(
+    pool_each = int(n_candidates) + RESERVE_PER_STRATUM
+    candidate_pool = _sample_near_threshold(
         tax,
-        n_each=n_candidates,
+        n_each=pool_each,
         thresholds=thresholds_by_pad[str(PRODUCTION_PAD)],
         score_column=score_column,
         class_column=class_column,
     )
-    logger.info(f"{len(cands)} near-threshold candidates; pads {list(pads)}")
+    expected_pool = 4 * pool_each
+    pool_counts = (
+        candidate_pool.groupby(["detector", class_column]).size().to_dict()
+    )
+    expected_pool_counts = {
+        (detector, klass): pool_each
+        for detector in ("H1", "L1")
+        for klass in ("ROBUST", "BACKGROUND")
+    }
+    if (
+        len(candidate_pool) != expected_pool
+        or pool_counts != expected_pool_counts
+    ):
+        raise RuntimeError(
+            "Whitening near-threshold reserve pool is incomplete: "
+            f"expected {expected_pool_counts}, got {pool_counts}"
+        )
+    logger.info(
+        "%d near-threshold candidates plus %d reserves per stratum; pads %s",
+        4 * int(n_candidates),
+        RESERVE_PER_STRATUM,
+        list(pads),
+    )
 
-    scores, kept = _score_at_pads(
+    (
         cands,
+        scores,
+        failures,
+        attempted_counts,
+        selected_counts,
+    ) = _score_balanced_at_pads(
+        candidate_pool,
         pads,
         scorer,
         qrange=production_qrange,
         window_offset=window_offset,
+        class_column=class_column,
+        score_column=score_column,
+        n_each=int(n_candidates),
+        anchor_tolerance=float(anchor_tolerance),
     )
-    cands = cands[kept].reset_index(drop=True)
-    scores = scores[kept]
-    if len(cands) == 0:
-        raise RuntimeError("No candidate was scored at every requested pad")
+    failure_path = AGG / (
+        f"whitening_context_scoring_failures_{run_name.lower()}_"
+        f"{representation}.csv"
+    )
+    pd.DataFrame(
+        failures,
+        columns=[
+            "detector",
+            "gps_start",
+            "analysis_start",
+            "pad_s",
+            "error_type",
+            "error",
+        ],
+    ).to_csv(failure_path, index=False)
+    expected_selected_counts = {
+        detector: {
+            "ROBUST": int(n_candidates),
+            "BACKGROUND": int(n_candidates),
+        }
+        for detector in ("H1", "L1")
+    }
+    if selected_counts != expected_selected_counts:
+        raise RuntimeError(
+            "Whitening candidate scoring is incomplete: "
+            f"expected {expected_selected_counts}, got {selected_counts}; "
+            f"diagnostics: {failure_path}"
+        )
     logger.info(f"{len(cands)} candidates scored at all pads")
 
     pad_idx = pads.index(PRODUCTION_PAD)
@@ -648,6 +825,18 @@ def run(
             "query_qrange": list(production_qrange),
         },
         "thresholds_by_pad": thresholds_by_pad,
+        "candidate_selection": {
+            "ordering": "nearest_class_boundary_first",
+            "reserve_per_detector_class": RESERVE_PER_STRATUM,
+            "attempted_counts": attempted_counts,
+            "selected_counts": selected_counts,
+            "failure_ledger": str(failure_path),
+            "failure_ledger_sha256": file_sha256(failure_path),
+        },
+        "n_attempted": int(
+            sum(sum(counts.values()) for counts in attempted_counts.values())
+        ),
+        "n_failed_scoring": int(len(failures)),
         "n_candidates": int(len(cands)),
         "n_robust": int((cands[class_column] == "ROBUST").sum()),
         "n_rejected": int((cands[class_column] == "BACKGROUND").sum()),

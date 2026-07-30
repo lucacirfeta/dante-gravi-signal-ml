@@ -93,6 +93,124 @@ def _dsd_class(score: float, lower: float, upper: float) -> str:
     return "BACKGROUND"
 
 
+def _wilson_interval(k: int, n: int, z: float = 1.959963984540054) -> list[float]:
+    """Two-sided 95% Wilson score interval for a binomial proportion."""
+    if n <= 0:
+        return [float("nan"), float("nan")]
+    p = float(k) / float(n)
+    z2 = z * z
+    denominator = 1.0 + z2 / n
+    center = (p + z2 / (2.0 * n)) / denominator
+    half_width = (
+        z
+        * np.sqrt((p * (1.0 - p) / n) + z2 / (4.0 * n * n))
+        / denominator
+    )
+    lower = 0.0 if k == 0 else max(0.0, center - half_width)
+    upper = 1.0 if k == n else min(1.0, center + half_width)
+    return [float(lower), float(upper)]
+
+
+def _binomial_record(mask: np.ndarray) -> dict:
+    mask = np.asarray(mask, dtype=bool)
+    k = int(mask.sum())
+    n = int(mask.size)
+    return {
+        "k": k,
+        "n": n,
+        "rate": float(k / n) if n else None,
+        "wilson_ci95": _wilson_interval(k, n) if n else [None, None],
+    }
+
+
+def _attach_binomial_uncertainty(rows: list[dict], trial_frame) -> None:
+    """Attach exact counts and Wilson intervals to every P9 result cell."""
+    for row in rows:
+        trials = trial_frame[
+            (trial_frame["system"] == row["system"])
+            & (
+                np.isclose(
+                    trial_frame["distance_mpc"].to_numpy(float),
+                    float(row["distance_mpc"]),
+                )
+            )
+        ]
+        if len(trials) != int(row["n"]):
+            raise RuntimeError(
+                "P9 uncertainty cell/trial mismatch for "
+                f"{row['system']} {row['distance_mpc']}: "
+                f"{len(trials)} != {row['n']}"
+            )
+        flag_h1 = trials["flag_H1"].to_numpy(bool)
+        flag_l1 = trials["flag_L1"].to_numpy(bool)
+        primary_flag = flag_h1 | flag_l1
+        recovered = trials["coincidence_recovered"].to_numpy(bool)
+        endpoints = {
+            "flag_H1": _binomial_record(flag_h1),
+            "flag_L1": _binomial_record(flag_l1),
+            "flag_either": _binomial_record(primary_flag),
+            "dsd_robust_H1": _binomial_record(
+                trials["dsd_class_H1"].to_numpy(str) == "ROBUST"
+            ),
+            "dsd_robust_L1": _binomial_record(
+                trials["dsd_class_L1"].to_numpy(str) == "ROBUST"
+            ),
+            "coincidence_localized_any": _binomial_record(
+                trials["coincidence_localized_H1"].to_numpy(bool)
+                | trials["coincidence_localized_L1"].to_numpy(bool)
+            ),
+            "coincidence_recovery": _binomial_record(recovered),
+            "coincidence_oracle_recovery": _binomial_record(
+                trials["coincidence_oracle_recovered"].to_numpy(bool)
+            ),
+            "coincidence_given_primary_flag": _binomial_record(
+                recovered[primary_flag]
+            ),
+        }
+        row["binomial_endpoints"] = endpoints
+        for detector in ("H1", "L1"):
+            classes = trials[f"dsd_class_{detector}"].to_numpy(str)
+            row[f"dsd_class_binomial_{detector}"] = {
+                klass: _binomial_record(classes == klass)
+                for klass in ("ROBUST", "AMBIGUOUS", "BACKGROUND")
+            }
+
+
+def augment_existing_artifact(path: str | Path) -> dict:
+    """Add count-based uncertainty to a completed trial-level P9 artifact."""
+    import pandas as pd
+
+    from src.core.index_contract import sha256_file
+
+    artifact_path = Path(path)
+    artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+    trial_path = Path(artifact["trial_level_path"])
+    if sha256_file(trial_path) != artifact["trial_level_sha256"]:
+        raise RuntimeError("P9 trial-level hash mismatch during augmentation")
+    trial_frame = pd.read_csv(trial_path)
+    if len(trial_frame) != int(artifact["n_trial_rows"]):
+        raise RuntimeError("P9 trial-level row count mismatch during augmentation")
+    _attach_binomial_uncertainty(artifact["rows"], trial_frame)
+    artifact["binomial_uncertainty"] = {
+        "method": "Wilson score interval",
+        "confidence_level": 0.95,
+        "cell_denominator": "valid trials in each system-distance cell",
+        "conditional_endpoint_denominator": (
+            "trials crossing the primary O3b flag in either detector"
+        ),
+    }
+    artifact_path.write_text(
+        json.dumps(artifact, indent=2),
+        encoding="utf-8",
+    )
+    record_environment(
+        AGG,
+        f"astrophysical_injection_uncertainty_"
+        f"{artifact['run'].lower()}_{artifact['taxonomy_representation']}",
+    )
+    return artifact
+
+
 def _waveform(m1: float, m2: float, distance_mpc: float, inclination: float,
               f_low: float):
     """IMRPhenomD plus/cross polarizations, as numpy arrays at SAMPLE_RATE."""
@@ -626,6 +744,7 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
     )
     trial_frame = pd.DataFrame(trial_rows)
     trial_frame.to_csv(trial_path, index=False)
+    _attach_binomial_uncertainty(rows, trial_frame)
 
     out = {"run": run_name, "thresholds": thresholds, "n_trials": n_trials,
            "seed": seed, "band": list(band),
@@ -637,6 +756,16 @@ def run(run_name: str = "O4a", systems=SYSTEMS, distances=DISTANCES_MPC,
            "trial_level_path": str(trial_path),
            "trial_level_sha256": sha256_file(trial_path),
            "n_trial_rows": int(len(trial_frame)),
+           "binomial_uncertainty": {
+               "method": "Wilson score interval",
+               "confidence_level": 0.95,
+               "cell_denominator": (
+                   "valid trials in each system-distance cell"
+               ),
+               "conditional_endpoint_denominator": (
+                   "trials crossing the primary O3b flag in either detector"
+               ),
+           },
            "waveform_model": "IMRPhenomD", "rows": rows}
     dest = AGG / (
         f"astrophysical_injection_{run_name.lower()}_{representation}.json"
@@ -657,8 +786,15 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--pilot", action="store_true",
                    help="One system, two distances, few trials.")
+    p.add_argument(
+        "--augment-artifact",
+        default=None,
+        help="Attach Wilson intervals to an existing completed P9 artifact.",
+    )
     a = p.parse_args()
-    if a.pilot:
+    if a.augment_artifact:
+        augment_existing_artifact(a.augment_artifact)
+    elif a.pilot:
         run(a.run, systems=SYSTEMS[:1], distances=(400.0, 2000.0),
             n_trials=3, seed=a.seed)
     else:

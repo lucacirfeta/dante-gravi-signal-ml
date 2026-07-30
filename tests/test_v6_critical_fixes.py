@@ -966,6 +966,45 @@ def test_p9_dsd_classification_uses_both_c2_interval_endpoints() -> None:
     assert _dsd_class(0.220001, 0.15, 0.22) == "ROBUST"
 
 
+def test_p9_attaches_count_based_wilson_intervals() -> None:
+    from src.pipeline_v2_production.astrophysical_injection import (
+        _attach_binomial_uncertainty,
+        _wilson_interval,
+    )
+
+    trials = pd.DataFrame(
+        {
+            "system": ["BBH"] * 4,
+            "distance_mpc": [100.0] * 4,
+            "flag_H1": [True, True, False, False],
+            "flag_L1": [False, True, False, False],
+            "dsd_class_H1": [
+                "ROBUST", "AMBIGUOUS", "BACKGROUND", "BACKGROUND"
+            ],
+            "dsd_class_L1": [
+                "BACKGROUND", "ROBUST", "BACKGROUND", "BACKGROUND"
+            ],
+            "coincidence_localized_H1": [True, False, False, False],
+            "coincidence_localized_L1": [False, True, False, False],
+            "coincidence_recovered": [True, True, False, False],
+            "coincidence_oracle_recovered": [True, False, False, False],
+        }
+    )
+    rows = [{"system": "BBH", "distance_mpc": 100.0, "n": 4}]
+    _attach_binomial_uncertainty(rows, trials)
+
+    endpoints = rows[0]["binomial_endpoints"]
+    assert endpoints["flag_either"]["k"] == 2
+    assert endpoints["flag_either"]["n"] == 4
+    assert endpoints["coincidence_given_primary_flag"]["k"] == 2
+    assert endpoints["coincidence_given_primary_flag"]["n"] == 2
+    assert rows[0]["dsd_class_binomial_H1"]["ROBUST"]["k"] == 1
+    assert _wilson_interval(0, 25)[0] == 0.0
+    assert _wilson_interval(0, 25)[1] == pytest.approx(0.13319225094)
+    assert _wilson_interval(25, 25)[0] == pytest.approx(0.86680774906)
+    assert _wilson_interval(25, 25)[1] == 1.0
+
+
 def test_c2_queue_has_a_fail_closed_artifact_gate_after_each_gpu_stage() -> None:
     script = Path("scripts/run_c2_bgv3_gpu_queue.ps1").read_text(
         encoding="utf-8"
@@ -1140,3 +1179,227 @@ def test_pem_class_association_excludes_uncalibrated_events() -> None:
         [3, 20],
         [5, 86],
     ]
+
+
+def test_whitening_candidate_scoring_requires_exact_context(
+    monkeypatch,
+) -> None:
+    from src.core import data_loader, preprocessor
+    from src.pipeline_v2_production.whitening_context_sensitivity import (
+        _score_at_pads,
+    )
+
+    calls = []
+
+    def fake_fetch(detector, start, end, **kwargs):
+        calls.append((detector, start, end, kwargs))
+        return object()
+
+    monkeypatch.setattr(data_loader, "fetch_local_or_remote_strain", fake_fetch)
+    monkeypatch.setattr(
+        preprocessor,
+        "whiten_context",
+        lambda ts, start, end, pad: (object(), {"left": 0.0, "right": 0.0}),
+    )
+    monkeypatch.setattr(
+        preprocessor,
+        "extract_clean_subwindow",
+        lambda ts, start, end: object(),
+    )
+    monkeypatch.setattr(
+        preprocessor,
+        "generate_qtransform",
+        lambda *args, **kwargs: np.zeros((2, 2), dtype=float),
+    )
+
+    class FakeScorer:
+        def score_spectrogram(self, images, threshold):
+            return [{"novelty_score": 0.25}]
+
+    candidates = pd.DataFrame(
+        [{"detector": "H1", "gps_start": 100}]
+    )
+    scores, kept, failures = _score_at_pads(
+        candidates,
+        (4.0, 16.0),
+        FakeScorer(),
+        qrange=(4, 64),
+        window_offset=4.0,
+    )
+
+    assert kept.tolist() == [True]
+    assert failures == []
+    assert scores.tolist() == [[0.25, 0.25]]
+    assert [call[3]["edge_tolerance"] for call in calls] == [0.0, 0.0]
+
+
+def test_whitening_candidate_scoring_records_failures(
+    monkeypatch,
+) -> None:
+    from src.core import data_loader
+    from src.pipeline_v2_production.whitening_context_sensitivity import (
+        _score_at_pads,
+    )
+
+    monkeypatch.setattr(
+        data_loader,
+        "fetch_local_or_remote_strain",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            RuntimeError("missing exact context")
+        ),
+    )
+    candidates = pd.DataFrame(
+        [{"detector": "L1", "gps_start": 200}]
+    )
+    scores, kept, failures = _score_at_pads(
+        candidates,
+        (4.0, 16.0),
+        object(),
+        qrange=(4, 64),
+        window_offset=4.0,
+    )
+
+    assert kept.tolist() == [False]
+    assert np.isnan(scores).all()
+    assert failures == [
+        {
+            "detector": "L1",
+            "gps_start": 200,
+            "analysis_start": 204.0,
+            "pad_s": 4.0,
+            "error_type": "RuntimeError",
+            "error": "missing exact context",
+        }
+    ]
+
+
+def test_whitening_balanced_scoring_uses_same_stratum_reserve(
+    monkeypatch,
+) -> None:
+    from src.pipeline_v2_production import whitening_context_sensitivity
+
+    class_column = "class"
+    rows = []
+    gps = 100
+    for detector in ("H1", "L1"):
+        for klass in ("ROBUST", "BACKGROUND"):
+            for _ in range(3):
+                rows.append(
+                    {
+                        "detector": detector,
+                        "gps_start": gps,
+                        class_column: klass,
+                        "stored_score": 0.25,
+                    }
+                )
+                gps += 1
+    pool = pd.DataFrame(rows)
+
+    def fake_score(candidates, pads, scorer, **kwargs):
+        candidate = candidates.iloc[0]
+        failed = int(candidate.gps_start) == 100
+        scores = np.full((1, len(pads)), np.nan if failed else 0.25)
+        failures = (
+            [{
+                "detector": candidate.detector,
+                "gps_start": int(candidate.gps_start),
+                "analysis_start": float(candidate.gps_start + 4),
+                "pad_s": float(pads[0]),
+                "error_type": "ValueError",
+                "error": "non-finite raw data",
+            }]
+            if failed
+            else []
+        )
+        return scores, np.array([not failed]), failures
+
+    monkeypatch.setattr(
+        whitening_context_sensitivity,
+        "_score_at_pads",
+        fake_score,
+    )
+    selected, scores, failures, attempted, counts = (
+        whitening_context_sensitivity._score_balanced_at_pads(
+            pool,
+            (4.0, 16.0),
+            object(),
+            qrange=(4, 64),
+            window_offset=4.0,
+            class_column=class_column,
+            score_column="stored_score",
+            n_each=2,
+            anchor_tolerance=1e-3,
+        )
+    )
+
+    assert len(selected) == 8
+    assert scores.shape == (8, 2)
+    assert 100 not in selected.gps_start.tolist()
+    assert selected[
+        (selected.detector == "H1") & (selected[class_column] == "ROBUST")
+    ].gps_start.tolist() == [101, 102]
+    assert attempted["H1"]["ROBUST"] == 3
+    assert counts == {
+        "H1": {"ROBUST": 2, "BACKGROUND": 2},
+        "L1": {"ROBUST": 2, "BACKGROUND": 2},
+    }
+    assert len(failures) == 1
+
+
+def test_whitening_balanced_scoring_replaces_anchor_mismatch(
+    monkeypatch,
+) -> None:
+    from src.pipeline_v2_production import whitening_context_sensitivity
+
+    pool = pd.DataFrame(
+        [
+            {
+                "detector": detector,
+                "gps_start": gps,
+                "class": klass,
+                "stored_score": 0.25,
+            }
+            for detector, klass, gps in (
+                ("H1", "ROBUST", 100),
+                ("H1", "ROBUST", 101),
+                ("H1", "BACKGROUND", 200),
+                ("L1", "ROBUST", 300),
+                ("L1", "BACKGROUND", 400),
+            )
+        ]
+    )
+
+    def fake_score(candidates, pads, scorer, **kwargs):
+        gps = int(candidates.iloc[0].gps_start)
+        value = 0.50 if gps == 100 else 0.25
+        return (
+            np.full((1, len(pads)), value),
+            np.array([True]),
+            [],
+        )
+
+    monkeypatch.setattr(
+        whitening_context_sensitivity,
+        "_score_at_pads",
+        fake_score,
+    )
+    selected, _, failures, attempted, counts = (
+        whitening_context_sensitivity._score_balanced_at_pads(
+            pool,
+            (4.0, 16.0),
+            object(),
+            qrange=(4, 64),
+            window_offset=4.0,
+            class_column="class",
+            score_column="stored_score",
+            n_each=1,
+            anchor_tolerance=1e-3,
+        )
+    )
+
+    assert 100 not in selected.gps_start.tolist()
+    assert 101 in selected.gps_start.tolist()
+    assert attempted["H1"]["ROBUST"] == 2
+    assert counts["H1"]["ROBUST"] == 1
+    assert len(failures) == 1
+    assert failures[0]["error_type"] == "AnchorMismatch"
