@@ -35,6 +35,7 @@ Run-agnostic: nothing here is O4a-specific.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -66,6 +67,85 @@ SPEC_FRANGE = (20.0, 1291.0)     # q-transform frequency span actually produced
 LIGHT_TRAVEL_S = 0.010002        # LHO <-> LLO
 LAG_MARGIN_S = 0.002             # tolerance on top of light travel
 NULL_SHIFTS_S = (1.0, 2.0, 4.0, 8.0, -1.0, -2.0, -4.0, -8.0)
+
+
+def _sha256(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _catalogue_keys(frame: pd.DataFrame) -> set[tuple[float, str]]:
+    required = {'gps_start', 'detector'}
+    missing = required.difference(frame.columns)
+    if missing:
+        raise RuntimeError(f'coincidence catalogue lacks columns: {sorted(missing)}')
+    keys = {
+        (float(gps), str(detector))
+        for gps, detector in zip(frame['gps_start'], frame['detector'])
+    }
+    if len(keys) != len(frame):
+        raise RuntimeError('coincidence catalogue contains duplicate detector/GPS keys')
+    return keys
+
+
+def _key_digest(keys: set[tuple[float, str]]) -> str:
+    payload = ''.join(
+        f'{detector},{gps:.9f}\n' for gps, detector in sorted(keys)
+    ).encode('utf-8')
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _load_reusable_events(
+    path: str | Path,
+    *,
+    allowed_keys: set[tuple[float, str]],
+) -> tuple[list[dict], dict]:
+    """Validate deterministic event measurements before subset reuse."""
+    source = Path(path)
+    payload = json.loads(source.read_text(encoding='utf-8'))
+    events = payload.get('events')
+    if not isinstance(events, list):
+        raise RuntimeError('physical-coincidence resume artifact has no event ledger')
+    keys: list[tuple[float, str]] = []
+    finite_fields = ('gps', 't_offset_s', 'f_lo', 'f_hi', 'cc_onsource')
+    for event in events:
+        key = (float(event['gps']), str(event['detector']))
+        keys.append(key)
+        if key not in allowed_keys:
+            raise RuntimeError(
+                f'physical-coincidence resume key is outside catalogue: {key}'
+            )
+        partner = 'L1' if key[1] == 'H1' else 'H1'
+        if event.get('partner') != partner:
+            raise RuntimeError(f'physical-coincidence partner mismatch: {key}')
+        if not all(np.isfinite(float(event[name])) for name in finite_fields):
+            raise RuntimeError(f'non-finite physical-coincidence event: {key}')
+        for optional in ('cc_null_mean', 'cc_null_max', 'patch_iou'):
+            value = event.get(optional)
+            if value is not None and not np.isfinite(float(value)):
+                raise RuntimeError(
+                    f'non-finite {optional} in physical-coincidence event: {key}'
+                )
+    if len(keys) != len(set(keys)):
+        raise RuntimeError('physical-coincidence resume artifact has duplicate keys')
+    return list(events), {
+        'mode': 'verified_event_subset_reuse',
+        'source_path': str(source),
+        'source_sha256': _sha256(source),
+        'n_reused': len(events),
+        'unique_keys': True,
+        'all_keys_in_catalogue': True,
+        'finite_statistics': True,
+    }
+
+
+def _write_checkpoint(path: Path, payload: dict) -> None:
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    temporary.write_text(json.dumps(payload, indent=1), encoding='utf-8')
+    temporary.replace(path)
 
 
 def _patch_time_band(top_k_idx: np.ndarray) -> tuple[float, float, float]:
@@ -208,7 +288,10 @@ def analyze_candidate(scorer, det: str, partner: str, gps: float,
 def run(run_name: str = 'O4a', n_candidates: int = 200, seed: int = 42,
         aggregated_dir: str | Path = 'data/production/aggregated',
         production_dir: str | Path = 'data/production',
-        with_iou: bool = True, resume: bool = True):
+        with_iou: bool = True, resume: bool = True,
+        catalogue: pd.DataFrame | None = None,
+        resume_source: str | Path | None = None,
+        baseline_catalogue: str | Path | None = None):
     """Apply the coincidence test. n_candidates=0 means the FULL pool.
 
     Results are checkpointed so a long run can be resumed; the output JSON is
@@ -217,30 +300,76 @@ def run(run_name: str = 'O4a', n_candidates: int = 200, seed: int = 42,
     from tqdm import tqdm
 
     agg, prod = Path(aggregated_dir), Path(production_dir)
-    tax = pd.read_csv(agg / f'Master_Taxonomy_{run_name}.csv')
+    tax = (
+        pd.read_csv(agg / f'Master_Taxonomy_{run_name}.csv')
+        if catalogue is None
+        else catalogue.copy()
+    )
     rng = np.random.default_rng(seed)
     if n_candidates and len(tax) > n_candidates:
         tax = tax.iloc[rng.choice(len(tax), n_candidates, replace=False)]
 
+    current_keys = _catalogue_keys(tax)
     out_path = agg / f'coincidence_physical_{run_name.lower()}.json'
     rows = []
     seen = set()
-    if resume and out_path.exists():
-        try:
-            prev = json.loads(out_path.read_text()).get('events', [])
-            rows = list(prev)
-            seen = {(e['gps'], e['detector']) for e in prev}
-            logger.info(f'resuming: {len(seen)} events already measured')
-        except Exception:
-            rows, seen = [], set()
+    reuse_provenance = None
+    source = Path(resume_source) if resume_source is not None else out_path
+    if resume and source.exists():
+        rows, reuse_provenance = _load_reusable_events(
+            source,
+            allowed_keys=current_keys,
+        )
+        seen = {(float(e['gps']), str(e['detector'])) for e in rows}
+        logger.info(f'resuming: {len(seen)} verified events already measured')
+
+    baseline_keys: set[tuple[float, str]] | None = None
+    baseline_provenance = None
+    if baseline_catalogue is not None:
+        baseline_path = Path(baseline_catalogue)
+        baseline_frame = pd.read_csv(baseline_path)
+        baseline_keys = _catalogue_keys(baseline_frame)
+        if not baseline_keys.issubset(current_keys):
+            raise RuntimeError('baseline catalogue is not a subset of current catalogue')
+        baseline_provenance = {
+            'path': str(baseline_path),
+            'sha256': _sha256(baseline_path),
+            'n_keys': len(baseline_keys),
+            'key_sha256': _key_digest(baseline_keys),
+        }
 
     scorer = PatchScorer(
         reference_index_path=str(get_reference_dir()
                                  / f'patch_compressed_index_{run_name.lower()}_ex.npz'),
         verify_md5=False)
 
-    todo = [r for _, r in tax.iterrows()
-            if (float(r['gps_start']), r['detector']) not in seen]
+    index_path = (
+        get_reference_dir() / f'patch_compressed_index_{run_name.lower()}_ex.npz'
+    )
+    analysis_contract = {
+        'schema_version': 2,
+        'algorithm': 'bandpassed_light_travel_normxcorr_v1',
+        'reference_index_path': str(index_path),
+        'reference_index_sha256': _sha256(index_path),
+        'segment_length_s': SEGMENT_LENGTH,
+        'light_travel_s': LIGHT_TRAVEL_S,
+        'lag_margin_s': LAG_MARGIN_S,
+        'null_shifts_s': list(NULL_SHIFTS_S),
+        'with_patch_iou': bool(with_iou),
+        'candidate_count': len(current_keys),
+        'candidate_key_sha256': _key_digest(current_keys),
+    }
+
+    attempt_keys = (
+        current_keys - baseline_keys
+        if baseline_keys is not None
+        else current_keys - seen
+    )
+    todo = [
+        r for _, r in tax.iterrows()
+        if (float(r['gps_start']), str(r['detector'])) in attempt_keys - seen
+    ]
+    failures: list[dict] = []
     for i, r in enumerate(tqdm(todo, desc='physical coincidence')):
         det, gps, sess = r['detector'], float(r['gps_start']), r['session_id']
         partner = 'L1' if det == 'H1' else 'H1'
@@ -255,8 +384,21 @@ def run(run_name: str = 'O4a', n_candidates: int = 200, seed: int = 42,
                                           with_iou=with_iou))
         except Exception as e:
             logger.debug(f'skip {gps} {det}: {e}')
+            failures.append({
+                'gps': gps,
+                'detector': str(det),
+                'error_type': type(e).__name__,
+                'error': str(e),
+            })
         if (i + 1) % 100 == 0:
-            out_path.write_text(json.dumps({'partial': True, 'events': rows}, indent=1))
+            _write_checkpoint(out_path, {
+                'status': 'partial',
+                'analysis_contract': analysis_contract,
+                'reuse_provenance': reuse_provenance,
+                'baseline_catalogue': baseline_provenance,
+                'events': rows,
+                'incremental_failures': failures,
+            })
 
     df = pd.DataFrame(rows)
     on = df['cc_onsource'].values
@@ -264,6 +406,15 @@ def run(run_name: str = 'O4a', n_candidates: int = 200, seed: int = 42,
     thr = float(np.percentile(nul, 99)) if len(nul) else float('nan')
     summary = {
         'run': run_name, 'n': int(len(df)),
+        'n_catalogue': int(len(current_keys)),
+        'n_measured': int(len(seen | {
+            (float(e['gps']), str(e['detector'])) for e in rows
+        })),
+        'n_unmeasured': int(len(current_keys) - len({
+            (float(e['gps']), str(e['detector'])) for e in rows
+        })),
+        'n_incremental_requested': int(len(attempt_keys - seen)),
+        'n_incremental_failed': int(len(failures)),
         'cc_onsource_mean': float(on.mean()), 'cc_onsource_max': float(on.max()),
         'cc_null_max_p99': thr,
         'n_exceeding': int((on > thr).sum()) if np.isfinite(thr) else None,
@@ -271,7 +422,15 @@ def run(run_name: str = 'O4a', n_candidates: int = 200, seed: int = 42,
         'light_travel_s': LIGHT_TRAVEL_S, 'lag_margin_s': LAG_MARGIN_S,
     }
     out = agg / f'coincidence_physical_{run_name.lower()}.json'
-    out.write_text(json.dumps({'summary': summary, 'events': rows}, indent=1))
+    _write_checkpoint(out, {
+        'status': 'complete',
+        'analysis_contract': analysis_contract,
+        'reuse_provenance': reuse_provenance,
+        'baseline_catalogue': baseline_provenance,
+        'summary': summary,
+        'events': rows,
+        'incremental_failures': failures,
+    })
     logger.info(json.dumps(summary, indent=2))
     logger.info(f'saved {out}')
     try:

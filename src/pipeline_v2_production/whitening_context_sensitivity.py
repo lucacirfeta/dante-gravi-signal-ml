@@ -523,7 +523,7 @@ def run(
                         f"pad={pad:g}"
                     )
             else:
-                bg_scores, ledger_records = (
+                bg_scores, ledger_records, score_reuse = (
                     reporter._extract_detector_background(
                         scorer,
                         det,
@@ -578,6 +578,7 @@ def run(
                                 "ledger_path": str(ledger_path),
                                 "ledger_sha256": file_sha256(ledger_path),
                                 "ledger_audit": ledger_audit,
+                                "score_reuse": score_reuse,
                                 **exclusion_meta,
                             },
                             indent=2,

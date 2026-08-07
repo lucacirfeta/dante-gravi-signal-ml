@@ -233,6 +233,353 @@ def test_b3_enum_contains_unobservable():
     assert "UNOBSERVABLE" in _COINCIDENCE_ENUM
 
 
+def test_prior_master_seeds_only_observability_states(tmp_path, monkeypatch):
+    import pandas as pd
+
+    from src.pipeline_v2_production import aggregate_report as ar
+
+    master = tmp_path / "master_candidates.csv"
+    pd.DataFrame(
+        [
+            {
+                "gps_start": 100.0,
+                "detector": "H1",
+                "partner_observing_status": "ACTIVE_UNVERIFIED",
+            },
+            {
+                "gps_start": 132.0,
+                "detector": "L1",
+                "partner_observing_status": "UNOBSERVABLE",
+            },
+            {
+                "gps_start": 164.0,
+                "detector": "H1",
+                "partner_observing_status": "ACTIVE_NO_ANOMALY",
+            },
+        ]
+    ).to_csv(master, index=False)
+    monkeypatch.setattr(ar, "_COINC_CACHE", {})
+    monkeypatch.setattr(ar, "_COINC_CACHE_PATH", tmp_path / "cache.json")
+
+    added = ar._seed_coincidence_cache_from_master(master)
+
+    assert added == 2
+    assert ar._COINC_CACHE == {
+        "100_H1": "ACTIVE_UNVERIFIED",
+        "132_L1": "UNOBSERVABLE",
+    }
+    assert (tmp_path / "cache.json").exists()
+
+
+def test_candidate_deduplication_is_detector_aware():
+    """Keep same-GPS measurements from distinct detectors."""
+    import pandas as pd
+
+    from src.pipeline_v2_production.aggregate_report import (
+        _deduplicate_detector_windows,
+    )
+
+    candidates = pd.DataFrame(
+        [
+            {"detector": "H1", "gps_start": 100.0, "session_id": "1"},
+            {"detector": "H1", "gps_start": 100.0, "session_id": "2"},
+            {"detector": "L1", "gps_start": 100.0, "session_id": "1"},
+            {"detector": "L1", "gps_start": 132.0, "session_id": "1"},
+        ]
+    )
+
+    unique, duplicates = _deduplicate_detector_windows(candidates)
+
+    assert len(unique) == 3
+    assert len(duplicates) == 1
+    assert set(map(tuple, unique[["detector", "gps_start"]].to_numpy())) == {
+        ("H1", 100.0),
+        ("L1", 100.0),
+        ("L1", 132.0),
+    }
+    assert duplicates.iloc[0]["detector"] == "H1"
+    assert duplicates.iloc[0]["gps_start"] == 100.0
+
+
+def test_candidate_score_reuse_accepts_only_verified_subset(tmp_path):
+    import json
+    import pandas as pd
+
+    from src.pipeline_v2_production.aggregate_report import (
+        _load_reusable_candidate_scores,
+    )
+
+    score_path = tmp_path / "scores.csv"
+    audit_path = tmp_path / "audit.json"
+    pd.DataFrame(
+        [
+            {
+                "gps_start": 100.0,
+                "detector": "H1",
+                "score": 0.2,
+                "variant": "idxq4-64_queryq4-64",
+            }
+        ]
+    ).to_csv(score_path, index=False)
+    audit_path.write_text(
+        json.dumps(
+            {
+                "experiment_run": True,
+                "total_requested": 1,
+                "total_evaluated": 1,
+                "total_failed": 0,
+                "representation": {
+                    "variant": "idxq4-64_queryq4-64",
+                    "index_sha256": "index-hash",
+                    "catalog_gps_to_analysis_window_offset_s": 4.0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    scores, provenance = _load_reusable_candidate_scores(
+        score_path,
+        audit_path,
+        candidate_keys={(100.0, "H1"), (100.0, "L1")},
+        variant="idxq4-64_queryq4-64",
+        index_sha256="index-hash",
+        candidate_window_offset_s=4.0,
+    )
+
+    assert scores == {(100.0, "H1"): 0.2}
+    assert provenance["n_reused"] == 1
+    assert provenance["current_candidate_count"] == 2
+
+
+def test_candidate_score_reuse_rejects_removed_catalogue_keys(tmp_path):
+    import json
+    import pandas as pd
+
+    from src.pipeline_v2_production.aggregate_report import (
+        _load_reusable_candidate_scores,
+    )
+
+    score_path = tmp_path / "scores.csv"
+    audit_path = tmp_path / "audit.json"
+    pd.DataFrame(
+        [
+            {
+                "gps_start": 100.0,
+                "detector": "H1",
+                "score": 0.2,
+                "variant": "idxq4-64_queryq4-64",
+            }
+        ]
+    ).to_csv(score_path, index=False)
+    audit_path.write_text(
+        json.dumps(
+            {
+                "experiment_run": True,
+                "total_requested": 1,
+                "total_evaluated": 1,
+                "total_failed": 0,
+                "representation": {
+                    "variant": "idxq4-64_queryq4-64",
+                    "index_sha256": "index-hash",
+                    "catalog_gps_to_analysis_window_offset_s": 4.0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="outside the current catalogue"):
+        _load_reusable_candidate_scores(
+            score_path,
+            audit_path,
+            candidate_keys={(100.0, "L1")},
+            variant="idxq4-64_queryq4-64",
+            index_sha256="index-hash",
+            candidate_window_offset_s=4.0,
+        )
+
+
+def test_candidate_score_reuse_rejects_incomplete_audit(tmp_path):
+    import json
+    import pandas as pd
+
+    from src.pipeline_v2_production.aggregate_report import (
+        _load_reusable_candidate_scores,
+    )
+
+    score_path = tmp_path / "scores.csv"
+    audit_path = tmp_path / "audit.json"
+    pd.DataFrame(
+        [{
+            "gps_start": 100.0,
+            "detector": "H1",
+            "score": 0.2,
+            "variant": "rep",
+        }]
+    ).to_csv(score_path, index=False)
+    audit_path.write_text(
+        json.dumps({
+            "experiment_run": True,
+            "total_requested": 2,
+            "total_evaluated": 1,
+            "total_failed": 1,
+            "representation": {
+                "variant": "rep",
+                "index_sha256": "a" * 64,
+                "catalog_gps_to_analysis_window_offset_s": 4.0,
+            },
+        }),
+        encoding="utf-8",
+    )
+    with pytest.raises(RuntimeError, match="failed or unevaluated"):
+        _load_reusable_candidate_scores(
+            score_path,
+            audit_path,
+            candidate_keys={(100.0, "H1")},
+            variant="rep",
+            index_sha256="a" * 64,
+            candidate_window_offset_s=4.0,
+        )
+
+
+
+
+def test_dsd_transition_audit_hashes_current_outputs_atomically(tmp_path):
+    import json
+
+    from src.pipeline_v2_production.aggregate_report import (
+        _write_dsd_transition_audit,
+    )
+
+    score = tmp_path / "scores.csv"
+    taxonomy = tmp_path / "taxonomy.csv"
+    threshold = tmp_path / "threshold.json"
+    score.write_text("score\n0.2\n", encoding="utf-8")
+    taxonomy.write_text("gps_start\n100\n", encoding="utf-8")
+    threshold.write_text("{}", encoding="utf-8")
+    destination = _write_dsd_transition_audit(
+        {
+            "run": "O4a",
+            "experiment_run": True,
+            "representation": {"variant": "rep"},
+            "long_form_scores": str(score),
+            "taxonomy_artifact": str(taxonomy),
+            "threshold_artifact": str(threshold),
+        },
+        tmp_path,
+    )
+    payload = json.loads(destination.read_text(encoding="utf-8"))
+    assert len(payload["long_form_scores_sha256"]) == 64
+    assert len(payload["taxonomy_artifact_sha256"]) == 64
+    assert len(payload["threshold_artifact_sha256"]) == 64
+    assert not destination.with_suffix(destination.suffix + ".tmp").exists()
+
+
+def test_physical_coincidence_resume_is_detector_aware_and_fail_closed(
+    tmp_path,
+):
+    import json
+
+    from src.pipeline_v2_production.coincidence_physical import (
+        _load_reusable_events,
+    )
+
+    source = tmp_path / "physical.json"
+    event = {
+        "gps": 100.0,
+        "detector": "H1",
+        "partner": "L1",
+        "t_offset_s": 16.0,
+        "f_lo": 30.0,
+        "f_hi": 300.0,
+        "cc_onsource": 0.1,
+        "cc_null_mean": 0.05,
+        "cc_null_max": 0.08,
+        "n_null": 8,
+        "patch_iou": 0.01,
+    }
+    source.write_text(json.dumps({"events": [event]}), encoding="utf-8")
+    events, provenance = _load_reusable_events(
+        source,
+        allowed_keys={(100.0, "H1"), (100.0, "L1")},
+    )
+    assert events == [event]
+    assert provenance["n_reused"] == 1
+
+    event["detector"] = "L1"
+    event["partner"] = "L1"
+    source.write_text(json.dumps({"events": [event]}), encoding="utf-8")
+    with pytest.raises(RuntimeError, match="partner mismatch"):
+        _load_reusable_events(
+            source,
+            allowed_keys={(100.0, "H1"), (100.0, "L1")},
+        )
+
+
+def test_physical_coincidence_aggregate_receives_current_master():
+    text = _read("src/pipeline_v2_production/aggregate_report.py")
+    assert "catalogue=master" in text
+    assert "DANTE_COINC_BASELINE_TAXONOMY" in text
+
+
+def test_retired_morphological_veto_cannot_remove_taxonomy_rows():
+    text = _read("src/pipeline_v2_production/aggregate_report.py")
+    assert "[table_3a, table_3b, table_3c]" in text
+    assert "Morphological_Threshold_Exceedance_Diagnostic_Only" in text
+    assert "table_3c_diagnostic_only" in text
+
+
+def test_background_score_reuse_requires_static_contract_and_hash(tmp_path):
+    import hashlib
+    import json
+    import pandas as pd
+
+    from src.pipeline_v2_production.aggregate_report import (
+        _load_compatible_background_scores,
+    )
+
+    score_path = tmp_path / "background_candidatehash.npy"
+    ledger_path = tmp_path / "background_candidatehash_ledger.csv"
+    metadata_path = tmp_path / "background_candidatehash.json"
+    np.save(score_path, np.asarray([0.1, 0.2], dtype=np.float32))
+    pd.DataFrame({"gps_start": [100.0, 164.0]}).to_csv(
+        ledger_path, index=False
+    )
+    ledger_hash = hashlib.sha256(ledger_path.read_bytes()).hexdigest()
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "index_sha256": "index-hash",
+                "query_qrange": [4, 64],
+                "candidate_windows_sha256": "old-candidate-hash",
+                "ledger_sha256": ledger_hash,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    scores, provenance = _load_compatible_background_scores(
+        tmp_path,
+        filename_pattern="background_*.npy",
+        expected_static_contract={
+            "index_sha256": "index-hash",
+            "query_qrange": [4, 64],
+        },
+    )
+
+    assert scores == pytest.approx({100.0: 0.1, 164.0: 0.2})
+    assert provenance[0]["n_scores"] == 2
+
+    no_scores, no_provenance = _load_compatible_background_scores(
+        tmp_path,
+        filename_pattern="background_*.npy",
+        expected_static_contract={"index_sha256": "different-index"},
+    )
+    assert no_scores == {}
+    assert no_provenance == []
+
+
 # =====================================================================
 # B-3-bis — lo stato COINCIDENT_TRANSIENT deve essere raggiungibile
 # =====================================================================
@@ -484,6 +831,35 @@ def test_veto_refuses_uncalibrated_tau(monkeypatch):
     text = _read("src/pipeline_v2_production/cross_detector_veto.py")
     assert "DANTE_ALLOW_HEURISTIC_TAU" in text
     assert "uncalibrated" in text
+
+
+def test_veto_cache_is_bound_to_exact_representation_contract(tmp_path):
+    """Partner similarities must never cross index/rendering contracts."""
+    import json
+    from src.pipeline_v2_production.cross_detector_veto import (
+        _load_similarity_cache,
+        _similarity_contract,
+        _write_similarity_cache,
+    )
+
+    index = tmp_path / "patch_compressed_index_o3b.npz"
+    index.write_bytes(b"frozen-index-a")
+    contract = _similarity_contract(index)
+    cache = tmp_path / "veto.json"
+    _write_similarity_cache(cache, contract, {"100.0_H1": 0.25})
+    assert _load_similarity_cache(cache, contract) == {"100.0_H1": 0.25}
+
+    changed = dict(contract, qtransform_renderer="raw_qgram")
+    assert _load_similarity_cache(cache, changed) == {}
+
+    cache.write_text(json.dumps({"100.0_H1": 0.25}), encoding="utf-8")
+    assert _load_similarity_cache(cache, contract) == {}
+
+
+def test_veto_has_no_arbitrary_reference_index_fallback():
+    text = _read("src/pipeline_v2_production/cross_detector_veto.py")
+    assert "rglob(\"patch_compressed_index*.npz\")" not in text
+    assert '"patch_compressed_index_o3b.npz"' in text
 
 
 def test_disposition_ledger_present_and_dynamic(tmp_path):

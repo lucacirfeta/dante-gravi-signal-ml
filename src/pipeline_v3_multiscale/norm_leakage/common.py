@@ -28,6 +28,7 @@ DETECTOR = "L1"
 RUN_WINDOWS = {
     # full run windows (GPS) — never sub-windows (audit M-4)
     "o3a": (1238166018, 1253977218),
+    "o3b": (1256655618, 1269363618),
     "o4a": (1368975618, 1389456018),
 }
 
@@ -159,6 +160,10 @@ def iter_clean_segments(run: str, detector: str, n: int, seed: int,
         if excess_power_veto(ts_bp, sample_rate=4096):
             continue
         accepted.append(t_bg)
+        logger.info(
+            f"[{run}/{detector}] accepted {len(accepted)}/{n} clean segments "
+            f"at GPS {t_bg:.0f} after {attempts} proposals"
+        )
         yield CleanSegment(t_bg=t_bg, ts_whitened=ts_bp)
     if len(accepted) < n:
         logger.warning(f"[{run}] only {len(accepted)}/{n} segments found "

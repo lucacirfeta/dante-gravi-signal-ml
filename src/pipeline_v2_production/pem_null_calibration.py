@@ -440,6 +440,115 @@ def _wilson_interval(k: int, n: int) -> list[float | None]:
     return [float(centre - margin), float(centre + margin)]
 
 
+def rejoin_existing_pem_taxonomy(
+    run: str = "O4a",
+    pem_dir: Path | None = None,
+    aggregated_dir: Path = AGGREGATED_DIR,
+) -> dict:
+    """Update only taxonomy-derived PEM metadata for the measured cohort."""
+    aggregated_dir = Path(aggregated_dir)
+    taxonomy, contract = load_taxonomy_view(aggregated_dir, run)
+    pem_dir = (
+        aggregated_dir / "pem" / contract.representation
+        if pem_dir is None
+        else Path(pem_dir)
+    )
+    target_path = pem_dir / "selected_targets.csv"
+    report_path = pem_dir / "coherence_report.csv"
+    manifest_path = pem_dir / "selection_manifest.json"
+    targets = pd.read_csv(target_path)
+    report = pd.read_csv(report_path)
+    if len(targets) != 141 or targets.duplicated(
+        ["detector", "gps_start"]
+    ).any():
+        raise RuntimeError("PEM target cohort is incomplete or duplicated")
+    current = taxonomy[
+        ["detector", "gps_start", "dsd_class", "dsd_score", "global_family_id"]
+    ].copy()
+    joined = targets.merge(
+        current,
+        on=["detector", "gps_start"],
+        how="left",
+        validate="one_to_one",
+        suffixes=("_prior", "_current"),
+    )
+    if joined["dsd_class_current"].isna().any():
+        raise RuntimeError("PEM cohort contains keys absent from current taxonomy")
+    transition = pd.crosstab(
+        joined["dsd_class_prior"], joined["dsd_class_current"]
+    )
+    target_updates = {
+        (str(row.detector), int(row.gps_start)): {
+            "dsd_class": str(row.dsd_class_current),
+            "dsd_score": float(row.dsd_score_current),
+            "family": str(row.global_family_id),
+        }
+        for row in joined.itertuples()
+    }
+    for frame in (targets, report):
+        keys = list(
+            zip(
+                frame["detector"].astype(str),
+                frame["gps_start"].astype(int),
+            )
+        )
+        if any(key not in target_updates for key in keys):
+            raise RuntimeError("PEM report contains keys outside measured cohort")
+        frame["dsd_class"] = [target_updates[key]["dsd_class"] for key in keys]
+        frame["dsd_score"] = [target_updates[key]["dsd_score"] for key in keys]
+        frame["family"] = [target_updates[key]["family"] for key in keys]
+        frame["taxonomy_representation"] = contract.representation
+
+    for path, frame in ((target_path, targets), (report_path, report)):
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        frame.to_csv(temporary, index=False)
+        temporary.replace(path)
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["taxonomy_path"] = str(contract.path)
+    manifest["taxonomy_audit_path"] = (
+        str(contract.audit_path) if contract.audit_path is not None else None
+    )
+    manifest["taxonomy_representation"] = contract.representation
+    changed = int(
+        (joined["dsd_class_prior"] != joined["dsd_class_current"]).sum()
+    )
+    manifest["taxonomy_rejoin"] = {
+        "mode": "fixed_measured_cohort_detector_gps_exact_rejoin",
+        "n_targets": int(len(targets)),
+        "n_exact_key_matches": int(len(joined)),
+        "n_class_transitions": changed,
+        "prior_class_counts": {
+            str(key): int(value)
+            for key, value in joined["dsd_class_prior"].value_counts().items()
+        },
+        "current_class_counts": {
+            str(key): int(value)
+            for key, value in joined["dsd_class_current"].value_counts().items()
+        },
+        "transition_counts": {
+            str(old): {str(new): int(value) for new, value in row.items()}
+            for old, row in transition.to_dict(orient="index").items()
+        },
+        "taxonomy_sha256": sha256_file(contract.path),
+        "taxonomy_audit_sha256": (
+            sha256_file(contract.audit_path)
+            if contract.audit_path is not None
+            else None
+        ),
+        "measurements_recomputed": False,
+        "null_calibrations_recomputed": False,
+    }
+    temporary_manifest = manifest_path.with_suffix(
+        manifest_path.suffix + ".tmp"
+    )
+    temporary_manifest.write_text(
+        json.dumps(manifest, indent=2), encoding="utf-8"
+    )
+    temporary_manifest.replace(manifest_path)
+    return manifest["taxonomy_rejoin"]
+
+
 def _pem_class_association_summary(df: pd.DataFrame) -> dict:
     """Reproducible class-rate and Fisher summaries for the PEM endpoints.
 
@@ -760,6 +869,14 @@ def main():
     )
     p.add_argument("--apply-only", action="store_true",
                    help="Skip calibration; only regenerate the verdicts CSV.")
+    p.add_argument(
+        "--rejoin-taxonomy",
+        action="store_true",
+        help=(
+            "Exact detector/GPS rejoin of the fixed measured cohort to the "
+            "current coherent taxonomy before applying saved nulls."
+        ),
+    )
     # Purging is the default: background spans rarely repeat across events, so
     # the cache is almost never reused, and a 63-event batch leaves ~30 GB
     # behind for nothing. Kept as an explicit opt-out rather than a silent one.
@@ -777,6 +894,13 @@ def main():
         if args.pem_dir is None
         else args.pem_dir
     )
+
+    if args.rejoin_taxonomy:
+        rejoin_existing_pem_taxonomy(
+            args.run,
+            pem_dir=pem_dir,
+            aggregated_dir=args.aggregated_dir,
+        )
 
     if not args.apply_only:
         from src.pipeline_v2_production.pem_coherence_analysis import require_nds2

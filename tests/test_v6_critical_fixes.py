@@ -570,6 +570,33 @@ def test_background_recalibration_does_not_override_requested_pad() -> None:
     assert "forbidden_intervals=forbidden_intervals" in source
 
 
+def test_background_extractor_empty_result_keeps_reuse_contract(
+    tmp_path, monkeypatch
+) -> None:
+    import numpy as np
+
+    from src.core import data_loader
+    from src.pipeline_v2_production.aggregate_report import AggregateReporter
+
+    monkeypatch.setattr(data_loader, "_DATA_DIRECTORIES", [])
+    reporter = AggregateReporter(
+        production_dir=tmp_path,
+        run="O4a",
+        native_background_n=2,
+    )
+    scores, ledger, reuse = reporter._extract_detector_background(
+        scorer=object(),
+        det_name="H1",
+        target_n=2,
+        run_bounds=(0.0, 1000.0),
+        forbidden_intervals=[],
+    )
+
+    assert isinstance(scores, np.ndarray) and scores.size == 0
+    assert ledger == []
+    assert reuse == {"n_reused": 0, "n_computed": 0}
+
+
 def test_o4a_calibration_bounds_match_the_gwosc_release() -> None:
     from src.core.utils import load_config
     from src.pipeline_v2_production.background_calibration import (

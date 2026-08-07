@@ -211,6 +211,111 @@ def augment_existing_artifact(path: str | Path) -> dict:
     return artifact
 
 
+def reclassify_existing_artifact(
+    path: str | Path,
+    threshold_path: str | Path | None = None,
+) -> dict:
+    """Reapply current DSD thresholds to immutable trial-level scores.
+
+    Injection, flagging and coincidence measurements are unchanged.  Only the
+    threshold-derived DSD class/survival columns and their summaries are
+    regenerated, so a taxonomy recalibration does not require new waveforms.
+    """
+    import pandas as pd
+
+    from src.core.index_contract import sha256_file
+
+    artifact_path = Path(path)
+    artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+    trial_path = Path(artifact["trial_level_path"])
+    if sha256_file(trial_path) != artifact["trial_level_sha256"]:
+        raise RuntimeError("P9 trial-level hash mismatch during reclassification")
+    selected_threshold_path = Path(
+        threshold_path or artifact["dsd_threshold_path"]
+    )
+    threshold_artifact = json.loads(
+        selected_threshold_path.read_text(encoding="utf-8")
+    )
+    representation = artifact["taxonomy_representation"]
+    if (
+        threshold_artifact.get("representation", {}).get("variant")
+        != representation
+    ):
+        raise RuntimeError("P9 threshold representation mismatch")
+
+    trial_frame = pd.read_csv(trial_path)
+    if len(trial_frame) != int(artifact["n_trial_rows"]):
+        raise RuntimeError("P9 trial-level row count mismatch")
+    for detector in ("H1", "L1"):
+        record = threshold_artifact["thresholds"][detector]
+        lower = float(record["ci_lower"])
+        upper = float(record["ci_upper"])
+        scores = pd.to_numeric(
+            trial_frame[f"score_{detector}_native"], errors="coerce"
+        ).to_numpy(float)
+        if not np.isfinite(scores).all():
+            raise RuntimeError(f"P9 {detector} native scores are non-finite")
+        classes = np.where(
+            scores > upper,
+            "ROBUST",
+            np.where(scores >= lower, "AMBIGUOUS", "BACKGROUND"),
+        )
+        trial_frame[f"dsd_class_{detector}"] = classes
+        trial_frame[f"dsd_survive_{detector}"] = classes == "ROBUST"
+        trial_frame[f"threshold_dsd_{detector}"] = upper
+        trial_frame[f"threshold_dsd_{detector}_lower"] = lower
+        artifact["thresholds"][f"dsd_{detector}"] = upper
+        artifact["thresholds"][f"dsd_{detector}_lower"] = lower
+
+    for row in artifact["rows"]:
+        selected = trial_frame[
+            (trial_frame["system"] == row["system"])
+            & np.isclose(
+                trial_frame["distance_mpc"].to_numpy(float),
+                float(row["distance_mpc"]),
+            )
+        ]
+        if len(selected) != int(row["n"]):
+            raise RuntimeError("P9 result-cell/trial mismatch")
+        for detector in ("H1", "L1"):
+            classes = selected[f"dsd_class_{detector}"].to_numpy(str)
+            row[f"dsd_survive_{detector}"] = float(
+                (classes == "ROBUST").mean()
+            )
+            row[f"dsd_class_rate_{detector}"] = {
+                klass: float((classes == klass).mean())
+                for klass in ("ROBUST", "AMBIGUOUS", "BACKGROUND")
+            }
+    _attach_binomial_uncertainty(artifact["rows"], trial_frame)
+
+    temporary_trial = trial_path.with_suffix(trial_path.suffix + ".tmp")
+    trial_frame.to_csv(temporary_trial, index=False)
+    temporary_trial.replace(trial_path)
+    artifact["trial_level_sha256"] = sha256_file(trial_path)
+    artifact["dsd_threshold_path"] = str(selected_threshold_path)
+    artifact["dsd_threshold_sha256"] = sha256_file(selected_threshold_path)
+    artifact["dsd_reclassification"] = {
+        "mode": "trial_native_score_threshold_reclassification",
+        "measurements_recomputed": False,
+        "threshold_path": str(selected_threshold_path),
+        "threshold_sha256": artifact["dsd_threshold_sha256"],
+        "n_trial_rows": int(len(trial_frame)),
+    }
+    temporary_artifact = artifact_path.with_suffix(
+        artifact_path.suffix + ".tmp"
+    )
+    temporary_artifact.write_text(
+        json.dumps(artifact, indent=2), encoding="utf-8"
+    )
+    temporary_artifact.replace(artifact_path)
+    record_environment(
+        AGG,
+        f"astrophysical_injection_reclassification_"
+        f"{artifact['run'].lower()}_{representation}",
+    )
+    return artifact
+
+
 def _waveform(m1: float, m2: float, distance_mpc: float, inclination: float,
               f_low: float):
     """IMRPhenomD plus/cross polarizations, as numpy arrays at SAMPLE_RATE."""
@@ -791,8 +896,23 @@ def main() -> None:
         default=None,
         help="Attach Wilson intervals to an existing completed P9 artifact.",
     )
+    p.add_argument(
+        "--reclassify-artifact",
+        default=None,
+        help="Reapply the current DSD thresholds to saved native trial scores.",
+    )
+    p.add_argument(
+        "--threshold-artifact",
+        default=None,
+        help="Explicit coherent DSD threshold JSON for reclassification.",
+    )
     a = p.parse_args()
-    if a.augment_artifact:
+    if a.reclassify_artifact:
+        reclassify_existing_artifact(
+            a.reclassify_artifact,
+            threshold_path=a.threshold_artifact,
+        )
+    elif a.augment_artifact:
         augment_existing_artifact(a.augment_artifact)
     elif a.pilot:
         run(a.run, systems=SYSTEMS[:1], distances=(400.0, 2000.0),

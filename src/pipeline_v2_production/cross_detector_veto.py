@@ -4,16 +4,85 @@ import torch
 import h5py
 import logging
 import matplotlib
+import hashlib
+import json
 from pathlib import Path
 from sklearn.metrics.pairwise import cosine_similarity
 import argparse
 
-from src.core.utils import setup_logger, get_observing_run
+from src.core.utils import setup_logger, get_observing_run, get_reference_dir
 from src.core.data_loader import fetch_local_or_remote_strain
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
 from src.core.patch_scorer import PatchScorer
 
 logger = setup_logger(__name__)
+
+_CACHE_SCHEMA_VERSION = 2
+_PRODUCTION_INDEX_NAME = "patch_compressed_index_o3b.npz"
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _similarity_contract(index_path: Path) -> dict:
+    """Immutable representation contract for cached partner similarities."""
+    return {
+        "schema_version": _CACHE_SCHEMA_VERSION,
+        "reference_index_name": index_path.name,
+        "reference_index_sha256": _sha256(index_path),
+        "encoder": "dinov2_vits14_reg",
+        "scorer_top_k": 68,
+        "qtransform_renderer": "production_cividis_uint8",
+        "whitening": "whiten_context_pad4_extract_clean_subwindow",
+        "window_seconds": 32.0,
+        "candidate_window_offset_seconds": 0.0,
+    }
+
+
+def _load_similarity_cache(path: Path, expected_contract: dict) -> dict[str, float]:
+    """Load only a provenance-compatible cache; legacy flat JSON fails closed."""
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("Ignoring unreadable veto similarity cache: %s", exc)
+        return {}
+    if not isinstance(payload, dict) or payload.get("contract") != expected_contract:
+        logger.warning(
+            "Ignoring veto similarity cache with missing or incompatible "
+            "representation provenance."
+        )
+        return {}
+    scores = payload.get("scores")
+    if not isinstance(scores, dict):
+        logger.warning("Ignoring veto similarity cache with invalid score payload.")
+        return {}
+    valid: dict[str, float] = {}
+    for key, value in scores.items():
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(number):
+            valid[str(key)] = number
+    return valid
+
+
+def _write_similarity_cache(
+    path: Path, contract: dict, scores: dict[str, float]
+) -> None:
+    """Persist cache atomically so an interrupted run cannot truncate it."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    payload = {"contract": contract, "scores": scores}
+    temporary.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+    temporary.replace(path)
 
 def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     logger.info("=" * 60)
@@ -34,27 +103,27 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
     # deterministic given (gps, primary detector), so a re-run after a crash
     # must not re-pay hours of partner fetch+encode. Only successful
     # similarity computations are cached (failures stay retryable).
-    import json as _json
     sim_cache_path = Path("data/production/aggregated/veto_similarity_cache.json")
-    try:
-        sim_cache = _json.loads(sim_cache_path.read_text()) if sim_cache_path.exists() else {}
-    except Exception:
-        sim_cache = {}
+    ref_index_path = get_reference_dir() / _PRODUCTION_INDEX_NAME
+    if not ref_index_path.exists():
+        raise FileNotFoundError(
+            "The cross-detector veto requires the frozen production index "
+            f"{ref_index_path}; refusing an arbitrary fallback index."
+        )
+    sim_contract = _similarity_contract(ref_index_path)
+    sim_cache = _load_similarity_cache(sim_cache_path, sim_contract)
     cache_dirty = 0
+    logger.info(
+        "Cross-detector representation contract: index=%s sha256=%s; "
+        "reusable similarities=%d",
+        ref_index_path,
+        sim_contract["reference_index_sha256"],
+        len(sim_cache),
+    )
 
     # Initialize PyTorch Models
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logger.info(f"Using device: {device}")
-    
-    ref_index_path = Path("data/index/patch_compressed_index.npz")
-    if not ref_index_path.exists():
-        found = list(Path(".").rglob("patch_compressed_index*.npz"))
-        if found:
-            ref_index_path = found[0]
-            logger.info(f"Using fallback reference index: {ref_index_path}")
-        else:
-            logger.warning("Could not find reference index. Run index builder first.")
-            return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
     scorer = PatchScorer(
         reference_index_path=ref_index_path,
@@ -154,8 +223,9 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
             cache_dirty += 1
             if cache_dirty % 100 == 0:
                 try:
-                    sim_cache_path.parent.mkdir(parents=True, exist_ok=True)
-                    sim_cache_path.write_text(_json.dumps(sim_cache))
+                    _write_similarity_cache(
+                        sim_cache_path, sim_contract, sim_cache
+                    )
                 except Exception:
                     pass
         logger.info(f"Match Similarity: {sim:.3f}")
@@ -223,8 +293,7 @@ def execute_cross_detector_veto(df: pd.DataFrame, production_dir: Path) -> tuple
     
     if cache_dirty:
         try:
-            sim_cache_path.parent.mkdir(parents=True, exist_ok=True)
-            sim_cache_path.write_text(_json.dumps(sim_cache))
+            _write_similarity_cache(sim_cache_path, sim_contract, sim_cache)
         except Exception as e:
             logger.warning(f"Failed to persist veto similarity cache: {e}")
     logger.info("Veto procedure completed successfully.")

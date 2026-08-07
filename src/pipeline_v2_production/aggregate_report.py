@@ -11,8 +11,10 @@ Output directory: data/production/aggregated/
 """
 
 import json
+import hashlib
 import logging
 import os
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -33,6 +35,32 @@ VQ_INDEX_MD5 = "1080afa809964011e398c44fb24b73c6"
 DETECTORS = ["L1", "H1"]
 MIN_SAMPLES_SPEARMAN = 100
 MIN_SESSIONS_SPEARMAN = 5
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _snapshot_reuse_source(path: Path) -> tuple[Path, str]:
+    """Preserve a cache input before the canonical path is overwritten."""
+    digest = _file_sha256(path)
+    archive_dir = path.parent / "archive" / "dsd_reuse_sources"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    destination = archive_dir / f"{path.stem}.{digest[:16]}{path.suffix}"
+    if destination.exists():
+        if _file_sha256(destination) != digest:
+            raise RuntimeError(
+                f"DSD reuse-source snapshot hash mismatch: {destination}"
+            )
+    else:
+        temporary = destination.with_suffix(destination.suffix + ".tmp")
+        shutil.copy2(path, temporary)
+        temporary.replace(destination)
+    return destination, digest
 
 # Morphcheck CSV column mapping (actual -> canonical)
 _COL_MAP = {
@@ -159,6 +187,56 @@ _COINC_CACHE_PATH = Path("data/production/aggregated/coincidence_status_cache.js
 _COINC_CACHE: dict | None = None
 
 
+def _seed_coincidence_cache_from_master(master_path: Path) -> int:
+    """Reuse immutable partner-observability results from a prior master.
+
+    Only resolver-level states are accepted.  Morphological-veto states and
+    transient NOT_CHECKED results are deliberately excluded.
+    """
+    global _COINC_CACHE
+    if _COINC_CACHE is None:
+        try:
+            _COINC_CACHE = (
+                json.loads(_COINC_CACHE_PATH.read_text(encoding="utf-8"))
+                if _COINC_CACHE_PATH.exists()
+                else {}
+            )
+        except Exception:
+            _COINC_CACHE = {}
+    if not master_path.exists():
+        return 0
+    frame = pd.read_csv(master_path)
+    required = {"gps_start", "detector", "partner_observing_status"}
+    if not required.issubset(frame.columns):
+        raise RuntimeError(
+            f"Prior master cannot seed coincidence cache: {master_path}"
+        )
+    allowed = {"ACTIVE_UNVERIFIED", "UNOBSERVABLE"}
+    added = 0
+    for row in frame.itertuples(index=False):
+        status = str(row.partner_observing_status)
+        if status not in allowed:
+            continue
+        key = f"{int(float(row.gps_start))}_{row.detector}"
+        previous = _COINC_CACHE.get(key)
+        if previous is not None and previous != status:
+            raise RuntimeError(
+                f"Conflicting coincidence cache state for {key}: "
+                f"{previous} != {status}"
+            )
+        if previous is None:
+            _COINC_CACHE[key] = status
+            added += 1
+    if added:
+        _COINC_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        temporary = _COINC_CACHE_PATH.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(_COINC_CACHE, sort_keys=True), encoding="utf-8"
+        )
+        temporary.replace(_COINC_CACHE_PATH)
+    return added
+
+
 def _resolve_coincidence_status(
     gps_start: float, detector: str
 ) -> str:
@@ -262,6 +340,233 @@ def _ingest_csv(
         )
 
     return df
+
+
+def _deduplicate_detector_windows(
+    candidates: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Collapse repeated session rows while preserving detector identity.
+
+    The catalogue unit is a detector--time window.  Overlapping production
+    sessions can emit the same window more than once for one detector, but H1
+    and L1 observations at the same GPS are distinct measurements.
+    """
+    required = {"detector", "gps_start"}
+    missing = required.difference(candidates.columns)
+    if missing:
+        raise ValueError(
+            "Cannot deduplicate candidate windows; missing columns: "
+            + ", ".join(sorted(missing))
+        )
+
+    marked = candidates.copy()
+    marked["is_duplicate"] = marked.duplicated(
+        subset=["detector", "gps_start"],
+        keep="first",
+    )
+    duplicates = marked[marked["is_duplicate"]].copy()
+    unique = marked[~marked["is_duplicate"]].copy()
+    return unique, duplicates
+
+
+def _load_reusable_candidate_scores(
+    score_path: Path,
+    audit_path: Path,
+    *,
+    candidate_keys: set[tuple[float, str]],
+    variant: str,
+    index_sha256: str,
+    candidate_window_offset_s: float,
+) -> tuple[dict[tuple[float, str], float], dict]:
+    """Load a verified subset of deterministic native candidate scores.
+
+    This is used when catalogue bookkeeping changes without changing the
+    representation or scored analysis windows.  Existing scores may be reused
+    only when their keys are a strict subset of the current catalogue; new
+    detector--time windows are scored normally.
+    """
+    if not score_path.exists() or not audit_path.exists():
+        return {}, {}
+
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    if not audit.get("experiment_run"):
+        raise RuntimeError("Candidate-score source audit is not complete")
+    total_evaluated = int(audit.get("total_evaluated", -1))
+    total_requested = int(audit.get("total_requested", -1))
+    total_failed = int(audit.get("total_failed", -1))
+    if total_failed != 0 or total_evaluated != total_requested:
+        raise RuntimeError(
+            "Candidate-score source audit contains failed or unevaluated rows"
+        )
+    representation = audit.get("representation", {})
+    expected_representation = {
+        "variant": variant,
+        "index_sha256": index_sha256,
+        "catalog_gps_to_analysis_window_offset_s": float(
+            candidate_window_offset_s
+        ),
+    }
+    for key, expected in expected_representation.items():
+        if representation.get(key) != expected:
+            raise RuntimeError(
+                f"Candidate-score reuse contract mismatch for {key}: "
+                f"{representation.get(key)!r} != {expected!r}"
+            )
+
+    frame = pd.read_csv(score_path)
+    required = {"gps_start", "detector", "score", "variant"}
+    missing = required.difference(frame.columns)
+    if missing:
+        raise RuntimeError(
+            "Candidate-score cache is missing columns: "
+            + ", ".join(sorted(missing))
+        )
+    if len(frame) != total_evaluated:
+        raise RuntimeError(
+            "Candidate-score cache length does not match its source audit"
+        )
+    if not (frame["variant"].astype(str) == variant).all():
+        raise RuntimeError("Candidate-score cache mixes representation variants")
+    scores = pd.to_numeric(frame["score"], errors="coerce")
+    if not np.isfinite(scores.to_numpy(dtype=float)).all():
+        raise RuntimeError("Candidate-score cache contains non-finite scores")
+
+    keys = [
+        (float(gps), str(detector))
+        for gps, detector in zip(frame["gps_start"], frame["detector"])
+    ]
+    if len(keys) != len(set(keys)):
+        raise RuntimeError("Candidate-score cache contains duplicate keys")
+    cache_keys = set(keys)
+    unexpected = cache_keys.difference(candidate_keys)
+    if unexpected:
+        raise RuntimeError(
+            "Candidate-score cache contains keys outside the current catalogue"
+        )
+
+    mapping = {
+        key: float(score)
+        for key, score in zip(keys, scores.to_numpy(dtype=float))
+    }
+    archived_score_path, score_sha256 = _snapshot_reuse_source(score_path)
+    archived_audit_path, audit_sha256 = _snapshot_reuse_source(audit_path)
+    provenance = {
+        "mode": "verified_subset_candidate_score_reuse",
+        "score_path": str(archived_score_path),
+        "score_sha256": score_sha256,
+        "source_audit_path": str(archived_audit_path),
+        "source_audit_sha256": audit_sha256,
+        "n_reused": len(mapping),
+        "current_candidate_count": len(candidate_keys),
+        "exact_key_subset": True,
+        "unique_candidate_keys": True,
+        "all_scores_finite": True,
+        "variant": variant,
+        "index_sha256": index_sha256,
+        "candidate_window_offset_s": float(candidate_window_offset_s),
+    }
+    return mapping, provenance
+
+
+def _write_dsd_transition_audit(metrics: dict, output_dir: Path) -> Path | None:
+    """Atomically bind a DSD audit to the score/taxonomy artifacts it reports."""
+    representation = metrics.get("representation", {})
+    variant = representation.get("variant")
+    if not variant:
+        return None
+
+    audited = dict(metrics)
+    for field, hash_field in (
+        ("long_form_scores", "long_form_scores_sha256"),
+        ("taxonomy_artifact", "taxonomy_artifact_sha256"),
+        ("threshold_artifact", "threshold_artifact_sha256"),
+    ):
+        raw_path = audited.get(field)
+        if not raw_path:
+            continue
+        path = Path(raw_path)
+        if not path.exists():
+            raise RuntimeError(
+                f"Cannot finalize DSD transition audit; missing {field}: {path}"
+            )
+        audited[hash_field] = _file_sha256(path)
+
+    run_name = str(audited.get("run", "")).lower()
+    if not run_name:
+        index_path = str(representation.get("index_path", "")).lower()
+        run_name = "o4a" if "o4a" in index_path else "unknown"
+    destination = output_dir / (
+        f"dsd_transition_audit_{run_name}_{variant}.json"
+    )
+    temporary = destination.with_suffix(destination.suffix + ".tmp")
+    temporary.write_text(json.dumps(audited, indent=2), encoding="utf-8")
+    temporary.replace(destination)
+    return destination
+
+
+def _load_compatible_background_scores(
+    output_dir: Path,
+    *,
+    filename_pattern: str,
+    expected_static_contract: dict,
+) -> tuple[dict[float, float], list[dict]]:
+    """Load scores whose analysis contract matches a new sampling plan.
+
+    Candidate exclusions are deliberately not part of the static contract:
+    the new block planner applies the expanded exclusions first, and cached
+    values are reused only for GPS windows selected by that new plan.
+    """
+    score_by_gps: dict[float, float] = {}
+    provenance = []
+    for score_path in sorted(output_dir.glob(filename_pattern)):
+        metadata_path = score_path.with_suffix(".json")
+        ledger_path = score_path.with_name(f"{score_path.stem}_ledger.csv")
+        if not metadata_path.exists() or not ledger_path.exists():
+            continue
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        if any(
+            metadata.get(key) != value
+            for key, value in expected_static_contract.items()
+        ):
+            continue
+        if metadata.get("ledger_sha256") != _file_sha256(ledger_path):
+            raise RuntimeError(
+                f"Background cache ledger hash mismatch: {ledger_path}"
+            )
+        scores = np.load(score_path)
+        ledger = pd.read_csv(ledger_path)
+        if len(scores) != len(ledger):
+            raise RuntimeError(
+                f"Background cache score/ledger mismatch: {score_path}"
+            )
+        if not np.isfinite(scores).all():
+            raise RuntimeError(
+                f"Background cache contains non-finite scores: {score_path}"
+            )
+        if "gps_start" not in ledger.columns:
+            raise RuntimeError(
+                f"Background cache ledger lacks gps_start: {ledger_path}"
+            )
+        for gps, score in zip(ledger["gps_start"], scores):
+            key = float(gps)
+            value = float(score)
+            if key in score_by_gps and not np.isclose(
+                score_by_gps[key], value, rtol=0.0, atol=1e-7
+            ):
+                raise RuntimeError(
+                    f"Conflicting cached background score at GPS {key}"
+                )
+            score_by_gps[key] = value
+        provenance.append(
+            {
+                "score_path": str(score_path),
+                "score_sha256": _file_sha256(score_path),
+                "ledger_path": str(ledger_path),
+                "ledger_sha256": _file_sha256(ledger_path),
+                "n_scores": int(len(scores)),
+            }
+        )
+    return score_by_gps, provenance
 
 
 # ===================================================================
@@ -396,6 +701,15 @@ class AggregateReporter:
         logger.info("=== AGGREGATE REPORT: Cross-Session Reducer ===")
         logger.info("=" * 60)
 
+        seeded = _seed_coincidence_cache_from_master(
+            self.output_dir / "master_candidates.csv"
+        )
+        logger.info(
+            "Seeded %d partner-observability cache entries from the prior "
+            "master catalogue",
+            seeded,
+        )
+
         # ----------------------------------------------------------
         # Phase 1: Discovery & Validation
         # ----------------------------------------------------------
@@ -507,25 +821,21 @@ class AggregateReporter:
             ["session_id", "gps_start"]
         ).reset_index(drop=True)
 
-        unclassified["is_duplicate"] = unclassified.duplicated(
-            subset=["gps_start"], keep="first"
-        )
+        master, dupes = _deduplicate_detector_windows(unclassified)
 
         # Log duplicates
-        dupes = unclassified[unclassified["is_duplicate"]]
         for _, row in dupes.iterrows():
-            orig = unclassified[
-                (unclassified["gps_start"] == row["gps_start"])
-                & (~unclassified["is_duplicate"])
+            orig = master[
+                (master["gps_start"] == row["gps_start"])
+                & (master["detector"] == row["detector"])
             ]
             orig_session = orig["session_id"].values[0] if len(orig) > 0 else "unknown"
             logger.warning(
-                f"Duplicate GPS {row['gps_start']:.0f} rejected: "
+                f"Duplicate {row['detector']} GPS {row['gps_start']:.0f} rejected: "
                 f"already claimed by session {orig_session}"
             )
 
         # Strip duplicates
-        master = unclassified[~unclassified["is_duplicate"]].copy()
         master["is_duplicate"] = False
         master["source_session"] = master["session_id"]
         duplicates_removed = total_before_dedup - len(master)
@@ -573,7 +883,11 @@ class AggregateReporter:
                 self.output_dir / "Table_3a_Confirmed_Local_Glitches.csv",
                 index=False
             )
-        logger.info(f"Table 3a: {len(table_3a)} confirmed local glitches")
+        logger.info(
+            "Table 3a: %d morphological sub-threshold diagnostics; this is "
+            "not an authoritative physical-coincidence classification",
+            len(table_3a),
+        )
 
         # Table 3b with mandatory footnote
         table_3b_path = self.output_dir / "Table_3b_Unverifiable_Unilateral_Detections.csv"
@@ -593,9 +907,16 @@ class AggregateReporter:
             table_3c[out_3c_cols].to_csv(table_3c_path, index=False)
             with open(table_3c_path, "a") as f:
                 f.write(
-                    "\n# NOTE: Morphological cross-match confirmed (Cosine Similarity > tau_coh).\n"
+                    "\n# NOTE: The retired morphological statistic exceeded tau_coh.\n"
+                    "# COINC-3 showed that this embedding statistic does not separate\n"
+                    "# true coincidence from its null. These rows are diagnostic only,\n"
+                    "# are not astrophysical classifications, and remain in the taxonomy.\n"
                 )
-        logger.info(f"Table 3c: {len(table_3c)} coincident/astrophysical candidates")
+        logger.info(
+            "Table 3c: %d morphological threshold exceedances retained as "
+            "diagnostic-only taxonomy rows",
+            len(table_3c),
+        )
 
         # ----------------------------------------------------------
         # Phase 3b: PHYSICAL cross-detector coincidence test.
@@ -620,6 +941,11 @@ class AggregateReporter:
                 n_candidates=n_phys,
                 aggregated_dir=self.output_dir,
                 production_dir=self.output_dir.parent,
+                catalogue=master,
+                resume_source=os.environ.get("DANTE_COINC_RESUME_ARTIFACT"),
+                baseline_catalogue=os.environ.get(
+                    "DANTE_COINC_BASELINE_TAXONOMY"
+                ),
             )
             logger.info(
                 "Physical coincidence test: "
@@ -761,7 +1087,15 @@ class AggregateReporter:
 
         if not table_3a.empty: table_3a["table_source"] = "3a"
         if not table_3b.empty: table_3b["table_source"] = "3b"
-        candidates_df = pd.concat([table_3a, table_3b], ignore_index=True)
+        if not table_3c.empty: table_3c["table_source"] = "3c"
+        # COINC-3 falsified the embedding-similarity statistic as a physical
+        # coincidence discriminator. Its threshold exceedances are retained
+        # for diagnostics, but excluding them from the scientific catalogue
+        # would silently let a known-invalid statistic remove candidates.
+        candidates_df = pd.concat(
+            [table_3a, table_3b, table_3c],
+            ignore_index=True,
+        )
         n_cands = len(candidates_df)
         logger.info(f"Phase 5: Computing cross-session cosine similarity for {n_cands} candidates...")
 
@@ -851,7 +1185,8 @@ class AggregateReporter:
 
             # 3. Transitivity Resolution and Master Taxonomy
             is_3a = np.array([m["table"] == "3a" for m in candidate_metadata])
-            is_3b = ~is_3a
+            is_3b = np.array([m["table"] == "3b" for m in candidate_metadata])
+            is_3c = np.array([m["table"] == "3c" for m in candidate_metadata])
             
             max_sim_to_3a = np.zeros(n_valid)
             if np.any(is_3a):
@@ -860,8 +1195,15 @@ class AggregateReporter:
             for i in range(n_valid):
                 meta = candidate_metadata[i]
                 if meta["table"] == "3a":
-                    meta["transitivity_status"] = "Confirmed_Local"
+                    meta["transitivity_status"] = (
+                        "Morphological_Subthreshold_Diagnostic_Only"
+                    )
                     meta["max_sim_to_3a"] = 1.0
+                elif meta["table"] == "3c":
+                    meta["max_sim_to_3a"] = max_sim_to_3a[i]
+                    meta["transitivity_status"] = (
+                        "Morphological_Threshold_Exceedance_Diagnostic_Only"
+                    )
                 else:
                     meta["max_sim_to_3a"] = max_sim_to_3a[i]
                     meta["transitivity_status"] = "Resolved_via_Transitivity" if max_sim_to_3a[i] > 0.75 else "Unclassified_Physical_Anomaly"
@@ -935,7 +1277,8 @@ class AggregateReporter:
                 members = np.where(fam_mask)[0]
                 total_mem = len(members)
                 t3a_mem = int(np.sum(is_3a[fam_mask]))
-                t3b_mem = total_mem - t3a_mem
+                t3b_mem = int(np.sum(is_3b[fam_mask]))
+                t3c_mem = int(np.sum(is_3c[fam_mask]))
                 
                 if total_mem > 1:
                     fam_sims = sim_matrix[members][:, members]
@@ -948,6 +1291,7 @@ class AggregateReporter:
                     "total_members": total_mem,
                     "table_3a_members": t3a_mem,
                     "table_3b_members": t3b_mem,
+                    "table_3c_diagnostic_members": t3c_mem,
                     "mean_internal_similarity": mean_sim,
                     "gps_list": [candidate_metadata[i]["gps"] for i in members]
                 })
@@ -956,7 +1300,8 @@ class AggregateReporter:
                 "transitivity_metrics": {
                     "total_table_3b_candidates": int(np.sum(is_3b)),
                     "resolved_via_transitivity": int(np.sum((is_3b) & (max_sim_to_3a > 0.75))),
-                    "remaining_unverifiable_anomalies": int(np.sum((is_3b) & (max_sim_to_3a <= 0.75)))
+                    "remaining_unverifiable_anomalies": int(np.sum((is_3b) & (max_sim_to_3a <= 0.75))),
+                    "table_3c_diagnostic_only": int(np.sum(is_3c)),
                 },
                 "global_families": global_families
             }
@@ -1085,6 +1430,16 @@ class AggregateReporter:
         # Phase 9: Domain Shift Defense (Native O4a Index)
         # ----------------------------------------------------------
         domain_shift_metrics = self._run_domain_shift_defense(master) if 'master' in locals() else {}
+        if domain_shift_metrics.get("representation", {}).get("variant"):
+            domain_shift_metrics["run"] = self.observing_run
+            audit_path = _write_dsd_transition_audit(
+                domain_shift_metrics,
+                self.output_dir,
+            )
+            if audit_path is not None:
+                domain_shift_metrics["transition_audit_artifact"] = str(
+                    audit_path
+                )
 
         # ----------------------------------------------------------
         # Phase 9b: Strain Sanity Check & Physical Validation
@@ -1348,6 +1703,7 @@ class AggregateReporter:
         run_bounds,
         forbidden_intervals,
         guard_s=96.0,
+        cached_scores_by_gps=None,
     ):
         import numpy as np
         import re
@@ -1371,7 +1727,10 @@ class AggregateReporter:
                 valid_files.extend(list(dir_path.rglob(f"{det_name}_*.hdf5")))
                 
         if not valid_files:
-            return np.array([]), []
+            return np.array([]), [], {
+                "n_reused": 0,
+                "n_computed": 0,
+            }
             
         file_records = {}
         pattern = re.compile(
@@ -1408,6 +1767,9 @@ class AggregateReporter:
         import matplotlib
 
         score_rows = []
+        cached_scores_by_gps = cached_scores_by_gps or {}
+        n_reused = 0
+        n_computed = 0
         logger.info(
             "Extracting %d %s background scores as %d-window temporal "
             "blocks stratified across %d available blocks...",
@@ -1421,58 +1783,77 @@ class AggregateReporter:
                 break
             file_path = calibration_block.windows[0].source_path
             try:
-                ts = TimeSeries.read(file_path)
-                block_images = []
-                for window in calibration_block.windows:
-                    seg_start = window.gps_start
-                    seg_end = window.gps_end
-                    ts_context = ts.crop(
-                        seg_start - float(pad),
-                        seg_end + float(pad),
-                    )
-                    ts_w, pad_info = whiten_context(
-                        ts_context,
-                        seg_start,
-                        seg_end,
-                        pad=float(pad),
-                    )
-                    if pad_info["left"] or pad_info["right"]:
-                        raise RuntimeError(
-                            f"incomplete background context: {pad_info}"
+                block_scores = [None] * len(calibration_block.windows)
+                missing = []
+                for position, window in enumerate(calibration_block.windows):
+                    cached = cached_scores_by_gps.get(float(window.gps_start))
+                    if cached is None:
+                        missing.append((position, window))
+                    else:
+                        block_scores[position] = float(cached)
+                        n_reused += 1
+
+                if missing:
+                    ts = TimeSeries.read(file_path)
+                    block_images = []
+                    for _position, window in missing:
+                        seg_start = window.gps_start
+                        seg_end = window.gps_end
+                        ts_context = ts.crop(
+                            seg_start - float(pad),
+                            seg_end + float(pad),
                         )
-                    ts_clean = extract_clean_subwindow(
-                        ts_w,
-                        seg_start,
-                        seg_end,
+                        ts_w, pad_info = whiten_context(
+                            ts_context,
+                            seg_start,
+                            seg_end,
+                            pad=float(pad),
+                        )
+                        if pad_info["left"] or pad_info["right"]:
+                            raise RuntimeError(
+                                f"incomplete background context: {pad_info}"
+                            )
+                        ts_clean = extract_clean_subwindow(
+                            ts_w,
+                            seg_start,
+                            seg_end,
+                        )
+                        q_gram = generate_qtransform(
+                            ts_clean,
+                            qrange=qrange,
+                            output_size=(256, 256),
+                        )
+                        rgb = (
+                            matplotlib.colormaps["cividis"](
+                                np.clip(q_gram, 0.0, 1.0)
+                            )[..., :3]
+                            * 255
+                        ).astype(np.uint8)
+                        block_images.append(rgb)
+                    block_result = scorer.score_spectrogram(
+                        block_images,
+                        threshold=1.0,
                     )
-                    q_gram = generate_qtransform(
-                        ts_clean,
-                        qrange=qrange,
-                        output_size=(256, 256),
-                    )
-                    rgb = (
-                        matplotlib.colormaps["cividis"](
-                            np.clip(q_gram, 0.0, 1.0)
-                        )[..., :3]
-                        * 255
-                    ).astype(np.uint8)
-                    block_images.append(rgb)
-                block_result = scorer.score_spectrogram(
-                    block_images,
-                    threshold=1.0,
-                )
-                if len(block_result) != block_len:
-                    raise RuntimeError("scorer returned an incomplete block")
+                    if len(block_result) != len(missing):
+                        raise RuntimeError("scorer returned an incomplete block")
+                    for (position, _window), result in zip(
+                        missing, block_result
+                    ):
+                        block_scores[position] = float(result["novelty_score"])
+                        n_computed += 1
+
+                if any(score is None for score in block_scores):
+                    raise RuntimeError("background block has missing scores")
                 score_rows.extend(
                     (
                         window.gps_start,
-                        float(result["novelty_score"]),
+                        float(score),
                         window,
                         block_index,
                     )
-                    for window, result in zip(
+                    for window, score in zip(
                         calibration_block.windows,
-                        block_result,
+                        block_scores,
                     )
                 )
             except Exception as exc:
@@ -1501,7 +1882,10 @@ class AggregateReporter:
                 }
             )
             ledger.append(record)
-        return scores, ledger
+        return scores, ledger, {
+            "n_reused": int(n_reused),
+            "n_computed": int(n_computed),
+        }
 
     def _calibrate_native_threshold(
         self,
@@ -1649,7 +2033,27 @@ class AggregateReporter:
                 # so reusing them here would silently contaminate a new
                 # representation. Recompute once and cache under the complete
                 # index+query fingerprint instead.
-                scores, ledger_records = self._extract_detector_background(
+                static_contract = {
+                    key: value
+                    for key, value in expected.items()
+                    if key != "candidate_windows_sha256"
+                }
+                prior_pattern = (
+                    f"background_scores_native_{det}_{self.observing_run}_"
+                    f"idx{index_tag}_query{query_tag}_pad4_"
+                    f"n{self.native_background_n}_bgv3_"
+                    f"{index_contract.sha256[:8]}_*_"
+                    f"{exclusion_meta['index_training_ledger_sha256'][:8]}.npy"
+                )
+                cached_scores, cache_sources = (
+                    _load_compatible_background_scores(
+                        self.output_dir,
+                        filename_pattern=prior_pattern,
+                        expected_static_contract=static_contract,
+                    )
+                )
+                scores, ledger_records, score_reuse = (
+                    self._extract_detector_background(
                     scorer,
                     det,
                     self.native_background_n,
@@ -1658,6 +2062,8 @@ class AggregateReporter:
                     run_bounds=run_bounds,
                     forbidden_intervals=forbidden_intervals,
                     guard_s=guard_s,
+                    cached_scores_by_gps=cached_scores,
+                )
                 )
                 if len(scores) != self.native_background_n:
                     raise RuntimeError(
@@ -1711,6 +2117,14 @@ class AggregateReporter:
                                 "ledger_path": str(ledger_path),
                                 "ledger_sha256": ledger_sha256,
                                 "ledger_audit": audit,
+                                "background_score_reuse": {
+                                    **score_reuse,
+                                    "sources": cache_sources,
+                                    "selection_contract": (
+                                        "new guarded block plan; cached values "
+                                        "used only at GPS selected by that plan"
+                                    ),
+                                },
                                 **exclusion_meta,
                             },
                             indent=2,
@@ -1719,9 +2133,12 @@ class AggregateReporter:
                     )
                     logger.info(
                         "Extracted %d representation-matched backgrounds for "
-                        "%s and saved to %s",
+                        "%s (%d cached scores, %d newly computed) and saved "
+                        "to %s",
                         len(scores),
                         det,
+                        score_reuse["n_reused"],
+                        score_reuse["n_computed"],
                         det_path,
                     )
                         
@@ -1898,11 +2315,70 @@ class AggregateReporter:
                 for row in tax_df.itertuples()
             }
 
+        candidate_keys = {
+            (float(row.gps_start), str(row.detector))
+            for row in master_df.itertuples()
+        }
+        prior_score_path = self.output_dir / (
+            f"dsd_scores_{run_str}_{variant}.csv"
+        )
+        prior_audit_path = self.output_dir / (
+            f"dsd_transition_audit_{run_str}_{variant}.json"
+        )
+        reusable_scores, reuse_provenance = _load_reusable_candidate_scores(
+            prior_score_path,
+            prior_audit_path,
+            candidate_keys=candidate_keys,
+            variant=variant,
+            index_sha256=index_contract.sha256,
+            candidate_window_offset_s=self.candidate_window_offset,
+        )
+        if reuse_provenance:
+            metrics["candidate_score_reuse"] = reuse_provenance
+            logger.info(
+                "Reusing %d verified native candidate scores; %d new keys "
+                "will be scored",
+                len(reusable_scores),
+                len(candidate_keys) - len(reusable_scores),
+            )
+
         import matplotlib
 
         batch_size = 32
         batch_items = []
         batch_images = []
+
+        def record_candidate_score(
+            det: str,
+            cid: str,
+            fam: str,
+            score: float,
+            mil_vector=None,
+        ) -> None:
+            det_thresholds = threshold_dict.get(det)
+            if not det_thresholds:
+                return
+            ci_upper_bound = det_thresholds["ci_upper"]
+            ci_lower_bound = det_thresholds["ci_lower"]
+            metrics[det]["total"] += 1
+            if score > ci_upper_bound:
+                metrics[det]["robust"] += 1
+                klass = "ROBUST"
+            elif score >= ci_lower_bound:
+                metrics[det]["ambiguous"] += 1
+                klass = "AMBIGUOUS"
+            else:
+                metrics[det]["background"] += 1
+                klass = "BACKGROUND"
+            if klass == "ROBUST" and mil_vector is not None:
+                new_mil_vectors[cid] = {
+                    "fam": fam,
+                    "vector": mil_vector,
+                }
+            robustness_records[cid] = {
+                "score": float(score),
+                "robustness_class": klass,
+            }
 
         def score_candidate_batch() -> None:
             if not batch_images:
@@ -1918,31 +2394,13 @@ class AggregateReporter:
                     )
                 for item, res in zip(batch_items, results):
                     det, cid, fam = item
-                    det_thresholds = threshold_dict.get(det)
-                    if not det_thresholds:
-                        continue
-                    score = float(res["novelty_score"])
-                    ci_upper_bound = det_thresholds["ci_upper"]
-                    ci_lower_bound = det_thresholds["ci_lower"]
-                    metrics[det]["total"] += 1
-                    if score > ci_upper_bound:
-                        metrics[det]["robust"] += 1
-                        klass = "ROBUST"
-                    elif score >= ci_lower_bound:
-                        metrics[det]["ambiguous"] += 1
-                        klass = "AMBIGUOUS"
-                    else:
-                        metrics[det]["background"] += 1
-                        klass = "BACKGROUND"
-                    if klass == "ROBUST":
-                        new_mil_vectors[cid] = {
-                            "fam": fam,
-                            "vector": res["mil_vector"],
-                        }
-                    robustness_records[cid] = {
-                        "score": score,
-                        "robustness_class": klass,
-                    }
+                    record_candidate_score(
+                        det,
+                        cid,
+                        fam,
+                        float(res["novelty_score"]),
+                        res["mil_vector"],
+                    )
             except Exception as exc:
                 logger.error(
                     "Failed to score candidate batch (%s): %s",
@@ -1965,6 +2423,15 @@ class AggregateReporter:
                     (float(row["gps_start"]), det),
                     "Unknown",
                 )
+                cache_key = (float(row["gps_start"]), det)
+                if cache_key in reusable_scores:
+                    record_candidate_score(
+                        det,
+                        cid,
+                        fam,
+                        reusable_scores[cache_key],
+                    )
+                    continue
                 # Historical O4a catalogues stored the padded-crop start,
                 # 4 s before the analysis window. The offset is an explicit
                 # run contract so a Q-range rerun cannot silently score the
@@ -1994,6 +2461,10 @@ class AggregateReporter:
             except Exception as e:
                 logger.error(f"Failed to process candidate {cid}: {e}")
         score_candidate_batch()
+        if reuse_provenance:
+            metrics["candidate_score_reuse"]["n_newly_scored"] = (
+                len(robustness_records) - len(reusable_scores)
+            )
 
         if tax_df is not None and not tax_df.empty:
             def get_robustness(row):
@@ -3164,10 +3635,10 @@ class AggregateReporter:
         md_lines.append("| --- | --- | --- |")
         
         tables = [
-            (f"Master_Taxonomy_{self.observing_run}.csv", "1. Master Taxonomy", "Final merged list of all un-vetoed physical transient candidates across all detector sessions."),
-            ("Table_3a_Confirmed_Local_Glitch.csv", f"{sec_num}.a Table 3a — Confirmed Local Glitches", "Candidates confirmed as local glitches via rigorous sub-threshold Cross-Detector veto. These events do NOT show structural similarity (Cosine Similarity ≤ tau_coh) in the partner detector."),
+            (f"Master_Taxonomy_{self.observing_run}.csv", "1. Master Taxonomy", "Final merged list of all detector-time candidates. No row is removed by the retired morphological coincidence statistic."),
+            ("Table_3a_Confirmed_Local_Glitch.csv", f"{sec_num}.a Table 3a — Morphological sub-threshold diagnostics", "Legacy-named compatibility table. The partner-window embedding similarity is at or below tau_coh; COINC-3 shows this statistic is not an authoritative physical classification."),
             ("Table_3b_Unverifiable_Unilateral_Detections.csv", f"{sec_num}.b Table 3b — Unverifiable Unilateral Detections", "Candidates detected exclusively in one detector where the partner was INACTIVE. Cannot be confirmed as astrophysical without further offline cross-validation."),
-            ("Table_3c_Coincident_Astrophysical.csv", f"{sec_num}.c Table 3c — Coincident Astrophysical Candidates", "Morphological cross-match confirmed. Candidates with sub-threshold Cosine Similarity > tau_coh in the opposite detector window."),
+            ("Table_3c_Coincident_Astrophysical.csv", f"{sec_num}.c Table 3c — Morphological threshold diagnostics", "Legacy-named compatibility table. Similarity exceeds tau_coh, but these rows are neither confirmed coincidences nor astrophysical classifications and remain in the master taxonomy."),
             ("physics/singleton_physics.csv", f"{sec_num}.d Singleton Physical Parameters", "Classical physical parameters (Peak Frequency, Duration, Peak-whitened SNR) extracted from the 32s window of isolated topological anomalies."),
             (f"coincidence_physical_{self.observing_run.lower()}.json", f"{sec_num}.e Physical Coincidence Test", "AUTHORITATIVE coincidence result (section 6b): per-event normalized cross-correlation of the whitened strains over the light-travel lag window, with the per-event time-shifted null. Supersedes the embedding-similarity statistic behind Tables 3a/3c, which lacks discriminating power (COINC-3)."),
             (f"coincidence_physical_efficiency_{self.observing_run.lower()}.json", f"{sec_num}.f Coincidence Recovery Efficiency", "Measured epsilon_coh of the physical coincidence statistic (section 6c): dual-detector injections across morphologies and amplitudes, plus a single-detector null. Required to interpret a null coincidence count as evidence of absence. NOTE: coincidence_injection_test.py measures the RETIRED embedding statistic and is not a substitute."),
