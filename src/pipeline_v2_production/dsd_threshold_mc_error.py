@@ -1,7 +1,7 @@
 """Monte Carlo error of the DSD block-bootstrap thresholds.
 
 The DSD thresholds are the 2.5th and 97.5th percentiles of the $P_{99}$
-distribution over moving-block bootstrap replicas of the native
+distribution over non-overlapping-block bootstrap replicas of the native
 background scores (``block_bootstrap_p99_ci`` in ``aggregate_report.py``). Both
 manuscripts require the finite-replica Monte Carlo error on
 $\\tau_{\\mathrm{lo}}, \\tau_{\\mathrm{hi}}$ to be measured rather than
@@ -50,7 +50,7 @@ B_PRODUCTION = DEFAULT_BOOTSTRAP_REPLICATES
 
 
 def _bootstrap_p99(scores: np.ndarray, B: int, seed: int) -> np.ndarray:
-    """`B` production-identical, memory-bounded moving-block replicas."""
+    """`B` production-identical, memory-bounded non-overlapping-block replicas."""
     distribution, _, _ = block_bootstrap_p99_distribution(
         scores,
         B=B,

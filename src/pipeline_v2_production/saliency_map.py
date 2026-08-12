@@ -25,6 +25,7 @@ def generate_saliency_map(
     segment_length: float = 32.0,
     frange: tuple[float, float] = EFFECTIVE_FRANGE,
     scorer=None,
+    score_source_label: str | None = None,
 ) -> dict:
     """
     Generates a 3-panel Topological Saliency Map of a candidate spectrogram.
@@ -90,7 +91,7 @@ def generate_saliency_map(
         res = scorer.score_spectrogram([rgb_spectrogram_uint8], threshold=0.0)[0]
         anomaly_score_np = np.asarray(res["patch_anomaly_scores"], dtype=np.float32)
         production_top_k = np.asarray(res["top_k_indices"], dtype=np.int64).ravel()
-        score_source = "VQ dictionary (production)"
+        score_source = score_source_label or "VQ dictionary (production)"
     else:
         if background_vector is None:
             raise ValueError(

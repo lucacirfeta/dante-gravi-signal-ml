@@ -315,12 +315,14 @@ def block_bootstrap_p99_distribution(
     B: int = DEFAULT_BOOTSTRAP_REPLICATES,
     seed: int = 42,
     chunk_size: int = 500,
+    block_length: int | None = None,
 ) -> tuple[np.ndarray, int, int]:
-    """Return a memory-bounded temporal-block bootstrap distribution.
+    """Return a memory-bounded non-overlapping-block bootstrap distribution.
 
     The implementation consumes one deterministic RNG stream independently of
     ``chunk_size``. This permits production-scale replication counts without
-    allocating ``B x n_scores`` in memory.
+    allocating ``B x n_scores`` in memory.  The default block length is
+    ``floor(n**(1/3))``; an explicit value is accepted for sensitivity studies.
     """
 
     values = np.asarray(scores, dtype=np.float64)
@@ -331,13 +333,17 @@ def block_bootstrap_p99_distribution(
     if B < 2 or chunk_size < 1:
         raise ValueError("B must be at least 2 and chunk_size must be positive")
 
-    block_length = max(1, int(len(values) ** (1 / 3)))
-    n_blocks = len(values) // block_length
+    length = max(1, int(len(values) ** (1 / 3))) if block_length is None else int(block_length)
+    if length < 1 or length > len(values) // 2:
+        raise ValueError(
+            "block_length must leave at least two complete temporal blocks"
+        )
+    n_blocks = len(values) // length
     if n_blocks < 2:
         raise ValueError("At least two complete temporal blocks are required")
-    aligned = values[: n_blocks * block_length].reshape(
+    aligned = values[: n_blocks * length].reshape(
         n_blocks,
-        block_length,
+        length,
     )
 
     rng = np.random.default_rng(seed)
@@ -355,7 +361,7 @@ def block_bootstrap_p99_distribution(
             99,
             axis=1,
         )
-    return distribution, block_length, n_blocks
+    return distribution, length, n_blocks
 
 
 def block_bootstrap_p99_ci(
@@ -364,8 +370,9 @@ def block_bootstrap_p99_ci(
     B: int = DEFAULT_BOOTSTRAP_REPLICATES,
     seed: int = 42,
     chunk_size: int = 500,
+    block_length: int | None = None,
 ) -> dict[str, float | int]:
-    """P99 and its percentile interval under temporal-block resampling."""
+    """P99 and its interval under non-overlapping-block resampling."""
 
     values = np.asarray(scores, dtype=np.float64)
     distribution, block_length, n_blocks = (
@@ -374,6 +381,7 @@ def block_bootstrap_p99_ci(
             B=B,
             seed=seed,
             chunk_size=chunk_size,
+            block_length=block_length,
         )
     )
     return {
