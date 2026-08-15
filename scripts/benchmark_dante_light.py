@@ -260,7 +260,7 @@ def score_once(
         )[0]
         stages.update({f"primary_{key}": value for key, value in primary_timing.items()})
         stages.update({f"native_{key}": value for key, value in native_timing.items()})
-    elif engine == "shared_encoder":
+    elif engine in {"shared_encoder", "shared_encoder_score_only"}:
         shared_timings: dict[str, float] = {}
         scored = primary.score_multi_index(
             [image],
@@ -268,6 +268,11 @@ def score_once(
                 "primary": (primary, 1.0),
                 "native": (native, 1.0),
             },
+            output_modes=(
+                {"native": "score_only"}
+                if engine == "shared_encoder_score_only"
+                else None
+            ),
             timings=shared_timings,
         )
         primary_result = scored["primary"][0]
@@ -289,9 +294,11 @@ def score_once(
         "primary_top_k_sha256": hashlib.sha256(
             primary_result["top_k_indices"].tobytes()
         ).hexdigest(),
-        "native_top_k_sha256": hashlib.sha256(
-            native_result["top_k_indices"].tobytes()
-        ).hexdigest(),
+        "native_top_k_sha256": (
+            hashlib.sha256(native_result["top_k_indices"].tobytes()).hexdigest()
+            if "top_k_indices" in native_result
+            else None
+        ),
         **record_context,
     }
     persist_began = time.perf_counter()
@@ -368,7 +375,7 @@ def main() -> int:
     parser.add_argument("--local-only", action="store_true")
     parser.add_argument(
         "--engine",
-        choices=("canonical", "shared_encoder"),
+        choices=("canonical", "shared_encoder", "shared_encoder_score_only"),
         default="canonical",
     )
     args = parser.parse_args()
@@ -400,7 +407,7 @@ def main() -> int:
         NATIVE_INDEX,
         device=args.device,
         k=68,
-        model=primary.model if args.engine == "shared_encoder" else None,
+        model=primary.model if args.engine.startswith("shared_encoder") else None,
     )
     if primary.reference_sha256 != contract.primary_index_sha256:
         raise RuntimeError(f"{FailClosedReason.STALE_INDEX.value}: primary")
@@ -521,11 +528,13 @@ def main() -> int:
     report = {
         "schema_version": 1,
         "status": "complete",
-        "benchmark": (
-            "dante_light_l0_canonical_dual_index"
-            if args.engine == "canonical"
-            else "dante_light_l1_shared_encoder_dual_index"
-        ),
+        "benchmark": {
+            "canonical": "dante_light_l0_canonical_dual_index",
+            "shared_encoder": "dante_light_l1_shared_encoder_dual_index",
+            "shared_encoder_score_only": (
+                "dante_light_l1_shared_encoder_score_only_dual_index"
+            ),
+        }[args.engine],
         "engine": args.engine,
         "scientific_mode": "historical_exact_replay",
         "prefilter": "none",

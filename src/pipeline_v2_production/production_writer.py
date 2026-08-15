@@ -1,4 +1,6 @@
 import logging
+import json
+import os
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -67,6 +69,20 @@ class ProductionWriter:
                 # Use variable-length string dataset for serialized ablation dictionary
                 dt_str = h5py.string_dtype(encoding='utf-8')
                 nov_grp.create_dataset("ablation_k_scores", shape=(0,), maxshape=(None,), dtype=dt_str, chunks=True)
+
+                processed = f.create_group("processed_windows")
+                processed.attrs["schema_version"] = 1
+                processed.attrs["window_length_s"] = 32.0
+                processed.attrs["gps_semantics"] = "analysis_window_start"
+                processed.attrs["detector"] = self.detector
+                processed.create_dataset(
+                    "gps_times",
+                    shape=(0,),
+                    maxshape=(None,),
+                    dtype="float64",
+                    chunks=True,
+                )
+                self._set_committed_state(f, 0, 0, None)
                 
     def load_threshold(self):
         """Loads the threshold from existing HDF5 file if present."""
@@ -129,40 +145,215 @@ class ProductionWriter:
                 
         if not self.hdf5_path.exists():
             self._init_hdf5(metadata, background_scores, threshold, background_gps)
+
+        with h5py.File(self.hdf5_path, "a", libver="latest") as handle:
+            self._ensure_writer_state(handle)
+            self._recover_uncommitted(handle)
+
+    @staticmethod
+    def _novelty_datasets(group):
+        names = (
+            "gps_times",
+            "mil_vectors",
+            "nov_scores",
+            "top_k_idx",
+            "ablation_k_scores",
+        )
+        return [group[name] for name in names if name in group]
+
+    def _ensure_processed_group(self, handle):
+        group = handle.require_group("processed_windows")
+        group.attrs["schema_version"] = 1
+        group.attrs["window_length_s"] = 32.0
+        group.attrs["gps_semantics"] = "analysis_window_start"
+        group.attrs["detector"] = self.detector
+        if "gps_times" not in group:
+            group.create_dataset(
+                "gps_times",
+                shape=(0,),
+                maxshape=(None,),
+                dtype="float64",
+                chunks=True,
+            )
+        return group
+
+    def _set_committed_state(
+        self,
+        handle,
+        novelty_rows: int,
+        processed_rows: int,
+        last_gps: float | None,
+    ) -> None:
+        handle.attrs["writer_commit_schema"] = 1
+        handle.attrs["writer_committed_novelty_rows"] = int(novelty_rows)
+        handle.attrs["writer_committed_processed_rows"] = int(processed_rows)
+        handle.attrs["writer_committed_last_gps"] = (
+            np.nan if last_gps is None else float(last_gps)
+        )
+
+    def _ensure_writer_state(self, handle) -> None:
+        novelty = handle["novelties"]
+        datasets = self._novelty_datasets(novelty)
+        novelty_lengths = {dataset.shape[0] for dataset in datasets}
+        if len(novelty_lengths) != 1:
+            raise RuntimeError(
+                "Novelty datasets have inconsistent lengths and no safe commit "
+                f"boundary can be inferred: {sorted(novelty_lengths)}"
+            )
+        processed = self._ensure_processed_group(handle)["gps_times"]
+        if "writer_commit_schema" not in handle.attrs:
+            self._set_committed_state(
+                handle,
+                novelty_lengths.pop(),
+                processed.shape[0],
+                None,
+            )
+            handle.flush()
+        if int(handle.attrs["writer_commit_schema"]) != 1:
+            raise RuntimeError("Unsupported ProductionWriter commit schema")
+
+    def _recover_uncommitted(self, handle) -> None:
+        committed_novelty = int(handle.attrs["writer_committed_novelty_rows"])
+        committed_processed = int(handle.attrs["writer_committed_processed_rows"])
+        changed = False
+        for dataset in self._novelty_datasets(handle["novelties"]):
+            if dataset.shape[0] < committed_novelty:
+                raise RuntimeError(
+                    "Novelty dataset is shorter than its committed boundary"
+                )
+            if dataset.shape[0] > committed_novelty:
+                dataset.resize(committed_novelty, axis=0)
+                changed = True
+        processed = self._ensure_processed_group(handle)["gps_times"]
+        if processed.shape[0] < committed_processed:
+            raise RuntimeError(
+                "Processed-window ledger is shorter than its committed boundary"
+            )
+        if processed.shape[0] > committed_processed:
+            processed.resize(committed_processed, axis=0)
+            changed = True
+        if changed:
+            logger.warning("Recovered and removed an uncommitted HDF5 batch tail")
+            handle.flush()
+
+    def _after_data_flush(self) -> None:
+        """Test fault-injection seam after data flush, before commit marker."""
+
+    def _after_commit_flush(self) -> None:
+        """Test fault-injection seam after commit marker, before checkpoint."""
+
+    @staticmethod
+    def _same_novelty(existing: dict, requested: dict) -> bool:
+        return (
+            float(existing["novelty_score"]) == float(requested["novelty_score"])
+            and np.array_equal(existing["mil_vector"], requested["mil_vector"])
+            and np.array_equal(existing["top_k_indices"], requested["top_k_indices"])
+            and existing.get("ablation_k_scores", {})
+            == requested.get("ablation_k_scores", {})
+        )
+
+    def append_batch(self, gps_starts, novel_records) -> None:
+        """Commit one scored batch before its external checkpoint advances.
+
+        ``novel_records`` contains ``(gps_start, full_result_dict)`` pairs.
+        Replaying a committed batch is idempotent. A divergent replay for an
+        existing novelty GPS fails closed instead of silently overwriting it.
+        """
+        processed_values = [float(value) for value in gps_starts]
+        requested_novelties = [(float(gps), result) for gps, result in novel_records]
+        if len({gps for gps, _ in requested_novelties}) != len(requested_novelties):
+            raise ValueError("Duplicate novelty GPS within one append batch")
+        if not processed_values and not requested_novelties:
+            return
+
+        with h5py.File(self.hdf5_path, "a", libver="latest") as handle:
+            self._ensure_writer_state(handle)
+            self._recover_uncommitted(handle)
+            novelty = handle["novelties"]
+            processed = self._ensure_processed_group(handle)["gps_times"]
+
+            committed_novelty = int(handle.attrs["writer_committed_novelty_rows"])
+            existing_gps = np.asarray(
+                novelty["gps_times"][:committed_novelty], dtype=np.float64
+            )
+            existing_by_gps = {float(gps): index for index, gps in enumerate(existing_gps)}
+            to_append = []
+            for gps, result in requested_novelties:
+                if gps not in existing_by_gps:
+                    to_append.append((gps, result))
+                    continue
+                index = existing_by_gps[gps]
+                stored_ablation = {}
+                if "ablation_k_scores" in novelty:
+                    value = novelty["ablation_k_scores"][index]
+                    if isinstance(value, bytes):
+                        value = value.decode("utf-8")
+                    stored_ablation = json.loads(value)
+                existing = {
+                    "novelty_score": novelty["nov_scores"][index],
+                    "mil_vector": novelty["mil_vectors"][index],
+                    "top_k_indices": novelty["top_k_idx"][index],
+                    "ablation_k_scores": stored_ablation,
+                }
+                if not self._same_novelty(existing, result):
+                    raise RuntimeError(
+                        f"Divergent novelty replay at detector/GPS "
+                        f"{self.detector}/{gps}"
+                    )
+
+            if to_append:
+                start = committed_novelty
+                stop = start + len(to_append)
+                for dataset in self._novelty_datasets(novelty):
+                    dataset.resize(stop, axis=0)
+                novelty["gps_times"][start:stop] = [gps for gps, _ in to_append]
+                novelty["mil_vectors"][start:stop] = np.asarray(
+                    [result["mil_vector"] for _, result in to_append],
+                    dtype=np.float32,
+                )
+                novelty["nov_scores"][start:stop] = np.asarray(
+                    [result["novelty_score"] for _, result in to_append],
+                    dtype=np.float32,
+                )
+                novelty["top_k_idx"][start:stop] = np.asarray(
+                    [result["top_k_indices"] for _, result in to_append],
+                    dtype=np.int32,
+                )
+                if "ablation_k_scores" in novelty:
+                    novelty["ablation_k_scores"][start:stop] = [
+                        json.dumps(
+                            result.get("ablation_k_scores", {}), sort_keys=True
+                        )
+                        for _, result in to_append
+                    ]
+
+            existing_processed = set(
+                np.asarray(processed[:], dtype=np.float64).tolist()
+            )
+            new_processed = []
+            for gps in processed_values:
+                if gps not in existing_processed:
+                    new_processed.append(gps)
+                    existing_processed.add(gps)
+            if new_processed:
+                start = processed.shape[0]
+                processed.resize(start + len(new_processed), axis=0)
+                processed[start:] = np.asarray(new_processed, dtype=np.float64)
+
+            handle.flush()
+            self._after_data_flush()
+            committed_novelty += len(to_append)
+            committed_processed = processed.shape[0]
+            last_gps = processed_values[-1] if processed_values else None
+            self._set_committed_state(
+                handle, committed_novelty, committed_processed, last_gps
+            )
+            handle.flush()
+            self._after_commit_flush()
             
     def append_novel(self, gps_start: float, result_dict: dict):
-        """Appends a novel segment directly to the HDF5 file using SWMR."""
-        # Open in append mode with SWMR enabled
-        with h5py.File(self.hdf5_path, 'a', libver='latest') as f:
-            f.swmr_mode = True
-            nov_grp = f["novelties"]
-            
-            # Current size
-            n_current = nov_grp["gps_times"].shape[0]
-            n_new = n_current + 1
-            
-            # Resize
-            nov_grp["gps_times"].resize(n_new, axis=0)
-            nov_grp["mil_vectors"].resize(n_new, axis=0)
-            nov_grp["nov_scores"].resize(n_new, axis=0)
-            nov_grp["top_k_idx"].resize(n_new, axis=0)
-            
-            if "ablation_k_scores" in nov_grp:
-                nov_grp["ablation_k_scores"].resize(n_new, axis=0)
-            
-            # Assign
-            nov_grp["gps_times"][n_current] = gps_start
-            nov_grp["mil_vectors"][n_current] = result_dict["mil_vector"]
-            nov_grp["nov_scores"][n_current] = result_dict["novelty_score"]
-            nov_grp["top_k_idx"][n_current] = result_dict["top_k_indices"]
-            
-            import json
-            if "ablation_k_scores" in nov_grp:
-                ab_dict = result_dict.get("ablation_k_scores", {})
-                nov_grp["ablation_k_scores"][n_current] = json.dumps(ab_dict).encode('utf-8')
-            
-            # Flush changes to disk
-            f.flush()
+        """Backward-compatible one-row wrapper around ``append_batch``."""
+        self.append_batch([], [(gps_start, result_dict)])
 
     def append_processed(self, gps_starts) -> None:
         """Append analysis-window starts that completed scoring successfully.
@@ -172,33 +363,18 @@ class ProductionWriter:
         is append-only; readers de-duplicate GPS values to make crash/resume
         replay harmless.
         """
-        values = np.asarray(list(gps_starts), dtype=np.float64)
-        if values.size == 0:
-            return
-        with h5py.File(self.hdf5_path, "a", libver="latest") as handle:
-            group = handle.require_group("processed_windows")
-            group.attrs["schema_version"] = 1
-            group.attrs["window_length_s"] = 32.0
-            group.attrs["gps_semantics"] = "analysis_window_start"
-            group.attrs["detector"] = self.detector
-            if "gps_times" not in group:
-                group.create_dataset(
-                    "gps_times",
-                    shape=(0,),
-                    maxshape=(None,),
-                    dtype="float64",
-                    chunks=True,
-                )
-            dataset = group["gps_times"]
-            start = dataset.shape[0]
-            dataset.resize(start + values.size, axis=0)
-            dataset[start:] = values
-            handle.flush()
+        self.append_batch(gps_starts, [])
 
     def save_checkpoint(self, gps_start: int):
         """Saves the last processed GPS to the checkpoint file."""
-        with open(self.checkpoint_path, "w") as f:
-            f.write(str(gps_start))
+        temporary = self.checkpoint_path.with_suffix(
+            self.checkpoint_path.suffix + ".tmp"
+        )
+        with open(temporary, "w", encoding="utf-8") as handle:
+            handle.write(str(gps_start))
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, self.checkpoint_path)
 
     def load_checkpoint(self) -> int | None:
         """Loads the last processed GPS from the checkpoint file."""
@@ -211,8 +387,14 @@ class ProductionWriter:
 
     def mark_completed(self):
         """Marks the session as completely processed."""
-        with open(self.checkpoint_path, "w") as f:
-            f.write("DONE")
+        temporary = self.checkpoint_path.with_suffix(
+            self.checkpoint_path.suffix + ".tmp"
+        )
+        with open(temporary, "w", encoding="utf-8") as handle:
+            handle.write("DONE")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, self.checkpoint_path)
 
     def is_completed(self) -> bool:
         """Checks if the session is completely processed."""

@@ -2520,6 +2520,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     seed = getattr(args, "seed", 42)
     workers = getattr(args, "workers", 8)
     batch_size = getattr(args, "batch_size", 32)
+    engine = getattr(args, "engine", "canonical")
 
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -2600,7 +2601,8 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             k_ablations=k_ablations,
             fpr=fpr,
             n_background=0,  # Optimization: skip empirical background modeling for the secondary scorer
-            seed=seed
+            seed=seed,
+            model=scorer.model if engine == "shared_encoder" else None,
         )
     else:
         logger.warning(
@@ -2748,26 +2750,39 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             if not valid_gps:
                 continue
                 
-            results = scorer.score_spectrogram(valid_spec, threshold)
-            
-            if native_scorer:
-                native_results = native_scorer.score_spectrogram(valid_spec, 1.0)
+            if native_scorer and engine == "shared_encoder":
+                dual_results = scorer.score_multi_index(
+                    valid_spec,
+                    {
+                        "primary": (scorer, threshold),
+                        "native": (native_scorer, 1.0),
+                    },
+                    output_modes={"native": "score_only"},
+                )
+                results = dual_results["primary"]
+                native_results = dual_results["native"]
+            else:
+                results = scorer.score_spectrogram(valid_spec, threshold)
+                native_results = (
+                    native_scorer.score_spectrogram(valid_spec, 1.0)
+                    if native_scorer
+                    else []
+                )
+
+            if native_results:
                 for nr in native_results:
                     native_scores_log.append(nr["novelty_score"])
 
-            # Coverage ledger: every window that reached a successful score,
-            # not only windows classified as novel.
-            writer.append_processed(valid_gps)
-            
             processed += len(valid_gps)
-            
-            for gps_start, result_dict in zip(valid_gps, results):
-                if result_dict["is_novel"]:
-                    writer.append_novel(gps_start, result_dict)
-                    novel_count += 1
-                
-                # We update the checkpoint after every valid item to ensure safe state
-                writer.save_checkpoint(gps_start)
+            novel_records = [
+                (gps_start, result_dict)
+                for gps_start, result_dict in zip(valid_gps, results)
+                if result_dict["is_novel"]
+            ]
+            writer.append_batch(valid_gps, novel_records)
+            novel_count += len(novel_records)
+            # Advance only after both coverage and novelty rows are committed.
+            writer.save_checkpoint(valid_gps[-1])
             
             if processed % 500 < len(valid_gps): # Roughly every 500 items
                 mem_mb = torch.cuda.memory_allocated() / (1024 * 1024)
@@ -3509,6 +3524,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_patch_production.add_argument("--batch-size", type=int, default=32, help="Batch size for DINOv2 GPU inference")
     p_patch_production.add_argument("--run", type=str, default="O4a", help="Observing run name (e.g., O4a, O4b, O5)")
     p_patch_production.add_argument("--reference-run", type=str, default="O3b", help="Observing run to use as the primary memory index")
+    p_patch_production.add_argument(
+        "--engine",
+        choices=("canonical", "shared_encoder"),
+        default="canonical",
+        help="Exact scoring engine. canonical remains the default; shared_encoder is opt-in.",
+    )
     p_patch_production.set_defaults(func=cmd_patch_production)
 
     # --- scan ---

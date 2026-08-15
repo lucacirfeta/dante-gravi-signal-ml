@@ -203,6 +203,25 @@ def test_patch_scorer_verifies_two_distinct_indices_without_mocking_init(
         "score_total_s",
     } <= multi_timings.keys()
 
+    score_only = primary_scorer.score_multi_index(
+        [image],
+        {"primary": (primary_scorer, 1.0), "native": (native_scorer, 1.0)},
+        output_modes={"native": "score_only"},
+    )
+    assert score_only["primary"][0]["novelty_score"] == baseline[0][
+        "novelty_score"
+    ]
+    assert score_only["native"][0] == {
+        "novelty_score": native_baseline[0]["novelty_score"],
+        "is_novel": native_baseline[0]["is_novel"],
+    }
+    with pytest.raises(ValueError, match="output_mode"):
+        native_scorer.score_patch_tokens(
+            primary_scorer.encode_patch_tokens([image]),
+            1.0,
+            output_mode="summary",
+        )
+
 
 def test_patch_scorer_rejects_index_tampered_after_manifest(tmp_path) -> None:
     import torch
@@ -677,6 +696,71 @@ def test_processed_window_ledger_is_exact_and_deduplicated(
         assert handle["processed_windows"].attrs["gps_semantics"] == (
             "analysis_window_start"
         )
+
+
+@pytest.mark.parametrize("fault_seam", ["_after_data_flush", "_after_commit_flush"])
+def test_production_batch_replay_is_crash_safe_and_idempotent(
+    monkeypatch,
+    tmp_path,
+    fault_seam,
+) -> None:
+    from src.pipeline_v2_production import production_writer
+
+    monkeypatch.setattr(production_writer, "record_environment", lambda *_a, **_k: None)
+    metadata = {"reference_md5": "test", "k": 2}
+    result = {
+        "novelty_score": np.float32(0.75).item(),
+        "mil_vector": np.arange(384, dtype=np.float32),
+        "top_k_indices": np.array([2, 7], dtype=np.int32),
+        "ablation_k_scores": {"k_2": 0.75},
+    }
+    writer = production_writer.ProductionWriter(tmp_path, "session", "H1")
+    writer.verify_and_init(metadata, np.array([0.1], dtype=np.float32), 0.5)
+
+    def fail() -> None:
+        raise RuntimeError("injected crash")
+
+    monkeypatch.setattr(writer, fault_seam, fail)
+    with pytest.raises(RuntimeError, match="injected crash"):
+        writer.append_batch([100.0, 132.0], [(132.0, result)])
+    assert writer.load_checkpoint() is None
+
+    recovered = production_writer.ProductionWriter(tmp_path, "session", "H1")
+    recovered.verify_and_init(metadata, np.array([0.1], dtype=np.float32), 0.5)
+    recovered.append_batch([100.0, 132.0], [(132.0, result)])
+    recovered.save_checkpoint(132)
+    # A second replay covers a crash after HDF5 commit but before checkpoint.
+    recovered.append_batch([100.0, 132.0], [(132.0, result)])
+
+    assert recovered.load_checkpoint() == 132
+    with h5py.File(recovered.hdf5_path, "r") as handle:
+        np.testing.assert_array_equal(
+            handle["processed_windows/gps_times"][:], [100.0, 132.0]
+        )
+        np.testing.assert_array_equal(handle["novelties/gps_times"][:], [132.0])
+        assert int(handle.attrs["writer_committed_processed_rows"]) == 2
+        assert int(handle.attrs["writer_committed_novelty_rows"]) == 1
+
+    divergent = dict(result)
+    divergent["novelty_score"] = 0.76
+    with pytest.raises(RuntimeError, match="Divergent novelty replay"):
+        recovered.append_batch([132.0], [(132.0, divergent)])
+
+
+def test_production_checkpoint_replace_is_atomic(monkeypatch, tmp_path) -> None:
+    from src.pipeline_v2_production import production_writer
+
+    monkeypatch.setattr(production_writer, "record_environment", lambda *_a, **_k: None)
+    writer = production_writer.ProductionWriter(tmp_path, "session", "L1")
+    writer.save_checkpoint(100)
+
+    def fail_replace(*_args, **_kwargs) -> None:
+        raise OSError("injected replace failure")
+
+    monkeypatch.setattr(production_writer.os, "replace", fail_replace)
+    with pytest.raises(OSError, match="replace failure"):
+        writer.save_checkpoint(132)
+    assert writer.load_checkpoint() == 100
 
 
 def test_raw_block_coverage_is_labelled_as_proxy(tmp_path) -> None:

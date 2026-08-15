@@ -224,9 +224,14 @@ class PatchScorer:
         patch_tokens: torch.Tensor,
         threshold: float,
         *,
+        output_mode: str = "full",
         timings: dict[str, float] | None = None,
     ) -> list[dict]:
         """Score a normalized token batch against this scorer's frozen index."""
+        if output_mode not in {"full", "score_only"}:
+            raise ValueError(
+                f"Unsupported output_mode {output_mode!r}; expected full or score_only"
+            )
         if patch_tokens.ndim != 3 or patch_tokens.shape[-1] != self.centroids.shape[-1]:
             raise ValueError(
                 "Expected patch tokens with shape (batch, patches, "
@@ -259,6 +264,23 @@ class PatchScorer:
         top_k_scores, top_k_indices = torch.topk(anomaly_scores, self.k, dim=-1) # (B, K)
         novelty_scores = top_k_scores.mean(dim=-1) # (B,)
         elapsed("index_scoring_s", started)
+
+        if output_mode == "score_only":
+            started = clock()
+            transfer_started = clock()
+            novelty_scores_np = novelty_scores.cpu().numpy().astype(np.float32)
+            cpu_transfer_s = clock() - transfer_started
+            results = [
+                {
+                    "novelty_score": float(score),
+                    "is_novel": float(score) > threshold,
+                }
+                for score in novelty_scores_np
+            ]
+            elapsed("result_materialization_s", started)
+            if timings is not None:
+                timings["cpu_transfer_s"] = timings.get("cpu_transfer_s", 0.0) + cpu_transfer_s
+            return results
         
         # 6. MIL Vector Extraction
         started = clock()
@@ -325,6 +347,7 @@ class PatchScorer:
         spectrogram_arrays: list[np.ndarray],
         targets: Mapping[str, tuple["PatchScorer", float]],
         *,
+        output_modes: Mapping[str, str] | None = None,
         timings: dict[str, float] | None = None,
     ) -> dict[str, list[dict]]:
         """Encode once, then score exactly against each named frozen index."""
@@ -355,7 +378,10 @@ class PatchScorer:
         for name, (scorer, threshold) in targets.items():
             target_timings: dict[str, float] | None = {} if timings is not None else None
             results[name] = scorer.score_patch_tokens(
-                patch_tokens, threshold, timings=target_timings
+                patch_tokens,
+                threshold,
+                output_mode=(output_modes or {}).get(name, "full"),
+                timings=target_timings,
             )
             if timings is not None and target_timings is not None:
                 timings.update(
