@@ -148,3 +148,18 @@ def test_declared_causal_epoch_with_missing_evidence_is_failure() -> None:
     status, detail, _ = _validate_causal_epochs(ROOT, epochs, representation)
     assert status == "FAIL"
     assert "lacks promotion evidence" in detail
+
+
+def test_historical_epochs_remain_open_without_unshipped_threshold(tmp_path) -> None:
+    epochs = json.loads(
+        (ROOT / "config/dante_light_epochs_v1.json").read_text(encoding="utf-8")
+    )
+    representation = RepresentationContract.from_reference_manifest(
+        ROOT / "config/reference_artifacts.json"
+    )
+    status, detail, verified = _validate_causal_epochs(
+        tmp_path, epochs, representation
+    )
+    assert status == "OPEN"
+    assert "H1, L1" in detail
+    assert verified == {}

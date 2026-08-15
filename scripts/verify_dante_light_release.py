@@ -197,6 +197,16 @@ def _validate_causal_epochs(
     verified: dict[str, Any] = {}
     missing: list[str] = []
     try:
+        for detector in ("H1", "L1"):
+            raw = epochs["epochs"][detector]
+            if raw.get("causal") is not True:
+                missing.append(detector)
+        if len(missing) == 2:
+            return (
+                "OPEN",
+                "causal promoted epochs missing for H1, L1",
+                verified,
+            )
         source = epochs["source_threshold_artifact"]
         source_path = _inside(root, source["path"])
         if not _is_sha256(source["sha256"]) or _sha256(source_path) != source["sha256"]:
@@ -204,7 +214,6 @@ def _validate_causal_epochs(
         for detector in ("H1", "L1"):
             raw = epochs["epochs"][detector]
             if raw.get("causal") is not True:
-                missing.append(detector)
                 continue
             evidence = raw.get("promotion_evidence")
             if evidence is None:
