@@ -31,6 +31,7 @@ from src.dante_light.executor import (
 )
 from src.dante_light.preprocessing import PreparedWindow, prepare_canonical_window
 from src.dante_light.review_queue import ReviewQueue
+from src.dante_light.sources.files import ReplayManifestSource
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -106,47 +107,8 @@ def load_replay_tasks(
     roles: set[str] | None = None,
     limit: int | None = None,
 ) -> tuple[dict[str, Any], list[WindowTask]]:
-    path = Path(path)
-    header = json.loads(path.read_text(encoding="utf-8"))
-    entries_path = ROOT / header["entries_path"]
-    if sha256_file(entries_path) != header["entries_file_sha256"]:
-        raise ContractError("DANTE-Light replay entry-file SHA256 mismatch")
-    entries = [
-        json.loads(line)
-        for line in entries_path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-    selected = [
-        entry for entry in entries if not roles or roles.intersection(entry["roles"])
-    ]
-    grouped: dict[str, dict[str, Any]] = {}
-    for entry in selected:
-        window = WindowIdentity.from_dict(entry["window"])
-        value = grouped.setdefault(
-            window.window_id,
-            {"window": window, "cases": [], "roles": set()},
-        )
-        if value["window"] != window:
-            raise ContractError(f"Conflicting replay identity {window.window_id}")
-        value["cases"].append(entry)
-        value["roles"].update(entry["roles"])
-    tasks = [
-        WindowTask(
-            value["window"],
-            {
-                "case_ids": sorted(entry["case_id"] for entry in value["cases"]),
-                "roles": sorted(value["roles"]),
-                "expected": [entry.get("expected", {}) for entry in value["cases"]],
-            },
-        )
-        for value in grouped.values()
-    ]
-    tasks.sort(key=lambda task: (task.window.detector, task.window.gps_start))
-    if limit is not None:
-        if limit <= 0:
-            raise ValueError("limit must be positive")
-        tasks = tasks[:limit]
-    return header, tasks
+    source = ReplayManifestSource(path, root=ROOT)
+    return source.header, source.tasks(roles=roles, limit=limit)
 
 
 class DanteLightRunner:

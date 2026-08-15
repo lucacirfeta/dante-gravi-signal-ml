@@ -13,7 +13,10 @@ detector-aware DSD, coincidence, PEM, or the offline paper artifacts.
 - Exact shared-encoder/native-score-only engine: opt-in; paired benchmarked.
 - Prospective shadow scoring: fail-closed because the shipped completed-O4a
   BGV3 epoch is non-causal.
-- Lossy prefilter, automatic online adaptation, public real-time alerts and
+- Cheap excess-energy features: implemented only as a `research_only` arm;
+  they are prohibited from routing scientific windows until promoted evidence
+  exists.
+- Lossy selection, automatic online adaptation, public real-time alerts and
   operational miss-rate claims: not enabled.
 
 The Light dispositions are `ESCALATE`, `AUDIT_SAMPLE`, `NOT_ESCALATED`, and
@@ -116,3 +119,27 @@ carry strain/image hashes, both exact scores, epoch/threshold, Top-68 patch
 evidence and MIL-vector hash. The downstream run must still perform the full
 detector-aware DSD and, where applicable, coincidence, catalog, PEM and human
 review. `NOT_ESCALATED` is never a substitute for offline `BACKGROUND`.
+
+## Research-only and future adapters
+
+`src/dante_light/prefilter.py` computes cheap deterministic excess-energy
+features, but its current contract cannot call `route()`. Promotion requires a
+temporally disjoint replay demonstrating robust-candidate retention, stratified
+known-glitch/injection non-inferiority with intervals, at least 50% fewer DINO
+calls, and an unbiased audit sample among rejected windows.
+
+`src/dante_light/epoch.py` rejects promotion unless calibration ends before the
+held-out evaluation begins, every required gate is `PASS`, and every evidence
+artifact hash matches. `src/dante_light/drift.py` can freeze adaptation on an
+alert or insufficient block; it never retrains or updates an index.
+
+The file/replay source and transport-neutral one-second packet assembler accept
+reordering and exact duplicates but fail closed on gaps, divergent duplicates,
+uncalibrated samples or missing CAT1. No authenticated IGWN Kafka adapter is
+claimed yet.
+
+`src/dante_light/aux_cache.py` is a content-addressed, provenance-preserving
+read-through cache primitive for auxiliary channels. It is not wired into the
+current PEM endpoint or synchronous Light path. A future authorised NDS2
+adapter must pass cold/warm equality and retain the exact detector, channel,
+GPS interval, sample rate and source in the cache key before adoption.
