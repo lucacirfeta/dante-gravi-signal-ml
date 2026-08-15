@@ -41,6 +41,16 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _source_sha256(path: Path) -> str:
+    normalized = (
+        path.read_text(encoding="utf-8")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .encode("utf-8")
+    )
+    return hashlib.sha256(normalized).hexdigest()
+
+
 def _is_sha256(value: Any) -> bool:
     return isinstance(value, str) and SHA256_RE.fullmatch(value.lower()) is not None
 
@@ -150,8 +160,10 @@ def _validate_benchmarks(
                 raise ValueError("paired primary Top-k evidence differs")
 
         for name in ("canonical", "shared"):
+            if payloads[name].get("source_hash_semantics") != "utf8_lf_v1":
+                raise ValueError(f"{name} source hash semantics are not portable")
             for relative, expected in payloads[name]["source_sha256"].items():
-                if _sha256(_inside(root, relative)) != expected:
+                if _source_sha256(_inside(root, relative)) != expected:
                     raise ValueError(f"{name} source SHA256 is stale: {relative}")
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
         return False, f"invalid benchmark evidence: {exc}"

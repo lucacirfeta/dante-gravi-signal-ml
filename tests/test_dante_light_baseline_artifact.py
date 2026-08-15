@@ -195,6 +195,11 @@ def test_l1_score_only_path_preserves_scalars_and_clears_adoption_gate() -> None
 
     assert control["engine"] == "canonical"
     assert shared["engine"] == "shared_encoder_score_only"
+    assert (
+        control["source_hash_semantics"]
+        == shared["source_hash_semantics"]
+        == "utf8_lf_v1"
+    )
     assert control["code_state"] == shared["code_state"]
     assert control["code_state"]["tracked_dirty"] is False
     assert control["selection"] == shared["selection"]

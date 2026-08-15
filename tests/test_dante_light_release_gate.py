@@ -4,6 +4,7 @@ import json
 
 from scripts.verify_dante_light_release import (
     ROOT,
+    _source_sha256,
     _validate_causal_epochs,
     _validate_prospective,
     _validate_public_bundle,
@@ -37,6 +38,14 @@ def test_release_gate_exposes_scope_for_every_gate() -> None:
         "public-replay",
         "operational",
     }
+
+
+def test_source_hash_is_stable_across_lf_and_crlf(tmp_path) -> None:
+    lf = tmp_path / "lf.py"
+    crlf = tmp_path / "crlf.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+    assert _source_sha256(lf) == _source_sha256(crlf)
 
 
 def test_public_bundle_requires_deposit_https_url_and_real_sha256() -> None:

@@ -66,7 +66,13 @@ def source_hashes() -> dict[str, str]:
         ROOT / "src/dante_light/contracts.py",
     )
     return {
-        path.relative_to(ROOT).as_posix(): sha256_file(path) for path in paths
+        path.relative_to(ROOT).as_posix(): hashlib.sha256(
+            path.read_text(encoding="utf-8")
+            .replace("\r\n", "\n")
+            .replace("\r", "\n")
+            .encode("utf-8")
+        ).hexdigest()
+        for path in paths
     }
 
 
@@ -549,6 +555,7 @@ def main() -> int:
         },
         "representation": contract.to_dict(),
         "source_sha256": source_hashes(),
+        "source_hash_semantics": "utf8_lf_v1",
         "code_state": git_state(),
         "environment": environment(primary.device),
         "selection": {
