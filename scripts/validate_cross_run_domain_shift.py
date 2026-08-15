@@ -33,9 +33,12 @@ LEGACY_V2_SOURCE_SHA256 = {
     "src/pipeline_v3_multiscale/norm_leakage/common.py": "ecc93a1de771c0810c0e4ebfea0e939a2a8760986a209862c00bf16e342ad9ad",
 }
 G0_LEGACY_EQUIVALENT_RUNTIME_SHA256 = {
-    "src/core/data_loader.py": "ce114c522002c380a24ef6d619c7597c2d1feffd383d2e9da1e378ddfb0b204f",
+    # UTF-8/LF-normalized source hashes.  The data loader includes the
+    # additive remote_only switch; its default=False path remains the legacy
+    # cache-producing path and is regression-tested separately.
+    "src/core/data_loader.py": "95058078a9155a3cc66866a42523cafe57f48b257d7efae5ec022f67f878026e",
     "src/core/model_loader.py": "831d871fc14bd71462e36024e7a21b89bb050861e2edc9a83f105243731f1ec9",
-    "src/core/preprocessor.py": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2",
+    "src/core/preprocessor.py": "3883cf80ab64f723faa3f97e23263323aa0d773dd33e13cb0164ead247d7ff2d",
     "src/pipeline_v3_multiscale/norm_leakage/common.py": "2baa97362564d02cf6fff6048abb4e8854116569dabc2f474e5bd6a730830725",
 }
 G0_DINOV2_CONTRACT = {
@@ -47,6 +50,17 @@ G0_DINOV2_CONTRACT = {
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def source_sha256(path: Path) -> str:
+    """Hash Python source portably while preserving binary artifact hashing."""
+    normalized = (
+        path.read_text(encoding="utf-8")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .encode("utf-8")
+    )
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def cache_identity(run: str, detector: str, n: int, seed: int) -> dict:
@@ -103,7 +117,7 @@ def legacy_v2_cache_identity(
 
 def legacy_v2_runtime_equivalence_is_valid() -> bool:
     observed = {
-        path: sha256(ROOT / path)
+        path: source_sha256(ROOT / path)
         for path in G0_LEGACY_EQUIVALENT_RUNTIME_SHA256
     }
     if observed != G0_LEGACY_EQUIVALENT_RUNTIME_SHA256:

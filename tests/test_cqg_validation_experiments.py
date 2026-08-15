@@ -130,6 +130,14 @@ def test_exact_legacy_domain_cache_is_compatible_but_mutation_is_not() -> None:
     )
 
 
+def test_legacy_runtime_source_hash_is_line_ending_portable(tmp_path) -> None:
+    lf = tmp_path / "source_lf.py"
+    crlf = tmp_path / "source_crlf.py"
+    lf.write_bytes(b"first\nsecond\n")
+    crlf.write_bytes(b"first\r\nsecond\r\n")
+    assert DOMAIN.source_sha256(lf) == DOMAIN.source_sha256(crlf)
+
+
 def test_compatible_cache_record_reuses_only_exact_legacy_cache(
     tmp_path: Path, monkeypatch
 ) -> None:
