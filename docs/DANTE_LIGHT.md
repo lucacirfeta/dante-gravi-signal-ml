@@ -157,13 +157,13 @@ python scripts/verify_dante_light_release.py --stage public-replay
 python scripts/verify_dante_light_release.py --stage operational
 ```
 
-At this development snapshot the first command passes. Publication of the
-reference bundle closes only the artifact-availability prerequisite. The
-`public-replay` stage additionally requires an exact, public-sources-only
-clean-clone result in
-`artifacts/dante_light/public_replay_validation_v1.json`; the operational stage
-also requires causal H1/L1 epochs and later-epoch evidence. The locked future
-operational protocol is in
+At the public-replay checkpoint, `development` and `public-replay` pass. The
+supporting clean-clone result is
+`artifacts/dante_light/public_replay_validation_v1.json`: it self-downloaded the
+GitHub asset, used GWOSC-only strain and whole-window CAT1, and obtained exact
+canonical/shared scores and dispositions with no drops or failures. The
+`operational` stage remains `NOT_READY` because it additionally requires causal
+H1/L1 epochs and later-epoch evidence. The locked future operational protocol is in
 `docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md`.
 
 ## Release-evidence commands

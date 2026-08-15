@@ -171,6 +171,9 @@ the separate
 [`dante_reference_artifacts_v1.zip`](https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/download/dante-reference-artifacts-v1/dante_reference_artifacts_v1.zip),
 published with SHA-256
 `651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63`.
+An independent clean HTTPS clone at commit `9669fab` self-downloaded and
+verified this asset, fetched GWOSC-only strain, and reproduced exact paired
+canonical/shared scores for the public replay gate.
 See [`docs/REPRODUCIBILITY_LEVELS.md`](docs/REPRODUCIBILITY_LEVELS.md).
 
 ## DANTE-Light (experimental, opt-in)

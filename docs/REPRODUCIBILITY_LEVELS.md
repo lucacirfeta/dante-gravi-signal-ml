@@ -38,7 +38,10 @@ The two existing software/evidence Zenodo records do not contain the NPZ
 dictionaries. The separate versioned GitHub release asset URL and SHA-256 are
 recorded in `config/reference_artifacts.json`. R2 is accepted only after the
 clean-clone runner self-downloads that asset and the public replay verifier
-passes. A maintainer can rebuild a candidate with:
+passes. This was completed at code commit
+`9669fab678ce08fd5eac818ea530cc1ba1591ae6`; the hashed supporting record is
+`artifacts/dante_light/public_replay_validation_v1.json`. A maintainer can
+rebuild a candidate with:
 
 ```bash
 python scripts/manage_reference_artifacts.py build-bundle

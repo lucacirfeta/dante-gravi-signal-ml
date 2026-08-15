@@ -1,0 +1,65 @@
+{
+  "artifacts": [
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/canonical/run_manifest.json",
+      "sha256": "83b53e568789561514d53321fc52c4f8433f62d43e103055a604c7bbb98a888b"
+    },
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/canonical/records.jsonl",
+      "sha256": "a6b568499960c16c215d497354ac61d21b409fe914edbc59ed3c28e4bdd6d3f7"
+    },
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/canonical/summary.json",
+      "sha256": "ebc08f3641007e41d7942b99ba94c03597622edfc9cc3b9834bb14c34a9b0514"
+    },
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/canonical/attempts.jsonl",
+      "sha256": "261b9c228a4b755347c2da90f011f919b526d7f13df8037aa5a79a9d18bee6d0"
+    },
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/shared_encoder_score_only/run_manifest.json",
+      "sha256": "b3a577ab068a77a1fae0ce3614730f8987ec957d15393bbd8cf95cd627dcf8b6"
+    },
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/shared_encoder_score_only/records.jsonl",
+      "sha256": "8ab66a524a3c1047a500c056e684b1d4fd88f2baf56874c3d6dd850f83f18b5b"
+    },
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/shared_encoder_score_only/summary.json",
+      "sha256": "6b0e682bd4f2410ffab9257c5cf41ff9c0941ba9a016969de243b062c00c2f4a"
+    },
+    {
+      "path": "artifacts/dante_light/clean_clone_run_v1/shared_encoder_score_only/attempts.jsonl",
+      "sha256": "760437c76c88d68dec290d802d17a0eb21ca40ec6afecdbed953fd28fac87168"
+    }
+  ],
+  "bundle_source": {
+    "download_verified": true,
+    "publication_status": "deposited",
+    "url": "https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/download/dante-reference-artifacts-v1/dante_reference_artifacts_v1.zip"
+  },
+  "checkout": {
+    "clean_clone": true,
+    "commit": "9669fab678ce08fd5eac818ea530cc1ba1591ae6",
+    "origin_url": "https://github.com/lucacirfeta/dante-gravi-signal-ml.git",
+    "tracked_dirty": false
+  },
+  "coverage": {
+    "drops": 0,
+    "failures": [],
+    "windows": 2
+  },
+  "exact_replay": {
+    "disposition_mismatches": 0,
+    "max_abs_score_delta": 0.0,
+    "score_atol": 2e-07
+  },
+  "mode": "clean_clone_public_replay",
+  "public_sources_only": true,
+  "reference_bundle_sha256": "651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63",
+  "replay_entries_file_sha256": "9f879beb835a3640e81e8f022bc244d0c5247a4acf928756d004878f844883f5",
+  "replay_manifest_sha256": "106eec94e83ca3c7208e9cc100f795f6ae13246e747ed112620d70910b43b1ea",
+  "schema_version": 1,
+  "status": "complete",
+  "strain_source": "gwosc-only"
+}

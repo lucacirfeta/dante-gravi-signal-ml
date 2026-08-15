@@ -1,0 +1,105 @@
+{
+  "cat1_provenance": "GWOSC CBC_CAT1 whole-window containment",
+  "epochs": {
+    "epochs": {
+      "H1": {
+        "calibration_ledger_sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588",
+        "causal": false,
+        "cutoff_gps": 1389456018.0,
+        "detector": "H1",
+        "epoch_id": "o4a-bgv3-historical-h1",
+        "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+        "run": "O4A",
+        "schema_version": 1,
+        "threshold": 0.16157861188054093,
+        "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+      },
+      "L1": {
+        "calibration_ledger_sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398",
+        "causal": false,
+        "cutoff_gps": 1389456018.0,
+        "detector": "L1",
+        "epoch_id": "o4a-bgv3-historical-l1",
+        "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+        "run": "O4A",
+        "schema_version": 1,
+        "threshold": 0.1760626833140853,
+        "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+      }
+    },
+    "schema_version": 1,
+    "source_threshold_artifact": {
+      "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+      "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    },
+    "status": "historical_replay_only"
+  },
+  "limit": 2,
+  "local_only": false,
+  "manifest_sha256": "5ec20c3b7bb1ee93d56523f0395b3ec28d737ffa725fa4f68106fd8b23c2ea55",
+  "mode": "historical_replay",
+  "pre_registered_latency_objective_s": null,
+  "prefilter": "none",
+  "prospective": false,
+  "replay_entries_file_sha256": "9f879beb835a3640e81e8f022bc244d0c5247a4acf928756d004878f844883f5",
+  "replay_manifest_sha256": "106eec94e83ca3c7208e9cc100f795f6ae13246e747ed112620d70910b43b1ea",
+  "representation": {
+    "analysis_duration_s": 32.0,
+    "colormap": "cividis",
+    "contract_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+    "encoder_input_size": [
+      518,
+      518
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "model_artifact_id": "dinov2_vits14_reg",
+    "model_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "model_source_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+    "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "primary_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "query_qrange": [
+      4,
+      64
+    ],
+    "sample_rate_hz": 4096,
+    "schema_version": 1,
+    "top_k": 68,
+    "variant": "idxq4-64_queryq4-64",
+    "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+    "whitening_pad_s": 4.0
+  },
+  "roles": [
+    "background_stratified"
+  ],
+  "runtime_provenance": {
+    "code_state": {
+      "branch": "codex/dante-light",
+      "commit": "9669fab678ce08fd5eac818ea530cc1ba1591ae6",
+      "tracked_dirty": false
+    },
+    "environment": {
+      "platform": "Windows-10-10.0.26200-SP0",
+      "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+      "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]"
+    },
+    "source_hash_semantics": "utf8_lf_v1",
+    "source_sha256": {
+      "src/core/patch_scorer.py": "30ab4b53058572c445427b24d92e23c58a4208c4bfb396ba3efe6cf4c891f1df",
+      "src/dante_light/executor.py": "c7e648d1657ab841b31ddfaf4910a6d26e254d094036586e9b40c27c56ed2a8d",
+      "src/dante_light/preprocessing.py": "65588a3f2a1c48e5f1342186c113f729a1d31be87757ad98ff245a4a942611f7",
+      "src/dante_light/review_queue.py": "5c0c3f2c21ff0d7fcf2e9e81c6667dbd397d62a8b4f4ebd9b119f8c53a93666e",
+      "src/dante_light/runner.py": "83bf6db747796d1b4ebcb8247f890243df9ed137e90aa16419b941fde15f91ce"
+    }
+  },
+  "schema_version": 1,
+  "scientific_engine": "canonical",
+  "strain_source": "gwosc-only"
+}
