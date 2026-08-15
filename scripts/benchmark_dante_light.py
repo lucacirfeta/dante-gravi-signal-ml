@@ -40,6 +40,7 @@ PRIMARY_INDEX = ROOT / "data" / "reference" / "patch_compressed_index_o3b.npz"
 NATIVE_INDEX = (
     ROOT / "data" / "reference" / "patch_compressed_index_o4a_q4-64_ex.npz"
 )
+GOLDEN_SCORE_ATOL = 2.0e-7
 
 
 def percentile_summary(values: list[float]) -> dict[str, float]:
@@ -461,6 +462,18 @@ def main() -> int:
         raise RuntimeError(
             f"repeat numerical mismatch: max score delta {numerical_max_delta}"
         )
+    expected_deltas = [
+        float(item["expected_abs_delta"])
+        for repeat in repeat_results
+        for item in repeat
+        if item["expected_abs_delta"] is not None
+    ]
+    golden_expected_max_delta = max(expected_deltas, default=0.0)
+    if golden_expected_max_delta > GOLDEN_SCORE_ATOL:
+        raise RuntimeError(
+            "frozen-score mismatch: max absolute delta "
+            f"{golden_expected_max_delta} > {GOLDEN_SCORE_ATOL}"
+        )
 
     summaries = {name: percentile_summary(values) for name, values in stage_values.items()}
     end_to_end_total = summaries["end_to_end_s"]["total_s"]
@@ -504,7 +517,14 @@ def main() -> int:
         },
         "resources": {"peak_rss_bytes": peak_rss, "peak_vram_bytes": peak_vram},
         "numerical_repeat_max_abs_delta": numerical_max_delta,
+        "golden_score_atol": GOLDEN_SCORE_ATOL,
+        "golden_expected_max_abs_delta": golden_expected_max_delta,
         "throughput_windows_per_s": measured_windows / end_to_end_total,
+        "timing_semantics": (
+            "Stage fractions are relative to end-to-end time. score_total includes "
+            "its transform/transfer/forward/scoring/materialization/cleanup children; "
+            "these nested fractions are not additive."
+        ),
         "stage_timings": summaries,
         "results_jsonl": {
             "path": results_path.relative_to(ROOT).as_posix(),

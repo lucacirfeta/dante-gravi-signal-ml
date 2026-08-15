@@ -4,7 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from scripts.benchmark_dante_light import percentile_summary, select_cases
+from scripts.benchmark_dante_light import (
+    GOLDEN_SCORE_ATOL,
+    percentile_summary,
+    select_cases,
+)
 from src.dante_light.contracts import WindowIdentity, canonical_json_sha256
 
 
@@ -120,3 +124,4 @@ def test_benchmark_percentile_summary_is_complete() -> None:
     assert summary["p50_s"] == 2.5
     assert summary["p95_s"] >= summary["p50_s"]
     assert summary["p99_s"] >= summary["p95_s"]
+    assert GOLDEN_SCORE_ATOL == 2.0e-7
