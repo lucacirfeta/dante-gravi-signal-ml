@@ -85,6 +85,8 @@ def test_bounded_executor_preserves_order_and_never_drops_under_backpressure() -
     assert summary.deferred == 0
     assert summary.max_preprocess_in_flight <= 6
     assert summary.max_pending_writes <= 2
+    assert len(summary.latency_s) == summary.written
+    assert all(latency > 0 for latency in summary.latency_s)
 
 
 def test_known_and_unknown_preprocess_failures_are_scoreless_defer() -> None:
@@ -116,6 +118,7 @@ def test_known_and_unknown_preprocess_failures_are_scoreless_defer() -> None:
     assert by_gps[1003].scores == by_gps[1005].scores == ()
     assert summary.written == 8
     assert summary.deferred == 2
+    assert len(summary.latency_s) == 8
     assert {failure.stage for failure in summary.failures} == {
         "preflight",
         "preprocess",
@@ -139,6 +142,7 @@ def test_scoring_failure_defers_the_whole_batch_without_loss() -> None:
     )
     summary = executor.run(tasks(5))
     assert summary.written == summary.deferred == 5
+    assert len(summary.latency_s) == 5
     assert all(record.defer_reason is FailClosedReason.INTERNAL_ERROR for record in written)
     assert all(record.scores == () for record in written)
     assert {failure.stage for failure in summary.failures} == {"score"}

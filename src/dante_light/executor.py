@@ -60,6 +60,7 @@ class ExecutorSummary:
     max_preprocess_in_flight: int
     max_pending_writes: int
     elapsed_s: float
+    latency_s: tuple[float, ...] = field(default_factory=tuple)
     failures: tuple[ExecutorFailure, ...] = field(default_factory=tuple)
 
     @property
@@ -123,7 +124,11 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
         written_batches = 0
         peak_preprocess = 0
         peak_writes = 0
-        pending_writes: deque[tuple[list[LightRecord], Future[None]]] = deque()
+        pending_writes: deque[
+            tuple[list[LightRecord], tuple[int, ...], Future[float]]
+        ] = deque()
+        submitted_at: dict[int, float] = {}
+        latency_by_sequence: dict[int, float] = {}
 
         def failure(sequence: int, task: WindowTask, stage: str, exc: Exception) -> None:
             failures.append(
@@ -138,9 +143,9 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
 
         def finish_oldest_write() -> None:
             nonlocal written, written_batches
-            records, future = pending_writes.popleft()
+            records, sequences, future = pending_writes.popleft()
             try:
-                future.result()
+                completed_at = future.result()
             except Exception as exc:
                 raise PipelineWriteError(
                     "DANTE-Light durable writer failed; retry from the last "
@@ -148,6 +153,8 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
                 ) from exc
             written += len(records)
             written_batches += 1
+            for sequence in sequences:
+                latency_by_sequence[sequence] = completed_at - submitted_at[sequence]
 
         with ThreadPoolExecutor(
             max_workers=self.workers, thread_name_prefix="dante-light-preprocess"
@@ -163,20 +170,29 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
                     next_submit < len(ordered)
                     and len(futures) < self.preprocess_limit
                 ):
+                    submitted_at[next_submit] = time.perf_counter()
                     futures[next_submit] = preprocess_pool.submit(
                         self.preprocess, ordered[next_submit]
                     )
                     next_submit += 1
                     peak_preprocess = max(peak_preprocess, len(futures))
 
-            def submit_write(records: list[LightRecord]) -> None:
+            def durable_write(records: list[LightRecord]) -> float:
+                self.write_batch(records)
+                return time.perf_counter()
+
+            def submit_write(
+                records: list[LightRecord], sequences: tuple[int, ...]
+            ) -> None:
                 nonlocal peak_writes
                 if not records:
                     return
+                if len(records) != len(sequences):
+                    raise RuntimeError("write batch sequence accounting mismatch")
                 while len(pending_writes) >= self.write_limit:
                     finish_oldest_write()
                 pending_writes.append(
-                    (records, writer_pool.submit(self.write_batch, records))
+                    (records, sequences, writer_pool.submit(durable_write, records))
                 )
                 peak_writes = max(peak_writes, len(pending_writes))
 
@@ -208,7 +224,7 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
                         )
                     deferred += len(records)
                 scored_batches += 1
-                submit_write(records)
+                submit_write(records, tuple(sequence for sequence, _, _ in batch))
 
             fill_preprocess()
             ready: list[tuple[int, WindowTask, PreparedT]] = []
@@ -220,7 +236,9 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
                     score_and_submit(ready)
                     ready = []
                     failure(sequence, task, "preflight", exc)
-                    submit_write([self.defer_record(task.window, exc.reason)])
+                    submit_write(
+                        [self.defer_record(task.window, exc.reason)], (sequence,)
+                    )
                     deferred += 1
                 except Exception as exc:
                     score_and_submit(ready)
@@ -231,7 +249,8 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
                             self.defer_record(
                                 task.window, FailClosedReason.INTERNAL_ERROR
                             )
-                        ]
+                        ],
+                        (sequence,),
                     )
                     deferred += 1
                 else:
@@ -253,6 +272,9 @@ class BoundedPipelineExecutor(Generic[PreparedT]):
             max_preprocess_in_flight=peak_preprocess,
             max_pending_writes=peak_writes,
             elapsed_s=time.perf_counter() - started,
+            latency_s=tuple(
+                latency_by_sequence[sequence] for sequence in range(len(ordered))
+            ),
             failures=tuple(failures),
         )
         if summary.drops:
