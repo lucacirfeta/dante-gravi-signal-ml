@@ -161,6 +161,7 @@ class DanteLightRunner:
         cat1_active: Callable[[WindowIdentity], bool | None],
         prepare: Callable[[WindowTask], PreparedWindow],
         prospective: bool,
+        engine: str = "canonical",
         workers: int = 2,
         batch_size: int = 8,
         max_preprocess_in_flight: int = 16,
@@ -178,6 +179,9 @@ class DanteLightRunner:
         self.cat1_active = cat1_active
         self.prepare_window = prepare
         self.prospective = prospective
+        if engine not in {"canonical", "shared_encoder_score_only"}:
+            raise ValueError(f"Unsupported DANTE-Light engine: {engine}")
+        self.engine = engine
         self.evidence: dict[str, dict[str, Any]] = {}
         self.executor = BoundedPipelineExecutor(
             preprocess=self._preprocess,
@@ -225,11 +229,17 @@ class DanteLightRunner:
         self, batch: list[tuple[WindowTask, PreparedWindow]]
     ) -> list[LightRecord]:
         images = [prepared.image for _, prepared in batch]
-        scored = self.primary.score_multi_index(
-            images,
-            {"primary": (self.primary, 1.0), "native": (self.native, 1.0)},
-            output_modes={"native": "score_only"},
-        )
+        if self.engine == "canonical":
+            scored = {
+                "primary": self.primary.score_spectrogram(images, threshold=1.0),
+                "native": self.native.score_spectrogram(images, threshold=1.0),
+            }
+        else:
+            scored = self.primary.score_multi_index(
+                images,
+                {"primary": (self.primary, 1.0), "native": (self.native, 1.0)},
+                output_modes={"native": "score_only"},
+            )
         records = []
         for index, (task, prepared) in enumerate(batch):
             epoch = self._epoch(task.window)
@@ -298,7 +308,13 @@ class DanteLightRunner:
         executor_payload["drops"] = summary.drops
         output = {
             "schema_version": 1,
-            "status": "complete" if summary.drops == 0 else "failed",
+            "status": (
+                "failed"
+                if summary.drops
+                else "complete_with_defer"
+                if summary.deferred
+                else "complete"
+            ),
             "executor": executor_payload,
             "records_total": len(self.queue.completed_window_ids),
             "dispositions": disposition_counts,
@@ -355,12 +371,15 @@ def run_replay(args) -> dict[str, Any]:
 
     primary = PatchScorer(PRIMARY_INDEX, device=args.device, k=68)
     native = PatchScorer(
-        NATIVE_INDEX, device=args.device, k=68, model=primary.model
+        NATIVE_INDEX,
+        device=args.device,
+        k=68,
+        model=(primary.model if args.engine == "shared_encoder_score_only" else None),
     )
     run_manifest = {
         "schema_version": 1,
         "mode": "shadow" if args.prospective else "historical_replay",
-        "scientific_engine": "shared_encoder_score_only",
+        "scientific_engine": args.engine,
         "prefilter": "none",
         "prospective": bool(args.prospective),
         "representation": representation.to_dict(),
@@ -385,6 +404,7 @@ def run_replay(args) -> dict[str, Any]:
             task.window, local_only=args.local_only
         ),
         prospective=args.prospective,
+        engine=args.engine,
         workers=args.workers,
         batch_size=args.batch_size,
         max_preprocess_in_flight=args.max_in_flight,

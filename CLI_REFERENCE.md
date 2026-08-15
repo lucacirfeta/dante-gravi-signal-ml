@@ -106,6 +106,53 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
 
 ---
 
+## DANTE-Light opt-in commands
+
+### `dante-light-replay`
+
+Runs a finite, exact Q64 replay into a separate schema-v1 evidence queue. The
+default `canonical` engine is the permanent reference. The opt-in
+`shared_encoder_score_only` engine computes both frozen index scores from one
+DINOv2 forward and preserves the canonical numerical contract.
+
+```bash
+python main.py dante-light-replay \
+  --output-dir runs/dante_light/example \
+  --role background_stratified --limit 8 \
+  --engine canonical --cat1-mode gwosc
+```
+
+- `--output-dir` is required and cannot resume with divergent provenance.
+- `--role` may be repeated; default: `background_stratified`.
+- `--engine`: `canonical` (default) or `shared_encoder_score_only`.
+- `--cat1-mode`: `gwosc` (default) or the explicit historical-only
+  `frozen-replay-attestation`.
+- `--local-only` forbids network strain fallback.
+- `--workers`, `--batch-size`, `--max-in-flight`, and
+  `--max-pending-writes` bound concurrency and memory.
+
+Outputs are `run_manifest.json`, append-only `records.jsonl`, append-only
+`attempts.jsonl`, and `summary.json`. An identical rerun is idempotent.
+`NOT_ESCALATED` is triage, not the offline `BACKGROUND` disposition.
+
+### `dante-light-shadow`
+
+Uses the exact scorer but enforces prospective epoch causality. The epoch in
+`config/dante_light_epochs_v1.json` uses completed O4a and declares
+`causal=false`; current attempts therefore produce
+`complete_with_defer/NON_CAUSAL_EPOCH`. A future causal epoch must use only
+earlier detector-specific calibration data and pass promotion gates.
+
+```bash
+python main.py dante-light-shadow \
+  --output-dir runs/dante_light/shadow_test --limit 1
+```
+
+See `docs/DANTE_LIGHT.md` for the runnable CPU/GPU tutorial and failure
+meanings.
+
+---
+
 ## Execution Order
 
 There are two tiers, and they run in this order. The **core discovery chain**
@@ -696,6 +743,11 @@ python main.py calibrate --method loglikelihood --reference data/reference/indom
 - `--output`: Destination JSON path.
 
 ### 22. `scan-live`
+> **Legacy V1 / non-production.** This command uses the historical class-
+> reference scanner and its separate thresholds. It is not the validated V2
+> patch-level statistic, not DANTE-Light, and not a scientific low-latency
+> alert path.
+
 Autopilot scanner with producer-consumer architecture. Works in 4096s blocks where a producer downloads the 4096s HDF5 to `tmp/`, internally processes 128 segments of 32s each (`whiten -> bandpass -> q-transform`), and the consumer evaluates them by classifying each spectrogram as KNOWN/AMBIGUOUS/NOVEL using DINOv2 + per-class thresholds. Deletes temporary HDF5s and PNGs in real time except for NOVELs.
 
 * **Under the Hood (Processing Details):**

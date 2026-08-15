@@ -1,4 +1,8 @@
-"""Autopilot live scanner — classify spectrograms as KNOWN/AMBIGUOUS/NOVEL.
+"""Legacy V1 autopilot scanner — exploratory KNOWN/AMBIGUOUS/NOVEL labels.
+
+This is not the validated V2 patch-level scorer, not DANTE-Light, and not a
+scientific low-latency alert path. It is retained only for backward-compatible
+exploration.
 
 Implements a producer-consumer architecture using :class:`queue.Queue`:
 

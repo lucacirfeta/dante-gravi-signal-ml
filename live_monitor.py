@@ -79,10 +79,10 @@ def main():
                     r'  Dense islands = new repeating glitches.',
                     r'',
                     r'• Color (Novelty Score):',
-                    r'  Yellow = Extreme Novelty (Alien signal)',
+                    r'  Yellow = Highest novelty (review priority)',
                     r'  Purple = Borderline Anomaly (Near noise)',
                     r'',
-                    r'Powered by Real-Time SWMR HDF5 Streaming'
+                    r'Offline SWMR visualization; not an alert stream'
                 ))
                 props = dict(boxstyle='round,pad=1', facecolor='#111111', alpha=0.8, edgecolor='gray')
                 

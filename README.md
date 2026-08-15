@@ -171,6 +171,46 @@ the separate `dante_reference_artifacts_v1.zip`; its deposit is still pending
 and this repository deliberately reports that R2 clean-clone gate as open.
 See [`docs/REPRODUCIBILITY_LEVELS.md`](docs/REPRODUCIBILITY_LEVELS.md).
 
+## DANTE-Light (experimental, opt-in)
+
+DANTE-Light is an additive exact-replay and detector-characterisation triage
+layer. It does not replace the validated offline pipeline and cannot emit the
+offline `ROBUST`, `AMBIGUOUS`, or `BACKGROUND` dispositions. Its vocabulary is
+limited to `ESCALATE`, `AUDIT_SAMPLE`, `NOT_ESCALATED`, and scoreless `DEFER`.
+
+The canonical reference engine remains the default:
+
+```bash
+python main.py dante-light-replay \
+  --output-dir runs/dante_light/tutorial \
+  --role background_stratified --limit 8 \
+  --engine canonical --cat1-mode gwosc
+```
+
+The exact shared-encoder engine is explicitly opt-in:
+
+```bash
+python main.py dante-light-replay \
+  --output-dir runs/dante_light/tutorial_fast \
+  --role background_stratified --limit 8 \
+  --engine shared_encoder_score_only --cat1-mode gwosc
+```
+
+On the frozen paired RTX 5070 benchmark it increased throughput by about 11.6%
+while preserving primary/native scores; this is a host-specific engineering
+measurement, not a universal speed claim. Every run writes a separate
+`run_manifest.json`, append-only `records.jsonl`, `attempts.jsonl`, and
+`summary.json`. Repeating the same command resumes without duplicate window
+identities; changing code, representation, epochs, selection, or CAT1 mode
+requires a new output directory.
+
+The shipped O4a BGV3 epoch is explicitly historical and non-causal. Therefore
+`dante-light-shadow` produces `DEFER/NON_CAUSAL_EPOCH` until a detector-specific
+past-only epoch is independently promoted. `NOT_ESCALATED` is a triage outcome,
+never a physical background classification. See
+[`docs/DANTE_LIGHT.md`](docs/DANTE_LIGHT.md) for installation, CPU/GPU replay,
+failure meanings, resume, artifacts, and escalation to the full pipeline.
+
 ## 📊 Key Results
 *Note: All empirical claims are strictly bounded by the conditions under which they were measured.*
 
@@ -212,7 +252,7 @@ Every experimentally-validated invariant of the pipeline is protected by a regre
 - **Unsafe PEM channels:** `PEM-EX_VMON` / `PEM-EY_MAINSMON` (23 % empirical FPR on time-shifted background) are excluded from production `AUX_CHANNELS` and guarded by test; PEM skips are always logged, never silent.
 
 ## 🛑 Limitations
-1. **Computational Bottleneck:** The $Q$-transform and DINOv2 patch extraction are computationally intensive. DANTE operates strictly offline/high-latency and is **not** capable of real-time, low-latency multi-messenger alerting.
+1. **Computational Bottleneck:** The $Q$-transform and data access dominate the current exact replay. DANTE-Light is an experimental nearline/shadow engineering path, not a validated real-time multi-messenger alert system.
 2. **Frequency Domain Truncation:** 2048 Hz is requested, but GWpy clamps the
    realized upper Q-transform axis to about 1291.05 Hz for the production
    32-second, 4096-Hz, Q=[4,64] configuration.

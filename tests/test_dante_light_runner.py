@@ -43,6 +43,23 @@ class FakeScorer:
             native.append({"novelty_score": score, "is_novel": score > 1.0})
         return {"primary": primary, "native": native}
 
+    def score_spectrogram(self, images, threshold):
+        assert threshold == 1.0
+        output = []
+        for image in images:
+            score = float(np.asarray(image, dtype=np.float32).mean())
+            if self.reference_sha256 == REPRESENTATION.primary_index_sha256:
+                score += 0.1
+            output.append(
+                {
+                    "novelty_score": score,
+                    "is_novel": score > threshold,
+                    "top_k_indices": np.array([1, 3], dtype=np.int32),
+                    "mil_vector": np.ones(384, dtype=np.float32),
+                }
+            )
+        return output
+
 
 def epoch(detector: str, *, causal: bool = False) -> CalibrationEpochContract:
     return CalibrationEpochContract(
@@ -74,7 +91,7 @@ def prepared(task: WindowTask) -> PreparedWindow:
     return PreparedWindow(image, digest, digest, {"fixture_s": 0.0})
 
 
-def make_runner(tmp_path, *, prospective: bool = False, cat1=None):
+def make_runner(tmp_path, *, prospective: bool = False, cat1=None, engine="shared_encoder_score_only"):
     primary = FakeScorer(REPRESENTATION.primary_index_sha256)
     native = FakeScorer(REPRESENTATION.native_index_sha256)
     queue = ReviewQueue(
@@ -94,6 +111,7 @@ def make_runner(tmp_path, *, prospective: bool = False, cat1=None):
         cat1_active=cat1 or (lambda _window: True),
         prepare=prepared,
         prospective=prospective,
+        engine=engine,
         workers=2,
         batch_size=2,
         max_preprocess_in_flight=4,
@@ -124,9 +142,17 @@ def test_exact_runner_writes_traceable_records_and_resumes(tmp_path) -> None:
     assert len((tmp_path / "attempts.jsonl").read_text(encoding="utf-8").splitlines()) == 2
 
 
+def test_canonical_reference_engine_produces_same_light_dispositions(tmp_path) -> None:
+    runner = make_runner(tmp_path, engine="canonical")
+    summary = runner.run(make_tasks())
+    assert summary["status"] == "complete"
+    assert summary["executor"]["written"] == 6
+
+
 def test_prospective_mode_rejects_noncausal_historical_epoch(tmp_path) -> None:
     runner = make_runner(tmp_path, prospective=True)
     summary = runner.run(make_tasks())
+    assert summary["status"] == "complete_with_defer"
     assert summary["executor"]["deferred"] == 6
     assert summary["dispositions"] == {LightDisposition.DEFER.value: 6}
     assert "NON_CAUSAL_EPOCH" in runner.queue.records_path.read_text(encoding="utf-8")
@@ -185,6 +211,7 @@ def test_public_cli_keeps_light_opt_in_and_output_separate() -> None:
     )
     assert replay.func is main.cmd_dante_light_replay
     assert replay.limit == 8
+    assert replay.engine == "canonical"
     assert replay.cat1_mode == "gwosc"
     assert replay.output_dir.as_posix() == "runs/dante_light/test"
     shadow = parser.parse_args(

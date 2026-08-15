@@ -2380,6 +2380,11 @@ def cmd_scan_live(args: argparse.Namespace) -> None:
     """Run the autopilot live scanner."""
     from src.pipeline_v1_legacy.scan_live import run_scan_live
 
+    logger.warning(
+        "scan-live is a frozen V1 exploratory command, not the validated V2 "
+        "pipeline and not DANTE-Light"
+    )
+
     run = _resolve_run(args)
     session_id = getattr(args, "session_id", None)
     hours = getattr(args, "hours", None)
@@ -3568,6 +3573,12 @@ def build_parser() -> argparse.ArgumentParser:
         command.add_argument("--role", action="append", default=None)
         command.add_argument("--limit", type=int, default=8)
         command.add_argument("--device", default=None)
+        command.add_argument(
+            "--engine",
+            choices=("canonical", "shared_encoder_score_only"),
+            default="canonical",
+            help="canonical is the permanent reference; the exact optimized engine is opt-in.",
+        )
         command.add_argument("--workers", type=int, default=2)
         command.add_argument("--batch-size", type=int, default=8)
         command.add_argument("--max-in-flight", type=int, default=16)
