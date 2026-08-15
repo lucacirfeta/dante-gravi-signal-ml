@@ -338,6 +338,8 @@ paper
 skills-lock.json
 .github
 tests/test_review.md
+benchmarks/*smoke*.json
+benchmarks/*smoke*.jsonl
 adapters
 GSD-STYLE.md
 model_capabilities.yaml
