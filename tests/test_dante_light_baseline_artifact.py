@@ -12,6 +12,12 @@ RESULTS = ROOT / "benchmarks" / "dante_light_l0_baseline.jsonl"
 MANIFEST = ROOT / "config" / "dante_light_replay_v1.json"
 L1_CONTROL = ROOT / "benchmarks" / "dante_light_l1_canonical_control.json"
 L1_SHARED = ROOT / "benchmarks" / "dante_light_l1_shared_encoder.json"
+L1_SCORE_ONLY_CONTROL = (
+    ROOT / "benchmarks" / "dante_light_l1_score_only_canonical_control.json"
+)
+L1_SCORE_ONLY_SHARED = (
+    ROOT / "benchmarks" / "dante_light_l1_score_only_shared.json"
+)
 
 
 def _load_jsonl(path: Path) -> list[dict]:
@@ -179,3 +185,43 @@ def test_l1_shared_encoder_is_exact_and_meets_frozen_adoption_gate() -> None:
     assert shared["resources"]["peak_rss_bytes"] <= control["resources"][
         "peak_rss_bytes"
     ]
+
+
+def test_l1_score_only_path_preserves_scalars_and_clears_adoption_gate() -> None:
+    control = json.loads(L1_SCORE_ONLY_CONTROL.read_text(encoding="utf-8"))
+    shared = json.loads(L1_SCORE_ONLY_SHARED.read_text(encoding="utf-8"))
+    control_rows = _load_jsonl(L1_SCORE_ONLY_CONTROL.with_suffix(".jsonl"))
+    shared_rows = _load_jsonl(L1_SCORE_ONLY_SHARED.with_suffix(".jsonl"))
+
+    assert control["engine"] == "canonical"
+    assert shared["engine"] == "shared_encoder_score_only"
+    assert control["code_state"] == shared["code_state"]
+    assert control["code_state"]["tracked_dirty"] is False
+    assert control["selection"] == shared["selection"]
+    assert control["coverage"] == shared["coverage"]
+    assert control["coverage"]["failures"] == []
+    assert control["coverage"]["drops"] == 0
+
+    scalar_fields = (
+        "case_id",
+        "expected_native_score",
+        "input_sha256",
+        "native_score",
+        "phase",
+        "primary_score",
+        "primary_top_k_sha256",
+        "repeat",
+        "window_id",
+    )
+    assert len(control_rows) == len(shared_rows) == 17
+    for expected, actual in zip(control_rows, shared_rows, strict=True):
+        assert all(expected[field] == actual[field] for field in scalar_fields)
+        assert expected["native_top_k_sha256"] is not None
+        assert actual["native_top_k_sha256"] is None
+
+    speedup = shared["throughput_windows_per_s"] / control[
+        "throughput_windows_per_s"
+    ]
+    assert speedup >= 1.10
+    assert shared["numerical_repeat_max_abs_delta"] <= 1.0e-7
+    assert shared["golden_expected_max_abs_delta"] <= shared["golden_score_atol"]

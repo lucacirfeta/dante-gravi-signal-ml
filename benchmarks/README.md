@@ -58,3 +58,11 @@ within the frozen score tolerance.
 This result clears the predeclared 10% engineering adoption gate on the
 recorded host. It does not imply an 11.3% gain on every GPU or storage system.
 The shared path remains opt-in until the later shadow and packaging gates pass.
+
+The production-oriented score-only pair repeats the comparison on commit
+`35f9b40`: the canonical control achieved 1.1595 windows/s and
+`shared_encoder_score_only` achieved 1.2934 windows/s, a ratio of 1.1155. The
+native scalar scores remain exactly equal; the score-only path intentionally
+does not materialise native top-k indices or MIL vectors. Primary evidence is
+still fully materialised, and the exact full-output shared benchmark above
+independently proves native top-k equivalence.
