@@ -119,7 +119,7 @@ DINOv2 forward and preserves the canonical numerical contract.
 python main.py dante-light-replay \
   --output-dir runs/dante_light/example \
   --role background_stratified --limit 8 \
-  --engine canonical --cat1-mode gwosc
+  --engine canonical --cat1-mode gwosc --strain-source gwosc-only
 ```
 
 - `--output-dir` is required and cannot resume with divergent provenance.
@@ -127,7 +127,11 @@ python main.py dante-light-replay \
 - `--engine`: `canonical` (default) or `shared_encoder_score_only`.
 - `--cat1-mode`: `gwosc` (default) or the explicit historical-only
   `frozen-replay-attestation`.
-- `--local-only` forbids network strain fallback.
+- `--strain-source`: `auto` (default), `local-only`, or `gwosc-only`.
+  `gwosc-only` bypasses matching local mirrors and is required for public
+  clean-clone evidence.
+- `--local-only` is a compatibility alias for `--strain-source local-only` and
+  cannot be combined with an explicit `--strain-source`.
 - `--workers`, `--batch-size`, `--max-in-flight`, and
   `--max-pending-writes` bound concurrency and memory.
 
@@ -148,8 +152,8 @@ python main.py dante-light-shadow \
   --output-dir runs/dante_light/shadow_test --limit 1
 ```
 
-See `docs/DANTE_LIGHT.md` for the runnable CPU/GPU tutorial and failure
-meanings.
+See `docs/DANTE_LIGHT.md` for the runnable CPU/GPU tutorial, failure meanings,
+clean-clone replay, causal-epoch promotion, and prospective-evidence commands.
 
 ---
 

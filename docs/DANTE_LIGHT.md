@@ -50,7 +50,8 @@ Public-strain/CAT1 mode (network access required):
 python main.py dante-light-replay \
   --output-dir runs/dante_light/public_example \
   --role background_stratified --limit 2 \
-  --device cpu --engine canonical --cat1-mode gwosc
+  --device cpu --engine canonical --cat1-mode gwosc \
+  --strain-source gwosc-only
 ```
 
 GPU exact optimized mode:
@@ -59,10 +60,14 @@ GPU exact optimized mode:
 python main.py dante-light-replay \
   --output-dir runs/dante_light/gpu_example \
   --role background_stratified --limit 8 \
-  --device cuda --engine shared_encoder_score_only --cat1-mode gwosc
+  --device cuda --engine shared_encoder_score_only --cat1-mode gwosc \
+  --strain-source gwosc-only
 ```
 
-For an already validated local strain mirror, add `--local-only`. The explicit
+`--strain-source gwosc-only` deliberately bypasses every matching local mirror
+and is required for public replay evidence. `--strain-source local-only` (or
+the compatibility alias `--local-only`) forbids network fallback; `auto` may
+use either source and is not proof of clean public reproducibility. The explicit
 `--cat1-mode frozen-replay-attestation` is restricted to historical corpus
 replay and records that weaker provenance; it must not be used as evidence of
 prospective DQ availability.
@@ -159,3 +164,47 @@ the `public-replay` stage also requires an exact, public-sources-only clean-clon
 result in `artifacts/dante_light/public_replay_validation_v1.json`. The locked
 future operational protocol is in
 `docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md`.
+
+## Release-evidence commands
+
+Before publication, test the exact bundle from a clean HTTPS clone without
+claiming the public gate:
+
+```bash
+python scripts/run_dante_light_clean_clone.py prepublish \
+  --bundle /absolute/path/dante_reference_artifacts_v1.zip \
+  --limit 2 --device cuda
+```
+
+After the bundle URL and SHA-256 are deposited in
+`config/reference_artifacts.json`, rerun the same clean clone with `public` and
+without `--bundle`; the script downloads and verifies the configured archive:
+
+```bash
+python scripts/run_dante_light_clean_clone.py public --limit 2 --device cuda
+python scripts/verify_dante_light_release.py --stage public-replay
+```
+
+A future causal epoch is assembled only from detector promotion payloads:
+
+```bash
+python scripts/promote_dante_light_epoch.py \
+  --promotion artifacts/dante_light/h1_epoch_promotion.json \
+  --promotion artifacts/dante_light/l1_epoch_promotion.json \
+  --output config/dante_light_epochs_v1.json
+```
+
+Once paired canonical/shared shadow runs exist strictly after those cutoffs,
+build their locked result. `preflight` writes a clearly non-operational mode;
+only `operational` can satisfy the release verifier, and it requires the public
+bundle contract:
+
+```bash
+python scripts/build_dante_light_prospective_evidence.py operational \
+  --canonical-run runs/dante_light/prospective_canonical \
+  --shared-run runs/dante_light/prospective_shared \
+  --epochs config/dante_light_epochs_v1.json \
+  --bundle artifacts/dante_light/downloads/dante_reference_artifacts_v1.zip \
+  --latency-objective-s <pre-registered-positive-seconds>
+python scripts/verify_dante_light_release.py --stage operational
+```

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict
 import hashlib
 import json
+import math
 from pathlib import Path
 import platform
 import subprocess
@@ -62,6 +63,15 @@ def runtime_provenance() -> dict[str, Any]:
         ROOT / "src/dante_light/review_queue.py",
         ROOT / "src/core/patch_scorer.py",
     )
+    def normalized_source_sha256(path: Path) -> str:
+        content = (
+            path.read_text(encoding="utf-8")
+            .replace("\r\n", "\n")
+            .replace("\r", "\n")
+            .encode("utf-8")
+        )
+        return hashlib.sha256(content).hexdigest()
+
     return {
         "code_state": {
             "commit": git("rev-parse", "HEAD"),
@@ -74,9 +84,10 @@ def runtime_provenance() -> dict[str, Any]:
             "processor": platform.processor(),
         },
         "source_sha256": {
-            path.relative_to(ROOT).as_posix(): sha256_file(path)
+            path.relative_to(ROOT).as_posix(): normalized_source_sha256(path)
             for path in source_paths
         },
+        "source_hash_semantics": "utf8_lf_v1",
     }
 
 
@@ -370,6 +381,11 @@ def run_replay(args) -> dict[str, Any]:
         args.manifest, roles=set(args.role), limit=args.limit
     )
     strain_source = getattr(args, "strain_source", "auto")
+    latency_objective = getattr(args, "latency_objective_s", None)
+    if latency_objective is not None:
+        latency_objective = float(latency_objective)
+        if not math.isfinite(latency_objective) or latency_objective <= 0:
+            raise ContractError("--latency-objective-s must be finite and positive")
     if args.local_only:
         if strain_source != "auto":
             raise ContractError(
@@ -409,6 +425,7 @@ def run_replay(args) -> dict[str, Any]:
         "cat1_provenance": cat1_provenance,
         "local_only": local_only,
         "strain_source": strain_source,
+        "pre_registered_latency_objective_s": latency_objective,
         "runtime_provenance": runtime_provenance(),
     }
     queue = ReviewQueue(args.output_dir, run_manifest)

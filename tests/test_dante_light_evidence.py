@@ -8,6 +8,7 @@ import zipfile
 import pytest
 
 from src.dante_light.contracts import (
+    CalibrationEpochContract,
     ContractError,
     LightDisposition,
     LightRecord,
@@ -41,17 +42,29 @@ def _record(window: WindowIdentity, score: float) -> dict:
     return {**body, "record_id": f"dlr1-{canonical_json_sha256(body)[:24]}"}
 
 
-def _run(root: Path, name: str, engine: str, records: list[dict]) -> Path:
+def _run(
+    root: Path,
+    name: str,
+    engine: str,
+    records: list[dict],
+    *,
+    prospective: bool = False,
+    epochs_payload: dict | None = None,
+    latency_objective_s: float | None = None,
+) -> Path:
+    source = root / "src/dante_light/runner.py"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("# fixture runner\n", encoding="utf-8", newline="\n")
     directory = root / name
     directory.mkdir()
     manifest_body = {
         "schema_version": 1,
-        "mode": "historical_replay",
+        "mode": "shadow" if prospective else "historical_replay",
         "scientific_engine": engine,
         "prefilter": "none",
-        "prospective": False,
+        "prospective": prospective,
         "representation": REPRESENTATION.to_dict(),
-        "epochs": {"fixture": True},
+        "epochs": epochs_payload if epochs_payload is not None else {"fixture": True},
         "replay_manifest_sha256": "1" * 64,
         "replay_entries_file_sha256": "2" * 64,
         "roles": ["background_stratified"],
@@ -59,13 +72,19 @@ def _run(root: Path, name: str, engine: str, records: list[dict]) -> Path:
         "cat1_provenance": "GWOSC CBC_CAT1 whole-window containment",
         "local_only": False,
         "strain_source": "gwosc-only",
+        "pre_registered_latency_objective_s": latency_objective_s,
         "runtime_provenance": {
             "code_state": {
                 "commit": "e" * 40,
                 "branch": "fixture",
                 "tracked_dirty": False,
             },
-            "source_sha256": {"src/dante_light/runner.py": "f" * 64},
+            "source_sha256": {
+                "src/dante_light/runner.py": hashlib.sha256(
+                    b"# fixture runner\n"
+                ).hexdigest()
+            },
+            "source_hash_semantics": "utf8_lf_v1",
         },
     }
     manifest = {
@@ -193,4 +212,158 @@ def test_prepublish_builder_cannot_masquerade_as_public_evidence(
             output_path=tmp_path / "public.json",
             root=tmp_path,
             mode="public",
+        )
+
+
+def _prospective_fixture(tmp_path: Path, monkeypatch, *, objective: float = 0.5):
+    epochs_payload = {"schema_version": 1, "status": "fixture", "epochs": {}}
+    epochs = {
+        detector: CalibrationEpochContract(
+            epoch_id=f"fixture-{detector.lower()}",
+            run="O4A",
+            detector=detector,
+            cutoff_gps=1000.0,
+            threshold=0.2,
+            threshold_artifact_sha256="1" * 64,
+            native_index_sha256=REPRESENTATION.native_index_sha256,
+            causal=True,
+        )
+        for detector in ("H1", "L1")
+    }
+    records = [
+        _record(WindowIdentity("O4A", detector, 1100.0), 0.1)
+        for detector in ("H1", "L1")
+    ]
+    canonical = _run(
+        tmp_path,
+        "prospective-canonical",
+        "canonical",
+        records,
+        prospective=True,
+        epochs_payload=epochs_payload,
+        latency_objective_s=objective,
+    )
+    shared = _run(
+        tmp_path,
+        "prospective-shared",
+        "shared_encoder_score_only",
+        [dict(row) for row in records],
+        prospective=True,
+        epochs_payload=epochs_payload,
+        latency_objective_s=objective,
+    )
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config/reference_artifacts.json").write_bytes(
+        Path("config/reference_artifacts.json").read_bytes()
+    )
+    epochs_path = tmp_path / "epochs.json"
+    epochs_path.write_text(json.dumps(epochs_payload), encoding="utf-8")
+    protocol = tmp_path / "docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md"
+    protocol.parent.mkdir()
+    protocol.write_text("locked fixture\n", encoding="utf-8")
+    monkeypatch.setattr(
+        evidence, "_load_verified_epochs", lambda *_args, **_kwargs: (epochs_payload, epochs)
+    )
+    monkeypatch.setattr(
+        evidence,
+        "git_checkout_provenance",
+        lambda _root: {
+            "clean_clone": True,
+            "tracked_dirty": False,
+            "commit": "e" * 40,
+            "origin_url": "https://example.test/repository.git",
+        },
+    )
+    return canonical, shared, epochs_path, _bundle(tmp_path), epochs
+
+
+def test_prospective_builder_records_causal_coverage_and_durable_latency(
+    tmp_path, monkeypatch
+) -> None:
+    canonical, shared, epochs_path, bundle, _epochs = _prospective_fixture(
+        tmp_path, monkeypatch
+    )
+    payload = evidence.build_prospective_evidence(
+        canonical,
+        shared,
+        epochs_path=epochs_path,
+        bundle_path=bundle,
+        output_path=tmp_path / "prospective-preflight.json",
+        root=tmp_path,
+        latency_objective_s=0.5,
+        mode="preflight",
+    )
+    assert payload["mode"] == "prospective_shadow_preflight"
+    assert payload["public_sources_only"] is False
+    assert payload["latency_semantics"].endswith("durable record write")
+    assert payload["latency_s"]["p99"] == pytest.approx(0.299)
+    assert payload["latency_objective_met"] is True
+    assert payload["coverage"]["windows"] == 2
+    assert payload["coverage"]["deferred_windows"] == 0
+    assert set(payload["detectors"]) == {"H1", "L1"}
+
+
+def test_prospective_builder_preserves_unmet_latency_endpoint(
+    tmp_path, monkeypatch
+) -> None:
+    canonical, shared, epochs_path, bundle, _epochs = _prospective_fixture(
+        tmp_path, monkeypatch, objective=0.25
+    )
+    payload = evidence.build_prospective_evidence(
+        canonical,
+        shared,
+        epochs_path=epochs_path,
+        bundle_path=bundle,
+        output_path=tmp_path / "prospective-negative.json",
+        root=tmp_path,
+        latency_objective_s=0.25,
+        mode="preflight",
+    )
+    assert payload["status"] == "complete"
+    assert payload["latency_objective_met"] is False
+
+
+def test_prospective_builder_rejects_at_cutoff_window(tmp_path, monkeypatch) -> None:
+    canonical, shared, epochs_path, bundle, epochs = _prospective_fixture(
+        tmp_path, monkeypatch
+    )
+    epochs["H1"] = CalibrationEpochContract(
+        epoch_id="fixture-h1",
+        run="O4A",
+        detector="H1",
+        cutoff_gps=1100.0,
+        threshold=0.2,
+        threshold_artifact_sha256="1" * 64,
+        native_index_sha256=REPRESENTATION.native_index_sha256,
+        causal=True,
+    )
+    with pytest.raises(ContractError, match="non-causal prospective window"):
+        evidence.build_prospective_evidence(
+            canonical,
+            shared,
+            epochs_path=epochs_path,
+            bundle_path=bundle,
+            output_path=tmp_path / "invalid.json",
+            root=tmp_path,
+            latency_objective_s=0.5,
+            mode="preflight",
+        )
+
+
+def test_operational_prospective_requires_deposited_bundle(
+    tmp_path, monkeypatch
+) -> None:
+    canonical, shared, epochs_path, bundle, _epochs = _prospective_fixture(
+        tmp_path, monkeypatch
+    )
+    with pytest.raises(ContractError, match="deposited bundle"):
+        evidence.build_prospective_evidence(
+            canonical,
+            shared,
+            epochs_path=epochs_path,
+            bundle_path=bundle,
+            output_path=tmp_path / "operational.json",
+            root=tmp_path,
+            latency_objective_s=0.5,
+            mode="operational",
         )

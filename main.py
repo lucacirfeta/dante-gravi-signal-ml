@@ -3583,6 +3583,15 @@ def build_parser() -> argparse.ArgumentParser:
         command.add_argument("--batch-size", type=int, default=8)
         command.add_argument("--max-in-flight", type=int, default=16)
         command.add_argument("--max-pending-writes", type=int, default=2)
+        command.add_argument(
+            "--latency-objective-s",
+            type=float,
+            default=None,
+            help=(
+                "Pre-register the durable-write p99 objective for prospective "
+                "shadow evidence; recorded immutably in the run manifest."
+            ),
+        )
         command.add_argument("--local-only", action="store_true")
         command.add_argument(
             "--strain-source",

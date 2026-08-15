@@ -318,6 +318,26 @@ def _validate_prospective(
             raise ValueError("prospective artifact schema/status mismatch")
         if payload.get("mode") != "prospective_shadow" or payload.get("prefilter") != "none":
             raise ValueError("prospective artifact is not exact no-prefilter shadow mode")
+        if payload.get("public_sources_only") is not True:
+            raise ValueError("prospective artifact used a non-public source")
+        if payload.get("strain_source") != "gwosc-only":
+            raise ValueError("prospective artifact did not bypass local strain mirrors")
+        checkout = payload["checkout"]
+        if (
+            checkout.get("clean_clone") is not True
+            or checkout.get("tracked_dirty") is not False
+            or re.fullmatch(r"[0-9a-f]{40}", str(checkout.get("commit", ""))) is None
+            or not str(checkout.get("origin_url", "")).startswith("https://")
+        ):
+            raise ValueError("prospective clean-checkout attestation is invalid")
+        if payload.get("run_commit") != checkout["commit"]:
+            raise ValueError("prospective run/checkout commit mismatch")
+        bundle_source = payload["bundle_source"]
+        if (
+            bundle_source.get("download_verified") is not True
+            or bundle_source.get("publication_status") != "deposited"
+        ):
+            raise ValueError("prospective public-bundle attestation is invalid")
         protocol = payload["locked_protocol"]
         if protocol.get("path") != PROTOCOL_PATH:
             raise ValueError("locked protocol path mismatch")
@@ -330,6 +350,13 @@ def _validate_prospective(
             raise ValueError("prospective result contains drops or duplicate identities")
         if coverage["failures"]:
             raise ValueError("prospective result contains failures")
+        deferred = int(coverage["deferred_windows"])
+        windows = int(coverage["windows"])
+        defer_rate = float(coverage["defer_rate"])
+        if windows <= 0 or deferred < 0 or deferred > windows:
+            raise ValueError("invalid prospective DEFER accounting")
+        if not math.isclose(defer_rate, deferred / windows, rel_tol=0, abs_tol=1e-15):
+            raise ValueError("prospective DEFER rate/count mismatch")
         exact = payload["exact_replay"]
         tolerance = float(exact["score_atol"])
         if tolerance <= 0 or tolerance > 2e-7:
@@ -341,10 +368,15 @@ def _validate_prospective(
         latency = payload["latency_s"]
         p50, p95, p99 = (float(latency[key]) for key in ("p50", "p95", "p99"))
         objective = float(payload["pre_registered_latency_objective_s"])
+        if payload.get("latency_semantics") != "task submission through completed durable record write":
+            raise ValueError("prospective latency semantics mismatch")
         if not all(math.isfinite(value) and value >= 0 for value in (p50, p95, p99)):
             raise ValueError("invalid prospective latency values")
         if not 0 <= p50 <= p95 <= p99 <= objective:
             raise ValueError("prospective latency objective failed")
+        if payload.get("latency_objective_met") is not True:
+            raise ValueError("prospective latency endpoint is not PASS")
+        detector_windows = 0
         for detector in ("H1", "L1"):
             result = payload["detectors"][detector]
             epoch = epochs[detector]
@@ -356,6 +388,9 @@ def _validate_prospective(
                 raise ValueError(f"{detector} evaluation interval invalid")
             if int(result["windows"]) <= 0:
                 raise ValueError(f"{detector} has no prospective windows")
+            detector_windows += int(result["windows"])
+        if detector_windows != windows:
+            raise ValueError("prospective detector/coverage window count mismatch")
         artifacts = payload["artifacts"]
         if not artifacts:
             raise ValueError("prospective result has no supporting artifacts")

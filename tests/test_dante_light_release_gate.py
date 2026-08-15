@@ -88,6 +88,30 @@ def test_existing_but_unverified_prospective_file_fails_closed(tmp_path) -> None
     assert "schema/status" in detail
 
 
+def test_prospective_preflight_cannot_masquerade_as_operational(tmp_path) -> None:
+    path = tmp_path / "prospective_validation_v1.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "status": "complete",
+                "mode": "prospective_shadow_preflight",
+                "prefilter": "none",
+                "public_sources_only": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    valid, detail = _validate_prospective(
+        tmp_path,
+        path,
+        bundle_sha256="a" * 64,
+        epochs={},
+    )
+    assert valid is False
+    assert "shadow mode" in detail
+
+
 def test_prepublish_clean_clone_is_not_public_replay_evidence(tmp_path) -> None:
     path = tmp_path / "preflight.json"
     path.write_text(

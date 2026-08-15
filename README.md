@@ -184,7 +184,7 @@ The canonical reference engine remains the default:
 python main.py dante-light-replay \
   --output-dir runs/dante_light/tutorial \
   --role background_stratified --limit 8 \
-  --engine canonical --cat1-mode gwosc
+  --engine canonical --cat1-mode gwosc --strain-source gwosc-only
 ```
 
 The exact shared-encoder engine is explicitly opt-in:
@@ -193,10 +193,11 @@ The exact shared-encoder engine is explicitly opt-in:
 python main.py dante-light-replay \
   --output-dir runs/dante_light/tutorial_fast \
   --role background_stratified --limit 8 \
-  --engine shared_encoder_score_only --cat1-mode gwosc
+  --engine shared_encoder_score_only --cat1-mode gwosc \
+  --strain-source gwosc-only
 ```
 
-On the frozen paired RTX 5070 benchmark it increased throughput by about 11.6%
+On the clean paired RTX 5070 benchmark it increased throughput by about 12.9%
 while preserving primary/native scores; this is a host-specific engineering
 measurement, not a universal speed claim. Every run writes a separate
 `run_manifest.json`, append-only `records.jsonl`, `attempts.jsonl`, and

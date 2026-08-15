@@ -31,8 +31,10 @@ drops, stable escalation behaviour and the full offline DANTE dispositions?
 - zero silent drops and duplicate detector/GPS identities;
 - exact canonical/shared scores and dispositions within the frozen numerical
   tolerance;
-- end-to-end p50/p95/p99 latency including data availability, preparation,
-  scoring, persistence and queue delay;
+- pipeline p50/p95/p99 latency from task submission through preparation,
+  scoring, queue delay and completed durable persistence;
+- detector-data availability delay, reported separately because it precedes
+  task submission and is not measured by the current executor clock;
 - escalation rate and detector/session block stability;
 - audit-estimated miss rate among non-escalated windows with confidence
   intervals;
@@ -72,15 +74,39 @@ follows before outcomes are inspected:
   "schema_version": 1,
   "status": "complete",
   "mode": "prospective_shadow",
+  "public_sources_only": true,
+  "strain_source": "gwosc-only",
   "prefilter": "none",
   "locked_protocol": {
     "path": "docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md",
     "sha256": "<sha256>"
   },
   "reference_bundle_sha256": "<sha256>",
+  "bundle_source": {
+    "url": "<public HTTPS URL>",
+    "download_verified": true,
+    "publication_status": "deposited"
+  },
+  "checkout": {
+    "clean_clone": true,
+    "tracked_dirty": false,
+    "commit": "<40-character Git SHA>",
+    "origin_url": "<public HTTPS Git URL>"
+  },
+  "run_commit": "<same 40-character Git SHA>",
   "pre_registered_latency_objective_s": "<positive number>",
+  "latency_semantics": "task submission through completed durable record write",
   "latency_s": {"p50": 0, "p95": 0, "p99": 0},
-  "coverage": {"drops": 0, "duplicate_identities": 0, "failures": []},
+  "latency_objective_met": true,
+  "coverage": {
+    "windows": 2,
+    "drops": 0,
+    "duplicate_identities": 0,
+    "deferred_windows": 0,
+    "defer_rate": 0,
+    "defer_reasons": {},
+    "failures": []
+  },
   "exact_replay": {
     "score_atol": 2e-7,
     "max_abs_score_delta": 0,
@@ -104,9 +130,28 @@ follows before outcomes are inspected:
 }
 ```
 
-The numerical latency objective must be written into the locked run manifest
-before evaluation begins. The verifier requires monotone p50/p95/p99 values,
+The numerical latency objective must be passed to both shadow runs with
+`--latency-objective-s` before evaluation begins; it is then immutable in both
+run manifests. The evidence builder refuses a different after-the-fact value.
+The measured latency starts when a task enters the executor and ends only after
+its record write completes; it does not include upstream GWOSC availability.
+The verifier requires monotone p50/p95/p99 values,
 p99 no larger than that objective, post-cutoff H1 and L1 intervals, exact score
 and disposition equivalence, no failures, duplicates or drops, and hashes for
 every supporting artifact. A file that merely declares `status: complete` is
 not sufficient.
+
+Build the result only from the paired run directories:
+
+```bash
+python scripts/build_dante_light_prospective_evidence.py operational \
+  --canonical-run runs/dante_light/prospective_canonical \
+  --shared-run runs/dante_light/prospective_shared \
+  --epochs config/dante_light_epochs_v1.json \
+  --bundle artifacts/dante_light/downloads/dante_reference_artifacts_v1.zip \
+  --latency-objective-s <the value already frozen in both manifests>
+```
+
+The `preflight` builder mode is available for local schema testing, but emits
+`prospective_shadow_preflight` and `public_sources_only: false`; it cannot pass
+the operational verifier.
