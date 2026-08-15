@@ -389,7 +389,11 @@ def main() -> int:
     peak_rss = process_rss_bytes()
     peak_vram = 0
     with tempfile.NamedTemporaryFile(
-        mode="w+", encoding="utf-8", delete=False, dir=args.output.parent
+        mode="w+",
+        encoding="utf-8",
+        newline="\n",
+        delete=False,
+        dir=args.output.parent,
     ) as persisted:
         temporary_results = Path(persisted.name)
         for item in selected[: args.warmup]:
