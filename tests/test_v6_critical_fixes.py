@@ -140,7 +140,30 @@ def test_patch_scorer_verifies_two_distinct_indices_without_mocking_init(
     assert native_scorer.index_integrity_verified is True
 
     image = np.zeros((256, 256, 3), dtype=np.uint8)
-    assert len(primary_scorer.score_spectrogram([image], threshold=1.0)) == 1
+    baseline = primary_scorer.score_spectrogram([image], threshold=1.0)
+    timings = {}
+    instrumented = primary_scorer.score_spectrogram(
+        [image], threshold=1.0, timings=timings
+    )
+    assert len(baseline) == len(instrumented) == 1
+    assert baseline[0]["novelty_score"] == instrumented[0]["novelty_score"]
+    np.testing.assert_array_equal(
+        baseline[0]["top_k_indices"], instrumented[0]["top_k_indices"]
+    )
+    np.testing.assert_array_equal(
+        baseline[0]["mil_vector"], instrumented[0]["mil_vector"]
+    )
+    assert {
+        "tensor_transform_s",
+        "host_to_device_s",
+        "dino_forward_s",
+        "index_scoring_s",
+        "cpu_transfer_s",
+        "result_materialization_s",
+        "cleanup_s",
+        "score_total_s",
+    } <= timings.keys()
+    assert all(value >= 0.0 for value in timings.values())
     assert len(native_scorer.score_spectrogram([image], threshold=1.0)) == 1
 
 

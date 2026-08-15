@@ -1,6 +1,7 @@
 import hashlib
 import logging
 from pathlib import Path
+import time
 
 import numpy as np
 import torch
@@ -172,25 +173,53 @@ class PatchScorer:
         return threshold, scores_np, gev_params
 
     @torch.no_grad()
-    def score_spectrogram(self, spectrogram_arrays: list[np.ndarray], threshold: float) -> list[dict]:
+    def score_spectrogram(
+        self,
+        spectrogram_arrays: list[np.ndarray],
+        threshold: float,
+        *,
+        timings: dict[str, float] | None = None,
+    ) -> list[dict]:
         """Runs the entire MIL patch-level scoring pipeline on a batch of images.
         
         spectrogram_arrays: list of (256, 256, 3) uint8 numpy arrays.
+
+        ``timings`` is an opt-in L0 benchmark sink.  It changes neither tensor
+        operations nor return values; CUDA synchronization is performed only
+        when the sink is supplied so normal production performance is unchanged.
         """
+        def clock() -> float:
+            if timings is not None and self.device.type == "cuda":
+                torch.cuda.synchronize(self.device)
+            return time.perf_counter()
+
+        def elapsed(name: str, started: float) -> None:
+            if timings is not None:
+                timings[name] = timings.get(name, 0.0) + (clock() - started)
+
+        total_started = clock()
         # Convert to PIL Images and apply transforms
+        started = clock()
         tensors = []
         for arr in spectrogram_arrays:
             img = Image.fromarray(arr)
             tensors.append(self.transform(img))
-            
+        batch_tensor = torch.stack(tensors)
+        elapsed("tensor_transform_s", started)
+
         # Stack into (B, 3, 256, 256)
-        batch_tensor = torch.stack(tensors).to(self.device)
+        started = clock()
+        batch_tensor = batch_tensor.to(self.device)
+        elapsed("host_to_device_s", started)
         
         # 1. Forward Features
+        started = clock()
         features = self.model.forward_features(batch_tensor)
         patch_tokens = features["x_norm_patchtokens"] # (B, 1369, 384)
+        elapsed("dino_forward_s", started)
         
         # 2. L2 Normalize explicitly
+        started = clock()
         patch_tokens = F.normalize(patch_tokens, p=2, dim=-1)
         
         # 3. Cosine Similarity vs Background
@@ -204,8 +233,11 @@ class PatchScorer:
         # 5. Top-K Pooling
         top_k_scores, top_k_indices = torch.topk(anomaly_scores, self.k, dim=-1) # (B, K)
         novelty_scores = top_k_scores.mean(dim=-1) # (B,)
+        elapsed("index_scoring_s", started)
         
         # 6. MIL Vector Extraction
+        started = clock()
+        cpu_transfer_s = 0.0
         results = []
         for i in range(len(spectrogram_arrays)):
             k_idx = top_k_indices[i] # (K,)
@@ -213,28 +245,43 @@ class PatchScorer:
             mil_vector = top_k_patches.mean(dim=0)
             mil_vector = F.normalize(mil_vector, p=2, dim=-1)
             
+            transfer_started = clock()
             n_score = float(novelty_scores[i].cpu().item())
+            cpu_transfer_s += clock() - transfer_started
             
             # Compute ablation scores for different k values seamlessly
             ablation_k_scores = {}
             if hasattr(self, 'k_ablations') and self.k_ablations:
                 for ab_k in self.k_ablations:
                     ab_k = min(ab_k, anomaly_scores.shape[-1])
+                    transfer_started = clock()
                     ab_score = anomaly_scores[i].topk(ab_k)[0].mean().item()
+                    cpu_transfer_s += clock() - transfer_started
                     ablation_k_scores[f"k_{ab_k}"] = ab_score
+
+            transfer_started = clock()
+            top_k_indices_np = k_idx.cpu().numpy().astype(np.int32)
+            mil_vector_np = mil_vector.cpu().numpy().astype(np.float32)
+            patch_scores_np = anomaly_scores[i].cpu().numpy().astype(np.float32)
+            cpu_transfer_s += clock() - transfer_started
             
             results.append({
                 "novelty_score": n_score,
                 "ablation_k_scores": ablation_k_scores,
                 "is_novel": n_score > threshold,
-                "top_k_indices": k_idx.cpu().numpy().astype(np.int32),
-                "mil_vector": mil_vector.cpu().numpy().astype(np.float32),
-                "patch_anomaly_scores": anomaly_scores[i].cpu().numpy().astype(np.float32)
+                "top_k_indices": top_k_indices_np,
+                "mil_vector": mil_vector_np,
+                "patch_anomaly_scores": patch_scores_np,
             })
+        elapsed("result_materialization_s", started)
+        if timings is not None:
+            timings["cpu_transfer_s"] = timings.get("cpu_transfer_s", 0.0) + cpu_transfer_s
             
+        cleanup_started = clock()
         import gc
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-            
+        elapsed("cleanup_s", cleanup_started)
+        elapsed("score_total_s", total_started)
         return results

@@ -1,0 +1,107 @@
+{
+  "counts": {
+    "entries": 9388,
+    "roles": {
+      "background_stratified": 552,
+      "candidate_non_background": 7640,
+      "cbc_control": 249,
+      "cbc_injection": 750,
+      "forum_candidate": 1,
+      "known_glitch": 180,
+      "threshold_boundary": 60
+    },
+    "unique_windows": 9387
+  },
+  "entries_file_sha256": "9f879beb835a3640e81e8f022bc244d0c5247a4acf928756d004878f844883f5",
+  "entries_path": "config/dante_light_replay_v1.jsonl",
+  "entries_sha256": "56db9c96debe9657b5a198954f9651d78c9413a7b1d53afc75c5a78b6aa44671",
+  "manifest_sha256": "106eec94e83ca3c7208e9cc100f795f6ae13246e747ed112620d70910b43b1ea",
+  "purpose": "DANTE-Light L0 exact-replay and non-regression corpus",
+  "raw_strain_embedded": false,
+  "representation": {
+    "analysis_duration_s": 32.0,
+    "colormap": "cividis",
+    "contract_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+    "encoder_input_size": [
+      518,
+      518
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "model_artifact_id": "dinov2_vits14_reg",
+    "model_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "model_source_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+    "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "primary_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "query_qrange": [
+      4,
+      64
+    ],
+    "sample_rate_hz": 4096,
+    "schema_version": 1,
+    "top_k": 68,
+    "variant": "idxq4-64_queryq4-64",
+    "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+    "whitening_pad_s": 4.0
+  },
+  "schema_version": 1,
+  "selection_contract": {
+    "background": "central calibration-ledger row per detector and source session",
+    "boundary": "30 smallest distances to either BGV3 CI edge per detector, tagged within candidate rows",
+    "candidate": "all O4a detector-aware ROBUST or AMBIGUOUS rows; analysis_start=catalog_gps+4s",
+    "cbc_control": "all O4a catalog events for every detector with processed coverage",
+    "cbc_injection": "all fixed trial-level injections for both detectors; reconstruction recipe retained",
+    "forum_candidate": "L1 catalog GPS 1382955228 / analysis GPS 1382955232",
+    "known_glitch": "all quality-screened CQG held-out Gravity Spy controls"
+  },
+  "source_artifacts": [
+    {
+      "bytes": 1722182,
+      "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    },
+    {
+      "bytes": 2570,
+      "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+      "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    },
+    {
+      "bytes": 103096,
+      "path": "data/production/aggregated/cqg_known_glitch_controls.json",
+      "sha256": "0f44e6e6e413bc4cde84478da9a55b931eb74b556a98ad93f5acb79e1008e199"
+    },
+    {
+      "bytes": 8972,
+      "path": "data/production/aggregated/catalog_cross_match_events_circular_shift_v2_idxq4-64_queryq4-64_o4a.csv",
+      "sha256": "f330b32195e5e104825dcd3711040c1a0647bb1881b667fa4652bb9c34dcbca8"
+    },
+    {
+      "bytes": 241657,
+      "path": "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv",
+      "sha256": "b80a78487f69b0f1aaf3d3eb4729af6c1c96bcdd5b8ce60a58f337cad450522b"
+    },
+    {
+      "bytes": 8990,
+      "path": "data/production/aggregated/candidate_case_L1_1382955228_idxq4-64_queryq4-64.json",
+      "sha256": "0a84bbdad28e119d210fc4cd1b133dbef70f268bb339f258c26e3df5e1307483"
+    },
+    {
+      "bytes": 658677,
+      "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+      "sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588"
+    },
+    {
+      "bytes": 658649,
+      "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+      "sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398"
+    }
+  ],
+  "status": "frozen"
+}
