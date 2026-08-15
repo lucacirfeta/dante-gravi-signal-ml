@@ -204,7 +204,7 @@ def test_prepublish_builder_cannot_masquerade_as_public_evidence(
     assert payload["mode"] == "clean_clone_prepublish_preflight"
     assert payload["public_sources_only"] is False
     assert payload["bundle_source"]["download_verified"] is False
-    with pytest.raises(ContractError, match="deposited"):
+    with pytest.raises(ContractError, match="differs from public contract"):
         evidence.build_public_replay_evidence(
             canonical,
             shared,
@@ -350,13 +350,13 @@ def test_prospective_builder_rejects_at_cutoff_window(tmp_path, monkeypatch) -> 
         )
 
 
-def test_operational_prospective_requires_deposited_bundle(
+def test_operational_prospective_requires_exact_public_bundle(
     tmp_path, monkeypatch
 ) -> None:
     canonical, shared, epochs_path, bundle, _epochs = _prospective_fixture(
         tmp_path, monkeypatch
     )
-    with pytest.raises(ContractError, match="deposited bundle"):
+    with pytest.raises(ContractError, match="differs from public contract"):
         evidence.build_prospective_evidence(
             canonical,
             shared,

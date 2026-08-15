@@ -30,3 +30,14 @@ python scripts/manage_reference_artifacts.py acquire-model
 This artifact enables exact scoring with the frozen dictionaries. It does not
 redistribute GWOSC strain, PEM channels, credentials, or the complete O4a raw
 corpus needed to rerun the historical scan from first principles.
+
+The immutable public asset is:
+
+```text
+https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/download/dante-reference-artifacts-v1/dante_reference_artifacts_v1.zip
+SHA-256 651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63
+```
+
+Zenodo DOI `10.5281/zenodo.21957984` is the archived source-tag snapshot. It
+does not contain the 73 MB release asset and is therefore not the bundle
+download endpoint.

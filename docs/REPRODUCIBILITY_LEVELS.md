@@ -35,9 +35,10 @@ python scripts/manage_reference_artifacts.py verify
 ```
 
 The two existing software/evidence Zenodo records do not contain the NPZ
-dictionaries. Until `dante_reference_artifacts_v1.zip` is deposited and its URL
-and SHA-256 are entered in `config/reference_artifacts.json`, a clean clone
-cannot claim R2. A maintainer can build the exact upload candidate with:
+dictionaries. The separate versioned GitHub release asset URL and SHA-256 are
+recorded in `config/reference_artifacts.json`. R2 is accepted only after the
+clean-clone runner self-downloads that asset and the public replay verifier
+passes. A maintainer can rebuild a candidate with:
 
 ```bash
 python scripts/manage_reference_artifacts.py build-bundle

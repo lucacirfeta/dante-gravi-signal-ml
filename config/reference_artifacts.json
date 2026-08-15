@@ -2,10 +2,11 @@
   "schema_version": 1,
   "artifact_root": "..",
   "reference_bundle": {
-    "publication_status": "not_deposited",
-    "url": null,
-    "sha256": null,
-    "note": "Populate URL and SHA-256 after depositing dante_reference_artifacts_v1.zip. The software and v6 evidence Zenodo records do not contain these NPZ dictionaries."
+    "publication_status": "deposited",
+    "url": "https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/download/dante-reference-artifacts-v1/dante_reference_artifacts_v1.zip",
+    "sha256": "651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63",
+    "release_page": "https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/tag/dante-reference-artifacts-v1",
+    "note": "Published as a versioned GitHub release asset. Zenodo DOI 10.5281/zenodo.21957984 archives the source tag but does not contain this 73 MB NPZ bundle; use the verified asset URL above."
   },
   "models": {
     "dinov2_vits14_reg": {

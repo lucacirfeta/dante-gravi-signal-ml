@@ -14,7 +14,7 @@ from scripts.verify_dante_light_release import (
 from src.dante_light.contracts import RepresentationContract
 
 
-def test_development_gate_passes_but_release_claims_remain_open() -> None:
+def test_development_and_bundle_pass_but_runtime_claims_remain_open() -> None:
     development, gates = verify("development")
     public, _ = verify("public-replay")
     operational, _ = verify("operational")
@@ -22,7 +22,7 @@ def test_development_gate_passes_but_release_claims_remain_open() -> None:
     assert development is True
     assert public is False
     assert operational is False
-    assert by_name["public_reference_bundle"].status == "OPEN"
+    assert by_name["public_reference_bundle"].status == "PASS"
     assert by_name["public_clean_clone_replay"].status == "OPEN"
     assert by_name["causal_detector_epochs"].status == "OPEN"
     assert by_name["prospective_validation"].status == "OPEN"

@@ -167,8 +167,10 @@ The public source datasets used to construct and benchmark reference indices are
 These records do **not** contain DANTE's validated `.npz` dictionaries. Neither
 the v3.7.0 software record (`10.5281/zenodo.21912589`) nor the v6 paper-evidence
 record (`10.5281/zenodo.21925453`) bundles them. Exact canonical scoring requires
-the separate `dante_reference_artifacts_v1.zip`; its deposit is still pending
-and this repository deliberately reports that R2 clean-clone gate as open.
+the separate
+[`dante_reference_artifacts_v1.zip`](https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/download/dante-reference-artifacts-v1/dante_reference_artifacts_v1.zip),
+published with SHA-256
+`651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63`.
 See [`docs/REPRODUCIBILITY_LEVELS.md`](docs/REPRODUCIBILITY_LEVELS.md).
 
 ## DANTE-Light (experimental, opt-in)

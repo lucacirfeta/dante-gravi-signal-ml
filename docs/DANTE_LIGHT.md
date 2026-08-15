@@ -36,11 +36,11 @@ python -m pytest tests/test_dante_light_contracts.py \
   tests/test_dante_light_runner.py -q
 ```
 
-The current public software/evidence Zenodo records do not yet contain
-`dante_reference_artifacts_v1.zip`. Until its later deposit is configured in
-`config/reference_artifacts.json`, a clean public clone cannot perform exact
-scoring. Development may proceed with locally verified artifacts; this is not
-equivalent to public reproducibility.
+The public software/evidence Zenodo records do not contain the NPZ dictionaries.
+The separate `dante_reference_artifacts_v1.zip` is instead a versioned GitHub
+release asset whose URL and SHA-256 are frozen in
+`config/reference_artifacts.json`. A clean clone can download, verify and
+install it with `python scripts/manage_reference_artifacts.py download-bundle`.
 
 ## Small historical replay
 
@@ -157,12 +157,13 @@ python scripts/verify_dante_light_release.py --stage public-replay
 python scripts/verify_dante_light_release.py --stage operational
 ```
 
-At this development snapshot the first command passes. The latter two return
-`NOT_READY` because the reference bundle is not public and no causal later-epoch
-validation exists. Publishing a URL and hash is not itself a public replay:
-the `public-replay` stage also requires an exact, public-sources-only clean-clone
-result in `artifacts/dante_light/public_replay_validation_v1.json`. The locked
-future operational protocol is in
+At this development snapshot the first command passes. Publication of the
+reference bundle closes only the artifact-availability prerequisite. The
+`public-replay` stage additionally requires an exact, public-sources-only
+clean-clone result in
+`artifacts/dante_light/public_replay_validation_v1.json`; the operational stage
+also requires causal H1/L1 epochs and later-epoch evidence. The locked future
+operational protocol is in
 `docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md`.
 
 ## Release-evidence commands
@@ -176,9 +177,8 @@ python scripts/run_dante_light_clean_clone.py prepublish \
   --limit 2 --device cuda
 ```
 
-After the bundle URL and SHA-256 are deposited in
-`config/reference_artifacts.json`, rerun the same clean clone with `public` and
-without `--bundle`; the script downloads and verifies the configured archive:
+To verify the published bundle, use `public` without `--bundle`; the script
+downloads and verifies the configured archive itself:
 
 ```bash
 python scripts/run_dante_light_clean_clone.py public --limit 2 --device cuda
