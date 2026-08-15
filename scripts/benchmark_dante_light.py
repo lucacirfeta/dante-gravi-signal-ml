@@ -244,20 +244,37 @@ def score_once(
     local_only: bool,
     persist_stream,
     record_context: dict[str, Any],
+    engine: str = "canonical",
 ) -> tuple[dict[str, Any], dict[str, float]]:
     identity = WindowIdentity.from_dict(item["window"])
     total_began = time.perf_counter()
     image, input_sha256, stages = render_window(identity, local_only=local_only)
-    primary_timing: dict[str, float] = {}
-    native_timing: dict[str, float] = {}
-    primary_result = primary.score_spectrogram(
-        [image], threshold=1.0, timings=primary_timing
-    )[0]
-    native_result = native.score_spectrogram(
-        [image], threshold=1.0, timings=native_timing
-    )[0]
-    stages.update({f"primary_{key}": value for key, value in primary_timing.items()})
-    stages.update({f"native_{key}": value for key, value in native_timing.items()})
+    if engine == "canonical":
+        primary_timing: dict[str, float] = {}
+        native_timing: dict[str, float] = {}
+        primary_result = primary.score_spectrogram(
+            [image], threshold=1.0, timings=primary_timing
+        )[0]
+        native_result = native.score_spectrogram(
+            [image], threshold=1.0, timings=native_timing
+        )[0]
+        stages.update({f"primary_{key}": value for key, value in primary_timing.items()})
+        stages.update({f"native_{key}": value for key, value in native_timing.items()})
+    elif engine == "shared_encoder":
+        shared_timings: dict[str, float] = {}
+        scored = primary.score_multi_index(
+            [image],
+            {
+                "primary": (primary, 1.0),
+                "native": (native, 1.0),
+            },
+            timings=shared_timings,
+        )
+        primary_result = scored["primary"][0]
+        native_result = scored["native"][0]
+        stages.update(shared_timings)
+    else:
+        raise ValueError(f"Unsupported benchmark engine: {engine}")
     expected = item.get("expected", {}).get("native_score")
     result = {
         "case_id": item["case_id"],
@@ -349,6 +366,11 @@ def main() -> int:
     parser.add_argument("--warmup", type=int, default=1)
     parser.add_argument("--device", default=None)
     parser.add_argument("--local-only", action="store_true")
+    parser.add_argument(
+        "--engine",
+        choices=("canonical", "shared_encoder"),
+        default="canonical",
+    )
     args = parser.parse_args()
     if args.limit <= 0 or args.repeat < 2 or args.warmup < 0:
         parser.error("limit must be positive, repeat >= 2, warmup >= 0")
@@ -374,7 +396,12 @@ def main() -> int:
         raise RuntimeError("no replay cases match the requested roles")
 
     primary = PatchScorer(PRIMARY_INDEX, device=args.device, k=68)
-    native = PatchScorer(NATIVE_INDEX, device=args.device, k=68)
+    native = PatchScorer(
+        NATIVE_INDEX,
+        device=args.device,
+        k=68,
+        model=primary.model if args.engine == "shared_encoder" else None,
+    )
     if primary.reference_sha256 != contract.primary_index_sha256:
         raise RuntimeError(f"{FailClosedReason.STALE_INDEX.value}: primary")
     if native.reference_sha256 != contract.native_index_sha256:
@@ -405,6 +432,7 @@ def main() -> int:
                     local_only=args.local_only,
                     persist_stream=persisted,
                     record_context={"phase": "warmup", "repeat": None},
+                    engine=args.engine,
                 )
                 warmup_results.append(result)
             except Exception as exc:
@@ -428,6 +456,7 @@ def main() -> int:
                         local_only=args.local_only,
                         persist_stream=persisted,
                         record_context={"phase": "measured", "repeat": repeat_index},
+                        engine=args.engine,
                     )
                     current.append(result)
                     for name, value in timings.items():
@@ -492,7 +521,12 @@ def main() -> int:
     report = {
         "schema_version": 1,
         "status": "complete",
-        "benchmark": "dante_light_l0_canonical_dual_index",
+        "benchmark": (
+            "dante_light_l0_canonical_dual_index"
+            if args.engine == "canonical"
+            else "dante_light_l1_shared_encoder_dual_index"
+        ),
+        "engine": args.engine,
         "scientific_mode": "historical_exact_replay",
         "prefilter": "none",
         "warmup_excluded_from_summary": True,

@@ -2,6 +2,7 @@ import hashlib
 import logging
 from pathlib import Path
 import time
+from typing import Mapping
 
 import numpy as np
 import torch
@@ -173,20 +174,16 @@ class PatchScorer:
         return threshold, scores_np, gev_params
 
     @torch.no_grad()
-    def score_spectrogram(
+    def encode_patch_tokens(
         self,
         spectrogram_arrays: list[np.ndarray],
-        threshold: float,
         *,
         timings: dict[str, float] | None = None,
-    ) -> list[dict]:
-        """Runs the entire MIL patch-level scoring pipeline on a batch of images.
-        
-        spectrogram_arrays: list of (256, 256, 3) uint8 numpy arrays.
+    ) -> torch.Tensor:
+        """Encode images once into normalized DINOv2 patch tokens.
 
-        ``timings`` is an opt-in L0 benchmark sink.  It changes neither tensor
-        operations nor return values; CUDA synchronization is performed only
-        when the sink is supplied so normal production performance is unchanged.
+        The returned tensor remains on ``self.device`` and may be scored against
+        multiple compatible reference indexes without another model forward.
         """
         def clock() -> float:
             if timings is not None and self.device.type == "cuda":
@@ -197,8 +194,6 @@ class PatchScorer:
             if timings is not None:
                 timings[name] = timings.get(name, 0.0) + (clock() - started)
 
-        total_started = clock()
-        # Convert to PIL Images and apply transforms
         started = clock()
         tensors = []
         for arr in spectrogram_arrays:
@@ -217,12 +212,42 @@ class PatchScorer:
         features = self.model.forward_features(batch_tensor)
         patch_tokens = features["x_norm_patchtokens"] # (B, 1369, 384)
         elapsed("dino_forward_s", started)
-        
-        # 2. L2 Normalize explicitly
+
         started = clock()
         patch_tokens = F.normalize(patch_tokens, p=2, dim=-1)
-        
-        # 3. Cosine Similarity vs Background
+        elapsed("token_normalization_s", started)
+        return patch_tokens
+
+    @torch.no_grad()
+    def score_patch_tokens(
+        self,
+        patch_tokens: torch.Tensor,
+        threshold: float,
+        *,
+        timings: dict[str, float] | None = None,
+    ) -> list[dict]:
+        """Score a normalized token batch against this scorer's frozen index."""
+        if patch_tokens.ndim != 3 or patch_tokens.shape[-1] != self.centroids.shape[-1]:
+            raise ValueError(
+                "Expected patch tokens with shape (batch, patches, "
+                f"{self.centroids.shape[-1]}), got {tuple(patch_tokens.shape)}"
+            )
+        if patch_tokens.device != self.centroids.device:
+            raise ValueError(
+                f"Patch tokens are on {patch_tokens.device}, index is on "
+                f"{self.centroids.device}"
+            )
+
+        def clock() -> float:
+            if timings is not None and self.device.type == "cuda":
+                torch.cuda.synchronize(self.device)
+            return time.perf_counter()
+
+        def elapsed(name: str, started: float) -> None:
+            if timings is not None:
+                timings[name] = timings.get(name, 0.0) + (clock() - started)
+
+        started = clock()
         # similarities = (B, 1369, 281)
         similarities = torch.matmul(patch_tokens, self.centroids.T)
         max_sims, _ = torch.max(similarities, dim=-1) # (B, 1369)
@@ -239,7 +264,7 @@ class PatchScorer:
         started = clock()
         cpu_transfer_s = 0.0
         results = []
-        for i in range(len(spectrogram_arrays)):
+        for i in range(patch_tokens.shape[0]):
             k_idx = top_k_indices[i] # (K,)
             top_k_patches = patch_tokens[i][k_idx] # (K, 384)
             mil_vector = top_k_patches.mean(dim=0)
@@ -276,12 +301,108 @@ class PatchScorer:
         elapsed("result_materialization_s", started)
         if timings is not None:
             timings["cpu_transfer_s"] = timings.get("cpu_transfer_s", 0.0) + cpu_transfer_s
-            
+        return results
+
+    def _cleanup(self, timings: dict[str, float] | None = None) -> None:
+        def clock() -> float:
+            if timings is not None and self.device.type == "cuda":
+                torch.cuda.synchronize(self.device)
+            return time.perf_counter()
+
         cleanup_started = clock()
         import gc
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        elapsed("cleanup_s", cleanup_started)
-        elapsed("score_total_s", total_started)
+        if timings is not None:
+            timings["cleanup_s"] = timings.get("cleanup_s", 0.0) + (
+                clock() - cleanup_started
+            )
+
+    @torch.no_grad()
+    def score_multi_index(
+        self,
+        spectrogram_arrays: list[np.ndarray],
+        targets: Mapping[str, tuple["PatchScorer", float]],
+        *,
+        timings: dict[str, float] | None = None,
+    ) -> dict[str, list[dict]]:
+        """Encode once, then score exactly against each named frozen index."""
+        if not targets:
+            raise ValueError("At least one scoring target is required")
+        for name, (scorer, _) in targets.items():
+            if not name or not name.replace("_", "").isalnum():
+                raise ValueError(f"Invalid target name: {name!r}")
+            if scorer.device != self.device:
+                raise ValueError(
+                    f"Target {name!r} uses {scorer.device}; encoder uses {self.device}"
+                )
+
+        def clock() -> float:
+            if timings is not None and self.device.type == "cuda":
+                torch.cuda.synchronize(self.device)
+            return time.perf_counter()
+
+        total_started = clock()
+        encode_timings: dict[str, float] | None = {} if timings is not None else None
+        patch_tokens = self.encode_patch_tokens(
+            spectrogram_arrays, timings=encode_timings
+        )
+        if timings is not None and encode_timings is not None:
+            timings.update({f"encoder_{key}": value for key, value in encode_timings.items()})
+
+        results: dict[str, list[dict]] = {}
+        for name, (scorer, threshold) in targets.items():
+            target_timings: dict[str, float] | None = {} if timings is not None else None
+            results[name] = scorer.score_patch_tokens(
+                patch_tokens, threshold, timings=target_timings
+            )
+            if timings is not None and target_timings is not None:
+                timings.update(
+                    {f"{name}_{key}": value for key, value in target_timings.items()}
+                )
+        self._cleanup(timings)
+        if timings is not None:
+            timings["score_total_s"] = timings.get("score_total_s", 0.0) + (
+                clock() - total_started
+            )
+        return results
+
+    @torch.no_grad()
+    def score_spectrogram(
+        self,
+        spectrogram_arrays: list[np.ndarray],
+        threshold: float,
+        *,
+        timings: dict[str, float] | None = None,
+    ) -> list[dict]:
+        """Run the legacy single-index MIL path with unchanged return values.
+
+        ``timings`` is an opt-in benchmark sink. CUDA synchronization is
+        performed only when it is supplied, so the normal production path is
+        unaffected.
+        """
+        def clock() -> float:
+            if timings is not None and self.device.type == "cuda":
+                torch.cuda.synchronize(self.device)
+            return time.perf_counter()
+
+        total_started = clock()
+        encode_timings: dict[str, float] | None = {} if timings is not None else None
+        patch_tokens = self.encode_patch_tokens(
+            spectrogram_arrays, timings=encode_timings
+        )
+        if timings is not None and encode_timings is not None:
+            timings.update(encode_timings)
+        scoring_timings: dict[str, float] | None = {} if timings is not None else None
+        results = self.score_patch_tokens(
+            patch_tokens, threshold, timings=scoring_timings
+        )
+        if timings is not None and scoring_timings is not None:
+            timings.update(scoring_timings)
+        self._cleanup(timings)
+        if timings is not None:
+            timings["score_total_s"] = timings.get("score_total_s", 0.0) + (
+                clock() - total_started
+            )
         return results

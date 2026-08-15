@@ -110,7 +110,12 @@ def test_patch_scorer_verifies_two_distinct_indices_without_mocking_init(
     )
 
     class FakeDino(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.forward_calls = 0
+
         def forward_features(self, batch):
+            self.forward_calls += 1
             tokens = torch.ones(
                 (batch.shape[0], 4, 384),
                 dtype=batch.dtype,
@@ -164,7 +169,39 @@ def test_patch_scorer_verifies_two_distinct_indices_without_mocking_init(
         "score_total_s",
     } <= timings.keys()
     assert all(value >= 0.0 for value in timings.values())
-    assert len(native_scorer.score_spectrogram([image], threshold=1.0)) == 1
+    native_baseline = native_scorer.score_spectrogram([image], threshold=1.0)
+    assert len(native_baseline) == 1
+
+    calls_before_multi = model.forward_calls
+    multi_timings = {}
+    multi = primary_scorer.score_multi_index(
+        [image],
+        {
+            "primary": (primary_scorer, 1.0),
+            "native": (native_scorer, 1.0),
+        },
+        timings=multi_timings,
+    )
+    assert model.forward_calls == calls_before_multi + 1
+    for expected, actual in (
+        (baseline[0], multi["primary"][0]),
+        (native_baseline[0], multi["native"][0]),
+    ):
+        assert actual["novelty_score"] == expected["novelty_score"]
+        np.testing.assert_array_equal(
+            actual["top_k_indices"], expected["top_k_indices"]
+        )
+        np.testing.assert_array_equal(actual["mil_vector"], expected["mil_vector"])
+        np.testing.assert_array_equal(
+            actual["patch_anomaly_scores"], expected["patch_anomaly_scores"]
+        )
+    assert {
+        "encoder_dino_forward_s",
+        "primary_index_scoring_s",
+        "native_index_scoring_s",
+        "cleanup_s",
+        "score_total_s",
+    } <= multi_timings.keys()
 
 
 def test_patch_scorer_rejects_index_tampered_after_manifest(tmp_path) -> None:
