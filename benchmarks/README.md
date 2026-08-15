@@ -40,3 +40,21 @@ pinned GWpy Q-transform and Q range 4--64, GWpy warns that the usable upper
 frequency is reduced to approximately 1291.05 Hz. This is existing canonical
 behavior, not a DANTE-Light modification; it must remain visible in provenance
 when environments are compared.
+
+## L1 exact shared-encoder comparison
+
+The L1 pair was measured on the same commit, environment, selected windows,
+warm-up, and repeat schedule:
+
+- `dante_light_l1_canonical_control.json`: 1.1616 windows/s;
+- `dante_light_l1_shared_encoder.json`: 1.2931 windows/s.
+
+The observed paired throughput ratio is 1.1132 (about 11.3% higher). The shared
+path also reduced peak process RSS from about 1536 MiB to 1509 MiB. All 17
+row-level outputs have identical input hashes, primary/native scores, and top-k
+hashes across the two engines; both measured repeats are exact, and both remain
+within the frozen score tolerance.
+
+This result clears the predeclared 10% engineering adoption gate on the
+recorded host. It does not imply an 11.3% gain on every GPU or storage system.
+The shared path remains opt-in until the later shadow and packaging gates pass.

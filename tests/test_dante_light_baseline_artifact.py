@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "benchmarks" / "dante_light_l0_baseline.json"
 RESULTS = ROOT / "benchmarks" / "dante_light_l0_baseline.jsonl"
 MANIFEST = ROOT / "config" / "dante_light_replay_v1.json"
+L1_CONTROL = ROOT / "benchmarks" / "dante_light_l1_canonical_control.json"
+L1_SHARED = ROOT / "benchmarks" / "dante_light_l1_shared_encoder.json"
 
 
 def _load_jsonl(path: Path) -> list[dict]:
@@ -122,3 +124,58 @@ def test_l0_report_does_not_publish_machine_local_data_paths() -> None:
     for digest in json.loads(encoded)["source_sha256"].values():
         assert len(digest) == 64
         int(digest, 16)
+
+
+def test_l1_shared_encoder_is_exact_and_meets_frozen_adoption_gate() -> None:
+    control = json.loads(L1_CONTROL.read_text(encoding="utf-8"))
+    shared = json.loads(L1_SHARED.read_text(encoding="utf-8"))
+    control_rows = _load_jsonl(L1_CONTROL.with_suffix(".jsonl"))
+    shared_rows = _load_jsonl(L1_SHARED.with_suffix(".jsonl"))
+
+    assert control["status"] == shared["status"] == "complete"
+    assert control["engine"] == "canonical"
+    assert shared["engine"] == "shared_encoder"
+    assert control["code_state"] == shared["code_state"]
+    assert control["code_state"]["tracked_dirty"] is False
+    assert control["selection"] == shared["selection"]
+    assert control["representation"] == shared["representation"]
+    assert control["coverage"] == shared["coverage"] == {
+        "drops": 0,
+        "failures": [],
+        "measured_windows": 16,
+        "queue_depth": 0,
+    }
+
+    exact_fields = (
+        "case_id",
+        "expected_native_score",
+        "input_sha256",
+        "native_score",
+        "native_top_k_sha256",
+        "phase",
+        "primary_score",
+        "primary_top_k_sha256",
+        "repeat",
+        "window_id",
+    )
+    assert len(control_rows) == len(shared_rows) == 17
+    for expected, actual in zip(control_rows, shared_rows, strict=True):
+        assert all(expected[field] == actual[field] for field in exact_fields)
+
+    for report, report_path in ((control, L1_CONTROL), (shared, L1_SHARED)):
+        result_path = report_path.with_suffix(".jsonl")
+        assert hashlib.sha256(result_path.read_bytes()).hexdigest() == report[
+            "results_jsonl"
+        ]["sha256"]
+        assert report["numerical_repeat_max_abs_delta"] <= 1.0e-7
+        assert report["golden_expected_max_abs_delta"] <= report[
+            "golden_score_atol"
+        ]
+
+    speedup = shared["throughput_windows_per_s"] / control[
+        "throughput_windows_per_s"
+    ]
+    assert speedup >= 1.10
+    assert shared["resources"]["peak_rss_bytes"] <= control["resources"][
+        "peak_rss_bytes"
+    ]
