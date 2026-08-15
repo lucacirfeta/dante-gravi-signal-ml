@@ -63,10 +63,15 @@ class PromotionEvidence:
         if missing:
             raise ContractError(f"epoch promotion gates are not PASS: {missing}")
         root = Path(root)
+        resolved_root = root.resolve()
         if not self.artifacts:
             raise ContractError("epoch promotion requires verifier artifacts")
         for relative, expected in self.artifacts:
-            path = root / relative
+            path = (root / relative).resolve()
+            if path != resolved_root and resolved_root not in path.parents:
+                raise ContractError(
+                    f"epoch evidence path escapes project root: {relative}"
+                )
             if not path.is_file():
                 raise ContractError(f"missing epoch evidence artifact: {relative}")
             if sha256_file(path) != expected:

@@ -110,6 +110,13 @@ def test_epoch_promotion_requires_temporal_separation_hashes_and_all_gates(tmp_p
             tampered, representation=REPRESENTATION, root=tmp_path
         )
 
+    escaped = promotion_payload(tmp_path)
+    escaped["promotion_evidence"]["artifacts"][0]["path"] = "../evidence.json"
+    with pytest.raises(ContractError, match="escapes project root"):
+        verified_epoch_from_promotion(
+            escaped, representation=REPRESENTATION, root=tmp_path
+        )
+
 
 def test_drift_monitor_freezes_on_shift_or_insufficient_evidence() -> None:
     contract = DriftContract(
