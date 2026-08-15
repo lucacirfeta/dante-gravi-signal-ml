@@ -1,0 +1,10 @@
+name: dante-cpu-reference
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - nds2-client
+  - python-nds2-client
+  - pip:
+      - -r requirements-cpu.txt

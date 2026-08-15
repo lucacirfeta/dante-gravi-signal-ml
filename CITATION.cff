@@ -10,11 +10,12 @@ abstract: >
   dense Patch Tokens from a frozen DINOv2 (ViT) model, applying
   Top-K Multiple Instance Learning (MIL) in the spherical cosine
   similarity space against a Vector-Quantized background reference.
-  Classification relies on rigorous Extreme Value Theory (EVT)
-  thresholding to guarantee a robust False Positive Rate. The
+  Detection uses empirical percentile thresholds with aligned
+  temporal-block bootstrap uncertainty; the previously considered
+  parametric GEV fit is explicitly rejected. The
   extracted anomaly vectors are then grouped via UMAP and Dirichlet
   Process Mixture Model (DPMM) clustering to discover new transient
-  morphologies without generative fine-tuning. Version 3 (release 3.6.0)
+  morphologies without generative fine-tuning. Version 3 (release 3.7.0)
   adds a multi-scale (0.5-4.0 s) sensitization layer, a block-bootstrap
   Domain Shift Defense, and an empirically calibrated family-wise
   PEM auxiliary-channel coherence veto, replacing raw per-channel
@@ -24,9 +25,8 @@ abstract: >
   with a physical cross-correlation test over the light-travel lag
   window, whose coherent recovery efficiency is measured across ten
   morphologies. Includes extensive ablation studies and spatial
-  saliency mapping. Note that no cross-validation against the Gravity
-  Spy catalog was possible: no released Gravity Spy classification set
-  covers the O4a epoch.
+  saliency mapping. O3b Gravity Spy classes provide bounded known-morphology
+  controls; no released Gravity Spy classification set covers the O4a epoch.
 
 authors:
   - family-names: "Cirfeta"
@@ -36,10 +36,10 @@ authors:
     city: "Rome"
     country: "IT"
 
-version: "3.6.0"
-date-released: "2026-07-29"
+version: "3.7.0"
+date-released: "2026-08-13"
 
-doi: "10.5281/zenodo.21676289"
+doi: "10.5281/zenodo.21912589"
 url: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 repository-code: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 
@@ -107,6 +107,11 @@ references:
     title: "Gravity Spy ML Classifications O3b"
     url: "https://zenodo.org/records/5649212"
     doi: "10.5281/zenodo.5649212"
+
+  - type: dataset
+    title: "DANTE v6: Reproducibility and Validation Evidence Bundle"
+    url: "https://zenodo.org/records/21925453"
+    doi: "10.5281/zenodo.21925453"
 
   - type: article
     title: >

@@ -25,6 +25,7 @@ from src.pipeline_v2_production.saliency_map import generate_saliency_map
 from src.core.data_loader import fetch_strain_data
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
 from src.core.encoder import build_dinov2_transform
+from src.core.model_loader import load_dinov2_model
 from src.pipeline_v2_production.pem_coherence_analysis import evaluate_candidate_pem
 
 logger = setup_logger(__name__)
@@ -125,15 +126,7 @@ class ValidationReporter:
             if scorer is not None:
                 self._dinov2_model = scorer.model
                 return self._dinov2_model
-            import torch
-            try:
-                self._dinov2_model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-            except Exception as e:
-                logger.warning(f"GitHub API failed ({e}), loading from local cache...")
-                cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
-                self._dinov2_model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
-            self._dinov2_model.eval()
-            self._dinov2_model.to(self.device)
+            self._dinov2_model = load_dinov2_model(self.device)
         return self._dinov2_model
             
     def _mark_completed(self, step_name: str):
@@ -868,14 +861,7 @@ class ValidationReporter:
         if not hasattr(self, 'spatial_median'):
             self.spatial_median, self.global_mean = self._compute_dynamic_background()
             
-        try:
-            model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-        except Exception as e:
-            logger.warning(f"GitHub API failed ({e}), loading from local cache...")
-            cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
-            model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
-        model.eval()
-        model.to(self.device)
+        model = load_dinov2_model(self.device)
         transform = build_dinov2_transform()
         
         with h5py.File(self.h5_path, "r") as f:
@@ -1083,9 +1069,7 @@ class ValidationReporter:
             md_content += "*No candidates requiring independent coincidence verification found in this session.*\n\n"
         else:
             try:
-                model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-                model.eval()
-                model.to(self.device)
+                model = load_dinov2_model(self.device)
             except Exception as e:
                 model = None
                 

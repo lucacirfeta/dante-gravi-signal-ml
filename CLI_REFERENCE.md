@@ -26,7 +26,7 @@ By using the `--session-id` flag, the CLI will automatically infer read/write pa
 
 ### Multi-Run Support
 
-> **Future runs (O5, …):** declare the run in `config.yaml → run_config` with explicit `gps_start`/`gps_end` bounds. `get_observing_run()` resolves config-first (config wins over the builtin epoch table), and every run-parametric artifact (`Master_Taxonomy_<run>.csv`, Final Discovery Report, `dq_cache_<det>_<run>.json`, per-run threshold gating) follows automatically — no code changes. The pipeline fails loudly listing what is missing (reference index, calibrated thresholds, `tau_coh`) instead of producing silently-wrong numbers.
+> **Future runs (O5, …):** declare GPS bounds in `config.yaml → run_config`, build and register a SHA-256-pinned native index, and calibrate run-specific thresholds and `tau_coh`. Run-parametric filenames follow automatically, but scientific calibration does not. Missing contracts fail loudly.
 
 The pipeline supports the analysis of different LIGO/Virgo observational runs. Currently supported and selectable runs via the `--run` flag are:
 - **O2** (Start: 2016-11-30)
@@ -280,7 +280,7 @@ Cross-session reducer. Must be run **after** the full `patch-analysis` scan is c
   10. Automatically spawns the offline validation subprocesses: `poisson-upper-limit` (livetime **gated on `{DET}_CBC_CAT1`** science segments; aborts rather than computing on the ungated span) and `pem-coherence-analysis` (unsafe channels `PEM-EX_VMON`/`PEM-EY_MAINSMON` excluded; skips are logged, never silent). Their failure is logged and does not abort aggregation.
 
 - `--production-dir`: Root production directory. *Default: `data/production/`*.
-- `--run`: Observing run context for EVT thresholds (e.g. O4a, O4b). *Default: `O4a`*.
+- `--run`: Observing run context for empirically calibrated thresholds (e.g. O4a, O4b). *Default: `O4a`*.
 - `--nds-host`: NDS2 server hostname for PEM analysis (e.g. `nds.gwosc.org`). If omitted, runs in public NULL-RESULT mode.
 
 ### 5b2. `multiscale-analysis` (V3 Characterization)
@@ -321,9 +321,9 @@ Run the Phase 4 Patch-Level Production pipeline directly on raw O4a data.
   1. Searches the `data-dir` for HDF5 raw data folders grouped by session.
   2. Spawns `ProcessPoolExecutor` with the specified number of `--workers` to extract raw strain, apply whitening, bandpass filter, and compute Q-transforms entirely on CPU cores.
   3. Preprocessed images are yielded in batches of size `--batch-size`.
-  4. The batched images are sent to DINOv2 on GPU, generating embeddings, calculating Top-K L2-normalized MIL vectors, and computing extreme-value p99 threshold anomaly scores against a compressed Vector Quantization (VQ) reference index.
+  4. The batched images are sent to a commit- and weight-pinned DINOv2 model, generating embeddings, calculating Top-K L2-normalized MIL vectors, and comparing empirical p99 anomaly scores against a compressed Vector Quantization (VQ) reference index.
   5. Continuous output is recorded chronologically in an SWMR HDF5 dataset inside `data/production/<session_id>`. Supports seamless `--resume`.
-  6. **Dual-Scoring**: Automatically searches for a native run index (`patch_compressed_index_{run}_ex.npz` or `.npz`). If found, dynamically enables a secondary novelty scoring pass directly on the native background for *Domain Shift Defense*, with zero I/O overhead.
+  6. **Dual-Scoring**: prefers a representation-versioned native run index and enables secondary novelty scoring for *Domain Shift Defense*. The canonical implementation reuses strain/Q-transform input but currently performs an additional encoder forward and centroid comparison; it is not zero-overhead. Every selected index must match the per-file SHA-256 and Q-range manifest.
 
 - `--detector` **(Required)**: Detector to use. Choices: `H1`, `L1`.
 - `--data-dir`: Directory containing raw HDF5 files. *Default: `data/raw/o4a/`*.
@@ -332,7 +332,7 @@ Run the Phase 4 Patch-Level Production pipeline directly on raw O4a data.
 - `--resume`: Flag. Resumes from the last checkpoint written to the HDF5 archive.
 - `--run`: Observing run context (e.g., O4a, O4b). Determines native index for dual-scoring. *Default: `O4a`*.
 - `--k`: Number of top-k patches for MIL vector pooling. *Default: `68`*.
-- `--fpr`: False Positive Rate for theoretical GEV thresholding (empirical). *Default: `0.01`* (Note: highly recommended to use `0.05` for broad searches).
+- `--fpr`: Target upper-tail fraction for the empirical percentile threshold. *Default: `0.01`*. Changing it changes the calibrated decision rule and must be reported.
 - `--n-background`: Samples used for empirical threshold calibration. *Default: `500`*.
 - `--seed`: Random seed. *Default: `42`*.
 - `--workers`: Number of CPU workers for parallel Q-Transform preprocessing. *Default: `8`*.
@@ -874,7 +874,7 @@ Output: `background_cohesion_{run}.json`, `background_mil_vectors_{run}.npy`
 > 2. Do **not** use `build_native_index --raw_sample_size` for this — it persists
 >    raw *patch tokens*, not MIL *segment* vectors; the two are not comparable.
 > 3. Do **not** run `build_native_index --run O4a` at all — it **overwrites** the
->    frozen, MD5-pinned reference index underpinning every published DSD result.
+>    frozen, per-artifact SHA-256-pinned reference index underpinning the published DSD result.
 
 ---
 

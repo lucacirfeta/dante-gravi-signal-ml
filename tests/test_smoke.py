@@ -203,7 +203,15 @@ def test_environment_is_recorded_with_artifacts(tmp_path) -> None:
         "gwpy version missing from the provenance record — it supplies both "
         "whiten() and q_transform(), so its version is the one that matters most."
     )
-    for key in ("git_commit", "python", "platform", "torch", "reference_index_md5"):
+    for key in (
+        "git_commit",
+        "python",
+        "platform",
+        "torch",
+        "reference_index_sha256",
+        "reference_index_md5",
+        "model_artifact_contract",
+    ):
         assert key in record, f"provenance record has no '{key}'"
 
 

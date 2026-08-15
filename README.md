@@ -2,7 +2,7 @@
 > Unsupervised morphological characterization of gravitational-wave transients using frozen Vision Transformers and Multiple Instance Learning.
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
-[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21676289-blue.svg)](https://doi.org/10.5281/zenodo.21676289)
+[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21912589-blue.svg)](https://doi.org/10.5281/zenodo.21912589)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -25,19 +25,19 @@ git clone https://github.com/lucacirfeta/dante-gravi-signal-ml.git
 cd dante-gravi-signal-ml
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-cpu.txt  # portable CPU reference
 
 # 2. Download raw GWOSC strain data (L1, 72 hours)
 python main.py fetch-raw --detector L1 --hours 72
 
-# 3. Obtain the baseline memory dictionary (Vector Quantization)
-#    NOTHING RUNS WITHOUT THIS FILE. Download the reference index from the
-#    These data artifacts are not bundled in the Zenodo software snapshot.
-#    Obtain the validated indices from the project artifact store and place them
-#    into data/reference/:
-#      data/reference/patch_compressed_index_o4a_ex.npz   (native O4a, K=1216)
-#      data/reference/patch_compressed_index_o3b.npz      (primary O3b, K=275)
-mkdir -p data/reference/
+# 3. Verify immutable model/index inputs. The software and paper-evidence
+#    Zenodo records do NOT contain the NPZ dictionaries. See R1/R2/R3 below;
+#    a missing artifact fails instead of being guessed.
+python scripts/manage_reference_artifacts.py acquire-model
+python scripts/manage_reference_artifacts.py verify
+# Required index names:
+#   data/reference/patch_compressed_index_o3b.npz          (O3b, K=275)
+#   data/reference/patch_compressed_index_o4a_q4-64_ex.npz (O4a, K=1216)
 # Verify your setup before going further (takes ~10 s):
 pytest -m smoke
 
@@ -115,7 +115,7 @@ For deep physical and mathematical derivations, refer to the [arXiv preprint (26
 ## 🏗️ Architecture
 - **Preprocessing:** 32-second whitened strain segments → Q-transform ($Q \in [4, 64]$) → $256 \times 256$ `cividis` spectrograms.
 - **Feature Extraction:** Frozen DINOv2 ViT-S/14 yields 1369 overlapping patch embeddings ($384$D) per segment.
-- **Background Dictionary:** VQ-clustered operational memory index — **$K=275$ centroids** (`patch_compressed_index_o3b.npz`, MD5-pinned in `PatchScorer`). $K$ is a derived parameter (95th-percentile reconstruction-error bound), not a hardcoded constant.
+- **Background Dictionary:** VQ-clustered operational memory index — **$K=275$ centroids** for canonical O3b discovery and **$K=1216$** for coherent O4a-native DSD. Each file has its own SHA-256/shape/Q-range contract in `config/reference_artifacts.json`.
 - **Anomaly Scoring:** Multiple Instance Learning (MIL) Top-$k$ pooling computes the mean $L_2$ distance of the $k=68$ most anomalous patches.
 - **State Tracker:** Dirichlet Process Gaussian Mixture Model (DPMM) absorbs macroscopic state shifts dynamically.
 - **Veto:** Cross-interferometer (H1/L1) cosine similarity matching across Top-$k$ patches suppresses localized artifacts. State machine: `ACTIVE_UNVERIFIED` (partner recording, search pending) is never conflated with `ACTIVE_NO_ANOMALY` (search ran, no match) or `UNOBSERVABLE` (no partner data); I/O failures route to *unverifiable*, never to *confirmed local*.
@@ -149,7 +149,7 @@ See `requirements.txt` for the full list. Core dependencies include:
 > on GPU, and with TF32 disabled. `requirements-lock.txt` is still worth using, and every
 > run now writes an `environment_*.json` beside its artifacts, but neither was the cause.
 
-**Every run now records its own provenance.** Scanning, per-session reporting and cross-session aggregation each write an `environment_*.json` next to their outputs, holding the full installed package set, the git commit, and the MD5 of each VQ reference index. Quote that file, not `requirements.txt`, when reporting where a number came from.
+**Every run now records its own provenance.** Scanning, per-session reporting and cross-session aggregation each write an `environment_*.json` next to their outputs, holding the installed package set, source state and reference-index hashes. New scoring HDF5 files record SHA-256 and retain MD5 only for resume compatibility with older files. Quote the adjacent environment record, not `requirements.txt`, when reporting where a number came from.
 
 ### Data Access (GWOSC)
 Raw O4a strain data is fetched programmatically from the Gravitational Wave Open Science Center (GWOSC). DANTE uses `gwpy` to stream the data automatically. 
@@ -164,21 +164,21 @@ The public source datasets used to construct and benchmark reference indices are
 - **Gravity Spy O1--O3 classifications:** `10.5281/zenodo.5649212`
 - **Gravity Spy image training set (legacy benchmark):** `10.5281/zenodo.1476551`
 
-These records do **not** contain DANTE's validated `.npz` dictionaries, and the
-DANTE software snapshot does not bundle them either. Exact production
-reproduction therefore requires the separately archived reference-index
-artifacts and their recorded hashes; a newly calibrated run must build and
-record its own native index.
+These records do **not** contain DANTE's validated `.npz` dictionaries. Neither
+the v3.7.0 software record (`10.5281/zenodo.21912589`) nor the v6 paper-evidence
+record (`10.5281/zenodo.21925453`) bundles them. Exact canonical scoring requires
+the separate `dante_reference_artifacts_v1.zip`; its deposit is still pending
+and this repository deliberately reports that R2 clean-clone gate as open.
+See [`docs/REPRODUCIBILITY_LEVELS.md`](docs/REPRODUCIBILITY_LEVELS.md).
 
 ## 📊 Key Results
 *Note: All empirical claims are strictly bounded by the conditions under which they were measured.*
 
-> **v6 audit gate (2026-07-28):** O4a results stratified by the historical
-> Q32-index/Q64-query DSD classes are superseded. The coherent Q64/Q64 funnel is
-> 3,593 ROBUST / 2,109 AMBIGUOUS / 4,670 BACKGROUND over 10,372 candidates.
-> P11 resolves no catalogue-overlap excess (2 observed, null 2.068 +/- 1.428,
-> p=0.6148). PEM/P4/P5/P10/P9 and the final funnel remain under coherent rerun;
-> do not quote their legacy values as v6 results.
+> **v6 detector-aware audit:** the final coherent Q64/Q64 taxonomy contains
+> 10,429 detector--GPS keys: 6,365 ROBUST, 1,275 AMBIGUOUS and 2,789 BACKGROUND.
+> Of 10,372 historical paired keys, 4,676 dispositions change under the coherent
+> representation; 57 detector-specific keys were restored. These are statistical
+> DSD dispositions, not physical glitch classes.
 
 - **O3b Benchmark Novelty Detection:** AUC > 0.98. 
   *(Conditions: Evaluated exclusively on the labeled O3b benchmark dataset, contrasting DINOv2 vs. ResNet baselines).*
@@ -190,8 +190,10 @@ record its own native index.
 
 - **Methodological Upper Limit (post-audit, 2026-07):** $R_{90} < 5.83 \text{ yr}^{-1}$ for H1 ($N=0$, 144.2 d) and $R_{90} < 5.63 \text{ yr}^{-1}$ for L1 ($N=0$, 149.4 d) on morphologically novel transients.
   *(Conditions: 42-session O4a production; livetime gated on `{DET}_CBC_CAT1` science segments — less optimistic by construction than the deprecated span-based values (3.70/6.52 yr⁻¹ over ~227/218-day bounding spans), which used an ungated denominator.)*
-- **Final funnel outcome:** pending the coherent 141-event PEM rerun. The legacy
-  one-survivor funnel must not be used as the v6 result.
+- **PEM endpoint:** in the fixed 141-event measured cohort, 8 class transitions
+  occur after detector-aware rejoining; the robust-vs-background Fisher test is
+  p=1.0. This resolves no class enrichment and is not evidence of equal coupling
+  rates or of absence in unmeasured channels.
 
 ## 🧪 Scientific Integrity Guarantees
 Every experimentally-validated invariant of the pipeline is protected by a regression test (`tests/test_regression_hard_constraints.py` + `tests/test_norm_leakage_units.py`, 36 tests). Highlights:
@@ -203,7 +205,10 @@ Every experimentally-validated invariant of the pipeline is protected by a regre
   representation used.
 - **Per-run calibration:** threshold files carry a `calibration_run` tag; applying thresholds across observing runs raises (`assert_threshold_run`), except in explicitly-declared cross-run measurement scripts. The 2026-07 leakage investigation (pre-registered, falsified the per-image-normalization hypothesis, and re-measured cross-run FPR at 0.7–2.9 % vs the 8–9 % artifact of the pre-audit code) is archived under `results/norm_leakage/`.
 - **Reports:** the Final Discovery Report is run-parametric (`Master_Taxonomy_<run>.csv`, no hardcoded epochs) and self-declaring: any missing/degraded input is listed in a completeness block at the top — a hollow report cannot masquerade as a null result.
-- **Multi-run support:** new observing runs (O5, …) are added by declaring GPS bounds in `config.yaml → run_config`; `get_observing_run()` resolves config-first. No code changes required.
+- **Multi-run support:** new observing runs (O5, …) require declared GPS bounds,
+  a newly calibrated native index added to the artifact manifest, per-run
+  thresholds and `tau_coh`. Missing contracts fail loudly; future readiness is
+  not inferred from a run label alone.
 - **Unsafe PEM channels:** `PEM-EX_VMON` / `PEM-EY_MAINSMON` (23 % empirical FPR on time-shifted background) are excluded from production `AUX_CHANNELS` and guarded by test; PEM skips are always logged, never silent.
 
 ## 🛑 Limitations
@@ -242,15 +247,15 @@ To cite the archived software and analysis artifacts:
   title     = {DANTE (Domain-Adaptive Network for Transient Evaluation)},
   author    = {Cirfeta, Luca},
   year      = {2026},
-  version   = {3.6.0},
-  doi       = {10.5281/zenodo.21676289},
+  version   = {3.7.0},
+  doi       = {10.5281/zenodo.21912589},
   publisher = {Zenodo},
-  url       = {https://doi.org/10.5281/zenodo.21676289}
+  url       = {https://doi.org/10.5281/zenodo.21912589}
 }
 ```
 
 > The exact version used for every number in the manuscripts is pinned at git
-> tag [`3.6.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.6.0).
+> tag [`3.7.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0).
 
 ### LLM Disclosure
 The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.

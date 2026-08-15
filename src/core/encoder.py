@@ -31,6 +31,7 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from src.core.utils import get_device, load_config, setup_logger
+from src.core.model_loader import load_dinov2_model
 
 logger: logging.Logger = setup_logger(__name__)
 
@@ -114,11 +115,8 @@ class DINOv2Encoder:
             self.batch_size = _batch_defaults.get(self.device.type, 16)
         self.logger = logger or logging.getLogger(__name__)
 
-        # Load DINOv2-Reg ViT-S/14 via torch.hub
-        self.model: torch.nn.Module = torch.hub.load(
-            "facebookresearch/dinov2",
-            "dinov2_vits14_reg",
-        )
+        # Load the immutable DINOv2 code-and-weights contract.
+        self.model: torch.nn.Module = load_dinov2_model(self.device)
         self.model.eval()
 
         # Freeze all parameters — no training, pure feature extraction

@@ -642,16 +642,28 @@ def record_environment(
 
         # The VQ dictionaries are inputs, not code: hash whichever are present
         # so a mismatched index is detectable after the fact.
-        indices = {}
+        indices_md5 = {}
+        indices_sha256 = {}
         try:
             for path in sorted(get_reference_dir().glob("patch_compressed_index*.npz")):
-                h = hashlib.md5()
+                md5 = hashlib.md5()
+                sha256 = hashlib.sha256()
                 with open(path, "rb") as f:
                     for chunk in iter(lambda: f.read(1 << 20), b""):
-                        h.update(chunk)
-                indices[path.name] = h.hexdigest()
+                        md5.update(chunk)
+                        sha256.update(chunk)
+                indices_md5[path.name] = md5.hexdigest()
+                indices_sha256[path.name] = sha256.hexdigest()
         except Exception:
             pass
+
+        model_contract = None
+        try:
+            from src.core.artifact_manager import model_contract_summary
+
+            model_contract = model_contract_summary()
+        except Exception as exc:
+            logger.warning("Could not record model artifact contract: %s", exc)
 
         record = {
             "context": context,
@@ -672,7 +684,9 @@ def record_environment(
                     torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
                 ),
             },
-            "reference_index_md5": indices,
+            "reference_index_sha256": indices_sha256,
+            "reference_index_md5": indices_md5,
+            "model_artifact_contract": model_contract,
             "packages": packages,
         }
 

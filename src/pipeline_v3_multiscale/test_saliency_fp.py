@@ -15,6 +15,7 @@ from src.core.data_loader import fetch_strain_data
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.pipeline_v3_multiscale.micro_mdc_multiscale import excess_power_veto
 from src.core.utils import setup_logger
+from src.core.model_loader import load_dinov2_model
 
 logger = setup_logger(__name__)
 
@@ -31,8 +32,7 @@ def test_saliency_and_veto(detector="L1", n_test=50, seed=42):
         p99_thresh = json.load(f)
         
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-    model = model.to(device)
+    model = load_dinov2_model(device)
     model.eval()
     
     transform = T.Compose([

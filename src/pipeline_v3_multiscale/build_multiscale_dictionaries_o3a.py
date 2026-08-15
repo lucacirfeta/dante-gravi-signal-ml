@@ -15,6 +15,7 @@ from gwosc.timeline import get_segments
 from src.core.data_loader import fetch_strain_data
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.encoder import build_dinov2_transform
+from src.core.model_loader import load_dinov2_model
 from src.core.utils import setup_logger
 from src.pipeline_v3_multiscale.micro_mdc_multiscale import excess_power_veto
 
@@ -48,7 +49,7 @@ def build_o3a_dictionaries(detector="L1", n_dict=2000, seed=42):
     logger.info(f"Finding {n_dict} valid background centers from O3a...")
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg').to(device)
+    model = load_dinov2_model(device)
     model.eval()
     for param in model.parameters(): param.requires_grad = False
     transform = build_dinov2_transform()

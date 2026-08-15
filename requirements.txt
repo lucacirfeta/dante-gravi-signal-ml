@@ -29,8 +29,8 @@ seaborn>=0.13
 # --- ML framework (Phase 2+) ---
 torch>=2.1.0
 torchvision>=0.16.0
-# DINOv2 loaded via torch.hub — no pip package needed.
-# First run downloads ~90MB to ~/.cache/torch/hub/
+# DINOv2 has no pip dependency: the central loader fixes a full upstream Git
+# commit and verifies the ~90 MB weight file before deserialization.
 
 # --- Image processing ---
 Pillow>=10.0.0

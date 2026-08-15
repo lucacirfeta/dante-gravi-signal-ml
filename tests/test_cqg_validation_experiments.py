@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -100,6 +101,88 @@ def test_domain_cache_identity_changes_with_sample_contract() -> None:
     assert baseline != DOMAIN.cache_identity("o3b", "L1", 12, 43)
     assert baseline["qrange"] == [4, 64]
     assert baseline["source_sha256"]
+
+
+def test_domain_cache_identity_pins_model_contract() -> None:
+    identity = DOMAIN.cache_identity("o3b", "L1", 12, 42)
+    assert identity["schema_version"] == DOMAIN.CACHE_SCHEMA_VERSION == 3
+    assert identity["encoder"]["revision"] == (
+        "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c"
+    )
+    assert identity["encoder"]["source_python_tree_sha256"] == (
+        "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef"
+    )
+    assert identity["encoder"]["weights_sha256"] == (
+        "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb"
+    )
+    assert "src/core/model_loader.py" in identity["source_sha256"]
+
+
+def test_exact_legacy_domain_cache_is_compatible_but_mutation_is_not() -> None:
+    identity = DOMAIN.legacy_v2_cache_identity("o3b", "L1", 12, 42)
+    assert DOMAIN.legacy_v2_runtime_equivalence_is_valid()
+    assert DOMAIN.cache_identity_is_compatible(identity, "o3b", "L1", 12, 42)
+
+    mutated = json.loads(json.dumps(identity))
+    mutated["source_sha256"]["src/core/preprocessor.py"] = "0" * 64
+    assert not DOMAIN.cache_identity_is_compatible(
+        mutated, "o3b", "L1", 12, 42
+    )
+
+
+def test_compatible_cache_record_reuses_only_exact_legacy_cache(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setattr(DOMAIN, "OUT", tmp_path)
+    identity = DOMAIN.legacy_v2_cache_identity("o3b", "L1", 2, 7)
+    cache = DOMAIN._cache_path("o3b", "L1", 2, 7, 2)
+    np.savez_compressed(
+        cache,
+        gps=np.array([1.0, 2.0]),
+        tokens=np.zeros((2, 1369, 384), dtype=np.float32),
+        identity_json=json.dumps(identity, sort_keys=True),
+    )
+    record = DOMAIN.compatible_cache_record("o3b", "L1", 2, 7)
+    assert record is not None
+    assert record[0] == cache
+    assert record[1] == identity
+
+    identity["seed"] = 8
+    np.savez_compressed(
+        cache,
+        gps=np.array([1.0, 2.0]),
+        tokens=np.zeros((2, 1369, 384), dtype=np.float32),
+        identity_json=json.dumps(identity, sort_keys=True),
+    )
+    assert DOMAIN.compatible_cache_record("o3b", "L1", 2, 7) is None
+
+
+def test_exact_legacy_known_glitch_cache_is_compatible() -> None:
+    kwargs = {
+        "detector": "L1",
+        "pool_digest": "a" * 64,
+        "pool_n": 150,
+        "n_per_class": 30,
+    }
+    identity = KNOWN.legacy_v2_known_cache_identity(**kwargs)
+    assert KNOWN.known_cache_identity_is_compatible(identity, **kwargs)
+
+    mutated = json.loads(json.dumps(identity))
+    mutated["quality_gate"] = "different"
+    assert not KNOWN.known_cache_identity_is_compatible(mutated, **kwargs)
+
+
+def test_current_known_glitch_cache_identity_pins_model() -> None:
+    identity = KNOWN.known_cache_identity(
+        detector="H1", pool_digest="b" * 64, pool_n=150, n_per_class=30
+    )
+    assert identity["schema_version"] == 3
+    assert identity["encoder"]["revision"] == (
+        "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c"
+    )
+    assert identity["encoder"]["weights_sha256"] == (
+        "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb"
+    )
 
 
 def _absorption_identity(**overrides):

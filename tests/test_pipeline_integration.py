@@ -43,9 +43,6 @@ def test_pipeline_end_to_end(temp_workspace, obs_run, monkeypatch):
     monkeypatch.setattr(data_loader, "_DATA_DIRECTORIES", [raw_dir])
     
     # We must patch sys.exit so validate_reports doesn't kill the test suite
-    def mock_verify_md5(self):
-        self.reference_md5 = "dummy_md5"
-        
     def mock_fetch_strain_data(*args, **kwargs):
         from gwpy.timeseries import TimeSeries
         import numpy as np
@@ -75,7 +72,6 @@ def test_pipeline_end_to_end(temp_workspace, obs_run, monkeypatch):
         ]
         
     with patch("sys.exit") as mock_exit, \
-         patch("src.core.patch_scorer.PatchScorer._verify_md5", mock_verify_md5), \
          patch(
              "src.pipeline_v2_production.production_report.fetch_strain_data",
              mock_fetch_strain_data,

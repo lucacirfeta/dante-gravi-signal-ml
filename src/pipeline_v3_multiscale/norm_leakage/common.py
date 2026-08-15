@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from src.core.utils import setup_logger, normalize_spectrogram, normalize_spectrogram_fixed
+from src.core.model_loader import load_dinov2_model
 from src.pipeline_v3_multiscale.sampling import respects_guard, GUARD_TIME_S
 
 logger = setup_logger(__name__)
@@ -183,8 +184,7 @@ class PatchEncoder:
 
         self.torch = torch
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = torch.hub.load("facebookresearch/dinov2",
-                                    "dinov2_vits14_reg").to(self.device)
+        self.model = load_dinov2_model(self.device)
         self.model.eval()
         for p in self.model.parameters():
             p.requires_grad = False

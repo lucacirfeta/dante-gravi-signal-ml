@@ -9,6 +9,7 @@ from src.core.data_loader import fetch_strain_data, _DATA_DIRECTORIES
 from gwosc.timeline import get_segments
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.utils import setup_logger
+from src.core.model_loader import load_dinov2_model
 
 logger = setup_logger(__name__)
 
@@ -77,7 +78,7 @@ def test_fpr(detector="L1", n_test=200):
     # The user specifically asked for FPR at 2s and 4s.
     test_scales = [0.5, 1, 2, 4]
             
-    model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg').to(device)
+    model = load_dinov2_model(device)
     model.eval()
     for param in model.parameters(): param.requires_grad = False
     

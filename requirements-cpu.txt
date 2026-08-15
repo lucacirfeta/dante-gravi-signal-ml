@@ -1,0 +1,28 @@
+# Portable CPU reference environment for smoke/replay checks (Python 3.11).
+# This is a functional reference, not the historical CUDA-nightly environment
+# recorded beside the published O4a artifacts.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+torch==2.12.1+cpu
+torchvision==0.27.1+cpu
+numpy==2.4.5
+scipy==1.17.1
+pandas==3.0.3
+gwpy==4.0.1
+gwosc==0.8.2
+h5py==3.16.0
+astropy==7.2.0
+matplotlib==3.10.9
+seaborn==0.13.2
+Pillow==12.2.0
+scikit-image==0.25.2
+scikit-learn==1.8.0
+umap-learn==0.5.12
+PyYAML==6.0.3
+tqdm==4.67.1
+python-dotenv==1.1.1
+sqlalchemy==2.0.43
+psycopg2-binary==2.9.10
+requests==2.32.5
+tenacity==9.1.2
+pytest==8.4.1

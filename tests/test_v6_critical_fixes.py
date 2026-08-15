@@ -17,6 +17,7 @@ from src.core.index_contract import (
     qrange_tag,
     validate_native_index,
 )
+from src.core.patch_scorer import PatchScorer
 
 
 def _write_index(path, *, qrange=None) -> None:
@@ -59,6 +60,253 @@ def test_declared_qrange_round_trip(tmp_path) -> None:
     assert contract.declared is True
     assert contract.legacy_inferred is False
     assert len(contract.sha256) == 64
+
+
+def _write_artifact_manifest(path, indices) -> None:
+    from src.core.index_contract import sha256_file
+
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "artifact_root": ".",
+                "reference_indices": {
+                    name: {
+                        "path": index.name,
+                        "sha256": sha256_file(index),
+                        "embedding_dim": 384,
+                        "n_centroids": 2,
+                        "qrange": list(qrange),
+                    }
+                    for name, index, qrange in indices
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_patch_scorer_verifies_two_distinct_indices_without_mocking_init(
+    tmp_path,
+) -> None:
+    import torch
+
+    primary = tmp_path / "patch_compressed_index_o3b.npz"
+    native = tmp_path / "patch_compressed_index_o4a_q4-64_ex.npz"
+    _write_index(primary, qrange=(4, 32))
+    payload = {
+        "embeddings": np.full((2, 384), 2.0, dtype=np.float32),
+        "labels": np.array(["BG", "BG"]),
+        "meta": json.dumps({"qrange": [4, 64]}),
+    }
+    np.savez(native, **payload)
+    manifest = tmp_path / "reference_artifacts.json"
+    _write_artifact_manifest(
+        manifest,
+        [
+            ("primary", primary, (4, 32)),
+            ("native", native, (4, 64)),
+        ],
+    )
+
+    class FakeDino(torch.nn.Module):
+        def forward_features(self, batch):
+            tokens = torch.ones(
+                (batch.shape[0], 4, 384),
+                dtype=batch.dtype,
+                device=batch.device,
+            )
+            return {"x_norm_patchtokens": tokens}
+
+    model = FakeDino()
+    primary_scorer = PatchScorer(
+        primary,
+        device="cpu",
+        k=1,
+        artifact_manifest_path=manifest,
+        model=model,
+    )
+    native_scorer = PatchScorer(
+        native,
+        device="cpu",
+        k=1,
+        artifact_manifest_path=manifest,
+        model=model,
+    )
+    assert primary_scorer.reference_sha256 != native_scorer.reference_sha256
+    assert primary_scorer.index_artifact_id == "primary"
+    assert native_scorer.index_artifact_id == "native"
+    assert primary_scorer.index_integrity_verified is True
+    assert native_scorer.index_integrity_verified is True
+
+    image = np.zeros((256, 256, 3), dtype=np.uint8)
+    assert len(primary_scorer.score_spectrogram([image], threshold=1.0)) == 1
+    assert len(native_scorer.score_spectrogram([image], threshold=1.0)) == 1
+
+
+def test_patch_scorer_rejects_index_tampered_after_manifest(tmp_path) -> None:
+    import torch
+
+    index = tmp_path / "patch_compressed_index_o3b.npz"
+    _write_index(index, qrange=(4, 32))
+    manifest = tmp_path / "reference_artifacts.json"
+    _write_artifact_manifest(manifest, [("primary", index, (4, 32))])
+    with index.open("ab") as handle:
+        handle.write(b"tamper")
+
+    with pytest.raises(RuntimeError, match="SHA-256 mismatch"):
+        PatchScorer(
+            index,
+            device="cpu",
+            artifact_manifest_path=manifest,
+            model=torch.nn.Identity(),
+        )
+
+
+def _write_tiny_model_contract(tmp_path):
+    import torch
+    from src.core.index_contract import sha256_file
+    from src.core.model_loader import python_source_tree_sha256
+
+    source = tmp_path / "dinov2_source"
+    package = source / "dinov2"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (source / "hubconf.py").write_text(
+        "import torch\n"
+        "def tiny_model(pretrained=False):\n"
+        "    return torch.nn.Linear(2, 2, bias=False)\n",
+        encoding="utf-8",
+    )
+    weights = tmp_path / "tiny_weights.pth"
+    expected = torch.nn.Linear(2, 2, bias=False)
+    with torch.no_grad():
+        expected.weight.copy_(torch.tensor([[1.0, 2.0], [3.0, 4.0]]))
+    torch.save(expected.state_dict(), weights)
+
+    manifest = tmp_path / "model_manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "artifact_root": ".",
+                "models": {
+                    "tiny": {
+                        "repository": "example/tiny",
+                        "revision": "a" * 40,
+                        "entrypoint": "tiny_model",
+                        "weights_filename": weights.name,
+                        "weights_url": "https://example.invalid/tiny.pth",
+                        "weights_sha256": sha256_file(weights),
+                        "weights_bytes": weights.stat().st_size,
+                        "source_python_tree_sha256": (
+                            python_source_tree_sha256(source)
+                        ),
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return source, weights, manifest
+
+
+def test_dinov2_loader_is_fully_offline_with_verified_local_mirror(
+    tmp_path,
+) -> None:
+    import torch
+    from src.core.model_loader import load_dinov2_model
+
+    source, weights, manifest = _write_tiny_model_contract(tmp_path)
+    model = load_dinov2_model(
+        "cpu",
+        source_dir=source,
+        weights_path=weights,
+        manifest_path=manifest,
+        artifact_id="tiny",
+        allow_download=False,
+    )
+    assert torch.equal(
+        model.weight,
+        torch.tensor([[1.0, 2.0], [3.0, 4.0]]),
+    )
+    assert all(not parameter.requires_grad for parameter in model.parameters())
+    assert model.dante_model_provenance["revision"] == "a" * 40
+    assert model.dante_model_provenance["source"] == str(source.resolve())
+
+
+def test_dinov2_loader_rejects_tampered_offline_source(tmp_path) -> None:
+    from src.core.artifact_manifest import ArtifactManifestError
+    from src.core.model_loader import load_dinov2_model
+
+    source, weights, manifest = _write_tiny_model_contract(tmp_path)
+    with (source / "hubconf.py").open("a", encoding="utf-8") as handle:
+        handle.write("# tampered\n")
+    with pytest.raises(ArtifactManifestError, match="source-tree SHA-256 mismatch"):
+        load_dinov2_model(
+            "cpu",
+            source_dir=source,
+            weights_path=weights,
+            manifest_path=manifest,
+            artifact_id="tiny",
+            allow_download=False,
+        )
+
+
+def test_dinov2_loader_rejects_tampered_weights_before_deserialization(
+    tmp_path,
+) -> None:
+    from src.core.artifact_manifest import ArtifactManifestError
+    from src.core.model_loader import load_dinov2_model
+
+    source, weights, manifest = _write_tiny_model_contract(tmp_path)
+    with weights.open("ab") as handle:
+        handle.write(b"tampered")
+    with pytest.raises(ArtifactManifestError, match="weights size mismatch"):
+        load_dinov2_model(
+            "cpu",
+            source_dir=source,
+            weights_path=weights,
+            manifest_path=manifest,
+            artifact_id="tiny",
+            allow_download=False,
+        )
+
+
+def test_dinov2_online_loader_addresses_full_commit_without_branch_validation(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    import torch
+    from src.core.model_loader import load_dinov2_model
+
+    _source, weights, manifest = _write_tiny_model_contract(tmp_path)
+    empty_hub = tmp_path / "empty_hub"
+    empty_hub.mkdir()
+    monkeypatch.setattr(torch.hub, "get_dir", lambda: str(empty_hub))
+    captured = {}
+
+    def fake_hub_load(repository, entrypoint, **kwargs):
+        captured.update(
+            repository=repository,
+            entrypoint=entrypoint,
+            kwargs=kwargs,
+        )
+        return torch.nn.Linear(2, 2, bias=False)
+
+    monkeypatch.setattr(torch.hub, "load", fake_hub_load)
+    model = load_dinov2_model(
+        "cpu",
+        weights_path=weights,
+        manifest_path=manifest,
+        artifact_id="tiny",
+        allow_download=True,
+    )
+    assert captured["repository"] == f"example/tiny:{'a' * 40}"
+    assert captured["entrypoint"] == "tiny_model"
+    assert captured["kwargs"]["skip_validation"] is True
+    assert captured["kwargs"]["pretrained"] is False
+    assert model.dante_model_provenance["revision"] == "a" * 40
 
 
 def _write_coherent_taxonomy_contract(
@@ -271,6 +519,72 @@ def test_native_builder_default_name_is_versioned(monkeypatch, tmp_path) -> None
         )
 
     assert not (tmp_path / "patch_compressed_index_o4a_ex.npz").exists()
+
+
+def test_production_resume_provenance_mismatch_is_non_destructive(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    import h5py
+    from src.pipeline_v2_production import production_writer
+
+    monkeypatch.setattr(
+        production_writer,
+        "record_environment",
+        lambda *_args, **_kwargs: None,
+    )
+    writer = production_writer.ProductionWriter(tmp_path, "session", "H1")
+    original = {
+        "reference_md5": "legacy-a",
+        "reference_sha256": "a" * 64,
+        "k": 2,
+    }
+    writer.verify_and_init(
+        original,
+        np.array([0.1], dtype=np.float32),
+        0.5,
+    )
+    with pytest.raises(RuntimeError, match="Cannot resume.*SHA-256"):
+        writer.verify_and_init(
+            {
+                "reference_md5": "legacy-b",
+                "reference_sha256": "b" * 64,
+                "k": 2,
+            },
+            np.array([0.2], dtype=np.float32),
+            0.6,
+        )
+    assert writer.hdf5_path.exists()
+    with h5py.File(writer.hdf5_path, "r") as handle:
+        assert handle["metadata"].attrs["reference_sha256"] == "a" * 64
+        assert float(handle["background_sample"].attrs["threshold"]) == 0.5
+
+
+def test_production_resume_never_deletes_corrupt_hdf5(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    from src.pipeline_v2_production import production_writer
+
+    monkeypatch.setattr(
+        production_writer,
+        "record_environment",
+        lambda *_args, **_kwargs: None,
+    )
+    writer = production_writer.ProductionWriter(tmp_path, "session", "L1")
+    sentinel = b"not-an-hdf5-but-must-survive"
+    writer.hdf5_path.write_bytes(sentinel)
+    with pytest.raises(RuntimeError, match="refusing to delete"):
+        writer.verify_and_init(
+            {
+                "reference_md5": "legacy",
+                "reference_sha256": "a" * 64,
+                "k": 2,
+            },
+            np.array([0.1], dtype=np.float32),
+            0.5,
+        )
+    assert writer.hdf5_path.read_bytes() == sentinel
 
 
 def test_processed_window_ledger_is_exact_and_deduplicated(

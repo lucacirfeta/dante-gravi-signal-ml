@@ -181,18 +181,27 @@ def test_vq_fallback_threshold_is_080():
 # K=275 — l'indice di riferimento in produzione non deve cambiare
 # =====================================================================
 
-def test_reference_index_is_k275_and_md5_pinned():
-    """Empirically verified: the production VQ index has exactly 275
-    centroids and its MD5 matches the constant pinned in PatchScorer."""
+def test_reference_index_is_k275_and_sha256_manifest_pinned():
+    """The production VQ index is pinned per artifact with SHA-256."""
     idx = REPO_ROOT / "data/reference/patch_compressed_index_o3b.npz"
     if not idx.exists():
         pytest.skip("production reference index not present in this checkout")
     import hashlib
+    import json
     data = np.load(idx, allow_pickle=True)
     assert data["embeddings"].shape == (275, 384)
-    md5 = hashlib.md5(idx.read_bytes()).hexdigest()
+    sha256 = hashlib.sha256(idx.read_bytes()).hexdigest()
+    manifest = json.loads(
+        (REPO_ROOT / "config/reference_artifacts.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    contract = manifest["reference_indices"]["o3b_production_k275"]
+    assert contract["n_centroids"] == 275
+    assert contract["sha256"] == sha256
     scorer_src = _read("src/core/patch_scorer.py")
-    assert md5 in scorer_src, "PatchScorer pinned MD5 no longer matches the index"
+    assert "resolve_reference_index" in scorer_src
+    assert "EXPECTED_MD5" not in scorer_src
 
 
 # =====================================================================

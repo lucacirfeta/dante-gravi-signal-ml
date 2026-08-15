@@ -8,6 +8,9 @@ import torch.nn.functional as F
 from PIL import Image
 
 from src.core.encoder import build_dinov2_transform
+from src.core.artifact_manifest import resolve_reference_index
+from src.core.index_contract import sha256_file
+from src.core.model_loader import load_dinov2_model
 from src.core.utils import get_device, setup_logger
 
 logger = setup_logger(__name__)
@@ -27,7 +30,10 @@ class PatchScorer:
         fpr: float = 0.01,
         n_background: int = 500,
         seed: int = 42,
-        verify_md5: bool = True
+        verify_md5: bool = True,
+        expected_sha256: str | None = None,
+        artifact_manifest_path: str | Path | None = None,
+        model: torch.nn.Module | None = None,
     ):
         self.device = torch.device(device) if device else get_device()
         self.k = k
@@ -36,27 +42,49 @@ class PatchScorer:
         self.n_background = n_background
         self.seed = seed
         self.reference_index_path = Path(reference_index_path)
+        self.expected_sha256 = expected_sha256
+        self.artifact_manifest_path = artifact_manifest_path
         
-        # 1. MD5 Verification
+        # 1. Immutable index verification. ``verify_md5`` is retained as a
+        # backward-compatible argument name; verification is SHA-256 based.
         if verify_md5:
             self._verify_md5()
         else:
-            logger.info("Skipping MD5 verification for custom reference index.")
+            self.reference_sha256 = sha256_file(self.reference_index_path)
+            self.reference_md5 = self._legacy_md5()
+            self.index_integrity_verified = False
+            self.index_artifact_id = None
+            logger.warning(
+                "Reference index integrity verification explicitly disabled: %s",
+                self.reference_index_path,
+            )
         
         # 2. Load Centroids
-        data = np.load(self.reference_index_path)
-        centroids_np = data["embeddings"]
+        with np.load(self.reference_index_path, allow_pickle=False) as data:
+            centroids_np = np.asarray(data["embeddings"], dtype=np.float32)
         
         # Expected shape constraint (N_centroids, 384)
         if centroids_np.ndim != 2 or centroids_np.shape[1] != 384:
             raise RuntimeError(f"Expected reference index shape (N, 384), got {centroids_np.shape}")
+        if verify_md5 and self.reference_index_spec.n_centroids >= 0:
+            expected_shape = (
+                self.reference_index_spec.n_centroids,
+                self.reference_index_spec.embedding_dim,
+            )
+            if centroids_np.shape != expected_shape:
+                raise RuntimeError(
+                    f"Reference index shape {centroids_np.shape} violates "
+                    f"manifest contract {expected_shape}"
+                )
             
         self.centroids = torch.tensor(centroids_np, device=self.device, dtype=torch.float32)
         # Explicit L2 normalization
         self.centroids = F.normalize(self.centroids, p=2, dim=-1)
         
         # 3. Load DINOv2
-        self.model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
+        self.model = model
+        if self.model is None:
+            self.model = load_dinov2_model(self.device)
         self.model.eval()
         for param in self.model.parameters():
             param.requires_grad = False
@@ -67,19 +95,44 @@ class PatchScorer:
         
         logger.info(f"PatchScorer initialized on {self.device}. k={self.k}, FPR={self.fpr}")
         
-    def _verify_md5(self):
-        """Strict MD5 verification to prevent silent corruptions."""
-        EXPECTED_MD5 = "5d5d1a7a3f55637fab125b558fdd795e"
+    def _legacy_md5(self) -> str:
         hash_md5 = hashlib.md5()
         with open(self.reference_index_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
-        actual_md5 = hash_md5.hexdigest()
-        
-        if actual_md5 != EXPECTED_MD5:
-            raise RuntimeError(f"MD5 mismatch for reference index! Expected {EXPECTED_MD5}, got {actual_md5}")
-        self.reference_md5 = actual_md5
-        logger.info(f"Reference MD5 verified: {self.reference_md5}")
+        return hash_md5.hexdigest()
+
+    def _verify_md5(self):
+        """Verify the per-index SHA-256 contract (legacy method name)."""
+        self.reference_index_spec = resolve_reference_index(
+            self.reference_index_path,
+            manifest_path=self.artifact_manifest_path,
+        )
+        manifest_sha256 = self.reference_index_spec.sha256
+        if (
+            self.expected_sha256 is not None
+            and self.expected_sha256.lower() != manifest_sha256
+        ):
+            raise RuntimeError(
+                "Caller SHA-256 and artifact manifest disagree for "
+                f"{self.reference_index_path}: {self.expected_sha256} != "
+                f"{manifest_sha256}"
+            )
+        actual_sha256 = sha256_file(self.reference_index_path)
+        if actual_sha256 != manifest_sha256:
+            raise RuntimeError(
+                "SHA-256 mismatch for reference index! Expected "
+                f"{manifest_sha256}, got {actual_sha256}"
+            )
+        self.reference_sha256 = actual_sha256
+        self.reference_md5 = self._legacy_md5()
+        self.index_integrity_verified = True
+        self.index_artifact_id = self.reference_index_spec.artifact_id
+        logger.info(
+            "Reference SHA-256 verified: %s (%s)",
+            self.reference_sha256,
+            self.index_artifact_id,
+        )
 
     @torch.no_grad()
     def calibrate_threshold(self, background_spectrograms: list[np.ndarray], batch_size: int = 32) -> tuple[float, np.ndarray, dict]:

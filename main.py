@@ -2671,7 +2671,11 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             threshold = existing_threshold
             
             # Verify MD5 without overwriting metadata
-            metadata = {"reference_md5": scorer.reference_md5}
+            metadata = {
+                "reference_md5": scorer.reference_md5,
+                "reference_sha256": scorer.reference_sha256,
+                "index_integrity_verified": scorer.index_integrity_verified,
+            }
             writer.verify_and_init(metadata, np.zeros(1), threshold)
             
         else:
@@ -2711,6 +2715,9 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
                 "threshold": float(threshold),
                 "k": k,
                 "reference_md5": scorer.reference_md5,
+                "reference_sha256": scorer.reference_sha256,
+                "index_integrity_verified": scorer.index_integrity_verified,
+                "index_artifact_id": scorer.index_artifact_id,
                 "n_background": len(bg_samples),
                 "timestamp_created": datetime.now(timezone.utc).isoformat(),
                 "gev_params": gev_params

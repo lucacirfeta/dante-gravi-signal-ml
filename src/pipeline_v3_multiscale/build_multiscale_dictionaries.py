@@ -15,6 +15,7 @@ from gwosc.timeline import get_segments
 from src.core.data_loader import fetch_strain_data, clear_astropy_cache, _DATA_DIRECTORIES
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.encoder import DINOv2Encoder, build_dinov2_transform
+from src.core.model_loader import load_dinov2_model
 from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -108,7 +109,7 @@ def build_multiscale_dictionaries(
     # Init encoder
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # We load DINOv2 to extract patch tokens
-    model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg').to(device)
+    model = load_dinov2_model(device)
     model.eval()
     for param in model.parameters():
         param.requires_grad = False

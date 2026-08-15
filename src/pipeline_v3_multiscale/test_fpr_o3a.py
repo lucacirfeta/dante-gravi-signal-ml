@@ -11,6 +11,7 @@ from gwosc.timeline import get_segments
 from tenacity import retry, wait_exponential, stop_after_attempt
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
 from src.core.utils import setup_logger
+from src.core.model_loader import load_dinov2_model
 
 logger = setup_logger(__name__)
 
@@ -71,7 +72,7 @@ def test_fpr_o3a(detector="L1", n_test=500, seed=42):
             dictionaries[scale] = torch.tensor(data["embeddings"], dtype=torch.float32).to(device)
             
     test_scales = [0.5, 1, 2, 4]
-    model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg').to(device)
+    model = load_dinov2_model(device)
     model.eval()
     for param in model.parameters(): param.requires_grad = False
     

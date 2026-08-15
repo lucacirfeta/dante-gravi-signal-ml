@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "artifact_root": "..",
+  "reference_bundle": {
+    "publication_status": "not_deposited",
+    "url": null,
+    "sha256": null,
+    "note": "Populate URL and SHA-256 after depositing dante_reference_artifacts_v1.zip. The software and v6 evidence Zenodo records do not contain these NPZ dictionaries."
+  },
+  "models": {
+    "dinov2_vits14_reg": {
+      "repository": "facebookresearch/dinov2",
+      "revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+      "entrypoint": "dinov2_vits14_reg",
+      "weights_filename": "dinov2_vits14_reg4_pretrain.pth",
+      "weights_url": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_reg4_pretrain.pth",
+      "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+      "weights_bytes": 88291785,
+      "source_python_tree_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+      "embedding_dim": 384,
+      "register_tokens": 4
+    }
+  },
+  "reference_indices": {
+    "o3b_production_k275": {
+      "path": "data/reference/patch_compressed_index_o3b.npz",
+      "sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+      "embedding_dim": 384,
+      "n_centroids": 275,
+      "qrange": [4, 32],
+      "qrange_source": "legacy frozen builder contract; not embedded in the NPZ",
+      "role": "canonical O3b production discovery index"
+    },
+    "o4a_native_q4_64_k1216": {
+      "path": "data/reference/patch_compressed_index_o4a_q4-64_ex.npz",
+      "sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+      "embedding_dim": 384,
+      "n_centroids": 1216,
+      "qrange": [4, 64],
+      "role": "detector-aware O4a native DSD index"
+    }
+  }
+}

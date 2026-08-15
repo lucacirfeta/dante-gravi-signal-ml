@@ -87,6 +87,54 @@ def temp_workspace(tmp_path):
             encoding="utf-8",
         )
 
+    # Per-index trust anchors used by the real PatchScorer constructors in
+    # integration tests.  This mirrors config/reference_artifacts.json while
+    # remaining fully hermetic.
+    import hashlib
+    def _sha256(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    manifest = workspace / "reference_artifacts.json"
+    release_models = json.loads(
+        (
+            Path(__file__).resolve().parents[1]
+            / "config"
+            / "reference_artifacts.json"
+        ).read_text(encoding="utf-8")
+    )["models"]
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "artifact_root": ".",
+                "models": release_models,
+                "reference_indices": {
+                    "fixture_o3b": {
+                        "path": "reference/patch_compressed_index_o3b.npz",
+                        "sha256": _sha256(primary_index),
+                        "embedding_dim": 384,
+                        "n_centroids": 10,
+                        "qrange": [4, 32],
+                    },
+                    **{
+                        f"fixture_native_{run}": {
+                            "path": f"reference/patch_compressed_index_{run}_ex.npz",
+                            "sha256": _sha256(
+                                ref_dir / f"patch_compressed_index_{run}_ex.npz"
+                            ),
+                            "embedding_dim": 384,
+                            "n_centroids": 10,
+                            "qrange": [4, 64],
+                        }
+                        for run in ("o4a", "o3b")
+                    },
+                },
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
     # Keep production-report morphcheck offline and hermetic.
     pd.DataFrame(
         {
@@ -100,7 +148,9 @@ def temp_workspace(tmp_path):
     # (K=275 / K=1216) from the repo checkout — the old non-hermetic
     # test_pipeline_end_to_end[O4a] failure mode.
     old_ref = os.environ.get("DANTE_REFERENCE_DIR")
+    old_manifest = os.environ.get("DANTE_ARTIFACT_MANIFEST")
     os.environ["DANTE_REFERENCE_DIR"] = str(ref_dir)
+    os.environ["DANTE_ARTIFACT_MANIFEST"] = str(manifest)
 
     yield workspace
 
@@ -109,4 +159,8 @@ def temp_workspace(tmp_path):
         os.environ.pop("DANTE_REFERENCE_DIR", None)
     else:
         os.environ["DANTE_REFERENCE_DIR"] = old_ref
+    if old_manifest is None:
+        os.environ.pop("DANTE_ARTIFACT_MANIFEST", None)
+    else:
+        os.environ["DANTE_ARTIFACT_MANIFEST"] = old_manifest
     shutil.rmtree(workspace, ignore_errors=True)

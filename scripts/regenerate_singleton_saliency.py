@@ -42,6 +42,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.core.data_loader import fetch_strain_data
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
+from src.core.model_loader import load_dinov2_model
 from src.pipeline_v2_production.saliency_map import generate_saliency_map
 
 # ── Singletons ──────────────────────────────────────────────────────
@@ -64,14 +65,8 @@ BG_OFFSET_STEP = 64  # seconds between consecutive background windows
 
 
 def _load_model(device: str) -> torch.nn.Module:
-    """Load DINOv2 ViT-S/14 with registers (cached in ~/.cache/torch/hub)."""
-    cache_dir = os.path.expanduser("~/.cache/torch/hub/facebookresearch_dinov2_main")
-    try:
-        model = torch.hub.load(cache_dir, "dinov2_vits14_reg", source="local")
-    except Exception:
-        model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg")
-    model = model.to(device).eval()
-    return model
+    """Load the pinned, hash-verified DINOv2 artifact."""
+    return load_dinov2_model(device)
 
 
 def _compute_spatial_median(

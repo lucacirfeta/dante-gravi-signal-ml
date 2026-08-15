@@ -27,6 +27,7 @@ from gwosc.timeline import get_segments
 from src.core.data_loader import fetch_strain_data, _DATA_DIRECTORIES
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, generate_qtransform
 from src.core.encoder import build_dinov2_transform
+from src.core.model_loader import load_dinov2_model
 from src.core.injection import SyntheticGlitchGenerator, InjectionEngine
 from src.core.utils import setup_logger
 from src.pipeline_v3_multiscale.micro_mdc_multiscale import excess_power_veto
@@ -145,7 +146,7 @@ def run_injection_efficiency(detector: str, n_per_cell: int, seed: int, target_r
     device = "cuda" if torch.cuda.is_available() else "cpu"
     for scale in SCALES:
         dicts[scale] = dicts[scale].to(device)
-    model = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14_reg").to(device)
+    model = load_dinov2_model(device)
     model.eval()
     for p in model.parameters():
         p.requires_grad = False

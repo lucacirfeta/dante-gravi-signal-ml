@@ -11,6 +11,7 @@ from PIL import Image
 from src.core.data_loader import fetch_strain_data, clear_astropy_cache
 from src.core.preprocessor import whiten, bandpass, generate_qtransform
 from src.core.encoder import build_dinov2_transform
+from src.core.model_loader import load_dinov2_model
 from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -40,7 +41,7 @@ def test_real_blips(detector: str = "L1", n_test: int = -1):
         raise RuntimeError(f"Could not load thresholds: {e}")
         
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14_reg').to(device)
+    model = load_dinov2_model(device)
     model.eval()
     for param in model.parameters(): param.requires_grad = False
     transform = build_dinov2_transform()

@@ -77,7 +77,11 @@ class ProductionWriter:
         return None
 
     def verify_and_init(self, metadata: dict, background_scores: np.ndarray, threshold: float, background_gps: np.ndarray = None):
-        """Checks MD5 compatibility if resuming, or initializes new file."""
+        """Checks index compatibility if resuming, or initializes a new file.
+
+        A provenance mismatch is not corruption: it is a fail-closed request
+        error and the existing HDF5 is left untouched.
+        """
         is_corrupted = False
         if self.hdf5_path.exists():
             try:
@@ -85,17 +89,43 @@ class ProductionWriter:
                     if "novelties" not in f or "metadata" not in f:
                         is_corrupted = True
                     else:
-                        existing_md5 = f["metadata"].attrs.get("reference_md5")
-                        if existing_md5 != metadata["reference_md5"]:
-                            raise RuntimeError(f"Cannot resume: existing HDF5 has reference MD5 {existing_md5}, but current is {metadata['reference_md5']}")
-                        logger.info(f"Verified existing HDF5 index MD5: {existing_md5}")
-            except Exception as e:
+                        existing_sha256 = f["metadata"].attrs.get("reference_sha256")
+                        requested_sha256 = metadata.get("reference_sha256")
+                        if existing_sha256 is not None and requested_sha256 is not None:
+                            if existing_sha256 != requested_sha256:
+                                raise RuntimeError(
+                                    "Cannot resume: existing HDF5 has reference "
+                                    f"SHA-256 {existing_sha256}, but current is "
+                                    f"{requested_sha256}"
+                                )
+                            logger.info(
+                                "Verified existing HDF5 index SHA-256: %s",
+                                existing_sha256,
+                            )
+                        else:
+                            existing_md5 = f["metadata"].attrs.get("reference_md5")
+                            requested_md5 = metadata.get("reference_md5")
+                            if existing_md5 != requested_md5:
+                                raise RuntimeError(
+                                    "Cannot resume legacy HDF5: existing reference "
+                                    f"MD5 {existing_md5}, current {requested_md5}"
+                                )
+                            logger.warning(
+                                "Resume uses legacy MD5 provenance because the "
+                                "existing HDF5 predates SHA-256 metadata: %s",
+                                existing_md5,
+                            )
+            except RuntimeError:
+                raise
+            except (OSError, KeyError) as e:
                 is_corrupted = True
                 logger.warning(f"Failed to read HDF5: {e}")
                 
             if is_corrupted:
-                logger.warning("HDF5 file is corrupted or incomplete. Removing and re-initializing...")
-                self.hdf5_path.unlink()
+                raise RuntimeError(
+                    "Existing HDF5 is corrupted or incomplete; refusing to "
+                    f"delete it automatically: {self.hdf5_path}"
+                )
                 
         if not self.hdf5_path.exists():
             self._init_hdf5(metadata, background_scores, threshold, background_gps)
