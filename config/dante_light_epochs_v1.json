@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "historical_replay_only",
+  "source_threshold_artifact": {
+    "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+    "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+  },
+  "epochs": {
+    "H1": {
+      "schema_version": 1,
+      "epoch_id": "o4a-bgv3-historical-h1",
+      "run": "O4A",
+      "detector": "H1",
+      "cutoff_gps": 1389456018.0,
+      "threshold": 0.16157861188054093,
+      "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02",
+      "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+      "causal": false,
+      "calibration_ledger_sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588"
+    },
+    "L1": {
+      "schema_version": 1,
+      "epoch_id": "o4a-bgv3-historical-l1",
+      "run": "O4A",
+      "detector": "L1",
+      "cutoff_gps": 1389456018.0,
+      "threshold": 0.1760626833140853,
+      "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02",
+      "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+      "causal": false,
+      "calibration_ledger_sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398"
+    }
+  }
+}

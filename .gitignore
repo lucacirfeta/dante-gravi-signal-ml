@@ -340,6 +340,8 @@ skills-lock.json
 tests/test_review.md
 benchmarks/*smoke*.json
 benchmarks/*smoke*.jsonl
+data/dante_light_smoke/
+runs/dante_light/
 adapters
 GSD-STYLE.md
 model_capabilities.yaml

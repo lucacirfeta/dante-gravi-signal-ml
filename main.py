@@ -2812,6 +2812,27 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         close_session_log()
 
 
+def _cmd_dante_light(args: argparse.Namespace, *, prospective: bool) -> None:
+    import json
+    from src.dante_light.runner import run_replay
+
+    args.prospective = prospective
+    if not args.role:
+        args.role = ["background_stratified"]
+    result = run_replay(args)
+    print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
+
+
+def cmd_dante_light_replay(args: argparse.Namespace) -> None:
+    """Run exact finite replay without claiming prospective causality."""
+    _cmd_dante_light(args, prospective=False)
+
+
+def cmd_dante_light_shadow(args: argparse.Namespace) -> None:
+    """Run prospective shadow mode; historical/non-causal epochs DEFER."""
+    _cmd_dante_light(args, prospective=True)
+
+
 def cmd_production_cluster(args):
     from src.pipeline_v2_production.production_cluster import H5Clusterer
     from pathlib import Path
@@ -3531,6 +3552,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exact scoring engine. canonical remains the default; shared_encoder is opt-in.",
     )
     p_patch_production.set_defaults(func=cmd_patch_production)
+
+    def add_dante_light_arguments(command):
+        command.add_argument(
+            "--manifest",
+            type=Path,
+            default=Path("config/dante_light_replay_v1.json"),
+        )
+        command.add_argument(
+            "--epochs",
+            type=Path,
+            default=Path("config/dante_light_epochs_v1.json"),
+        )
+        command.add_argument("--output-dir", type=Path, required=True)
+        command.add_argument("--role", action="append", default=None)
+        command.add_argument("--limit", type=int, default=8)
+        command.add_argument("--device", default=None)
+        command.add_argument("--workers", type=int, default=2)
+        command.add_argument("--batch-size", type=int, default=8)
+        command.add_argument("--max-in-flight", type=int, default=16)
+        command.add_argument("--max-pending-writes", type=int, default=2)
+        command.add_argument("--local-only", action="store_true")
+        command.add_argument(
+            "--cat1-mode",
+            choices=("gwosc", "frozen-replay-attestation"),
+            default="gwosc",
+            help=(
+                "CAT1 evidence source. frozen-replay-attestation is historical "
+                "only and is never a prospective DQ claim."
+            ),
+        )
+
+    p_light_replay = subparsers.add_parser(
+        "dante-light-replay",
+        help="Opt-in exact DANTE-Light replay with append-only evidence records.",
+    )
+    add_dante_light_arguments(p_light_replay)
+    p_light_replay.set_defaults(func=cmd_dante_light_replay)
+
+    p_light_shadow = subparsers.add_parser(
+        "dante-light-shadow",
+        help="Prospective shadow runner; rejects historical non-causal epochs.",
+    )
+    add_dante_light_arguments(p_light_shadow)
+    p_light_shadow.set_defaults(func=cmd_dante_light_shadow)
 
     # --- scan ---
     p_scan = subparsers.add_parser(
