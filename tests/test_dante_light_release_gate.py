@@ -79,6 +79,31 @@ def test_existing_but_unverified_prospective_file_fails_closed(tmp_path) -> None
     assert "schema/status" in detail
 
 
+def test_prepublish_clean_clone_is_not_public_replay_evidence(tmp_path) -> None:
+    path = tmp_path / "preflight.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "status": "complete",
+                "mode": "clean_clone_prepublish_preflight",
+                "public_sources_only": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    from scripts.verify_dante_light_release import _validate_public_replay
+
+    valid, detail = _validate_public_replay(
+        tmp_path,
+        path,
+        bundle_sha256="a" * 64,
+        replay={"manifest_sha256": "b" * 64, "entries_file_sha256": "c" * 64},
+    )
+    assert valid is False
+    assert "clean-clone mode" in detail
+
+
 def test_declared_causal_epoch_with_missing_evidence_is_failure() -> None:
     epochs = json.loads(
         (ROOT / "config/dante_light_epochs_v1.json").read_text(encoding="utf-8")

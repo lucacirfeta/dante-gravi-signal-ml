@@ -244,6 +244,22 @@ def _validate_public_replay(
             raise ValueError("public replay did not run from the clean-clone mode")
         if payload.get("public_sources_only") is not True:
             raise ValueError("public replay used a non-public source")
+        if payload.get("strain_source") != "gwosc-only":
+            raise ValueError("public replay did not bypass local strain mirrors")
+        checkout = payload["checkout"]
+        if (
+            checkout.get("clean_clone") is not True
+            or checkout.get("tracked_dirty") is not False
+            or re.fullmatch(r"[0-9a-f]{40}", str(checkout.get("commit", ""))) is None
+            or not str(checkout.get("origin_url", "")).startswith("https://")
+        ):
+            raise ValueError("public replay clean-checkout attestation is invalid")
+        bundle_source = payload["bundle_source"]
+        if (
+            bundle_source.get("download_verified") is not True
+            or bundle_source.get("publication_status") != "deposited"
+        ):
+            raise ValueError("public replay bundle-download attestation is invalid")
         if not _is_sha256(bundle_sha256) or payload.get("reference_bundle_sha256") != bundle_sha256:
             raise ValueError("public replay bundle identity mismatch")
         if payload.get("replay_manifest_sha256") != replay["manifest_sha256"]:
