@@ -369,6 +369,15 @@ def run_replay(args) -> dict[str, Any]:
     replay_header, tasks = load_replay_tasks(
         args.manifest, roles=set(args.role), limit=args.limit
     )
+    strain_source = getattr(args, "strain_source", "auto")
+    if args.local_only:
+        if strain_source != "auto":
+            raise ContractError(
+                "--local-only cannot be combined with an explicit --strain-source"
+            )
+        strain_source = "local-only"
+    local_only = strain_source == "local-only"
+    remote_only = strain_source == "gwosc-only"
     if args.cat1_mode == "frozen-replay-attestation":
         cat1_active = lambda _window: True
         cat1_provenance = (
@@ -398,7 +407,8 @@ def run_replay(args) -> dict[str, Any]:
         "roles": sorted(set(args.role)),
         "limit": args.limit,
         "cat1_provenance": cat1_provenance,
-        "local_only": bool(args.local_only),
+        "local_only": local_only,
+        "strain_source": strain_source,
         "runtime_provenance": runtime_provenance(),
     }
     queue = ReviewQueue(args.output_dir, run_manifest)
@@ -410,7 +420,7 @@ def run_replay(args) -> dict[str, Any]:
         review_queue=queue,
         cat1_active=cat1_active,
         prepare=lambda task: prepare_canonical_window(
-            task.window, local_only=args.local_only
+            task.window, local_only=local_only, remote_only=remote_only
         ),
         prospective=args.prospective,
         engine=args.engine,

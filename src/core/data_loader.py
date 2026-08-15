@@ -101,6 +101,7 @@ def fetch_strain_data(
         sample_rate: int = _SAMPLE_RATE,
         cache_raw: bool = False,
         local_only: bool = False,
+        remote_only: bool = False,
         edge_tolerance: float = 0.0,
 ) -> TimeSeries:
     """Fetch open strain data from GWOSC for a given detector and time range.
@@ -125,6 +126,8 @@ def fetch_strain_data(
             timeout, missing data, rate limits).
     """
     _validate_detector(detector)
+    if local_only and remote_only:
+        raise ValueError("local_only and remote_only are mutually exclusive")
 
     utc_start = gps_to_utc(gps_start)
     utc_end = gps_to_utc(gps_end)
@@ -138,7 +141,7 @@ def fetch_strain_data(
     )
 
     # 1. Tenta il caricamento da un blocco locale più grande (es. O4a 4096s) sui drive prioritari
-    directories = _DATA_DIRECTORIES
+    directories = [] if remote_only else _DATA_DIRECTORIES
 
     for dir_path in directories:
         if not dir_path.exists():

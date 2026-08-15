@@ -290,8 +290,26 @@ def test_public_cli_keeps_light_opt_in_and_output_separate() -> None:
     assert replay.limit == 8
     assert replay.engine == "canonical"
     assert replay.cat1_mode == "gwosc"
+    assert replay.strain_source == "auto"
     assert replay.output_dir.as_posix() == "runs/dante_light/test"
     shadow = parser.parse_args(
         ["dante-light-shadow", "--output-dir", "runs/dante_light/shadow"]
     )
     assert shadow.func is main.cmd_dante_light_shadow
+
+
+def test_light_cli_exposes_explicit_gwosc_only_source() -> None:
+    import main
+
+    parser = main.build_parser()
+    args = parser.parse_args(
+        [
+            "dante-light-replay",
+            "--output-dir",
+            "runs/dante_light/public",
+            "--strain-source",
+            "gwosc-only",
+        ]
+    )
+    assert args.strain_source == "gwosc-only"
+    assert args.local_only is False

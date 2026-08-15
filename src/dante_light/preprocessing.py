@@ -24,6 +24,7 @@ def prepare_canonical_window(
     window: WindowIdentity,
     *,
     local_only: bool,
+    remote_only: bool = False,
 ) -> PreparedWindow:
     import matplotlib.pyplot as plt
     from src.core.data_loader import fetch_strain_data
@@ -43,8 +44,9 @@ def prepare_canonical_window(
             start - 4.0,
             end + 4.0,
             local_only=local_only,
+            remote_only=remote_only,
         )
-    except (FileNotFoundError, OSError) as exc:
+    except (FileNotFoundError, OSError, RuntimeError) as exc:
         raise DeferredWindow(FailClosedReason.DEPENDENCY_UNAVAILABLE) from exc
     stages["data_read_s"] = time.perf_counter() - began
     actual_start = float(strain.t0.value)

@@ -3585,6 +3585,15 @@ def build_parser() -> argparse.ArgumentParser:
         command.add_argument("--max-pending-writes", type=int, default=2)
         command.add_argument("--local-only", action="store_true")
         command.add_argument(
+            "--strain-source",
+            choices=("auto", "local-only", "gwosc-only"),
+            default="auto",
+            help=(
+                "Strain source contract. gwosc-only bypasses every configured "
+                "local mirror and is required for public clean-clone evidence."
+            ),
+        )
+        command.add_argument(
             "--cat1-mode",
             choices=("gwosc", "frozen-replay-attestation"),
             default="gwosc",
