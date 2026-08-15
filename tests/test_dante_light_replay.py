@@ -103,6 +103,14 @@ def test_benchmark_selection_is_deterministic_detector_interleaved() -> None:
         "L1",
     ]
     assert all(item["source_kind"] != "synthetic_injection" for item in first)
+    for detector in ("H1", "L1"):
+        gps = [
+            item["window"]["gps_start"]
+            for item in first
+            if item["window"]["detector"] == detector
+        ]
+        assert len(gps) == 4
+        assert max(gps) - min(gps) > 10_000_000
 
 
 def test_benchmark_percentile_summary_is_complete() -> None:

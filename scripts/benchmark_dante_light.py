@@ -303,13 +303,30 @@ def select_cases(manifest: dict, roles: set[str], limit: int) -> list[dict]:
         detector: [item for item in selected if item["window"]["detector"] == detector]
         for detector in sorted({item["window"]["detector"] for item in selected})
     }
+    detector_order = sorted(by_detector)
+    target_counts = {
+        detector: limit // len(detector_order) for detector in detector_order
+    }
+    for detector in detector_order[: limit % len(detector_order)]:
+        target_counts[detector] += 1
+    stratified: dict[str, list[dict]] = {}
+    for detector in detector_order:
+        values = by_detector[detector]
+        count = min(target_counts[detector], len(values))
+        if count == 0:
+            stratified[detector] = []
+        elif count == 1:
+            stratified[detector] = [values[len(values) // 2]]
+        else:
+            indices = np.linspace(0, len(values) - 1, count).round().astype(int)
+            stratified[detector] = [values[int(index)] for index in indices]
     interleaved: list[dict] = []
     index = 0
     while len(interleaved) < min(limit, len(selected)):
         progressed = False
-        for detector in sorted(by_detector):
-            if index < len(by_detector[detector]):
-                interleaved.append(by_detector[detector][index])
+        for detector in detector_order:
+            if index < len(stratified[detector]):
+                interleaved.append(stratified[detector][index])
                 progressed = True
                 if len(interleaved) == limit:
                     break
