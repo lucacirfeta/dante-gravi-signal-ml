@@ -243,6 +243,7 @@ def score_once(
     *,
     local_only: bool,
     persist_stream,
+    record_context: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, float]]:
     identity = WindowIdentity.from_dict(item["window"])
     total_began = time.perf_counter()
@@ -274,6 +275,7 @@ def score_once(
         "native_top_k_sha256": hashlib.sha256(
             native_result["top_k_indices"].tobytes()
         ).hexdigest(),
+        **record_context,
     }
     persist_began = time.perf_counter()
     persist_stream.write(json.dumps(result, sort_keys=True, allow_nan=False) + "\n")
@@ -398,6 +400,7 @@ def main() -> int:
                     native,
                     local_only=args.local_only,
                     persist_stream=persisted,
+                    record_context={"phase": "warmup", "repeat": None},
                 )
                 warmup_results.append(result)
             except Exception as exc:
@@ -420,8 +423,8 @@ def main() -> int:
                         native,
                         local_only=args.local_only,
                         persist_stream=persisted,
+                        record_context={"phase": "measured", "repeat": repeat_index},
                     )
-                    result["repeat"] = repeat_index
                     current.append(result)
                     for name, value in timings.items():
                         stage_values[name].append(value)
