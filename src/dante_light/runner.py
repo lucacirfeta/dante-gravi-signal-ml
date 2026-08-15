@@ -29,6 +29,7 @@ from src.dante_light.executor import (
     DeferredWindow,
     WindowTask,
 )
+from src.dante_light.epoch import verified_epoch_from_promotion
 from src.dante_light.preprocessing import PreparedWindow, prepare_canonical_window
 from src.dante_light.review_queue import ReviewQueue
 from src.dante_light.sources.files import ReplayManifestSource
@@ -79,25 +80,69 @@ def runtime_provenance() -> dict[str, Any]:
     }
 
 
-def load_epochs(path: str | Path = DEFAULT_EPOCHS) -> tuple[dict[str, Any], dict[str, CalibrationEpochContract]]:
+def load_epochs(
+    path: str | Path = DEFAULT_EPOCHS,
+    *,
+    representation: RepresentationContract | None = None,
+    root: str | Path = ROOT,
+) -> tuple[dict[str, Any], dict[str, CalibrationEpochContract]]:
     path = Path(path)
+    root = Path(root)
     payload = json.loads(path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != 1:
         raise ContractError("Unsupported DANTE-Light epoch-file schema")
     source = payload["source_threshold_artifact"]
-    source_path = ROOT / source["path"]
+    source_path = root / source["path"]
     if source_path.is_file() and sha256_file(source_path) != source["sha256"]:
         raise ContractError("DANTE-Light threshold artifact SHA256 mismatch")
-    epochs = {
-        detector: CalibrationEpochContract(
-            **{
-                key: value
-                for key, value in raw.items()
-                if key != "calibration_ledger_sha256"
+    epochs: dict[str, CalibrationEpochContract] = {}
+    for detector, raw in payload["epochs"].items():
+        epoch_fields = {
+            key: value
+            for key, value in raw.items()
+            if key not in {"calibration_ledger_sha256", "promotion_evidence"}
+        }
+        if raw.get("causal") is True:
+            if representation is None:
+                raise ContractError(
+                    "causal DANTE-Light epochs require a representation contract"
+                )
+            if "promotion_evidence" not in raw:
+                raise ContractError(
+                    f"causal DANTE-Light epoch {detector} lacks promotion evidence"
+                )
+            if not source_path.is_file():
+                raise ContractError(
+                    "causal DANTE-Light epoch requires the source threshold artifact"
+                )
+            if raw.get("threshold_artifact_sha256") != source["sha256"]:
+                raise ContractError(
+                    f"causal DANTE-Light epoch {detector} threshold provenance mismatch"
+                )
+            evidence_hashes = {
+                item.get("sha256")
+                for item in raw["promotion_evidence"].get("artifacts", [])
             }
-        )
-        for detector, raw in payload["epochs"].items()
-    }
+            if raw.get("calibration_ledger_sha256") not in evidence_hashes:
+                raise ContractError(
+                    f"causal DANTE-Light epoch {detector} calibration ledger "
+                    "is not verified evidence"
+                )
+            epoch = verified_epoch_from_promotion(
+                {
+                    "epoch": epoch_fields,
+                    "promotion_evidence": raw["promotion_evidence"],
+                },
+                representation=representation,
+                root=root,
+            )
+        else:
+            epoch = CalibrationEpochContract(**epoch_fields)
+        if epoch.detector != detector:
+            raise ContractError(
+                f"DANTE-Light epoch key/detector mismatch: {detector}/{epoch.detector}"
+            )
+        epochs[epoch.detector] = epoch
     return payload, epochs
 
 
@@ -318,7 +363,9 @@ def run_replay(args) -> dict[str, Any]:
     representation = RepresentationContract.from_reference_manifest(
         ROOT / "config/reference_artifacts.json"
     )
-    epoch_payload, epochs = load_epochs(args.epochs)
+    epoch_payload, epochs = load_epochs(
+        args.epochs, representation=representation, root=ROOT
+    )
     replay_header, tasks = load_replay_tasks(
         args.manifest, roles=set(args.role), limit=args.limit
     )

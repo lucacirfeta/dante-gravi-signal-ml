@@ -143,3 +143,19 @@ read-through cache primitive for auxiliary channels. It is not wired into the
 current PEM endpoint or synchronous Light path. A future authorised NDS2
 adapter must pass cold/warm equality and retain the exact detector, channel,
 GPS interval, sample rate and source in the cache key before adoption.
+
+Release status is machine-checkable:
+
+```bash
+python scripts/verify_dante_light_release.py --stage development
+python scripts/verify_dante_light_release.py --stage public-replay
+python scripts/verify_dante_light_release.py --stage operational
+```
+
+At this development snapshot the first command passes. The latter two return
+`NOT_READY` because the reference bundle is not public and no causal later-epoch
+validation exists. Publishing a URL and hash is not itself a public replay:
+the `public-replay` stage also requires an exact, public-sources-only clean-clone
+result in `artifacts/dante_light/public_replay_validation_v1.json`. The locked
+future operational protocol is in
+`docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md`.

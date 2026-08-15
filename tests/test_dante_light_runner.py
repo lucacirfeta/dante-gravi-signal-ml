@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 
 import numpy as np
 import pytest
@@ -13,9 +14,15 @@ from src.dante_light.contracts import (
     WindowIdentity,
 )
 from src.dante_light.executor import WindowTask
+from src.dante_light.epoch import REQUIRED_GATES
 from src.dante_light.preprocessing import PreparedWindow
 from src.dante_light.review_queue import ReviewQueue
-from src.dante_light.runner import DanteLightRunner, load_epochs, load_replay_tasks
+from src.dante_light.runner import (
+    DEFAULT_EPOCHS,
+    DanteLightRunner,
+    load_epochs,
+    load_replay_tasks,
+)
 
 
 REPRESENTATION = RepresentationContract.from_reference_manifest(
@@ -200,6 +207,76 @@ def test_frozen_epoch_and_replay_files_are_self_consistent() -> None:
     assert len(replay) == 1
     assert replay[0].window.detector == "L1"
     assert replay[0].window.gps_start == 1382955232.0
+
+
+def test_causal_epoch_file_cannot_bypass_promotion_evidence(tmp_path) -> None:
+    payload = json.loads(DEFAULT_EPOCHS.read_text(encoding="utf-8"))
+    payload["epochs"]["H1"]["causal"] = True
+    path = tmp_path / "epochs.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    representation = RepresentationContract.from_reference_manifest(
+        "config/reference_artifacts.json"
+    )
+    with pytest.raises(ContractError, match="lacks promotion evidence"):
+        load_epochs(path, representation=representation)
+
+
+def test_epoch_file_rejects_noncanonical_detector_key(tmp_path) -> None:
+    payload = json.loads(DEFAULT_EPOCHS.read_text(encoding="utf-8"))
+    payload["epochs"]["h1"] = payload["epochs"].pop("H1")
+    path = tmp_path / "epochs.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ContractError, match="key/detector mismatch"):
+        load_epochs(path)
+
+
+def test_causal_epoch_file_accepts_only_hashed_promotion_path(tmp_path) -> None:
+    threshold = tmp_path / "threshold.json"
+    ledger = tmp_path / "ledger.csv"
+    threshold.write_text("{}\n", encoding="utf-8")
+    ledger.write_text("gps,score\n", encoding="utf-8")
+    threshold_sha256 = hashlib.sha256(threshold.read_bytes()).hexdigest()
+    ledger_sha256 = hashlib.sha256(ledger.read_bytes()).hexdigest()
+    representation = RepresentationContract.from_reference_manifest(
+        "config/reference_artifacts.json"
+    )
+    raw_epoch = {
+        "schema_version": 1,
+        "epoch_id": "o4b-causal-h1-v1",
+        "run": "O4B",
+        "detector": "H1",
+        "cutoff_gps": 2000.0,
+        "threshold": 0.2,
+        "threshold_artifact_sha256": threshold_sha256,
+        "native_index_sha256": representation.native_index_sha256,
+        "causal": True,
+        "calibration_ledger_sha256": ledger_sha256,
+        "promotion_evidence": {
+            "detector": "H1",
+            "run": "O4B",
+            "calibration_start_gps": 1000.0,
+            "calibration_end_gps": 2000.0,
+            "evaluation_start_gps": 3000.0,
+            "evaluation_end_gps": 4000.0,
+            "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "artifacts": [
+                {"path": threshold.name, "sha256": threshold_sha256},
+                {"path": ledger.name, "sha256": ledger_sha256},
+            ],
+        },
+    }
+    payload = {
+        "schema_version": 1,
+        "source_threshold_artifact": {
+            "path": threshold.name,
+            "sha256": threshold_sha256,
+        },
+        "epochs": {"H1": raw_epoch},
+    }
+    path = tmp_path / "epochs.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    _, epochs = load_epochs(path, representation=representation, root=tmp_path)
+    assert epochs["H1"].causal is True
 
 
 def test_public_cli_keeps_light_opt_in_and_output_separate() -> None:
