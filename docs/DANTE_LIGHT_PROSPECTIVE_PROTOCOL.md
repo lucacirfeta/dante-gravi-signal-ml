@@ -124,6 +124,11 @@ follows before outcomes are inspected:
     "canonical": {"elapsed_s": 0, "p50_s": 0, "p95_s": 0, "p99_s": 0, "failures": 0},
     "shared": {"elapsed_s": 0, "p50_s": 0, "p95_s": 0, "p99_s": 0, "failures": 0}
   },
+  "execution": {
+    "executor_config": {"requested_device": "cuda", "workers": 2, "batch_size": 8,
+      "max_preprocess_in_flight": 16, "max_pending_writes": 2},
+    "runtime_environment": {"python": "<version>", "packages": {}, "accelerator": {}}
+  },
   "latency_s": {"p50": 0, "p95": 0, "p99": 0},
   "latency_objective_met": true,
   "coverage": {

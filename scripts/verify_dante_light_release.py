@@ -346,6 +346,19 @@ def _validate_prospective(
                 raise ValueError(f"{engine} data staging timings are invalid")
             if not 0 <= values[1] <= values[2] <= values[3]:
                 raise ValueError(f"{engine} data staging quantiles are invalid")
+        execution = payload.get("execution", {})
+        executor_config = execution.get("executor_config", {})
+        for key in (
+            "workers",
+            "batch_size",
+            "max_preprocess_in_flight",
+            "max_pending_writes",
+        ):
+            if int(executor_config.get(key, 0)) <= 0:
+                raise ValueError(f"prospective executor configuration invalid: {key}")
+        environment = execution.get("runtime_environment", {})
+        if not environment.get("python") or not environment.get("packages"):
+            raise ValueError("prospective runtime environment is incomplete")
         checkout = payload["checkout"]
         if (
             checkout.get("clean_clone") is not True

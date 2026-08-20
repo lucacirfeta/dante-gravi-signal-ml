@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import hashlib
+import importlib.metadata
 import json
 import math
+import os
 from pathlib import Path
 import platform
 import subprocess
@@ -85,6 +87,25 @@ def runtime_provenance() -> dict[str, Any]:
         )
         return hashlib.sha256(content).hexdigest()
 
+    packages = {}
+    for distribution in ("numpy", "torch", "gwpy", "astropy", "matplotlib"):
+        try:
+            packages[distribution] = importlib.metadata.version(distribution)
+        except importlib.metadata.PackageNotFoundError:
+            packages[distribution] = None
+    accelerator: dict[str, Any] = {"cuda_available": False}
+    try:
+        import torch
+
+        accelerator["cuda_available"] = bool(torch.cuda.is_available())
+        accelerator["torch_cuda_version"] = torch.version.cuda
+        if torch.cuda.is_available():
+            accelerator["cuda_device_name"] = torch.cuda.get_device_name(0)
+            accelerator["cuda_device_capability"] = list(
+                torch.cuda.get_device_capability(0)
+            )
+    except (ImportError, RuntimeError):
+        pass
     return {
         "code_state": {
             "commit": git("rev-parse", "HEAD"),
@@ -95,6 +116,9 @@ def runtime_provenance() -> dict[str, Any]:
             "python": sys.version,
             "platform": platform.platform(),
             "processor": platform.processor(),
+            "logical_cpu_count": os.cpu_count(),
+            "packages": packages,
+            "accelerator": accelerator,
         },
         "source_sha256": {
             path.relative_to(ROOT).as_posix(): normalized_source_sha256(path)
@@ -505,6 +529,13 @@ def run_replay(args) -> dict[str, Any]:
             "prestage_before_task_submission" if args.prospective else "inline"
         ),
         "pre_registered_latency_objective_s": latency_objective,
+        "executor_config": {
+            "requested_device": args.device,
+            "workers": args.workers,
+            "batch_size": args.batch_size,
+            "max_preprocess_in_flight": args.max_in_flight,
+            "max_pending_writes": args.max_pending_writes,
+        },
         "runtime_provenance": runtime_provenance(),
     }
     queue = ReviewQueue(args.output_dir, run_manifest)

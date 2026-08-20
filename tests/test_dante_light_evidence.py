@@ -76,6 +76,13 @@ def _run(
             "prestage_before_task_submission" if prospective else "inline"
         ),
         "pre_registered_latency_objective_s": latency_objective_s,
+        "executor_config": {
+            "requested_device": "cpu",
+            "workers": 2,
+            "batch_size": 8,
+            "max_preprocess_in_flight": 16,
+            "max_pending_writes": 2,
+        },
         "runtime_provenance": {
             "code_state": {
                 "commit": "e" * 40,
@@ -88,6 +95,10 @@ def _run(
                 ).hexdigest()
             },
             "source_hash_semantics": "utf8_lf_v1",
+            "environment": {
+                "python": "fixture",
+                "packages": {"numpy": "fixture"},
+            },
         },
     }
     manifest = {
@@ -315,6 +326,7 @@ def test_prospective_builder_records_causal_coverage_and_durable_latency(
     assert payload["data_availability"]["canonical"]["p99_s"] == pytest.approx(
         0.499
     )
+    assert payload["execution"]["executor_config"]["workers"] == 2
     assert payload["coverage"]["windows"] == 2
     assert payload["coverage"]["deferred_windows"] == 0
     assert set(payload["detectors"]) == {"H1", "L1"}

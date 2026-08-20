@@ -206,11 +206,13 @@ def compare_exact_runs(
         "replay_entries_file_sha256",
         "roles",
         "limit",
+        "limit_per_detector",
         "cat1_provenance",
         "local_only",
         "strain_source",
         "data_availability_mode",
         "pre_registered_latency_objective_s",
+        "executor_config",
     )
     for field in comparable_manifest_fields:
         if canonical.manifest.get(field) != shared.manifest.get(field):
@@ -405,6 +407,17 @@ def build_prospective_evidence(
         raise ContractError(
             "prospective evidence requires pre-submission GWOSC staging"
         )
+    execution = canonical.manifest.get("executor_config")
+    if not isinstance(execution, dict):
+        raise ContractError("prospective evidence lacks executor configuration")
+    for key in (
+        "workers",
+        "batch_size",
+        "max_preprocess_in_flight",
+        "max_pending_writes",
+    ):
+        if int(execution.get(key, 0)) <= 0:
+            raise ContractError(f"prospective executor configuration invalid: {key}")
     if canonical.manifest.get("cat1_provenance") != "GWOSC CBC_CAT1 whole-window containment":
         raise ContractError("prospective evidence requires GWOSC CAT1 provenance")
 
@@ -535,6 +548,10 @@ def build_prospective_evidence(
         "pre_registered_latency_objective_s": objective,
         "latency_semantics": "task submission through completed durable record write",
         "data_availability": acquisition,
+        "execution": {
+            "executor_config": execution,
+            "runtime_environment": shared.manifest["runtime_provenance"]["environment"],
+        },
         "latency_s": latency,
         "latency_objective_met": latency["p99"] <= objective,
         "coverage": {

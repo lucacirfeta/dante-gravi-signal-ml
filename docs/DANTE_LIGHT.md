@@ -35,6 +35,9 @@ strain digest, reports acquisition delay separately, and the timed preparation
 must reproduce the digest or fail closed. `--strain-source gwosc-only` remains
 mandatory for operational evidence, so a local mirror cannot silently replace
 the public source.
+The immutable run manifest also records executor concurrency, batch size,
+requested device, Python and core package versions, CPU count, and CUDA device
+identity so latency results are interpretable rather than hardware-free claims.
 
 ## Installation and artifacts
 

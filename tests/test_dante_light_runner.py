@@ -22,6 +22,7 @@ from src.dante_light.runner import (
     DanteLightRunner,
     load_epochs,
     load_replay_tasks,
+    runtime_provenance,
 )
 
 
@@ -352,6 +353,16 @@ def test_public_cli_keeps_light_opt_in_and_output_separate() -> None:
         ["dante-light-shadow", "--output-dir", "runs/dante_light/shadow"]
     )
     assert shadow.func is main.cmd_dante_light_shadow
+
+
+def test_runtime_provenance_records_reproducible_latency_environment() -> None:
+    payload = runtime_provenance()
+    environment = payload["environment"]
+    assert environment["logical_cpu_count"] > 0
+    assert environment["packages"]["torch"]
+    assert "cuda_available" in environment["accelerator"]
+    assert "main.py" in payload["source_sha256"]
+    assert "src/core/data_loader.py" in payload["source_sha256"]
 
 
 def test_light_cli_exposes_explicit_gwosc_only_source() -> None:
