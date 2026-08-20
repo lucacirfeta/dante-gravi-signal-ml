@@ -58,6 +58,14 @@ The separate `dante_reference_artifacts_v1.zip` is instead a versioned GitHub
 release asset whose URL and SHA-256 are frozen in
 `config/reference_artifacts.json`. A clean clone can download, verify and
 install it with `python scripts/manage_reference_artifacts.py download-bundle`.
+To verify the committed O4b operational evidence from a clean clone, place the
+same verified public bundle at the path attested by that evidence:
+
+```bash
+python scripts/manage_reference_artifacts.py download-bundle \
+  --output artifacts/dante_light/downloads/dante_reference_artifacts_v1.zip
+python scripts/verify_dante_light_release.py --stage operational
+```
 
 ## Small historical replay
 
