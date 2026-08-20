@@ -8,8 +8,8 @@ benchmarks/*.jsonl text eol=lf
 artifacts/dante_light/**/*.json text eol=lf
 artifacts/dante_light/**/*.jsonl text eol=lf
 docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md text eol=lf
-data/production/aggregated/*.json text eol=lf
-data/production/aggregated/*.csv text eol=lf
+data/production/aggregated/*.json binary
+data/production/aggregated/*.csv binary
 data/production/aggregated/*.npy binary
 runs/dante_light/o4b_v2/**/*.json text eol=lf
 runs/dante_light/o4b_v2/**/*.jsonl text eol=lf
