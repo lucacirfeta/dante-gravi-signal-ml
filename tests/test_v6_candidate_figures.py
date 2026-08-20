@@ -4,11 +4,17 @@ import importlib.util
 from pathlib import Path
 
 import matplotlib
+import pytest
 
 matplotlib.use("Agg")
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "paper_draft" / "v6_paper" / "tools" / "generate_candidate_and_method_figures.py"
+if not SCRIPT.is_file():
+    pytest.skip(
+        "private paper workspace is not included in the public checkout",
+        allow_module_level=True,
+    )
 SPEC = importlib.util.spec_from_file_location("v6_candidate_figures", SCRIPT)
 assert SPEC and SPEC.loader
 module = importlib.util.module_from_spec(SPEC)
