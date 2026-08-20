@@ -450,9 +450,8 @@ def evaluate_gates(root: Path = ROOT) -> list[Gate]:
         replay = json.loads(
             (root / "config/dante_light_replay_v1.json").read_text(encoding="utf-8")
         )
-        epochs = json.loads(
-            (root / "config/dante_light_epochs_v1.json").read_text(encoding="utf-8")
-        )
+        epochs_path = _inside(root, config["dante_light"]["operational_epochs"])
+        epochs = json.loads(epochs_path.read_text(encoding="utf-8"))
         representation = RepresentationContract.from_reference_manifest(
             root / "config/reference_artifacts.json"
         )

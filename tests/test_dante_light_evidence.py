@@ -327,6 +327,7 @@ def test_prospective_builder_records_causal_coverage_and_durable_latency(
         0.499
     )
     assert payload["execution"]["executor_config"]["workers"] == 2
+    assert (tmp_path / "prospective-preflight.json").is_file()
     assert payload["coverage"]["windows"] == 2
     assert payload["coverage"]["deferred_windows"] == 0
     assert set(payload["detectors"]) == {"H1", "L1"}

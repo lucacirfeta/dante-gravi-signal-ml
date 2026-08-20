@@ -14,19 +14,29 @@ from scripts.verify_dante_light_release import (
 from src.dante_light.contracts import RepresentationContract
 
 
-def test_public_replay_passes_but_operational_claims_remain_open() -> None:
+def test_operational_release_gates_pass_with_locked_o4b_evidence() -> None:
     development, gates = verify("development")
     public, _ = verify("public-replay")
     operational, _ = verify("operational")
     by_name = {gate.name: gate for gate in gates}
     assert development is True
     assert public is True
-    assert operational is False
+    assert operational is True
     assert by_name["public_reference_bundle"].status == "PASS"
     assert by_name["public_clean_clone_replay"].status == "PASS"
-    assert by_name["causal_detector_epochs"].status == "OPEN"
-    assert by_name["prospective_validation"].status == "OPEN"
+    assert by_name["causal_detector_epochs"].status == "PASS"
+    assert by_name["prospective_validation"].status == "PASS"
     assert all(gate.status != "FAIL" for gate in gates)
+
+
+def test_operational_epoch_path_is_explicit_and_detector_causal() -> None:
+    import yaml
+
+    config = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
+    path = ROOT / config["dante_light"]["operational_epochs"]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert set(payload["epochs"]) == {"H1", "L1"}
+    assert all(epoch["causal"] is True for epoch in payload["epochs"].values())
 
 
 def test_release_gate_exposes_scope_for_every_gate() -> None:

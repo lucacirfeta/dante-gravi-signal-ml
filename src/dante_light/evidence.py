@@ -385,6 +385,7 @@ def build_prospective_evidence(
         raise ContractError("latency objective must be finite and positive")
 
     root = Path(root).resolve()
+    output_path = _root_member(root, output_path)
     protocol_path = _root_member(root, PROTOCOL_PATH)
     epochs_file = _root_member(root, epochs_path)
     bundle_file = _root_member(root, bundle_path)

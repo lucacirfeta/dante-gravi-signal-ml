@@ -1,0 +1,100 @@
+{
+  "experiment_run": true,
+  "survival_rate": 0.6103173842170869,
+  "family_cohesion": {
+    "Family_01": {
+      "n": 26,
+      "mean_internal_similarity": 0.7428861856460571
+    }
+  },
+  "H1": {
+    "robust": 2227,
+    "ambiguous": 562,
+    "background": 1622,
+    "total": 4411
+  },
+  "L1": {
+    "robust": 4138,
+    "ambiguous": 713,
+    "background": 1167,
+    "total": 6018
+  },
+  "representation": {
+    "mode": "coherent",
+    "coherent": true,
+    "variant": "idxq4-64_queryq4-64",
+    "index_path": "data\\reference\\patch_compressed_index_o4a_q4-64_ex.npz",
+    "index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "index_qrange": [
+      4,
+      64
+    ],
+    "query_qrange": [
+      4,
+      64
+    ],
+    "index_qrange_declared": true,
+    "legacy_qrange_inferred": false,
+    "catalog_gps_to_analysis_window_offset_s": 4.0
+  },
+  "candidate_score_reuse": {
+    "mode": "verified_subset_candidate_score_reuse",
+    "score_path": "data\\production\\aggregated\\dsd_scores_o4a_idxq4-64_queryq4-64.csv",
+    "score_sha256": "44772e407b3daf0b16da202f882998c851fdbb0f99ac5c624ea43c572912005f",
+    "source_audit_path": "data\\production\\aggregated\\dsd_transition_audit_o4a_idxq4-64_queryq4-64.json",
+    "source_audit_sha256": "6438b1edddca26121815bca5a28ba0d8fa634b321ffe58fda69aed630d948899",
+    "n_reused": 10372,
+    "current_candidate_count": 10429,
+    "exact_key_subset": true,
+    "unique_candidate_keys": true,
+    "all_scores_finite": true,
+    "variant": "idxq4-64_queryq4-64",
+    "index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "candidate_window_offset_s": 4.0,
+    "n_newly_scored": 57,
+    "source_artifacts_overwritten_after_reuse": true,
+    "posthoc_exact_reuse_verification": {
+      "path": "data\\production\\aggregated\\archive\\detector_dedup_bug_20260805\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.pre_detector_aware.csv",
+      "sha256": "f88005919f044d9c035dc8d42f1215373470d14ee4e15b6b2002620bdeefa525",
+      "key_columns": [
+        "detector",
+        "gps_start"
+      ],
+      "score_column": "native_score_idxq4_64_queryq4_64",
+      "n_verified": 10372,
+      "max_absolute_score_difference": 0.0,
+      "exact_float_equality": true
+    }
+  },
+  "taxonomy_artifact": "data\\production\\aggregated\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+  "long_form_scores": "data\\production\\aggregated\\dsd_scores_o4a_idxq4-64_queryq4-64.csv",
+  "transition_from_existing_class": {
+    "AMBIGUOUS": {
+      "AMBIGUOUS": 1275,
+      "BACKGROUND": 0,
+      "ROBUST": 0
+    },
+    "BACKGROUND": {
+      "AMBIGUOUS": 0,
+      "BACKGROUND": 2789,
+      "ROBUST": 0
+    },
+    "ROBUST": {
+      "AMBIGUOUS": 0,
+      "BACKGROUND": 0,
+      "ROBUST": 6365
+    }
+  },
+  "total_requested": 10429,
+  "total_evaluated": 10429,
+  "total_failed": 0,
+  "survived_native_threshold": 6365,
+  "robust_count": 6365,
+  "ambiguous_count": 1275,
+  "background_count": 2789,
+  "threshold_artifact": "data\\production\\aggregated\\dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+  "run": "O4a",
+  "long_form_scores_sha256": "d9870257ae56072d3ddec59ed56cf309651600b231b264c65bb4ea0a519b7dd0",
+  "taxonomy_artifact_sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
+  "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+}

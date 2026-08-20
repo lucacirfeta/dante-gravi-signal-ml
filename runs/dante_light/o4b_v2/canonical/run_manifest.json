@@ -1,0 +1,357 @@
+{
+  "cat1_provenance": "GWOSC CBC_CAT1 whole-window containment",
+  "data_availability_mode": "prestage_before_task_submission",
+  "epochs": {
+    "epochs": {
+      "H1": {
+        "calibration_ledger_sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588",
+        "causal": true,
+        "cutoff_gps": 1389456018.0,
+        "detector": "H1",
+        "epoch_id": "o4a-calibrated-o4b-causal-h1-v2",
+        "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+        "promotion_evidence": {
+          "artifacts": [
+            {
+              "path": "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "sha256": "fb6ad06934104f83b11786b03bafd2b976284ddd6d279c36f778832271d67bc8"
+            },
+            {
+              "path": "config/dante_light_o4b_cat1_segments_v1.json",
+              "sha256": "8d0fb72f892287ef971698f5b6ab25c32085ee3def46173cdea97f3f8fce4dab"
+            },
+            {
+              "path": "config/dante_light_o4b_shadow_v2.json",
+              "sha256": "79e9cdbdcfe3d6230a5385ef29afe7a18d2c747c66d456872a00a80605ba6639"
+            },
+            {
+              "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+              "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+            },
+            {
+              "path": "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+              "sha256": "9363d4f1b0e9253e622f3318d8f5986e07205cc0e27763a481d3e390cb8a0fee"
+            },
+            {
+              "path": "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv",
+              "sha256": "b80a78487f69b0f1aaf3d3eb4729af6c1c96bcdd5b8ce60a58f337cad450522b"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+              "sha256": "a73fcf87cdff4d3a6c1ffe303c2aabd019a1e85c083302b3f26bfbd9ecda78c4"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+              "sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+              "sha256": "0e78d9ce7fd4250563879c0dee33e8b146cb81237b37867950e2dbbe49c6211e"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+              "sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398"
+            },
+            {
+              "path": "data/production/aggregated/cqg_cross_run_domain_shift.json",
+              "sha256": "45c7ce628ee4a2bb109f4b72a7659123f7f97fe24fcff0dbf5c16fe75c9bd2b8"
+            },
+            {
+              "path": "data/production/aggregated/cqg_known_glitch_controls.json",
+              "sha256": "0f44e6e6e413bc4cde84478da9a55b931eb74b556a98ad93f5acb79e1008e199"
+            },
+            {
+              "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+              "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+            },
+            {
+              "path": "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json",
+              "sha256": "802a65e6c8b08828bd07fb6922a4db03ff6e3353f2c1b33d4f7299ff16ee532c"
+            }
+          ],
+          "calibration_end_gps": 1389456018.0,
+          "calibration_start_gps": 1368975618.0,
+          "detector": "H1",
+          "evaluation_end_gps": 1415055264.0,
+          "evaluation_start_gps": 1404597088.0,
+          "gate_artifacts": {
+            "background_quality": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+              "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+              "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+              "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+              "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+            ],
+            "drift_baseline": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/cqg_cross_run_domain_shift.json"
+            ],
+            "dsd_transition_audit": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+              "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json"
+            ],
+            "injection_replay": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+              "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv"
+            ],
+            "known_glitch_replay": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/cqg_known_glitch_controls.json"
+            ],
+            "temporal_separation": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "config/dante_light_o4b_cat1_segments_v1.json",
+              "config/dante_light_o4b_shadow_v2.json",
+              "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+            ]
+          },
+          "gates": {
+            "background_quality": "PASS",
+            "drift_baseline": "PASS",
+            "dsd_transition_audit": "PASS",
+            "injection_replay": "PASS",
+            "known_glitch_replay": "PASS",
+            "temporal_separation": "PASS"
+          },
+          "run": "O4B"
+        },
+        "run": "O4B",
+        "schema_version": 1,
+        "threshold": 0.16157861188054093,
+        "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+      },
+      "L1": {
+        "calibration_ledger_sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398",
+        "causal": true,
+        "cutoff_gps": 1389456018.0,
+        "detector": "L1",
+        "epoch_id": "o4a-calibrated-o4b-causal-l1-v2",
+        "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+        "promotion_evidence": {
+          "artifacts": [
+            {
+              "path": "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "sha256": "fb6ad06934104f83b11786b03bafd2b976284ddd6d279c36f778832271d67bc8"
+            },
+            {
+              "path": "config/dante_light_o4b_cat1_segments_v1.json",
+              "sha256": "8d0fb72f892287ef971698f5b6ab25c32085ee3def46173cdea97f3f8fce4dab"
+            },
+            {
+              "path": "config/dante_light_o4b_shadow_v2.json",
+              "sha256": "79e9cdbdcfe3d6230a5385ef29afe7a18d2c747c66d456872a00a80605ba6639"
+            },
+            {
+              "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+              "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+            },
+            {
+              "path": "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+              "sha256": "9363d4f1b0e9253e622f3318d8f5986e07205cc0e27763a481d3e390cb8a0fee"
+            },
+            {
+              "path": "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv",
+              "sha256": "b80a78487f69b0f1aaf3d3eb4729af6c1c96bcdd5b8ce60a58f337cad450522b"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+              "sha256": "a73fcf87cdff4d3a6c1ffe303c2aabd019a1e85c083302b3f26bfbd9ecda78c4"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+              "sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+              "sha256": "0e78d9ce7fd4250563879c0dee33e8b146cb81237b37867950e2dbbe49c6211e"
+            },
+            {
+              "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+              "sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398"
+            },
+            {
+              "path": "data/production/aggregated/cqg_cross_run_domain_shift.json",
+              "sha256": "45c7ce628ee4a2bb109f4b72a7659123f7f97fe24fcff0dbf5c16fe75c9bd2b8"
+            },
+            {
+              "path": "data/production/aggregated/cqg_known_glitch_controls.json",
+              "sha256": "0f44e6e6e413bc4cde84478da9a55b931eb74b556a98ad93f5acb79e1008e199"
+            },
+            {
+              "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+              "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+            },
+            {
+              "path": "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json",
+              "sha256": "802a65e6c8b08828bd07fb6922a4db03ff6e3353f2c1b33d4f7299ff16ee532c"
+            }
+          ],
+          "calibration_end_gps": 1389456018.0,
+          "calibration_start_gps": 1368975618.0,
+          "detector": "L1",
+          "evaluation_end_gps": 1414952608.0,
+          "evaluation_start_gps": 1404588832.0,
+          "gate_artifacts": {
+            "background_quality": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+              "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+              "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+              "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+              "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+            ],
+            "drift_baseline": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/cqg_cross_run_domain_shift.json"
+            ],
+            "dsd_transition_audit": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+              "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json"
+            ],
+            "injection_replay": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+              "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv"
+            ],
+            "known_glitch_replay": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "data/production/aggregated/cqg_known_glitch_controls.json"
+            ],
+            "temporal_separation": [
+              "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+              "config/dante_light_o4b_cat1_segments_v1.json",
+              "config/dante_light_o4b_shadow_v2.json",
+              "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+            ]
+          },
+          "gates": {
+            "background_quality": "PASS",
+            "drift_baseline": "PASS",
+            "dsd_transition_audit": "PASS",
+            "injection_replay": "PASS",
+            "known_glitch_replay": "PASS",
+            "temporal_separation": "PASS"
+          },
+          "run": "O4B"
+        },
+        "run": "O4B",
+        "schema_version": 1,
+        "threshold": 0.1760626833140853,
+        "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+      }
+    },
+    "promotion_inputs_sha256": {
+      "config/dante_light_o4b_promotion_h1_v2.json": "091a79daf445f5a1f16cebb7492e7bfb55683768033be0dfe1e95c8340048992",
+      "config/dante_light_o4b_promotion_l1_v2.json": "3155ce677a158c3fe1d4ccad36228057f94abbe14077fba8c6e260f91e33c52d"
+    },
+    "promotion_manifest_sha256": "04dcd655e13c7bcdce1e98bdceb8b9fd2ee8b9aadf0e74675228831d16183388",
+    "schema_version": 1,
+    "source_threshold_artifact": {
+      "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+      "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    },
+    "status": "causal_promoted"
+  },
+  "executor_config": {
+    "batch_size": 8,
+    "max_pending_writes": 2,
+    "max_preprocess_in_flight": 16,
+    "requested_device": "cuda",
+    "workers": 2
+  },
+  "limit": null,
+  "limit_per_detector": null,
+  "local_only": false,
+  "manifest_sha256": "9e2e72ee380456352710ecb0ff08b7c20bb9f7b7a94ffbfa026bbf28b1a7e69d",
+  "mode": "shadow",
+  "pre_registered_latency_objective_s": 60.0,
+  "prefilter": "none",
+  "prospective": true,
+  "replay_entries_file_sha256": "6b43dbc0723be69042b3d4b2f74a47bf05bcf2ded68d9a4dd0777eb11dda96f9",
+  "replay_manifest_sha256": "51e36133c67b8c0270afe5e28634cd436c9d77db912a64950e871a8337ae1044",
+  "representation": {
+    "analysis_duration_s": 32.0,
+    "colormap": "cividis",
+    "contract_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+    "encoder_input_size": [
+      518,
+      518
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "model_artifact_id": "dinov2_vits14_reg",
+    "model_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "model_source_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+    "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "primary_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "query_qrange": [
+      4,
+      64
+    ],
+    "sample_rate_hz": 4096,
+    "schema_version": 1,
+    "top_k": 68,
+    "variant": "idxq4-64_queryq4-64",
+    "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+    "whitening_pad_s": 4.0
+  },
+  "roles": [],
+  "runtime_provenance": {
+    "code_state": {
+      "branch": "codex/dante-light-o4b-validation",
+      "commit": "780831b6f9afb579d58758020747c8ee0abe930e",
+      "tracked_dirty": false
+    },
+    "environment": {
+      "accelerator": {
+        "cuda_available": true,
+        "cuda_device_capability": [
+          12,
+          0
+        ],
+        "cuda_device_name": "NVIDIA GeForce RTX 5070",
+        "torch_cuda_version": "12.8"
+      },
+      "logical_cpu_count": 16,
+      "packages": {
+        "astropy": "7.2.0",
+        "gwpy": "4.0.1",
+        "matplotlib": "3.10.9",
+        "numpy": "2.4.5",
+        "torch": "2.12.0.dev20260408+cu128"
+      },
+      "platform": "Windows-10-10.0.26200-SP0",
+      "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+      "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]"
+    },
+    "source_hash_semantics": "utf8_lf_v1",
+    "source_sha256": {
+      "main.py": "49d96f5b24400ae2dd3a1115d5c6709035b53d26a698d5bc73903b356874660a",
+      "src/core/data_loader.py": "95058078a9155a3cc66866a42523cafe57f48b257d7efae5ec022f67f878026e",
+      "src/core/patch_scorer.py": "30ab4b53058572c445427b24d92e23c58a4208c4bfb396ba3efe6cf4c891f1df",
+      "src/core/preprocessor.py": "3883cf80ab64f723faa3f97e23263323aa0d773dd33e13cb0164ead247d7ff2d",
+      "src/dante_light/contracts.py": "a80e64b0ee8b7b1a5c7cc94a38e75e6136b5719001cafe3514ccf204a23a6691",
+      "src/dante_light/epoch.py": "0c13948bc95e5a8a0fa4adb9c0628ac9c53f56e560c199b0b98495b531b90d87",
+      "src/dante_light/evidence.py": "24a2466c781140769c53338a18bc4050d2de878612c29c6d9456f6e42da448d4",
+      "src/dante_light/executor.py": "c7e648d1657ab841b31ddfaf4910a6d26e254d094036586e9b40c27c56ed2a8d",
+      "src/dante_light/preprocessing.py": "5273672f389ff8a959048f9ca32089fa8e59d4092740332f9bfcf257b2675982",
+      "src/dante_light/review_queue.py": "5c0c3f2c21ff0d7fcf2e9e81c6667dbd397d62a8b4f4ebd9b119f8c53a93666e",
+      "src/dante_light/runner.py": "5b68dd7976ae6623e30ef02226c1c90e540c3326c21aaed55987e648d1148570",
+      "src/dante_light/sources/files.py": "ac3a80481286327ad8eef8c09c88f2f4b63af17b153b5215655193ffc9458bce"
+    }
+  },
+  "schema_version": 1,
+  "scientific_engine": "canonical",
+  "strain_source": "gwosc-only"
+}

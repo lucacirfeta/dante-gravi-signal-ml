@@ -1,0 +1,154 @@
+{
+  "artifacts": [
+    {
+      "path": "runs/dante_light/o4b_v2/canonical/run_manifest.json",
+      "sha256": "c2b581137bb7df251262e7487940280a0a331501d07ee16bb5538cba10864b7e"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/canonical/records.jsonl",
+      "sha256": "747eb07375cc505080935343b993575770fc46d5bdc90434276670280693ea97"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/canonical/summary.json",
+      "sha256": "c0ecdc0df2b720b9d5658e247eabf2e9828cec6e4e6e371a004688643158da68"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/canonical/attempts.jsonl",
+      "sha256": "9affbe8cd820098cd7df6dab07310ece5a509d3003d0a622c34fbbd3ab076314"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/shared/run_manifest.json",
+      "sha256": "39e44977678ed2b5b601ce0244b2a62301cf61bd715fb496737dd01b0247e985"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/shared/records.jsonl",
+      "sha256": "130343ff17060eddb0f0dde8e8e0678e6a20df1e71bf251124707afa3f815a91"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/shared/summary.json",
+      "sha256": "0b0501cb17a8f4c93e328b69d3d488de4d3fb19706d9cac14274c1f8e41452e6"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/shared/attempts.jsonl",
+      "sha256": "fb6afda0a318ffe12b5eb9a89659e77072dd6f78897ecf517d279b55cc023b59"
+    },
+    {
+      "path": "config/dante_light_o4b_epochs_v2.json",
+      "sha256": "16dd0cf2ec2814742f77730abc8f11637055796cebb77305fa391b2a351c1786"
+    },
+    {
+      "path": "docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md",
+      "sha256": "5da1d306a664328eb4c8eb0794cd6836aaf69e9227c408786f45f1be43b39784"
+    },
+    {
+      "path": "artifacts/dante_light/downloads/dante_reference_artifacts_v1.zip",
+      "sha256": "651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63"
+    }
+  ],
+  "bundle_source": {
+    "download_verified": true,
+    "publication_status": "deposited",
+    "url": "https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/download/dante-reference-artifacts-v1/dante_reference_artifacts_v1.zip"
+  },
+  "checkout": {
+    "clean_clone": true,
+    "commit": "780831b6f9afb579d58758020747c8ee0abe930e",
+    "origin_url": "https://github.com/lucacirfeta/dante-gravi-signal-ml.git",
+    "tracked_dirty": false
+  },
+  "coverage": {
+    "defer_rate": 0.0,
+    "defer_reasons": {},
+    "deferred_windows": 0,
+    "drops": 0,
+    "duplicate_identities": 0,
+    "failures": [],
+    "windows": 768
+  },
+  "data_availability": {
+    "canonical": {
+      "elapsed_s": 1809.2614307000185,
+      "failures": 0,
+      "p50_s": 3.7651875999872573,
+      "p95_s": 5.013084534968948,
+      "p99_s": 31.248499112004655
+    },
+    "shared": {
+      "elapsed_s": 1472.399634099973,
+      "failures": 0,
+      "p50_s": 3.8314416999928653,
+      "p95_s": 4.975713109984644,
+      "p99_s": 5.323789003009442
+    }
+  },
+  "detectors": {
+    "H1": {
+      "epoch_id": "o4a-calibrated-o4b-causal-h1-v2",
+      "evaluation_end_gps": 1415055264.0,
+      "evaluation_start_gps": 1404597088.0,
+      "windows": 384
+    },
+    "L1": {
+      "epoch_id": "o4a-calibrated-o4b-causal-l1-v2",
+      "evaluation_end_gps": 1414952608.0,
+      "evaluation_start_gps": 1404588832.0,
+      "windows": 384
+    }
+  },
+  "exact_replay": {
+    "disposition_mismatches": 0,
+    "max_abs_score_delta": 0.0,
+    "score_atol": 2e-07
+  },
+  "execution": {
+    "executor_config": {
+      "batch_size": 8,
+      "max_pending_writes": 2,
+      "max_preprocess_in_flight": 16,
+      "requested_device": "cuda",
+      "workers": 2
+    },
+    "runtime_environment": {
+      "accelerator": {
+        "cuda_available": true,
+        "cuda_device_capability": [
+          12,
+          0
+        ],
+        "cuda_device_name": "NVIDIA GeForce RTX 5070",
+        "torch_cuda_version": "12.8"
+      },
+      "logical_cpu_count": 16,
+      "packages": {
+        "astropy": "7.2.0",
+        "gwpy": "4.0.1",
+        "matplotlib": "3.10.9",
+        "numpy": "2.4.5",
+        "torch": "2.12.0.dev20260408+cu128"
+      },
+      "platform": "Windows-10-10.0.26200-SP0",
+      "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+      "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]"
+    }
+  },
+  "latency_objective_met": true,
+  "latency_s": {
+    "p50": 29.03892269998323,
+    "p95": 35.39786922001804,
+    "p99": 37.013968810011285
+  },
+  "latency_semantics": "task submission through completed durable record write",
+  "locked_protocol": {
+    "path": "docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md",
+    "sha256": "5da1d306a664328eb4c8eb0794cd6836aaf69e9227c408786f45f1be43b39784"
+  },
+  "mode": "prospective_shadow",
+  "pre_registered_latency_objective_s": 60.0,
+  "prefilter": "none",
+  "public_sources_only": true,
+  "reference_bundle_sha256": "651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63",
+  "run_commit": "780831b6f9afb579d58758020747c8ee0abe930e",
+  "schema_version": 1,
+  "status": "complete",
+  "strain_source": "gwosc-only"
+}

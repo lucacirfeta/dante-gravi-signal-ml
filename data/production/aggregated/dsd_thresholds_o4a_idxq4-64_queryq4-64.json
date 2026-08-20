@@ -1,0 +1,77 @@
+{
+  "run": "O4a",
+  "representation": {
+    "mode": "coherent",
+    "coherent": true,
+    "variant": "idxq4-64_queryq4-64",
+    "index_path": "data\\reference\\patch_compressed_index_o4a_q4-64_ex.npz",
+    "index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "index_qrange": [
+      4,
+      64
+    ],
+    "query_qrange": [
+      4,
+      64
+    ],
+    "index_qrange_declared": true,
+    "legacy_qrange_inferred": false,
+    "catalog_gps_to_analysis_window_offset_s": 4.0
+  },
+  "thresholds": {
+    "H1": {
+      "ci_lower": 0.13023118793964325,
+      "ci_upper": 0.2040884156525078,
+      "p99": 0.16157861188054093,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_seed": 42,
+      "bootstrap_block_length": 17,
+      "bootstrap_complete_blocks": 294,
+      "n_background": 5000,
+      "background_scores_path": "data\\production\\aggregated\\background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+      "background_ledger_path": "data\\production\\aggregated\\background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+      "background_ledger_sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588",
+      "calibration_run": "O4a",
+      "run_bounds_gps": [
+        1368975618.0,
+        1389456018.0
+      ],
+      "guard_s": 96.0,
+      "index_qrange": [
+        4,
+        64
+      ],
+      "query_qrange": [
+        4,
+        64
+      ]
+    },
+    "L1": {
+      "ci_lower": 0.15031939417123752,
+      "ci_upper": 0.21959366053342733,
+      "p99": 0.1760626833140853,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_seed": 42,
+      "bootstrap_block_length": 17,
+      "bootstrap_complete_blocks": 294,
+      "n_background": 5000,
+      "background_scores_path": "data\\production\\aggregated\\background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+      "background_ledger_path": "data\\production\\aggregated\\background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+      "background_ledger_sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398",
+      "calibration_run": "O4a",
+      "run_bounds_gps": [
+        1368975618.0,
+        1389456018.0
+      ],
+      "guard_s": 96.0,
+      "index_qrange": [
+        4,
+        64
+      ],
+      "query_qrange": [
+        4,
+        64
+      ]
+    }
+  }
+}

@@ -186,6 +186,7 @@ dante_light:
   prefilter: none
   output_root: runs/dante_light
   replay_manifest: config/dante_light_replay_v1.json
+  operational_epochs: config/dante_light_o4b_epochs_v2.json
   representation: idxq4-64_queryq4-64
   dispositions: [ESCALATE, AUDIT_SAMPLE, NOT_ESCALATED, DEFER]
   fail_closed: true

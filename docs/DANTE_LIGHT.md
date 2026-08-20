@@ -11,9 +11,10 @@ detector-aware DSD, coincidence, PEM, or the offline paper artifacts.
 - Bounded preprocessing/scoring/writing with back-pressure: implemented.
 - Canonical engine: default and permanent reference.
 - Exact shared-encoder/native-score-only engine: opt-in; paired benchmarked.
-- Prospective shadow scoring: fail-closed because the shipped completed-O4a
-  BGV3 epoch is non-causal. Separate O4a-calibrated causal O4b-v2 epochs and an
-  outcome-blind 768-window holdout are now locked, but the final run is open.
+- Prospective shadow scoring: the O4a-calibrated causal O4b-v2 epochs and
+  outcome-blind 768-window holdout are complete. Paired canonical/shared runs
+  have zero drops, DEFERs and failures, exact scores/dispositions, and shared
+  p99 task-to-durable-write latency 37.01 s against the frozen 60 s objective.
 - Cheap excess-energy features: implemented only as a `research_only` arm;
   they are prohibited from routing scientific windows until promoted evidence
   exists.
@@ -178,9 +179,9 @@ supporting clean-clone result is
 `artifacts/dante_light/public_replay_validation_v1.json`: it self-downloaded the
 GitHub asset, used GWOSC-only strain and whole-window CAT1, and obtained exact
 canonical/shared scores and dispositions with no drops or failures. The
-`operational` stage remains `NOT_READY` because it additionally requires causal
-H1/L1 epochs and later-epoch evidence. The locked future operational protocol is in
-`docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md`.
+`operational` now passes on the locked O4b v2 evidence. This validates exact
+later-epoch shadow execution under the stated protocol; it does not authorize
+public real-time alerts, automatic adaptation, or a lossy prefilter.
 
 ## Release-evidence commands
 
@@ -207,7 +208,7 @@ A future causal epoch is assembled only from detector promotion payloads:
 python scripts/promote_dante_light_epoch.py \
   --promotion artifacts/dante_light/h1_epoch_promotion.json \
   --promotion artifacts/dante_light/l1_epoch_promotion.json \
-  --output config/dante_light_epochs_v1.json
+  --output config/dante_light_o4b_epochs_v2.json
 ```
 
 Once paired canonical/shared shadow runs exist strictly after those cutoffs,
@@ -217,11 +218,11 @@ bundle contract:
 
 ```bash
 python scripts/build_dante_light_prospective_evidence.py operational \
-  --canonical-run runs/dante_light/prospective_canonical \
-  --shared-run runs/dante_light/prospective_shared \
-  --epochs config/dante_light_epochs_v1.json \
+  --canonical-run runs/dante_light/o4b_v2/canonical \
+  --shared-run runs/dante_light/o4b_v2/shared \
+  --epochs config/dante_light_o4b_epochs_v2.json \
   --bundle artifacts/dante_light/downloads/dante_reference_artifacts_v1.zip \
-  --latency-objective-s <pre-registered-positive-seconds>
+  --latency-objective-s 60
 python scripts/verify_dante_light_release.py --stage operational
 ```
 
