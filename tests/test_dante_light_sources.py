@@ -8,6 +8,43 @@ from src.dante_light.executor import DeferredWindow
 from src.dante_light.sources import ReplayManifestSource, StrainPacket, WindowAssembler
 
 
+def test_replay_source_balances_preflight_limit_per_detector(tmp_path) -> None:
+    import hashlib
+    import json
+
+    entries = []
+    for detector in ("H1", "L1"):
+        for offset in range(3):
+            window = WindowIdentity("O4B", detector, 3000 + offset * 32, 32)
+            entries.append(
+                {
+                    "case_id": f"{detector}-{offset}",
+                    "roles": ["shadow"],
+                    "window": window.to_dict(),
+                }
+            )
+    encoded = "".join(json.dumps(row) + "\n" for row in entries).encode()
+    entries_path = tmp_path / "entries.jsonl"
+    entries_path.write_bytes(encoded)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "entries_path": "entries.jsonl",
+                "entries_file_sha256": hashlib.sha256(encoded).hexdigest(),
+            }
+        ),
+        encoding="utf-8",
+    )
+    source = ReplayManifestSource(manifest, root=tmp_path)
+
+    tasks = source.tasks(limit_per_detector=1)
+
+    assert [task.window.detector for task in tasks] == ["H1", "L1"]
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        source.tasks(limit=1, limit_per_detector=1)
+
+
 def packet(second: int, *, value: float | None = None, cat1: bool = True):
     return StrainPacket(
         run="O4A",

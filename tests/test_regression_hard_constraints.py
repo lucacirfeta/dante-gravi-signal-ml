@@ -772,6 +772,18 @@ def test_observing_run_is_config_extensible(monkeypatch):
     assert utils.get_observing_run(1240000000) == "O3a"
 
 
+def test_observing_run_uses_official_bounded_o4b_epoch():
+    """O4b must neither start late nor absorb arbitrary post-run GPS times."""
+    from src.core import utils
+
+    assert utils.get_observing_run(1396796418) == "O4b"
+    assert utils.get_observing_run(1422118818) == "O4b"
+    with pytest.raises(ValueError):
+        utils.get_observing_run(1396796417)
+    with pytest.raises(ValueError):
+        utils.get_observing_run(1422118819)
+
+
 # =====================================================================
 # DSD — coerenza cromatica, separazione background, anti-circolarità
 # =====================================================================

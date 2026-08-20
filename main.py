@@ -2823,7 +2823,7 @@ def _cmd_dante_light(args: argparse.Namespace, *, prospective: bool) -> None:
 
     args.prospective = prospective
     if not args.role:
-        args.role = ["background_stratified"]
+        args.role = [] if prospective else ["background_stratified"]
     result = run_replay(args)
     print(json.dumps(result, indent=2, sort_keys=True, allow_nan=False))
 
@@ -3558,7 +3558,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_patch_production.set_defaults(func=cmd_patch_production)
 
-    def add_dante_light_arguments(command):
+    def add_dante_light_arguments(command, *, default_limit):
         command.add_argument(
             "--manifest",
             type=Path,
@@ -3571,7 +3571,16 @@ def build_parser() -> argparse.ArgumentParser:
         )
         command.add_argument("--output-dir", type=Path, required=True)
         command.add_argument("--role", action="append", default=None)
-        command.add_argument("--limit", type=int, default=8)
+        command.add_argument("--limit", type=int, default=default_limit)
+        command.add_argument(
+            "--limit-per-detector",
+            type=int,
+            default=None,
+            help=(
+                "Deterministic balanced cap per detector; mutually exclusive "
+                "with --limit. Useful only for preflight runs."
+            ),
+        )
         command.add_argument("--device", default=None)
         command.add_argument(
             "--engine",
@@ -3616,14 +3625,14 @@ def build_parser() -> argparse.ArgumentParser:
         "dante-light-replay",
         help="Opt-in exact DANTE-Light replay with append-only evidence records.",
     )
-    add_dante_light_arguments(p_light_replay)
+    add_dante_light_arguments(p_light_replay, default_limit=8)
     p_light_replay.set_defaults(func=cmd_dante_light_replay)
 
     p_light_shadow = subparsers.add_parser(
         "dante-light-shadow",
         help="Prospective shadow runner; rejects historical non-causal epochs.",
     )
-    add_dante_light_arguments(p_light_shadow)
+    add_dante_light_arguments(p_light_shadow, default_limit=None)
     p_light_shadow.set_defaults(func=cmd_dante_light_shadow)
 
     # --- scan ---

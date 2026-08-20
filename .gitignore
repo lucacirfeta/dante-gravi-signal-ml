@@ -309,8 +309,11 @@ scripts/*
 !scripts/run_raw_diffusivity.py
 !scripts/verify_cohesion.py
 !scripts/pem_background_batch.sh
+!scripts/build_dante_light_o4b_manifest.py
+!scripts/build_dante_light_o4b_epochs.py
 
 tmp
+archive/
 .claude
 .codex
 .gsd/

@@ -42,6 +42,8 @@ run_config:
   O3b: {start_date: "2019-11-01 15:00:00", hours_per_detector: 144}
   O4a: {start_date: "2023-05-24 15:00:00", hours_per_detector: 144,
         gps_start: 1368975618, gps_end: 1389456018}
+  O4b: {start_date: "2024-04-10 15:00:00", hours_per_detector: 144,
+        gps_start: 1396796418, gps_end: 1422118818}
   # Future runs: add an entry with explicit GPS bounds and it is picked up
   # by get_observing_run() (config wins over the builtin epoch table), by
   # the report writers (Master_Taxonomy_<run>.csv, Final Discovery Report)

@@ -20,6 +20,49 @@ class PreparedWindow:
     timings: dict[str, float]
 
 
+def stage_canonical_strain(
+    window: WindowIdentity,
+    *,
+    local_only: bool,
+    remote_only: bool = False,
+) -> dict[str, float | int | str]:
+    """Make public strain available before executor submission.
+
+    This stage deliberately performs no whitening, rendering, scoring, or
+    outcome-dependent selection.  It only verifies that the complete frozen
+    input window (including whitening context) is retrievable and finite.  A
+    subsequent canonical preparation must reproduce the same strain digest.
+    """
+    from src.core.data_loader import fetch_strain_data
+
+    start = window.gps_start
+    end = start + window.duration_s
+    began = time.perf_counter()
+    strain = fetch_strain_data(
+        window.detector,
+        start - 4.0,
+        end + 4.0,
+        local_only=local_only,
+        remote_only=remote_only,
+    )
+    elapsed = time.perf_counter() - began
+    actual_start = float(strain.t0.value)
+    actual_end = actual_start + float(strain.duration.value)
+    tolerance = 1.0 / float(strain.sample_rate.value)
+    if actual_start > start - 4.0 + tolerance or actual_end < end + 4.0 - tolerance:
+        raise RuntimeError("staged strain does not cover the frozen window")
+    values = np.ascontiguousarray(strain.value)
+    if not np.all(np.isfinite(values)):
+        raise RuntimeError("staged strain contains non-finite samples")
+    return {
+        "window_id": window.window_id,
+        "duration_s": elapsed,
+        "samples": int(values.size),
+        "sample_rate_hz": float(strain.sample_rate.value),
+        "strain_sha256": hashlib.sha256(values.tobytes()).hexdigest(),
+    }
+
+
 def prepare_canonical_window(
     window: WindowIdentity,
     *,

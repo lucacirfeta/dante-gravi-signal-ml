@@ -331,6 +331,21 @@ def _validate_prospective(
             raise ValueError("prospective artifact used a non-public source")
         if payload.get("strain_source") != "gwosc-only":
             raise ValueError("prospective artifact did not bypass local strain mirrors")
+        acquisition = payload.get("data_availability")
+        if not isinstance(acquisition, dict):
+            raise ValueError("prospective artifact lacks staged data availability")
+        for engine in ("canonical", "shared"):
+            staged = acquisition.get(engine, {})
+            values = [
+                float(staged[key])
+                for key in ("elapsed_s", "p50_s", "p95_s", "p99_s")
+            ]
+            if int(staged.get("failures", -1)) != 0:
+                raise ValueError(f"{engine} data staging contains failures")
+            if not all(math.isfinite(value) and value >= 0 for value in values):
+                raise ValueError(f"{engine} data staging timings are invalid")
+            if not 0 <= values[1] <= values[2] <= values[3]:
+                raise ValueError(f"{engine} data staging quantiles are invalid")
         checkout = payload["checkout"]
         if (
             checkout.get("clean_clone") is not True

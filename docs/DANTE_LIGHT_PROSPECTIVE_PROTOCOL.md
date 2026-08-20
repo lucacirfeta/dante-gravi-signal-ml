@@ -1,7 +1,30 @@
-# DANTE-Light prospective validation protocol (not yet executed)
+# DANTE-Light O4b later-epoch shadow-validation protocol
 
-Status: **LOCK BEFORE OUTCOME INSPECTION**. This document defines the evidence
-needed for an operational claim; it is not evidence that those gates passed.
+Status: **V2 HOLDOUT LOCKED; FINAL EVALUATION NOT YET EXECUTED**. The O4a
+calibration gates and detector-specific causal epochs pass. A four-window v1
+infrastructure preflight reported a 65.22 s canonical cold-path p99 because the
+implementation incorrectly included the first GWOSC acquisition inside the
+executor clock. That value is not comparable to the registered executor-latency
+endpoint. The defect was corrected before v2 evaluation by an explicit,
+outcome-blind staging phase; acquisition is reported separately and the entire
+observed first O4b block remains tuning-only and excluded from v2.
+This document and the v2 manifest define required evidence; they are not an
+operational PASS.
+
+## Locked O4b corpus
+
+O4a remains immutable on the external raw-data disk. O4b is a separate public
+holdout (official GPS bounds 1396796418--1422118818). The outcome-blind DQ
+snapshot is `config/dante_light_o4b_cat1_segments_v1.json`; the v2 manifest is
+`config/dante_light_o4b_shadow_v2.json` with 768 windows: 384 H1 and 384 L1,
+128 per detector in each of three fixed later blocks. Selection used only
+GWOSC `H1_CBC_CAT1` and `L1_CBC_CAT1`, including the four-second whitening
+context, and no DANTE score, event label or strain morphology.
+
+The causal epochs in `config/dante_light_o4b_epochs_v2.json` retain the frozen
+O4a thresholds and native index. Their cutoff is GPS 1389456018, before every
+O4b evaluation window. Each promotion gate is bound to named, hashed evidence
+in `artifacts/dante_light/o4b_epoch_gate_receipt_v2.json`.
 
 ## Scientific question
 
@@ -11,9 +34,9 @@ drops, stable escalation behaviour and the full offline DANTE dispositions?
 
 ## Frozen design before evaluation
 
-1. Choose a later public/authorised epoch not used by the active reference or
-   calibration. Record immutable GPS intervals separately for calibration,
-   tuning and held-out evaluation for H1 and L1.
+1. Use the locked O4b v2 manifest. Do not add, remove or reorder windows after
+   inspecting scores. O4a supplies calibration; the excluded v1 block is
+   tuning-only; the three v2 blocks are held-out evaluation.
 2. Promote detector-specific causal epochs only through
    `src/dante_light/epoch.py`; all six promotion gates and artifact hashes must
    pass. No window at or before the epoch cutoff is a prospective trial.
@@ -33,8 +56,9 @@ drops, stable escalation behaviour and the full offline DANTE dispositions?
   tolerance;
 - pipeline p50/p95/p99 latency from task submission through preparation,
   scoring, queue delay and completed durable persistence;
-- detector-data availability delay, reported separately because it precedes
-  task submission and is not measured by the current executor clock;
+- detector-data acquisition/staging delay, reported separately because it
+  precedes task submission; complete-window availability and the staged strain
+  digest are rechecked fail-closed during canonical preparation;
 - escalation rate and detector/session block stability;
 - audit-estimated miss rate among non-escalated windows with confidence
   intervals;
@@ -96,6 +120,10 @@ follows before outcomes are inspected:
   "run_commit": "<same 40-character Git SHA>",
   "pre_registered_latency_objective_s": "<positive number>",
   "latency_semantics": "task submission through completed durable record write",
+  "data_availability": {
+    "canonical": {"elapsed_s": 0, "p50_s": 0, "p95_s": 0, "p99_s": 0, "failures": 0},
+    "shared": {"elapsed_s": 0, "p50_s": 0, "p95_s": 0, "p99_s": 0, "failures": 0}
+  },
   "latency_s": {"p50": 0, "p95": 0, "p99": 0},
   "latency_objective_met": true,
   "coverage": {
@@ -134,7 +162,10 @@ The numerical latency objective must be passed to both shadow runs with
 `--latency-objective-s` before evaluation begins; it is then immutable in both
 run manifests. The evidence builder refuses a different after-the-fact value.
 The measured latency starts when a task enters the executor and ends only after
-its record write completes; it does not include upstream GWOSC availability.
+its record write completes. Before task submission, every frozen window is
+retrieved through the public GWOSC-only source, checked for full context and
+finite samples, and bound to a SHA256 digest. Acquisition timings and failures
+are preserved separately; a digest change at preparation becomes `DEFER`.
 The verifier requires monotone p50/p95/p99 values,
 p99 no larger than that objective, post-cutoff H1 and L1 intervals, exact score
 and disposition equivalence, no failures, duplicates or drops, and hashes for
@@ -155,3 +186,10 @@ python scripts/build_dante_light_prospective_evidence.py operational \
 The `preflight` builder mode is available for local schema testing, but emits
 `prospective_shadow_preflight` and `public_sources_only: false`; it cannot pass
 the operational verifier.
+
+Before an operational build, reproduce the frozen contracts with:
+
+```bash
+python scripts/build_dante_light_o4b_manifest.py --check
+python scripts/build_dante_light_o4b_epochs.py --check
+```

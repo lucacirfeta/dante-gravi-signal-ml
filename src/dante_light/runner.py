@@ -10,6 +10,8 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Callable
 
 import numpy as np
@@ -31,7 +33,11 @@ from src.dante_light.executor import (
     WindowTask,
 )
 from src.dante_light.epoch import verified_epoch_from_promotion
-from src.dante_light.preprocessing import PreparedWindow, prepare_canonical_window
+from src.dante_light.preprocessing import (
+    PreparedWindow,
+    prepare_canonical_window,
+    stage_canonical_strain,
+)
 from src.dante_light.review_queue import ReviewQueue
 from src.dante_light.sources.files import ReplayManifestSource
 
@@ -57,10 +63,17 @@ def runtime_provenance() -> dict[str, Any]:
 
     status = git("status", "--porcelain", "--untracked-files=no")
     source_paths = (
+        ROOT / "main.py",
         Path(__file__).resolve(),
+        ROOT / "src/dante_light/contracts.py",
+        ROOT / "src/dante_light/epoch.py",
         ROOT / "src/dante_light/executor.py",
+        ROOT / "src/dante_light/evidence.py",
         ROOT / "src/dante_light/preprocessing.py",
         ROOT / "src/dante_light/review_queue.py",
+        ROOT / "src/dante_light/sources/files.py",
+        ROOT / "src/core/data_loader.py",
+        ROOT / "src/core/preprocessor.py",
         ROOT / "src/core/patch_scorer.py",
     )
     def normalized_source_sha256(path: Path) -> str:
@@ -162,9 +175,14 @@ def load_replay_tasks(
     *,
     roles: set[str] | None = None,
     limit: int | None = None,
+    limit_per_detector: int | None = None,
 ) -> tuple[dict[str, Any], list[WindowTask]]:
     source = ReplayManifestSource(path, root=ROOT)
-    return source.header, source.tasks(roles=roles, limit=limit)
+    return source.header, source.tasks(
+        roles=roles,
+        limit=limit,
+        limit_per_detector=limit_per_detector,
+    )
 
 
 class DanteLightRunner:
@@ -178,6 +196,7 @@ class DanteLightRunner:
         review_queue: ReviewQueue,
         cat1_active: Callable[[WindowIdentity], bool | None],
         prepare: Callable[[WindowTask], PreparedWindow],
+        stage_data: Callable[[WindowTask], dict[str, Any]] | None = None,
         prospective: bool,
         engine: str = "canonical",
         workers: int = 2,
@@ -196,6 +215,8 @@ class DanteLightRunner:
         self.queue = review_queue
         self.cat1_active = cat1_active
         self.prepare_window = prepare
+        self.stage_data = stage_data
+        self.staged_strain_sha256: dict[str, str] = {}
         self.prospective = prospective
         if engine not in {"canonical", "shared_encoder_score_only"}:
             raise ValueError(f"Unsupported DANTE-Light engine: {engine}")
@@ -230,7 +251,56 @@ class DanteLightRunner:
             raise DeferredWindow(FailClosedReason.DEPENDENCY_UNAVAILABLE)
         if not cat1:
             raise DeferredWindow(FailClosedReason.MISSING_CAT1)
-        return self.prepare_window(task)
+        prepared = self.prepare_window(task)
+        staged_sha256 = self.staged_strain_sha256.get(task.window.window_id)
+        if staged_sha256 is not None and prepared.strain_sha256 != staged_sha256:
+            raise DeferredWindow(FailClosedReason.INTERNAL_ERROR)
+        return prepared
+
+    def _stage_before_submission(self, tasks: list[WindowTask]) -> dict[str, Any]:
+        """Stage immutable inputs without exposing DANTE outcomes."""
+        if self.stage_data is None or not tasks:
+            return {
+                "mode": "none",
+                "windows": 0,
+                "failures": [],
+                "elapsed_s": 0.0,
+                "duration_s": [],
+            }
+        began = time.perf_counter()
+        results: dict[str, dict[str, Any]] = {}
+        failures: list[dict[str, str]] = []
+        with ThreadPoolExecutor(
+            max_workers=self.executor.workers,
+            thread_name_prefix="dante-light-acquisition",
+        ) as pool:
+            futures = {pool.submit(self.stage_data, task): task for task in tasks}
+            for future in as_completed(futures):
+                task = futures[future]
+                try:
+                    result = dict(future.result())
+                    if result.get("window_id") != task.window.window_id:
+                        raise ContractError("staging reordered the window identity")
+                    results[task.window.window_id] = result
+                    self.staged_strain_sha256[task.window.window_id] = str(
+                        result["strain_sha256"]
+                    )
+                except Exception as exc:
+                    failures.append(
+                        {
+                            "window_id": task.window.window_id,
+                            "exception_type": type(exc).__name__,
+                            "message": str(exc),
+                        }
+                    )
+        ordered = [results[key] for key in sorted(results)]
+        return {
+            "mode": "prestage_before_task_submission",
+            "windows": len(ordered),
+            "failures": sorted(failures, key=lambda item: item["window_id"]),
+            "elapsed_s": time.perf_counter() - began,
+            "duration_s": [float(item["duration_s"]) for item in ordered],
+        }
 
     def _defer(
         self, window: WindowIdentity, reason: FailClosedReason
@@ -313,6 +383,7 @@ class DanteLightRunner:
             for task in tasks
             if task.window.window_id not in self.queue.completed_window_ids
         ]
+        acquisition = self._stage_before_submission(remaining)
         summary = self.executor.run(remaining)
         disposition_counts: dict[str, int] = {}
         if self.queue.records_path.exists():
@@ -334,6 +405,7 @@ class DanteLightRunner:
                 else "complete"
             ),
             "executor": executor_payload,
+            "acquisition": acquisition,
             "records_total": len(self.queue.completed_window_ids),
             "dispositions": disposition_counts,
         }
@@ -378,7 +450,10 @@ def run_replay(args) -> dict[str, Any]:
         args.epochs, representation=representation, root=ROOT
     )
     replay_header, tasks = load_replay_tasks(
-        args.manifest, roles=set(args.role), limit=args.limit
+        args.manifest,
+        roles=set(args.role),
+        limit=args.limit,
+        limit_per_detector=args.limit_per_detector,
     )
     strain_source = getattr(args, "strain_source", "auto")
     latency_objective = getattr(args, "latency_objective_s", None)
@@ -422,9 +497,13 @@ def run_replay(args) -> dict[str, Any]:
         "replay_entries_file_sha256": replay_header["entries_file_sha256"],
         "roles": sorted(set(args.role)),
         "limit": args.limit,
+        "limit_per_detector": args.limit_per_detector,
         "cat1_provenance": cat1_provenance,
         "local_only": local_only,
         "strain_source": strain_source,
+        "data_availability_mode": (
+            "prestage_before_task_submission" if args.prospective else "inline"
+        ),
         "pre_registered_latency_objective_s": latency_objective,
         "runtime_provenance": runtime_provenance(),
     }
@@ -438,6 +517,15 @@ def run_replay(args) -> dict[str, Any]:
         cat1_active=cat1_active,
         prepare=lambda task: prepare_canonical_window(
             task.window, local_only=local_only, remote_only=remote_only
+        ),
+        stage_data=(
+            (
+                lambda task: stage_canonical_strain(
+                    task.window, local_only=local_only, remote_only=remote_only
+                )
+            )
+            if args.prospective
+            else None
         ),
         prospective=args.prospective,
         engine=args.engine,

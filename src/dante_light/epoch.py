@@ -34,6 +34,7 @@ class PromotionEvidence:
     evaluation_start_gps: float
     evaluation_end_gps: float
     gates: dict[str, str]
+    gate_artifacts: dict[str, tuple[str, ...]]
     artifacts: tuple[tuple[str, str], ...]
 
     @classmethod
@@ -46,6 +47,10 @@ class PromotionEvidence:
             evaluation_start_gps=float(value["evaluation_start_gps"]),
             evaluation_end_gps=float(value["evaluation_end_gps"]),
             gates={str(key): str(status) for key, status in value["gates"].items()},
+            gate_artifacts={
+                str(gate): tuple(str(path) for path in paths)
+                for gate, paths in value.get("gate_artifacts", {}).items()
+            },
             artifacts=tuple(
                 (str(item["path"]), str(item["sha256"]).lower())
                 for item in value["artifacts"]
@@ -62,6 +67,21 @@ class PromotionEvidence:
         missing = [gate for gate in REQUIRED_GATES if self.gates.get(gate) != "PASS"]
         if missing:
             raise ContractError(f"epoch promotion gates are not PASS: {missing}")
+        if set(self.gates) != set(REQUIRED_GATES):
+            raise ContractError("epoch promotion contains undocumented gates")
+        if set(self.gate_artifacts) != set(REQUIRED_GATES):
+            raise ContractError("epoch promotion lacks gate-specific provenance")
+        declared_paths = {relative for relative, _ in self.artifacts}
+        for gate in REQUIRED_GATES:
+            paths = self.gate_artifacts[gate]
+            if not paths:
+                raise ContractError(f"epoch promotion gate has no artifacts: {gate}")
+            unknown = sorted(set(paths) - declared_paths)
+            if unknown:
+                raise ContractError(
+                    f"epoch promotion gate references undeclared artifacts: "
+                    f"{gate}: {unknown}"
+                )
         root = Path(root)
         resolved_root = root.resolve()
         if not self.artifacts:

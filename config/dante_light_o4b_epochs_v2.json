@@ -1,0 +1,255 @@
+{
+  "epochs": {
+    "H1": {
+      "calibration_ledger_sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588",
+      "causal": true,
+      "cutoff_gps": 1389456018.0,
+      "detector": "H1",
+      "epoch_id": "o4a-calibrated-o4b-causal-h1-v2",
+      "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+      "promotion_evidence": {
+        "artifacts": [
+          {
+            "path": "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "sha256": "fb6ad06934104f83b11786b03bafd2b976284ddd6d279c36f778832271d67bc8"
+          },
+          {
+            "path": "config/dante_light_o4b_cat1_segments_v1.json",
+            "sha256": "8d0fb72f892287ef971698f5b6ab25c32085ee3def46173cdea97f3f8fce4dab"
+          },
+          {
+            "path": "config/dante_light_o4b_shadow_v2.json",
+            "sha256": "79e9cdbdcfe3d6230a5385ef29afe7a18d2c747c66d456872a00a80605ba6639"
+          },
+          {
+            "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+            "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+          },
+          {
+            "path": "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+            "sha256": "9363d4f1b0e9253e622f3318d8f5986e07205cc0e27763a481d3e390cb8a0fee"
+          },
+          {
+            "path": "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv",
+            "sha256": "b80a78487f69b0f1aaf3d3eb4729af6c1c96bcdd5b8ce60a58f337cad450522b"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+            "sha256": "a73fcf87cdff4d3a6c1ffe303c2aabd019a1e85c083302b3f26bfbd9ecda78c4"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+            "sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+            "sha256": "0e78d9ce7fd4250563879c0dee33e8b146cb81237b37867950e2dbbe49c6211e"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+            "sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398"
+          },
+          {
+            "path": "data/production/aggregated/cqg_cross_run_domain_shift.json",
+            "sha256": "45c7ce628ee4a2bb109f4b72a7659123f7f97fe24fcff0dbf5c16fe75c9bd2b8"
+          },
+          {
+            "path": "data/production/aggregated/cqg_known_glitch_controls.json",
+            "sha256": "0f44e6e6e413bc4cde84478da9a55b931eb74b556a98ad93f5acb79e1008e199"
+          },
+          {
+            "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+            "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+          },
+          {
+            "path": "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json",
+            "sha256": "802a65e6c8b08828bd07fb6922a4db03ff6e3353f2c1b33d4f7299ff16ee532c"
+          }
+        ],
+        "calibration_end_gps": 1389456018.0,
+        "calibration_start_gps": 1368975618.0,
+        "detector": "H1",
+        "evaluation_end_gps": 1415055264.0,
+        "evaluation_start_gps": 1404597088.0,
+        "gate_artifacts": {
+          "background_quality": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+            "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+            "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+            "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+            "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+          ],
+          "drift_baseline": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/cqg_cross_run_domain_shift.json"
+          ],
+          "dsd_transition_audit": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+            "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json"
+          ],
+          "injection_replay": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+            "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv"
+          ],
+          "known_glitch_replay": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/cqg_known_glitch_controls.json"
+          ],
+          "temporal_separation": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "config/dante_light_o4b_cat1_segments_v1.json",
+            "config/dante_light_o4b_shadow_v2.json",
+            "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+          ]
+        },
+        "gates": {
+          "background_quality": "PASS",
+          "drift_baseline": "PASS",
+          "dsd_transition_audit": "PASS",
+          "injection_replay": "PASS",
+          "known_glitch_replay": "PASS",
+          "temporal_separation": "PASS"
+        },
+        "run": "O4B"
+      },
+      "run": "O4B",
+      "schema_version": 1,
+      "threshold": 0.16157861188054093,
+      "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    },
+    "L1": {
+      "calibration_ledger_sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398",
+      "causal": true,
+      "cutoff_gps": 1389456018.0,
+      "detector": "L1",
+      "epoch_id": "o4a-calibrated-o4b-causal-l1-v2",
+      "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+      "promotion_evidence": {
+        "artifacts": [
+          {
+            "path": "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "sha256": "fb6ad06934104f83b11786b03bafd2b976284ddd6d279c36f778832271d67bc8"
+          },
+          {
+            "path": "config/dante_light_o4b_cat1_segments_v1.json",
+            "sha256": "8d0fb72f892287ef971698f5b6ab25c32085ee3def46173cdea97f3f8fce4dab"
+          },
+          {
+            "path": "config/dante_light_o4b_shadow_v2.json",
+            "sha256": "79e9cdbdcfe3d6230a5385ef29afe7a18d2c747c66d456872a00a80605ba6639"
+          },
+          {
+            "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+            "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+          },
+          {
+            "path": "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+            "sha256": "9363d4f1b0e9253e622f3318d8f5986e07205cc0e27763a481d3e390cb8a0fee"
+          },
+          {
+            "path": "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv",
+            "sha256": "b80a78487f69b0f1aaf3d3eb4729af6c1c96bcdd5b8ce60a58f337cad450522b"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+            "sha256": "a73fcf87cdff4d3a6c1ffe303c2aabd019a1e85c083302b3f26bfbd9ecda78c4"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+            "sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+            "sha256": "0e78d9ce7fd4250563879c0dee33e8b146cb81237b37867950e2dbbe49c6211e"
+          },
+          {
+            "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+            "sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398"
+          },
+          {
+            "path": "data/production/aggregated/cqg_cross_run_domain_shift.json",
+            "sha256": "45c7ce628ee4a2bb109f4b72a7659123f7f97fe24fcff0dbf5c16fe75c9bd2b8"
+          },
+          {
+            "path": "data/production/aggregated/cqg_known_glitch_controls.json",
+            "sha256": "0f44e6e6e413bc4cde84478da9a55b931eb74b556a98ad93f5acb79e1008e199"
+          },
+          {
+            "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+            "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+          },
+          {
+            "path": "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json",
+            "sha256": "802a65e6c8b08828bd07fb6922a4db03ff6e3353f2c1b33d4f7299ff16ee532c"
+          }
+        ],
+        "calibration_end_gps": 1389456018.0,
+        "calibration_start_gps": 1368975618.0,
+        "detector": "L1",
+        "evaluation_end_gps": 1414952608.0,
+        "evaluation_start_gps": 1404588832.0,
+        "gate_artifacts": {
+          "background_quality": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186.npy",
+            "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+            "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186.npy",
+            "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+            "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+          ],
+          "drift_baseline": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/cqg_cross_run_domain_shift.json"
+          ],
+          "dsd_transition_audit": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+            "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json"
+          ],
+          "injection_replay": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json",
+            "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv"
+          ],
+          "known_glitch_replay": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "data/production/aggregated/cqg_known_glitch_controls.json"
+          ],
+          "temporal_separation": [
+            "artifacts/dante_light/o4b_epoch_gate_receipt_v2.json",
+            "config/dante_light_o4b_cat1_segments_v1.json",
+            "config/dante_light_o4b_shadow_v2.json",
+            "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+          ]
+        },
+        "gates": {
+          "background_quality": "PASS",
+          "drift_baseline": "PASS",
+          "dsd_transition_audit": "PASS",
+          "injection_replay": "PASS",
+          "known_glitch_replay": "PASS",
+          "temporal_separation": "PASS"
+        },
+        "run": "O4B"
+      },
+      "run": "O4B",
+      "schema_version": 1,
+      "threshold": 0.1760626833140853,
+      "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    }
+  },
+  "promotion_inputs_sha256": {
+    "config/dante_light_o4b_promotion_h1_v2.json": "091a79daf445f5a1f16cebb7492e7bfb55683768033be0dfe1e95c8340048992",
+    "config/dante_light_o4b_promotion_l1_v2.json": "3155ce677a158c3fe1d4ccad36228057f94abbe14077fba8c6e260f91e33c52d"
+  },
+  "promotion_manifest_sha256": "04dcd655e13c7bcdce1e98bdceb8b9fd2ee8b9aadf0e74675228831d16183388",
+  "schema_version": 1,
+  "source_threshold_artifact": {
+    "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+    "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+  },
+  "status": "causal_promoted"
+}

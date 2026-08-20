@@ -77,6 +77,9 @@ def promotion_payload(tmp_path):
             "evaluation_start_gps": 3000.0,
             "evaluation_end_gps": 4000.0,
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "gate_artifacts": {
+                gate: [artifact.name] for gate in REQUIRED_GATES
+            },
             "artifacts": [{"path": artifact.name, "sha256": digest}],
         },
     }
@@ -103,6 +106,13 @@ def test_epoch_promotion_requires_temporal_separation_hashes_and_all_gates(tmp_p
             failed, representation=REPRESENTATION, root=tmp_path
         )
 
+    unbound = promotion_payload(tmp_path)
+    unbound["promotion_evidence"]["gate_artifacts"].pop("drift_baseline")
+    with pytest.raises(ContractError, match="gate-specific provenance"):
+        verified_epoch_from_promotion(
+            unbound, representation=REPRESENTATION, root=tmp_path
+        )
+
     tampered = promotion_payload(tmp_path)
     (tmp_path / "evidence.json").write_text("tampered\n", encoding="utf-8")
     with pytest.raises(ContractError, match="SHA256 mismatch"):
@@ -112,6 +122,9 @@ def test_epoch_promotion_requires_temporal_separation_hashes_and_all_gates(tmp_p
 
     escaped = promotion_payload(tmp_path)
     escaped["promotion_evidence"]["artifacts"][0]["path"] = "../evidence.json"
+    escaped["promotion_evidence"]["gate_artifacts"] = {
+        gate: ["../evidence.json"] for gate in REQUIRED_GATES
+    }
     with pytest.raises(ContractError, match="escapes project root"):
         verified_epoch_from_promotion(
             escaped, representation=REPRESENTATION, root=tmp_path

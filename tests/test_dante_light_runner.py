@@ -98,7 +98,14 @@ def prepared(task: WindowTask) -> PreparedWindow:
     return PreparedWindow(image, digest, digest, {"fixture_s": 0.0})
 
 
-def make_runner(tmp_path, *, prospective: bool = False, cat1=None, engine="shared_encoder_score_only"):
+def make_runner(
+    tmp_path,
+    *,
+    prospective: bool = False,
+    cat1=None,
+    engine="shared_encoder_score_only",
+    stage_data=None,
+):
     primary = FakeScorer(REPRESENTATION.primary_index_sha256)
     native = FakeScorer(REPRESENTATION.native_index_sha256)
     queue = ReviewQueue(
@@ -117,6 +124,7 @@ def make_runner(tmp_path, *, prospective: bool = False, cat1=None, engine="share
         review_queue=queue,
         cat1_active=cat1 or (lambda _window: True),
         prepare=prepared,
+        stage_data=stage_data,
         prospective=prospective,
         engine=engine,
         workers=2,
@@ -154,6 +162,51 @@ def test_canonical_reference_engine_produces_same_light_dispositions(tmp_path) -
     summary = runner.run(make_tasks())
     assert summary["status"] == "complete"
     assert summary["executor"]["written"] == 6
+
+
+def test_prospective_staging_precedes_executor_and_binds_strain(tmp_path) -> None:
+    order: list[str] = []
+
+    def stage(task):
+        order.append(f"stage:{task.window.window_id}")
+        result = prepared(task)
+        return {
+            "window_id": task.window.window_id,
+            "duration_s": 0.1,
+            "samples": 4,
+            "sample_rate_hz": 1.0,
+            "strain_sha256": result.strain_sha256,
+        }
+
+    runner = make_runner(tmp_path, stage_data=stage)
+    original_prepare = runner.prepare_window
+
+    def ordered_prepare(task):
+        assert len(order) == len(make_tasks())
+        return original_prepare(task)
+
+    runner.prepare_window = ordered_prepare
+    summary = runner.run(make_tasks())
+    assert summary["status"] == "complete"
+    assert summary["acquisition"]["mode"] == "prestage_before_task_submission"
+    assert summary["acquisition"]["windows"] == 6
+    assert summary["acquisition"]["failures"] == []
+
+
+def test_staged_strain_drift_fails_closed(tmp_path) -> None:
+    def stage(task):
+        return {
+            "window_id": task.window.window_id,
+            "duration_s": 0.1,
+            "samples": 4,
+            "sample_rate_hz": 1.0,
+            "strain_sha256": "0" * 64,
+        }
+
+    summary = make_runner(tmp_path, stage_data=stage).run(make_tasks())
+    assert summary["status"] == "complete_with_defer"
+    assert summary["executor"]["deferred"] == 6
+    assert summary["dispositions"] == {LightDisposition.DEFER.value: 6}
 
 
 def test_prospective_mode_rejects_noncausal_historical_epoch(tmp_path) -> None:
@@ -259,6 +312,9 @@ def test_causal_epoch_file_accepts_only_hashed_promotion_path(tmp_path) -> None:
             "evaluation_start_gps": 3000.0,
             "evaluation_end_gps": 4000.0,
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "gate_artifacts": {
+                gate: [threshold.name] for gate in REQUIRED_GATES
+            },
             "artifacts": [
                 {"path": threshold.name, "sha256": threshold_sha256},
                 {"path": ledger.name, "sha256": ledger_sha256},

@@ -54,6 +54,9 @@ def _promotion(
             "evaluation_start_gps": 3000.0,
             "evaluation_end_gps": 4000.0,
             "gates": {gate: "PASS" for gate in REQUIRED_GATES},
+            "gate_artifacts": {
+                gate: [threshold.name] for gate in REQUIRED_GATES
+            },
             "artifacts": [
                 {"path": threshold.name, "sha256": _sha256(threshold)},
                 {"path": ledger.name, "sha256": _sha256(ledger)},

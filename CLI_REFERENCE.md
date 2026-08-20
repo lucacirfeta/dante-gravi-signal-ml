@@ -130,6 +130,10 @@ python main.py dante-light-replay \
 - `--strain-source`: `auto` (default), `local-only`, or `gwosc-only`.
   `gwosc-only` bypasses matching local mirrors and is required for public
   clean-clone evidence.
+- In `dante-light-shadow`, locked strain is staged through the selected source
+  before executor submission. Acquisition time is recorded separately from
+  task-to-durable-write latency, and staged/prepared strain SHA256 values must
+  agree.
 - `--local-only` is a compatibility alias for `--strain-source local-only` and
   cannot be combined with an explicit `--strain-source`.
 - `--workers`, `--batch-size`, `--max-in-flight`, and
@@ -141,16 +145,24 @@ Outputs are `run_manifest.json`, append-only `records.jsonl`, append-only
 
 ### `dante-light-shadow`
 
-Uses the exact scorer but enforces prospective epoch causality. The epoch in
-`config/dante_light_epochs_v1.json` uses completed O4a and declares
-`causal=false`; current attempts therefore produce
-`complete_with_defer/NON_CAUSAL_EPOCH`. A future causal epoch must use only
-earlier detector-specific calibration data and pass promotion gates.
+Uses the exact scorer and enforces epoch causality. The historical
+`config/dante_light_epochs_v1.json` remains non-causal. The locked O4b
+validation instead uses `config/dante_light_o4b_shadow_v2.json` with
+`config/dante_light_o4b_epochs_v2.json`, calibrated only on earlier O4a data.
 
 ```bash
 python main.py dante-light-shadow \
-  --output-dir runs/dante_light/shadow_test --limit 1
+  --manifest config/dante_light_o4b_shadow_v2.json \
+  --epochs config/dante_light_o4b_epochs_v2.json \
+  --output-dir runs/dante_light/o4b_shadow_canonical \
+  --engine canonical --strain-source gwosc-only \
+  --latency-objective-s 60
 ```
+
+Shadow mode has no implicit global limit and consumes the selected manifest.
+For tuning only, `--limit-per-detector N` selects a deterministic balanced
+subset. It is mutually exclusive with `--limit` and must not be used for the
+final evaluation.
 
 See `docs/DANTE_LIGHT.md` for the runnable CPU/GPU tutorial, failure meanings,
 clean-clone replay, causal-epoch promotion, and prospective-evidence commands.

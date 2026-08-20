@@ -26,8 +26,14 @@ class ReplayManifestSource:
         ]
 
     def tasks(
-        self, *, roles: set[str] | None = None, limit: int | None = None
+        self,
+        *,
+        roles: set[str] | None = None,
+        limit: int | None = None,
+        limit_per_detector: int | None = None,
     ) -> list[WindowTask]:
+        if limit is not None and limit_per_detector is not None:
+            raise ValueError("limit and limit_per_detector are mutually exclusive")
         selected = [
             entry
             for entry in self.entries
@@ -60,6 +66,18 @@ class ReplayManifestSource:
             for value in grouped.values()
         ]
         tasks.sort(key=lambda task: (task.window.detector, task.window.gps_start))
+        if limit_per_detector is not None:
+            if limit_per_detector <= 0:
+                raise ValueError("limit_per_detector must be positive")
+            counts: dict[str, int] = {}
+            balanced = []
+            for task in tasks:
+                detector = task.window.detector
+                if counts.get(detector, 0) >= limit_per_detector:
+                    continue
+                balanced.append(task)
+                counts[detector] = counts.get(detector, 0) + 1
+            tasks = balanced
         if limit is not None:
             if limit <= 0:
                 raise ValueError("limit must be positive")

@@ -196,7 +196,10 @@ def get_observing_run(gps_start: int | float) -> str:
         # Official GWOSC O4a bounds: 2023-05-24 15:00 UTC to
         # 2024-01-16 16:00 UTC.
         return "O4a"
-    elif gps > 1397062818:
+    elif 1396796418 <= gps <= 1422118818:
+        # Official GWOSC O4b observing-run bounds. The public release also
+        # contains a few pre-run SN2024ggi segments; those are not O4b
+        # observing-run time and must not be labelled as such here.
         return "O4b"
     else:
         raise ValueError(f"GPS time {gps} does not fall into any known LIGO/Virgo observing run epoch.")

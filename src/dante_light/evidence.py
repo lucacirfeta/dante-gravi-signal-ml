@@ -209,6 +209,7 @@ def compare_exact_runs(
         "cat1_provenance",
         "local_only",
         "strain_source",
+        "data_availability_mode",
         "pre_registered_latency_objective_s",
     )
     for field in comparable_manifest_fields:
@@ -398,6 +399,12 @@ def build_prospective_evidence(
         raise ContractError("prospective evidence requires shadow-mode runs")
     if canonical.manifest.get("strain_source") != "gwosc-only":
         raise ContractError("prospective evidence requires --strain-source gwosc-only")
+    if canonical.manifest.get("data_availability_mode") != (
+        "prestage_before_task_submission"
+    ):
+        raise ContractError(
+            "prospective evidence requires pre-submission GWOSC staging"
+        )
     if canonical.manifest.get("cat1_provenance") != "GWOSC CBC_CAT1 whole-window containment":
         raise ContractError("prospective evidence requires GWOSC CAT1 provenance")
 
@@ -459,6 +466,29 @@ def build_prospective_evidence(
         "p95": _quantile(latencies, 0.95),
         "p99": _quantile(latencies, 0.99),
     }
+    acquisition: dict[str, Any] = {}
+    for label, run in (("canonical", canonical), ("shared", shared)):
+        raw = run.summary.get("acquisition", {})
+        durations = [float(value) for value in raw.get("duration_s", [])]
+        failures = list(raw.get("failures", []))
+        expected = int(run.summary["executor"]["submitted"])
+        if raw.get("mode") != "prestage_before_task_submission":
+            raise ContractError(f"{label} run lacks pre-submission acquisition")
+        if int(raw.get("windows", -1)) + len(failures) != expected:
+            raise ContractError(f"{label} acquisition/window accounting mismatch")
+        if failures:
+            raise ContractError(f"{label} acquisition contains failures")
+        if len(durations) != expected or not all(
+            math.isfinite(value) and value >= 0 for value in durations
+        ):
+            raise ContractError(f"{label} acquisition durations are invalid")
+        acquisition[label] = {
+            "elapsed_s": float(raw["elapsed_s"]),
+            "p50_s": _quantile(durations, 0.50),
+            "p95_s": _quantile(durations, 0.95),
+            "p99_s": _quantile(durations, 0.99),
+            "failures": 0,
+        }
 
     deferred = int(shared.summary["executor"].get("deferred", 0))
     if deferred != sum(defer_reasons.values()):
@@ -504,6 +534,7 @@ def build_prospective_evidence(
         "run_commit": run_commit,
         "pre_registered_latency_objective_s": objective,
         "latency_semantics": "task submission through completed durable record write",
+        "data_availability": acquisition,
         "latency_s": latency,
         "latency_objective_met": latency["p99"] <= objective,
         "coverage": {

@@ -72,6 +72,9 @@ def _run(
         "cat1_provenance": "GWOSC CBC_CAT1 whole-window containment",
         "local_only": False,
         "strain_source": "gwosc-only",
+        "data_availability_mode": (
+            "prestage_before_task_submission" if prospective else "inline"
+        ),
         "pre_registered_latency_objective_s": latency_objective_s,
         "runtime_provenance": {
             "code_state": {
@@ -109,6 +112,17 @@ def _run(
             "drops": 0,
             "failures": [],
             "latency_s": [0.2 + index * 0.1 for index in range(len(records))],
+        },
+        "acquisition": {
+            "mode": (
+                "prestage_before_task_submission" if prospective else "none"
+            ),
+            "windows": len(records) if prospective else 0,
+            "failures": [],
+            "elapsed_s": 1.0 if prospective else 0.0,
+            "duration_s": [0.4 + index * 0.1 for index in range(len(records))]
+            if prospective
+            else [],
         },
     }
     (directory / "summary.json").write_text(
@@ -298,6 +312,9 @@ def test_prospective_builder_records_causal_coverage_and_durable_latency(
     assert payload["latency_semantics"].endswith("durable record write")
     assert payload["latency_s"]["p99"] == pytest.approx(0.299)
     assert payload["latency_objective_met"] is True
+    assert payload["data_availability"]["canonical"]["p99_s"] == pytest.approx(
+        0.499
+    )
     assert payload["coverage"]["windows"] == 2
     assert payload["coverage"]["deferred_windows"] == 0
     assert set(payload["detectors"]) == {"H1", "L1"}
@@ -321,6 +338,33 @@ def test_prospective_builder_preserves_unmet_latency_endpoint(
     )
     assert payload["status"] == "complete"
     assert payload["latency_objective_met"] is False
+
+
+def test_prospective_builder_rejects_partial_resume_latency(
+    tmp_path, monkeypatch
+) -> None:
+    canonical, shared, epochs_path, bundle, _epochs = _prospective_fixture(
+        tmp_path, monkeypatch
+    )
+    summary_path = shared / "summary.json"
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    summary["executor"]["submitted"] = 1
+    summary["executor"]["written"] = 1
+    summary["executor"]["latency_s"] = [0.2]
+    summary["acquisition"]["windows"] = 1
+    summary["acquisition"]["duration_s"] = [0.4]
+    summary_path.write_text(json.dumps(summary), encoding="utf-8")
+    with pytest.raises(ContractError, match="executor/record count mismatch"):
+        evidence.build_prospective_evidence(
+            canonical,
+            shared,
+            epochs_path=epochs_path,
+            bundle_path=bundle,
+            output_path=tmp_path / "partial.json",
+            root=tmp_path,
+            latency_objective_s=0.5,
+            mode="preflight",
+        )
 
 
 def test_prospective_builder_rejects_at_cutoff_window(tmp_path, monkeypatch) -> None:

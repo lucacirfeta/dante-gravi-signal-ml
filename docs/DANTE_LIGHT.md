@@ -12,7 +12,8 @@ detector-aware DSD, coincidence, PEM, or the offline paper artifacts.
 - Canonical engine: default and permanent reference.
 - Exact shared-encoder/native-score-only engine: opt-in; paired benchmarked.
 - Prospective shadow scoring: fail-closed because the shipped completed-O4a
-  BGV3 epoch is non-causal.
+  BGV3 epoch is non-causal. Separate O4a-calibrated causal O4b-v2 epochs and an
+  outcome-blind 768-window holdout are now locked, but the final run is open.
 - Cheap excess-energy features: implemented only as a `research_only` arm;
   they are prohibited from routing scientific windows until promoted evidence
   exists.
@@ -22,6 +23,18 @@ detector-aware DSD, coincidence, PEM, or the offline paper artifacts.
 The Light dispositions are `ESCALATE`, `AUDIT_SAMPLE`, `NOT_ESCALATED`, and
 `DEFER`. Only the full offline pipeline may emit `ROBUST`, `AMBIGUOUS`, or
 `BACKGROUND`.
+
+Do not replace `E:/o4a`: it is the historical v6 reproducibility corpus. Any
+O4b mirror must use a separate directory such as `E:/o4b` and retain its GWOSC
+source and checksum manifest.
+
+Prospective shadow mode stages every locked GWOSC window before submitting it
+to the timed executor. This is not an outcome cache: staging performs no
+whitening, rendering, embedding or scoring. It verifies availability and a raw
+strain digest, reports acquisition delay separately, and the timed preparation
+must reproduce the digest or fail closed. `--strain-source gwosc-only` remains
+mandatory for operational evidence, so a local mirror cannot silently replace
+the public source.
 
 ## Installation and artifacts
 
@@ -208,3 +221,7 @@ python scripts/build_dante_light_prospective_evidence.py operational \
   --latency-objective-s <pre-registered-positive-seconds>
 python scripts/verify_dante_light_release.py --stage operational
 ```
+
+The locked O4b run uses `config/dante_light_o4b_shadow_v2.json` and
+`config/dante_light_o4b_epochs_v2.json`. For a tuning-only balanced smoke test,
+use `--limit-per-detector N`; never use a limit for the final v2 evaluation.
