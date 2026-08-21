@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "manifest_sha256": "ec08a37e19f8987d98a4e1c7cb65ad9a73d104643578c89806a1d15976ae5b0b",
+  "catalog": "GWTC-5.0",
+  "catalog_source_url": "https://gwosc.org/api/v2/catalogs/GWTC-5.0/events?include-default-parameters=true&pagesize=500",
+  "catalog_response_sha256": "f3080ef07d357de28cd41ac256f10866439a4bc3d9120e3e02d18a0ef2b3cc54",
+  "catalog_event_count": 161,
+  "window_match_rule": "catalog GPS in [gps_start, gps_start + 32 s)",
+  "n_candidates": 18,
+  "n_candidates_with_catalog_match": 0,
+  "crossmatches": [
+    {
+      "window_id": "dlw1-d705588c205dc08f681bfc1e",
+      "detector": "H1",
+      "gps_start": 1404598432.0,
+      "feature_gps": 1404598435.891892,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-fe660a18bbdc000218382006",
+      "detector": "H1",
+      "gps_start": 1409757632.0,
+      "feature_gps": 1409757636.7567568,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-c82cd4388361c4d9707d75df",
+      "detector": "H1",
+      "gps_start": 1409759680.0,
+      "feature_gps": 1409759690.8108108,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-bbbe3f79a64ceba70f2a7b1a",
+      "detector": "H1",
+      "gps_start": 1409760064.0,
+      "feature_gps": 1409760073.945946,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-304847f23082944919a9be67",
+      "detector": "H1",
+      "gps_start": 1415052192.0,
+      "feature_gps": 1415052220.108108,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-91d0430b8d66e4eeaddb19a8",
+      "detector": "H1",
+      "gps_start": 1415052224.0,
+      "feature_gps": 1415052251.2432432,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-983c79fbdb6819ed35191a91",
+      "detector": "H1",
+      "gps_start": 1415053344.0,
+      "feature_gps": 1415053374.7027028,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-7389bcd12271ea2af9625f8f",
+      "detector": "H1",
+      "gps_start": 1415054816.0,
+      "feature_gps": 1415054832.0,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-caa76cd66e4d3cf05d56234e",
+      "detector": "L1",
+      "gps_start": 1409756544.0,
+      "feature_gps": 1409756547.891892,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-a9270e0358c8e8296d9b9151",
+      "detector": "L1",
+      "gps_start": 1409757504.0,
+      "feature_gps": 1409757511.3513513,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-79d8f501ee22980e8de24581",
+      "detector": "L1",
+      "gps_start": 1409759680.0,
+      "feature_gps": 1409759690.8108108,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-d7bb01734b48e47f7f7ea877",
+      "detector": "L1",
+      "gps_start": 1409759712.0,
+      "feature_gps": 1409759717.1891892,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-7d9656f934fbf9a8fba27874",
+      "detector": "L1",
+      "gps_start": 1409759744.0,
+      "feature_gps": 1409759746.162162,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-a098ff47ca0940c755dfd18c",
+      "detector": "L1",
+      "gps_start": 1409759904.0,
+      "feature_gps": 1409759916.9729729,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-f6552663148bdf0a4d086a03",
+      "detector": "L1",
+      "gps_start": 1414941408.0,
+      "feature_gps": 1414941428.3243244,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-6d95c8823118a194b7105323",
+      "detector": "L1",
+      "gps_start": 1414942688.0,
+      "feature_gps": 1414942707.891892,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-109172b20a3bc6114e7d35bf",
+      "detector": "L1",
+      "gps_start": 1414942880.0,
+      "feature_gps": 1414942883.891892,
+      "matched_catalog_events": []
+    },
+    {
+      "window_id": "dlw1-d8251c2caaf7f79e84df76e6",
+      "detector": "L1",
+      "gps_start": 1414951104.0,
+      "feature_gps": 1414951122.5945945,
+      "matched_catalog_events": []
+    }
+  ],
+  "scientific_boundary": "No catalog match excludes association with a listed GWTC-5.0 event inside the window; it does not establish a novel glitch morphology.",
+  "catalog_response_path": "artifacts/dante_light/o4b_followup/gwtc5_events_raw_v1.json",
+  "fetched_utc": "2026-08-21T07:14:37.890294+00:00"
+}

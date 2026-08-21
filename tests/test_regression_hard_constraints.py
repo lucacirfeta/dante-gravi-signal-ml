@@ -526,6 +526,43 @@ def test_physical_coincidence_resume_is_detector_aware_and_fail_closed(
         )
 
 
+def test_physical_coincidence_rejects_nonfinite_partner(monkeypatch):
+    from types import SimpleNamespace
+
+    import numpy as np
+    import pytest
+
+    from src.pipeline_v2_production.coincidence_physical import (
+        CoincidenceDataUnavailable,
+        analyze_candidate,
+    )
+
+    class Series:
+        def __init__(self, values):
+            self.value = np.asarray(values, dtype=float)
+            self.dt = SimpleNamespace(value=1.0 / 1024.0)
+
+    calls = iter(
+        (
+            Series(np.random.default_rng(7).normal(size=32768)),
+            Series(np.full(32768, np.nan)),
+        )
+    )
+    monkeypatch.setattr(
+        "src.pipeline_v2_production.coincidence_physical._whitened",
+        lambda *_args: next(calls),
+    )
+    with pytest.raises(CoincidenceDataUnavailable, match="partner H1 strain"):
+        analyze_candidate(
+            None,
+            "L1",
+            "H1",
+            1000.0,
+            np.asarray([0, 1, 37, 38]),
+            with_iou=False,
+        )
+
+
 def test_physical_coincidence_aggregate_receives_current_master():
     text = _read("src/pipeline_v2_production/aggregate_report.py")
     assert "catalogue=master" in text

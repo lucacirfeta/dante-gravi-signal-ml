@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "manifest_sha256": "ec08a37e19f8987d98a4e1c7cb65ad9a73d104643578c89806a1d15976ae5b0b",
+  "physical_artifact_path": "artifacts/dante_light/o4b_followup/physical_v1.json",
+  "physical_artifact_sha256": "83238bae8ff60aef93aa09e6aaae12fa28a7bb1dce5b53460af74ee0501bf7ca",
+  "gallery_path": "artifacts/dante_light/o4b_followup/gallery_v1.png",
+  "gallery_sha256": "f22dd51c60a53af6ca9d928c33b6b2f79bba36478d770373085a8745050b78f4",
+  "n_candidates": 18,
+  "n_exact_strain_hash": 18,
+  "n_exact_image_hash": 18,
+  "axis_contract": {
+    "horizontal": "time, 0--32 s",
+    "vertical": "Q-transform frequency pixels with log-spaced Hz ticks, 20--1291 Hz",
+    "top_k": "white boxes; row=time and column=frequency",
+    "localization": "red vertical line at median Top-k time"
+  },
+  "checks": [
+    {
+      "window_id": "dlw1-d705588c205dc08f681bfc1e",
+      "strain_sha256": "ad0deb96516656840ee39eb437f40ce94af118a499054226448211c7ffa8a51b",
+      "image_sha256": "ba04f28000942fd32653ffa20712753e476091724d87910c7cc8c2156f433986",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-fe660a18bbdc000218382006",
+      "strain_sha256": "e4fe3d9388744f43d5f572f7e46424bd3fa2c0f33b1a80456fdd4aa4d1e0adc7",
+      "image_sha256": "cf6ee13f8810d96fc40c61cd3e43714985aa7d5a17f5451f3d37e8cbe0c54873",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-c82cd4388361c4d9707d75df",
+      "strain_sha256": "1a532de67ee2abf0c751756410302b1b0d3fc5484b99142be97ff5f69a32c6af",
+      "image_sha256": "98f135ba1161102ece186691edb66da98815660f1b78e45748fc24c9ac246fb8",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-bbbe3f79a64ceba70f2a7b1a",
+      "strain_sha256": "607c1d5b82adc3e3c3e0b4372541503c2f5826304a8ed9d9c2754b7d586fa1fa",
+      "image_sha256": "a89b0c30a7c402f0da22fa474b2bfad57e4a5a90040c62595d84c79a6971b048",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-304847f23082944919a9be67",
+      "strain_sha256": "fb87052868f16eaf0051a87b11036cb1790cda39f61ba7938110761ffca1073d",
+      "image_sha256": "f9afbdd01a7f94f8e6ed04a21dd811f5cc1c4ebfd58f5aa13e55b060c93b5148",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-91d0430b8d66e4eeaddb19a8",
+      "strain_sha256": "befd611478d7f3878b3f701275c1cef058ede932579ccba4e515318c4dd0c3df",
+      "image_sha256": "74d0989e78c2d57020e40d620c9db7249baf6ada9d5c9961b3d4980afc5f0791",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-983c79fbdb6819ed35191a91",
+      "strain_sha256": "1d67e6f215e50f40d23c4500fc162b6a6304a1daffc23c1328322b8860427da4",
+      "image_sha256": "b287a2aa0e0645e317f5b79f38efa14935f5cbec295b11f03b2df8cb7db9aaac",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-7389bcd12271ea2af9625f8f",
+      "strain_sha256": "ce2c9efb934d5d97d87d59f6c7a699b766cd47af318989112cb1ac3b4ed49003",
+      "image_sha256": "97db4cde8176a4d9719171ae667dcc3ec6fd063b2478f9305152aa7fc0241333",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-caa76cd66e4d3cf05d56234e",
+      "strain_sha256": "b0c7a45dfb31b33586d4eb1c67c871d75110ee1b4811cc8f1d9c988bcbca403a",
+      "image_sha256": "81e9f937bde707e130bebb5ada6762c993c805a6eb480a573f6b6e25e9db042e",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-a9270e0358c8e8296d9b9151",
+      "strain_sha256": "573fbe8179f6e2f5c1bda0cdba696c7f8bf5b2edc987c4da244cb4909545b3c0",
+      "image_sha256": "02b591e5aba947788b06644016eee6b99fdd59d4e261d54053812c44091bdf2b",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-79d8f501ee22980e8de24581",
+      "strain_sha256": "6d131b776bc0196b06690f7c5b5317c345b7054ca14a7d2612eac0ea28c9a146",
+      "image_sha256": "9c1c1fd08dff7635a92b8b1b8a02c9acc374126b43a73d27ee4de7bc7fa98097",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-d7bb01734b48e47f7f7ea877",
+      "strain_sha256": "6ce7048cef8f6f4fa36c375a6f3cd424a914d8af4dff83974e8a6c8ec0a79046",
+      "image_sha256": "41900f94e654a101bf312976d9210280048ef16390a112df5c9006a0cbd7b0d6",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-7d9656f934fbf9a8fba27874",
+      "strain_sha256": "76b2de2e3b41b4dda0da54b585eb2de0dfcd7ecbfccda7110608fa061a72754d",
+      "image_sha256": "82e301e09b7402bb696098fb046a75f16a18deed389783f636395462bc384697",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-a098ff47ca0940c755dfd18c",
+      "strain_sha256": "f83c3fc41a8e5a95a73e3dd712fcd525cfb53bb6cb17fc16b6a6e6fa31a34ebd",
+      "image_sha256": "4f4b64e4e8b92ce7c0b62cf5f10d7b3c288617a655542ec19327fd39aa7634db",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-f6552663148bdf0a4d086a03",
+      "strain_sha256": "f6b81d2081e853514e076250cb58d28dc508924f9d15d63efad3bbeaf4e57bdf",
+      "image_sha256": "668578f592b1dde3c450ecaa326fdd2c527a3f81176f3d550244ba153275ac4a",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-6d95c8823118a194b7105323",
+      "strain_sha256": "5e1bfcac8c0c96da9677f97982c076a09521643f760761cd34a2e4049a8ae740",
+      "image_sha256": "9944ff306064b37579299fd130f5c7848a3ec4b6ebd8e98be7f24f3b8d3a8dd3",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-109172b20a3bc6114e7d35bf",
+      "strain_sha256": "13f1cb49a71d3993d0ae9a2da7a8d0e6e59315defaaeec43036b8e98db4590a3",
+      "image_sha256": "d4c9fcf8033f2e110242b25d5e4e1f562af73a2fd4baf4c5ad4d93890f41fb92",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    },
+    {
+      "window_id": "dlw1-d8251c2caaf7f79e84df76e6",
+      "strain_sha256": "8af5381b96e8ba9166b43d66a322ee9041d389b196e6eb7654ae892b5fe03bcc",
+      "image_sha256": "9533724e8b6395ce15eba2e921e6e32e88e084e3f83f5c3619c01e627c65d4db",
+      "strain_hash_match": true,
+      "image_hash_match": true
+    }
+  ]
+}

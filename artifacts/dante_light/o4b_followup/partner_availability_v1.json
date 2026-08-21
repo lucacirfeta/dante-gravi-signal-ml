@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "source": "GWOSC public timeline API",
+  "fetched_utc": "2026-08-21T07:14:43.134053+00:00",
+  "query_interval": [
+    1414941400,
+    1414951152
+  ],
+  "manifest_sha256": "ec08a37e19f8987d98a4e1c7cb65ad9a73d104643578c89806a1d15976ae5b0b",
+  "physical_artifact_sha256": "83238bae8ff60aef93aa09e6aaae12fa28a7bb1dce5b53460af74ee0501bf7ca",
+  "timelines": {
+    "H1": {
+      "timeline": "H1_CBC_CAT1",
+      "segments": []
+    }
+  },
+  "checks": [
+    {
+      "window_id": "dlw1-f6552663148bdf0a4d086a03",
+      "unavailable_detector": "H1",
+      "required_interval": [
+        1414941404.0,
+        1414941444.0
+      ],
+      "whole_context_cat1_covered": false
+    },
+    {
+      "window_id": "dlw1-6d95c8823118a194b7105323",
+      "unavailable_detector": "H1",
+      "required_interval": [
+        1414942684.0,
+        1414942724.0
+      ],
+      "whole_context_cat1_covered": false
+    },
+    {
+      "window_id": "dlw1-109172b20a3bc6114e7d35bf",
+      "unavailable_detector": "H1",
+      "required_interval": [
+        1414942876.0,
+        1414942916.0
+      ],
+      "whole_context_cat1_covered": false
+    },
+    {
+      "window_id": "dlw1-d8251c2caaf7f79e84df76e6",
+      "unavailable_detector": "H1",
+      "required_interval": [
+        1414951100.0,
+        1414951140.0
+      ],
+      "whole_context_cat1_covered": false
+    }
+  ],
+  "n_unavailable": 4,
+  "n_without_whole_context_cat1": 4
+}

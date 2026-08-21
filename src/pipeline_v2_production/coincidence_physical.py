@@ -69,6 +69,16 @@ LAG_MARGIN_S = 0.002             # tolerance on top of light travel
 NULL_SHIFTS_S = (1.0, 2.0, 4.0, 8.0, -1.0, -2.0, -4.0, -8.0)
 
 
+class CoincidenceDataUnavailable(RuntimeError):
+    """The physical statistic cannot be evaluated on valid strain."""
+
+    def __init__(self, detector: str, gps: float, role: str, reason: str):
+        self.detector = detector
+        self.gps = float(gps)
+        self.role = role
+        super().__init__(f"{role} {detector} strain unavailable at {gps}: {reason}")
+
+
 def _sha256(path: str | Path) -> str:
     digest = hashlib.sha256()
     with Path(path).open('rb') as stream:
@@ -240,8 +250,23 @@ def analyze_candidate(scorer, det: str, partner: str, gps: float,
     """Return the physical (B) and morphological (A) coincidence statistics."""
     t_off, f_lo, f_hi = _patch_time_band(top_k_idx)
 
-    ts_d = _whitened(det, gps)
-    ts_p = _whitened(partner, gps)
+    try:
+        ts_d = _whitened(det, gps)
+    except Exception as exc:
+        raise CoincidenceDataUnavailable(det, gps, "candidate", str(exc)) from exc
+    try:
+        ts_p = _whitened(partner, gps)
+    except Exception as exc:
+        raise CoincidenceDataUnavailable(partner, gps, "partner", str(exc)) from exc
+    for role, detector, series in (
+        ("candidate", det, ts_d),
+        ("partner", partner, ts_p),
+    ):
+        values = np.asarray(series.value, dtype=np.float64)
+        if values.size < 2 or not np.isfinite(values).all() or np.std(values) <= 0:
+            raise CoincidenceDataUnavailable(
+                detector, gps, role, "non-finite or zero-variance whitened strain"
+            )
     fs = float(1.0 / ts_d.dt.value)
 
     def seg(ts, extra_shift=0.0):
@@ -268,6 +293,7 @@ def analyze_candidate(scorer, det: str, partner: str, gps: float,
         'gps': float(gps), 'detector': det, 'partner': partner,
         't_offset_s': t_off, 'f_lo': f_lo, 'f_hi': f_hi,
         'cc_onsource': float(cc_on),
+        'cc_null_values': [float(value) for value in cc_null],
         'cc_null_mean': float(np.mean(cc_null)) if cc_null else None,
         'cc_null_max': float(np.max(cc_null)) if cc_null else None,
         'n_null': len(cc_null),

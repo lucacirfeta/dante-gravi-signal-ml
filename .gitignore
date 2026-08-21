@@ -311,6 +311,9 @@ scripts/*
 !scripts/pem_background_batch.sh
 !scripts/build_dante_light_o4b_manifest.py
 !scripts/build_dante_light_o4b_epochs.py
+!scripts/build_dante_light_o4b_followup.py
+!scripts/verify_dante_light_o4b_followup.py
+!scripts/snapshot_dante_light_o4b_partner_availability.py
 
 tmp
 archive/

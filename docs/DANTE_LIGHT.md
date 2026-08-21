@@ -150,6 +150,28 @@ evidence and MIL-vector hash. The downstream run must still perform the full
 detector-aware DSD and, where applicable, coincidence, catalog, PEM and human
 review. `NOT_ESCALATED` is never a substitute for offline `BACKGROUND`.
 
+### O4b frozen escalation follow-up
+
+The locked O4b shadow produced 18 escalations. Their detector-aware offline
+ledger is built separately so that follow-up cannot change the original
+manifest, threshold, score, or disposition:
+
+```bash
+python scripts/build_dante_light_o4b_followup.py manifest
+python scripts/build_dante_light_o4b_followup.py physical --device cuda
+python scripts/build_dante_light_o4b_followup.py catalog
+python scripts/snapshot_dante_light_o4b_partner_availability.py
+python scripts/build_dante_light_o4b_followup.py gallery
+python scripts/verify_dante_light_o4b_followup.py --stage all
+```
+
+The machine-readable results are under
+`artifacts/dante_light/o4b_followup/`; the bounded scientific interpretation is
+in `artifacts/dante_light/O4B_FOLLOWUP_RESULT.md`. A physical measurement may
+be `PARTNER_DATA_UNAVAILABLE` when the other detector has no valid CAT1
+context. No catalog match or historical-label match is equivalent to a claim
+of a new glitch morphology.
+
 ## Research-only and future adapters
 
 `src/dante_light/prefilter.py` computes cheap deterministic excess-energy
