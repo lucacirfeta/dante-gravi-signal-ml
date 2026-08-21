@@ -7,7 +7,7 @@ import pytest
 from gwpy.timeseries import TimeSeries
 
 from src.dante_light.contracts import WindowIdentity
-from src.dante_light.preprocessing import stage_canonical_strain
+from src.dante_light.preprocessing import prepare_prefilter_features, stage_canonical_strain
 
 
 def test_stage_canonical_strain_fetches_context_and_hashes(monkeypatch) -> None:
@@ -57,3 +57,29 @@ def test_stage_canonical_strain_rejects_nonfinite_input(monkeypatch) -> None:
     monkeypatch.setattr("src.core.data_loader.fetch_strain_data", fetch)
     with pytest.raises(RuntimeError, match="non-finite"):
         stage_canonical_strain(window, local_only=False, remote_only=True)
+
+
+def test_prefilter_features_use_canonical_whitened_subwindow(monkeypatch) -> None:
+    window = WindowIdentity("O4B", "H1", 1400000000, duration_s=32.0)
+    raw = np.arange(40 * 4096, dtype=np.float64)
+    clean = TimeSeries(np.ones(32 * 4096), sample_rate=4096, t0=window.gps_start)
+    calls = []
+
+    def fetch(_detector, start, _end, **_kwargs):
+        return TimeSeries(raw, sample_rate=4096, t0=start)
+
+    def whiten(strain, start, end, *, pad):
+        calls.append((strain.size, start, end, pad))
+        return clean, {"left": 0.0, "right": 0.0}
+
+    monkeypatch.setattr("src.core.data_loader.fetch_strain_data", fetch)
+    monkeypatch.setattr("src.core.preprocessor.whiten_context", whiten)
+    monkeypatch.setattr(
+        "src.core.preprocessor.extract_clean_subwindow", lambda value, *_args: value
+    )
+    prepared = prepare_prefilter_features(
+        window, local_only=False, remote_only=True
+    )
+    assert calls == [(raw.size, window.gps_start, window.gps_start + 32.0, 4.0)]
+    assert prepared.features.rms == pytest.approx(1.0)
+    assert prepared.strain_sha256 == hashlib.sha256(raw.tobytes()).hexdigest()

@@ -318,6 +318,8 @@ scripts/*
 !scripts/run_dante_light_o4b_auxiliary_calibrations.sh
 !scripts/run_dante_light_o4b_auxiliary_batch.sh
 !scripts/aggregate_dante_light_o4b_auxiliary.py
+!scripts/evaluate_dante_light_prefilter.py
+!scripts/build_dante_light_prefilter_features.py
 !scripts/verify_dante_light_o4b_auxiliary.py
 !scripts/build_dante_light_report.py
 !scripts/verify_dante_light_report.py

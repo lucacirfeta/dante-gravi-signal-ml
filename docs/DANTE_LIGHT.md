@@ -380,6 +380,26 @@ temporally disjoint replay demonstrating robust-candidate retention, stratified
 known-glitch/injection non-inferiority with intervals, at least 50% fewer DINO
 calls, and an unbiased audit sample among rejected windows.
 
+The L4 evaluator is available without enabling routing:
+
+```bash
+python scripts/evaluate_dante_light_prefilter.py \
+  --contract config/PREFILTER_EVALUATION_CONTRACT.json \
+  --ledger artifacts/dante_light/PREFILTER_FEATURE_LEDGER.json \
+  --output artifacts/dante_light/PREFILTER_EVALUATION_RESULT.json
+```
+
+The contract must be locked before evaluation and bind the threshold-tuning
+artifact. The ledger must contain features derived from the canonical whitened
+subwindow, an exact row-file hash, a genuinely later detector-specific epoch,
+and an empty list of outcome fields used for threshold selection. The result is
+`NOT_READY` unless every pre-registered retention group and the effective
+compute-reduction gate pass. Even a `PASS` result has
+`routing_enabled=false`; promotion remains a separate scientific decision and
+requires the full L4 evidence described above.
+The fixed experimental boundary and execution order are documented in
+`docs/DANTE_LIGHT_PREFILTER_PROTOCOL.md`.
+
 `src/dante_light/epoch.py` rejects promotion unless calibration ends before the
 held-out evaluation begins, every required gate is `PASS`, and every evidence
 artifact hash matches. `src/dante_light/drift.py` can freeze adaptation on an

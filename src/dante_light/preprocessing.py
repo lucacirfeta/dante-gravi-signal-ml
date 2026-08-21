@@ -20,6 +20,13 @@ class PreparedWindow:
     timings: dict[str, float]
 
 
+@dataclass(frozen=True, slots=True)
+class PreparedPrefilterFeatures:
+    features: "ExcessEnergyFeatures"
+    strain_sha256: str
+    timings: dict[str, float]
+
+
 def stage_canonical_strain(
     window: WindowIdentity,
     *,
@@ -63,17 +70,15 @@ def stage_canonical_strain(
     }
 
 
-def prepare_canonical_window(
+def _prepare_whitened_subwindow(
     window: WindowIdentity,
     *,
     local_only: bool,
     remote_only: bool = False,
-) -> PreparedWindow:
-    import matplotlib.pyplot as plt
+) -> tuple[object, str, dict[str, float], float]:
     from src.core.data_loader import fetch_strain_data
     from src.core.preprocessor import (
         extract_clean_subwindow,
-        generate_qtransform,
         whiten_context,
     )
 
@@ -111,6 +116,46 @@ def prepare_canonical_window(
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
     if abs(float(clean.duration.value) - window.duration_s) > tolerance:
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
+    return clean, strain_sha256, stages, float(strain.sample_rate.value)
+
+
+def prepare_prefilter_features(
+    window: WindowIdentity,
+    *,
+    local_only: bool,
+    remote_only: bool = False,
+) -> PreparedPrefilterFeatures:
+    """Extract cheap features from the exact canonical whitened subwindow."""
+
+    from src.dante_light.prefilter import extract_excess_energy_features
+
+    clean, strain_sha256, stages, sample_rate_hz = _prepare_whitened_subwindow(
+        window, local_only=local_only, remote_only=remote_only
+    )
+    began = time.perf_counter()
+    features = extract_excess_energy_features(
+        np.asarray(clean.value), sample_rate_hz=int(sample_rate_hz)
+    )
+    stages["feature_extraction_s"] = time.perf_counter() - began
+    return PreparedPrefilterFeatures(
+        features=features,
+        strain_sha256=strain_sha256,
+        timings=stages,
+    )
+
+
+def prepare_canonical_window(
+    window: WindowIdentity,
+    *,
+    local_only: bool,
+    remote_only: bool = False,
+) -> PreparedWindow:
+    import matplotlib.pyplot as plt
+    from src.core.preprocessor import generate_qtransform
+
+    clean, strain_sha256, stages, _sample_rate_hz = _prepare_whitened_subwindow(
+        window, local_only=local_only, remote_only=remote_only
+    )
 
     began = time.perf_counter()
     spectrogram = generate_qtransform(clean, save_path=None, cmap="cividis")
