@@ -70,7 +70,12 @@ def test_prefilter_features_use_canonical_whitened_subwindow(monkeypatch) -> Non
 
     def whiten(strain, start, end, *, pad):
         calls.append((strain.size, start, end, pad))
-        return clean, {"left": 0.0, "right": 0.0}
+        return clean, {
+            "left": False,
+            "right": False,
+            "effective_left": 4.0,
+            "effective_right": 4.0,
+        }
 
     monkeypatch.setattr("src.core.data_loader.fetch_strain_data", fetch)
     monkeypatch.setattr("src.core.preprocessor.whiten_context", whiten)
@@ -83,3 +88,34 @@ def test_prefilter_features_use_canonical_whitened_subwindow(monkeypatch) -> Non
     assert calls == [(raw.size, window.gps_start, window.gps_start + 32.0, 4.0)]
     assert prepared.features.rms == pytest.approx(1.0)
     assert prepared.strain_sha256 == hashlib.sha256(raw.tobytes()).hexdigest()
+
+
+def test_prefilter_features_accept_subsample_padding_roundoff(monkeypatch) -> None:
+    window = WindowIdentity("O3B", "H1", 1261279894.88135, duration_s=32.0)
+    raw = np.ones(40 * 4096)
+    clean = TimeSeries(np.ones(32 * 4096), sample_rate=4096, t0=window.gps_start)
+
+    monkeypatch.setattr(
+        "src.core.data_loader.fetch_strain_data",
+        lambda _detector, start, _end, **_kwargs: TimeSeries(
+            raw, sample_rate=4096, t0=start - 2.4e-6
+        ),
+    )
+    monkeypatch.setattr(
+        "src.core.preprocessor.whiten_context",
+        lambda *_args, **_kwargs: (
+            clean,
+            {
+                "left": False,
+                "right": True,
+                "effective_left": 4.0,
+                "effective_right": 4.0 - 2.4e-6,
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        "src.core.preprocessor.extract_clean_subwindow", lambda value, *_args: value
+    )
+    assert prepare_prefilter_features(
+        window, local_only=False, remote_only=True
+    ).features.rms == pytest.approx(1.0)

@@ -160,3 +160,116 @@ def build_shadow_feature_ledger(
     ledger_path = output_dir / "shadow_feature_ledger_v1.json"
     ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     return ledger
+
+
+def build_split_feature_ledger(
+    *,
+    root: str | Path,
+    split_path: str | Path,
+    role: str,
+    output_dir: str | Path,
+    prepare: Callable[[WindowTask], PreparedPrefilterFeatures],
+    limit: int | None = None,
+) -> dict[str, Any]:
+    """Extract a resumable role ledger from a frozen L4 split artifact."""
+
+    root = Path(root).resolve()
+    split_path = Path(split_path).resolve()
+    output_dir = Path(output_dir).resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    from src.dante_light.prefilter_splits import load_prefilter_splits
+
+    split = load_prefilter_splits(split_path)
+    try:
+        cohort = split["cohorts"][role]
+    except KeyError as exc:
+        raise ContractError(f"role is absent from L4 split artifact: {role}") from exc
+    if split.get("status") != "locked_before_feature_extraction":
+        raise ContractError("L4 split artifact is not locked")
+    if role not in {"robust_candidate", "known_glitch", "injection"}:
+        raise ContractError(f"unsupported L4 feature role: {role}")
+    split_sha256 = str(cohort["split_sha256"])
+    rows = list(cohort["rows"])
+    if limit is not None:
+        if limit <= 0:
+            raise ContractError("feature limit must be positive")
+        rows = rows[:limit]
+    tasks = [
+        WindowTask(WindowIdentity.from_dict(row["window"]), payload=row)
+        for row in rows
+    ]
+    expected_ids = {task.window.window_id for task in tasks}
+    if len(expected_ids) != len(tasks):
+        raise ContractError(f"duplicate window identities in {role} split")
+    from src.dante_light.contracts import RepresentationContract
+
+    representation_sha256 = RepresentationContract.from_reference_manifest(
+        root / "config/reference_artifacts.json"
+    ).contract_sha256
+    partial_path = output_dir / f"{role}_features_v1.partial.jsonl"
+    existing = _existing_rows(partial_path)
+    if not set(existing).issubset(expected_ids):
+        raise ContractError("partial cohort ledger contains rows outside its frozen split")
+    with partial_path.open("a", encoding="utf-8", newline="\n") as stream:
+        for task in tasks:
+            window_id = task.window.window_id
+            if window_id in existing:
+                continue
+            prepared = prepare(task)
+            source = task.payload
+            row = {
+                "schema_version": 1,
+                "window": task.window.to_dict(),
+                "roles": [role],
+                "partition": source["partition"],
+                "split_artifact_sha256_by_role": {role: split_sha256},
+                "detector": task.window.detector,
+                "morphology": source["morphology"],
+                "retention_target": bool(source["retention_target"]),
+                "exact_disposition": "NOT_APPLICABLE",
+                "representation_sha256": representation_sha256,
+                "strain_sha256": prepared.strain_sha256,
+                "features": asdict(prepared.features),
+                "timings": prepared.timings,
+                "cohort_id": source["cohort_id"],
+            }
+            stream.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
+            stream.flush()
+            existing[window_id] = row
+    if set(existing) != expected_ids:
+        raise ContractError("partial cohort feature ledger did not reach frozen coverage")
+    rows_path = output_dir / f"{role}_features_v1.jsonl"
+    ordered = [existing[task.window.window_id] for task in tasks]
+    rows_path.write_text(
+        "".join(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in ordered),
+        encoding="utf-8",
+        newline="\n",
+    )
+    partial_path.unlink()
+    ledger = {
+        "schema_version": 1,
+        "status": "complete" if limit is None else "smoke_only",
+        "scientific_mode": "research_only_split_feature_extraction",
+        "feature_source": FEATURE_SOURCE,
+        "outcome_fields_used_for_feature_extraction": [],
+        "role": role,
+        "representation_sha256": representation_sha256,
+        "cohort_split_sha256_by_role": {role: split_sha256},
+        "row_count": len(ordered),
+        "rows_path": rows_path.name,
+        "rows_sha256": _sha256(rows_path),
+        "source_split": {
+            "path": _portable_path(split_path, root),
+            "sha256": _sha256(split_path),
+            "role_split_sha256": split_sha256,
+        },
+        "selection_limit": limit,
+    }
+    ledger["ledger_digest"] = canonical_json_sha256(ledger)
+    ledger_path = output_dir / f"{role}_feature_ledger_v1.json"
+    ledger_path.write_text(
+        json.dumps(ledger, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    return ledger

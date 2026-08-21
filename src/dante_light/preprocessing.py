@@ -112,7 +112,9 @@ def _prepare_whitened_subwindow(
     whitened, padding = whiten_context(strain, start, end, pad=4.0)
     clean = extract_clean_subwindow(whitened, start, end)
     stages["whitening_s"] = time.perf_counter() - began
-    if padding["left"] or padding["right"]:
+    effective_left = float(padding.get("effective_left", 0.0))
+    effective_right = float(padding.get("effective_right", 0.0))
+    if effective_left + tolerance < 4.0 or effective_right + tolerance < 4.0:
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
     if abs(float(clean.duration.value) - window.duration_s) > tolerance:
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)

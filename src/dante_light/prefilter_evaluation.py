@@ -276,7 +276,12 @@ def evaluate_prefilter(
         ):
             raise ContractError(f"shadow row is not in the locked later epoch: {window.window_id}")
         exact = row.get("exact_disposition")
-        if exact not in {"ESCALATE", "NOT_ESCALATED"}:
+        allowed_exact = (
+            {"ESCALATE", "NOT_ESCALATED"}
+            if "shadow" in roles
+            else {"NOT_APPLICABLE"}
+        )
+        if exact not in allowed_exact:
             raise ContractError(f"invalid exact disposition for {window.window_id}")
         if not isinstance(row.get("retention_target"), bool):
             raise ContractError(f"retention_target is not boolean for {window.window_id}")
@@ -318,7 +323,11 @@ def evaluate_prefilter(
     reduction = 1.0 - calls / len(evaluated)
     reduction_pass = reduction >= float(contract["minimum_compute_reduction"])
     gates.append({"name": "effective_compute_reduction", "status": "PASS" if reduction_pass else "FAIL"})
-    exact_positives = [row for row in evaluated if row["exact_disposition"] == "ESCALATE"]
+    exact_positives = [
+        row
+        for row in evaluated
+        if "shadow" in row["roles"] and row["exact_disposition"] == "ESCALATE"
+    ]
     missed = [row for row in exact_positives if not row["selected"]]
     audited_misses = sum(row["audited"] for row in missed)
     exact_gate = len(exact_positives) >= int(contract["minimum_exact_escalates"]) and not missed

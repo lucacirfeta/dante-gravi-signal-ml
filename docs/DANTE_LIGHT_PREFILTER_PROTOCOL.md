@@ -54,11 +54,14 @@ zero missed exact O4b escalations. The contract must gate robust candidates,
 known glitches and injections explicitly. Retention gates are separate for
 each detector and, for known glitches and injections, for each pre-registered
 morphology or source system; an aggregate mean cannot hide a failed stratum.
-Retention is conditional on a frozen positive decision from the exact
-reference scorer (`retention_target=true`). Requiring the cheap filter to select
-examples that exact DANTE itself rejects would test a different detector and is
-not the L4 non-regression estimand. Cells with fewer than 18 reference-positive
-examples remain unmeasured and cannot contribute to promotion.
+Retention is conditional on a frozen cohort-specific positive endpoint
+(`retention_target=true`): the exact Light disposition for O4b shadow rows, the
+released robustness class for robust candidates, the external quality-screened
+label for known glitches, and membership in a pre-registered injection cell for
+simulations. These endpoints and their split hashes are fixed before feature
+evaluation. Cells with fewer than 18 reference-positive examples remain
+unmeasured and cannot contribute to promotion. Exact-score non-regression is
+reported separately on all 18 O4b escalations.
 
 ## Effective compute and miss accounting
 
@@ -94,3 +97,31 @@ artifact and a complete parallel shadow epoch are required before
 5. evaluate and archive negative as well as positive results;
 6. run the complete DANTE-Light and repository regression gates;
 7. only then decide whether a separate promotion experiment is justified.
+
+The frozen split artifact is generated deterministically from the released P5,
+known-glitch and injection ledgers:
+
+```bash
+python scripts/build_dante_light_prefilter_splits.py
+```
+
+Real-strain features use the same canonical preparation function as the Light
+runner. Long extractions are resumable through a `.partial.jsonl` ledger; a
+limited run is marked `smoke_only` and cannot satisfy a final gate:
+
+```bash
+python scripts/build_dante_light_prefilter_features.py \
+  --manifest config/dante_light_o4b_shadow_v2.json \
+  --records runs/dante_light/o4b_v2/shared/records.jsonl \
+  --output-dir /external/cache/l4_o4b --strain-source gwosc-only
+
+python scripts/build_dante_light_prefilter_cohort_features.py \
+  --split config/dante_light_prefilter_splits_v1.json \
+  --role robust_candidate --output-dir /external/cache/l4_robust \
+  --strain-source local-only
+```
+
+The known-glitch command is identical with `--role known_glitch` and normally
+uses `--strain-source gwosc-only` unless a verified O3b mirror is configured.
+Injection rows require deterministic reconstruction in raw strain and are not
+accepted by the real-strain cohort command.

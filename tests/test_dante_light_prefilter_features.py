@@ -14,7 +14,10 @@ from src.dante_light.contracts import (
     canonical_json_sha256,
 )
 from src.dante_light.prefilter import ExcessEnergyFeatures
-from src.dante_light.prefilter_features import build_shadow_feature_ledger
+from src.dante_light.prefilter_features import (
+    build_shadow_feature_ledger,
+    build_split_feature_ledger,
+)
 from src.dante_light.preprocessing import PreparedPrefilterFeatures
 
 
@@ -135,3 +138,30 @@ def test_shadow_feature_ledger_resumes_partial_rows(tmp_path):
     )
     assert ledger["row_count"] == 3
     assert len(resumed) == 2
+
+
+def test_build_split_feature_ledger_preserves_frozen_partition(tmp_path):
+    prepared = PreparedPrefilterFeatures(
+        features=ExcessEnergyFeatures(1.0, 3.0, 0.1, 2.0),
+        strain_sha256="a" * 64,
+        timings={"data_read_s": 0.1},
+    )
+    ledger = build_split_feature_ledger(
+        root=".",
+        split_path="config/dante_light_prefilter_splits_v1.json",
+        role="robust_candidate",
+        output_dir=tmp_path,
+        limit=2,
+        prepare=lambda _task: prepared,
+    )
+    assert ledger["status"] == "smoke_only"
+    rows = [
+        json.loads(line)
+        for line in (tmp_path / "robust_candidate_features_v1.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert len(rows) == 2
+    assert all(row["roles"] == ["robust_candidate"] for row in rows)
+    assert all(row["exact_disposition"] == "NOT_APPLICABLE" for row in rows)
+    assert all(row["partition"] in {"development", "evaluation"} for row in rows)

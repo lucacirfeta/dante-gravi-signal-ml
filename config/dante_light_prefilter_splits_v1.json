@@ -1,0 +1,63 @@
+{
+  "artifact_digest": "f370b5cac3331d2bfb4bac3c94c26b6c5cfdfb42241fbde7a297fb1b84952f6a",
+  "cohorts": {
+    "injection": {
+      "counts": {
+        "development": 210,
+        "evaluation": 540,
+        "total": 750
+      },
+      "role": "injection",
+      "seed": 20260821,
+      "sources": [
+        {
+          "path": "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv",
+          "sha256": "b80a78487f69b0f1aaf3d3eb4729af6c1c96bcdd5b8ce60a58f337cad450522b"
+        }
+      ],
+      "split_sha256": "62cf427773a3bd6a381ad92cff203bb2d46c254beb0b9f76a5e32e7ee0e1ee0f"
+    },
+    "known_glitch": {
+      "counts": {
+        "development": 72,
+        "evaluation": 108,
+        "total": 180
+      },
+      "role": "known_glitch",
+      "seed": 20260821,
+      "sources": [
+        {
+          "path": "data/production/aggregated/cqg_known_glitch_controls.json",
+          "sha256": "0f44e6e6e413bc4cde84478da9a55b931eb74b556a98ad93f5acb79e1008e199"
+        }
+      ],
+      "split_sha256": "bcfaf601f553f90949c293435885faa9a2502291db94928b1fa6907376ea3cee"
+    },
+    "robust_candidate": {
+      "counts": {
+        "development": 40,
+        "evaluation": 40,
+        "total": 80
+      },
+      "role": "robust_candidate",
+      "seed": 20260821,
+      "sources": [
+        {
+          "path": "data/production/aggregated/dsd_index_stability_candidate_tokens_o4a_idxq4-64_queryq4-64_q4-64_n40_s42_1154059b80ca.npz",
+          "sha256": "8edc27f32184fea6601edbc511f57617dc188402d81b27cc2cbdd142b75f9a60"
+        },
+        {
+          "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+          "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+        }
+      ],
+      "split_sha256": "4aae3bc2220b2d185c45a989e307ee84a9cc7e44888b3ff5d74254daf20ca38a"
+    }
+  },
+  "entries_file_sha256": "d881bdd6c4478d7c5949ff9eb64ee2db4f265515ddf36b2a5048ed3d5bf6e1c5",
+  "entries_path": "dante_light_prefilter_splits_v1.jsonl",
+  "outcome_fields_used_for_partition": [],
+  "schema_version": 1,
+  "seed": 20260821,
+  "status": "locked_before_feature_extraction"
+}
