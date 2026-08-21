@@ -26,6 +26,7 @@ def main() -> int:
     parser.add_argument("--trials", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
     try:
         trials = load_injection_trials(args.trials)
@@ -35,6 +36,7 @@ def main() -> int:
             role="injection",
             output_dir=args.output_dir,
             limit=args.limit,
+            workers=args.workers,
             prepare=lambda task: prepare_injection_prefilter_features(
                 task, trials=trials
             ),

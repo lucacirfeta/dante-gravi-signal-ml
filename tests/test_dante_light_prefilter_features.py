@@ -165,3 +165,24 @@ def test_build_split_feature_ledger_preserves_frozen_partition(tmp_path):
     assert all(row["roles"] == ["robust_candidate"] for row in rows)
     assert all(row["exact_disposition"] == "NOT_APPLICABLE" for row in rows)
     assert all(row["partition"] in {"development", "evaluation"} for row in rows)
+
+
+def test_split_feature_ledger_parallel_output_is_finally_deterministic(tmp_path):
+    prepared = PreparedPrefilterFeatures(
+        features=ExcessEnergyFeatures(1.0, 3.0, 0.1, 2.0),
+        strain_sha256="a" * 64,
+        timings={"data_read_s": 0.1},
+    )
+    ledger = build_split_feature_ledger(
+        root=".",
+        split_path="config/dante_light_prefilter_splits_v1.json",
+        role="robust_candidate",
+        output_dir=tmp_path,
+        limit=8,
+        workers=3,
+        prepare=lambda _task: prepared,
+    )
+    assert ledger["row_count"] == 8
+    assert ledger["extraction_workers"] == 3
+    rows = [json.loads(line) for line in (tmp_path / ledger["rows_path"]).read_text().splitlines()]
+    assert [row["cohort_id"] for row in rows] == sorted(row["cohort_id"] for row in rows)

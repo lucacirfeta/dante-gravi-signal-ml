@@ -28,6 +28,7 @@ def main() -> int:
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--strain-source", choices=("auto", "local-only", "gwosc-only"), default="auto")
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
     try:
         ledger = build_split_feature_ledger(
@@ -36,6 +37,7 @@ def main() -> int:
             role=args.role,
             output_dir=args.output_dir,
             limit=args.limit,
+            workers=args.workers,
             prepare=lambda task: prepare_prefilter_features(
                 task.window,
                 local_only=args.strain_source == "local-only",

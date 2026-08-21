@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
 import json
 from pathlib import Path
@@ -170,6 +171,7 @@ def build_split_feature_ledger(
     output_dir: str | Path,
     prepare: Callable[[WindowTask], PreparedPrefilterFeatures],
     limit: int | None = None,
+    workers: int = 1,
 ) -> dict[str, Any]:
     """Extract a resumable role ledger from a frozen L4 split artifact."""
 
@@ -188,6 +190,8 @@ def build_split_feature_ledger(
         raise ContractError("L4 split artifact is not locked")
     if role not in {"background", "robust_candidate", "known_glitch", "injection"}:
         raise ContractError(f"unsupported L4 feature role: {role}")
+    if not 1 <= int(workers) <= 8:
+        raise ContractError("L4 feature workers must be between 1 and 8")
     split_sha256 = str(cohort["split_sha256"])
     rows = list(cohort["rows"])
     if limit is not None:
@@ -210,33 +214,46 @@ def build_split_feature_ledger(
     existing = _existing_rows(partial_path)
     if not set(existing).issubset(expected_ids):
         raise ContractError("partial cohort ledger contains rows outside its frozen split")
+
+    def prepare_row(task: WindowTask) -> tuple[str, dict[str, Any]]:
+        prepared = prepare(task)
+        source = task.payload
+        return task.window.window_id, {
+            "schema_version": 1,
+            "window": task.window.to_dict(),
+            "roles": [role],
+            "partition": source["partition"],
+            "split_artifact_sha256_by_role": {role: split_sha256},
+            "detector": task.window.detector,
+            "morphology": source["morphology"],
+            "retention_target": bool(source["retention_target"]),
+            "exact_disposition": "NOT_APPLICABLE",
+            "representation_sha256": representation_sha256,
+            "strain_sha256": prepared.strain_sha256,
+            "features": asdict(prepared.features),
+            "timings": prepared.timings,
+            "preparation_metadata": prepared.metadata,
+            "cohort_id": source["cohort_id"],
+        }
+
+    pending = [task for task in tasks if task.window.window_id not in existing]
     with partial_path.open("a", encoding="utf-8", newline="\n") as stream:
-        for task in tasks:
-            window_id = task.window.window_id
-            if window_id in existing:
-                continue
-            prepared = prepare(task)
-            source = task.payload
-            row = {
-                "schema_version": 1,
-                "window": task.window.to_dict(),
-                "roles": [role],
-                "partition": source["partition"],
-                "split_artifact_sha256_by_role": {role: split_sha256},
-                "detector": task.window.detector,
-                "morphology": source["morphology"],
-                "retention_target": bool(source["retention_target"]),
-                "exact_disposition": "NOT_APPLICABLE",
-                "representation_sha256": representation_sha256,
-                "strain_sha256": prepared.strain_sha256,
-                "features": asdict(prepared.features),
-                "timings": prepared.timings,
-                "preparation_metadata": prepared.metadata,
-                "cohort_id": source["cohort_id"],
-            }
-            stream.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
-            stream.flush()
-            existing[window_id] = row
+        if workers == 1:
+            results = (prepare_row(task) for task in pending)
+            for window_id, row in results:
+                stream.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
+                stream.flush()
+                existing[window_id] = row
+        else:
+            with ThreadPoolExecutor(max_workers=int(workers)) as pool:
+                futures = {pool.submit(prepare_row, task): task for task in pending}
+                for future in as_completed(futures):
+                    window_id, row = future.result()
+                    if window_id in existing:
+                        raise ContractError(f"duplicate concurrent feature result: {window_id}")
+                    stream.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
+                    stream.flush()
+                    existing[window_id] = row
     if set(existing) != expected_ids:
         raise ContractError("partial cohort feature ledger did not reach frozen coverage")
     rows_path = output_dir / f"{role}_features_v1.jsonl"
@@ -265,6 +282,7 @@ def build_split_feature_ledger(
             "role_split_sha256": split_sha256,
         },
         "selection_limit": limit,
+        "extraction_workers": int(workers),
     }
     ledger["ledger_digest"] = canonical_json_sha256(ledger)
     ledger_path = output_dir / f"{role}_feature_ledger_v1.json"
