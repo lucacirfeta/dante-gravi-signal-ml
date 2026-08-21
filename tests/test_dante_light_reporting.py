@@ -171,6 +171,7 @@ def test_build_run_report_is_generic_and_records_source_hashes(tmp_path: Path) -
     assert result["coverage"]["windows"] == 5
     assert result["followup"]["n_candidates"] == 2
     assert result["auxiliary"]["n_events"] == 2
+    assert result["report_hash_semantics"] == "raw_utf8_lf_bytes_v1"
     assert len(result["source_artifacts"]) == 6
     assert receipt.is_file()
     assert verify_run_report(receipt, root=tmp_path) == result
@@ -292,3 +293,10 @@ def test_report_verifier_rejects_rendered_report_tampering(tmp_path: Path) -> No
 
     with pytest.raises(ContractError, match="rendered report hash"):
         verify_run_report(output.with_suffix(".md.json"), root=tmp_path)
+
+
+def test_repository_forces_lf_for_generated_reports() -> None:
+    attributes = (Path(__file__).resolve().parents[1] / ".gitattributes").read_text(
+        encoding="utf-8"
+    )
+    assert "artifacts/dante_light/*.generated.md text eol=lf" in attributes

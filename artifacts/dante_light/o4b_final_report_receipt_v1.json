@@ -51,7 +51,8 @@
     "p95": 35.39786922001804,
     "p99": 37.013968810011285
   },
-  "receipt_sha256": "3ded2430846f833898da7583e9cf815f57dea1ed97aab4fc33a4314113425990",
+  "receipt_sha256": "0229f4a09b6b5ac778d8f985327102231f6b4fc664fd473ee4f7eaa53ec5a7ef",
+  "report_hash_semantics": "raw_utf8_lf_bytes_v1",
   "report_path": "artifacts/dante_light/O4B_FINAL_REPORT.generated.md",
   "report_sha256": "55b3324baf59b74bb912d1be7a01ad0750057c1c2cd8a9861d2d58bd3297923e",
   "schema_version": 1,

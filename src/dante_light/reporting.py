@@ -514,6 +514,7 @@ def build_run_report(
         "scientific_status": "TRIAGE_REPORT_ONLY",
         "report_path": _portable_path(root_path, output),
         "report_sha256": report_hash,
+        "report_hash_semantics": "raw_utf8_lf_bytes_v1",
         "coverage": {"windows": primary["windows"], "detectors": primary["detectors"]},
         "exact_replay": {
             "max_abs_score_delta": primary["max_abs_score_delta"],
@@ -555,6 +556,8 @@ def verify_run_report(
         raise ContractError("report receipt status is not complete")
     if receipt.get("scientific_status") != "TRIAGE_REPORT_ONLY":
         raise ContractError("report receipt scientific boundary mismatch")
+    if receipt.get("report_hash_semantics") != "raw_utf8_lf_bytes_v1":
+        raise ContractError("report receipt hash semantics mismatch")
 
     report = _inside(root_path, receipt.get("report_path", ""))
     if not report.is_file() or _sha256(report) != receipt.get("report_sha256"):
