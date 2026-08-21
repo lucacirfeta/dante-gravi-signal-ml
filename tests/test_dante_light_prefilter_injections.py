@@ -5,7 +5,10 @@ import csv
 import pytest
 
 from src.dante_light.contracts import ContractError
-from src.dante_light.prefilter_injections import load_injection_trials
+from src.dante_light.prefilter_injections import (
+    RAW_FETCH_EDGE_TOLERANCE_S,
+    load_injection_trials,
+)
 
 
 def _write_trials(path, rows):
@@ -46,3 +49,7 @@ def test_load_injection_trials_rejects_duplicate_identity(tmp_path):
     _write_trials(path, [row, row])
     with pytest.raises(ContractError, match="duplicate"):
         load_injection_trials(path)
+
+
+def test_injection_fetch_does_not_accept_multi_second_padding_gaps():
+    assert RAW_FETCH_EDGE_TOLERANCE_S == pytest.approx(1.0 / 4096.0)

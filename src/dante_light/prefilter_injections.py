@@ -15,6 +15,9 @@ from src.dante_light.prefilter import extract_excess_energy_features
 from src.dante_light.preprocessing import PreparedPrefilterFeatures
 
 
+RAW_FETCH_EDGE_TOLERANCE_S = 1.0 / 4096.0
+
+
 def _sha(values: np.ndarray) -> str:
     return hashlib.sha256(np.ascontiguousarray(values).tobytes()).hexdigest()
 
@@ -89,7 +92,10 @@ def prepare_injection_prefilter_features(
             detector,
             gps - 4.0,
             gps + SEGMENT_LENGTH + 4.0,
-            edge_tolerance=4.0,
+            # Whitening requires the full four-second context on both sides.
+            # A multi-second lookup tolerance can accept a nearby local block
+            # which does not actually cover the requested padded interval.
+            edge_tolerance=RAW_FETCH_EDGE_TOLERANCE_S,
         )
     except (FileNotFoundError, OSError, RuntimeError) as exc:
         raise DeferredWindow(FailClosedReason.DEPENDENCY_UNAVAILABLE) from exc
