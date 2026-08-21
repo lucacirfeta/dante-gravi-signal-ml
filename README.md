@@ -210,6 +210,12 @@ measurement, not a universal speed claim. Every run writes a separate
 identities; changing code, representation, epochs, selection, or CAT1 mode
 requires a new output directory.
 
+Once the prospective and optional follow-up gates pass, a provenance-bound
+human report can be generated with `scripts/build_dante_light_report.py` and
+checked with `scripts/verify_dante_light_report.py`. This derived report does
+not replace the full offline `Final_Discovery_Report.md`; see
+[`docs/DANTE_LIGHT.md`](docs/DANTE_LIGHT.md) for the complete command.
+
 The shipped O4a BGV3 epoch is explicitly historical and non-causal. Therefore
 `dante-light-shadow` produces `DEFER/NON_CAUSAL_EPOCH` until a detector-specific
 past-only epoch is independently promoted. `NOT_ESCALATED` is a triage outcome,

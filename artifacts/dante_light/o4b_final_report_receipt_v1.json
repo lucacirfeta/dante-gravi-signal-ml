@@ -1,0 +1,92 @@
+{
+  "auxiliary": {
+    "detector_counts": {
+      "H1": 8,
+      "L1": 10
+    },
+    "n_calibration_epochs": 5,
+    "n_events": 18,
+    "verdict_counts": {
+      "NO_AUXILIARY_EXCESS": 14,
+      "PERSISTENT_BASELINE_COMPATIBLE": 4
+    }
+  },
+  "coverage": {
+    "detectors": {
+      "H1": {
+        "epoch_id": "o4a-calibrated-o4b-causal-h1-v2",
+        "evaluation_end_gps": 1415055264.0,
+        "evaluation_start_gps": 1404597088.0,
+        "windows": 384
+      },
+      "L1": {
+        "epoch_id": "o4a-calibrated-o4b-causal-l1-v2",
+        "evaluation_end_gps": 1414952608.0,
+        "evaluation_start_gps": 1404588832.0,
+        "windows": 384
+      }
+    },
+    "windows": 768
+  },
+  "exact_replay": {
+    "disposition_mismatches": 0,
+    "max_abs_score_delta": 0.0,
+    "score_atol": 2e-07
+  },
+  "followup": {
+    "catalog_status": "COMPLETE",
+    "detector_counts": {
+      "H1": 8,
+      "L1": 10
+    },
+    "n_candidates": 18,
+    "n_catalog_matches": 0,
+    "n_data_unavailable": 4,
+    "n_physical_measured": 14,
+    "n_source_windows": 768,
+    "pooled_null_p99_diagnostic": 0.21295252027684744
+  },
+  "latency_s": {
+    "p50": 29.03892269998323,
+    "p95": 35.39786922001804,
+    "p99": 37.013968810011285
+  },
+  "receipt_sha256": "3ded2430846f833898da7583e9cf815f57dea1ed97aab4fc33a4314113425990",
+  "report_path": "artifacts/dante_light/O4B_FINAL_REPORT.generated.md",
+  "report_sha256": "55b3324baf59b74bb912d1be7a01ad0750057c1c2cd8a9861d2d58bd3297923e",
+  "schema_version": 1,
+  "scientific_status": "TRIAGE_REPORT_ONLY",
+  "source_artifacts": [
+    {
+      "path": "artifacts/dante_light/prospective_validation_v1.json",
+      "role": "prospective_evidence",
+      "sha256": "3be2b77f3254afacb896901d6a009354af9e6deaf8bd031972d720ce10046a83"
+    },
+    {
+      "path": "artifacts/dante_light/o4b_followup/manifest_v1.json",
+      "role": "followup_manifest",
+      "sha256": "12a487de3f69cd14105f0a656260d54745ae36050e771b0cd270e3eabf563199"
+    },
+    {
+      "path": "artifacts/dante_light/o4b_followup/physical_v1.json",
+      "role": "followup_physical",
+      "sha256": "83238bae8ff60aef93aa09e6aaae12fa28a7bb1dce5b53460af74ee0501bf7ca"
+    },
+    {
+      "path": "artifacts/dante_light/o4b_followup/catalog_v1.json",
+      "role": "followup_catalog",
+      "sha256": "4072918cd045d1b706f2bea21ead9c1bf39b3c9bc47d772bfb8154046a20f285"
+    },
+    {
+      "path": "artifacts/dante_light/o4b_followup/gallery_v1.json",
+      "role": "followup_gallery",
+      "sha256": "92a9190e62a4f889b8b1fb6ff433b6624e0b6058a4745cb4adf5c82fc63b3069"
+    },
+    {
+      "path": "artifacts/dante_light/o4b_auxiliary/result_v1.json",
+      "role": "auxiliary_result",
+      "sha256": "5caf0c126a0fbf986b1d345ceaf8444a2f96877e882d7b46f2fad9d7232036f3"
+    }
+  ],
+  "status": "COMPLETE"
+}

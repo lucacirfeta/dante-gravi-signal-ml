@@ -1,0 +1,29 @@
+{
+  "official_run_bounds_gps": [1396796418, 1422118818],
+  "outcome_fields_used_for_selection": [],
+  "purpose": "Example outcome-blind later-run shadow evaluation; copy and edit before locking",
+  "run": "O4B",
+  "schema_version": 1,
+  "selection": {
+    "detectors": ["H1", "L1"],
+    "evaluation_blocks_gps": [
+      [1404572418, 1404745218],
+      [1409756418, 1409929218],
+      [1414940418, 1415113218]
+    ],
+    "tuning_interval_gps": [1399388418, 1399561218],
+    "selection_rule": "uniform_cat1",
+    "whitening_pad_s": 4,
+    "window_s": 32,
+    "windows_per_detector_block": 128
+  },
+  "source": {
+    "flags": {
+      "H1": "H1_CBC_CAT1",
+      "L1": "L1_CBC_CAT1"
+    },
+    "provider": "GWOSC",
+    "release_url": "https://gwosc.org/O4/O4b/"
+  },
+  "status": "draft"
+}

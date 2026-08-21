@@ -319,6 +319,11 @@ scripts/*
 !scripts/run_dante_light_o4b_auxiliary_batch.sh
 !scripts/aggregate_dante_light_o4b_auxiliary.py
 !scripts/verify_dante_light_o4b_auxiliary.py
+!scripts/build_dante_light_report.py
+!scripts/verify_dante_light_report.py
+!scripts/build_dante_light_followup.py
+!scripts/build_dante_light_manifest.py
+!scripts/verify_dante_light_run_config.py
 
 tmp
 archive/

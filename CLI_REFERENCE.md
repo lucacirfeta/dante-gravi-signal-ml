@@ -164,8 +164,42 @@ For tuning only, `--limit-per-detector N` selects a deterministic balanced
 subset. It is mutually exclusive with `--limit` and must not be used for the
 final evaluation.
 
+`scripts/build_dante_light_manifest.py` provides the run-generic preparation
+stages `lock-plan`, `snapshot-dq`, `build` and `check`. The example input is
+`docs/dante_light_shadow_plan.example.json`. Lock selection before DQ fetch or
+score inspection; the tool refuses divergent overwrite and does not generate
+or waive causal-epoch promotion evidence.
+Run `scripts/verify_dante_light_run_config.py --manifest ... --epochs ...`
+before starting paired canonical/shared scoring; it rejects stale contracts,
+missing detector epochs and calibration look-ahead.
+
 See `docs/DANTE_LIGHT.md` for the runnable CPU/GPU tutorial, failure meanings,
 clean-clone replay, causal-epoch promotion, and prospective-evidence commands.
+
+### DANTE-Light final report
+
+`scripts/build_dante_light_report.py` builds a deterministic Markdown view
+from already validated prospective, follow-up and optional auxiliary JSON
+artifacts. It neither rescores windows nor creates offline physical classes.
+The companion receipt is verified with:
+
+```bash
+python scripts/verify_dante_light_report.py \
+  --receipt artifacts/dante_light/o4b_final_report_receipt_v1.json
+```
+
+For a new run, use new output/report paths. Never mix evidence from different
+manifests or reuse the O4b report receipt.
+
+### Generic DANTE-Light escalation handoff
+
+`scripts/build_dante_light_followup.py` writes `manifest_v1.json`,
+`physical_v1.json`, `catalog_v1.json` and `gallery_v1.json` below an explicitly
+selected run directory. The manifest stage requires both canonical and shared
+`records.jsonl` paths and freezes only their exactly matching `ESCALATE`
+cohort. See `docs/DANTE_LIGHT.md` for the staged commands. The catalog stage
+remains O4b/GWTC-5.0-specific and fails closed for later runs; future catalog
+schemas are not silently accepted.
 
 ---
 

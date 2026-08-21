@@ -107,6 +107,36 @@ runs/dante_light/<name>/
   summary.json        most recent accounting, including drops and DEFERs
 ```
 
+### Unified derived report
+
+After prospective evidence and any optional offline follow-up have passed
+their own gates, build one human-readable report without copying numbers by
+hand:
+
+```bash
+python scripts/build_dante_light_report.py \
+  --prospective artifacts/dante_light/prospective_validation_v1.json \
+  --followup-dir artifacts/dante_light/o4b_followup \
+  --auxiliary artifacts/dante_light/o4b_auxiliary/result_v1.json \
+  --output artifacts/dante_light/O4B_FINAL_REPORT.generated.md \
+  --receipt artifacts/dante_light/o4b_final_report_receipt_v1.json
+python scripts/verify_dante_light_report.py \
+  --receipt artifacts/dante_light/o4b_final_report_receipt_v1.json
+```
+
+`--followup-dir` and `--auxiliary` are optional, but auxiliary evidence is
+accepted only when it can be linked to a complete follow-up cohort. The report
+builder checks coverage accounting, exact canonical/shared agreement, latency,
+cross-stage manifest links, gallery hashes and auxiliary self-hashes before it
+writes anything. The receipt binds the rendered Markdown and every source JSON
+by SHA-256. The generated Markdown is a triage report, not an authority that
+replaces those machine-readable artifacts or the full offline
+`Final_Discovery_Report.md`.
+Within a supplied follow-up directory, manifest, physical and gallery evidence
+are mandatory. `catalog_v1.json` is optional: when a validated catalog adapter
+is not yet available, the generated report records `NOT_SUPPLIED` and makes no
+zero-match inference.
+
 Re-run the identical command to resume. Completed detector/GPS identities are
 not rescored or duplicated. Any change in code state, epoch, representation,
 selection, CAT1 source, or engine requires a new output directory and fails
@@ -122,6 +152,95 @@ python main.py dante-light-shadow \
 With the shipped epochs the expected disposition is
 `DEFER/NON_CAUSAL_EPOCH`, and the summary is `complete_with_defer`. This proves
 the look-ahead guard; it is not a successful prospective shadow run.
+
+### Preparing a new run without O4b hard-coding
+
+The lower-level shadow runner accepts arbitrary frozen manifests and causal
+epochs. For a new observing interval, first copy
+`docs/dante_light_shadow_plan.example.json` to a new run-specific configuration
+and edit the run bounds, HTTPS release URL, tuning interval and held-out blocks.
+Do this before fetching DQ metadata or inspecting scores. Then lock the plan,
+freeze only the public CAT1 segments and build the manifest:
+
+```bash
+RUN_TAG=o5_shadow_001
+python scripts/build_dante_light_manifest.py lock-plan \
+  --draft config/${RUN_TAG}_shadow_plan_draft.json \
+  --output config/${RUN_TAG}_shadow_plan_v1.json
+python scripts/build_dante_light_manifest.py snapshot-dq \
+  --plan config/${RUN_TAG}_shadow_plan_v1.json \
+  --output config/${RUN_TAG}_cat1_segments_v1.json
+python scripts/build_dante_light_manifest.py build \
+  --plan config/${RUN_TAG}_shadow_plan_v1.json \
+  --snapshot config/${RUN_TAG}_cat1_segments_v1.json \
+  --output config/${RUN_TAG}_shadow_v1.json
+python scripts/build_dante_light_manifest.py check \
+  --plan config/${RUN_TAG}_shadow_plan_v1.json \
+  --snapshot config/${RUN_TAG}_cat1_segments_v1.json \
+  --output config/${RUN_TAG}_shadow_v1.json
+```
+
+Every stage is immutable: rerunning identical inputs is idempotent, while a
+different plan, DQ snapshot, reference contract or output fails closed. The
+builder requires the tuning interval to end before the first held-out block,
+whole-window CAT1 including whitening padding, empty outcome fields, unique
+detector/GPS identities and the schema-1 32 s/pad-4 representation.
+`uniform_cat1` is the recommended outcome-blind rule for a new run because it
+spreads the fixed count across every eligible CAT1 window in each block.
+`first_aligned` exists only to reproduce protocols such as the frozen O4b
+selection; its more concentrated temporal sampling must be stated explicitly.
+Schema 1 currently requires the paired H1/L1 detector set; Virgo/KAGRA support
+would require new coincidence, epoch and validation contracts and is not
+silently inferred by changing the detector list.
+
+This prepares selection only. It does not create a scientifically valid epoch.
+Detector promotion payloads must still demonstrate all six gates from earlier
+calibration data; assemble them with `scripts/promote_dante_light_epoch.py`.
+Do not copy the O4a thresholds into a later run without rerunning and binding
+the required gate evidence.
+
+Before spending time on strain acquisition or scoring, verify the locked
+manifest and promoted epochs together:
+
+```bash
+python scripts/verify_dante_light_run_config.py \
+  --manifest config/${RUN_TAG}_shadow_v1.json \
+  --epochs config/${RUN_TAG}_epochs_v1.json
+```
+
+This preflight recomputes manifest and entry digests, rejects inspected outcome
+fields or duplicate windows, verifies the exact representation contract and
+requires one causal, past-only epoch for every selected detector.
+
+Run the permanent canonical reference and exact shared-encoder arm into
+different directories, with the same pre-registered latency objective:
+
+```bash
+LATENCY_OBJECTIVE_S=60
+python main.py dante-light-shadow \
+  --manifest config/${RUN_TAG}_shadow_v1.json \
+  --epochs config/${RUN_TAG}_epochs_v1.json \
+  --output-dir runs/dante_light/${RUN_TAG}/canonical \
+  --engine canonical --cat1-mode gwosc --strain-source gwosc-only \
+  --latency-objective-s ${LATENCY_OBJECTIVE_S}
+python main.py dante-light-shadow \
+  --manifest config/${RUN_TAG}_shadow_v1.json \
+  --epochs config/${RUN_TAG}_epochs_v1.json \
+  --output-dir runs/dante_light/${RUN_TAG}/shared \
+  --engine shared_encoder_score_only --cat1-mode gwosc \
+  --strain-source gwosc-only \
+  --latency-objective-s ${LATENCY_OBJECTIVE_S}
+python scripts/build_dante_light_prospective_evidence.py operational \
+  --canonical-run runs/dante_light/${RUN_TAG}/canonical \
+  --shared-run runs/dante_light/${RUN_TAG}/shared \
+  --epochs config/${RUN_TAG}_epochs_v1.json \
+  --bundle artifacts/dante_light/downloads/dante_reference_artifacts_v1.zip \
+  --latency-objective-s ${LATENCY_OBJECTIVE_S} \
+  --output artifacts/dante_light/${RUN_TAG}_prospective_v1.json
+```
+
+Do not use `--limit` or `--limit-per-detector` for the final held-out run.
+Those switches are only for smoke/preflight execution.
 
 ## Failure meanings
 
@@ -171,6 +290,30 @@ in `artifacts/dante_light/O4B_FOLLOWUP_RESULT.md`. A physical measurement may
 be `PARTNER_DATA_UNAVAILABLE` when the other detector has no valid CAT1
 context. No catalog match or historical-label match is equivalent to a claim
 of a new glitch morphology.
+
+For a new shadow run, use the generic wrapper and a fresh directory. It freezes
+only the exact paired `ESCALATE` records and refuses later stages until that
+manifest exists:
+
+```bash
+RUN_TAG=o5_shadow_001
+python scripts/build_dante_light_followup.py manifest \
+  --canonical-records runs/dante_light/${RUN_TAG}/canonical/records.jsonl \
+  --shared-records runs/dante_light/${RUN_TAG}/shared/records.jsonl \
+  --output-dir artifacts/dante_light/${RUN_TAG}_followup
+python scripts/build_dante_light_followup.py physical \
+  --output-dir artifacts/dante_light/${RUN_TAG}_followup --device cuda
+python scripts/build_dante_light_followup.py gallery \
+  --output-dir artifacts/dante_light/${RUN_TAG}_followup
+```
+
+The current catalog adapter is deliberately restricted to the official
+GWTC-5.0 response contract and the O4b run. The generic wrapper fails closed if
+its `catalog` stage is requested for a later run. A later catalog release
+requires a separately implemented and validated adapter; changing
+`--catalog-url` cannot relabel a different schema as GWTC-5.0. Until that
+adapter exists, a new-run report must state that catalog follow-up is pending
+rather than report a false zero-match result.
 
 ### Public O4b auxiliary diagnostic
 
