@@ -15,6 +15,17 @@ def test_prefilter_splits_are_deterministic_disjoint_and_powered():
     assert first == second
     assert first["status"] == "locked_before_feature_extraction"
 
+    background = first["cohorts"]["background"]
+    assert background["counts"] == {
+        "total": 552,
+        "development": 552,
+        "evaluation": 0,
+    }
+    assert Counter(row["detector"] for row in background["rows"]) == {
+        "H1": 274,
+        "L1": 278,
+    }
+
     robust = first["cohorts"]["robust_candidate"]
     assert robust["counts"] == {"total": 80, "development": 40, "evaluation": 40}
     for detector in ("H1", "L1"):

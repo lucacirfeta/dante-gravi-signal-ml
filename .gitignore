@@ -323,6 +323,7 @@ scripts/*
 !scripts/build_dante_light_prefilter_splits.py
 !scripts/build_dante_light_prefilter_cohort_features.py
 !scripts/build_dante_light_prefilter_injection_features.py
+!scripts/tune_dante_light_prefilter.py
 !scripts/verify_dante_light_o4b_auxiliary.py
 !scripts/build_dante_light_report.py
 !scripts/verify_dante_light_report.py

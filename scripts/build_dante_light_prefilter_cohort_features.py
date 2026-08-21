@@ -20,7 +20,11 @@ from src.dante_light.preprocessing import prepare_prefilter_features
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--split", required=True, type=Path)
-    parser.add_argument("--role", required=True, choices=("robust_candidate", "known_glitch"))
+    parser.add_argument(
+        "--role",
+        required=True,
+        choices=("background", "robust_candidate", "known_glitch"),
+    )
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--strain-source", choices=("auto", "local-only", "gwosc-only"), default="auto")
     parser.add_argument("--limit", type=int)

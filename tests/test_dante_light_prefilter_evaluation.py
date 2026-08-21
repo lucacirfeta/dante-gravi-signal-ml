@@ -151,6 +151,7 @@ def test_prefilter_evaluation_passes_without_enabling_routing(tmp_path):
     assert result["status"] == "PASS"
     assert result["routing_enabled"] is False
     assert result["coverage"]["missed_exact_escalates"] == 0
+    assert result["coverage"]["shadow_windows"] == 240
     assert result["coverage"]["effective_compute_reduction"] >= 0.5
 
 

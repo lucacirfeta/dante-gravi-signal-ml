@@ -186,7 +186,7 @@ def build_split_feature_ledger(
         raise ContractError(f"role is absent from L4 split artifact: {role}") from exc
     if split.get("status") != "locked_before_feature_extraction":
         raise ContractError("L4 split artifact is not locked")
-    if role not in {"robust_candidate", "known_glitch", "injection"}:
+    if role not in {"background", "robust_candidate", "known_glitch", "injection"}:
         raise ContractError(f"unsupported L4 feature role: {role}")
     split_sha256 = str(cohort["split_sha256"])
     rows = list(cohort["rows"])

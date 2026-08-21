@@ -155,9 +155,44 @@ def _injection_rows(root: Path, *, seed: int) -> tuple[list[dict[str, Any]], lis
     return rows, [{"path": path.relative_to(root).as_posix(), "sha256": _sha256(path)}]
 
 
+def _background_rows(root: Path, *, seed: int) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    del seed
+    manifest_path = root / "config/dante_light_replay_v1.json"
+    entries_path = root / "config/dante_light_replay_v1.jsonl"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if manifest.get("entries_file_sha256") != _sha256(entries_path):
+        raise ContractError("frozen replay entry-file SHA256 mismatch")
+    rows: list[dict[str, Any]] = []
+    for line in entries_path.read_text(encoding="utf-8").splitlines():
+        entry = json.loads(line)
+        if "background_stratified" not in entry["roles"]:
+            continue
+        window = WindowIdentity.from_dict(entry["window"])
+        rows.append(
+            {
+                "cohort_id": f"background:{window.window_id}",
+                "role": "background",
+                "detector": window.detector,
+                "morphology": "clean_background",
+                "retention_target": False,
+                "window": window.to_dict(),
+                "partition": "development",
+                "partition_priority": entry["case_id"],
+            }
+        )
+    counts = {detector: sum(row["detector"] == detector for row in rows) for detector in ("H1", "L1")}
+    if counts != {"H1": 274, "L1": 278}:
+        raise ContractError(f"unexpected frozen background counts: {counts}")
+    return rows, [
+        {"path": manifest_path.relative_to(root).as_posix(), "sha256": _sha256(manifest_path)},
+        {"path": entries_path.relative_to(root).as_posix(), "sha256": _sha256(entries_path)},
+    ]
+
+
 def build_prefilter_splits(*, root: str | Path, seed: int = 20260821) -> dict[str, Any]:
     root = Path(root).resolve()
     builders = {
+        "background": _background_rows,
         "robust_candidate": _robust_rows,
         "known_glitch": _known_rows,
         "injection": _injection_rows,

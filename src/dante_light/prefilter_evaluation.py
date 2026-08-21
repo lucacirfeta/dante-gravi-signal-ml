@@ -319,8 +319,11 @@ def evaluate_prefilter(
         group_results.append(result)
         gates.append({"name": f"retention:{rule['name']}", "status": result["status"]})
 
-    calls = sum(row["selected"] or row["audited"] for row in evaluated)
-    reduction = 1.0 - calls / len(evaluated)
+    shadow_rows = [row for row in evaluated if "shadow" in row["roles"]]
+    if not shadow_rows:
+        raise ContractError("evaluation ledger contains no later shadow rows")
+    calls = sum(row["selected"] or row["audited"] for row in shadow_rows)
+    reduction = 1.0 - calls / len(shadow_rows)
     reduction_pass = reduction >= float(contract["minimum_compute_reduction"])
     gates.append({"name": "effective_compute_reduction", "status": "PASS" if reduction_pass else "FAIL"})
     exact_positives = [
@@ -351,6 +354,7 @@ def evaluate_prefilter(
         },
         "coverage": {
             "windows": len(evaluated),
+            "shadow_windows": len(shadow_rows),
             "would_call_dino": calls,
             "effective_compute_reduction": reduction,
             "exact_escalates": len(exact_positives),

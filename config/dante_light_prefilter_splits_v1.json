@@ -1,6 +1,26 @@
 {
-  "artifact_digest": "f370b5cac3331d2bfb4bac3c94c26b6c5cfdfb42241fbde7a297fb1b84952f6a",
+  "artifact_digest": "3972188cf8c24555b1e5da322250ba9a5e97542b3ebff408872fe131afdeeb1b",
   "cohorts": {
+    "background": {
+      "counts": {
+        "development": 552,
+        "evaluation": 0,
+        "total": 552
+      },
+      "role": "background",
+      "seed": 20260821,
+      "sources": [
+        {
+          "path": "config/dante_light_replay_v1.json",
+          "sha256": "877c696c05bacdb0f71ebf34d7c690c47a405df2963e2e218c9c86afe4894c08"
+        },
+        {
+          "path": "config/dante_light_replay_v1.jsonl",
+          "sha256": "9f879beb835a3640e81e8f022bc244d0c5247a4acf928756d004878f844883f5"
+        }
+      ],
+      "split_sha256": "e8c72b67c92adc686c15f343ce3271f5aca7fbe93cbb5015ba4635503fe647db"
+    },
     "injection": {
       "counts": {
         "development": 210,
@@ -54,7 +74,7 @@
       "split_sha256": "4aae3bc2220b2d185c45a989e307ee84a9cc7e44888b3ff5d74254daf20ca38a"
     }
   },
-  "entries_file_sha256": "d881bdd6c4478d7c5949ff9eb64ee2db4f265515ddf36b2a5048ed3d5bf6e1c5",
+  "entries_file_sha256": "d7bac1a6d4f6e63382e3909d7aa4a3475937856c4d66d0c5fd3703bc955d6dd1",
   "entries_path": "dante_light_prefilter_splits_v1.jsonl",
   "outcome_fields_used_for_partition": [],
   "schema_version": 1,
