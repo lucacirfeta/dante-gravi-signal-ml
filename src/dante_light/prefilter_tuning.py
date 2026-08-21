@@ -62,6 +62,31 @@ def _grid(values: np.ndarray, cells: int) -> np.ndarray:
     return np.r_[observed, np.nextafter(observed[-1], np.inf)]
 
 
+def _validate_rows(
+    rows: list[dict[str, Any]], ledger: Mapping[str, Any], role: str, split_sha256: str
+) -> None:
+    seen: set[str] = set()
+    for row in rows:
+        try:
+            window = WindowIdentity.from_dict(row["window"])
+            features = ExcessEnergyFeatures(**row["features"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ContractError(f"invalid feature row in {role}") from exc
+        if window.window_id in seen:
+            raise ContractError(f"duplicate feature identity in {role}: {window.window_id}")
+        seen.add(window.window_id)
+        if row.get("roles") != [role] or row.get("detector") != window.detector:
+            raise ContractError(f"feature row annotation mismatch in {role}: {window.window_id}")
+        if row.get("partition") not in {"development", "evaluation"}:
+            raise ContractError(f"invalid feature partition in {role}: {window.window_id}")
+        if row.get("representation_sha256") != ledger["representation_sha256"]:
+            raise ContractError(f"feature row representation mismatch in {role}: {window.window_id}")
+        if row.get("split_artifact_sha256_by_role") != {role: split_sha256}:
+            raise ContractError(f"feature row split mismatch in {role}: {window.window_id}")
+        if not isinstance(row.get("retention_target"), bool):
+            raise ContractError(f"invalid retention target in {role}: {window.window_id}")
+
+
 def tune_prefilter(
     *,
     ledgers: Mapping[str, str | Path],
@@ -92,6 +117,7 @@ def tune_prefilter(
         observed_split = ledger.get("cohort_split_sha256_by_role", {}).get(role)
         if observed_split != expected_split_hashes[role]:
             raise ContractError(f"feature ledger split hash mismatch for {role}: {path}")
+        _validate_rows(rows, ledger, role, observed_split)
         representations.add(ledger["representation_sha256"])
         source_records.append(
             {

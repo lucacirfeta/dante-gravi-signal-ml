@@ -9,6 +9,7 @@ import shutil
 from typing import Any, Mapping
 
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
+from src.dante_light.prefilter import ExcessEnergyFeatures
 from src.dante_light.prefilter_evaluation import FEATURE_SOURCE
 
 
@@ -59,6 +60,27 @@ def _load_source(path: Path, role: str) -> tuple[dict[str, Any], list[dict[str, 
     split_hashes = ledger.get("cohort_split_sha256_by_role")
     if not isinstance(split_hashes, dict) or set(split_hashes) != {role}:
         raise ContractError(f"source split binding mismatch for {role}: {path}")
+    split_sha256 = split_hashes[role]
+    seen: set[str] = set()
+    for row in rows:
+        try:
+            window = WindowIdentity.from_dict(row["window"])
+            ExcessEnergyFeatures(**row["features"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ContractError(f"invalid source feature row for {role}: {path}") from exc
+        if window.window_id in seen:
+            raise ContractError(f"duplicate source feature identity for {role}: {window.window_id}")
+        seen.add(window.window_id)
+        if row.get("roles") != [role] or row.get("detector") != window.detector:
+            raise ContractError(f"source row annotation mismatch for {role}: {window.window_id}")
+        if row.get("partition") not in {"development", "evaluation"}:
+            raise ContractError(f"source row partition mismatch for {role}: {window.window_id}")
+        if row.get("representation_sha256") != ledger["representation_sha256"]:
+            raise ContractError(f"source row representation mismatch for {role}: {window.window_id}")
+        if row.get("split_artifact_sha256_by_role") != {role: split_sha256}:
+            raise ContractError(f"source row split mismatch for {role}: {window.window_id}")
+        if not isinstance(row.get("retention_target"), bool):
+            raise ContractError(f"invalid source endpoint or features for {role}: {window.window_id}")
     return ledger, rows
 
 
@@ -82,6 +104,9 @@ def _validate_tuning(
     }
     if tuning.get("cohort_split_sha256_by_role") != expected_splits:
         raise ContractError("threshold tuning is not bound to the source cohort splits")
+    records = tuning.get("source_ledgers", [])
+    if not isinstance(records, list) or len(records) != 4:
+        raise ContractError("threshold tuning has incomplete source provenance")
     expected_records = {
         record["role"]: record for record in tuning.get("source_ledgers", [])
         if isinstance(record, dict) and "role" in record

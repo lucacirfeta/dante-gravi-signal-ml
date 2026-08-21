@@ -43,9 +43,11 @@ def _row(index, *, role, detector="H1", morphology="unknown", positive=True):
         "window": window.to_dict(),
         "roles": [role],
         "partition": "development",
+        "split_artifact_sha256_by_role": {role: SPLIT_HASHES[role]},
         "detector": detector,
         "morphology": morphology,
         "retention_target": positive,
+        "representation_sha256": "a" * 64,
         "features": {
             "rms": 1.0,
             "crest_factor": 10.0 if positive else 1.0,
