@@ -12,7 +12,7 @@ h5py>=3.10
 # Use tar.gz extraction instead (see reference_builder.py).
 astropy>=6.0
 
-# --- NDS2 Data (Optional, requires LVC credentials) ---
+# --- NDS2 Data (Optional; public O4 auxiliary data are available from GWOSC) ---
 # nds2-client
 # python-nds2-client
 # These must be installed via Conda for Windows/Linux:

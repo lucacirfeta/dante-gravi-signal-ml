@@ -6,18 +6,18 @@ Analyzes the spectral coherence between gravitational-wave strain and
 auxiliary (PEM/CAL/IMC/SUS/OAF/ASC) channels for structurally anomalous
 candidates (e.g. Family_01 and Singletons).
 
-IMPORTANT — PUBLIC DATA LIMITATION:
-    Auxiliary channels are NOT publicly available via ``nds.gwosc.org``.
-    They require LVC credentials and access to site-internal NDS servers
-    (``nds.ligo-la.caltech.edu`` / ``nds.ligo-wa.caltech.edu``).
+IMPORTANT — PUBLIC DATA STATUS:
+    GWOSC released a limited O4 auxiliary-channel inventory publicly in 2026.
+    Those channels are available through ``nds.gwosc.org`` and OSDF, but the
+    NDS2 client bindings are still an optional Conda dependency. Public
+    availability does not establish astrophysical safety: this legacy module
+    must not turn auxiliary coherence into an event veto without an explicit
+    channel policy and empirical time-shift plus quiet zero-lag calibration.
 
-    When running against public GWOSC data only, this module produces a
-    "null-result" coherence report, explicitly documenting the data-access
-    limitation.  A strain ASD plot is generated per event as a diagnostic
-    sanity check (stationarity / spectral cleanliness).
-
-    If you later obtain LVC credentials, set ``nds_host`` via the CLI
-    ``--nds-host`` argument and the full coherence pipeline will activate.
+    The frozen DANTE-Light O4b diagnostic implementing that stricter contract
+    lives in ``src.dante_light.o4b_auxiliary``. This production module retains
+    its historical O4a workflow and fail-closed ``PEM_UNAVAILABLE`` behavior
+    when no transport is configured.
 """
 
 from pathlib import Path
@@ -41,7 +41,8 @@ logger = setup_logger(__name__)
 MEDOID_PRIORITY = ['ROBUST', 'AMBIGUOUS', 'BACKGROUND']
 
 # ---------------------------------------------------------------------------
-# O4a candidate auxiliary channels (require LVC credentials)
+# Historical O4a candidate auxiliary-channel subset. Public availability is
+# not a safety claim; this list remains frozen for the published O4a analysis.
 # ---------------------------------------------------------------------------
 AUX_CHANNELS = {
     "H1": [
@@ -68,7 +69,7 @@ AUX_CHANNELS = {
 
 
 # ---------------------------------------------------------------------------
-# Auxiliary channel fetch (requires LVC credentials / internal NDS)
+# Auxiliary channel fetch (requires optional NDS2 client bindings)
 # ---------------------------------------------------------------------------
 
 def require_nds2() -> bool:
@@ -239,7 +240,7 @@ def _plot_strain_asd(
         ax.set_ylabel(r"ASD [strain / $\sqrt{\mathrm{Hz}}$]")
         ax.set_title(
             f"Strain ASD — {detector} | GPS: {gps_start} | {family}\n"
-            "(Auxiliary channels not available on public GWOSC NDS)"
+            "(Auxiliary transport not configured for this run)"
         )
         ax.grid(True, which="both", alpha=0.3)
         fig.tight_layout()
@@ -394,7 +395,7 @@ def run_pem_coherence_analysis(
         Maximum number of events to analyse per family.
     nds_host:
         NDS2 server hostname for auxiliary channels.  If ``None`` (default),
-        the module runs in null-result mode (public GWOSC data only).
+        the module runs in explicit null-result mode without auxiliary fetches.
     robustness_class:
         Restrict selection to a single robustness class (``ROBUST``,
         ``AMBIGUOUS``, ``BACKGROUND``).  Used to interrogate one population
@@ -455,7 +456,8 @@ def run_pem_coherence_analysis(
     if public_mode:
         logger.warning(
             "NDS host not configured (--nds-host). Running in NULL-RESULT mode: "
-            "auxiliary channels are not publicly available on nds.gwosc.org. "
+            "no auxiliary transport was requested. Public O4 availability "
+            "still requires the optional NDS2 client and an explicit host. "
             "Strain ASD plots will be generated as a diagnostic sanity check."
         )
 
@@ -813,7 +815,7 @@ def run_pem_coherence_analysis(
                     "peak_freq": np.nan,
                     "significant": False,
                     "data_available": False,
-                    "note": "Aux channel not available on public GWOSC NDS",
+                    "note": "Auxiliary transport not configured for this run",
                     "dsd_class": target_class,
                     "dsd_score": target_score,
                     "taxonomy_representation": (
@@ -918,7 +920,7 @@ def run_pem_coherence_analysis(
             n_events = len({(r["detector"], r["gps_start"]) for r in results})
             logger.warning(
                 "NULL-RESULT: %d events × %d channels recorded. "
-                "No coherence computed (aux data requires LVC credentials). "
+                "No coherence computed (auxiliary transport not configured). "
                 "Strain ASD plots saved to %s",
                 n_events, len(AUX_CHANNELS.get("H1", [])), pem_out_dir / "strain_asd",
             )
@@ -1007,12 +1009,13 @@ def _inject_into_final_report(
         md_lines = []
         if public_mode:
             md_lines.append(
-                "> **NULL-RESULT (public data limitation):** Auxiliary PEM/CAL/IMC/SUS channels "
-                "are not available on the public GWOSC NDS server. No instrumental coupling could "
-                "be assessed. Strain ASD plots are provided as a spectral cleanliness proxy."
+                "> **NULL-RESULT (transport not configured):** No auxiliary fetch was attempted "
+                "for this run, so instrumental coupling was not assessed. Public O4 channel "
+                "availability does not convert missing measurements into negative evidence. "
+                "Strain ASD plots are provided only as a spectral diagnostic."
             )
         else:
-            md_lines.append("> Instrumental validation against GWOSC safe auxiliary channels.")
+            md_lines.append("> Diagnostic coherence against the configured auxiliary channels.")
             md_lines.append("> ")
             md_lines.append("> **Statistical Defense:** Significance is based on per-channel calibrated thresholds ($C \\ge 0.6$ or higher) to guarantee empirical FPR $< 1\\%$ per channel. Over the 9 active channels, the cumulative Bonferroni probability of a spurious false positive is $P_{{cum}} < {:.2f}\\%$. Across 388 robust candidates, we expect $N_{{expected}} < {:.1f}$ false positives purely by chance.".format(p_cumulata * 100, n_expected_false))
             md_lines.append("> **Caveat:** Hardware injection safety checks are still required to definitively prove these channels do not respond to physical GW signals. Specifically, `PEM-EX_VMON` and `PEM-EY_MAINSMON` have been explicitly excluded due to documented structural non-stationarity (FPR 23%, Soni et al. 2025).")

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "run": "O4b",
+  "source": {
+    "release_page": "https://gwosc.org/O4/auxiliary/",
+    "repository": "https://git.ligo.org/gwosc/tutorials/gwosc-aux-tutorials.git",
+    "repository_commit": "104a8333950607b02097df43dd60752cbd2b6d50",
+    "path": "Channels/O4_bulk_aux_channel_list.csv",
+    "byte_normalization": "utf8_lf_v1",
+    "sha256_raw_upstream": "6e14a29445790b6d360be4fb5ccccad9a4356a5fe7b5015399226dc0e6188a3f",
+    "sha256_utf8_lf": "efeb8df360d9ac9408d7d16a4376b0354d69039b272b394df659763dced6409b"
+  },
+  "scientific_policy": {
+    "status": "DIAGNOSTIC_ONLY",
+    "reason": "The public O4 inventory contains calibration, control, subtraction and data-quality channels. Public availability does not establish astrophysical safety, so no channel may veto or confirm a candidate in this analysis.",
+    "decision_rule": "Only an event-local excess over both a family-wise time-shift null and a quiet zero-lag null may be reported as AUXILIARY_EXCESS; it remains descriptive and is never a physical-origin verdict.",
+    "excluded_from_spectral_test": "Channels sampled at 16 Hz have Nyquist frequency below the frozen 20-500 Hz analysis band."
+  },
+  "analysis_band_hz": [20.0, 500.0],
+  "channels": {
+    "H1": [
+      {"name": "H1:CAL-PCALX_RX_PD_OUT_DQ", "sample_rate_hz": 16384, "role": "calibration_injection", "analyze": true},
+      {"name": "H1:CAL-PCALY_RX_PD_OUT_DQ", "sample_rate_hz": 16384, "role": "calibration_injection", "analyze": true},
+      {"name": "H1:IMC-WFS_A_DC_PIT_OUT_DQ", "sample_rate_hz": 16384, "role": "control_or_subtraction", "analyze": true},
+      {"name": "H1:IMC-WFS_A_DC_YAW_OUT_DQ", "sample_rate_hz": 16384, "role": "control_or_subtraction", "analyze": true},
+      {"name": "H1:LSC-POP_A_LF_OUT_DQ", "sample_rate_hz": 2048, "role": "control_or_subtraction", "analyze": true},
+      {"name": "H1:LSC-REFL_A_RIN_OUT_DQ", "sample_rate_hz": 16384, "role": "control_or_subtraction", "analyze": true},
+      {"name": "H1:OAF-IMC_WFS_A_DC_PIT_PREFILT_OUT_DQ", "sample_rate_hz": 16384, "role": "control_or_subtraction", "analyze": true},
+      {"name": "H1:OAF-IMC_WFS_A_DC_YAW_PREFILT_OUT_DQ", "sample_rate_hz": 16384, "role": "control_or_subtraction", "analyze": true},
+      {"name": "H1:OAF-REFL_A_RIN_PREFILT_OUT_DQ", "sample_rate_hz": 16384, "role": "control_or_subtraction", "analyze": true},
+      {"name": "H1:PEM-EY_MAINSMON_EBAY_1_DQ", "sample_rate_hz": 8192, "role": "environmental_monitor", "analyze": true},
+      {"name": "H1:SUS-ETMX_L1_CAL_LINE_OUT_DQ", "sample_rate_hz": 512, "role": "calibration_injection", "analyze": true},
+      {"name": "H1:SUS-ETMX_L2_CAL_LINE_OUT_DQ", "sample_rate_hz": 512, "role": "calibration_injection", "analyze": true},
+      {"name": "H1:SUS-ETMX_L3_CAL_LINE_OUT_DQ", "sample_rate_hz": 512, "role": "calibration_injection", "analyze": true},
+      {"name": "H1:SUS-PI_PROC_COMPUTE_MODE29_RMSMON", "sample_rate_hz": 16, "role": "dq_state_below_band", "analyze": false}
+    ],
+    "L1": [
+      {"name": "L1:ASC-X_TR_A_NSUM_OUT_DQ", "sample_rate_hz": 2048, "role": "control_or_subtraction", "analyze": true},
+      {"name": "L1:CAL-PCALX_RX_PD_OUT_DQ", "sample_rate_hz": 16384, "role": "calibration_injection", "analyze": true},
+      {"name": "L1:CAL-PCALY_RX_PD_OUT_DQ", "sample_rate_hz": 16384, "role": "calibration_injection", "analyze": true},
+      {"name": "L1:IMC-WFS_B_I_PIT_OUT_DQ", "sample_rate_hz": 2048, "role": "control_or_subtraction", "analyze": true},
+      {"name": "L1:OAF-IMC_WFS_B_I_PIT_PREFILT_OUT_DQ", "sample_rate_hz": 16384, "role": "control_or_subtraction", "analyze": true},
+      {"name": "L1:PEM-EX_VMON_ETMX_ESDPOWER24_DQ", "sample_rate_hz": 8192, "role": "environmental_monitor", "analyze": true},
+      {"name": "L1:PEM-EY_MAINSMON_EBAY_1_DQ", "sample_rate_hz": 8192, "role": "environmental_monitor", "analyze": true},
+      {"name": "L1:SUS-ETMX_L1_CAL_LINE_OUT_DQ", "sample_rate_hz": 512, "role": "calibration_injection", "analyze": true},
+      {"name": "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ", "sample_rate_hz": 512, "role": "calibration_injection", "analyze": true},
+      {"name": "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ", "sample_rate_hz": 512, "role": "calibration_injection", "analyze": true},
+      {"name": "L1:SUS-PI_PROC_COMPUTE_MODE5_RMSMON", "sample_rate_hz": 16, "role": "dq_state_below_band", "analyze": false}
+    ]
+  }
+}

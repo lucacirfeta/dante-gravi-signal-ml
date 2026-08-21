@@ -172,6 +172,63 @@ be `PARTNER_DATA_UNAVAILABLE` when the other detector has no valid CAT1
 context. No catalog match or historical-label match is equivalent to a claim
 of a new glitch morphology.
 
+### Public O4b auxiliary diagnostic
+
+GWOSC now publishes a limited O4 auxiliary inventory through NDS2 and OSDF
+([release page](https://gwosc.org/O4/auxiliary/), DOI
+`10.7935/kt51-6n86`). DANTE-Light freezes the exact upstream GitLab commit,
+raw and LF-normalized CSV hashes, and all 25 published channel names in
+`config/dante_light_o4b_aux_channels_v1.json`. Only the one H1 and two L1
+channels classified as environmental monitors enter the frozen analysis.
+Calibration, control and subtraction channels remain in the inventory for
+auditability but do not enter this endpoint; 16 Hz state channels cannot reach
+the frozen 20--500 Hz band.
+
+This is an offline, diagnostic-only endpoint. Public availability is not a
+channel-safety certificate, so its three possible measured outcomes are
+`NO_AUXILIARY_EXCESS`, `PERSISTENT_BASELINE_COMPATIBLE`, and
+`AUXILIARY_EXCESS`. None is a veto, a glitch label, or evidence of
+astrophysical/instrumental origin. `AUXILIARY_EXCESS` requires the event-level
+maximum to exceed both the max-over-channel time-shift null and the quiet
+zero-lag null. The latter is essential for persistent lines: a high raw
+coherence alone is not candidate-specific.
+
+The final frozen cohort contains all 18 O4b escalations (8 H1, 10 L1) and five
+local detector epochs. Each epoch uses 142--150 candidate-excluded 32 s CAT1
+windows from a four-hour block; a calibration may be reused only within 12 h,
+and the actual event-to-block distance is recorded. Results are 14
+`NO_AUXILIARY_EXCESS`, four `PERSISTENT_BASELINE_COMPATIBLE`, zero
+`AUXILIARY_EXCESS`, and zero unavailable events. This does not exclude an
+instrumental origin because the public witness set is very limited.
+
+NDS2 bindings are installed through Conda. For example, inside WSL:
+
+```bash
+micromamba create -p /path/to/gwosc-aux -f environment-o4b-aux.yml
+```
+
+Use an external cache (for example on `E:`) so reruns do not download the same
+GPS/channel blocks again. The cache key includes detector, channel, exact GPS
+interval, native and stored rates, and source; every object and value array is
+SHA-256 checked. Reproduce the five frozen calibrations, then run the exact
+event-to-epoch mapping:
+
+```bash
+bash scripts/run_dante_light_o4b_auxiliary_calibrations.sh \
+  /path/to/gwosc-aux/bin/python /path/to/dante-light-o4b-aux-cache
+bash scripts/run_dante_light_o4b_auxiliary_batch.sh \
+  /path/to/gwosc-aux/bin/python /path/to/dante-light-o4b-aux-cache
+python scripts/aggregate_dante_light_o4b_auxiliary.py
+python scripts/verify_dante_light_o4b_auxiliary.py \
+  --stage all --cache-dir /path/to/dante-light-o4b-aux-cache
+```
+
+The portable result is
+`artifacts/dante_light/o4b_auxiliary/result_v1.json`; external cached samples
+are not part of the Git repository. The verifier can check policy and result
+artifacts without network access (`--stage policy` or `--stage artifacts`),
+while `--stage cache` additionally validates every local cached byte.
+
 ## Research-only and future adapters
 
 `src/dante_light/prefilter.py` computes cheap deterministic excess-energy
@@ -190,11 +247,11 @@ reordering and exact duplicates but fail closed on gaps, divergent duplicates,
 uncalibrated samples or missing CAT1. No authenticated IGWN Kafka adapter is
 claimed yet.
 
-`src/dante_light/aux_cache.py` is a content-addressed, provenance-preserving
-read-through cache primitive for auxiliary channels. It is not wired into the
-current PEM endpoint or synchronous Light path. A future authorised NDS2
-adapter must pass cold/warm equality and retain the exact detector, channel,
-GPS interval, sample rate and source in the cache key before adoption.
+`src/dante_light/aux_cache.py` remains the transport-neutral cache primitive
+for future adapters. The O4b-only diagnostic uses the stricter float32 block
+cache in `src/dante_light/o4b_auxiliary.py`; it passed exact cold/warm equality
+and retains detector, channel, GPS interval, native/stored sample rates and
+source. Neither cache is part of the synchronous Light scoring path.
 
 Release status is machine-checkable:
 

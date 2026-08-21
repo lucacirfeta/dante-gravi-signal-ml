@@ -1,0 +1,207 @@
+{
+  "background": {
+    "candidate_exclusion_s_center_to_center": 112.0,
+    "cat1_flag": "H1_BURST_CAT1",
+    "event_to_background_distance_s": 0,
+    "maximum_allowed_distance_s": 43200,
+    "span": [
+      1404597061,
+      1404601157
+    ],
+    "window_starts": [
+      1404597061,
+      1404597157,
+      1404597253,
+      1404597349,
+      1404597445,
+      1404597541,
+      1404597637,
+      1404597733,
+      1404597829,
+      1404597925,
+      1404598021,
+      1404598117,
+      1404598213,
+      1404598309,
+      1404598597,
+      1404598693,
+      1404598789,
+      1404598885,
+      1404598981,
+      1404599077,
+      1404599173,
+      1404599269,
+      1404599365,
+      1404599461,
+      1404599557,
+      1404599653,
+      1404599749,
+      1404599845,
+      1404599941,
+      1404600037,
+      1404600133,
+      1404600229,
+      1404600325,
+      1404600421,
+      1404600517,
+      1404600613,
+      1404600709,
+      1404600805,
+      1404600901,
+      1404600997,
+      1404601093
+    ]
+  },
+  "calibration": {
+    "alpha_familywise": 0.01,
+    "method": "max over channels and frequency; off-diagonal 32 s quiet-window pairs define the time-shift null; aligned diagonal windows define the quiet zero-lag null; bootstrap resamples window identities",
+    "n_channels": 1,
+    "n_time_shift_pairs": 1640,
+    "n_windows": 41,
+    "per_channel": {
+      "H1:PEM-EY_MAINSMON_EBAY_1_DQ": {
+        "time_shift_q99": 0.5606796450239117,
+        "zero_lag_median": 0.3710862594026432,
+        "zero_lag_q99": 0.6550535894076718
+      }
+    },
+    "time_shift_threshold": 0.5606796450239117,
+    "time_shift_threshold_ci95": [
+      0.4978764869454571,
+      0.6476220687332357
+    ],
+    "zero_lag_fraction_above_time_shift_threshold": 0.07317073170731707,
+    "zero_lag_threshold": 0.6550535894076718,
+    "zero_lag_threshold_ci95": [
+      0.5522569124569475,
+      0.6781588249479484
+    ]
+  },
+  "candidate": {
+    "candidate_sha256": "7b34ae0e84f6ba303eec90db1d3736c8c748b0bd66f6972ed00a277ec0eb75bd",
+    "detector": "H1",
+    "gps_start": 1404598432,
+    "window_id": "dlw1-d705588c205dc08f681bfc1e"
+  },
+  "channel_roles": [
+    "environmental_monitor"
+  ],
+  "channels": [
+    "H1:PEM-EY_MAINSMON_EBAY_1_DQ"
+  ],
+  "claim_boundary": "This diagnostic cannot veto, confirm, classify, or establish the physical origin of a candidate; public channel availability does not establish astrophysical safety.",
+  "diagnostic_verdict": "NO_AUXILIARY_EXCESS",
+  "observed": {
+    "H1:PEM-EY_MAINSMON_EBAY_1_DQ": {
+      "effective_band_hz": [
+        20.0,
+        500.0
+      ],
+      "max_coherence": 0.2588747118338546,
+      "n_welch_segments": 31,
+      "peak_frequency_hz": 180.0,
+      "role": "environmental_monitor"
+    }
+  },
+  "provenance": {
+    "cache_receipts": [
+      {
+        "cache_id": "o4aux1-daeebf4dc79e8e0359b9c9929c347c12",
+        "key": {
+          "channel": "H1:GWOSC-4KHZ_R1_STRAIN",
+          "detector": "H1",
+          "gps_end": 1404601157,
+          "gps_start": 1404597061,
+          "native_sample_rate_hz": 4096.0,
+          "schema_version": 1,
+          "source": "gwosc-open-data",
+          "stored_sample_rate_hz": 2048.0
+        },
+        "npy_sha256": "e970d52a85c4b5b4c4b14237051e375fd5bc3e2f458aaf0223e1e41415c853e3",
+        "schema_version": 1,
+        "values_sha256": "7fb6fd51da8d4181ca9d576bc5aef09f735c62eab600b2f3516df70ebc9cb7f5"
+      },
+      {
+        "cache_id": "o4aux1-98f82121a48c0cc81f3c099a34e8c678",
+        "key": {
+          "channel": "H1:PEM-EY_MAINSMON_EBAY_1_DQ",
+          "detector": "H1",
+          "gps_end": 1404601157,
+          "gps_start": 1404597061,
+          "native_sample_rate_hz": 8192.0,
+          "schema_version": 1,
+          "source": "nds.gwosc.org",
+          "stored_sample_rate_hz": 2048.0
+        },
+        "npy_sha256": "b1d005c88973e5ea54b84b0cd1be00064eaeabd9b180dc04479b7a06c4675a34",
+        "schema_version": 1,
+        "values_sha256": "592c7a0a6ebb6e1fb11a73eb715c47714ed32f29e71ccdcc33a62e0df889e52b"
+      },
+      {
+        "cache_id": "o4aux1-8750ffc36ff44bb666572ebc5722e85c",
+        "key": {
+          "channel": "H1:PEM-EY_MAINSMON_EBAY_1_DQ",
+          "detector": "H1",
+          "gps_end": 1404598464,
+          "gps_start": 1404598432,
+          "native_sample_rate_hz": 8192.0,
+          "schema_version": 1,
+          "source": "nds.gwosc.org",
+          "stored_sample_rate_hz": 2048.0
+        },
+        "npy_sha256": "e6c110e691450ee0f982b0f4a6e36386a8f87d1b1379d392b78c32c31c19b0d0",
+        "schema_version": 1,
+        "values_sha256": "1910259a9ec306dd3a45be65633ae93d15aac9ec5ff2f8dfc51bb7ca61e6f708"
+      },
+      {
+        "cache_id": "o4aux1-471b76d4ff66584f702d8421a9569bf5",
+        "key": {
+          "channel": "H1:GWOSC-4KHZ_R1_STRAIN",
+          "detector": "H1",
+          "gps_end": 1404598464,
+          "gps_start": 1404598432,
+          "native_sample_rate_hz": 4096.0,
+          "schema_version": 1,
+          "source": "gwosc-open-data",
+          "stored_sample_rate_hz": 2048.0
+        },
+        "npy_sha256": "b3d36a660dbfd48a7800d842313f8ea43e23f5a818df0fd1a1f68518251f3c22",
+        "schema_version": 1,
+        "values_sha256": "f3febcabf78a59d6669a8e85d0a50fad8e136ebeb5df3a180c62f8121dd2647f"
+      }
+    ],
+    "calibration_source": null,
+    "dependency_versions": {
+      "gwdatafind": "2.1.1",
+      "gwosc": "0.8.3",
+      "gwpy": "4.0.1",
+      "numpy": "2.4.6",
+      "python-nds2-client": "0.16.12",
+      "scipy": "1.17.1"
+    },
+    "implementation_hash_semantics": "utf8_lf_v1",
+    "implementation_sha256": {
+      "scripts/run_dante_light_o4b_auxiliary.py": "d4d0f3ba5473b8144cb899190db9c0cebe0235d0f37d0b78df3ab6f51c8b2c6a",
+      "src/dante_light/o4b_auxiliary.py": "25e1c3c4f55ef3ac493d326b6f4d91b89a379a1fd924480a269a3a771d4291e9"
+    },
+    "manifest_path": "artifacts/dante_light/o4b_followup/manifest_v1.json",
+    "manifest_sha256": "12a487de3f69cd14105f0a656260d54745ae36050e771b0cd270e3eabf563199",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "policy_path": "config/dante_light_o4b_aux_channels_v1.json",
+    "policy_sha256": "8463ec31641357026a44416f8532f98f99aaec3cb28e144bee232bd3f05dff94",
+    "policy_source": {
+      "byte_normalization": "utf8_lf_v1",
+      "path": "Channels/O4_bulk_aux_channel_list.csv",
+      "release_page": "https://gwosc.org/O4/auxiliary/",
+      "repository": "https://git.ligo.org/gwosc/tutorials/gwosc-aux-tutorials.git",
+      "repository_commit": "104a8333950607b02097df43dd60752cbd2b6d50",
+      "sha256_raw_upstream": "6e14a29445790b6d360be4fb5ccccad9a4356a5fe7b5015399226dc0e6188a3f",
+      "sha256_utf8_lf": "efeb8df360d9ac9408d7d16a4376b0354d69039b272b394df659763dced6409b"
+    },
+    "python": "3.11.15"
+  },
+  "schema_version": 1,
+  "scientific_status": "DIAGNOSTIC_ONLY",
+  "scope": "O4b frozen escalation auxiliary-coherence pilot",
+  "status": "PASS"
+}

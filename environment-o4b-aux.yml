@@ -1,0 +1,12 @@
+name: dante-o4b-aux
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.15
+  - numpy=2.4.6
+  - scipy=1.17.1
+  - pandas=3.0.5
+  - gwpy=4.0.1
+  - gwosc=0.8.3
+  - gwdatafind=2.1.1
+  - python-nds2-client=0.16.12
