@@ -45,6 +45,10 @@ def _rows(path: Path) -> list[dict[str, Any]]:
 
 def _load_source(path: Path, role: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     ledger = _json(path)
+    ledger_body = dict(ledger)
+    declared_digest = ledger_body.pop("ledger_digest", None)
+    if declared_digest != canonical_json_sha256(ledger_body):
+        raise ContractError(f"source ledger digest mismatch: {path}")
     if ledger.get("status") != "complete":
         raise ContractError(f"source ledger is not complete: {path}")
     if ledger.get("feature_source") != FEATURE_SOURCE:

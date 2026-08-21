@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 
-from src.dante_light.contracts import WindowIdentity
+from src.dante_light.contracts import WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_tuning import tune_prefilter
 
 
@@ -32,6 +32,7 @@ def _ledger(tmp_path, role, rows):
         "rows_path": rows_path.name,
         "rows_sha256": hashlib.sha256(rows_path.read_bytes()).hexdigest(),
     }
+    payload["ledger_digest"] = canonical_json_sha256(payload)
     path = directory / "ledger.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     return path

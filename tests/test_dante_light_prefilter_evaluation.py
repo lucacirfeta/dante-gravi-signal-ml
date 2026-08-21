@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from src.dante_light.contracts import ContractError, WindowIdentity
+from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_evaluation import evaluate_prefilter, wilson_interval
 
 
@@ -81,6 +81,7 @@ def _write_case(tmp_path, *, reduction_target=0.5, tamper=False):
             },
         ],
     }
+    contract["contract_digest"] = canonical_json_sha256(contract)
     contract_path = tmp_path / "contract.json"
     contract_path.write_text(json.dumps(contract), encoding="utf-8")
     rows = []
@@ -140,6 +141,7 @@ def _write_case(tmp_path, *, reduction_target=0.5, tamper=False):
     }
     if tamper:
         ledger["rows_sha256"] = "0" * 64
+    ledger["ledger_digest"] = canonical_json_sha256(ledger)
     ledger_path = tmp_path / "ledger.json"
     ledger_path.write_text(json.dumps(ledger), encoding="utf-8")
     return contract_path, ledger_path

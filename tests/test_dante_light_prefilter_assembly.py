@@ -29,6 +29,7 @@ def _write_source(tmp_path, role, rows, split_hash, representation):
     }
     if role != "shadow":
         ledger["role"] = role
+    ledger["ledger_digest"] = canonical_json_sha256(ledger)
     path = directory / "ledger.json"
     path.write_text(json.dumps(ledger), encoding="utf-8")
     return path, ledger

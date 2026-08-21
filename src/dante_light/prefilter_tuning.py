@@ -37,6 +37,10 @@ def _sha256(path: Path) -> str:
 def _load_ledger(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     try:
         ledger = json.loads(path.read_text(encoding="utf-8"))
+        ledger_body = dict(ledger)
+        declared_digest = ledger_body.pop("ledger_digest", None)
+        if declared_digest != canonical_json_sha256(ledger_body):
+            raise ContractError(f"feature ledger digest mismatch: {path}")
         rows_path = path.parent / ledger["rows_path"]
         if ledger.get("status") != "complete":
             raise ContractError(f"feature ledger is not complete: {path}")

@@ -101,6 +101,10 @@ def _require_sha256(value: Any, label: str) -> str:
 
 
 def _validate_contract(payload: Mapping[str, Any]) -> None:
+    body = dict(payload)
+    declared_digest = body.pop("contract_digest", None)
+    if declared_digest != canonical_json_sha256(body):
+        raise ContractError("evaluation contract digest mismatch")
     if payload.get("schema_version") != SCHEMA_VERSION:
         raise ContractError("unsupported prefilter evaluation contract schema")
     if payload.get("status") != "locked_before_evaluation":
@@ -184,6 +188,10 @@ def _validate_contract(payload: Mapping[str, Any]) -> None:
 def _validate_ledger(
     payload: Mapping[str, Any], rows_path: Path, tuning_path: Path, contract: Mapping[str, Any]
 ) -> None:
+    body = dict(payload)
+    declared_digest = body.pop("ledger_digest", None)
+    if declared_digest != canonical_json_sha256(body):
+        raise ContractError("feature-ledger digest mismatch")
     if payload.get("schema_version") != SCHEMA_VERSION:
         raise ContractError("unsupported feature-ledger schema")
     if payload.get("status") != "complete":
