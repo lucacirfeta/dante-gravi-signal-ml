@@ -119,6 +119,11 @@ python scripts/build_dante_light_prefilter_cohort_features.py \
   --split config/dante_light_prefilter_splits_v1.json \
   --role robust_candidate --output-dir /external/cache/l4_robust \
   --strain-source local-only
+
+python scripts/build_dante_light_prefilter_cohort_features.py \
+  --split config/dante_light_prefilter_splits_v1.json \
+  --role background --output-dir /external/cache/l4_background \
+  --strain-source auto
 ```
 
 The known-glitch command is identical with `--role known_glitch` and normally
@@ -136,3 +141,42 @@ python scripts/build_dante_light_prefilter_injection_features.py \
 
 Every reconstructed row must reproduce its published detector SNR before the
 injected-strain hash and cheap features are accepted.
+
+Thresholds are then chosen strictly from the frozen development partitions.
+The tuner verifies every source-ledger SHA256, role split, detector and
+morphology cell before searching the two-dimensional operating-point grid:
+
+```bash
+python scripts/tune_dante_light_prefilter.py \
+  --background /external/cache/l4_background/background_feature_ledger_v1.json \
+  --robust /external/cache/l4_robust/robust_candidate_feature_ledger_v1.json \
+  --known /external/cache/l4_known/known_glitch_feature_ledger_v1.json \
+  --injection /external/cache/l4_injection/injection_feature_ledger_v1.json \
+  --output /external/cache/l4_final/threshold_tuning_v1.json
+```
+
+If and only if tuning returns `PASS`, assemble the later shadow rows and the
+held-out control partitions. Assembly copies the tuning artifact beside the
+contract, binds every source and split hash, and never enables routing:
+
+```bash
+python scripts/assemble_dante_light_prefilter_evaluation.py \
+  --background /external/cache/l4_background/background_feature_ledger_v1.json \
+  --shadow /external/cache/l4_o4b/shadow_feature_ledger_v1.json \
+  --robust /external/cache/l4_robust/robust_candidate_feature_ledger_v1.json \
+  --known /external/cache/l4_known/known_glitch_feature_ledger_v1.json \
+  --injection /external/cache/l4_injection/injection_feature_ledger_v1.json \
+  --tuning /external/cache/l4_final/threshold_tuning_v1.json \
+  --output-dir /external/cache/l4_final
+
+python scripts/evaluate_dante_light_prefilter.py \
+  --contract /external/cache/l4_final/evaluation_contract_v1.json \
+  --ledger /external/cache/l4_final/evaluation_feature_ledger_v1.json \
+  --output /external/cache/l4_final/evaluation_result_v1.json
+```
+
+These large, regenerable experiment products belong in the chosen external
+cache (for this project, normally `E:\\dante_cache`), not in
+`data/production`. The compact JSON result is the machine-readable final
+report; a `PASS` means the research experiment met its preregistered gates,
+not that the prefilter has been promoted into DANTE-Light.
