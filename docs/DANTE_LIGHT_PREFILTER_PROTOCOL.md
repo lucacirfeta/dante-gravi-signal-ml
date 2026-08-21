@@ -124,4 +124,15 @@ python scripts/build_dante_light_prefilter_cohort_features.py \
 The known-glitch command is identical with `--role known_glitch` and normally
 uses `--strain-source gwosc-only` unless a verified O3b mirror is configured.
 Injection rows require deterministic reconstruction in raw strain and are not
-accepted by the real-strain cohort command.
+accepted by the real-strain cohort command. In the pinned WSL/LALSuite
+environment, reconstruct them with:
+
+```bash
+python scripts/build_dante_light_prefilter_injection_features.py \
+  --split config/dante_light_prefilter_splits_v1.json \
+  --trials data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv \
+  --output-dir /external/cache/l4_injection
+```
+
+Every reconstructed row must reproduce its published detector SNR before the
+injected-strain hash and cheap features are accepted.

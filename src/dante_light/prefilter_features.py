@@ -231,6 +231,7 @@ def build_split_feature_ledger(
                 "strain_sha256": prepared.strain_sha256,
                 "features": asdict(prepared.features),
                 "timings": prepared.timings,
+                "preparation_metadata": prepared.metadata,
                 "cohort_id": source["cohort_id"],
             }
             stream.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")

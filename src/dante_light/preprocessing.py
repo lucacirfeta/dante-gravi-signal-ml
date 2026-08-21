@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import hashlib
 import time
 
@@ -25,6 +25,7 @@ class PreparedPrefilterFeatures:
     features: "ExcessEnergyFeatures"
     strain_sha256: str
     timings: dict[str, float]
+    metadata: dict[str, float | str] = field(default_factory=dict)
 
 
 def stage_canonical_strain(
