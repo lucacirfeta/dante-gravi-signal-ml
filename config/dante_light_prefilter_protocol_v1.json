@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "status": "frozen",
+  "protocol_id": "dante-light-l4-prefilter-v1",
+  "cohort_split_seed": 20260821,
+  "required_detectors": [
+    "H1",
+    "L1"
+  ],
+  "required_morphologies_by_role": {
+    "known_glitch": [
+      "Blip",
+      "KoiFish",
+      "ScatteredLight"
+    ],
+    "injection": [
+      "BBH_30_30",
+      "BBH_10_10",
+      "NSBH_10_1.4"
+    ]
+  },
+  "audit": {
+    "fraction": 0.05,
+    "seed": 20260821
+  },
+  "tuning": {
+    "grid_cells": 65,
+    "minimum_development_retention": 0.9,
+    "minimum_effective_reduction": 0.5,
+    "minimum_background_per_detector": 200,
+    "minimum_group_n_by_role": {
+      "robust_candidate": 20,
+      "known_glitch": 12,
+      "injection": 35
+    }
+  },
+  "evaluation": {
+    "minimum_compute_reduction": 0.5,
+    "minimum_exact_escalates": 18,
+    "wilson_confidence": 0.95,
+    "minimum_retention_by_role": {
+      "robust_candidate": 0.9,
+      "known_glitch": 0.9,
+      "injection": 0.9
+    },
+    "minimum_wilson_lower_by_role": {
+      "robust_candidate": 0.8,
+      "known_glitch": 0.8,
+      "injection": 0.8
+    },
+    "minimum_group_n_by_role": {
+      "robust_candidate": 20,
+      "known_glitch": 18,
+      "injection": 90
+    }
+  },
+  "protocol_digest": "b8a2a21ed933f116297425af2c60ff1b04480de2e0203e2f5d9017fbcb050a53"
+}

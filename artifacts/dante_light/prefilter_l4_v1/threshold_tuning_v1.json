@@ -1,0 +1,148 @@
+{
+  "artifact_digest": "2d16c67f277fa43c14e0e4474dc4fbceab863e0e461b0d229cd1ee5249f8e3f4",
+  "cohort_split_sha256_by_role": {
+    "background": "e8c72b67c92adc686c15f343ce3271f5aca7fbe93cbb5015ba4635503fe647db",
+    "injection": "62cf427773a3bd6a381ad92cff203bb2d46c254beb0b9f76a5e32e7ee0e1ee0f",
+    "known_glitch": "bcfaf601f553f90949c293435885faa9a2502291db94928b1fa6907376ea3cee",
+    "robust_candidate": "4aae3bc2220b2d185c45a989e307ee84a9cc7e44888b3ff5d74254daf20ca38a"
+  },
+  "evaluation_outcomes_used": [],
+  "operating_point": {
+    "background_n": 552,
+    "band_fraction_threshold": 0.012430641922920281,
+    "crest_threshold": 4.281442138656343,
+    "development_groups": {
+      "injection/H1/BBH_10_10": {
+        "n": 35,
+        "rate": 0.9142857142857143,
+        "retained": 32
+      },
+      "injection/H1/BBH_30_30": {
+        "n": 35,
+        "rate": 0.9142857142857143,
+        "retained": 32
+      },
+      "injection/H1/NSBH_10_1.4": {
+        "n": 35,
+        "rate": 0.9428571428571428,
+        "retained": 33
+      },
+      "injection/L1/BBH_10_10": {
+        "n": 35,
+        "rate": 0.9714285714285714,
+        "retained": 34
+      },
+      "injection/L1/BBH_30_30": {
+        "n": 35,
+        "rate": 0.9428571428571428,
+        "retained": 33
+      },
+      "injection/L1/NSBH_10_1.4": {
+        "n": 35,
+        "rate": 0.9142857142857143,
+        "retained": 32
+      },
+      "known_glitch/H1/Blip": {
+        "n": 12,
+        "rate": 0.9166666666666666,
+        "retained": 11
+      },
+      "known_glitch/H1/KoiFish": {
+        "n": 12,
+        "rate": 1.0,
+        "retained": 12
+      },
+      "known_glitch/H1/ScatteredLight": {
+        "n": 12,
+        "rate": 0.9166666666666666,
+        "retained": 11
+      },
+      "known_glitch/L1/Blip": {
+        "n": 12,
+        "rate": 1.0,
+        "retained": 12
+      },
+      "known_glitch/L1/KoiFish": {
+        "n": 12,
+        "rate": 1.0,
+        "retained": 12
+      },
+      "known_glitch/L1/ScatteredLight": {
+        "n": 12,
+        "rate": 1.0,
+        "retained": 12
+      },
+      "robust_candidate/H1/unknown": {
+        "n": 20,
+        "rate": 0.95,
+        "retained": 19
+      },
+      "robust_candidate/L1/unknown": {
+        "n": 20,
+        "rate": 1.0,
+        "retained": 20
+      }
+    },
+    "effective_background_reduction": 0.06702898550724634,
+    "would_call_dino": 515
+  },
+  "outcome_fields_used": [
+    "retention_target",
+    "role",
+    "detector",
+    "morphology"
+  ],
+  "protocol": {
+    "file_name": "dante_light_prefilter_protocol_v1.json",
+    "protocol_digest": "b8a2a21ed933f116297425af2c60ff1b04480de2e0203e2f5d9017fbcb050a53",
+    "protocol_id": "dante-light-l4-prefilter-v1",
+    "sha256": "bfee9947d61bf4944d20a3e95ba3a32c7b3f94980d02ff1b7b0373b223d4bb0c"
+  },
+  "representation_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+  "routing_enabled": false,
+  "schema_version": 1,
+  "scientific_mode": "development_only_prefilter_tuning",
+  "search": {
+    "audit_fraction": 0.05,
+    "audit_seed": 20260821,
+    "band_grid_n": 66,
+    "crest_grid_n": 66,
+    "feature_rule": "crest_factor >= crest OR peak_band_fraction >= band",
+    "grid_cells_requested": 65,
+    "grid_method": "equally_spaced_empirical_quantiles",
+    "minimum_background_per_detector": 200,
+    "minimum_development_retention": 0.9,
+    "minimum_effective_reduction": 0.5
+  },
+  "source_ledgers": [
+    {
+      "file_name": "background_feature_ledger_v1.json",
+      "role": "background",
+      "role_split_sha256": "e8c72b67c92adc686c15f343ce3271f5aca7fbe93cbb5015ba4635503fe647db",
+      "rows_sha256": "20a6dfab1e787ab54a1311744d983e5db5258df18dcd51ff7e541c07d41897e3",
+      "sha256": "1570cab0d0ee91a5ffbe8f8c8690b15beb1397cc905ce6531ad6f34c88267f1c"
+    },
+    {
+      "file_name": "injection_feature_ledger_v1.json",
+      "role": "injection",
+      "role_split_sha256": "62cf427773a3bd6a381ad92cff203bb2d46c254beb0b9f76a5e32e7ee0e1ee0f",
+      "rows_sha256": "3c0893c657680f912ee6d937db10155af97fffbea2ab5d4864017545f4678537",
+      "sha256": "898a4a06cddd91dc4a377a19a545b651f35c20a17fd7c73932036662c2b7f110"
+    },
+    {
+      "file_name": "known_glitch_feature_ledger_v1.json",
+      "role": "known_glitch",
+      "role_split_sha256": "bcfaf601f553f90949c293435885faa9a2502291db94928b1fa6907376ea3cee",
+      "rows_sha256": "74a203ebe4357db6e7551a66fd3e7f33cfdc7ea9b12a345775033145d8bbca52",
+      "sha256": "0bdf05f01bbea46b9ec831d173b630c996fca9fef383bce98aaa9e76d255c9e5"
+    },
+    {
+      "file_name": "robust_candidate_feature_ledger_v1.json",
+      "role": "robust_candidate",
+      "role_split_sha256": "4aae3bc2220b2d185c45a989e307ee84a9cc7e44888b3ff5d74254daf20ca38a",
+      "rows_sha256": "e92a4e8d4052120fcd1d4c55b529bea04ce78b591f7a30be41c5b0e71d317547",
+      "sha256": "37d02f2ec36934fb9510103d8c83a4bd690f8a47c4883743fc60466b57a79201"
+    }
+  ],
+  "status": "NOT_READY"
+}

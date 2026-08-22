@@ -13,6 +13,10 @@ if str(ROOT) not in sys.path:
 
 from src.dante_light.contracts import ContractError
 from src.dante_light.prefilter_assembly import assemble_prefilter_evaluation
+from src.dante_light.prefilter_protocol import (
+    DEFAULT_PROTOCOL_PATH,
+    load_prefilter_protocol,
+)
 
 
 def main() -> int:
@@ -24,6 +28,7 @@ def main() -> int:
     parser.add_argument("--injection", required=True, type=Path)
     parser.add_argument("--tuning", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL_PATH)
     args = parser.parse_args()
     try:
         contract, ledger = assemble_prefilter_evaluation(
@@ -36,6 +41,7 @@ def main() -> int:
             },
             tuning_path=args.tuning,
             output_dir=args.output_dir,
+            protocol=load_prefilter_protocol(args.protocol),
         )
     except ContractError as exc:
         print(f"NOT_READY: {exc}", file=sys.stderr)

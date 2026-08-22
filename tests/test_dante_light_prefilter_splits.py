@@ -7,12 +7,17 @@ from src.dante_light.prefilter_splits import (
     load_prefilter_splits,
     write_prefilter_splits,
 )
+from src.dante_light.prefilter_protocol import load_prefilter_protocol
+
+
+SEED = int(load_prefilter_protocol().payload["cohort_split_seed"])
 
 
 def test_prefilter_splits_are_deterministic_disjoint_and_powered():
-    first = build_prefilter_splits(root=".")
-    second = build_prefilter_splits(root=".")
+    first = build_prefilter_splits(root=".", seed=SEED)
+    second = build_prefilter_splits(root=".", seed=SEED)
     assert first == second
+    assert first == load_prefilter_splits("config/dante_light_prefilter_splits_v1.json")
     assert first["status"] == "locked_before_feature_extraction"
 
     background = first["cohorts"]["background"]
@@ -62,6 +67,6 @@ def test_prefilter_splits_are_deterministic_disjoint_and_powered():
 
 
 def test_prefilter_split_jsonl_round_trip_is_exact(tmp_path):
-    expected = build_prefilter_splits(root=".")
+    expected = build_prefilter_splits(root=".", seed=SEED)
     path = write_prefilter_splits(expected, tmp_path / "splits.json")
     assert load_prefilter_splits(path) == expected

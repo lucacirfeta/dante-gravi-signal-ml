@@ -260,6 +260,8 @@ docs/
 !docs/
 docs/*
 !docs/GITIGNORE_AUDIT.md
+!docs/DANTE_LIGHT_L4_PREFILTER.md
+!docs/DANTE_LIGHT_L4_PREFILTER_NOT_READY_2026-08-22.md
 runs/
 
 # Raw HDF5 strain data downloads

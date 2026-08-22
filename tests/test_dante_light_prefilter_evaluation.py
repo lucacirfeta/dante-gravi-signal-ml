@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import hashlib
 import json
 
@@ -7,9 +8,34 @@ import pytest
 
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_evaluation import evaluate_prefilter, wilson_interval
+from src.dante_light.prefilter_protocol import load_prefilter_protocol
 
 
 def _write_case(tmp_path, *, reduction_target=0.5, tamper=False):
+    protocol_payload = deepcopy(dict(load_prefilter_protocol().payload))
+    protocol_payload["protocol_id"] = "fixture-prefilter-v1"
+    protocol_payload["required_detectors"] = ["H1"]
+    protocol_payload["required_morphologies_by_role"] = {
+        "known_glitch": ["fixture_glitch"],
+        "injection": ["fixture_injection"],
+    }
+    protocol_payload["audit"] = {"fraction": 0.25, "seed": 42}
+    protocol_payload["evaluation"]["minimum_compute_reduction"] = reduction_target
+    protocol_payload["evaluation"]["minimum_group_n_by_role"] = {
+        role: 18 for role in ("robust_candidate", "known_glitch", "injection")
+    }
+    protocol_payload["evaluation"]["minimum_retention_by_role"]["robust_candidate"] = 1.0
+    protocol_payload.pop("protocol_digest")
+    protocol_payload["protocol_digest"] = canonical_json_sha256(protocol_payload)
+    protocol_path = tmp_path / "fixture_protocol.json"
+    protocol_path.write_text(json.dumps(protocol_payload), encoding="utf-8")
+    protocol = load_prefilter_protocol(protocol_path)
+    protocol_ref = {
+        "path": protocol_path.name,
+        "sha256": protocol.sha256,
+        "protocol_id": protocol.payload["protocol_id"],
+        "protocol_digest": protocol.payload["protocol_digest"],
+    }
     tuning_path = tmp_path / "tuning.json"
     tuning_path.write_text('{"status":"frozen"}\n', encoding="utf-8")
     tuning = {
@@ -34,6 +60,7 @@ def _write_case(tmp_path, *, reduction_target=0.5, tamper=False):
         "audit_seed": 42,
         "minimum_compute_reduction": reduction_target,
         "minimum_exact_escalates": 18,
+        "wilson_confidence": 0.95,
         "representation_sha256": representation_sha256,
         "evaluation_start_gps_by_detector": {"H1": 1000.0},
         "required_detectors": ["H1"],
@@ -43,6 +70,7 @@ def _write_case(tmp_path, *, reduction_target=0.5, tamper=False):
         },
         "cohort_split_sha256_by_role": split_hashes,
         "threshold_tuning_artifact": tuning,
+        "protocol_artifact": protocol_ref,
         "required_groups": [
             {
                 "name": "robust",
@@ -133,6 +161,7 @@ def _write_case(tmp_path, *, reduction_target=0.5, tamper=False):
         "feature_source": "canonical_whitened_subwindow_v1",
         "outcome_fields_used_for_threshold_selection": [],
         "threshold_tuning_artifact": tuning,
+        "protocol_artifact": protocol_ref,
         "representation_sha256": representation_sha256,
         "cohort_split_sha256_by_role": split_hashes,
         "rows_path": rows_path.name,
@@ -174,5 +203,5 @@ def test_prefilter_evaluation_rejects_tampered_rows(tmp_path):
 
 
 def test_wilson_interval_bounds_point_estimate():
-    lower, upper = wilson_interval(9, 10)
+    lower, upper = wilson_interval(9, 10, confidence=0.95)
     assert lower < 0.9 < upper

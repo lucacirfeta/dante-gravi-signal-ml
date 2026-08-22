@@ -11,12 +11,11 @@ from typing import Any, Mapping
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter import ExcessEnergyFeatures
 from src.dante_light.prefilter_evaluation import FEATURE_SOURCE
+from src.dante_light.prefilter_protocol import PrefilterProtocol
 
 
 CONTROL_ROLES = ("robust_candidate", "known_glitch", "injection")
 ALL_SOURCE_ROLES = ("background", "shadow", *CONTROL_ROLES)
-KNOWN_MORPHOLOGIES = ("Blip", "KoiFish", "ScatteredLight")
-INJECTION_SYSTEMS = ("BBH_30_30", "BBH_10_10", "NSBH_10_1.4")
 
 
 def _sha256(path: Path) -> str:
@@ -91,6 +90,7 @@ def _load_source(path: Path, role: str) -> tuple[dict[str, Any], list[dict[str, 
 def _validate_tuning(
     tuning: Mapping[str, Any],
     sources: Mapping[str, tuple[Path, dict[str, Any], list[dict[str, Any]]]],
+    protocol: PrefilterProtocol,
 ) -> None:
     if tuning.get("status") != "PASS" or tuning.get("routing_enabled") is not False:
         raise ContractError("threshold tuning is not a research-only PASS")
@@ -98,6 +98,29 @@ def _validate_tuning(
         raise ContractError("threshold tuning mode is invalid")
     if tuning.get("evaluation_outcomes_used") != []:
         raise ContractError("evaluation outcomes entered threshold tuning")
+    if tuning.get("protocol") != protocol.reference:
+        raise ContractError("threshold tuning is not bound to the frozen protocol")
+    search = tuning.get("search")
+    tuning_rules = protocol.payload["tuning"]
+    audit = protocol.payload["audit"]
+    expected_search = {
+        "grid_cells_requested": int(tuning_rules["grid_cells"]),
+        "minimum_development_retention": float(
+            tuning_rules["minimum_development_retention"]
+        ),
+        "minimum_effective_reduction": float(
+            tuning_rules["minimum_effective_reduction"]
+        ),
+        "minimum_background_per_detector": int(
+            tuning_rules["minimum_background_per_detector"]
+        ),
+        "audit_fraction": float(audit["fraction"]),
+        "audit_seed": int(audit["seed"]),
+    }
+    if not isinstance(search, dict) or any(
+        search.get(key) != value for key, value in expected_search.items()
+    ):
+        raise ContractError("threshold tuning search differs from frozen protocol")
     body = dict(tuning)
     declared = body.pop("artifact_digest", None)
     if declared != canonical_json_sha256(body):
@@ -130,20 +153,22 @@ def _validate_tuning(
             raise ContractError(f"threshold tuning source changed for {role}")
 
 
-def _group_rules(detectors: tuple[str, ...]) -> list[dict[str, Any]]:
+def _group_rules(
+    detectors: tuple[str, ...], protocol: PrefilterProtocol
+) -> list[dict[str, Any]]:
+    evaluation = protocol.payload["evaluation"]
+    morphologies_by_role = protocol.payload["required_morphologies_by_role"]
     rules: list[dict[str, Any]] = []
     for detector in detectors:
         rules.append({
             "name": f"robust_candidate_{detector}",
             "filters": {"role": "robust_candidate", "detector": detector, "retention_target": True},
-            "minimum_n": 20,
-            "minimum_retention": 0.9,
-            "minimum_wilson_lower": 0.8,
+            "minimum_n": int(evaluation["minimum_group_n_by_role"]["robust_candidate"]),
+            "minimum_retention": float(evaluation["minimum_retention_by_role"]["robust_candidate"]),
+            "minimum_wilson_lower": float(evaluation["minimum_wilson_lower_by_role"]["robust_candidate"]),
         })
-    for role, morphologies, minimum_n in (
-        ("known_glitch", KNOWN_MORPHOLOGIES, 18),
-        ("injection", INJECTION_SYSTEMS, 90),
-    ):
+    for role in ("known_glitch", "injection"):
+        morphologies = morphologies_by_role[role]
         for detector in detectors:
             for morphology in morphologies:
                 rules.append({
@@ -154,9 +179,9 @@ def _group_rules(detectors: tuple[str, ...]) -> list[dict[str, Any]]:
                         "morphology": morphology,
                         "retention_target": True,
                     },
-                    "minimum_n": minimum_n,
-                    "minimum_retention": 0.9,
-                    "minimum_wilson_lower": 0.8,
+                    "minimum_n": int(evaluation["minimum_group_n_by_role"][role]),
+                    "minimum_retention": float(evaluation["minimum_retention_by_role"][role]),
+                    "minimum_wilson_lower": float(evaluation["minimum_wilson_lower_by_role"][role]),
                 })
     return rules
 
@@ -166,6 +191,7 @@ def assemble_prefilter_evaluation(
     ledgers: Mapping[str, str | Path],
     tuning_path: str | Path,
     output_dir: str | Path,
+    protocol: PrefilterProtocol,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Create the immutable contract and evaluation-only feature ledger."""
 
@@ -185,7 +211,7 @@ def assemble_prefilter_evaluation(
 
     tuning_path = Path(tuning_path).resolve()
     tuning = _json(tuning_path)
-    _validate_tuning(tuning, sources)
+    _validate_tuning(tuning, sources, protocol)
     if tuning.get("representation_sha256") != representation_sha256:
         raise ContractError("threshold tuning representation changed")
     operating_point = tuning.get("operating_point")
@@ -206,8 +232,11 @@ def assemble_prefilter_evaluation(
 
     shadow_rows = sources["shadow"][2]
     detectors = tuple(sorted({row["detector"] for row in shadow_rows}))
-    if detectors != ("H1", "L1"):
-        raise ContractError(f"shadow evaluation requires H1 and L1, observed {detectors}")
+    required_detectors = tuple(protocol.payload["required_detectors"])
+    if detectors != tuple(sorted(required_detectors)):
+        raise ContractError(
+            f"shadow evaluation requires {required_detectors}, observed {detectors}"
+        )
     starts = {
         detector: min(float(row["window"]["gps_start"]) for row in shadow_rows if row["detector"] == detector)
         for detector in detectors
@@ -221,6 +250,15 @@ def assemble_prefilter_evaluation(
     if tuning_path != local_tuning:
         shutil.copyfile(tuning_path, local_tuning)
     tuning_ref = {"path": local_tuning.name, "sha256": _sha256(local_tuning)}
+    local_protocol = output_dir / protocol.path.name
+    if protocol.path != local_protocol:
+        shutil.copyfile(protocol.path, local_protocol)
+    protocol_ref = {
+        "path": local_protocol.name,
+        **{key: value for key, value in protocol.reference.items() if key != "file_name"},
+    }
+    evaluation = protocol.payload["evaluation"]
+    morphologies = protocol.payload["required_morphologies_by_role"]
     contract = {
         "schema_version": 1,
         "status": "locked_before_evaluation",
@@ -230,18 +268,20 @@ def assemble_prefilter_evaluation(
         "band_fraction_threshold": float(operating_point["band_fraction_threshold"]),
         "audit_fraction": float(tuning["search"]["audit_fraction"]),
         "audit_seed": int(tuning["search"]["audit_seed"]),
-        "minimum_compute_reduction": 0.5,
-        "minimum_exact_escalates": 18,
+        "minimum_compute_reduction": float(evaluation["minimum_compute_reduction"]),
+        "minimum_exact_escalates": int(evaluation["minimum_exact_escalates"]),
+        "wilson_confidence": float(evaluation["wilson_confidence"]),
         "representation_sha256": representation_sha256,
         "evaluation_start_gps_by_detector": starts,
-        "required_detectors": list(detectors),
+        "required_detectors": list(required_detectors),
         "required_morphologies_by_role": {
-            "known_glitch": list(KNOWN_MORPHOLOGIES),
-            "injection": list(INJECTION_SYSTEMS),
+            "known_glitch": list(morphologies["known_glitch"]),
+            "injection": list(morphologies["injection"]),
         },
         "cohort_split_sha256_by_role": split_hashes,
         "threshold_tuning_artifact": tuning_ref,
-        "required_groups": _group_rules(detectors),
+        "protocol_artifact": protocol_ref,
+        "required_groups": _group_rules(detectors, protocol),
     }
     contract["contract_digest"] = canonical_json_sha256(contract)
     contract_path = output_dir / "evaluation_contract_v1.json"
@@ -269,6 +309,7 @@ def assemble_prefilter_evaluation(
         "feature_source": FEATURE_SOURCE,
         "outcome_fields_used_for_threshold_selection": [],
         "threshold_tuning_artifact": tuning_ref,
+        "protocol_artifact": protocol_ref,
         "representation_sha256": representation_sha256,
         "cohort_split_sha256_by_role": split_hashes,
         "row_count": len(evaluation_rows),

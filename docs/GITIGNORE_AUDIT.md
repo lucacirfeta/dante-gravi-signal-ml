@@ -50,4 +50,9 @@ The 73 MB native O4a index remains outside Git. Its path and SHA256 are
 versioned in `config/reference_artifacts.json` and the published reference
 bundle is acquired and verified by `scripts/manage_reference_artifacts.py`.
 
+The 312 MB P5 token cache also remains ignored. L4 split regeneration uses the
+compact, self-hashed candidate-key projection in
+`config/dante_light_prefilter_robust_candidates_v1.json`; it records the
+original cache path and SHA256 and reproduces the frozen split hashes exactly.
+
 This invariant is checked in `tests/test_paper_reproducibility_bundle.py`.

@@ -16,6 +16,7 @@ from typing import Any, Mapping
 
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter import ExcessEnergyFeatures, PrefilterContract
+from src.dante_light.prefilter_protocol import PrefilterProtocol, load_prefilter_protocol
 
 
 SCHEMA_VERSION = 1
@@ -35,7 +36,7 @@ def _finite_fraction(value: Any, name: str) -> float:
     return result
 
 
-def wilson_interval(k: int, n: int, confidence: float = 0.95) -> tuple[float, float]:
+def wilson_interval(k: int, n: int, confidence: float) -> tuple[float, float]:
     """Return a two-sided Wilson score interval without a SciPy dependency."""
 
     if n <= 0 or not 0 <= k <= n:
@@ -100,7 +101,20 @@ def _require_sha256(value: Any, label: str) -> str:
     return digest
 
 
-def _validate_contract(payload: Mapping[str, Any]) -> None:
+def _protocol_contract_reference(protocol: PrefilterProtocol) -> dict[str, str]:
+    return {
+        "path": protocol.path.name,
+        **{
+            key: value
+            for key, value in protocol.reference.items()
+            if key != "file_name"
+        },
+    }
+
+
+def _validate_contract(
+    payload: Mapping[str, Any], protocol: PrefilterProtocol
+) -> None:
     body = dict(payload)
     declared_digest = body.pop("contract_digest", None)
     if declared_digest != canonical_json_sha256(body):
@@ -113,28 +127,38 @@ def _validate_contract(payload: Mapping[str, Any]) -> None:
         raise ContractError("evaluation requires canonical whitened feature source")
     if not payload.get("contract_id"):
         raise ContractError("evaluation contract requires contract_id")
-    if _finite_fraction(payload["minimum_compute_reduction"], "minimum_compute_reduction") < 0.5:
-        raise ContractError("L4 requires at least 50% effective compute reduction")
-    if int(payload.get("minimum_exact_escalates", 0)) < 18:
-        raise ContractError("L4 requires at least 18 exact escalates")
+    if payload.get("protocol_artifact") != _protocol_contract_reference(protocol):
+        raise ContractError("evaluation contract is not bound to the frozen protocol")
+    evaluation = protocol.payload["evaluation"]
+    if _finite_fraction(
+        payload["minimum_compute_reduction"], "minimum_compute_reduction"
+    ) != float(evaluation["minimum_compute_reduction"]):
+        raise ContractError("compute-reduction gate differs from frozen protocol")
+    if int(payload.get("minimum_exact_escalates", 0)) != int(
+        evaluation["minimum_exact_escalates"]
+    ):
+        raise ContractError("exact-escalate gate differs from frozen protocol")
+    if _finite_fraction(payload["wilson_confidence"], "wilson_confidence") != float(
+        evaluation["wilson_confidence"]
+    ):
+        raise ContractError("Wilson confidence differs from frozen protocol")
     _require_sha256(payload.get("representation_sha256"), "representation_sha256")
     audit_fraction = _finite_fraction(payload["audit_fraction"], "audit_fraction")
-    if audit_fraction <= 0.0:
-        raise ContractError("L4 requires a non-zero rejected-window audit")
+    if audit_fraction != float(protocol.payload["audit"]["fraction"]):
+        raise ContractError("audit fraction differs from frozen protocol")
+    if int(payload["audit_seed"]) != int(protocol.payload["audit"]["seed"]):
+        raise ContractError("audit seed differs from frozen protocol")
     cutoffs = payload.get("evaluation_start_gps_by_detector")
     if not isinstance(cutoffs, dict) or not cutoffs:
         raise ContractError("evaluation start GPS is required per detector")
     for detector, value in cutoffs.items():
         WindowIdentity(run="TEST", detector=detector, gps_start=float(value))
     detectors = payload.get("required_detectors")
-    if not isinstance(detectors, list) or set(detectors) != set(cutoffs):
+    if detectors != protocol.payload["required_detectors"] or set(detectors) != set(cutoffs):
         raise ContractError("required_detectors must match evaluation GPS detectors")
     morphologies = payload.get("required_morphologies_by_role")
-    if not isinstance(morphologies, dict) or set(morphologies) != {"known_glitch", "injection"}:
-        raise ContractError("known-glitch and injection morphology grids are required")
-    for role, values in morphologies.items():
-        if not isinstance(values, list) or not values or len(values) != len(set(values)):
-            raise ContractError(f"{role} morphologies must be non-empty and unique")
+    if morphologies != protocol.payload["required_morphologies_by_role"]:
+        raise ContractError("morphology grids differ from frozen protocol")
     split_hashes = payload.get("cohort_split_sha256_by_role")
     if not isinstance(split_hashes, dict) or set(split_hashes) != ALLOWED_ROLES:
         raise ContractError("every evaluation role requires a frozen split artifact")
@@ -150,17 +174,30 @@ def _validate_contract(payload: Mapping[str, Any]) -> None:
         if not name or name in names:
             raise ContractError("required group names must be non-empty and unique")
         names.add(name)
-        if int(rule.get("minimum_n", 0)) < 18:
-            raise ContractError(f"group {name} minimum_n must be at least 18")
-        if _finite_fraction(rule["minimum_retention"], f"{name}.minimum_retention") < 0.9:
-            raise ContractError(f"group {name} minimum retention must be at least 0.9")
-        if _finite_fraction(rule["minimum_wilson_lower"], f"{name}.minimum_wilson_lower") < 0.8:
-            raise ContractError(f"group {name} Wilson lower bound must be at least 0.8")
         filters = rule.get("filters")
         if not isinstance(filters, dict) or not filters:
             raise ContractError(f"group {name} requires explicit filters")
         if filters.get("role") in REQUIRED_SCIENTIFIC_ROLES:
             covered_roles.add(filters["role"])
+            role = filters["role"]
+            expected = {
+                "minimum_n": int(evaluation["minimum_group_n_by_role"][role]),
+                "minimum_retention": float(evaluation["minimum_retention_by_role"][role]),
+                "minimum_wilson_lower": float(
+                    evaluation["minimum_wilson_lower_by_role"][role]
+                ),
+            }
+            observed = {
+                "minimum_n": int(rule.get("minimum_n", 0)),
+                "minimum_retention": _finite_fraction(
+                    rule["minimum_retention"], f"{name}.minimum_retention"
+                ),
+                "minimum_wilson_lower": _finite_fraction(
+                    rule["minimum_wilson_lower"], f"{name}.minimum_wilson_lower"
+                ),
+            }
+            if observed != expected:
+                raise ContractError(f"group {name} gates differ from frozen protocol")
     missing_roles = REQUIRED_SCIENTIFIC_ROLES - covered_roles
     if missing_roles:
         raise ContractError(f"required scientific roles are not gated: {sorted(missing_roles)}")
@@ -181,12 +218,16 @@ def _validate_contract(payload: Mapping[str, Any]) -> None:
         for morphology in values
     )
     missing_filters = [expected for expected in required_filters if expected not in filters]
-    if missing_filters:
+    if missing_filters or len(filters) != len(required_filters):
         raise ContractError(f"detector/morphology retention gates are missing: {missing_filters}")
 
 
 def _validate_ledger(
-    payload: Mapping[str, Any], rows_path: Path, tuning_path: Path, contract: Mapping[str, Any]
+    payload: Mapping[str, Any],
+    rows_path: Path,
+    tuning_path: Path,
+    contract: Mapping[str, Any],
+    protocol: PrefilterProtocol,
 ) -> None:
     body = dict(payload)
     declared_digest = body.pop("ledger_digest", None)
@@ -200,6 +241,8 @@ def _validate_ledger(
         raise ContractError("feature ledger does not use canonical whitened features")
     if payload.get("outcome_fields_used_for_threshold_selection") != []:
         raise ContractError("evaluation outcomes were used for threshold selection")
+    if payload.get("protocol_artifact") != _protocol_contract_reference(protocol):
+        raise ContractError("feature ledger is not bound to the frozen protocol")
     if payload.get("rows_sha256") != _sha256_file(rows_path):
         raise ContractError("feature row SHA256 mismatch")
     if int(payload.get("row_count", -1)) <= 0:
@@ -243,11 +286,16 @@ def evaluate_prefilter(
     ledger_path = Path(ledger_path)
     contract = _load_json(contract_path)
     ledger = _load_json(ledger_path)
-    _validate_contract(contract)
+    protocol_record = contract.get("protocol_artifact", {})
+    protocol_path = _local_member(
+        contract_path.parent, protocol_record.get("path"), "protocol path"
+    )
+    protocol = load_prefilter_protocol(protocol_path)
+    _validate_contract(contract, protocol)
     rows_path = _local_member(ledger_path.parent, ledger["rows_path"], "rows_path")
     tuning = ledger.get("threshold_tuning_artifact", {})
     tuning_path = _local_member(ledger_path.parent, tuning.get("path"), "threshold tuning path")
-    _validate_ledger(ledger, rows_path, tuning_path, contract)
+    _validate_ledger(ledger, rows_path, tuning_path, contract, protocol)
     rows = _load_rows(rows_path)
     if len(rows) != int(ledger["row_count"]):
         raise ContractError("feature ledger row count mismatch")
@@ -308,7 +356,11 @@ def evaluate_prefilter(
         members = [row for row in evaluated if _matches(row, rule["filters"])]
         retained = sum(bool(row["selected"]) for row in members)
         n = len(members)
-        lower, upper = wilson_interval(retained, n) if n else (0.0, 0.0)
+        lower, upper = (
+            wilson_interval(retained, n, confidence=float(contract["wilson_confidence"]))
+            if n
+            else (0.0, 0.0)
+        )
         rate = retained / n if n else 0.0
         passed = (
             n >= int(rule["minimum_n"])
@@ -321,6 +373,10 @@ def evaluate_prefilter(
             "n": n,
             "retained": retained,
             "retention": rate,
+            "wilson_interval": {
+                "confidence": float(contract["wilson_confidence"]),
+                "bounds": [lower, upper],
+            },
             "wilson_ci95": [lower, upper],
             "status": "PASS" if passed else "FAIL",
         }
@@ -359,6 +415,11 @@ def evaluate_prefilter(
             "sha256": _sha256_file(ledger_path),
             "rows_path": rows_path.as_posix(),
             "rows_sha256": _sha256_file(rows_path),
+        },
+        "protocol": {
+            "path": protocol_path.as_posix(),
+            "sha256": protocol.sha256,
+            "protocol_digest": protocol.payload["protocol_digest"],
         },
         "coverage": {
             "windows": len(evaluated),

@@ -8,8 +8,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 
 
@@ -32,13 +30,36 @@ def _partition(rows: list[dict[str, Any]], *, development_n: int, seed: int) -> 
 
 def _robust_rows(root: Path, *, seed: int) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
     aggregate = root / "data/production/aggregated"
-    cache = aggregate / (
-        "dsd_index_stability_candidate_tokens_o4a_idxq4-64_queryq4-64_"
-        "q4-64_n40_s42_1154059b80ca.npz"
+    candidates_path = (
+        root / "config" / "dante_light_prefilter_robust_candidates_v1.json"
     )
     taxonomy = aggregate / "Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv"
-    with np.load(cache, allow_pickle=False) as payload:
-        keys = [str(value) for value in payload["candidate_keys"]]
+    candidates = json.loads(candidates_path.read_text(encoding="utf-8"))
+    body = dict(candidates)
+    declared_digest = body.pop("artifact_digest", None)
+    if declared_digest != canonical_json_sha256(body):
+        raise ContractError("robust-candidate manifest digest mismatch")
+    if (
+        candidates.get("schema_version") != 1
+        or candidates.get("status") != "frozen"
+        or candidates.get("role") != "robust_candidate"
+    ):
+        raise ContractError("robust-candidate manifest is not frozen")
+    keys = candidates.get("candidate_keys")
+    if (
+        not isinstance(keys, list)
+        or not keys
+        or len(keys) != len(set(keys))
+        or canonical_json_sha256(keys) != candidates.get("candidate_keys_sha256")
+    ):
+        raise ContractError("robust-candidate keys are invalid")
+    source_artifact = candidates.get("source_artifact")
+    if (
+        not isinstance(source_artifact, dict)
+        or set(source_artifact) != {"path", "sha256"}
+        or len(str(source_artifact["sha256"])) != 64
+    ):
+        raise ContractError("robust-candidate source provenance is invalid")
     by_key: dict[str, dict[str, str]] = {}
     with taxonomy.open(newline="", encoding="utf-8") as stream:
         for row in csv.DictReader(stream):
@@ -70,7 +91,7 @@ def _robust_rows(root: Path, *, seed: int) -> tuple[list[dict[str, Any]], list[d
             raise ContractError(f"expected 40 P5 robust rows for {detector}")
         _partition(selected, development_n=20, seed=seed)
     return rows, [
-        {"path": cache.relative_to(root).as_posix(), "sha256": _sha256(cache)},
+        dict(source_artifact),
         {"path": taxonomy.relative_to(root).as_posix(), "sha256": _sha256(taxonomy)},
     ]
 
@@ -189,7 +210,7 @@ def _background_rows(root: Path, *, seed: int) -> tuple[list[dict[str, Any]], li
     ]
 
 
-def build_prefilter_splits(*, root: str | Path, seed: int = 20260821) -> dict[str, Any]:
+def build_prefilter_splits(*, root: str | Path, seed: int) -> dict[str, Any]:
     root = Path(root).resolve()
     builders = {
         "background": _background_rows,

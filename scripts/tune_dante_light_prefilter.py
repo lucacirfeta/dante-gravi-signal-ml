@@ -14,6 +14,10 @@ if str(ROOT) not in sys.path:
 from src.dante_light.contracts import ContractError
 from src.dante_light.prefilter_tuning import tune_prefilter, write_tuning_result
 from src.dante_light.prefilter_splits import load_prefilter_splits
+from src.dante_light.prefilter_protocol import (
+    DEFAULT_PROTOCOL_PATH,
+    load_prefilter_protocol,
+)
 
 
 def main() -> int:
@@ -28,9 +32,13 @@ def main() -> int:
         default=ROOT / "config/dante_light_prefilter_splits_v1.json",
     )
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL_PATH)
     args = parser.parse_args()
     try:
+        protocol = load_prefilter_protocol(args.protocol)
         split = load_prefilter_splits(args.split)
+        if int(split["seed"]) != int(protocol.payload["cohort_split_seed"]):
+            raise ContractError("cohort split seed differs from frozen protocol")
         expected_split_hashes = {
             role: cohort["split_sha256"] for role, cohort in split["cohorts"].items()
         }
@@ -42,6 +50,7 @@ def main() -> int:
                 "injection": args.injection,
             },
             expected_split_hashes=expected_split_hashes,
+            protocol=protocol,
         )
         write_tuning_result(result, args.output)
     except ContractError as exc:

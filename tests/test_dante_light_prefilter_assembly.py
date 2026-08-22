@@ -7,6 +7,7 @@ import pytest
 
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_assembly import assemble_prefilter_evaluation
+from src.dante_light.prefilter_protocol import load_prefilter_protocol
 
 
 ROLES = ("background", "shadow", "robust_candidate", "known_glitch", "injection")
@@ -65,6 +66,7 @@ def _row(index, role, partition, detector="H1"):
 
 
 def _case(tmp_path):
+    protocol = load_prefilter_protocol()
     rows_by_role = {
         "background": [_row(0, "background", "development")],
         "shadow": [
@@ -108,26 +110,34 @@ def _case(tmp_path):
         "scientific_mode": "development_only_prefilter_tuning",
         "routing_enabled": False,
         "evaluation_outcomes_used": [],
+        "protocol": protocol.reference,
         "representation_sha256": "a" * 64,
         "cohort_split_sha256_by_role": {
             role: ledgers[role]["cohort_split_sha256_by_role"][role]
             for role in ("background", "robust_candidate", "known_glitch", "injection")
         },
         "source_ledgers": source_records,
-        "search": {"audit_fraction": 0.05, "audit_seed": 42},
+        "search": {
+            "grid_cells_requested": protocol.payload["tuning"]["grid_cells"],
+            "minimum_development_retention": protocol.payload["tuning"]["minimum_development_retention"],
+            "minimum_effective_reduction": protocol.payload["tuning"]["minimum_effective_reduction"],
+            "minimum_background_per_detector": protocol.payload["tuning"]["minimum_background_per_detector"],
+            "audit_fraction": protocol.payload["audit"]["fraction"],
+            "audit_seed": protocol.payload["audit"]["seed"],
+        },
         "operating_point": {"crest_threshold": 5.0, "band_fraction_threshold": 0.1},
     }
     tuning["artifact_digest"] = canonical_json_sha256(tuning)
     tuning_path = tmp_path / "tuning.json"
     tuning_path.write_text(json.dumps(tuning), encoding="utf-8")
-    return paths, tuning_path
+    return paths, tuning_path, protocol
 
 
 def test_assembly_includes_only_heldout_rows_and_locks_contract(tmp_path):
-    paths, tuning_path = _case(tmp_path)
+    paths, tuning_path, protocol = _case(tmp_path)
     output = tmp_path / "output"
     contract, ledger = assemble_prefilter_evaluation(
-        ledgers=paths, tuning_path=tuning_path, output_dir=output
+        ledgers=paths, tuning_path=tuning_path, output_dir=output, protocol=protocol
     )
     assert contract["status"] == "locked_before_evaluation"
     assert contract["required_detectors"] == ["H1", "L1"]
@@ -136,10 +146,11 @@ def test_assembly_includes_only_heldout_rows_and_locks_contract(tmp_path):
     assert all(row["partition"] == "evaluation" for row in rows)
     assert all(row["roles"] != ["background"] for row in rows)
     assert (output / contract["threshold_tuning_artifact"]["path"]).is_file()
+    assert (output / contract["protocol_artifact"]["path"]).is_file()
 
 
 def test_assembly_rejects_tuning_bound_to_changed_split(tmp_path):
-    paths, tuning_path = _case(tmp_path)
+    paths, tuning_path, protocol = _case(tmp_path)
     tuning = json.loads(tuning_path.read_text())
     tuning["cohort_split_sha256_by_role"]["known_glitch"] = "f" * 64
     body = dict(tuning)
@@ -148,5 +159,8 @@ def test_assembly_rejects_tuning_bound_to_changed_split(tmp_path):
     tuning_path.write_text(json.dumps(tuning), encoding="utf-8")
     with pytest.raises(ContractError, match="source cohort splits"):
         assemble_prefilter_evaluation(
-            ledgers=paths, tuning_path=tuning_path, output_dir=tmp_path / "output"
+            ledgers=paths,
+            tuning_path=tuning_path,
+            output_dir=tmp_path / "output",
+            protocol=protocol,
         )

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import hashlib
 import json
 
 from src.dante_light.contracts import WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_tuning import tune_prefilter
+from src.dante_light.prefilter_protocol import load_prefilter_protocol
 
 
 SPLIT_HASHES = {
@@ -58,6 +60,17 @@ def _row(index, *, role, detector="H1", morphology="unknown", positive=True):
     }
 
 
+def _test_protocol(tmp_path):
+    payload = deepcopy(dict(load_prefilter_protocol().payload))
+    payload["tuning"]["grid_cells"] = 9
+    payload["tuning"]["minimum_background_per_detector"] = 20
+    payload.pop("protocol_digest")
+    payload["protocol_digest"] = canonical_json_sha256(payload)
+    path = tmp_path / "test_protocol.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return load_prefilter_protocol(path)
+
+
 def test_tuning_uses_only_development_and_keeps_routing_disabled(tmp_path):
     background = [
         _row(i + 80 * d, role="background", detector=detector, positive=False)
@@ -103,12 +116,12 @@ def test_tuning_uses_only_development_and_keeps_routing_disabled(tmp_path):
     result = tune_prefilter(
         ledgers=paths,
         expected_split_hashes=SPLIT_HASHES,
-        grid_cells=9,
-        minimum_background_per_detector=20,
+        protocol=_test_protocol(tmp_path),
     )
     assert result["status"] == "PASS"
     assert result["routing_enabled"] is False
     assert result["evaluation_outcomes_used"] == []
+    assert result["protocol"]["protocol_digest"]
     assert result["operating_point"]["effective_background_reduction"] >= 0.5
     assert all(
         value["rate"] == 1.0

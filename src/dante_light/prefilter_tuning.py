@@ -12,22 +12,10 @@ import numpy as np
 
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter import ExcessEnergyFeatures, PrefilterContract
+from src.dante_light.prefilter_protocol import PrefilterProtocol
 
 
 REQUIRED_ROLES = {"background", "robust_candidate", "known_glitch", "injection"}
-EXPECTED_POSITIVE_GROUPS = {
-    *(('robust_candidate', detector, 'unknown') for detector in ('H1', 'L1')),
-    *(
-        ('known_glitch', detector, morphology)
-        for detector in ('H1', 'L1')
-        for morphology in ('Blip', 'KoiFish', 'ScatteredLight')
-    ),
-    *(
-        ('injection', detector, morphology)
-        for detector in ('H1', 'L1')
-        for morphology in ('BBH_30_30', 'BBH_10_10', 'NSBH_10_1.4')
-    ),
-}
 
 
 def _sha256(path: Path) -> str:
@@ -95,12 +83,7 @@ def tune_prefilter(
     *,
     ledgers: Mapping[str, str | Path],
     expected_split_hashes: Mapping[str, str],
-    audit_fraction: float = 0.05,
-    audit_seed: int = 20260821,
-    grid_cells: int = 65,
-    minimum_development_retention: float = 0.9,
-    minimum_effective_reduction: float = 0.5,
-    minimum_background_per_detector: int = 200,
+    protocol: PrefilterProtocol,
 ) -> dict[str, Any]:
     """Select one global OR operating point using development rows only."""
 
@@ -110,6 +93,33 @@ def tune_prefilter(
         raise ContractError(
             f"tuning requires split hashes for exactly these roles: {sorted(REQUIRED_ROLES)}"
         )
+    protocol_payload = protocol.payload
+    detectors = tuple(protocol_payload["required_detectors"])
+    morphologies = protocol_payload["required_morphologies_by_role"]
+    audit = protocol_payload["audit"]
+    tuning_rules = protocol_payload["tuning"]
+    audit_fraction = float(audit["fraction"])
+    audit_seed = int(audit["seed"])
+    grid_cells = int(tuning_rules["grid_cells"])
+    minimum_development_retention = float(
+        tuning_rules["minimum_development_retention"]
+    )
+    minimum_effective_reduction = float(
+        tuning_rules["minimum_effective_reduction"]
+    )
+    minimum_background_per_detector = int(
+        tuning_rules["minimum_background_per_detector"]
+    )
+    required_group_sizes = tuning_rules["minimum_group_n_by_role"]
+    expected_positive_groups = {
+        *(("robust_candidate", detector, "unknown") for detector in detectors),
+        *(
+            (role, detector, morphology)
+            for role in ("known_glitch", "injection")
+            for detector in detectors
+            for morphology in morphologies[role]
+        ),
+    }
     source_records = []
     all_rows: list[dict[str, Any]] = []
     representations = set()
@@ -142,7 +152,7 @@ def tune_prefilter(
     positives = [row for row in all_rows if row.get("retention_target") is True]
     if not background or not positives:
         raise ContractError("tuning requires development background and positive controls")
-    for detector in ("H1", "L1"):
+    for detector in detectors:
         count = sum(row["detector"] == detector for row in background)
         if count < minimum_background_per_detector:
             raise ContractError(
@@ -153,14 +163,9 @@ def tune_prefilter(
     for row in positives:
         role = row["roles"][0]
         groups[(role, row["detector"], row["morphology"])].append(row)
-    required_group_sizes = {
-        "robust_candidate": 20,
-        "known_glitch": 12,
-        "injection": 35,
-    }
-    if set(groups) != EXPECTED_POSITIVE_GROUPS:
-        missing = sorted(EXPECTED_POSITIVE_GROUPS - set(groups))
-        extra = sorted(set(groups) - EXPECTED_POSITIVE_GROUPS)
+    if set(groups) != expected_positive_groups:
+        missing = sorted(expected_positive_groups - set(groups))
+        extra = sorted(set(groups) - expected_positive_groups)
         raise ContractError(
             f"unexpected development positive-group coverage; missing={missing}, extra={extra}"
         )
@@ -240,6 +245,7 @@ def tune_prefilter(
         "routing_enabled": False,
         "outcome_fields_used": ["retention_target", "role", "detector", "morphology"],
         "evaluation_outcomes_used": [],
+        "protocol": protocol.reference,
         "representation_sha256": representations.pop(),
         "cohort_split_sha256_by_role": dict(sorted(expected_split_hashes.items())),
         "source_ledgers": source_records,
