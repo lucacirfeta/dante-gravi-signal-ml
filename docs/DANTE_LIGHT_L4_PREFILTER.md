@@ -2,12 +2,13 @@
 
 L4 is a research-only cheap prefilter evaluated in front of the unchanged
 DANTE-Light exact path. It is not active routing: every generated contract and
-result records `routing_enabled: false`. Both completed development protocols
-are negative: v1 reached 6.70% effective reduction and v2 reached at most
-8.70%, below the frozen 50% gate. Neither protocol opened its held-out O4b
-outcomes. The exact DANTE-Light path remains the supported path.
+result records `routing_enabled: false`. All three completed development
+protocols are negative: v1 reached 6.70% effective reduction, v2 reached at
+most 8.70%, and the predeclared v3 A+B primary reached 3.08%, below the frozen
+50% gate. No protocol opened its held-out O4b outcomes. The exact DANTE-Light
+path remains the supported path.
 
-The scientific criteria live only in the versioned v1 and v2 protocol JSON
+The scientific criteria live only in the versioned v1, v2, and v3 protocol JSON
 files under `config/`. The protocol, split, screening result, evaluation
 contract and feature ledgers are linked by SHA256 and canonical JSON digests.
 Changing a criterion without freezing a new protocol fails closed.
@@ -30,6 +31,42 @@ the copied protocol and the copied tuning artefact. The final evaluator writes
 one machine-readable JSON report containing coverage, per-detector and
 per-morphology retention intervals, compute reduction, exact-escalate coverage
 and every PASS/FAIL gate.
+
+## V3 A+B development commands and final status
+
+V3 reuses the frozen v2 split but extracts only `development` rows. Its A/B
+ablation on that cohort is hypothesis-generating because the v2 diagnostic
+motivated the features. The untouched, disjoint `evaluation` rows were
+reserved for confirmation and may be opened only after
+`READY_FOR_CONFIRMATION`. The completed v3 run returned `NOT_READY`, so they
+were not opened. See
+`docs/DANTE_LIGHT_L4_PREFILTER_V3_NOT_READY_2026-08-22.md`.
+
+Create the Linux/WSL LALSuite environment once for CBC reconstruction:
+
+```bash
+conda env create -f environment-dante-light-v3.yml
+```
+
+Then run from the repository root, replacing `<L4_V3>` with an external output
+directory. The first three builders can use the regular Python environment;
+the injection builder must use the pinned LALSuite environment.
+
+```powershell
+python scripts/build_dante_light_prefilter_v3_cohort_features.py --role background --output-dir <L4_V3>/background --strain-source auto --workers 4
+python scripts/build_dante_light_prefilter_v3_cohort_features.py --role robust_candidate --output-dir <L4_V3>/robust --strain-source auto --workers 4
+python scripts/build_dante_light_prefilter_v3_cohort_features.py --role known_glitch --output-dir <L4_V3>/known --strain-source auto --workers 4
+
+conda run -n dante-light-v3 python scripts/build_dante_light_prefilter_v3_injection_features.py --output-dir <L4_V3>/injection --workers 4
+
+python scripts/screen_dante_light_prefilter_v3.py --background <L4_V3>/background/background_feature_ledger_v3_development.json --robust <L4_V3>/robust/robust_candidate_feature_ledger_v3_development.json --known <L4_V3>/known/known_glitch_feature_ledger_v3_development.json --injection <L4_V3>/injection/injection_feature_ledger_v3_development.json --output <L4_V3>/final/screening_result_v3.json
+
+python scripts/verify_dante_light_prefilter_v3_artifacts.py --background <L4_V3>/background/background_feature_ledger_v3_development.json --robust <L4_V3>/robust/robust_candidate_feature_ledger_v3_development.json --known <L4_V3>/known/known_glitch_feature_ledger_v3_development.json --injection <L4_V3>/injection/injection_feature_ledger_v3_development.json --screening <L4_V3>/final/screening_result_v3.json
+```
+
+The screening command intentionally exits 1 for a valid `NOT_READY` result;
+the verifier exits 0 when that negative artifact is internally consistent and
+exactly reproducible. Do not reinterpret verifier PASS as scientific PASS.
 
 ## V2 commands and mandatory stop gate
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -82,3 +83,26 @@ def test_v3_protocol_rejects_unhashed_change(tmp_path):
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ContractError, match="digest mismatch"):
         load_prefilter_v3_protocol(path)
+
+
+def test_committed_v3_summary_is_not_ready_and_sealed():
+    root = Path(__file__).resolve().parents[1]
+    protocol = load_prefilter_v3_protocol()
+    path = root / "artifacts/dante_light/prefilter_l4_v3/screening_summary_v3.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    body = dict(payload)
+    declared = body.pop("summary_digest")
+    assert declared == canonical_json_sha256(body)
+    assert payload["status"] == "NOT_READY"
+    assert payload["protocol"]["protocol_digest"] == protocol.payload["protocol_digest"]
+    assert payload["sealed_boundaries"] == {
+        "routing_enabled": False,
+        "confirmation_values_used": [],
+        "o4b_outcomes_used": [],
+        "can_authorize_operational_pass": False,
+        "next_stage": "stop_without_opening_reserved_confirmation_or_o4b",
+    }
+    assert (
+        payload["candidate_results"]["signed_plus_ridge"]["development_criteria"]
+        == "NOT_MET"
+    )

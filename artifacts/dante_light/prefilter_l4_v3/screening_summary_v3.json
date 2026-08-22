@@ -1,0 +1,114 @@
+{
+  "schema_version": 3,
+  "status": "NOT_READY",
+  "scientific_mode": "exploratory_development_screen_before_reserved_confirmation",
+  "protocol": {
+    "path": "config/dante_light_prefilter_protocol_v3.json",
+    "protocol_digest": "8c40fa2d7054afdf434a848b1964d325ce38ce941819d4748879490f1925c748"
+  },
+  "sealed_boundaries": {
+    "routing_enabled": false,
+    "confirmation_values_used": [],
+    "o4b_outcomes_used": [],
+    "can_authorize_operational_pass": false,
+    "next_stage": "stop_without_opening_reserved_confirmation_or_o4b"
+  },
+  "development_counts": {
+    "background": 552,
+    "robust_candidate": 50,
+    "known_glitch": 150,
+    "injection": 210,
+    "total": 962
+  },
+  "candidate_results": {
+    "signed_ordering": {
+      "is_predeclared_primary": false,
+      "development_criteria": "NOT_MET",
+      "oof_development_background_call_reduction": 0.0036231884057971175,
+      "overall_roc_auc": 0.5126325556733828,
+      "overall_roc_auc_block_bootstrap_95_ci": [
+        0.4778492998128415,
+        0.5504095553066333
+      ],
+      "nsbh_roc_auc": {
+        "H1": 0.4765380604796663,
+        "L1": 0.4335046248715313
+      }
+    },
+    "ridge_consistency": {
+      "is_predeclared_primary": false,
+      "development_criteria": "NOT_MET",
+      "oof_development_background_call_reduction": 0.016304347826086918,
+      "overall_roc_auc": 0.7112495581477554,
+      "overall_roc_auc_block_bootstrap_95_ci": [
+        0.6750194265587439,
+        0.745860361326737
+      ],
+      "nsbh_roc_auc": {
+        "H1": 0.5569343065693431,
+        "L1": 0.4738951695786228
+      }
+    },
+    "signed_plus_ridge": {
+      "is_predeclared_primary": true,
+      "eligible_for_selection": true,
+      "development_criteria": "NOT_MET",
+      "oof_development_background_call_reduction": 0.030797101449275388,
+      "overall_roc_auc": 0.7179347826086957,
+      "overall_roc_auc_block_bootstrap_95_ci": [
+        0.68293563470323,
+        0.7518561519165791
+      ],
+      "nsbh_roc_auc": {
+        "H1": 0.5478623566214808,
+        "L1": 0.4761562178828366
+      }
+    },
+    "spectral_v2_baseline": {
+      "is_predeclared_primary": false,
+      "development_criteria": "NOT_MET",
+      "oof_development_background_call_reduction": 0.08695652173913049,
+      "overall_roc_auc": 0.8052315305761752,
+      "overall_roc_auc_block_bootstrap_95_ci": [
+        0.7751371666889542,
+        0.8340783785171957
+      ],
+      "nsbh_roc_auc": {
+        "H1": 0.5327424400417101,
+        "L1": 0.5564234326824254
+      }
+    }
+  },
+  "feature_cost_seconds": {
+    "median": 0.005384949967265129,
+    "p95": 0.013343649997841562,
+    "maximum": 0.029157267000016418,
+    "excludes_data_read_and_whitening": true
+  },
+  "verification": {
+    "exact_recomputation": "PASS",
+    "full_screening_artifact_digest": "de2509b74ec230328f2ca44f5a2c7e2fdb47a75761efdcbcbb702ae8a07fc1f1",
+    "full_screening_file_sha256": "ae53f2deff75e73ad87b7759a0198d59804539acd55ec3e8d2498f0b23b542fe",
+    "v2_spectral_baseline_exact_match": {
+      "constrained_reduction": true,
+      "overall_auc": true,
+      "protected_stratum_auc_count": 14
+    },
+    "development_confirmation_overlap_n": 0,
+    "reserved_confirmation_window_n": 688
+  },
+  "external_evidence": {
+    "root": "E:/dante_cache/dante_light_prefilter_l4_v3_development",
+    "ledger_file_sha256_by_role": {
+      "background": "63629aadda4a03c75807119401cc4d4a4182cd8699329b0d78cb48dcb50c8cf7",
+      "robust_candidate": "3510462bc27f3a489179ff191f969288615279467b4b6091ff1214cadf14666d",
+      "known_glitch": "35bc6be5bd25f2e869f8a166f1145322f889ec4c50cdd0bd72cfe4ac4085bc21",
+      "injection": "bafa30bfa25dff44073d4f5c8927b5acbfe62bb55bb4a123205e03c6ec556b56"
+    },
+    "environment_file_sha256": {
+      "windows": "276812505a0ab3c14d291eaaea0edfcd7f97f79c91746b366fcaa2c3e7ccd63f",
+      "wsl_injection": "8b76601db6abc21da46f86c47b2da9a133b042a0905c9992f07a54640261d7f6"
+    }
+  },
+  "summary_digest": "e43c92b04e8c9ac4ebf53daa87177aefa2c823b0cae556d0976ded4baab92177"
+}
