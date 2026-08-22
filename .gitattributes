@@ -18,5 +18,7 @@ data/production/aggregated/*.npy binary
 data/production/aggregated/pem/**/*.json binary
 data/production/aggregated/pem/**/*.csv binary
 data/production_reference/channel_thresholds.json binary
+# Sole historical baseline admitted by the detector-aware transition audit.
+data/production/aggregated/archive/detector_dedup_bug_20260805/Master_Taxonomy_O4a_idxq4-64_queryq4-64.pre_detector_aware.csv binary
 runs/dante_light/o4b_v2/**/*.json text eol=lf
 runs/dante_light/o4b_v2/**/*.jsonl text eol=lf
