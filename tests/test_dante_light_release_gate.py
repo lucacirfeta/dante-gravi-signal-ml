@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
+
+import pytest
 
 from scripts.verify_dante_light_release import (
     ROOT,
@@ -8,6 +11,7 @@ from scripts.verify_dante_light_release import (
     _validate_causal_epochs,
     _validate_prospective,
     _validate_public_bundle,
+    _validate_supporting_artifacts,
     evaluate_gates,
     verify,
 )
@@ -83,6 +87,43 @@ def test_public_bundle_requires_deposit_https_url_and_real_sha256() -> None:
     assert _validate_public_bundle(invalid_bundles[0])[0] == "OPEN"
     for invalid in invalid_bundles[1:]:
         assert _validate_public_bundle(invalid)[0] == "FAIL"
+
+
+def test_missing_deposited_bundle_is_allowed_but_other_missing_evidence_fails(
+    tmp_path,
+) -> None:
+    evidence = tmp_path / "evidence.json"
+    evidence.write_text("{}", encoding="utf-8")
+    evidence_sha256 = hashlib.sha256(evidence.read_bytes()).hexdigest()
+    bundle_path = "artifacts/dante_light/downloads/reference.zip"
+    bundle_sha256 = "a" * 64
+    artifacts = [
+        {"path": "evidence.json", "sha256": evidence_sha256},
+        {"path": bundle_path, "sha256": bundle_sha256},
+    ]
+    _validate_supporting_artifacts(
+        tmp_path,
+        artifacts,
+        external_bundle_path=bundle_path,
+        external_bundle_sha256=bundle_sha256,
+    )
+    artifacts[0]["path"] = "missing.json"
+    with pytest.raises(ValueError, match="prospective artifact SHA256 mismatch"):
+        _validate_supporting_artifacts(
+            tmp_path,
+            artifacts,
+            external_bundle_path=bundle_path,
+            external_bundle_sha256=bundle_sha256,
+        )
+    artifacts[0] = {"path": "evidence.json", "sha256": evidence_sha256}
+    artifacts[1]["sha256"] = "b" * 64
+    with pytest.raises(ValueError, match="reference-bundle artifact identity mismatch"):
+        _validate_supporting_artifacts(
+            tmp_path,
+            artifacts,
+            external_bundle_path=bundle_path,
+            external_bundle_sha256=bundle_sha256,
+        )
 
 
 def test_existing_but_unverified_prospective_file_fails_closed(tmp_path) -> None:

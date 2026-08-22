@@ -63,6 +63,43 @@ def _inside(root: Path, relative: str) -> Path:
     return resolved
 
 
+def _validate_supporting_artifacts(
+    root: Path,
+    artifacts: list[dict[str, Any]],
+    *,
+    external_bundle_path: str,
+    external_bundle_sha256: str,
+) -> None:
+    """Verify tracked evidence while permitting one deposited bundle reference.
+
+    The published reference ZIP is intentionally ignored by Git. Its exact
+    identity is still required in the evidence list, but a clean clone may
+    verify that identity from the deposited-bundle contract without retaining
+    the 73 MB local download.
+    """
+
+    if not artifacts:
+        raise ValueError("prospective result has no supporting artifacts")
+    declared_external_bundle = False
+    for item in artifacts:
+        relative = str(item["path"]).replace("\\", "/")
+        declared_sha256 = item["sha256"]
+        if not _is_sha256(declared_sha256):
+            raise ValueError(f"invalid prospective artifact SHA256: {relative}")
+        artifact = _inside(root, relative)
+        if relative == external_bundle_path:
+            declared_external_bundle = True
+            if declared_sha256 != external_bundle_sha256:
+                raise ValueError("prospective reference-bundle artifact identity mismatch")
+            if artifact.is_file() and _sha256(artifact) != declared_sha256:
+                raise ValueError(f"prospective artifact SHA256 mismatch: {relative}")
+            continue
+        if not artifact.is_file() or _sha256(artifact) != declared_sha256:
+            raise ValueError(f"prospective artifact SHA256 mismatch: {relative}")
+    if not declared_external_bundle:
+        raise ValueError("prospective evidence does not identify the deposited reference bundle")
+
+
 def _validate_replay(root: Path, replay: dict[str, Any]) -> tuple[bool, str]:
     try:
         entries = _inside(root, replay["entries_path"])
@@ -317,6 +354,7 @@ def _validate_prospective(
     path: Path,
     *,
     bundle_sha256: str | None,
+    bundle_url: str | None = None,
     epochs: dict[str, Any],
 ) -> tuple[bool, str]:
     if not path.is_file():
@@ -373,8 +411,14 @@ def _validate_prospective(
         if (
             bundle_source.get("download_verified") is not True
             or bundle_source.get("publication_status") != "deposited"
+            or bundle_source.get("url") != bundle_url
         ):
             raise ValueError("prospective public-bundle attestation is invalid")
+        parsed_bundle_url = urlparse(str(bundle_url))
+        bundle_name = Path(parsed_bundle_url.path).name
+        if parsed_bundle_url.scheme != "https" or not bundle_name:
+            raise ValueError("prospective public-bundle URL is invalid")
+        external_bundle_path = f"artifacts/dante_light/downloads/{bundle_name}"
         protocol = payload["locked_protocol"]
         if protocol.get("path") != PROTOCOL_PATH:
             raise ValueError("locked protocol path mismatch")
@@ -428,13 +472,12 @@ def _validate_prospective(
             detector_windows += int(result["windows"])
         if detector_windows != windows:
             raise ValueError("prospective detector/coverage window count mismatch")
-        artifacts = payload["artifacts"]
-        if not artifacts:
-            raise ValueError("prospective result has no supporting artifacts")
-        for item in artifacts:
-            artifact = _inside(root, item["path"])
-            if not _is_sha256(item["sha256"]) or _sha256(artifact) != item["sha256"]:
-                raise ValueError(f"prospective artifact SHA256 mismatch: {item['path']}")
+        _validate_supporting_artifacts(
+            root,
+            payload["artifacts"],
+            external_bundle_path=external_bundle_path,
+            external_bundle_sha256=str(bundle_sha256),
+        )
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
         return False, f"invalid prospective evidence: {exc}"
     return True, "locked exact prospective shadow evidence verified"
@@ -477,6 +520,7 @@ def evaluate_gates(root: Path = ROOT) -> list[Gate]:
         root,
         prospective_path,
         bundle_sha256=bundle.get("sha256"),
+        bundle_url=bundle.get("url"),
         epochs=verified_epochs,
     )
     docs_ok = all(
