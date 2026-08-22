@@ -182,10 +182,35 @@ protocol containing:
 4. primary selection metric and protected per-morphology retention gates;
 5. informational metrics, including per-stratum AUC with detector/GPS-block
    bootstrap uncertainty (never i.i.d. resampling);
-6. an ablation matrix for A, B, A+B, and the v2 spectral baseline;
+6. an ablation matrix for A, B, A+B, and the v2 spectral baseline, subject to
+   the anti-circularity clause below;
 7. a measured CPU cost and end-to-end call-reduction contract;
 8. untouched O4b outcome rules and a one-shot evaluation decision;
 9. provenance hashes, deterministic seeds, and fail-closed verification.
+
+### Anti-circularity clause for the A/B ablation
+
+A and B were proposed after inspecting the post-hoc v2 development diagnostic,
+including the weak NSBH separation. Their ablation on those same development
+rows is therefore hypothesis-generating and **exploratory only**: it cannot
+confirm NSBH discrimination or authorize a PASS.
+
+The first confirmatory NSBH endpoint must instead use the previously frozen,
+unused evaluation partition in `config/dante_light_prefilter_splits_v2.json`:
+90 NSBH injection windows per detector (18 at each of the five frozen
+distances), disjoint in window identity from the 35 development windows per
+detector. The v2 screening and diagnostic implementations consume only rows
+whose partition is `development`; the confirmatory identities must be bound by
+their existing split hash and checked again for zero overlap before use.
+
+The A/B formulas, combination rule, fitted-model procedure, calibration rule,
+and all decision criteria must be frozen before extracting or scoring A/B on
+that evaluation partition. Its confirmatory endpoint is protected-stratum
+retention, not background reduction and not operational PASS. End-to-end
+compute reduction and operational promotion remain reserved for the one-shot,
+outcome-blind O4b shadow evaluation. If any A/B value from the reserved
+partition is inspected before the v3 freeze, that partition is invalidated and
+a newly seeded, disjoint injection cohort is required.
 
 The 50% reduction target is a product/scientific requirement, not a quantity
 derived from the v2 data. It must either remain unchanged with an explicit
