@@ -18,6 +18,11 @@ from src.dante_light.prefilter_splits import load_prefilter_splits
 from src.dante_light.prefilter_v2 import feature_names_by_family
 from src.dante_light.prefilter_v2_assembly import _load_source
 from src.dante_light.prefilter_v2_evaluation import evaluate_prefilter_v2
+from src.dante_light.prefilter_v2_diagnostics import (
+    DEFAULT_DIAGNOSTIC_CONFIG,
+    diagnose_prefilter_v2,
+    load_diagnostic_config,
+)
 from src.dante_light.prefilter_v2_protocol import DEFAULT_PROTOCOL_V2_PATH, load_prefilter_v2_protocol
 
 
@@ -193,9 +198,40 @@ def _verify_summary(path: Path, screening_path: Path, screening: dict, protocol:
         raise ContractError("v2 compact summary feature cost changed")
 
 
+def _verify_diagnostics(
+    path: Path,
+    *,
+    screening_path: Path,
+    protocol: object,
+    split: dict,
+    sources: dict,
+    config_path: Path,
+) -> None:
+    diagnostic_config = load_diagnostic_config(config_path, protocol=protocol)
+    expected = diagnose_prefilter_v2(
+        ledgers={role: source[0] for role, source in sources.items()},
+        expected_split_hashes={
+            role: cohort["split_sha256"] for role, cohort in split["cohorts"].items()
+        },
+        frozen_screening_path=screening_path,
+        protocol=protocol,
+        diagnostic_config=diagnostic_config,
+    )
+    try:
+        recorded = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ContractError(f"invalid v2 diagnostic artifact: {exc}") from exc
+    if recorded != expected:
+        raise ContractError("recorded v2 diagnostics are not exactly reproducible")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--stage", choices=("split", "development", "screening", "evaluation", "all"), default="all")
+    parser.add_argument(
+        "--stage",
+        choices=("split", "development", "screening", "diagnostics", "evaluation", "all"),
+        default="all",
+    )
     parser.add_argument("--protocol", type=Path, default=DEFAULT_PROTOCOL_V2_PATH)
     parser.add_argument("--split", type=Path, default=ROOT / "config/dante_light_prefilter_splits_v2.json")
     parser.add_argument("--background", type=Path)
@@ -204,6 +240,8 @@ def main() -> int:
     parser.add_argument("--injection", type=Path)
     parser.add_argument("--screening", type=Path)
     parser.add_argument("--summary", type=Path)
+    parser.add_argument("--diagnostics", type=Path)
+    parser.add_argument("--diagnostic-config", type=Path, default=DEFAULT_DIAGNOSTIC_CONFIG)
     parser.add_argument("--contract", type=Path)
     parser.add_argument("--evaluation-ledger", type=Path)
     parser.add_argument("--result", type=Path)
@@ -211,16 +249,27 @@ def main() -> int:
     try:
         protocol = load_prefilter_v2_protocol(args.protocol)
         split = _verify_split(_require(args.split, "v2 split"), protocol)
-        stages = {args.stage} if args.stage != "all" else {"split", "development", "screening", "evaluation"}
+        stages = {args.stage} if args.stage != "all" else {
+            "split", "development", "screening", "evaluation"
+        }
         sources = None
         screening = None
-        if stages & {"development", "screening"}:
+        if stages & {"development", "screening", "diagnostics"}:
             sources = _verify_development(args, protocol, split)
-        if "screening" in stages:
+        if stages & {"screening", "diagnostics"}:
             screening_path = _require(args.screening, "screening result")
             screening = _verify_screening(screening_path, protocol, sources)
-            if args.summary is not None:
+            if "screening" in stages and args.summary is not None:
                 _verify_summary(_require(args.summary, "compact screening summary"), screening_path, screening, protocol, split)
+        if "diagnostics" in stages:
+            _verify_diagnostics(
+                _require(args.diagnostics, "diagnostic result"),
+                screening_path=screening_path,
+                protocol=protocol,
+                split=split,
+                sources=sources,
+                config_path=_require(args.diagnostic_config, "diagnostic config"),
+            )
         if "evaluation" in stages:
             if screening is not None and screening["status"] != "PASS":
                 raise ContractError("held-out evaluation is forbidden after NOT_READY screening")

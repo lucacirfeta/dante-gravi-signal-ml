@@ -19,8 +19,10 @@ The compact robust-candidate manifest allows split regeneration without the
 The scripts never write into historical `data/production` implicitly. Every
 output directory is explicit. A recommended local layout is an external cache
 such as `E:\dante_cache\dante_light_prefilter_l4_v2_*`. Large regenerable
-ledgers stay outside Git; compact reviewed summaries belong under
-`artifacts/dante_light/`.
+ledgers stay outside Git; compact reviewed summaries and complete small result
+JSONs belong under `artifacts/dante_light/`. A deterministic external bundle
+can carry the ledgers needed for independent recalculation without placing
+them in Git history.
 
 Each cohort builder writes one `*_feature_ledger_v1.json` plus its JSONL rows.
 The assembly step writes the locked contract, a combined evaluation ledger,
@@ -66,6 +68,19 @@ effective compute reduction would be measured on all 768 realistic O4b shadow
 windows. Both include deterministic rejected-window audit calls. They use the
 same accounting but are deliberately different populations; only the held-out
 quantity could support a later-run performance claim.
+
+The optional post-hoc diagnostics are descriptive only. They cannot change
+the frozen `NOT_READY` screen or authorize O4b evaluation:
+
+```powershell
+python scripts/diagnose_dante_light_prefilter_v2.py --background <L4_V2_BACKGROUND>/background_feature_ledger_v2.json --robust <L4_V2_ROBUST>/robust_candidate_feature_ledger_v2.json --known <L4_V2_KNOWN>/known_glitch_feature_ledger_v2.json --injection <L4_V2_INJECTION>/injection_feature_ledger_v2.json --screening artifacts/dante_light/prefilter_l4_v2/screening_result_v2.json --output <L4_V2_FINAL>/diagnostics_v2.json
+
+python scripts/verify_dante_light_prefilter_v2_artifacts.py --stage diagnostics --background <L4_V2_BACKGROUND>/background_feature_ledger_v2.json --robust <L4_V2_ROBUST>/robust_candidate_feature_ledger_v2.json --known <L4_V2_KNOWN>/known_glitch_feature_ledger_v2.json --injection <L4_V2_INJECTION>/injection_feature_ledger_v2.json --screening artifacts/dante_light/prefilter_l4_v2/screening_result_v2.json --diagnostics artifacts/dante_light/prefilter_l4_v2/diagnostics_v2.json
+
+python scripts/build_dante_light_prefilter_v2_bundle.py build --background <L4_V2_BACKGROUND>/background_feature_ledger_v2.json --robust <L4_V2_ROBUST>/robust_candidate_feature_ledger_v2.json --known-glitch <L4_V2_KNOWN>/known_glitch_feature_ledger_v2.json --injection <L4_V2_INJECTION>/injection_feature_ledger_v2.json --output <L4_V2_FINAL>/dante_light_prefilter_l4_v2_development_artifacts.zip
+
+python scripts/build_dante_light_prefilter_v2_bundle.py check --bundle <L4_V2_FINAL>/dante_light_prefilter_l4_v2_development_artifacts.zip
+```
 
 ## Historical v1 commands
 

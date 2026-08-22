@@ -1,0 +1,770 @@
+{
+  "all_feature_regularization_sweep": [
+    {
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.02898550724637683,
+        "retention_feasible": true
+      },
+      "regularization_c": 0.1,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.7900124621684174,
+          "L1": 0.8205474644674504
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.6140771637122002
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.8640250260688217
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.5411887382690302
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.6123329907502569
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.8641315519013361
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.573792394655704
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9312408759124088
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9951824817518248
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8994160583941606
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9755395683453238
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9951079136690647
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.921294964028777
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8252554744525549
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9661870503597122
+          }
+        },
+        "overall": 0.8049973488865325
+      }
+    },
+    {
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.0688405797101449,
+        "retention_feasible": true
+      },
+      "regularization_c": 1.0,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.7886950329357307,
+          "L1": 0.8187752237234602
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.6207507820646507
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.8684045881126172
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.5532846715328468
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.6211716341212744
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.8729701952723534
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.5860226104830422
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9391240875912409
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.991970802919708
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8824817518248176
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9736690647482015
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9920863309352518
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9128057553956834
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.7943065693430658
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9231654676258993
+          }
+        },
+        "overall": 0.8027439024390245
+      }
+    },
+    {
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.07065217391304346,
+        "retention_feasible": true
+      },
+      "regularization_c": 10.0,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.7935997863628271,
+          "L1": 0.8198104930689596
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.6240875912408759
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.8691345151199166
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.5551616266944734
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.6301130524152107
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.870606372045221
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.5921891058581705
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9417518248175183
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.992992700729927
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8676642335766424
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9722302158273382
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9887769784172662
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9092086330935252
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8373722627737226
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9221582733812949
+          }
+        },
+        "overall": 0.8057241958289149
+      }
+    }
+  ],
+  "artifact_digest": "51c8c408016488d3424ccf240e1b411b16db2a704ffadd890ee2d18870491691",
+  "auc_by_candidate": [
+    {
+      "feature_set": "temporal_energy",
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.0018115942028985588,
+        "retention_feasible": true
+      },
+      "regularization_c": 1.0,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.7157557414990208,
+          "L1": 0.7189506931040534
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.6278415015641292
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.7741397288842544
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.4344108446298227
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.6778006166495375
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.7419321685508736
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.43216855087358685
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.7953284671532846
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9935766423357664
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.691094890510949
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.8149640287769784
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9949640287769784
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.5653237410071942
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8182481751824818
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9274820143884893
+          }
+        },
+        "overall": 0.7171924708377518
+      }
+    },
+    {
+      "feature_set": "tf_cluster",
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.0,
+        "retention_feasible": true
+      },
+      "regularization_c": 1.0,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.5369859355527862,
+          "L1": 0.5811896824004211
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.43753910323253387
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.4872784150156413
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.43159541188738265
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.5636176772867421
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.5050359712230216
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.4706577595066804
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.44328467153284673
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8892700729927007
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.46773722627737224
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.5233812949640289
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9830215827338129
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.3764748201438849
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.704014598540146
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.727841726618705
+          }
+        },
+        "overall": 0.5596964475079533
+      }
+    },
+    {
+      "feature_set": "spectral_evolution",
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.08695652173913049,
+        "retention_feasible": true
+      },
+      "regularization_c": 1.0,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.7941961901370839,
+          "L1": 0.8169327952272328
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.6159541188738269
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.8638164754953076
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.5327424400417101
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.6194244604316547
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.8722507708119218
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.5564234326824254
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9235036496350365
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9976642335766424
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8623357664233577
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.958273381294964
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9964028776978417
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.924748201438849
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9113868613138686
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9520863309352517
+          }
+        },
+        "overall": 0.8052315305761752
+      }
+    },
+    {
+      "feature_set": "wavelet_sparse",
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.061594202898550776,
+        "retention_feasible": true
+      },
+      "regularization_c": 1.0,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.7387751468755563,
+          "L1": 0.7842779434988595
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.6685088633993745
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.7683003128258603
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.5624608967674661
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.6292908530318603
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.733710174717369
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.54655704008222
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.5677372262773723
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9893430656934307
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8607299270072992
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.8811510791366907
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9964028776978417
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9545323741007194
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8411678832116789
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9256115107913668
+          }
+        },
+        "overall": 0.7577920643336867
+      }
+    },
+    {
+      "feature_set": "all",
+      "frozen_constrained_context": {
+        "meets_frozen_reduction_target": false,
+        "oof_effective_development_call_reduction": 0.0688405797101449,
+        "retention_feasible": true
+      },
+      "regularization_c": 1.0,
+      "roc_auc": {
+        "by_detector": {
+          "H1": 0.7886950329357307,
+          "L1": 0.8187752237234602
+        },
+        "by_protected_stratum": {
+          "injection/H1/BBH_10_10": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.6207507820646507
+          },
+          "injection/H1/BBH_30_30": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.8684045881126172
+          },
+          "injection/H1/NSBH_10_1.4": {
+            "background_n": 274,
+            "positive_n": 35,
+            "roc_auc": 0.5532846715328468
+          },
+          "injection/L1/BBH_10_10": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.6211716341212744
+          },
+          "injection/L1/BBH_30_30": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.8729701952723534
+          },
+          "injection/L1/NSBH_10_1.4": {
+            "background_n": 278,
+            "positive_n": 35,
+            "roc_auc": 0.5860226104830422
+          },
+          "known_glitch/H1/Blip": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.9391240875912409
+          },
+          "known_glitch/H1/KoiFish": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.991970802919708
+          },
+          "known_glitch/H1/ScatteredLight": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.8824817518248176
+          },
+          "known_glitch/L1/Blip": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9736690647482015
+          },
+          "known_glitch/L1/KoiFish": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9920863309352518
+          },
+          "known_glitch/L1/ScatteredLight": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9128057553956834
+          },
+          "robust_candidate/H1/unknown": {
+            "background_n": 274,
+            "positive_n": 25,
+            "roc_auc": 0.7943065693430658
+          },
+          "robust_candidate/L1/unknown": {
+            "background_n": 278,
+            "positive_n": 25,
+            "roc_auc": 0.9231654676258993
+          }
+        },
+        "overall": 0.8027439024390245
+      }
+    }
+  ],
+  "cohort_split_sha256_by_role": {
+    "background": "5deba2dcf7a2d4aa6e1d89c6adf9ebf1cf7eb5a46705e1c160e9a0979930d826",
+    "injection": "24c364b90f9bdde44fb8132105f8ea2105f3ab9a1bad479eb6e2a75dfe1ef910",
+    "known_glitch": "8487d897c0fe101aa5e13f8afd1a6c37c9ccf325ab14310c52c11cd2f41e3d1a",
+    "robust_candidate": "f7af82a85fabee2a5578bc0a6cd9febd5a87f6c04b79ec3168fa8cdcd462637d"
+  },
+  "development_n": 962,
+  "diagnostic_config": {
+    "diagnostic_digest": "41b54cb6f244c0708d1b1a4981364837e86a734e6e3b9f6088a9d3ab4cdaad06",
+    "file_name": "dante_light_prefilter_v2_diagnostics.json",
+    "sha256": "20b5915314e3e0aa1c9768e9aadc7dafbe23c04b7ff8b3b8b1458beb805c8411"
+  },
+  "eligible_for_pass_fail_gate": false,
+  "frozen_screening": {
+    "artifact_digest": "7be11b327e96f8744e2479286a0391f4a6b130ad7c5f4e856eb32167259242a5",
+    "file_name": "screening_result_v2.json",
+    "sha256": "9817377d05ee30cf9c6a5a72c33cecd6fdd2e8bc55f0031a2113412cd7063991",
+    "status": "NOT_READY"
+  },
+  "interpretation_boundary": "Post-hoc descriptive ranking diagnostics only; values cannot revise the frozen v2 NOT_READY result or authorize O4b evaluation.",
+  "o4b_outcomes_used": [],
+  "protocol": {
+    "file_name": "dante_light_prefilter_protocol_v2.json",
+    "protocol_digest": "a7f94ba384e670654002db711b8c7d8d8b18e83d26603e23f14599004030b1e4",
+    "protocol_id": "dante-light-l4-prefilter-v2-development",
+    "sha256": "054c3dbd537d2c2ca28955c6878e1bd12027f4a884cc76daca07cad81ef1df1a"
+  },
+  "representation_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+  "routing_enabled": false,
+  "schema_version": 1,
+  "source_ledgers": [
+    {
+      "file_name": "background_feature_ledger_v2.json",
+      "role": "background",
+      "role_split_sha256": "5deba2dcf7a2d4aa6e1d89c6adf9ebf1cf7eb5a46705e1c160e9a0979930d826",
+      "rows_sha256": "5a7493dd14fe89270bcdad5f9261b3d450112e3aac52fd09a184886d9705840d",
+      "sha256": "7981930e305c328c26fa15c7bf61787500bf0ad0b99f91c506a9b101e7afc539"
+    },
+    {
+      "file_name": "injection_feature_ledger_v2.json",
+      "role": "injection",
+      "role_split_sha256": "24c364b90f9bdde44fb8132105f8ea2105f3ab9a1bad479eb6e2a75dfe1ef910",
+      "rows_sha256": "3255271c9707c9944720745d2f195ac5e9cd2e86c29c8eac850bfd8c534a69e5",
+      "sha256": "86425070b5e7c0ef3f8b5e140b6a21155f43b38b9189ffd1be313fb2405a5f45"
+    },
+    {
+      "file_name": "known_glitch_feature_ledger_v2.json",
+      "role": "known_glitch",
+      "role_split_sha256": "8487d897c0fe101aa5e13f8afd1a6c37c9ccf325ab14310c52c11cd2f41e3d1a",
+      "rows_sha256": "4793e30f30762356f659c664704c2ceaed0a8bb3f1ac818032700d61f8e0428b",
+      "sha256": "985a772923d388a7ddadb0ecb056e87b0b6178e8d36a3fef6de389be54447749"
+    },
+    {
+      "file_name": "robust_candidate_feature_ledger_v2.json",
+      "role": "robust_candidate",
+      "role_split_sha256": "f7af82a85fabee2a5578bc0a6cd9febd5a87f6c04b79ec3168fa8cdcd462637d",
+      "rows_sha256": "9a9801fcc518b93e69a15cb4c91dc787d2a6c685c22560405cbe4bb4045f8718",
+      "sha256": "5440f7153ece0b51f7a3c194ac3e61b9c298a1afa22e29cc223b5f78b38e5263"
+    }
+  ],
+  "status": "COMPLETE_DIAGNOSTIC_ONLY",
+  "updates_frozen_screening": false
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "built_not_published",
+  "scientific_mode": "frozen_v2_development_evidence_only",
+  "file_name": "dante_light_prefilter_l4_v2_development_artifacts.zip",
+  "bytes": 806000,
+  "sha256": "d0e6f05c34f73d5f5e0cbe1972d6c41c0fe3ce87f55ec7c9db8066d7f4a63151",
+  "entries": 18,
+  "screening_artifact_digest": "7be11b327e96f8744e2479286a0391f4a6b130ad7c5f4e856eb32167259242a5",
+  "diagnostic_artifact_digest": "51c8c408016488d3424ccf240e1b411b16db2a704ffadd890ee2d18870491691",
+  "contains_o4b_outcomes": false,
+  "contains_o4b_features": false,
+  "publication": {
+    "url": null,
+    "doi": null
+  }
+}

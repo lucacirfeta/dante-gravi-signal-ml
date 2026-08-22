@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "status": "posthoc_diagnostic_only",
+  "parent_protocol": {
+    "path": "config/dante_light_prefilter_protocol_v2.json",
+    "sha256": "054c3dbd537d2c2ca28955c6878e1bd12027f4a884cc76daca07cad81ef1df1a",
+    "protocol_digest": "a7f94ba384e670654002db711b8c7d8d8b18e83d26603e23f14599004030b1e4"
+  },
+  "uses_o4b_outcomes": false,
+  "updates_frozen_screening": false,
+  "eligible_for_pass_fail_gate": false,
+  "auc": {
+    "metric": "unweighted_oof_roc_auc",
+    "candidate_feature_sets": [
+      "temporal_energy",
+      "tf_cluster",
+      "spectral_evolution",
+      "wavelet_sparse",
+      "all"
+    ],
+    "report_overall": true,
+    "report_by_detector": true,
+    "report_by_protected_stratum_against_same_detector_background": true
+  },
+  "regularization_sweep": {
+    "candidate_feature_set": "all",
+    "regularization_c_values": [
+      0.1,
+      1.0,
+      10.0
+    ],
+    "report_frozen_constrained_reduction_for_context": true
+  },
+  "diagnostic_digest": "41b54cb6f244c0708d1b1a4981364837e86a734e6e3b9f6088a9d3ab4cdaad06"
+}

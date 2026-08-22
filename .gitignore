@@ -339,6 +339,8 @@ scripts/*
 !scripts/assemble_dante_light_prefilter_v2_evaluation.py
 !scripts/evaluate_dante_light_prefilter_v2.py
 !scripts/verify_dante_light_prefilter_v2_artifacts.py
+!scripts/diagnose_dante_light_prefilter_v2.py
+!scripts/build_dante_light_prefilter_v2_bundle.py
 !scripts/verify_dante_light_o4b_auxiliary.py
 !scripts/build_dante_light_report.py
 !scripts/verify_dante_light_report.py

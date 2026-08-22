@@ -1,0 +1,1130 @@
+{
+  "artifact_digest": "7be11b327e96f8744e2479286a0391f4a6b130ad7c5f4e856eb32167259242a5",
+  "cohort_split_sha256_by_role": {
+    "background": "5deba2dcf7a2d4aa6e1d89c6adf9ebf1cf7eb5a46705e1c160e9a0979930d826",
+    "injection": "24c364b90f9bdde44fb8132105f8ea2105f3ab9a1bad479eb6e2a75dfe1ef910",
+    "known_glitch": "8487d897c0fe101aa5e13f8afd1a6c37c9ccf325ab14310c52c11cd2f41e3d1a",
+    "robust_candidate": "f7af82a85fabee2a5578bc0a6cd9febd5a87f6c04b79ec3168fa8cdcd462637d"
+  },
+  "feature_cost": {
+    "development_n": 962,
+    "excludes_data_read_and_whitening": true,
+    "feature_extraction_max_s": 0.054529631000036716,
+    "feature_extraction_median_s": 0.016023100004531443,
+    "feature_extraction_p95_s": 0.026251570048043498
+  },
+  "o4b_outcomes_used": [],
+  "protocol": {
+    "file_name": "dante_light_prefilter_protocol_v2.json",
+    "protocol_digest": "a7f94ba384e670654002db711b8c7d8d8b18e83d26603e23f14599004030b1e4",
+    "protocol_id": "dante-light-l4-prefilter-v2-development",
+    "sha256": "054c3dbd537d2c2ca28955c6878e1bd12027f4a884cc76daca07cad81ef1df1a"
+  },
+  "representation_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+  "routing_enabled": false,
+  "schema_version": 2,
+  "scientific_mode": "development_only_block_cross_validated_prefilter_screening",
+  "screening": {
+    "candidates": [
+      {
+        "detectors": {
+          "H1": {
+            "background_n": 274,
+            "detector": "H1",
+            "development_background_call_reduction": 0.0036496350364964014,
+            "groups": {
+              "injection/H1/BBH_10_10": {
+                "n": 35,
+                "rate": 0.9714285714285714,
+                "retained": 34,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8546691276638634,
+                  0.9949385081445559
+                ]
+              },
+              "injection/H1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/H1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/H1/unknown": {
+                "n": 25,
+                "rate": 0.96,
+                "retained": 24,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8045593626380627,
+                  0.9929037664980127
+                ]
+              }
+            },
+            "threshold": 0.30907869657311104,
+            "would_call_exact": 273
+          },
+          "L1": {
+            "background_n": 278,
+            "detector": "L1",
+            "development_background_call_reduction": 0.0,
+            "groups": {
+              "injection/L1/BBH_10_10": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/L1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/L1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/ScatteredLight": {
+                "n": 25,
+                "rate": 0.96,
+                "retained": 24,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8045593626380627,
+                  0.9929037664980127
+                ]
+              },
+              "robust_candidate/L1/unknown": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              }
+            },
+            "threshold": 0.30246589600764184,
+            "would_call_exact": 278
+          }
+        },
+        "feature_names": [
+          "temporal_peak_ratio_125ms",
+          "temporal_top_energy_fraction_125ms",
+          "temporal_excursion_fraction_125ms",
+          "temporal_longest_excursion_fraction_125ms",
+          "temporal_peak_ratio_500ms",
+          "temporal_top_energy_fraction_500ms",
+          "temporal_excursion_fraction_500ms",
+          "temporal_longest_excursion_fraction_500ms",
+          "temporal_peak_ratio_2000ms",
+          "temporal_top_energy_fraction_2000ms",
+          "temporal_excursion_fraction_2000ms",
+          "temporal_longest_excursion_fraction_2000ms"
+        ],
+        "feature_set": "temporal_energy",
+        "folds": [
+          {
+            "fold": 1,
+            "train_n": 771,
+            "validation_block_n": 187,
+            "validation_n": 191
+          },
+          {
+            "fold": 2,
+            "train_n": 767,
+            "validation_block_n": 187,
+            "validation_n": 195
+          },
+          {
+            "fold": 3,
+            "train_n": 773,
+            "validation_block_n": 186,
+            "validation_n": 189
+          },
+          {
+            "fold": 4,
+            "train_n": 768,
+            "validation_block_n": 186,
+            "validation_n": 194
+          },
+          {
+            "fold": 5,
+            "train_n": 769,
+            "validation_block_n": 186,
+            "validation_n": 193
+          }
+        ],
+        "oof_development_background_call_reduction": 0.0018115942028985588,
+        "status": "NOT_READY"
+      },
+      {
+        "detectors": {
+          "H1": {
+            "background_n": 274,
+            "detector": "H1",
+            "development_background_call_reduction": 0.0,
+            "groups": {
+              "injection/H1/BBH_10_10": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/H1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/H1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/H1/unknown": {
+                "n": 25,
+                "rate": 0.96,
+                "retained": 24,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8045593626380627,
+                  0.9929037664980127
+                ]
+              }
+            },
+            "threshold": 0.44436249819205587,
+            "would_call_exact": 274
+          },
+          "L1": {
+            "background_n": 278,
+            "detector": "L1",
+            "development_background_call_reduction": 0.0,
+            "groups": {
+              "injection/L1/BBH_10_10": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/L1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/L1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/L1/unknown": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              }
+            },
+            "threshold": 0.44436249819205587,
+            "would_call_exact": 278
+          }
+        },
+        "feature_names": [
+          "tf_occupancy",
+          "tf_cluster_count_density",
+          "tf_largest_cluster_fraction",
+          "tf_largest_cluster_energy_fraction",
+          "tf_cluster_time_span_fraction",
+          "tf_cluster_band_span_fraction"
+        ],
+        "feature_set": "tf_cluster",
+        "folds": [
+          {
+            "fold": 1,
+            "train_n": 771,
+            "validation_block_n": 187,
+            "validation_n": 191
+          },
+          {
+            "fold": 2,
+            "train_n": 767,
+            "validation_block_n": 187,
+            "validation_n": 195
+          },
+          {
+            "fold": 3,
+            "train_n": 773,
+            "validation_block_n": 186,
+            "validation_n": 189
+          },
+          {
+            "fold": 4,
+            "train_n": 768,
+            "validation_block_n": 186,
+            "validation_n": 194
+          },
+          {
+            "fold": 5,
+            "train_n": 769,
+            "validation_block_n": 186,
+            "validation_n": 193
+          }
+        ],
+        "oof_development_background_call_reduction": 0.0,
+        "status": "NOT_READY"
+      },
+      {
+        "detectors": {
+          "H1": {
+            "background_n": 274,
+            "detector": "H1",
+            "development_background_call_reduction": 0.07664233576642332,
+            "groups": {
+              "injection/H1/BBH_10_10": {
+                "n": 35,
+                "rate": 0.9714285714285714,
+                "retained": 34,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8546691276638634,
+                  0.9949385081445559
+                ]
+              },
+              "injection/H1/BBH_30_30": {
+                "n": 35,
+                "rate": 0.9714285714285714,
+                "retained": 34,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8546691276638634,
+                  0.9949385081445559
+                ]
+              },
+              "injection/H1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "known_glitch/H1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/H1/unknown": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              }
+            },
+            "threshold": 0.21550934522145704,
+            "would_call_exact": 253
+          },
+          "L1": {
+            "background_n": 278,
+            "detector": "L1",
+            "development_background_call_reduction": 0.09712230215827333,
+            "groups": {
+              "injection/L1/BBH_10_10": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "injection/L1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/L1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "known_glitch/L1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/L1/unknown": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              }
+            },
+            "threshold": 0.19265250186478533,
+            "would_call_exact": 251
+          }
+        },
+        "feature_names": [
+          "spectral_flux_median",
+          "spectral_flux_max",
+          "spectral_centroid_range_fraction",
+          "spectral_centroid_slope_abs",
+          "spectral_entropy_median",
+          "spectral_entropy_range"
+        ],
+        "feature_set": "spectral_evolution",
+        "folds": [
+          {
+            "fold": 1,
+            "train_n": 771,
+            "validation_block_n": 187,
+            "validation_n": 191
+          },
+          {
+            "fold": 2,
+            "train_n": 767,
+            "validation_block_n": 187,
+            "validation_n": 195
+          },
+          {
+            "fold": 3,
+            "train_n": 773,
+            "validation_block_n": 186,
+            "validation_n": 189
+          },
+          {
+            "fold": 4,
+            "train_n": 768,
+            "validation_block_n": 186,
+            "validation_n": 194
+          },
+          {
+            "fold": 5,
+            "train_n": 769,
+            "validation_block_n": 186,
+            "validation_n": 193
+          }
+        ],
+        "oof_development_background_call_reduction": 0.08695652173913049,
+        "status": "NOT_READY"
+      },
+      {
+        "detectors": {
+          "H1": {
+            "background_n": 274,
+            "detector": "H1",
+            "development_background_call_reduction": 0.07664233576642332,
+            "groups": {
+              "injection/H1/BBH_10_10": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "injection/H1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/H1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "known_glitch/H1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/ScatteredLight": {
+                "n": 25,
+                "rate": 0.96,
+                "retained": 24,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8045593626380627,
+                  0.9929037664980127
+                ]
+              },
+              "robust_candidate/H1/unknown": {
+                "n": 25,
+                "rate": 0.96,
+                "retained": 24,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8045593626380627,
+                  0.9929037664980127
+                ]
+              }
+            },
+            "threshold": 0.29857345054089857,
+            "would_call_exact": 253
+          },
+          "L1": {
+            "background_n": 278,
+            "detector": "L1",
+            "development_background_call_reduction": 0.046762589928057596,
+            "groups": {
+              "injection/L1/BBH_10_10": {
+                "n": 35,
+                "rate": 0.9714285714285714,
+                "retained": 34,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8546691276638634,
+                  0.9949385081445559
+                ]
+              },
+              "injection/L1/BBH_30_30": {
+                "n": 35,
+                "rate": 0.9714285714285714,
+                "retained": 34,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8546691276638634,
+                  0.9949385081445559
+                ]
+              },
+              "injection/L1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "known_glitch/L1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/L1/unknown": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              }
+            },
+            "threshold": 0.2659782201502266,
+            "would_call_exact": 265
+          }
+        },
+        "feature_names": [
+          "wavelet_max_robust_z",
+          "wavelet_tail_fraction",
+          "wavelet_tail_mean_ratio",
+          "wavelet_scale_entropy",
+          "wavelet_peak_scale_energy_fraction",
+          "wavelet_longest_tail_run_fraction"
+        ],
+        "feature_set": "wavelet_sparse",
+        "folds": [
+          {
+            "fold": 1,
+            "train_n": 771,
+            "validation_block_n": 187,
+            "validation_n": 191
+          },
+          {
+            "fold": 2,
+            "train_n": 767,
+            "validation_block_n": 187,
+            "validation_n": 195
+          },
+          {
+            "fold": 3,
+            "train_n": 773,
+            "validation_block_n": 186,
+            "validation_n": 189
+          },
+          {
+            "fold": 4,
+            "train_n": 768,
+            "validation_block_n": 186,
+            "validation_n": 194
+          },
+          {
+            "fold": 5,
+            "train_n": 769,
+            "validation_block_n": 186,
+            "validation_n": 193
+          }
+        ],
+        "oof_development_background_call_reduction": 0.061594202898550776,
+        "status": "NOT_READY"
+      },
+      {
+        "detectors": {
+          "H1": {
+            "background_n": 274,
+            "detector": "H1",
+            "development_background_call_reduction": 0.0,
+            "groups": {
+              "injection/H1/BBH_10_10": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/H1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/H1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/H1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/H1/unknown": {
+                "n": 25,
+                "rate": 0.96,
+                "retained": 24,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8045593626380627,
+                  0.9929037664980127
+                ]
+              }
+            },
+            "threshold": 0.022717857582432947,
+            "would_call_exact": 274
+          },
+          "L1": {
+            "background_n": 278,
+            "detector": "L1",
+            "development_background_call_reduction": 0.13669064748201443,
+            "groups": {
+              "injection/L1/BBH_10_10": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "injection/L1/BBH_30_30": {
+                "n": 35,
+                "rate": 1.0,
+                "retained": 35,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.9010990076755961,
+                  1.0
+                ]
+              },
+              "injection/L1/NSBH_10_1.4": {
+                "n": 35,
+                "rate": 0.9428571428571428,
+                "retained": 33,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8139294257983508,
+                  0.9841868381428914
+                ]
+              },
+              "known_glitch/L1/Blip": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/KoiFish": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "known_glitch/L1/ScatteredLight": {
+                "n": 25,
+                "rate": 1.0,
+                "retained": 25,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8668077490609516,
+                  1.0
+                ]
+              },
+              "robust_candidate/L1/unknown": {
+                "n": 25,
+                "rate": 0.96,
+                "retained": 24,
+                "status": "PASS",
+                "wilson_interval": [
+                  0.8045593626380627,
+                  0.9929037664980127
+                ]
+              }
+            },
+            "threshold": 0.1938810623383472,
+            "would_call_exact": 240
+          }
+        },
+        "feature_names": [
+          "temporal_peak_ratio_125ms",
+          "temporal_top_energy_fraction_125ms",
+          "temporal_excursion_fraction_125ms",
+          "temporal_longest_excursion_fraction_125ms",
+          "temporal_peak_ratio_500ms",
+          "temporal_top_energy_fraction_500ms",
+          "temporal_excursion_fraction_500ms",
+          "temporal_longest_excursion_fraction_500ms",
+          "temporal_peak_ratio_2000ms",
+          "temporal_top_energy_fraction_2000ms",
+          "temporal_excursion_fraction_2000ms",
+          "temporal_longest_excursion_fraction_2000ms",
+          "tf_occupancy",
+          "tf_cluster_count_density",
+          "tf_largest_cluster_fraction",
+          "tf_largest_cluster_energy_fraction",
+          "tf_cluster_time_span_fraction",
+          "tf_cluster_band_span_fraction",
+          "spectral_flux_median",
+          "spectral_flux_max",
+          "spectral_centroid_range_fraction",
+          "spectral_centroid_slope_abs",
+          "spectral_entropy_median",
+          "spectral_entropy_range",
+          "wavelet_max_robust_z",
+          "wavelet_tail_fraction",
+          "wavelet_tail_mean_ratio",
+          "wavelet_scale_entropy",
+          "wavelet_peak_scale_energy_fraction",
+          "wavelet_longest_tail_run_fraction"
+        ],
+        "feature_set": "all",
+        "folds": [
+          {
+            "fold": 1,
+            "train_n": 771,
+            "validation_block_n": 187,
+            "validation_n": 191
+          },
+          {
+            "fold": 2,
+            "train_n": 767,
+            "validation_block_n": 187,
+            "validation_n": 195
+          },
+          {
+            "fold": 3,
+            "train_n": 773,
+            "validation_block_n": 186,
+            "validation_n": 189
+          },
+          {
+            "fold": 4,
+            "train_n": 768,
+            "validation_block_n": 186,
+            "validation_n": 194
+          },
+          {
+            "fold": 5,
+            "train_n": 769,
+            "validation_block_n": 186,
+            "validation_n": 193
+          }
+        ],
+        "oof_development_background_call_reduction": 0.0688405797101449,
+        "status": "NOT_READY"
+      }
+    ],
+    "class_weighting": "equal_background_and_positive_strata",
+    "cross_validation_method": "shuffled_group_k_fold",
+    "development_call_reduction_target": 0.5,
+    "folds": 5,
+    "gps_block_duration_s": 4096,
+    "model": "l2_logistic_regression",
+    "selection_metric": "oof_effective_development_call_reduction",
+    "selection_tie_break": [
+      "higher_reduction",
+      "fewer_features",
+      "feature_set_lexicographic"
+    ]
+  },
+  "selected_operating_point": null,
+  "source_ledgers": [
+    {
+      "file_name": "background_feature_ledger_v2.json",
+      "role": "background",
+      "role_split_sha256": "5deba2dcf7a2d4aa6e1d89c6adf9ebf1cf7eb5a46705e1c160e9a0979930d826",
+      "rows_sha256": "5a7493dd14fe89270bcdad5f9261b3d450112e3aac52fd09a184886d9705840d",
+      "sha256": "7981930e305c328c26fa15c7bf61787500bf0ad0b99f91c506a9b101e7afc539"
+    },
+    {
+      "file_name": "injection_feature_ledger_v2.json",
+      "role": "injection",
+      "role_split_sha256": "24c364b90f9bdde44fb8132105f8ea2105f3ab9a1bad479eb6e2a75dfe1ef910",
+      "rows_sha256": "3255271c9707c9944720745d2f195ac5e9cd2e86c29c8eac850bfd8c534a69e5",
+      "sha256": "86425070b5e7c0ef3f8b5e140b6a21155f43b38b9189ffd1be313fb2405a5f45"
+    },
+    {
+      "file_name": "known_glitch_feature_ledger_v2.json",
+      "role": "known_glitch",
+      "role_split_sha256": "8487d897c0fe101aa5e13f8afd1a6c37c9ccf325ab14310c52c11cd2f41e3d1a",
+      "rows_sha256": "4793e30f30762356f659c664704c2ceaed0a8bb3f1ac818032700d61f8e0428b",
+      "sha256": "985a772923d388a7ddadb0ecb056e87b0b6178e8d36a3fef6de389be54447749"
+    },
+    {
+      "file_name": "robust_candidate_feature_ledger_v2.json",
+      "role": "robust_candidate",
+      "role_split_sha256": "f7af82a85fabee2a5578bc0a6cd9febd5a87f6c04b79ec3168fa8cdcd462637d",
+      "rows_sha256": "9a9801fcc518b93e69a15cb4c91dc787d2a6c685c22560405cbe4bb4045f8718",
+      "sha256": "5440f7153ece0b51f7a3c194ac3e61b9c298a1afa22e29cc223b5f78b38e5263"
+    }
+  ],
+  "status": "NOT_READY"
+}

@@ -3,9 +3,14 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import json
+from pathlib import Path
 
 from src.dante_light.contracts import WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_v2 import feature_names_by_family
+from src.dante_light.prefilter_v2_diagnostics import (
+    diagnose_prefilter_v2,
+    load_diagnostic_config,
+)
 from src.dante_light.prefilter_v2_protocol import load_prefilter_v2_protocol
 from src.dante_light.prefilter_v2_screening import (
     _candidate_sort_key,
@@ -149,3 +154,74 @@ def test_candidate_tie_break_prefers_fewer_features_then_lexicographic_name():
     ]
     selected = min(candidates, key=_candidate_sort_key)
     assert selected["feature_set"] == "temporal_energy"
+
+
+def test_posthoc_auc_and_regularization_diagnostics_do_not_update_gate(tmp_path):
+    protocol = _protocol(tmp_path)
+    rows = {role: [] for role in SPLIT_HASHES}
+    index = 0
+    for detector in ("H1", "L1"):
+        for _ in range(20):
+            rows["background"].append(
+                _row(protocol, index, "background", detector, "clean_background", False)
+            )
+            index += 1
+        for _ in range(16):
+            rows["robust_candidate"].append(
+                _row(protocol, index, "robust_candidate", detector, "unknown", True)
+            )
+            index += 1
+        for morphology in ("Blip", "KoiFish", "ScatteredLight"):
+            for _ in range(16):
+                rows["known_glitch"].append(
+                    _row(protocol, index, "known_glitch", detector, morphology, True)
+                )
+                index += 1
+        for morphology in ("BBH_30_30", "BBH_10_10", "NSBH_10_1.4"):
+            for _ in range(16):
+                rows["injection"].append(
+                    _row(protocol, index, "injection", detector, morphology, True)
+                )
+                index += 1
+    ledgers = {role: _ledger(tmp_path, protocol, role, values) for role, values in rows.items()}
+    screening = screen_prefilter_v2(
+        ledgers=ledgers,
+        expected_split_hashes=SPLIT_HASHES,
+        protocol=protocol,
+    )
+    screening["status"] = "NOT_READY"
+    screening["selected_operating_point"] = None
+    screening.pop("artifact_digest")
+    screening["artifact_digest"] = canonical_json_sha256(screening)
+    screening_path = tmp_path / "screening_not_ready.json"
+    screening_path.write_text(json.dumps(screening), encoding="utf-8")
+
+    default = json.loads(
+        (Path(__file__).resolve().parents[1] / "config/dante_light_prefilter_v2_diagnostics.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    default["parent_protocol"] = {
+        "path": "config/dante_light_prefilter_protocol_v2.json",
+        "sha256": protocol.sha256,
+        "protocol_digest": protocol.payload["protocol_digest"],
+    }
+    default.pop("diagnostic_digest")
+    default["diagnostic_digest"] = canonical_json_sha256(default)
+    config_path = tmp_path / "diagnostics.json"
+    config_path.write_text(json.dumps(default), encoding="utf-8")
+    config = load_diagnostic_config(config_path, protocol=protocol)
+    result = diagnose_prefilter_v2(
+        ledgers=ledgers,
+        expected_split_hashes=SPLIT_HASHES,
+        frozen_screening_path=screening_path,
+        protocol=protocol,
+        diagnostic_config=config,
+    )
+    assert result["status"] == "COMPLETE_DIAGNOSTIC_ONLY"
+    assert result["eligible_for_pass_fail_gate"] is False
+    assert result["updates_frozen_screening"] is False
+    assert result["o4b_outcomes_used"] == []
+    temporal = next(item for item in result["auc_by_candidate"] if item["feature_set"] == "temporal_energy")
+    assert temporal["roc_auc"]["overall"] == 1.0
+    assert len(result["all_feature_regularization_sweep"]) == 3
