@@ -14,5 +14,9 @@ docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md text eol=lf
 data/production/aggregated/*.json binary
 data/production/aggregated/*.csv binary
 data/production/aggregated/*.npy binary
+# PEM provenance hashes bind exact published bytes, including line endings.
+data/production/aggregated/pem/**/*.json binary
+data/production/aggregated/pem/**/*.csv binary
+data/production_reference/channel_thresholds.json binary
 runs/dante_light/o4b_v2/**/*.json text eol=lf
 runs/dante_light/o4b_v2/**/*.jsonl text eol=lf
