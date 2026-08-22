@@ -1,0 +1,140 @@
+{
+  "artifact_digest": "3067fd4595ddf1c03b44f09f19c698ca522d728c644f45cfd6929bf20e6280c4",
+  "availability_preflight": {
+    "known_glitch_failures": [
+      {
+        "cohort_id": "v2-known:H1:XG5Fhr2C9o",
+        "error": "DEPENDENCY_UNAVAILABLE",
+        "error_type": "DeferredWindow",
+        "window_id": "dlw1-bc6e6244c60fa552b57c8682"
+      },
+      {
+        "cohort_id": "v2-known:L1:8YWvOVNP1Z",
+        "error": "DEPENDENCY_UNAVAILABLE",
+        "error_type": "DeferredWindow",
+        "window_id": "dlw1-16ad0e2792296f34425f8764"
+      },
+      {
+        "cohort_id": "v2-known:L1:75gt79VUNs",
+        "error": "DEPENDENCY_UNAVAILABLE",
+        "error_type": "DeferredWindow",
+        "window_id": "dlw1-6bc30dba058d80cbefb59660"
+      },
+      {
+        "cohort_id": "v2-known:L1:UPxVuZzMU3",
+        "error": "DEPENDENCY_UNAVAILABLE",
+        "error_type": "DeferredWindow",
+        "window_id": "dlw1-b61537833d18f0281471a65a"
+      },
+      {
+        "cohort_id": "v2-known:L1:7ZyRMthXSA",
+        "error": "DEPENDENCY_UNAVAILABLE",
+        "error_type": "DeferredWindow",
+        "window_id": "dlw1-9c53cd046db3e338f68161f2"
+      },
+      {
+        "cohort_id": "v2-known:L1:Rj4qP791kx",
+        "error": "DEPENDENCY_UNAVAILABLE",
+        "error_type": "DeferredWindow",
+        "window_id": "dlw1-cac1585fedc2ea749ef8472d"
+      }
+    ],
+    "robust_candidate_failures": []
+  },
+  "cohorts": {
+    "background": {
+      "counts": {
+        "development": 552,
+        "evaluation": 0,
+        "total": 552
+      },
+      "role": "background",
+      "seed": 20260822,
+      "sources": [
+        {
+          "path": "config/dante_light_prefilter_splits_v1.json",
+          "role_split_sha256": "e8c72b67c92adc686c15f343ce3271f5aca7fbe93cbb5015ba4635503fe647db",
+          "sha256": "40a23728c68500ff6a35391787fb40e37f02ea0467c836673b7b61279392656a"
+        }
+      ],
+      "split_sha256": "5deba2dcf7a2d4aa6e1d89c6adf9ebf1cf7eb5a46705e1c160e9a0979930d826"
+    },
+    "injection": {
+      "counts": {
+        "development": 210,
+        "evaluation": 540,
+        "total": 750
+      },
+      "role": "injection",
+      "seed": 20260822,
+      "sources": [
+        {
+          "path": "config/dante_light_prefilter_splits_v1.json",
+          "role_split_sha256": "62cf427773a3bd6a381ad92cff203bb2d46c254beb0b9f76a5e32e7ee0e1ee0f",
+          "sha256": "40a23728c68500ff6a35391787fb40e37f02ea0467c836673b7b61279392656a"
+        }
+      ],
+      "split_sha256": "24c364b90f9bdde44fb8132105f8ea2105f3ab9a1bad479eb6e2a75dfe1ef910"
+    },
+    "known_glitch": {
+      "counts": {
+        "development": 150,
+        "evaluation": 108,
+        "total": 258
+      },
+      "role": "known_glitch",
+      "seed": 20260822,
+      "sources": [
+        {
+          "path": "config/dante_light_prefilter_splits_v1.json",
+          "role_split_sha256": "bcfaf601f553f90949c293435885faa9a2502291db94928b1fa6907376ea3cee",
+          "sha256": "40a23728c68500ff6a35391787fb40e37f02ea0467c836673b7b61279392656a"
+        },
+        {
+          "path": "data/reference/gs_classifications_O3b_H1.csv",
+          "sha256": "f17ae6344220d985ddaf134481a9074f89c5dd2fcf345870b20381c008d7cb04"
+        },
+        {
+          "path": "data/reference/gs_classifications_O3b_L1.csv",
+          "sha256": "dd2e66c2afbdb6a80aec9081a9bfd29b577cf3f6e9c2d289300de33fc6c2c04a"
+        }
+      ],
+      "split_sha256": "8487d897c0fe101aa5e13f8afd1a6c37c9ccf325ab14310c52c11cd2f41e3d1a"
+    },
+    "robust_candidate": {
+      "counts": {
+        "development": 50,
+        "evaluation": 40,
+        "total": 90
+      },
+      "role": "robust_candidate",
+      "seed": 20260822,
+      "sources": [
+        {
+          "path": "config/dante_light_prefilter_splits_v1.json",
+          "role_split_sha256": "4aae3bc2220b2d185c45a989e307ee84a9cc7e44888b3ff5d74254daf20ca38a",
+          "sha256": "40a23728c68500ff6a35391787fb40e37f02ea0467c836673b7b61279392656a"
+        },
+        {
+          "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+          "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+        }
+      ],
+      "split_sha256": "f7af82a85fabee2a5578bc0a6cd9febd5a87f6c04b79ec3168fa8cdcd462637d"
+    }
+  },
+  "entries_file_sha256": "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609",
+  "entries_path": "dante_light_prefilter_splits_v2.jsonl",
+  "exact_scores_used_for_partition": [],
+  "feature_values_used_for_partition": [],
+  "outcome_fields_used_for_partition": [],
+  "protocol": {
+    "file_name": "dante_light_prefilter_protocol_v2.json",
+    "protocol_digest": "a7f94ba384e670654002db711b8c7d8d8b18e83d26603e23f14599004030b1e4",
+    "protocol_id": "dante-light-l4-prefilter-v2-development",
+    "sha256": "054c3dbd537d2c2ca28955c6878e1bd12027f4a884cc76daca07cad81ef1df1a"
+  },
+  "schema_version": 2,
+  "seed": 20260822,
+  "status": "availability_screened_before_feature_extraction"
+}

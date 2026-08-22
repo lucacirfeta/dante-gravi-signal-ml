@@ -262,6 +262,7 @@ docs/*
 !docs/GITIGNORE_AUDIT.md
 !docs/DANTE_LIGHT_L4_PREFILTER.md
 !docs/DANTE_LIGHT_L4_PREFILTER_NOT_READY_2026-08-22.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V2_NOT_READY_2026-08-22.md
 runs/
 
 # Raw HDF5 strain data downloads
@@ -330,6 +331,14 @@ scripts/*
 !scripts/build_dante_light_prefilter_injection_features.py
 !scripts/tune_dante_light_prefilter.py
 !scripts/assemble_dante_light_prefilter_evaluation.py
+!scripts/build_dante_light_prefilter_v2_splits.py
+!scripts/build_dante_light_prefilter_v2_cohort_features.py
+!scripts/build_dante_light_prefilter_v2_injection_features.py
+!scripts/build_dante_light_prefilter_v2_shadow_features.py
+!scripts/screen_dante_light_prefilter_v2.py
+!scripts/assemble_dante_light_prefilter_v2_evaluation.py
+!scripts/evaluate_dante_light_prefilter_v2.py
+!scripts/verify_dante_light_prefilter_v2_artifacts.py
 !scripts/verify_dante_light_o4b_auxiliary.py
 !scripts/build_dante_light_report.py
 !scripts/verify_dante_light_report.py

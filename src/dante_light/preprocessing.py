@@ -76,6 +76,7 @@ def _prepare_whitened_subwindow(
     *,
     local_only: bool,
     remote_only: bool = False,
+    pad_s: float = 4.0,
 ) -> tuple[object, str, dict[str, float], float]:
     from src.core.data_loader import fetch_strain_data
     from src.core.preprocessor import (
@@ -90,8 +91,8 @@ def _prepare_whitened_subwindow(
     try:
         strain = fetch_strain_data(
             window.detector,
-            start - 4.0,
-            end + 4.0,
+            start - pad_s,
+            end + pad_s,
             local_only=local_only,
             remote_only=remote_only,
         )
@@ -101,7 +102,7 @@ def _prepare_whitened_subwindow(
     actual_start = float(strain.t0.value)
     actual_end = actual_start + float(strain.duration.value)
     tolerance = 1.0 / float(strain.sample_rate.value)
-    if actual_start > start - 4.0 + tolerance or actual_end < end + 4.0 - tolerance:
+    if actual_start > start - pad_s + tolerance or actual_end < end + pad_s - tolerance:
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
     if not np.all(np.isfinite(strain.value)):
         raise DeferredWindow(FailClosedReason.NONFINITE_INPUT)
@@ -110,16 +111,46 @@ def _prepare_whitened_subwindow(
     ).hexdigest()
 
     began = time.perf_counter()
-    whitened, padding = whiten_context(strain, start, end, pad=4.0)
+    whitened, padding = whiten_context(strain, start, end, pad=pad_s)
     clean = extract_clean_subwindow(whitened, start, end)
     stages["whitening_s"] = time.perf_counter() - began
     effective_left = float(padding.get("effective_left", 0.0))
     effective_right = float(padding.get("effective_right", 0.0))
-    if effective_left + tolerance < 4.0 or effective_right + tolerance < 4.0:
+    if effective_left + tolerance < pad_s or effective_right + tolerance < pad_s:
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
     if abs(float(clean.duration.value) - window.duration_s) > tolerance:
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
     return clean, strain_sha256, stages, float(strain.sample_rate.value)
+
+
+def preflight_prefilter_window(
+    window: WindowIdentity,
+    *,
+    local_only: bool,
+    remote_only: bool = False,
+    pad_s: float,
+    expected_sample_rate_hz: int,
+) -> dict[str, float | int | str]:
+    """Verify canonical feature input availability without computing features."""
+
+    clean, strain_sha256, stages, sample_rate_hz = _prepare_whitened_subwindow(
+        window,
+        local_only=local_only,
+        remote_only=remote_only,
+        pad_s=pad_s,
+    )
+    if int(round(sample_rate_hz)) != int(expected_sample_rate_hz):
+        raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
+    values = np.asarray(clean.value)
+    if not np.all(np.isfinite(values)):
+        raise DeferredWindow(FailClosedReason.NONFINITE_INPUT)
+    return {
+        "strain_sha256": strain_sha256,
+        "sample_rate_hz": int(round(sample_rate_hz)),
+        "clean_samples": int(values.size),
+        "data_read_s": float(stages["data_read_s"]),
+        "whitening_s": float(stages["whitening_s"]),
+    }
 
 
 def prepare_prefilter_features(
@@ -138,6 +169,39 @@ def prepare_prefilter_features(
     began = time.perf_counter()
     features = extract_excess_energy_features(
         np.asarray(clean.value), sample_rate_hz=int(sample_rate_hz)
+    )
+    stages["feature_extraction_s"] = time.perf_counter() - began
+    return PreparedPrefilterFeatures(
+        features=features,
+        strain_sha256=strain_sha256,
+        timings=stages,
+    )
+
+
+def prepare_prefilter_v2_features(
+    window: WindowIdentity,
+    *,
+    local_only: bool,
+    remote_only: bool = False,
+    config: dict,
+    pad_s: float,
+) -> PreparedPrefilterFeatures:
+    """Extract the frozen v2 feature families from canonical whitened strain."""
+
+    from src.dante_light.prefilter_v2 import extract_prefilter_v2_features
+
+    clean, strain_sha256, stages, sample_rate_hz = _prepare_whitened_subwindow(
+        window,
+        local_only=local_only,
+        remote_only=remote_only,
+        pad_s=pad_s,
+    )
+    if int(round(sample_rate_hz)) != int(config["sample_rate_hz"]):
+        raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
+    began = time.perf_counter()
+    features = extract_prefilter_v2_features(
+        np.asarray(clean.value),
+        config=config,
     )
     stages["feature_extraction_s"] = time.perf_counter() - began
     return PreparedPrefilterFeatures(

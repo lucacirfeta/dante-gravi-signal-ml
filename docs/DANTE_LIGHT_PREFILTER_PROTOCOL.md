@@ -1,17 +1,25 @@
-# DANTE-Light L4 prefilter evaluation protocol
+# DANTE-Light L4 prefilter research protocol
 
-Status: **implementation in progress; routing disabled**
+Status: **v1 and v2 development complete, both NOT_READY; routing disabled**
 Scientific mode: **research-only, outcome-blind evaluation**
+
+V1 is preserved as the immutable two-feature negative result documented in
+`DANTE_LIGHT_L4_PREFILTER_NOT_READY_2026-08-22.md`. V2 is a separate,
+prospectively frozen attempt documented in
+`DANTE_LIGHT_L4_PREFILTER_V2_NOT_READY_2026-08-22.md`. V2 added four
+pre-registered feature families and grouped cross-validation; it did not
+replace or rewrite v1. Neither result authorizes routing or an O4b performance
+claim.
 
 ## Question and fixed boundary
 
-The L4 experiment asks whether the deterministic excess-energy prefilter can
+The L4 experiments ask whether a deterministic cheap prefilter can
 avoid at least 50% of DINOv2 calls, after rejected-window auditing, without
 removing exact DANTE escalations or materially reducing coverage of robust
 candidates, known glitch morphologies, or injections. It does not test a new
 anomaly score and it cannot change the canonical no-prefilter path.
 
-The only allowed feature source is the clean 32 s strain returned by
+The only allowed input is the clean 32 s strain returned by
 `whiten_context(pad=4.0) -> extract_clean_subwindow`. Features must be computed
 before reading the exact DANTE disposition. Threshold selection and final
 evaluation use disjoint GPS epochs or independent simulation seeds.
@@ -23,9 +31,9 @@ evaluation use disjoint GPS epochs or independent simulation seeds.
    It may choose the two feature thresholds but contributes no final metric.
 2. **Later shadow evaluation:** all 768 locked O4b-v2 windows, including all 18
    exact Light escalations. No O4b outcome may enter threshold selection.
-3. **Scientific retention evaluation:** held-out robust candidates, at least 18
-   reference-positive examples per required known-glitch stratum, and at least
-   18 reference-positive examples per required injection stratum. These
+3. **Scientific retention evaluation:** 20 held-out ROBUST candidates per
+   detector, 18 reference-positive examples per required known-glitch stratum,
+   and 90 reference-positive examples per required injection stratum. These
    examples must not have selected the thresholds. Existing rows may be reused
    only when their raw strain or
    deterministic injection recipe can regenerate the canonical feature input.
@@ -35,7 +43,7 @@ be used as a substitute for raw/whitened strain. A missing raw segment,
 unreproducible injection, detector mismatch, hash mismatch or insufficient
 stratum produces `NOT_READY`.
 
-## Locked operating point
+## V1 locked operating point
 
 The development search may examine only `crest_factor` and
 `peak_band_fraction`. It selects one OR threshold pair and freezes:
@@ -47,9 +55,10 @@ The development search may examine only `crest_factor` and
 - required strata and their minimum sample sizes;
 - point-retention and Wilson-lower-bound requirements.
 
-The promotion-grade minima are fixed in code: effective DINO-call reduction
-at least 0.50, non-zero rejected-window audit, at least 18 examples per required
-group, point retention at least 0.90, Wilson 95% lower bound at least 0.80, and
+The promotion-grade minima are read from the versioned protocol config:
+effective DINO-call reduction at least 0.50, non-zero rejected-window audit,
+the role-specific sample sizes
+above, point retention at least 0.90, Wilson 95% lower bound at least 0.80, and
 zero missed exact O4b escalations. The contract must gate robust candidates,
 known glitches and injections explicitly. Retention gates are separate for
 each detector and, for known glitches and injections, for each pre-registered
@@ -59,8 +68,8 @@ Retention is conditional on a frozen cohort-specific positive endpoint
 released robustness class for robust candidates, the external quality-screened
 label for known glitches, and membership in a pre-registered injection cell for
 simulations. These endpoints and their split hashes are fixed before feature
-evaluation. Cells with fewer than 18 reference-positive examples remain
-unmeasured and cannot contribute to promotion. Exact-score non-regression is
+evaluation. Cells below their role-specific frozen minimum remain unmeasured
+and cannot contribute to promotion. Exact-score non-regression is
 reported separately on all 18 O4b escalations.
 
 ## Effective compute and miss accounting
@@ -98,7 +107,35 @@ artifact and a complete parallel shadow epoch are required before
 6. run the complete DANTE-Light and repository regression gates;
 7. only then decide whether a separate promotion experiment is justified.
 
-The frozen split artifact is generated deterministically from the released P5,
+## V2 frozen extension
+
+V2 keeps the same scientific gates and audit accounting but removes the
+development/evaluation sample-size ambiguity. Development contains 25 ROBUST
+examples per detector, 25 known glitches per detector and morphology, and 35
+injections per detector and source system. Evaluation remains the untouched v1
+partition: 20, 18 and 90 respectively. Point-retention and Wilson requirements
+are identical in both stages. At n=18 and n=20 those combined gates imply zero
+held-out misses; the smaller evaluation counts are not treated as equivalent
+statistical power to the development counts.
+
+The candidate representations are temporal-energy concentration, coarse
+time-frequency cluster topology, spectral evolution and dyadic wavelet
+sparsity. Detector-specific L2 logistic models are screened with shuffled
+five-fold grouped cross-validation; groups are detector-specific 4096 s GPS
+blocks. The selection objective is effective development call reduction after
+the same 5% deterministic audit used by evaluation. This quantity is measured
+on O4a development background, whereas final effective compute reduction would
+be measured on the differently composed O4b shadow stream. The final gate is
+therefore not inferred from the development metric.
+
+The frozen v2 screening result is `NOT_READY`: the best candidate reached
+8.70% rather than 50%. Under the protocol, this forbids O4b feature extraction
+and evaluation. Any further representation or model is v3 work requiring a new
+scientific decision and a new protocol, not an in-place v2 optimization.
+
+## V1 reproducibility commands
+
+The frozen v1 split artifact is generated deterministically from the released P5,
 known-glitch and injection ledgers:
 
 ```bash

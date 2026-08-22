@@ -1,0 +1,160 @@
+{
+  "schema_version": 2,
+  "status": "frozen",
+  "protocol_id": "dante-light-l4-prefilter-v2-development",
+  "parent_protocol": {
+    "path": "config/dante_light_prefilter_protocol_v1.json",
+    "sha256": "bfee9947d61bf4944d20a3e95ba3a32c7b3f94980d02ff1b7b0373b223d4bb0c",
+    "result": "NOT_READY"
+  },
+  "scientific_boundary": {
+    "primary_development_run": "O4A",
+    "external_known_glitch_run": "O3B",
+    "prospective_evaluation_run": "O4B",
+    "o4b_outcomes_allowed_during_development": false,
+    "routing_enabled": false
+  },
+  "cohort_split_seed": 20260822,
+  "required_detectors": [
+    "H1",
+    "L1"
+  ],
+  "required_morphologies_by_role": {
+    "known_glitch": [
+      "Blip",
+      "KoiFish",
+      "ScatteredLight"
+    ],
+    "injection": [
+      "BBH_30_30",
+      "BBH_10_10",
+      "NSBH_10_1.4"
+    ]
+  },
+  "cohort_augmentation": {
+    "base_split": {
+      "path": "config/dante_light_prefilter_splits_v1.json",
+      "sha256": "40a23728c68500ff6a35391787fb40e37f02ea0467c836673b7b61279392656a",
+      "entries_sha256": "d7bac1a6d4f6e63382e3909d7aa4a3475937856c4d66d0c5fd3703bc955d6dd1"
+    },
+    "robust_candidate": {
+      "additional_development_per_detector": 5,
+      "source_path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "source_sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
+      "required_class": "ROBUST"
+    },
+    "known_glitch": {
+      "additional_development_per_stratum": 13,
+      "availability_reserve_per_stratum": 25,
+      "catalog_zenodo_record": "5649212",
+      "catalog_paths": {
+        "H1": "data/reference/gs_classifications_O3b_H1.csv",
+        "L1": "data/reference/gs_classifications_O3b_L1.csv"
+      },
+      "catalog_sha256": {
+        "H1": "f17ae6344220d985ddaf134481a9074f89c5dd2fcf345870b20381c008d7cb04",
+        "L1": "dd2e66c2afbdb6a80aec9081a9bfd29b577cf3f6e9c2d289300de33fc6c2c04a"
+      },
+      "minimum_ml_confidence": 0.95,
+      "minimum_snr": 7.5,
+      "separation_guard_s": 96.0
+    },
+    "availability_preflight": {
+      "whitening_context_pad_s": 4.0,
+      "workers": 4,
+      "selection_uses_feature_values": false,
+      "selection_uses_exact_scores": false
+    }
+  },
+  "audit": {
+    "fraction": 0.05,
+    "seed": 20260822
+  },
+  "feature_extraction": {
+    "feature_version": "prefilter-v2",
+    "sample_rate_hz": 4096,
+    "analysis_band_hz": [
+      20.0,
+      1024.0
+    ],
+    "temporal_block_durations_s": [
+      0.125,
+      0.5,
+      2.0
+    ],
+    "temporal_overlap_fraction": 0.5,
+    "temporal_top_fraction": 0.05,
+    "stft_frame_duration_s": 0.25,
+    "stft_overlap_fraction": 0.5,
+    "robust_z_threshold": 6.0,
+    "dyadic_levels": 8,
+    "wavelet_tail_quantile": 0.995,
+    "families": [
+      "temporal_energy",
+      "tf_cluster",
+      "spectral_evolution",
+      "wavelet_sparse"
+    ]
+  },
+  "development": {
+    "cross_validation_folds": 5,
+    "cross_validation_method": "shuffled_group_k_fold",
+    "gps_block_duration_s": 4096,
+    "model": "l2_logistic_regression",
+    "regularization_c": 1.0,
+    "maximum_iterations": 2000,
+    "class_weighting": "equal_background_and_positive_strata",
+    "candidate_feature_sets": [
+      "temporal_energy",
+      "tf_cluster",
+      "spectral_evolution",
+      "wavelet_sparse",
+      "all"
+    ],
+    "selection_metric": "oof_effective_development_call_reduction",
+    "selection_tie_break": [
+      "higher_reduction",
+      "fewer_features",
+      "feature_set_lexicographic"
+    ],
+    "minimum_effective_reduction": 0.5,
+    "minimum_background_per_detector": 200,
+    "wilson_confidence": 0.95,
+    "minimum_retention_by_role": {
+      "robust_candidate": 0.9,
+      "known_glitch": 0.9,
+      "injection": 0.9
+    },
+    "minimum_wilson_lower_by_role": {
+      "robust_candidate": 0.8,
+      "known_glitch": 0.8,
+      "injection": 0.8
+    },
+    "minimum_group_n_by_role": {
+      "robust_candidate": 25,
+      "known_glitch": 25,
+      "injection": 35
+    }
+  },
+  "evaluation": {
+    "minimum_compute_reduction": 0.5,
+    "minimum_exact_escalates": 18,
+    "wilson_confidence": 0.95,
+    "minimum_retention_by_role": {
+      "robust_candidate": 0.9,
+      "known_glitch": 0.9,
+      "injection": 0.9
+    },
+    "minimum_wilson_lower_by_role": {
+      "robust_candidate": 0.8,
+      "known_glitch": 0.8,
+      "injection": 0.8
+    },
+    "minimum_group_n_by_role": {
+      "robust_candidate": 20,
+      "known_glitch": 18,
+      "injection": 90
+    }
+  },
+  "protocol_digest": "a7f94ba384e670654002db711b8c7d8d8b18e83d26603e23f14599004030b1e4"
+}

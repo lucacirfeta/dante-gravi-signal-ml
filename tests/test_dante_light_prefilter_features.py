@@ -14,6 +14,7 @@ from src.dante_light.contracts import (
     canonical_json_sha256,
 )
 from src.dante_light.prefilter import ExcessEnergyFeatures
+from src.dante_light.prefilter_v2 import PrefilterFeaturesV2
 from src.dante_light.prefilter_features import (
     build_shadow_feature_ledger,
     build_split_feature_ledger,
@@ -140,6 +141,25 @@ def test_shadow_feature_ledger_resumes_partial_rows(tmp_path):
     assert len(resumed) == 2
 
 
+def test_v2_shadow_feature_ledger_uses_distinct_files(tmp_path):
+    manifest, records, prepared = _case(tmp_path)
+    output = tmp_path / "output-v2"
+    ledger = build_shadow_feature_ledger(
+        root=tmp_path,
+        manifest_path=manifest,
+        records_path=records,
+        output_dir=output,
+        prepare=lambda task: prepared[task.window.window_id],
+        schema_version=2,
+        file_version="v2",
+        feature_source="prefilter-v2:test",
+        scientific_mode="frozen_o4b_shadow_v2_feature_extraction",
+    )
+    assert ledger["schema_version"] == 2
+    assert ledger["rows_path"] == "shadow_features_v2.jsonl"
+    assert (output / "shadow_feature_ledger_v2.json").is_file()
+
+
 def test_build_split_feature_ledger_preserves_frozen_partition(tmp_path):
     prepared = PreparedPrefilterFeatures(
         features=ExcessEnergyFeatures(1.0, 3.0, 0.1, 2.0),
@@ -186,3 +206,84 @@ def test_split_feature_ledger_parallel_output_is_finally_deterministic(tmp_path)
     assert ledger["extraction_workers"] == 3
     rows = [json.loads(line) for line in (tmp_path / ledger["rows_path"]).read_text().splitlines()]
     assert [row["cohort_id"] for row in rows] == sorted(row["cohort_id"] for row in rows)
+
+
+def test_v2_split_ledger_uses_separate_schema_and_verifies_preflight(tmp_path):
+    split_path = "config/dante_light_prefilter_splits_v1.json"
+    from src.dante_light.prefilter_splits import load_prefilter_splits, write_prefilter_splits
+
+    split = load_prefilter_splits(split_path)
+    split["schema_version"] = 2
+    split["status"] = "availability_screened_before_feature_extraction"
+    source = split["cohorts"]["robust_candidate"]["rows"][0]
+    source["availability_preflight"] = {"strain_sha256": "c" * 64}
+    body = {
+        "role": "robust_candidate",
+        "seed": split["seed"],
+        "sources": split["cohorts"]["robust_candidate"]["sources"],
+        "rows": split["cohorts"]["robust_candidate"]["rows"],
+    }
+    split["cohorts"]["robust_candidate"]["split_sha256"] = canonical_json_sha256(body)
+    split["artifact_digest"] = canonical_json_sha256(split)
+    frozen = tmp_path / "split_v2.json"
+    write_prefilter_splits(split, frozen)
+    prepared = PreparedPrefilterFeatures(
+        features=PrefilterFeaturesV2({"temporal_peak_ratio_125ms": 2.0}),
+        strain_sha256="c" * 64,
+        timings={"data_read_s": 0.1},
+    )
+    ledger = build_split_feature_ledger(
+        root=".",
+        split_path=frozen,
+        role="robust_candidate",
+        output_dir=tmp_path / "features",
+        limit=1,
+        prepare=lambda _task: prepared,
+        schema_version=2,
+        file_version="v2",
+        feature_source="prefilter-v2:test",
+        accepted_split_statuses=("availability_screened_before_feature_extraction",),
+        verify_preflight_strain=True,
+    )
+    assert ledger["schema_version"] == 2
+    assert ledger["rows_path"] == "robust_candidate_features_v2.jsonl"
+
+
+def test_v2_split_ledger_rejects_changed_preflight_strain(tmp_path):
+    split_path = "config/dante_light_prefilter_splits_v1.json"
+    from src.dante_light.prefilter_splits import load_prefilter_splits, write_prefilter_splits
+
+    split = load_prefilter_splits(split_path)
+    split["schema_version"] = 2
+    split["status"] = "availability_screened_before_feature_extraction"
+    source = split["cohorts"]["robust_candidate"]["rows"][0]
+    source["availability_preflight"] = {"strain_sha256": "c" * 64}
+    body = {
+        "role": "robust_candidate",
+        "seed": split["seed"],
+        "sources": split["cohorts"]["robust_candidate"]["sources"],
+        "rows": split["cohorts"]["robust_candidate"]["rows"],
+    }
+    split["cohorts"]["robust_candidate"]["split_sha256"] = canonical_json_sha256(body)
+    split["artifact_digest"] = canonical_json_sha256(split)
+    frozen = tmp_path / "split_v2.json"
+    write_prefilter_splits(split, frozen)
+    prepared = PreparedPrefilterFeatures(
+        features=PrefilterFeaturesV2({"temporal_peak_ratio_125ms": 2.0}),
+        strain_sha256="d" * 64,
+        timings={"data_read_s": 0.1},
+    )
+    with pytest.raises(ContractError, match="preflight strain digest changed"):
+        build_split_feature_ledger(
+            root=".",
+            split_path=frozen,
+            role="robust_candidate",
+            output_dir=tmp_path / "features",
+            limit=1,
+            prepare=lambda _task: prepared,
+            schema_version=2,
+            file_version="v2",
+            feature_source="prefilter-v2:test",
+            accepted_split_statuses=("availability_screened_before_feature_extraction",),
+            verify_preflight_strain=True,
+        )

@@ -78,6 +78,10 @@ def build_shadow_feature_ledger(
     output_dir: str | Path,
     prepare: Callable[[WindowTask], PreparedPrefilterFeatures],
     limit: int | None = None,
+    schema_version: int = 1,
+    file_version: str = "v1",
+    feature_source: str = FEATURE_SOURCE,
+    scientific_mode: str = "research_only_shadow_feature_extraction",
 ) -> dict[str, Any]:
     """Extract resumable features and finalize a deterministic shadow ledger."""
 
@@ -99,7 +103,7 @@ def build_shadow_feature_ledger(
     representation_sha256 = representation_digests.pop()
     manifest_sha256 = _sha256(manifest_path)
 
-    partial_path = output_dir / "shadow_features_v1.partial.jsonl"
+    partial_path = output_dir / f"shadow_features_{file_version}.partial.jsonl"
     existing = _existing_rows(partial_path)
     if not set(existing).issubset(expected_ids):
         raise ContractError("partial ledger contains rows outside the frozen manifest")
@@ -114,7 +118,7 @@ def build_shadow_feature_ledger(
             if prepared.strain_sha256 != expected_strain:
                 raise ContractError(f"raw strain digest changed for {window_id}")
             row = {
-                "schema_version": 1,
+                "schema_version": int(schema_version),
                 "window": task.window.to_dict(),
                 "roles": ["shadow"],
                 "partition": "evaluation",
@@ -134,7 +138,7 @@ def build_shadow_feature_ledger(
 
     if set(existing) != expected_ids:
         raise ContractError("partial feature ledger did not reach frozen coverage")
-    rows_path = output_dir / "shadow_features_v1.jsonl"
+    rows_path = output_dir / f"shadow_features_{file_version}.jsonl"
     ordered = [existing[task.window.window_id] for task in tasks]
     rows_path.write_text(
         "".join(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in ordered),
@@ -143,10 +147,10 @@ def build_shadow_feature_ledger(
     )
     partial_path.unlink()
     ledger = {
-        "schema_version": 1,
+        "schema_version": int(schema_version),
         "status": "complete" if limit is None else "smoke_only",
-        "scientific_mode": "research_only_shadow_feature_extraction",
-        "feature_source": FEATURE_SOURCE,
+        "scientific_mode": scientific_mode,
+        "feature_source": feature_source,
         "outcome_fields_used_for_feature_extraction": [],
         "representation_sha256": representation_sha256,
         "cohort_split_sha256_by_role": {"shadow": manifest_sha256},
@@ -158,7 +162,7 @@ def build_shadow_feature_ledger(
         "selection_limit": limit,
     }
     ledger["ledger_digest"] = canonical_json_sha256(ledger)
-    ledger_path = output_dir / "shadow_feature_ledger_v1.json"
+    ledger_path = output_dir / f"shadow_feature_ledger_{file_version}.json"
     ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     return ledger
 
@@ -172,6 +176,12 @@ def build_split_feature_ledger(
     prepare: Callable[[WindowTask], PreparedPrefilterFeatures],
     limit: int | None = None,
     workers: int = 1,
+    schema_version: int = 1,
+    file_version: str = "v1",
+    feature_source: str = FEATURE_SOURCE,
+    scientific_mode: str = "research_only_split_feature_extraction",
+    accepted_split_statuses: tuple[str, ...] = ("locked_before_feature_extraction",),
+    verify_preflight_strain: bool = False,
 ) -> dict[str, Any]:
     """Extract a resumable role ledger from a frozen L4 split artifact."""
 
@@ -186,7 +196,7 @@ def build_split_feature_ledger(
         cohort = split["cohorts"][role]
     except KeyError as exc:
         raise ContractError(f"role is absent from L4 split artifact: {role}") from exc
-    if split.get("status") != "locked_before_feature_extraction":
+    if split.get("status") not in accepted_split_statuses:
         raise ContractError("L4 split artifact is not locked")
     if role not in {"background", "robust_candidate", "known_glitch", "injection"}:
         raise ContractError(f"unsupported L4 feature role: {role}")
@@ -210,7 +220,7 @@ def build_split_feature_ledger(
     representation_sha256 = RepresentationContract.from_reference_manifest(
         root / "config/reference_artifacts.json"
     ).contract_sha256
-    partial_path = output_dir / f"{role}_features_v1.partial.jsonl"
+    partial_path = output_dir / f"{role}_features_{file_version}.partial.jsonl"
     existing = _existing_rows(partial_path)
     if not set(existing).issubset(expected_ids):
         raise ContractError("partial cohort ledger contains rows outside its frozen split")
@@ -218,8 +228,14 @@ def build_split_feature_ledger(
     def prepare_row(task: WindowTask) -> tuple[str, dict[str, Any]]:
         prepared = prepare(task)
         source = task.payload
+        expected_preflight = source.get("availability_preflight", {}).get("strain_sha256")
+        if verify_preflight_strain and expected_preflight is not None:
+            if prepared.strain_sha256 != expected_preflight:
+                raise ContractError(
+                    f"preflight strain digest changed for {task.window.window_id}"
+                )
         return task.window.window_id, {
-            "schema_version": 1,
+            "schema_version": int(schema_version),
             "window": task.window.to_dict(),
             "roles": [role],
             "partition": source["partition"],
@@ -256,7 +272,7 @@ def build_split_feature_ledger(
                     existing[window_id] = row
     if set(existing) != expected_ids:
         raise ContractError("partial cohort feature ledger did not reach frozen coverage")
-    rows_path = output_dir / f"{role}_features_v1.jsonl"
+    rows_path = output_dir / f"{role}_features_{file_version}.jsonl"
     ordered = [existing[task.window.window_id] for task in tasks]
     rows_path.write_text(
         "".join(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n" for row in ordered),
@@ -265,10 +281,10 @@ def build_split_feature_ledger(
     )
     partial_path.unlink()
     ledger = {
-        "schema_version": 1,
+        "schema_version": int(schema_version),
         "status": "complete" if limit is None else "smoke_only",
-        "scientific_mode": "research_only_split_feature_extraction",
-        "feature_source": FEATURE_SOURCE,
+        "scientific_mode": scientific_mode,
+        "feature_source": feature_source,
         "outcome_fields_used_for_feature_extraction": [],
         "role": role,
         "representation_sha256": representation_sha256,
@@ -285,7 +301,7 @@ def build_split_feature_ledger(
         "extraction_workers": int(workers),
     }
     ledger["ledger_digest"] = canonical_json_sha256(ledger)
-    ledger_path = output_dir / f"{role}_feature_ledger_v1.json"
+    ledger_path = output_dir / f"{role}_feature_ledger_{file_version}.json"
     ledger_path.write_text(
         json.dumps(ledger, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",

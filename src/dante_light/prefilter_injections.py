@@ -6,6 +6,7 @@ import csv
 import hashlib
 from pathlib import Path
 import time
+from typing import Callable
 
 import numpy as np
 
@@ -39,6 +40,7 @@ def prepare_injection_prefilter_features(
     task: WindowTask,
     *,
     trials: dict[str, dict[str, str]],
+    feature_builder: Callable[[np.ndarray, int], object] | None = None,
 ) -> PreparedPrefilterFeatures:
     """Rebuild one raw-strain injection and verify its published SNR."""
 
@@ -139,9 +141,12 @@ def prepare_injection_prefilter_features(
     ):
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
     began = time.perf_counter()
-    features = extract_excess_energy_features(
-        np.asarray(clean.value), sample_rate_hz=SAMPLE_RATE
-    )
+    if feature_builder is None:
+        features = extract_excess_energy_features(
+            np.asarray(clean.value), sample_rate_hz=SAMPLE_RATE
+        )
+    else:
+        features = feature_builder(np.asarray(clean.value), int(SAMPLE_RATE))
     feature_s = time.perf_counter() - began
     return PreparedPrefilterFeatures(
         features=features,
