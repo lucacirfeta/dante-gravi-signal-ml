@@ -9,7 +9,11 @@ import pytest
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_v3 import feature_names_by_family
 from src.dante_light.prefilter_v3_protocol import load_prefilter_v3_protocol
-from src.dante_light.prefilter_v3_screening import screen_prefilter_v3
+from src.dante_light.prefilter_v3_screening import (
+    screen_prefilter_v3,
+    verify_screening_result,
+    write_screening_result,
+)
 
 
 def _protocol(tmp_path):
@@ -222,3 +226,18 @@ def test_v3_screening_rejects_reserved_confirmation_rows(tmp_path):
     path.write_text(json.dumps(ledger), encoding="utf-8")
     with pytest.raises(ContractError, match="reserved confirmation row exposed"):
         screen_prefilter_v3(ledgers=ledgers, protocol=protocol)
+
+
+def test_v3_screening_verifier_recomputes_exact_artifact(tmp_path):
+    protocol = _protocol(tmp_path)
+    ledgers = _fixture_ledgers(tmp_path, protocol)
+    result = screen_prefilter_v3(ledgers=ledgers, protocol=protocol)
+    path = write_screening_result(result, tmp_path / "screening_v3.json")
+    verification = verify_screening_result(path, ledgers=ledgers, protocol=protocol)
+    assert verification["status"] == "PASS"
+    assert verification["scientific_status"] == "READY_FOR_CONFIRMATION"
+    tampered = json.loads(path.read_text(encoding="utf-8"))
+    tampered["routing_enabled"] = True
+    path.write_text(json.dumps(tampered), encoding="utf-8")
+    with pytest.raises(ContractError, match="digest mismatch"):
+        verify_screening_result(path, ledgers=ledgers, protocol=protocol)

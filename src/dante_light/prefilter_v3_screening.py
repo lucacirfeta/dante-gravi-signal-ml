@@ -461,3 +461,47 @@ def write_screening_result(result: Mapping[str, Any], path: str | Path) -> Path:
         newline="\n",
     )
     return destination
+
+
+def load_screening_result(path: str | Path) -> dict[str, Any]:
+    source = Path(path).resolve()
+    try:
+        result = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ContractError(f"invalid v3 screening artifact {source}: {exc}") from exc
+    if not isinstance(result, dict):
+        raise ContractError("v3 screening artifact root must be an object")
+    body = dict(result)
+    declared = body.pop("artifact_digest", None)
+    if declared != canonical_json_sha256(body):
+        raise ContractError("v3 screening artifact digest mismatch")
+    if (
+        result.get("schema_version") != 3
+        or result.get("status") not in {"NOT_READY", "READY_FOR_CONFIRMATION"}
+        or result.get("routing_enabled") is not False
+        or result.get("o4b_outcomes_used") != []
+        or result.get("confirmation_values_used") != []
+        or result.get("can_authorize_operational_pass") is not False
+    ):
+        raise ContractError("v3 screening scientific boundary is invalid")
+    return result
+
+
+def verify_screening_result(
+    saved_path: str | Path,
+    *,
+    ledgers: Mapping[str, str | Path],
+    protocol: PrefilterProtocolV3,
+) -> dict[str, Any]:
+    saved = load_screening_result(saved_path)
+    recomputed = screen_prefilter_v3(ledgers=ledgers, protocol=protocol)
+    if saved != recomputed:
+        raise ContractError("v3 screening artifact does not match exact recomputation")
+    return {
+        "status": "PASS",
+        "scientific_status": saved["status"],
+        "artifact_digest": saved["artifact_digest"],
+        "routing_enabled": False,
+        "o4b_outcomes_used": [],
+        "confirmation_values_used": [],
+    }
