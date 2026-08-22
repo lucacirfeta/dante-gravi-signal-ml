@@ -135,6 +135,7 @@
     "regularization_c": 1.0,
     "maximum_iterations": 2000,
     "class_weighting": "equal_background_and_positive_strata",
+    "final_calibration_method": "full_development_model_threshold_on_full_development",
     "primary_feature_set": "signed_plus_ridge",
     "ablation_feature_sets": [
       "signed_ordering",
@@ -212,5 +213,5 @@
       "injection": 90
     }
   },
-  "protocol_digest": "f138714c5f69251b0710096a04ed1b9a903ba29cfb9fa2d6fa90b1ca252cb099"
+  "protocol_digest": "8c40fa2d7054afdf434a848b1964d325ce38ce941819d4748879490f1925c748"
 }

@@ -316,6 +316,7 @@ def validate_prefilter_v3_protocol(payload: Mapping[str, Any]) -> None:
         "regularization_c",
         "maximum_iterations",
         "class_weighting",
+        "final_calibration_method",
         "primary_feature_set",
         "ablation_feature_sets",
         "ablation_eligible_for_selection",
@@ -332,6 +333,8 @@ def validate_prefilter_v3_protocol(payload: Mapping[str, Any]) -> None:
         development["cross_validation_method"] != "shuffled_group_k_fold"
         or development["model"] != "l2_logistic_regression"
         or development["class_weighting"] != "equal_background_and_positive_strata"
+        or development["final_calibration_method"]
+        != "full_development_model_threshold_on_full_development"
         or development["primary_feature_set"] != "signed_plus_ridge"
         or development["ablation_feature_sets"] != list(ABLATIONS)
         or development["ablation_eligible_for_selection"] is not False
