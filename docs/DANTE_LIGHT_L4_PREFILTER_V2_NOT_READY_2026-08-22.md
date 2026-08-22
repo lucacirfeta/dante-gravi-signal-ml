@@ -107,6 +107,18 @@ thresholds even though easier morphologies separate well. Increasing sample
 size would improve precision but would not by itself guarantee the missing
 separation.
 
+**Statistical-power versus representation diagnosis.** The candidates are not
+globally signal-free, so the negative gate cannot be attributed solely to a
+small development cohort. Conversely, the post-hoc OOF results do not
+demonstrate useful NSBH discrimination: `spectral_evolution` gives AUC 0.5327
+(H1) and 0.5564 (L1), while `all` gives 0.5533 and 0.5860. These values are not
+proof that NSBH morphology contains no exploitable information: no uncertainty
+interval or confirmatory hypothesis test was pre-registered for the post-hoc
+per-stratum AUCs. They show the narrower and actionable result that the frozen
+v2 representations, model and cohort do not expose enough NSBH ranking signal
+to satisfy the protected-stratum gate. A larger cohort could reduce uncertainty;
+it cannot be assumed to improve point separation without new evidence.
+
 For `all`, the offline C sweep gives overall AUC 0.8050, 0.8027 and 0.8057 for
 `C = 0.1, 1, 10`; the corresponding constrained reductions are 2.90%, 6.88%
 and 7.07%. Fixed regularization therefore does not explain why `all`
