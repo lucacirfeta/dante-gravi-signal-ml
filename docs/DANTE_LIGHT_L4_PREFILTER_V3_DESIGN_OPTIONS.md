@@ -180,7 +180,8 @@ protocol containing:
 2. unchanged or explicitly revised development/evaluation populations;
 3. grouped split and detector-specific preprocessing rules;
 4. primary selection metric and protected per-morphology retention gates;
-5. informational metrics, including per-stratum AUC with uncertainty;
+5. informational metrics, including per-stratum AUC with detector/GPS-block
+   bootstrap uncertainty (never i.i.d. resampling);
 6. an ablation matrix for A, B, A+B, and the v2 spectral baseline;
 7. a measured CPU cost and end-to-end call-reduction contract;
 8. untouched O4b outcome rules and a one-shot evaluation decision;
