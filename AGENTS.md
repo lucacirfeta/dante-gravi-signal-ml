@@ -57,5 +57,6 @@ alternative, non implementare e poi raccontare.
 
 ## Sessioni lunghe
 
-Usa `/compact` a metà sessione se sta accumulando molta storia, invece di
+- Usa `/compact` a metà sessione se sta accumulando molta storia, invece di
 lasciarla crescere fino a fine task.
+- Non generare output intermedi non utili
