@@ -73,7 +73,12 @@ def _positive_int(value: Any, label: str, *, minimum: int = 1) -> int:
     return value
 
 
-def _hash_reference(value: Any, label: str, *, extra: set[str] = set()) -> Mapping[str, Any]:
+def _hash_reference(
+    value: Any,
+    label: str,
+    *,
+    extra: frozenset[str] = frozenset(),
+) -> Mapping[str, Any]:
     record = _exact_mapping(value, label, {"path", "sha256", *extra})
     if not str(record["path"]) or len(str(record["sha256"])) != 64:
         raise ContractError(f"{label} is not a valid file/hash reference")
@@ -142,7 +147,7 @@ def validate_prefilter_v3_protocol(payload: Mapping[str, Any]) -> None:
     split_ref = _hash_reference(
         parent["split"],
         "parent_v2.split",
-        extra={"entries_path", "entries_sha256", "artifact_digest", "role_split_sha256"},
+        extra=frozenset({"entries_path", "entries_sha256", "artifact_digest", "role_split_sha256"}),
     )
     for field in ("entries_sha256", "artifact_digest"):
         if len(str(split_ref[field])) != 64:
@@ -155,10 +160,10 @@ def validate_prefilter_v3_protocol(payload: Mapping[str, Any]) -> None:
     if any(len(str(value)) != 64 for value in role_hashes.values()):
         raise ContractError("parent v2 role split hash is invalid")
     screening_ref = _hash_reference(
-        parent["screening"], "parent_v2.screening", extra={"required_status"}
+        parent["screening"], "parent_v2.screening", extra=frozenset({"required_status"})
     )
     diagnostic_ref = _hash_reference(
-        parent["diagnostics"], "parent_v2.diagnostics", extra={"required_status"}
+        parent["diagnostics"], "parent_v2.diagnostics", extra=frozenset({"required_status"})
     )
     if screening_ref["required_status"] != "NOT_READY":
         raise ContractError("v3 must descend from a NOT_READY v2 screen")
@@ -268,7 +273,8 @@ def validate_prefilter_v3_protocol(payload: Mapping[str, Any]) -> None:
         "signed_ordering",
         {"log_frequency_band_count", "energy_arrival_quantile", "features"},
     )
-    _positive_int(signed["log_frequency_band_count"], "log-frequency band count", minimum=2)
+    if signed["log_frequency_band_count"] != 3:
+        raise ContractError("prefilter v3 requires three log-frequency bands")
     _fraction(signed["energy_arrival_quantile"], "energy arrival quantile", positive=True)
     if signed["features"] != [
         "signed_centroid_slope",
