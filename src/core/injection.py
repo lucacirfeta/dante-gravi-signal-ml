@@ -14,9 +14,6 @@ from tqdm import tqdm
 
 from src.core.utils import setup_logger, load_config
 from src.core.preprocessor import whiten_context, extract_clean_subwindow, bandpass, generate_qtransform
-from src.core.encoder import DINOv2Encoder
-from src.pipeline_v1_legacy.similarity_checker import cosine_knn_search, assess_novelty, assess_novelty_dynamic, compute_baseline_stats
-from src.core.utils import discover_references
 
 logger = setup_logger(__name__)
 
@@ -495,6 +492,7 @@ class InjectionEngine:
 
 def _load_all_references() -> tuple[np.ndarray, np.ndarray, list[str]]:
     """Load and merge all reference indices from data/reference."""
+    from src.core.utils import discover_references
     from src.pipeline_v1_legacy.reference_builder import load_reference_index
     
     reference_files = discover_references(Path("data/reference"))
@@ -554,6 +552,14 @@ def run_mdc(
     exceeded by the noise floor (~0.94 on L1 O4a), causing Recall=0.00
     for all synthetic glitch types.
     """
+    from src.core.encoder import DINOv2Encoder
+    from src.pipeline_v1_legacy.similarity_checker import (
+        assess_novelty,
+        assess_novelty_dynamic,
+        compute_baseline_stats,
+        cosine_knn_search,
+    )
+
     np.random.seed(seed)
     output_dir.mkdir(parents=True, exist_ok=True)
     

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 
@@ -19,6 +20,7 @@ from src.dante_light.prefilter_features import (
     build_shadow_feature_ledger,
     build_split_feature_ledger,
 )
+from src.dante_light.prefilter_injections import resolve_frozen_injection_trials
 from src.dante_light.preprocessing import PreparedPrefilterFeatures
 
 
@@ -311,3 +313,14 @@ def test_v2_split_ledger_rejects_changed_preflight_strain(tmp_path):
             accepted_split_statuses=("availability_screened_before_feature_extraction",),
             verify_preflight_strain=True,
         )
+
+def test_v2_injection_trial_provenance_chain_resolves_exact_published_csv():
+    root = Path(__file__).resolve().parents[1]
+    result = resolve_frozen_injection_trials(
+        root / "config/dante_light_prefilter_splits_v2.json",
+        root=root,
+    )
+    assert result == (
+        root
+        / "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv"
+    )

@@ -23,6 +23,50 @@ def _sha(values: np.ndarray) -> str:
     return hashlib.sha256(np.ascontiguousarray(values).tobytes()).hexdigest()
 
 
+def _file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def resolve_frozen_injection_trials(split_path: str | Path, *, root: str | Path) -> Path:
+    """Resolve and verify the v2 -> v1 -> published-trial provenance chain."""
+
+    from src.dante_light.prefilter_splits import load_prefilter_splits
+
+    root = Path(root).resolve()
+    split_path = Path(split_path).resolve()
+    split = load_prefilter_splits(split_path)
+    sources = split["cohorts"]["injection"]["sources"]
+    ancestors = [
+        source
+        for source in sources
+        if str(source.get("path", "")).endswith("dante_light_prefilter_splits_v1.json")
+    ]
+    if len(ancestors) != 1:
+        raise ContractError("injection split does not identify one frozen v1 split ancestor")
+    ancestor_ref = ancestors[0]
+    ancestor_path = root / str(ancestor_ref["path"])
+    if not ancestor_path.is_file() or _file_sha256(ancestor_path) != str(ancestor_ref["sha256"]):
+        raise ContractError("frozen v1 injection split provenance mismatch")
+    ancestor = load_prefilter_splits(ancestor_path)
+    if (
+        ancestor["cohorts"]["injection"]["split_sha256"]
+        != ancestor_ref.get("role_split_sha256")
+    ):
+        raise ContractError("frozen v1 injection role split mismatch")
+    trial_sources = [
+        source
+        for source in ancestor["cohorts"]["injection"]["sources"]
+        if "astrophysical_injection_trials" in str(source.get("path", ""))
+    ]
+    if len(trial_sources) != 1:
+        raise ContractError("frozen v1 split does not identify one injection trial table")
+    trial_ref = trial_sources[0]
+    trial_path = root / str(trial_ref["path"])
+    if not trial_path.is_file() or _file_sha256(trial_path) != str(trial_ref["sha256"]):
+        raise ContractError("frozen injection trial source provenance mismatch")
+    return trial_path
+
+
 def load_injection_trials(path: str | Path) -> dict[str, dict[str, str]]:
     trials: dict[str, dict[str, str]] = {}
     with Path(path).open(newline="", encoding="utf-8") as stream:

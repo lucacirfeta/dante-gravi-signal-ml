@@ -1,0 +1,15 @@
+name: dante-light-v3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.16
+  - numpy=2.4.5
+  - scipy=1.17.1
+  - pandas=3.0.3
+  - gwpy=4.0.1
+  - astropy=7.2.0
+  - matplotlib=3.10.9
+  - scikit-learn=1.8.0
+  - tqdm=4.67.1
+  - pyyaml=6.0.3
+  - lalsuite=7.26

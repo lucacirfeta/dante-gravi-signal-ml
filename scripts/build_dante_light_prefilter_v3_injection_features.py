@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 from pathlib import Path
 import sys
 
@@ -18,31 +17,14 @@ from src.dante_light.prefilter_features import build_split_feature_ledger
 from src.dante_light.prefilter_injections import (
     load_injection_trials,
     prepare_injection_prefilter_features,
+    resolve_frozen_injection_trials,
 )
-from src.dante_light.prefilter_splits import load_prefilter_splits
 from src.dante_light.prefilter_v3 import extract_prefilter_v3_features
 from src.dante_light.prefilter_v3_protocol import (
     DEFAULT_PROTOCOL_V3_PATH,
     load_prefilter_v3_protocol,
     verify_prefilter_v3_sources,
 )
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def _frozen_trial_source(split_path: Path, root: Path) -> Path:
-    split = load_prefilter_splits(split_path)
-    sources = split["cohorts"]["injection"]["sources"]
-    matches = [source for source in sources if "astrophysical_injection_trials" in source["path"]]
-    if len(matches) != 1:
-        raise ContractError("v3 injection split does not identify one frozen trial source")
-    path = root / str(matches[0]["path"])
-    if not path.is_file() or _sha256(path) != str(matches[0]["sha256"]):
-        raise ContractError("v3 injection trial source provenance mismatch")
-    return path
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -56,7 +38,9 @@ def main() -> int:
         verify_prefilter_v3_sources(protocol, root=ROOT)
         feature_config = dict(protocol.payload["feature_extraction"])
         split_path = ROOT / str(protocol.payload["parent_v2"]["split"]["path"])
-        trials = load_injection_trials(_frozen_trial_source(split_path, ROOT))
+        trials = load_injection_trials(
+            resolve_frozen_injection_trials(split_path, root=ROOT)
+        )
 
         def build_features(values, sample_rate_hz):
             if sample_rate_hz != int(feature_config["sample_rate_hz"]):

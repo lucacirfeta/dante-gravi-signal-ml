@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import torch
 import yaml
 from astropy.time import Time
 
@@ -35,6 +34,8 @@ def get_device(verbose: bool = True) -> torch.device:
     Returns:
         A :class:`torch.device` pointing to the best usable accelerator.
     """
+    import torch
+
     _logger = logging.getLogger("antigravity")
 
     # 1. Test CUDA — run a real compute op to catch missing sm_120 kernels
@@ -668,6 +669,27 @@ def record_environment(
         except Exception as exc:
             logger.warning("Could not record model artifact contract: %s", exc)
 
+        try:
+            import torch
+
+            torch_record = {
+                "status": "installed",
+                "version": torch.__version__,
+                "cuda_available": torch.cuda.is_available(),
+                "cuda_version": torch.version.cuda,
+                "device_name": (
+                    torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
+                ),
+            }
+        except ImportError:
+            torch_record = {
+                "status": "not_installed",
+                "version": None,
+                "cuda_available": False,
+                "cuda_version": None,
+                "device_name": None,
+            }
+
         record = {
             "context": context,
             "note": note,
@@ -679,14 +701,7 @@ def record_environment(
             "python": sys.version.split()[0],
             "executable": sys.executable,
             "platform": platform.platform(),
-            "torch": {
-                "version": torch.__version__,
-                "cuda_available": torch.cuda.is_available(),
-                "cuda_version": torch.version.cuda,
-                "device_name": (
-                    torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
-                ),
-            },
+            "torch": torch_record,
             "reference_index_sha256": indices_sha256,
             "reference_index_md5": indices_md5,
             "model_artifact_contract": model_contract,
