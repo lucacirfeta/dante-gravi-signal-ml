@@ -1,0 +1,215 @@
+{
+  "schema_version": 3,
+  "status": "frozen",
+  "protocol_id": "dante-light-l4-prefilter-v3-ab",
+  "parent_v2": {
+    "protocol": {
+      "path": "config/dante_light_prefilter_protocol_v2.json",
+      "sha256": "054c3dbd537d2c2ca28955c6878e1bd12027f4a884cc76daca07cad81ef1df1a"
+    },
+    "split": {
+      "path": "config/dante_light_prefilter_splits_v2.json",
+      "sha256": "b31adb6fb6dbae9bf59ebcc69d4ff9d0cae67053df8b702129261ff7c484b3c9",
+      "entries_path": "config/dante_light_prefilter_splits_v2.jsonl",
+      "entries_sha256": "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609",
+      "artifact_digest": "3067fd4595ddf1c03b44f09f19c698ca522d728c644f45cfd6929bf20e6280c4",
+      "role_split_sha256": {
+        "background": "5deba2dcf7a2d4aa6e1d89c6adf9ebf1cf7eb5a46705e1c160e9a0979930d826",
+        "injection": "24c364b90f9bdde44fb8132105f8ea2105f3ab9a1bad479eb6e2a75dfe1ef910",
+        "known_glitch": "8487d897c0fe101aa5e13f8afd1a6c37c9ccf325ab14310c52c11cd2f41e3d1a",
+        "robust_candidate": "f7af82a85fabee2a5578bc0a6cd9febd5a87f6c04b79ec3168fa8cdcd462637d"
+      }
+    },
+    "screening": {
+      "path": "artifacts/dante_light/prefilter_l4_v2/screening_result_v2.json",
+      "sha256": "9817377d05ee30cf9c6a5a72c33cecd6fdd2e8bc55f0031a2113412cd7063991",
+      "required_status": "NOT_READY"
+    },
+    "diagnostics": {
+      "path": "artifacts/dante_light/prefilter_l4_v2/diagnostics_v2.json",
+      "sha256": "5536d195d72099dfe0495356dcbb64c473115dbf087e27631a3bcf726054131a",
+      "required_status": "COMPLETE_DIAGNOSTIC_ONLY"
+    }
+  },
+  "design_basis": {
+    "path": "docs/DANTE_LIGHT_L4_PREFILTER_V3_DESIGN_OPTIONS.md",
+    "sha256": "0245025184368d83122478d1165a8ad6c3723b2e09e20c61c4ffe3fec444f787"
+  },
+  "scientific_boundary": {
+    "primary_development_run": "O4A",
+    "external_known_glitch_run": "O3B",
+    "prospective_evaluation_run": "O4B",
+    "v2_development_ablation_interpretation": "exploratory_only",
+    "reserved_positive_confirmation_endpoint": "protected_stratum_retention_only",
+    "o4b_outcomes_allowed_before_confirmation_pass": false,
+    "routing_enabled": false
+  },
+  "required_detectors": [
+    "H1",
+    "L1"
+  ],
+  "required_morphologies_by_role": {
+    "known_glitch": [
+      "Blip",
+      "KoiFish",
+      "ScatteredLight"
+    ],
+    "injection": [
+      "BBH_30_30",
+      "BBH_10_10",
+      "NSBH_10_1.4"
+    ]
+  },
+  "cohort_contract": {
+    "development_partition": "development",
+    "development_interpretation": "hypothesis_generating_exploratory",
+    "confirmation_partition": "evaluation",
+    "confirmation_feature_values_inspected_before_freeze": [],
+    "require_zero_window_overlap": true,
+    "invalidate_confirmation_on_pre_freeze_access": true,
+    "required_confirmation_n_by_role": {
+      "robust_candidate": 20,
+      "known_glitch": 18,
+      "injection": 90
+    },
+    "nsbh_confirmation_per_detector": 90,
+    "nsbh_confirmation_per_distance": 18,
+    "nsbh_distances_mpc": [
+      100.0,
+      200.0,
+      400.0,
+      800.0,
+      1600.0
+    ]
+  },
+  "audit": {
+    "fraction": 0.05,
+    "seed": 20260822
+  },
+  "feature_extraction": {
+    "feature_version": "prefilter-v3-ab",
+    "sample_rate_hz": 4096,
+    "analysis_band_hz": [
+      20.0,
+      1024.0
+    ],
+    "stft_frame_duration_s": 0.25,
+    "stft_overlap_fraction": 0.5,
+    "signed_ordering": {
+      "log_frequency_band_count": 3,
+      "energy_arrival_quantile": 0.5,
+      "features": [
+        "signed_centroid_slope",
+        "centroid_time_spearman",
+        "centroid_positive_step_fraction",
+        "low_band_arrival_time",
+        "mid_band_arrival_time",
+        "high_band_arrival_time",
+        "high_minus_low_arrival_time"
+      ]
+    },
+    "ridge_consistency": {
+      "ridge_method": "per_frame_maximum_power",
+      "inspiral_coordinate_power": -2.6666666666666665,
+      "features": [
+        "ridge_signed_slope",
+        "ridge_time_spearman",
+        "ridge_positive_step_fraction",
+        "ridge_energy_fraction",
+        "ridge_linear_residual",
+        "ridge_inspiral_residual"
+      ]
+    },
+    "families": [
+      "signed_ordering",
+      "ridge_consistency",
+      "spectral_v2_baseline"
+    ]
+  },
+  "development": {
+    "cross_validation_folds": 5,
+    "cross_validation_method": "shuffled_group_k_fold",
+    "gps_block_duration_s": 4096,
+    "model": "l2_logistic_regression",
+    "regularization_c": 1.0,
+    "maximum_iterations": 2000,
+    "class_weighting": "equal_background_and_positive_strata",
+    "primary_feature_set": "signed_plus_ridge",
+    "ablation_feature_sets": [
+      "signed_ordering",
+      "ridge_consistency",
+      "signed_plus_ridge",
+      "spectral_v2_baseline"
+    ],
+    "ablation_eligible_for_selection": false,
+    "selection_metric": "oof_effective_development_call_reduction",
+    "minimum_effective_reduction": 0.5,
+    "minimum_background_per_detector": 200,
+    "wilson_confidence": 0.95,
+    "minimum_retention_by_role": {
+      "robust_candidate": 0.9,
+      "known_glitch": 0.9,
+      "injection": 0.9
+    },
+    "minimum_wilson_lower_by_role": {
+      "robust_candidate": 0.8,
+      "known_glitch": 0.8,
+      "injection": 0.8
+    },
+    "minimum_group_n_by_role": {
+      "robust_candidate": 25,
+      "known_glitch": 25,
+      "injection": 35
+    }
+  },
+  "confirmation": {
+    "open_only_after_development_ready": true,
+    "endpoint": "protected_stratum_retention_only",
+    "wilson_confidence": 0.95,
+    "minimum_retention_by_role": {
+      "robust_candidate": 0.9,
+      "known_glitch": 0.9,
+      "injection": 0.9
+    },
+    "minimum_wilson_lower_by_role": {
+      "robust_candidate": 0.8,
+      "known_glitch": 0.8,
+      "injection": 0.8
+    },
+    "minimum_group_n_by_role": {
+      "robust_candidate": 20,
+      "known_glitch": 18,
+      "injection": 90
+    },
+    "can_authorize_operational_pass": false
+  },
+  "uncertainty": {
+    "method": "detector_gps_block_bootstrap",
+    "gps_block_duration_s": 4096,
+    "n_resamples": 2000,
+    "confidence": 0.95,
+    "eligible_for_gate": false,
+    "seed": 20260823
+  },
+  "evaluation": {
+    "minimum_compute_reduction": 0.5,
+    "minimum_exact_escalates": 18,
+    "wilson_confidence": 0.95,
+    "minimum_retention_by_role": {
+      "robust_candidate": 0.9,
+      "known_glitch": 0.9,
+      "injection": 0.9
+    },
+    "minimum_wilson_lower_by_role": {
+      "robust_candidate": 0.8,
+      "known_glitch": 0.8,
+      "injection": 0.8
+    },
+    "minimum_group_n_by_role": {
+      "robust_candidate": 20,
+      "known_glitch": 18,
+      "injection": 90
+    }
+  },
+  "protocol_digest": "1c3bab89c6b7b31e45f55485cc4ff8a94e4992fbc5fd8fa2cde5534a9ebb7562"
+}
