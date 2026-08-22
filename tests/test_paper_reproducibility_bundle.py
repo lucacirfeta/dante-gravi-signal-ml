@@ -13,6 +13,7 @@ def test_unsafe_paths_are_rejected() -> None:
     for value in ("../secret", "/absolute/file", "archive/stale.json", "x_pilot.json"):
         with pytest.raises(RuntimeError):
             bundle._safe_relative(value)
+    assert bundle._safe_relative(bundle.HISTORICAL_TRANSITION_BASELINE) == bundle.HISTORICAL_TRANSITION_BASELINE
 
 
 def test_portability_rewrite_is_explicit_and_removes_machine_paths() -> None:
@@ -32,9 +33,13 @@ def test_current_allowlist_is_final_and_master_hashes_match() -> None:
     assert len(paths) > 180
     assert len(paths) == len(set(paths))
     assert all("pilot" not in Path(path).name.lower() for path in paths)
-    assert all("archive" not in Path(path).parts for path in paths)
+    archived = [path for path in paths if "archive" in Path(path).parts]
+    assert archived == [bundle.HISTORICAL_TRANSITION_BASELINE]
     assert sum(path.endswith(".png") for path in paths) >= 9
     assert sum("null_calibration_" in path for path in paths) == 141
+    for manuscript, expected in (("arxiv_v6", 10), ("cqg_v6", 12)):
+        prefix = f"paper_draft/v6_paper/{manuscript}/img/"
+        assert sum(path.startswith(prefix) and path.endswith(".png") for path in paths) == expected
 
 
 def test_build_and_check_round_trip(tmp_path: Path) -> None:

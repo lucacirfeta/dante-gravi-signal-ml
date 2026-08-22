@@ -1,0 +1,41 @@
+{
+  "run": "O4a",
+  "representation": "idxq4-64_queryq4-64",
+  "taxonomy_path": "data\\production\\aggregated\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+  "qrange": [
+    4,
+    64
+  ],
+  "n_candidates": 160,
+  "n_robust": 80,
+  "n_rejected": 80,
+  "sample_class_counts": {
+    "ROBUST": 80,
+    "AMBIGUOUS": 80
+  },
+  "n_draws": 4,
+  "n_background": 1300,
+  "seed": 42,
+  "candidate_token_cache": "data\\production\\aggregated\\dsd_index_stability_candidate_tokens_o4a_idxq4-64_queryq4-64_q4-64_n40_s42_1154059b80ca.npz",
+  "candidate_token_cache_sha256": "8edc27f32184fea6601edbc511f57617dc188402d81b27cc2cbdd142b75f9a60",
+  "candidate_keys_sha256": "1154059b80ca36a4f1db59aee30157fcf7933db7d4ef3d795644f23534632905",
+  "background_token_cache": "data\\production\\aggregated\\dsd_index_stability_background_tokens_o4a_idxq4-64_queryq4-64_q4-64_n1300_h300_s42.npz",
+  "background_token_cache_sha256": "3fcc684c1200e5130da675b151ab58cf705ee3fc0fe5932a90f2ed5f3c32efe4",
+  "background_ledger": "data\\production\\aggregated\\dsd_index_stability_background_tokens_o4a_idxq4-64_queryq4-64_q4-64_n1300_h300_s42_ledger.csv",
+  "background_ledger_sha256": "64bcb4b1e1643ba78a84e4bdbe4584eb35c1d2e6b14a5278ee02e3409ee77f1c",
+  "score_rank_correlation_mean": 0.6737020977381928,
+  "score_rank_correlation_min": 0.5146870971522325,
+  "per_candidate_score_std_median": 0.007566576059790487,
+  "per_candidate_score_std_max": 0.029386362153973403,
+  "robust_mean_score": 0.22632213588804007,
+  "rejected_mean_score": 0.21819493738003076,
+  "robust_rejected_separation": 0.008127198508009303,
+  "_diagnostic_thresholds": [
+    0.09592378839850425,
+    0.09627738989889621,
+    0.0950116878002882,
+    0.092155879214406
+  ],
+  "_diagnostic_verdict_note": "held-out thresholds use vetoed clean background, whereas the production calibration uses its frozen chronological background ledger and detector-specific B=1,000,000 bootstrap upper endpoint. The populations and decision boundaries are therefore different; verdict metrics below are diagnostic only, see LAB_NOTEBOOK section 19",
+  "_diagnostic_verdict_stable_fraction": 1.0
+}

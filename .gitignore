@@ -257,6 +257,9 @@ results/figures/**
 !results/figures/clusters/*.png
 
 docs/
+!docs/
+docs/*
+!docs/GITIGNORE_AUDIT.md
 runs/
 
 # Raw HDF5 strain data downloads
@@ -331,6 +334,7 @@ scripts/*
 !scripts/build_dante_light_followup.py
 !scripts/build_dante_light_manifest.py
 !scripts/verify_dante_light_run_config.py
+!scripts/build_dsd_representation_transition.py
 
 tmp
 archive/

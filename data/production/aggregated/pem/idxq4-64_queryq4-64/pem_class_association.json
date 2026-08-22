@@ -1,0 +1,120 @@
+{
+  "taxonomy_representation": "idxq4-64_queryq4-64",
+  "n_events": 141,
+  "n_calibrated": 141,
+  "n_uncalibrated": 0,
+  "calibration_coverage_by_class": {
+    "ROBUST": {
+      "n_total": 26,
+      "n_calibrated": 26,
+      "n_uncalibrated": 0
+    },
+    "AMBIGUOUS": {
+      "n_total": 22,
+      "n_calibrated": 22,
+      "n_uncalibrated": 0
+    },
+    "BACKGROUND": {
+      "n_total": 93,
+      "n_calibrated": 93,
+      "n_uncalibrated": 0
+    }
+  },
+  "n_suspect_time_shift_only": 38,
+  "primary_endpoint": "zero_lag_confirmed",
+  "denominator_note": "Class rates and Fisher tables exclude UNCALIBRATED events; missing calibration is never counted as a negative.",
+  "endpoints": {
+    "time_shift_only": {
+      "definition": "Observed Cmax exceeds the family-wise time-shift null. Diagnostic only: persistent zero-lag coherence is not controlled.",
+      "by_class": {
+        "ROBUST": {
+          "n_positive": 6,
+          "n_calibrated": 26,
+          "rate": 0.23076923076923078,
+          "wilson_ci95": [
+            0.11033849405783291,
+            0.42051554078943687
+          ]
+        },
+        "AMBIGUOUS": {
+          "n_positive": 8,
+          "n_calibrated": 22,
+          "rate": 0.36363636363636365,
+          "wilson_ci95": [
+            0.19733204670366122,
+            0.5704829190986899
+          ]
+        },
+        "BACKGROUND": {
+          "n_positive": 34,
+          "n_calibrated": 93,
+          "rate": 0.3655913978494624,
+          "wilson_ci95": [
+            0.274857021642714,
+            0.4669890812099031
+          ]
+        }
+      },
+      "robust_vs_background": {
+        "table_positive_negative": [
+          [
+            6,
+            20
+          ],
+          [
+            34,
+            59
+          ]
+        ],
+        "odds_ratio": 0.5205882352941177,
+        "fisher_exact_two_sided_p": 0.24474329439875603
+      }
+    },
+    "zero_lag_confirmed": {
+      "definition": "Observed Cmax exceeds both the family-wise time-shift threshold and the quiet-background zero-lag q99. Primary endpoint.",
+      "by_class": {
+        "ROBUST": {
+          "n_positive": 2,
+          "n_calibrated": 26,
+          "rate": 0.07692307692307693,
+          "wilson_ci95": [
+            0.0213550884722762,
+            0.2414155377162906
+          ]
+        },
+        "AMBIGUOUS": {
+          "n_positive": 1,
+          "n_calibrated": 22,
+          "rate": 0.045454545454545456,
+          "wilson_ci95": [
+            0.00806942762126385,
+            0.21798045838657332
+          ]
+        },
+        "BACKGROUND": {
+          "n_positive": 7,
+          "n_calibrated": 93,
+          "rate": 0.07526881720430108,
+          "wilson_ci95": [
+            0.03693668398168047,
+            0.1472970010325892
+          ]
+        }
+      },
+      "robust_vs_background": {
+        "table_positive_negative": [
+          [
+            2,
+            24
+          ],
+          [
+            7,
+            86
+          ]
+        ],
+        "odds_ratio": 1.0238095238095237,
+        "fisher_exact_two_sided_p": 1.0
+      }
+    }
+  }
+}

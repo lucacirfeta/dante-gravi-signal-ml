@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 import matplotlib
@@ -40,6 +41,13 @@ def test_pipeline_schematic_names_the_scientific_boundaries(tmp_path, monkeypatc
 
 
 def test_frozen_native_index_hash() -> None:
+    if not module.INDEX.is_file():
+        contract = json.loads((ROOT / "config" / "reference_artifacts.json").read_text(encoding="utf-8"))
+        record = contract["reference_indices"]["o4a_native_q4_64_k1216"]
+        assert record["path"] == module.INDEX.relative_to(ROOT).as_posix()
+        assert record["sha256"] == module.EXPECTED_INDEX_SHA256
+        assert contract["reference_bundle"]["publication_status"] == "deposited"
+        pytest.skip("published reference-artifact bundle is not installed")
     assert module.sha256(module.INDEX) == module.EXPECTED_INDEX_SHA256
 
 

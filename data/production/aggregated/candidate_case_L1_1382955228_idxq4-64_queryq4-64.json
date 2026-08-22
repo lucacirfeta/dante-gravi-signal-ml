@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "candidate_key": {
+    "detector": "L1",
+    "catalog_gps": 1382955228.0
+  },
+  "analysis_window": [
+    1382955232.0,
+    1382955264.0
+  ],
+  "feature_gps": 1382955253.17,
+  "representation": "idxq4-64_queryq4-64",
+  "source_artifacts": [
+    {
+      "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    },
+    {
+      "path": "data/production/aggregated/Multiscale_Profile_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "b2ba8ef3a7a811f4388cad4f8956ea975c80927158bea58094a10b7d18e7518c"
+    },
+    {
+      "path": "data/production/aggregated/pem/idxq4-64_queryq4-64/pem_family_wise_verdicts.csv",
+      "sha256": "f069a0f162e698fe7ca45507276d1f9610312a759db93be8514db437da09bce0"
+    },
+    {
+      "path": "data/production/aggregated/characterize_L1_1382955232.json",
+      "sha256": "5497b3ddb11a8e8c5e86a454f65b90caaef4276bca5a1a229ac72fdc774e1476"
+    },
+    {
+      "path": "data/reference/patch_compressed_index_o4a_q4-64_ex.npz",
+      "sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744"
+    }
+  ],
+  "score_reproduction": {
+    "recomputed_score": 0.5988766551017761,
+    "stored_score": 0.5988767743110657,
+    "absolute_delta": 1.1920928955078125e-07,
+    "top_k_indices": [
+      1334,
+      1336,
+      890,
+      1333,
+      931,
+      969,
+      968,
+      930,
+      892,
+      967,
+      889,
+      928,
+      1261,
+      854,
+      1335,
+      927,
+      853,
+      891,
+      894,
+      929,
+      926,
+      1038,
+      970,
+      966,
+      888,
+      857,
+      963,
+      1113,
+      893,
+      1298,
+      1112,
+      897,
+      971,
+      817,
+      1002,
+      823,
+      855,
+      934,
+      932,
+      1003,
+      1224,
+      1075,
+      933,
+      856,
+      818,
+      1005,
+      1149,
+      965,
+      1004,
+      1186,
+      1040,
+      858,
+      935,
+      1223,
+      1260,
+      925,
+      1114,
+      898,
+      860,
+      1077,
+      822,
+      1187,
+      820,
+      1262,
+      859,
+      819,
+      816,
+      1041
+    ],
+    "spectrogram_shape": [
+      256,
+      256
+    ]
+  },
+  "candidate_evidence": {
+    "taxonomy": {
+      "gps_start": 1382955228.0,
+      "detector": "L1",
+      "session_id": 1382451712,
+      "origin_table": "3a",
+      "local_cluster_id": "C11",
+      "global_family_id": "Singleton_1382955228",
+      "max_similarity_to_3a": NaN,
+      "transitivity_status": "Morphological_Subthreshold_Diagnostic_Only",
+      "gravity_spy_label": "No_Catalog_Coverage",
+      "gravity_spy_confidence": 0.0,
+      "robustness_class_idxq4_64_queryq4_64": "ROBUST",
+      "native_score_idxq4_64_queryq4_64": 0.5988767743110657,
+      "robustness_class": "ROBUST",
+      "native_o4a_score": 0.5988767743110657
+    },
+    "multiscale": [
+      {
+        "gps_start": 1382955228.0,
+        "detector": "L1",
+        "scale_s": 0.5,
+        "score": 0.2264584600925445,
+        "p99_threshold": 0.1200925678545237,
+        "exceeds": true,
+        "status": "OK",
+        "margin": 0.1063658922380208,
+        "dominant_scale_s": 4.0,
+        "dominant_margin": 0.1117434334452449,
+        "taxonomy_representation": "idxq4-64_queryq4-64",
+        "catalog_gps_to_analysis_window_offset_s": 4.0
+      },
+      {
+        "gps_start": 1382955228.0,
+        "detector": "L1",
+        "scale_s": 1.0,
+        "score": 0.1728480756282806,
+        "p99_threshold": 0.1048756461376697,
+        "exceeds": true,
+        "status": "OK",
+        "margin": 0.0679724294906109,
+        "dominant_scale_s": 4.0,
+        "dominant_margin": 0.1117434334452449,
+        "taxonomy_representation": "idxq4-64_queryq4-64",
+        "catalog_gps_to_analysis_window_offset_s": 4.0
+      },
+      {
+        "gps_start": 1382955228.0,
+        "detector": "L1",
+        "scale_s": 2.0,
+        "score": 0.1922319382429123,
+        "p99_threshold": 0.0982235055832565,
+        "exceeds": true,
+        "status": "OK",
+        "margin": 0.0940084326596557,
+        "dominant_scale_s": 4.0,
+        "dominant_margin": 0.1117434334452449,
+        "taxonomy_representation": "idxq4-64_queryq4-64",
+        "catalog_gps_to_analysis_window_offset_s": 4.0
+      },
+      {
+        "gps_start": 1382955228.0,
+        "detector": "L1",
+        "scale_s": 4.0,
+        "score": 0.2133692800998687,
+        "p99_threshold": 0.1016258466546238,
+        "exceeds": true,
+        "status": "OK",
+        "margin": 0.1117434334452449,
+        "dominant_scale_s": 4.0,
+        "dominant_margin": 0.1117434334452449,
+        "taxonomy_representation": "idxq4-64_queryq4-64",
+        "catalog_gps_to_analysis_window_offset_s": 4.0
+      }
+    ],
+    "pem": {
+      "detector": "L1",
+      "gps_start": 1382955228,
+      "family": "Singleton_1382955228",
+      "m_channels": 7,
+      "n_windows": 116,
+      "n_surrogate_pairs": 13340,
+      "threshold_fw": 0.6627429127693176,
+      "cmax_observed": 0.4784850756301909,
+      "top_channel": "L1:ASC-X_TR_A_NSUM_OUT_DQ",
+      "top_channel_baseline": 0.6043713688850403,
+      "threshold_zero_lag": 0.7891485691070557,
+      "verdict": "NO_CORRELATION",
+      "dsd_class": "ROBUST",
+      "dsd_score": 0.5988767743110657,
+      "taxonomy_representation": "idxq4-64_queryq4-64",
+      "top_channel_class": "ASC",
+      "verdict_tier": "NO_CORRELATION"
+    },
+    "characterize": {
+      "detector": "L1",
+      "partner": "H1",
+      "gps": 1382955232.0,
+      "feature_gps": 1382955253.17,
+      "window": [
+        1382955232.0,
+        1382955264.0
+      ],
+      "band_hz": [
+        26.0,
+        42.0
+      ],
+      "descriptor_recipe": {
+        "name": "kretski-independent-v1",
+        "source": "https://gist.github.com/Kretski/d0f17ae69cd8fc40093cb4a4e372b7be",
+        "source_revision": "9ea0f8e4ec998e1f41521e5265eb3cc0b07ca1a0",
+        "whitening": {
+          "fftlength_s": 4.0,
+          "overlap_s": 2.0,
+          "padding_s": 8.0
+        },
+        "peak": {
+          "input": "raw strain, 4 s centred on feature_gps",
+          "asd_fftlength_s": 1.0,
+          "asd_overlap_s": 0.5
+        },
+        "correlation": {
+          "input": "whitened, band-passed 4 s feature window",
+          "maximum": "signed",
+          "max_lag_s": 0.012,
+          "null_test": false
+        },
+        "loudness_reference": "mean of adjacent windows"
+      },
+      "peak_frequency_hz": 28.0,
+      "candidate_inband_energy": 253237.83765442087,
+      "loudness_ratio_to_background_mean": 304.0695886040712,
+      "loudness_ratio_to_background_median_diagnostic": 314.8852573789505,
+      "background_energy_mean": 832.8285601233265,
+      "background_energy_median": 804.2225913093807,
+      "background_energy_min": 722.1049032099102,
+      "background_energy_max": 1009.6569286496033,
+      "n_background": 16,
+      "background_spacing_s": 40.0,
+      "raw_cross_detector_max_corr": 0.05853407762863288,
+      "raw_cross_detector_best_lag_s": -0.011962890625,
+      "correlation_note": "Independent descriptive statistic near zero lag. It is unstable under reasonable implementation choices and is not the production time-shift/null coincidence veto.",
+      "production_coincidence": {
+        "gps": 1382955228.0,
+        "detector": "L1",
+        "partner": "H1",
+        "t_offset_s": 24.64864864864865,
+        "f_lo": 20.0,
+        "f_hi": 65.99849894084433,
+        "cc_onsource": 0.07160130107328701,
+        "cc_null_mean": 0.19696659845415138,
+        "cc_null_max": 0.28637825502139447,
+        "n_null": 7,
+        "patch_iou": 0.007407407407407408,
+        "artifact": "data\\production\\aggregated\\coincidence_physical_o4a.json",
+        "interpretation": "Production time-shift/null veto; not comparable one-for-one with raw descriptor correlation."
+      },
+      "attribution": "Cross-check recipe reproduced from GitHub user Kretski, gist d0f17ae69cd8fc40093cb4a4e372b7be, revision 9ea0f8e4ec998e1f41521e5265eb3cc0b07ca1a0."
+    }
+  },
+  "figures": [
+    {
+      "path": "paper_draft/v6_paper/figures/fig_candidate_saliency_q64.png",
+      "sha256": "dc4367071c3e74edd80cb582369e50abfd78cb1ed4b6a987f2a7bfcbe975821e"
+    },
+    {
+      "path": "paper_draft/v6_paper/figures/fig_representation_examples.png",
+      "sha256": "83ffd3b9023b688e71b5d135eb09f74e57838c01c87b666a556fe83f69df264d"
+    },
+    {
+      "path": "paper_draft/v6_paper/figures/fig_pipeline_overview.png",
+      "sha256": "be1234ffa6ed1f4391d8e4f1ff9904619e2416a1816b1ba70ae8e356ee7e449e"
+    }
+  ],
+  "claim_boundary": "Statistically ROBUST L1-local transient with no resolved H1 or tested-public-PEM counterpart; unclassified and not evidence for a new glitch class."
+}

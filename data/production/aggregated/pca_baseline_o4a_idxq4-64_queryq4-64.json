@@ -1,0 +1,49 @@
+{
+  "run": "O4a",
+  "representation": "idxq4-64_queryq4-64",
+  "taxonomy_path": "data\\production\\aggregated\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+  "qrange": [
+    4,
+    64
+  ],
+  "n_candidates": 160,
+  "n_robust": 80,
+  "n_rejected": 80,
+  "sample_class_counts": {
+    "ROBUST": 80,
+    "AMBIGUOUS": 80
+  },
+  "n_background": 1300,
+  "seed": 42,
+  "feature_dim": 1024,
+  "pca_components": 507,
+  "pca_variance_kept": 0.9,
+  "candidate_feature_cache": "data\\production\\aggregated\\pca_baseline_candidate_feats_o4a_idxq4-64_queryq4-64_q4-64_n40_s42_1154059b80ca.npz",
+  "candidate_feature_cache_sha256": "02732e96562a928be2e6f586127c49bb2c78b312c275d5dfa05ac8f526a74d05",
+  "candidate_keys_sha256": "1154059b80ca36a4f1db59aee30157fcf7933db7d4ef3d795644f23534632905",
+  "background_feature_cache": "data\\production\\aggregated\\pca_baseline_background_feats_o4a_idxq4-64_queryq4-64_q4-64_n1300_s42.npz",
+  "background_feature_cache_sha256": "a9cbdf021d951aa12b9c01b8de3e9a3e743853d40cf8571e125ef41830c88b99",
+  "background_ledger": "data\\production\\aggregated\\pca_baseline_background_feats_o4a_idxq4-64_queryq4-64_q4-64_n1300_s42_ledger.csv",
+  "background_ledger_sha256": "072005683f0547b966cf035459d6292bb8c65ca48eee516082d826b533e53f92",
+  "pca_reconstruction_residual": {
+    "rank_correlation_with_dante": -0.1578694480253135,
+    "robust_mean": 6.653421878814697,
+    "rejected_mean": 6.938992500305176,
+    "auc_robust_vs_rejected": 0.4362500011920929,
+    "auc_by_detector": {
+      "H1": 0.42375001311302185,
+      "L1": 0.4375
+    }
+  },
+  "spectral_energy": {
+    "rank_correlation_with_dante": 0.030056838157740535,
+    "robust_mean": 108404.37236328125,
+    "rejected_mean": 104925.18251953126,
+    "auc_robust_vs_rejected": 0.54375,
+    "auc_by_detector": {
+      "H1": 0.598125,
+      "L1": 0.49
+    }
+  },
+  "interpretation_note": "rank_correlation_with_dante near 1 means a pixel-only method already ranks candidates as DANTE does (the natural-image transfer buys little ordering power); near 0 means DANTE responds to structure the classical detector is blind to. auc_robust_vs_rejected near 0.5 means the classical score alone cannot tell survivors from rejected. This bounds the transfer's value; it does not reduce its cost (B2)."
+}

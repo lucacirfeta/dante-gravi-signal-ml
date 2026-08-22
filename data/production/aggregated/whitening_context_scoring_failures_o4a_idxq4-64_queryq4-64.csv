@@ -1,0 +1,7 @@
+detector,gps_start,analysis_start,pad_s,error_type,error
+H1,1383154396,1383154400.0,4.0,AnchorMismatch,"pad-4 score does not reproduce stored production score: abs_delta=0.0965801104903, tolerance=0.001"
+H1,1377411036,1377411040.0,4.0,AnchorMismatch,"pad-4 score does not reproduce stored production score: abs_delta=0.113864287734, tolerance=0.001"
+L1,1380089052,1380089056.0,4.0,AnchorMismatch,"pad-4 score does not reproduce stored production score: abs_delta=0.111146003008, tolerance=0.001"
+L1,1382558172,1382558176.0,4.0,AnchorMismatch,"pad-4 score does not reproduce stored production score: abs_delta=0.129138715565, tolerance=0.001"
+L1,1376175324,1376175328.0,4.0,AnchorMismatch,"pad-4 score does not reproduce stored production score: abs_delta=0.0682592242956, tolerance=0.001"
+L1,1374241596,1374241600.0,128.0,ValueError,Input signal contains non-numerical values

@@ -1,0 +1,126 @@
+{
+  "run": "O4a",
+  "taxonomy_path": "data\\production\\aggregated\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+  "taxonomy_representation": "idxq4-64_queryq4-64",
+  "taxonomy_audit_path": "data\\production\\aggregated\\dsd_transition_audit_o4a_idxq4-64_queryq4-64.json",
+  "target_families": [
+    "Family_01"
+  ],
+  "include_singletons": true,
+  "max_events_per_family": 3,
+  "events_per_class": {
+    "ROBUST": 21,
+    "AMBIGUOUS": 20,
+    "BACKGROUND": 98
+  },
+  "robustness_class": null,
+  "n_targets": 141,
+  "nds_host": "nds.gwosc.org",
+  "public_mode": false,
+  "selected_targets_path": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/production/aggregated/pem/idxq4-64_queryq4-64/selected_targets.csv",
+  "channel_thresholds_path": "data/production_reference/channel_thresholds.json",
+  "channel_thresholds_sha256": "6f604f33e6c0aff07c27f1c90b996f0efe9731729dd2b3168e60d12499d0890e",
+  "ephemeral_cache_dir": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/raw/auxiliary/idxq4-64_queryq4-64",
+  "reuse_existing_dir": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000",
+  "reuse_report_path": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000/coherence_report.csv",
+  "reuse_report_sha256": "9d4627efb9335dcf3a36a0e83f64ac8e40926bbd3cb3a73a092444bc6b70da38",
+  "reuse_source_manifest_path": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000/selection_manifest.json",
+  "reuse_source_manifest_sha256": "2302c3a33fc3dbaaa9d080773c88d0706fb6196b1efb9ce6f001a16933956609",
+  "reuse_validation": {
+    "exact_detector_gps_join": true,
+    "channel_inventory_subset": true,
+    "channel_thresholds_sha256_match": true,
+    "representation_match": true
+  },
+  "n_reused_events": 5,
+  "reused_calibrations": [
+    {
+      "detector": "H1",
+      "gps_start": 1369305276,
+      "source": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000/null_calibration_H1_1369305276.json",
+      "source_sha256": "e3a9417e8cbc80776cbb1110d43fc8bf8d23b997906f492ed0bc1800db719f34",
+      "destination": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/production/aggregated/pem/idxq4-64_queryq4-64/null_calibration_H1_1369305276.json",
+      "validated_event_identity": true,
+      "validated_channel_subset": true,
+      "validated_alpha_family_wise": true
+    },
+    {
+      "detector": "H1",
+      "gps_start": 1372736092,
+      "source": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000/null_calibration_H1_1372736092.json",
+      "source_sha256": "1900471019be052d89b4fb32b89fd5cc9d47fdff07ee2eefeb5b3f9e6c0a2e02",
+      "destination": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/production/aggregated/pem/idxq4-64_queryq4-64/null_calibration_H1_1372736092.json",
+      "validated_event_identity": true,
+      "validated_channel_subset": true,
+      "validated_alpha_family_wise": true
+    },
+    {
+      "detector": "H1",
+      "gps_start": 1374963452,
+      "source": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000/null_calibration_H1_1374963452.json",
+      "source_sha256": "55cf51ad10c1b5362af720b176081d1917fb837d3ad5a12a904c4a5fd593490f",
+      "destination": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/production/aggregated/pem/idxq4-64_queryq4-64/null_calibration_H1_1374963452.json",
+      "validated_event_identity": true,
+      "validated_channel_subset": true,
+      "validated_alpha_family_wise": true
+    },
+    {
+      "detector": "H1",
+      "gps_start": 1377509376,
+      "source": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000/null_calibration_H1_1377509376.json",
+      "source_sha256": "d1a01d1bf3a8b887de5ec436d7fdd9755f35a4af672203be9c5804f603f4e646",
+      "destination": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/production/aggregated/pem/idxq4-64_queryq4-64/null_calibration_H1_1377509376.json",
+      "validated_event_identity": true,
+      "validated_channel_subset": true,
+      "validated_alpha_family_wise": true
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1382955228,
+      "source": "data/production/aggregated/archive/pre_bgv3_c2_20260729/pem_full_B1000/null_calibration_L1_1382955228.json",
+      "source_sha256": "5ded31d60191a8f9a112c00181dccd6ed896c25817533c6cec49dab0ea28d622",
+      "destination": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/production/aggregated/pem/idxq4-64_queryq4-64/null_calibration_L1_1382955228.json",
+      "validated_event_identity": true,
+      "validated_channel_subset": true,
+      "validated_alpha_family_wise": true
+    }
+  ],
+  "rejected_calibration_reuse": [],
+  "taxonomy_rejoin": {
+    "mode": "fixed_measured_cohort_detector_gps_exact_rejoin",
+    "n_targets": 141,
+    "n_exact_key_matches": 141,
+    "n_class_transitions": 8,
+    "prior_class_counts": {
+      "BACKGROUND": 98,
+      "ROBUST": 23,
+      "AMBIGUOUS": 20
+    },
+    "current_class_counts": {
+      "BACKGROUND": 93,
+      "ROBUST": 26,
+      "AMBIGUOUS": 22
+    },
+    "transition_counts": {
+      "AMBIGUOUS": {
+        "AMBIGUOUS": 17,
+        "BACKGROUND": 0,
+        "ROBUST": 3
+      },
+      "BACKGROUND": {
+        "AMBIGUOUS": 5,
+        "BACKGROUND": 93,
+        "ROBUST": 0
+      },
+      "ROBUST": {
+        "AMBIGUOUS": 0,
+        "BACKGROUND": 0,
+        "ROBUST": 23
+      }
+    },
+    "taxonomy_sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
+    "taxonomy_audit_sha256": "802a65e6c8b08828bd07fb6922a4db03ff6e3353f2c1b33d4f7299ff16ee532c",
+    "measurements_recomputed": false,
+    "null_calibrations_recomputed": false
+  }
+}

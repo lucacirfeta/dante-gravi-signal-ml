@@ -35,6 +35,10 @@ README = RELEASE / "README.md"
 TEXT_SUFFIXES = {".bib", ".csv", ".json", ".md", ".py", ".tex", ".txt", ".yaml", ".yml"}
 FORBIDDEN_PARTS = {"archive", ".corrupt", "cache", "credentials", "raw"}
 FORBIDDEN_NAME_FRAGMENTS = ("pilot", "stale", "backup")
+HISTORICAL_TRANSITION_BASELINE = (
+    "data/production/aggregated/archive/detector_dedup_bug_20260805/"
+    "Master_Taxonomy_O4a_idxq4-64_queryq4-64.pre_detector_aware.csv"
+)
 ABSOLUTE_PATTERNS = (
     re.compile(rb"[A-Za-z]:\\\\(?:Users|home)\\\\", re.IGNORECASE),
     re.compile(rb"[A-Za-z]:\\(?:Users|home)\\", re.IGNORECASE),
@@ -70,6 +74,7 @@ STATIC_ALLOWLIST = (
     "tests/test_patch_axis_mapping.py",
     "tests/test_v6_candidate_figures.py",
     "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+    HISTORICAL_TRANSITION_BASELINE,
     "data/production/aggregated/dsd_scores_o4a_idxq4-64_queryq4-64.csv",
     "data/production/aggregated/whitening_context_scores_o4a_idxq4-64_queryq4-64.csv",
     "data/production/aggregated/whitening_context_scoring_failures_o4a_idxq4-64_queryq4-64.csv",
@@ -117,7 +122,10 @@ def _safe_relative(raw: str | Path) -> str:
     if value.is_absolute() or ".." in value.parts:
         raise RuntimeError(f"unsafe bundle path: {raw}")
     lower = [part.lower() for part in value.parts]
-    if any(part in FORBIDDEN_PARTS for part in lower):
+    # The detector-aware transition has one immutable pre-fix taxonomy as an
+    # explicit scientific input.  It is the sole archived path eligible for
+    # the evidence bundle; all other archived outputs remain fail-closed.
+    if any(part in FORBIDDEN_PARTS for part in lower) and value.as_posix() != HISTORICAL_TRANSITION_BASELINE:
         raise RuntimeError(f"forbidden bundle path component: {raw}")
     name = value.name.lower()
     if any(fragment in name for fragment in FORBIDDEN_NAME_FRAGMENTS):
@@ -221,16 +229,21 @@ def source_paths() -> list[str]:
         raise RuntimeError(f"expected 141 final PEM null files, found {len(nulls)}")
     paths.update(path.relative_to(ROOT).as_posix() for path in nulls)
 
-    cqg_text = (PAPER / "cqg_v6" / "main.tex").read_text(encoding="utf-8")
-    figure_names = sorted(set(re.findall(
-        r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+\.png)\}", cqg_text
-    )))
-    if len(figure_names) < 9:
-        raise RuntimeError(
-            f"expected at least nine referenced CQG figures, found {len(figure_names)}"
-        )
-    figures = [PAPER / "cqg_v6" / "img" / name for name in figure_names]
-    paths.update(path.relative_to(ROOT).as_posix() for path in figures)
+    for manuscript, minimum_figures in (("arxiv_v6", 9), ("cqg_v6", 9)):
+        text = (PAPER / manuscript / "main.tex").read_text(encoding="utf-8")
+        figure_names = sorted(set(re.findall(
+            r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+\.png)\}", text
+        )))
+        if len(figure_names) < minimum_figures:
+            raise RuntimeError(
+                f"expected at least {minimum_figures} referenced {manuscript} figures, "
+                f"found {len(figure_names)}"
+            )
+        figures = [PAPER / manuscript / "img" / name for name in figure_names]
+        missing = [path for path in figures if not path.is_file()]
+        if missing:
+            raise RuntimeError(f"missing manuscript figures: {missing}")
+        paths.update(path.relative_to(ROOT).as_posix() for path in figures)
 
     result = sorted(_safe_relative(path) for path in paths)
     for path in result:

@@ -1,0 +1,42 @@
+{
+  "run": "O4a",
+  "population": "ROBUST",
+  "representation": "idxq4-64_queryq4-64",
+  "taxonomy_path": "data\\production\\aggregated\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+  "detectors": {
+    "H1": {
+      "detector": "H1",
+      "n_candidates": 2227,
+      "n_sessions": 39,
+      "similarity_mean": 0.8155792355537415,
+      "similarity_p99": 0.9754807949066162,
+      "cross_session_fraction_all_pairs": 0.9706396745649145,
+      "cross_session_fraction_top": 0.9665,
+      "top_n": 2000,
+      "enrichment_top_vs_baseline": 0.995735106782267,
+      "median_dt_days_top_cross": 60.26555555555556,
+      "max_dt_days_top_cross": 228.49444444444444,
+      "neighbour_session_span_mean": 8.508307139649753,
+      "neighbour_session_span_null_mean": 8.786418949259094,
+      "neighbour_session_span_z": -7.715726393070729,
+      "k_neighbours": 10
+    },
+    "L1": {
+      "detector": "L1",
+      "n_candidates": 4138,
+      "n_sessions": 42,
+      "similarity_mean": 0.7759318351745605,
+      "similarity_p99": 0.9722297787666321,
+      "cross_session_fraction_all_pairs": 0.9643161776809803,
+      "cross_session_fraction_top": 0.961,
+      "top_n": 2000,
+      "enrichment_top_vs_baseline": 0.9965611095637167,
+      "median_dt_days_top_cross": 63.437222222222225,
+      "max_dt_days_top_cross": 233.3962962962963,
+      "neighbour_session_span_mean": 7.195021749637506,
+      "neighbour_session_span_null_mean": 8.580566698888353,
+      "neighbour_session_span_z": -46.279001129423776,
+      "k_neighbours": 10
+    }
+  }
+}

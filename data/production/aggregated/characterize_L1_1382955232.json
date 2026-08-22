@@ -1,0 +1,65 @@
+{
+  "detector": "L1",
+  "partner": "H1",
+  "gps": 1382955232.0,
+  "feature_gps": 1382955253.17,
+  "window": [
+    1382955232.0,
+    1382955264.0
+  ],
+  "band_hz": [
+    26.0,
+    42.0
+  ],
+  "descriptor_recipe": {
+    "name": "kretski-independent-v1",
+    "source": "https://gist.github.com/Kretski/d0f17ae69cd8fc40093cb4a4e372b7be",
+    "source_revision": "9ea0f8e4ec998e1f41521e5265eb3cc0b07ca1a0",
+    "whitening": {
+      "fftlength_s": 4.0,
+      "overlap_s": 2.0,
+      "padding_s": 8.0
+    },
+    "peak": {
+      "input": "raw strain, 4 s centred on feature_gps",
+      "asd_fftlength_s": 1.0,
+      "asd_overlap_s": 0.5
+    },
+    "correlation": {
+      "input": "whitened, band-passed 4 s feature window",
+      "maximum": "signed",
+      "max_lag_s": 0.012,
+      "null_test": false
+    },
+    "loudness_reference": "mean of adjacent windows"
+  },
+  "peak_frequency_hz": 28.0,
+  "candidate_inband_energy": 253237.83765442087,
+  "loudness_ratio_to_background_mean": 304.0695886040712,
+  "loudness_ratio_to_background_median_diagnostic": 314.8852573789505,
+  "background_energy_mean": 832.8285601233265,
+  "background_energy_median": 804.2225913093807,
+  "background_energy_min": 722.1049032099102,
+  "background_energy_max": 1009.6569286496033,
+  "n_background": 16,
+  "background_spacing_s": 40.0,
+  "raw_cross_detector_max_corr": 0.05853407762863288,
+  "raw_cross_detector_best_lag_s": -0.011962890625,
+  "correlation_note": "Independent descriptive statistic near zero lag. It is unstable under reasonable implementation choices and is not the production time-shift/null coincidence veto.",
+  "production_coincidence": {
+    "gps": 1382955228.0,
+    "detector": "L1",
+    "partner": "H1",
+    "t_offset_s": 24.64864864864865,
+    "f_lo": 20.0,
+    "f_hi": 65.99849894084433,
+    "cc_onsource": 0.07160130107328701,
+    "cc_null_mean": 0.19696659845415138,
+    "cc_null_max": 0.28637825502139447,
+    "n_null": 7,
+    "patch_iou": 0.007407407407407408,
+    "artifact": "data\\production\\aggregated\\coincidence_physical_o4a.json",
+    "interpretation": "Production time-shift/null veto; not comparable one-for-one with raw descriptor correlation."
+  },
+  "attribution": "Cross-check recipe reproduced from GitHub user Kretski, gist d0f17ae69cd8fc40093cb4a4e372b7be, revision 9ea0f8e4ec998e1f41521e5265eb3cc0b07ca1a0."
+}

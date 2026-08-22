@@ -1,0 +1,716 @@
+{
+  "run": "O4a",
+  "seed": 42,
+  "target_snr": 20.0,
+  "flag_threshold": 0.3783,
+  "q_max": 64.0,
+  "qrange": [
+    4,
+    64
+  ],
+  "native_representation": "idxq4-64_queryq4-64",
+  "native_index_path": "data\\reference\\patch_compressed_index_o4a_q4-64_ex.npz",
+  "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+  "n_realizations": 8,
+  "injection_time_semantics": "waveform_center_at_analysis_window_center",
+  "f0_values": [
+    35.0,
+    60.0,
+    100.0,
+    170.0,
+    300.0
+  ],
+  "q_values": [
+    2.0,
+    4.0,
+    8.0,
+    16.0,
+    32.0,
+    64.0,
+    128.0,
+    256.0
+  ],
+  "cells": [
+    {
+      "f0": 35.0,
+      "q": 2.0,
+      "n": 8,
+      "duration_s": 0.021417708056080773,
+      "bandwidth_hz": 17.5,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.299862515181303,
+      "excess_o3b_mean": -0.007340513169765472,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.06989066861569881,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 35.0,
+      "q": 4.0,
+      "n": 8,
+      "duration_s": 0.042835416112161545,
+      "bandwidth_hz": 8.75,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3259836509823799,
+      "excess_o3b_mean": 0.018780622631311417,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.09312858153134584,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 35.0,
+      "q": 8.0,
+      "n": 8,
+      "duration_s": 0.08567083222432309,
+      "bandwidth_hz": 4.375,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3672211579978466,
+      "excess_o3b_mean": 0.06001812964677811,
+      "flag_rate": 0.25,
+      "inj_native_mean": 0.1169348694384098,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 35.0,
+      "q": 16.0,
+      "n": 8,
+      "duration_s": 0.17134166444864618,
+      "bandwidth_hz": 2.1875,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3948563486337662,
+      "excess_o3b_mean": 0.08765332028269768,
+      "flag_rate": 0.75,
+      "inj_native_mean": 0.1542783472687006,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 35.0,
+      "q": 32.0,
+      "n": 8,
+      "duration_s": 0.34268332889729236,
+      "bandwidth_hz": 1.09375,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.37511611729860306,
+      "excess_o3b_mean": 0.06791308894753456,
+      "flag_rate": 0.25,
+      "inj_native_mean": 0.1429084986448288,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 35.0,
+      "q": 64.0,
+      "n": 8,
+      "duration_s": 0.6853666577945847,
+      "bandwidth_hz": 0.546875,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3842279128730297,
+      "excess_o3b_mean": 0.07702488452196121,
+      "flag_rate": 0.75,
+      "inj_native_mean": 0.14082131627947092,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 35.0,
+      "q": 128.0,
+      "n": 8,
+      "duration_s": 1.3707333155891694,
+      "bandwidth_hz": 0.2734375,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.377782192081213,
+      "excess_o3b_mean": 0.0705791637301445,
+      "flag_rate": 0.625,
+      "inj_native_mean": 0.12489815428853035,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 35.0,
+      "q": 256.0,
+      "n": 8,
+      "duration_s": 2.741466631178339,
+      "bandwidth_hz": 0.13671875,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3489108122885227,
+      "excess_o3b_mean": 0.041707783937454224,
+      "flag_rate": 0.25,
+      "inj_native_mean": 0.11648102290928364,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 60.0,
+      "q": 2.0,
+      "n": 8,
+      "duration_s": 0.012493663032713785,
+      "bandwidth_hz": 30.0,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3079436905682087,
+      "excess_o3b_mean": 0.0007406622171401978,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07403904385864735,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 60.0,
+      "q": 4.0,
+      "n": 8,
+      "duration_s": 0.02498732606542757,
+      "bandwidth_hz": 15.0,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.30826006829738617,
+      "excess_o3b_mean": 0.0010570399463176727,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07422692701220512,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 60.0,
+      "q": 8.0,
+      "n": 8,
+      "duration_s": 0.04997465213085514,
+      "bandwidth_hz": 7.5,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.32321399077773094,
+      "excess_o3b_mean": 0.016010962426662445,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07688321452587843,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 60.0,
+      "q": 16.0,
+      "n": 8,
+      "duration_s": 0.09994930426171028,
+      "bandwidth_hz": 3.75,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3870522975921631,
+      "excess_o3b_mean": 0.07984926924109459,
+      "flag_rate": 0.625,
+      "inj_native_mean": 0.12780303601175547,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 60.0,
+      "q": 32.0,
+      "n": 8,
+      "duration_s": 0.19989860852342056,
+      "bandwidth_hz": 1.875,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.4037654884159565,
+      "excess_o3b_mean": 0.096562460064888,
+      "flag_rate": 0.875,
+      "inj_native_mean": 0.16548069939017296,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 60.0,
+      "q": 64.0,
+      "n": 8,
+      "duration_s": 0.3997972170468411,
+      "bandwidth_hz": 0.9375,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.4083125963807106,
+      "excess_o3b_mean": 0.1011095680296421,
+      "flag_rate": 1.0,
+      "inj_native_mean": 0.15524311922490597,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 60.0,
+      "q": 128.0,
+      "n": 8,
+      "duration_s": 0.7995944340936822,
+      "bandwidth_hz": 0.46875,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.36965593695640564,
+      "excess_o3b_mean": 0.06245290860533714,
+      "flag_rate": 0.375,
+      "inj_native_mean": 0.12168544437736273,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 60.0,
+      "q": 256.0,
+      "n": 8,
+      "duration_s": 1.5991888681873645,
+      "bandwidth_hz": 0.234375,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.41762519627809525,
+      "excess_o3b_mean": 0.11042216792702675,
+      "flag_rate": 1.0,
+      "inj_native_mean": 0.19581144489347935,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 100.0,
+      "q": 2.0,
+      "n": 8,
+      "duration_s": 0.00749619781962827,
+      "bandwidth_hz": 50.0,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3084787353873253,
+      "excess_o3b_mean": 0.0012757070362567902,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07462151255458593,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 100.0,
+      "q": 4.0,
+      "n": 8,
+      "duration_s": 0.01499239563925654,
+      "bandwidth_hz": 25.0,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.30864372849464417,
+      "excess_o3b_mean": 0.0014407001435756683,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07448852062225342,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 100.0,
+      "q": 8.0,
+      "n": 8,
+      "duration_s": 0.02998479127851308,
+      "bandwidth_hz": 12.5,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.31112875416874886,
+      "excess_o3b_mean": 0.003925725817680359,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.06670232908800244,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 100.0,
+      "q": 16.0,
+      "n": 8,
+      "duration_s": 0.05996958255702616,
+      "bandwidth_hz": 6.25,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.38627949357032776,
+      "excess_o3b_mean": 0.07907646521925926,
+      "flag_rate": 0.625,
+      "inj_native_mean": 0.12540600076317787,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 100.0,
+      "q": 32.0,
+      "n": 8,
+      "duration_s": 0.11993916511405232,
+      "bandwidth_hz": 3.125,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3870578333735466,
+      "excess_o3b_mean": 0.0798548050224781,
+      "flag_rate": 0.75,
+      "inj_native_mean": 0.18783882074058056,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 100.0,
+      "q": 64.0,
+      "n": 8,
+      "duration_s": 0.23987833022810465,
+      "bandwidth_hz": 1.5625,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.38026366755366325,
+      "excess_o3b_mean": 0.07306063920259476,
+      "flag_rate": 0.375,
+      "inj_native_mean": 0.1741076372563839,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 100.0,
+      "q": 128.0,
+      "n": 8,
+      "duration_s": 0.4797566604562093,
+      "bandwidth_hz": 0.78125,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3982433006167412,
+      "excess_o3b_mean": 0.09104027226567268,
+      "flag_rate": 0.875,
+      "inj_native_mean": 0.1714564599096775,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 100.0,
+      "q": 256.0,
+      "n": 8,
+      "duration_s": 0.9595133209124186,
+      "bandwidth_hz": 0.390625,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.36177507787942886,
+      "excess_o3b_mean": 0.05457204952836037,
+      "flag_rate": 0.125,
+      "inj_native_mean": 0.1614010725170374,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 170.0,
+      "q": 2.0,
+      "n": 8,
+      "duration_s": 0.0044095281291931,
+      "bandwidth_hz": 85.0,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3088345192372799,
+      "excess_o3b_mean": 0.0016314908862113953,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07450209278613329,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 170.0,
+      "q": 4.0,
+      "n": 8,
+      "duration_s": 0.0088190562583862,
+      "bandwidth_hz": 42.5,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3091344013810158,
+      "excess_o3b_mean": 0.0019313730299472809,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.0744804972782731,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 170.0,
+      "q": 8.0,
+      "n": 8,
+      "duration_s": 0.0176381125167724,
+      "bandwidth_hz": 21.25,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3121967278420925,
+      "excess_o3b_mean": 0.004993699491024017,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.06621636310592294,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 170.0,
+      "q": 16.0,
+      "n": 8,
+      "duration_s": 0.0352762250335448,
+      "bandwidth_hz": 10.625,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3078300878405571,
+      "excess_o3b_mean": 0.0006270594894886017,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07186701195314527,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 170.0,
+      "q": 32.0,
+      "n": 8,
+      "duration_s": 0.0705524500670896,
+      "bandwidth_hz": 5.3125,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3987431488931179,
+      "excess_o3b_mean": 0.09154012054204941,
+      "flag_rate": 0.75,
+      "inj_native_mean": 0.16356344241648912,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 170.0,
+      "q": 64.0,
+      "n": 8,
+      "duration_s": 0.1411049001341792,
+      "bandwidth_hz": 2.65625,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.42140328884124756,
+      "excess_o3b_mean": 0.11420026049017906,
+      "flag_rate": 0.875,
+      "inj_native_mean": 0.17048470210283995,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 170.0,
+      "q": 128.0,
+      "n": 8,
+      "duration_s": 0.2822098002683584,
+      "bandwidth_hz": 1.328125,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.4013553000986576,
+      "excess_o3b_mean": 0.09415227174758911,
+      "flag_rate": 0.75,
+      "inj_native_mean": 0.14464655984193087,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 170.0,
+      "q": 256.0,
+      "n": 8,
+      "duration_s": 0.5644196005367168,
+      "bandwidth_hz": 0.6640625,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3549281395971775,
+      "excess_o3b_mean": 0.04772511124610901,
+      "flag_rate": 0.125,
+      "inj_native_mean": 0.12755589559674263,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 300.0,
+      "q": 2.0,
+      "n": 8,
+      "duration_s": 0.002498732606542757,
+      "bandwidth_hz": 150.0,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3088470473885536,
+      "excess_o3b_mean": 0.0016440190374851227,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07471416285261512,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 300.0,
+      "q": 4.0,
+      "n": 8,
+      "duration_s": 0.004997465213085514,
+      "bandwidth_hz": 75.0,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.30896366760134697,
+      "excess_o3b_mean": 0.001760639250278473,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07461291272193193,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 300.0,
+      "q": 8.0,
+      "n": 8,
+      "duration_s": 0.009994930426171028,
+      "bandwidth_hz": 37.5,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3119898624718189,
+      "excess_o3b_mean": 0.004786834120750427,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.06625735945999622,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 300.0,
+      "q": 16.0,
+      "n": 8,
+      "duration_s": 0.019989860852342056,
+      "bandwidth_hz": 18.75,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.29478149861097336,
+      "excess_o3b_mean": -0.012421529740095139,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.06778606818988919,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 300.0,
+      "q": 32.0,
+      "n": 8,
+      "duration_s": 0.03997972170468411,
+      "bandwidth_hz": 9.375,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.2949935905635357,
+      "excess_o3b_mean": -0.012209437787532806,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.07232605339959264,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 300.0,
+      "q": 64.0,
+      "n": 8,
+      "duration_s": 0.07995944340936822,
+      "bandwidth_hz": 4.6875,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3358246088027954,
+      "excess_o3b_mean": 0.028621580451726913,
+      "flag_rate": 0.0,
+      "inj_native_mean": 0.09424498956650496,
+      "q_gt_qmax": false
+    },
+    {
+      "f0": 300.0,
+      "q": 128.0,
+      "n": 8,
+      "duration_s": 0.15991888681873645,
+      "bandwidth_hz": 2.34375,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.39355040341615677,
+      "excess_o3b_mean": 0.08634737506508827,
+      "flag_rate": 0.625,
+      "inj_native_mean": 0.13823749404400587,
+      "q_gt_qmax": true
+    },
+    {
+      "f0": 300.0,
+      "q": 256.0,
+      "n": 8,
+      "duration_s": 0.3198377736374729,
+      "bandwidth_hz": 1.171875,
+      "clean_o3b_mean": 0.3072030283510685,
+      "inj_o3b_mean": 0.3558741435408592,
+      "excess_o3b_mean": 0.048671115189790726,
+      "flag_rate": 0.125,
+      "inj_native_mean": 0.11521015502512455,
+      "q_gt_qmax": true
+    }
+  ],
+  "mean_flag_rate_Q_le_Qmax": 0.2625,
+  "mean_flag_rate_Q_gt_Qmax": 0.4875,
+  "blind_cells": [
+    {
+      "f0": 35.0,
+      "q": 2.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": -0.007340513169765472
+    },
+    {
+      "f0": 35.0,
+      "q": 4.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.018780622631311417
+    },
+    {
+      "f0": 35.0,
+      "q": 8.0,
+      "flag_rate": 0.25,
+      "excess_o3b_mean": 0.06001812964677811
+    },
+    {
+      "f0": 35.0,
+      "q": 32.0,
+      "flag_rate": 0.25,
+      "excess_o3b_mean": 0.06791308894753456
+    },
+    {
+      "f0": 35.0,
+      "q": 256.0,
+      "flag_rate": 0.25,
+      "excess_o3b_mean": 0.041707783937454224
+    },
+    {
+      "f0": 60.0,
+      "q": 2.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0007406622171401978
+    },
+    {
+      "f0": 60.0,
+      "q": 4.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0010570399463176727
+    },
+    {
+      "f0": 60.0,
+      "q": 8.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.016010962426662445
+    },
+    {
+      "f0": 60.0,
+      "q": 128.0,
+      "flag_rate": 0.375,
+      "excess_o3b_mean": 0.06245290860533714
+    },
+    {
+      "f0": 100.0,
+      "q": 2.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0012757070362567902
+    },
+    {
+      "f0": 100.0,
+      "q": 4.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0014407001435756683
+    },
+    {
+      "f0": 100.0,
+      "q": 8.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.003925725817680359
+    },
+    {
+      "f0": 100.0,
+      "q": 64.0,
+      "flag_rate": 0.375,
+      "excess_o3b_mean": 0.07306063920259476
+    },
+    {
+      "f0": 100.0,
+      "q": 256.0,
+      "flag_rate": 0.125,
+      "excess_o3b_mean": 0.05457204952836037
+    },
+    {
+      "f0": 170.0,
+      "q": 2.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0016314908862113953
+    },
+    {
+      "f0": 170.0,
+      "q": 4.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0019313730299472809
+    },
+    {
+      "f0": 170.0,
+      "q": 8.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.004993699491024017
+    },
+    {
+      "f0": 170.0,
+      "q": 16.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0006270594894886017
+    },
+    {
+      "f0": 170.0,
+      "q": 256.0,
+      "flag_rate": 0.125,
+      "excess_o3b_mean": 0.04772511124610901
+    },
+    {
+      "f0": 300.0,
+      "q": 2.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.0016440190374851227
+    },
+    {
+      "f0": 300.0,
+      "q": 4.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.001760639250278473
+    },
+    {
+      "f0": 300.0,
+      "q": 8.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.004786834120750427
+    },
+    {
+      "f0": 300.0,
+      "q": 16.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": -0.012421529740095139
+    },
+    {
+      "f0": 300.0,
+      "q": 32.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": -0.012209437787532806
+    },
+    {
+      "f0": 300.0,
+      "q": 64.0,
+      "flag_rate": 0.0,
+      "excess_o3b_mean": 0.028621580451726913
+    },
+    {
+      "f0": 300.0,
+      "q": 256.0,
+      "flag_rate": 0.125,
+      "excess_o3b_mean": 0.048671115189790726
+    }
+  ],
+  "interpretation_note": "Cells with flag_rate<0.5 at fixed SNR 20 are where the morphology, not the loudness, keeps DANTE from flagging. Compare mean_flag_rate_Q_le_Qmax vs _Q_gt_Qmax: if flagging drops sharply for Q>Q_max=64, the analytic T=Q_max/f boundary is empirically real; if it drops elsewhere, the true blind spot differs from the drawn boundary."
+}

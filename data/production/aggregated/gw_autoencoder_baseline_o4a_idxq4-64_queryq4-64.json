@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "experiment": "gw_autoencoder_baseline",
+  "scope": "Detector-specific nonlinear autoencoder trained from scratch on O4a Q-transform backgrounds and evaluated on the same 160 near-boundary candidates as the PCA/energy controls. Agreement with DANTE dispositions is not physical classification accuracy.",
+  "representation": "idxq4-64_queryq4-64",
+  "architecture": "conv-8-16-16-latent16-16-16-8",
+  "input": "32x32 log1p Q-transform power, Q in [4,64]",
+  "detector_specific_training": true,
+  "seeds": [
+    42,
+    314159,
+    271828
+  ],
+  "n_candidates": 160,
+  "candidate_class_counts": {
+    "ROBUST": 80,
+    "AMBIGUOUS": 80
+  },
+  "metrics": {
+    "pooled": {
+      "auc_robust_vs_ambiguous": 0.472890625,
+      "spearman_with_dante": -0.04686301607298028
+    },
+    "by_detector": {
+      "H1": {
+        "auc_robust_vs_ambiguous": 0.5284375,
+        "spearman_with_dante": 0.03893683087455743
+      },
+      "L1": {
+        "auc_robust_vs_ambiguous": 0.4240625,
+        "spearman_with_dante": -0.17721929907779352
+      }
+    },
+    "auc_by_seed": {
+      "42": 0.473203125,
+      "314159": 0.485,
+      "271828": 0.482734375
+    }
+  },
+  "training": {
+    "H1": {
+      "42": {
+        "best_validation_loss": 0.9038364291191101,
+        "epochs_completed": 49,
+        "n_train": 520,
+        "n_validation": 130,
+        "device": "cuda"
+      },
+      "314159": {
+        "best_validation_loss": 0.8964016437530518,
+        "epochs_completed": 55,
+        "n_train": 520,
+        "n_validation": 130,
+        "device": "cuda"
+      },
+      "271828": {
+        "best_validation_loss": 0.9447747468948364,
+        "epochs_completed": 45,
+        "n_train": 520,
+        "n_validation": 130,
+        "device": "cuda"
+      }
+    },
+    "L1": {
+      "42": {
+        "best_validation_loss": 0.9261211156845093,
+        "epochs_completed": 45,
+        "n_train": 520,
+        "n_validation": 130,
+        "device": "cuda"
+      },
+      "314159": {
+        "best_validation_loss": 0.9286352396011353,
+        "epochs_completed": 58,
+        "n_train": 520,
+        "n_validation": 130,
+        "device": "cuda"
+      },
+      "271828": {
+        "best_validation_loss": 0.9071090817451477,
+        "epochs_completed": 44,
+        "n_train": 520,
+        "n_validation": 130,
+        "device": "cuda"
+      }
+    }
+  },
+  "sources": {
+    "thresholds": {
+      "path": "data\\production\\aggregated\\dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+      "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    },
+    "taxonomy": {
+      "path": "data\\production\\aggregated\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    },
+    "candidate_feature_cache": {
+      "path": "data\\production\\aggregated\\pca_baseline_candidate_feats_o4a_idxq4-64_queryq4-64_q4-64_n40_s42_1154059b80ca.npz",
+      "sha256": "02732e96562a928be2e6f586127c49bb2c78b312c275d5dfa05ac8f526a74d05"
+    },
+    "backgrounds": {
+      "H1": {
+        "feature_cache": "data\\production\\aggregated\\gw_autoencoder_background_H1_o4a_idxq4-64_queryq4-64_n650.npz",
+        "feature_cache_sha256": "edaaf2bef0c8e5e585a517d7e9b17907c569a213fa67424a6b95d2ab4edf8ba1",
+        "selection_ledger": "data\\production\\aggregated\\gw_autoencoder_background_H1_o4a_idxq4-64_queryq4-64_n650_ledger.csv",
+        "selection_ledger_sha256": "52268fdc1f1a3122e52d76c9765e0ce39300eb7c9b8d6ddb8993c80d2087bcd3",
+        "upstream_calibration_ledger": "data\\production\\aggregated\\background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+        "upstream_calibration_ledger_sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588",
+        "n_background": 650
+      },
+      "L1": {
+        "feature_cache": "data\\production\\aggregated\\gw_autoencoder_background_L1_o4a_idxq4-64_queryq4-64_n650.npz",
+        "feature_cache_sha256": "31fd8b67d3ad8ec5f42444cc4792e9363b7eda62bd16f64396d0f1980ea4fb29",
+        "selection_ledger": "data\\production\\aggregated\\gw_autoencoder_background_L1_o4a_idxq4-64_queryq4-64_n650_ledger.csv",
+        "selection_ledger_sha256": "c91178a480b3a31a08648b21e41a21f56d9ce85083adeb46b4bb7bb361b0b92f",
+        "upstream_calibration_ledger": "data\\production\\aggregated\\background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+        "upstream_calibration_ledger_sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398",
+        "n_background": 650
+      }
+    },
+    "scores": {
+      "path": "data\\production\\aggregated\\gw_autoencoder_baseline_scores_o4a_idxq4-64_queryq4-64.csv",
+      "sha256": "babd806fe3fed73e9bcf5d5dfe0bc92f6a69f09f57522dab3dd5b2e8e83bb47d"
+    }
+  }
+}

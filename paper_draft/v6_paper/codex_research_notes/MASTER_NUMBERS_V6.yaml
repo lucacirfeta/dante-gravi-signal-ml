@@ -1,0 +1,409 @@
+schema_version: 3
+frozen_at: "2026-08-14"
+status: "AUTOMATED_SUBMISSION_GATES_PASS_EVIDENCE_DOI_PUBLISHED"
+verification_command: "python scripts/verify_c2_bgv3_artifacts.py --stage all"
+verification_result:
+  passed:
+    - p5
+    - p4
+    - p10
+    - multiscale
+    - cohesion
+    - whitening
+    - p9
+    - r5
+    - p11
+    - pem
+  failed: []
+  final_submission_gate:
+    c2_stages_passed: 10
+    cqg_stages_passed: 5
+    manuscript_claim_check: "PASS papers=all artifacts=verified"
+    final_focused_tests_passed: 174
+    final_tests_skipped: 1
+    reproducibility_bundle_files: 250
+    evidence_bundle_doi: "10.5281/zenodo.21925453"
+    evidence_bundle_sha256: "a04ef27a564ab356103eb1ae14031d14649359e884d571aa08a832bc822bd37c"
+    human_metadata_pending: []
+    nonblocking_zenodo_metadata_note: "Remove the stray space in related identifier 10.5281/zenodo. 21912589"
+
+representation_contract:
+  variant: "idxq4-64_queryq4-64"
+  index_qrange: [4, 64]
+  query_qrange: [4, 64]
+  production_top_k: 68
+  historical_o3b_dictionary_k: 275
+  native_o4a_dictionary_k: 1216
+  native_index_sha256: "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744"
+
+artifacts:
+  thresholds:
+    path: "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+    sha256: "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+  taxonomy:
+    path: "data/production/aggregated/dsd_transition_audit_o4a_idxq4-64_queryq4-64.json"
+    sha256: "802a65e6c8b08828bd07fb6922a4db03ff6e3353f2c1b33d4f7299ff16ee532c"
+  p5_index_stability:
+    path: "data/production/aggregated/dsd_index_stability_o4a_idxq4-64_queryq4-64.json"
+    sha256: "2dec8013b8d3d2db7513c41051d027ed453abd0a7c5481c890c30b3eb21d22db"
+  p4_k_sensitivity:
+    path: "data/production/aggregated/dsd_k_sensitivity_o4a_idxq4-64_queryq4-64.json"
+    sha256: "bcf63b2ea0b02e298fd362637ed9b92cb10eb307713afecf1444c15334a1b61a"
+  p10_baselines:
+    path: "data/production/aggregated/pca_baseline_o4a_idxq4-64_queryq4-64.json"
+    sha256: "7f62f42a5ed69fb69fc1e2eb16a7f5def1d7f8f8ae7ebad405d6c63f34f3db0f"
+  block_length_sensitivity:
+    path: "data/production/aggregated/dsd_block_length_sensitivity_o4a_idxq4-64_queryq4-64.json"
+    sha256: "2d54df439e6f07b6a6ed1a53db18435421f3599da74e4a22753fd9f2d48aa3ea"
+  gw_autoencoder_baseline:
+    path: "data/production/aggregated/gw_autoencoder_baseline_o4a_idxq4-64_queryq4-64.json"
+    sha256: "735c702bda3a5be861fe303813836334fb2bd3ee40741c22611c77b4decfeed2"
+  gw_autoencoder_scores:
+    path: "data/production/aggregated/gw_autoencoder_baseline_scores_o4a_idxq4-64_queryq4-64.csv"
+    sha256: "babd806fe3fed73e9bcf5d5dfe0bc92f6a69f09f57522dab3dd5b2e8e83bb47d"
+  whitening:
+    path: "data/production/aggregated/whitening_context_sensitivity_o4a_idxq4-64_queryq4-64.json"
+    sha256: "2d138829282e8fa3bc0e137459a9189a962cf1aedbf370ab4be286494b70529b"
+  absorption:
+    path: "data/production/aggregated/dsd_absorption_blip_q4-64.json"
+    sha256: "dd91f6c070c71a2f48f374d95a8b4ecde3508d3ae88330910d71b604aad42e1f"
+  blind_map:
+    path: "data/production/aggregated/blind_spot_map_centered_q64_v3_o4a.json"
+    sha256: "4ae40c1422b3ef10875a01abf09c7db82580f68a7fdf7b8791c03015cd534005"
+  cross_detector:
+    path: "data/production/aggregated/coincidence_physical_o4a.json"
+    sha256: "51c70296c55b70f5c17f4578db232d78bb37bfcdaaf2dbc6b25295c67421ff05"
+  pem:
+    path: "data/production/aggregated/pem/idxq4-64_queryq4-64/pem_class_association.json"
+    sha256: "10151a5756575dc453d0676e45269ce3f9615b0d08bf449ba238d291ee5474c1"
+  cbc:
+    path: "data/production/aggregated/astrophysical_injection_o4a_idxq4-64_queryq4-64.json"
+    sha256: "9363d4f1b0e9253e622f3318d8f5986e07205cc0e27763a481d3e390cb8a0fee"
+  recurrence:
+    path: "data/production/aggregated/inter_session_recurrence_o4a_idxq4-64_queryq4-64.json"
+    sha256: "e9caad0f7935ce7787d38ba27e076886f9cf0f20a9e60583bb36f5360000f3d7"
+  catalogue:
+    path: "data/production/aggregated/catalog_cross_match_circular_shift_v2_idxq4-64_queryq4-64_o4a.json"
+    sha256: "dc5dcc06651a48cae31dffcb7314cff8956ac0672d43f51a8e0fa54d98d82225"
+  multiscale:
+    path: "data/production/aggregated/Multiscale_Profile_O4a_idxq4-64_queryq4-64.csv"
+    sha256: "b2ba8ef3a7a811f4388cad4f8956ea975c80927158bea58094a10b7d18e7518c"
+  cohesion:
+    path: "data/production/aggregated/background_cohesion_o4a_idxq4-64_queryq4-64.json"
+    sha256: "0dea951d5a07d7aa70d443daadae34faa462749dde9d903e8e1c94808c0820ff"
+  representation_transition:
+    path: "data/production/aggregated/dsd_representation_transition_detector_aware.json"
+    sha256: "203a1f93c71f31cdd7342264ddc8d2705ce02b1c2b4e1bf266b1a2e6e38693bb"
+  cqg_cross_run_domain_shift:
+    path: "data/production/aggregated/cqg_cross_run_domain_shift.json"
+    sha256: "45c7ce628ee4a2bb109f4b72a7659123f7f97fe24fcff0dbf5c16fe75c9bd2b8"
+  cqg_known_glitch_controls:
+    path: "data/production/aggregated/cqg_known_glitch_controls.json"
+    sha256: "0f44e6e6e413bc4cde84478da9a55b931eb74b556a98ad93f5acb79e1008e199"
+  cqg_absorption_matrix:
+    path: "data/production/aggregated/cqg_absorption_matrix.json"
+    sha256: "6881ec208879a518168caf963fcb0c54499652017da2e696741f375e346449c3"
+  cqg_robustness_replicates:
+    path: "data/production/aggregated/cqg_robustness_replicates.json"
+    sha256: "7f54067c0895c7e491fff89aa257bdf8a0dd82edabb0d8be441eb6d7ef558840"
+  candidate_case:
+    path: "data/production/aggregated/candidate_case_L1_1382955228_idxq4-64_queryq4-64.json"
+    sha256: "0a84bbdad28e119d210fc4cd1b133dbef70f268bb339f258c26e3df5e1307483"
+
+metrics:
+  population:
+    candidates_total: 10429
+    sessions_total: 42
+    robust: 6365
+    ambiguous: 1275
+    background: 2789
+    paired_historical: 10372
+    restored_detector_aware: 57
+    changed_dispositions: 4676
+    transition_matrix:
+      robust: {robust: 2914, ambiguous: 14, background: 9}
+      ambiguous: {robust: 1666, ambiguous: 68, background: 39}
+      background: {robust: 1759, ambiguous: 1188, background: 2714}
+      unknown: {robust: 0, ambiguous: 0, background: 1}
+    scope: "O4a candidate population; DSD dispositions are statistical, not physical classes."
+  thresholds:
+    n_background_per_detector: 5000
+    bootstrap_replicates: 1000000
+    bootstrap_block_length: 17
+    h1_p99: 0.16157861188054093
+    h1_ci: [0.13023118793964325, 0.2040884156525078]
+    l1_p99: 0.1760626833140853
+    l1_ci: [0.15031939417123752, 0.21959366053342733]
+  block_length_sensitivity:
+    bootstrap_replicates_per_cell: 200000
+    block_lengths: [8, 17, 32, 64]
+    non_overlapping_changed: {8: 46, 17: 1, 32: 42, 64: 140}
+    moving_block_changed: {8: 86, 17: 43, 32: 7, 64: 148}
+    maximum_changed_fraction: 0.014191197622015534
+    minimum_stable_fraction: 0.9858088023779845
+    scope: "Boundary sensitivity to block length and resampling scheme; released thresholds and taxonomy are not overwritten."
+  p5:
+    sample_total: 160
+    robust: 80
+    ambiguous: 80
+    background_draws: 4
+    spearman_mean: 0.6737020977381928
+    spearman_min: 0.5146870971522325
+    score_std_median: 0.007566576059790487
+    scope: "Rank/score stability in a deliberately near-boundary sample; diagnostic verdict agreement is excluded."
+  p4:
+    production_k: 1216
+    spearman_vs_production:
+      512: 0.7525137700691432
+      1024: 0.7680446501816478
+      2048: 0.9427897574123989
+    scope: "K sensitivity on the P5 sample and cached background; not invariance."
+  p10:
+    pca_auc: 0.4362500011920929
+    pca_spearman: -0.1578694480253135
+    energy_auc: 0.54375
+    energy_spearman: 0.030056838157740535
+    energy_auc_h1: 0.598125
+    energy_auc_l1: 0.49
+    scope: "Baselines do not explain the full DANTE ranking; they do not establish causal morphology use or backbone optimality."
+  gw_autoencoder:
+    candidates: 160
+    background_per_detector: 650
+    seeds: [42, 314159, 271828]
+    pooled_auc: 0.472890625
+    pooled_spearman: -0.04686301607298028
+    auc_by_seed: {42: 0.473203125, 314159: 0.485, 271828: 0.482734375}
+    h1_auc: 0.5284375
+    l1_auc: 0.4240625
+    scope: "Non-discriminating GW-specific reconstruction baseline; agreement with DANTE dispositions is not physical classification accuracy."
+  whitening:
+    attempted: 66
+    selected: 60
+    excluded: 6
+    pad4_anchor_passed: 60
+    pad4_anchor_tolerance: 0.001
+    pad4_anchor_max_abs_delta: 0.000000685453414861481
+    score_swing_median: 0.010880038142204285
+    score_swing_max: 0.07383482158184052
+    large_swing_threshold: 0.02
+    large_swing_count: 16
+    fixed_boundary_flip_rates:
+      pad16: 0.4
+      pad64: 0.4
+      pad128: 0.36666666666666664
+    recalibrated_flip_rates:
+      pad16: 0.6333333333333333
+      pad64: 0.7
+      pad128: 0.65
+    scope: "Balanced boundary-conditioned sample; not a survey-wide prevalence."
+  absorption:
+    morphology: "Blip"
+    amplitude: 12.0
+    seed: 42
+    k: 282
+    z_by_prevalence:
+      0.00: 8.598164583096105
+      0.02: 3.601626377499636
+      0.10: 2.28661789494523
+      0.40: 0.8851060118084824
+    flagged_fraction:
+      0.05: 0.5333333333333333
+      0.10: 0.2
+    scope: "Proof-of-mechanism for one morphology, amplitude and seed; no universal absorption threshold."
+  blind_map:
+    target_snr: 20.0
+    frequencies: 5
+    q_values: 8
+    trials_per_cell: 8
+    mean_flag_q_le_64: 0.2625
+    mean_flag_q_gt_64: 0.4875
+    q2_flag_rate_all_frequencies: 0.0
+    q4_flag_rate_all_frequencies: 0.0
+    scope: "Conditional morphology grid; not a universal efficiency surface or a Q=64 frontier."
+  cross_detector:
+    candidates: 8806
+    catalogue_total: 10429
+    unmeasured: 1623
+    threshold_p99: 0.4045910817732782
+    above_threshold: 13
+    above_fraction: 0.001485884100
+    null_shifts_per_event: [4, 8]
+    null_statistic: "Maximum over valid shifts for each event; P99 pooled across per-event maxima."
+    scope: "Conservative screen only: a single on-source value and a per-event null maximum are not exchangeable, so 13/8,806 is not a tail-count test and is assigned no p-value or physical interpretation."
+  pem:
+    selected: 141
+    calibrated: 141
+    time_shift_positive:
+      robust: [6, 26]
+      ambiguous: [8, 22]
+      background: [34, 93]
+      total: [48, 141]
+    rejected_by_quiet_zero_lag: 38
+    two_null_positive:
+      robust: [2, 26]
+      ambiguous: [1, 22]
+      background: [7, 93]
+      total: [10, 141]
+    robust_vs_background_odds_ratio: 1.0238095238095237
+    robust_vs_background_fisher_p: 1.0
+    scope: "No class enrichment resolved in this selected public-channel sample; high p is not evidence of equal rates."
+  catalogue:
+    catalogue_events: 135
+    covered_any: 131
+    covered_both: 118
+    observed_overlap_any: 2
+    observed_overlap_both: 0
+    null_mean: 2.1899
+    null_std: 1.466510502964616
+    null_interval_95: [0.0, 5.0]
+    empirical_p: 0.6508349165083491
+    scope: "Coverage-proxy overlap null; not catalogue recall or real-event efficiency."
+  cbc:
+    total_trials: 375
+    trials_per_cell: 25
+    systems: 3
+    distances_per_system: 5
+    selected_cells:
+      bbh30_100: {flag: [23, 25], coincidence: [16, 25], coincidence_ci: [0.44518497748164865, 0.7975211922554178]}
+      bbh30_200: {flag: [12, 25], coincidence: [9, 25], coincidence_ci: [0.20247880774458224, 0.5548150225183514]}
+      bbh10_100: {flag: [22, 25], coincidence: [12, 25], coincidence_ci: [0.30031285954112974, 0.6650148304964322]}
+      bbh10_200: {flag: [14, 25], coincidence: [0, 25], coincidence_ci: [0.0, 0.13319225093904846]}
+      nsbh_100: {flag: [7, 25], coincidence: [0, 25], coincidence_ci: [0.0, 0.13319225093904846]}
+    bns_measured: false
+    scope: "Oracle-centred simulation controls on unpaired background cells; not an astrophysical efficiency curve."
+  recurrence:
+    h1:
+      candidates: 2227
+      sessions: 39
+      top_cross_session_fraction: 0.9665
+      baseline_cross_session_fraction: 0.9706396745649145
+      enrichment: 0.995735106782267
+      neighbour_span_z: -7.715726393070729
+    l1:
+      candidates: 4138
+      sessions: 42
+      top_cross_session_fraction: 0.961
+      baseline_cross_session_fraction: 0.9643161776809803
+      enrichment: 0.9965611095637167
+      neighbour_span_z: -46.279001129423776
+    scope: "No positive recurrence resolved by the current embedding/statistic; not physical absence of recurrence."
+  multiscale:
+    candidates: 2
+    scales_per_candidate: 4
+    rows: 8
+    status: "OK"
+    scope: "Characterization of two retained singletons; not population efficiency."
+  cohesion:
+    scope: "Largest-component statistic saturates near one and is non-discriminating at the selected graph cut."
+  cqg_domain_shift:
+    sample_per_run_detector: 100
+    train_per_run: 60
+    heldout_per_run: 40
+    dictionary_k: 56
+    seed: 20260730
+    h1_mean_difference: 0.039825331419706345
+    h1_mean_difference_ci95: [0.029142849361523976, 0.05184029743541031]
+    h1_ks_p: 0.00000012344976480973208
+    h1_run_probe_auc: 0.9199
+    l1_mean_difference: -0.00289983451366424
+    l1_mean_difference_ci95: [-0.013035276127047843, 0.00822905008215457]
+    l1_ks_p: 0.09707484379785862
+    l1_run_probe_auc: 0.6164999999999999
+    scope: "Cross-run shift is resolved for H1 but not L1 in this held-out, matched-K=56 construct control; it is distinct from production K=275/K=1216 and recalibration need is detector-dependent."
+  cqg_known_glitch_controls:
+    positive_per_class_detector: 30
+    clean_per_detector: 40
+    h1_auc: {blip: 0.67, scattered_light: 1.0, koi_fish: 1.0}
+    l1_auc: {blip: 0.5233333333333333, scattered_light: 0.9883333333333333, koi_fish: 0.9925}
+    scope: "O3b known-morphology ranking control; not multiclass classification and not O4a recall."
+  cqg_absorption_matrix:
+    morphologies: ["Blip", "KoiFish", "ScatteredLight"]
+    seeds: [42, 314159, 271828]
+    peak_amplitude_whitened_units: 12.0
+    durations_s: {Blip: 1.0, KoiFish: 1.0, ScatteredLight: 1.5}
+    amplitude_scope: "Peak after unit-peak waveform normalization in approximately unit-variance whitened strain; SNR-like, not matched-filter SNR."
+    heldout_injected: 60
+    heldout_background: 150
+    z_bootstrap_replicates: 2000
+    blip_crossing_range: [0.02, 0.05]
+    koi_fish_crossing_range: [0.10, 0.10]
+    scattered_light_crossing_range: [0.05, 0.05]
+    scope: "Absorption is reproducible but morphology-dependent; crossings are not production constants."
+  cqg_robustness_replicates:
+    candidates_near_boundary: 160
+    candidates_unconditioned: 160
+    background_draws:
+      near_boundary_mean_min: [0.9340296495956872, 0.8336370561350053]
+      unconditioned_mean_min: [0.976638701009526, 0.9292599320285949]
+    kmeans_seeds:
+      near_boundary_mean_min: [0.9536631313723192, 0.8964578694480252]
+      unconditioned_mean_min: [0.9876793038790576, 0.9806662369623812]
+    k_values:
+      near_boundary_mean_min: [0.902510840267198, 0.8300011719207782]
+      unconditioned_mean_min: [0.9784210320715653, 0.9619946091644205]
+    scope: "Replicated sensitivity matrix with bootstrap uncertainty; distinct from the C2 P4/P5 diagnostic estimands."
+  reporting_protocols:
+    cross_run_bootstrap_replicates: 2000
+    known_glitch_bootstrap_replicates: 2000
+    robustness_candidate_bootstrap_replicates: 1000
+    blind_map_snr: "Matched-filter rho=20 using the PSD of each clean 32 s segment, 4 s FFTs and 20--2000 Hz."
+    pem_null: "Family-wise alpha=0.01 max over channel/frequency; 4 h CAT1-clean block; 32 s windows, 96 s stride, >=64 s pair separation; bootstrap over window indices."
+    physical_coincidence_null: "One on-source statistic per event compared with P99 pooled across per-event maxima from 4--8 valid shifts; conservative, non-exchangeable screen without tail-count p-value."
+    cbc: "Zero-spin non-precessing IMRPhenomD; isotropic sky, uniform polarization and cos(iota); raw-strain injection; merger centred; paired clean controls; seed 42."
+  candidate_case:
+    detector: "L1"
+    catalogue_gps: 1382955228
+    analysis_window: [1382955232, 1382955264]
+    figure_score_absolute_delta: 0.0000001192092896
+    peak_frequency_hz: 28.0
+    loudness_ratio_to_adjacent_mean: 304.0695886040712
+    multiscale_exceeds_p99: [0.5, 1.0, 2.0, 4.0]
+    coincidence: {onsource: 0.07160130107328701, null_mean: 0.19696659845415138, null_max: 0.28637825502139447, patch_iou: 0.007407407407407408}
+    pem: {cmax: 0.4784850756301909, family_wise_threshold: 0.6627429127693176, quiet_zero_lag_threshold: 0.7891485691070557, verdict: "NO_CORRELATION"}
+    scope: "Unclassified statistically robust L1-local transient; no resolved H1 or tested-public-PEM counterpart and no claim of a new glitch class."
+  software_tests:
+    passed: 174
+    skipped: 1
+    warnings: 9
+    warning_scope: "Complete repository suite; one platform-dependent skip, three optional-xFormers warnings and six GWpy deprecation warnings."
+
+manuscript_contract:
+  forbidden_fragments:
+    - "changes 41 apparent positives to 12 confirmed endpoints"
+    - "3/23"
+    - "5/91"
+    - "p=0.201"
+    - "2,858"
+    - "106 passing"
+    - "280\\sigma"
+    - "4,558 dispositions change"
+    - "no on-source excess"
+    - "on-source tail is not in excess"
+    - "tail is consistent with time shifts"
+  required_fragments_all:
+    - "10,429"
+    - "6,365"
+    - "1,275"
+    - "2,789"
+    - "4,676"
+    - "2/26"
+    - "1/22"
+    - "7/93"
+    - "p=1.000"
+    - "1382955228"
+    - "0.598877"
+    - "304 times"
+    - "0.0716"
+    - "0.478"
+  required_scope_terms:
+    - "boundary-conditioned"
+    - "simulation-only"
+    - "coverage proxy"
+    - "not evidence of equal rates"
+    - "not evidence for a new glitch class"
+    - "matched-filter SNR 20"
+    - "no global multiplicity adjustment"
+    - "1.5\\,s"
+    - "zero-spin"
+    - "not an exchangeable tail-count test"
+    - "K=56"

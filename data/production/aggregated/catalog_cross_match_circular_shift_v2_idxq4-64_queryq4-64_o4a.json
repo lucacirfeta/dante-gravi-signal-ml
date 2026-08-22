@@ -1,0 +1,105 @@
+{
+  "run": "O4a",
+  "representation": "idxq4-64_queryq4-64",
+  "taxonomy_path": "data\\production\\aggregated\\Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+  "catalogs": [
+    "GWTC-4.0",
+    "GWTC-4.1"
+  ],
+  "n_events_in_window": 135,
+  "coverage": {
+    "H1": {
+      "detector": "H1",
+      "source": "completed_session_raw_blocks",
+      "quality": "upper_bound_proxy_excludes_no_nan_zero_or_preprocessing_failures",
+      "window_length_s": 32.0,
+      "n_windows": 443064,
+      "n_merged_intervals": 304,
+      "livetime_s": 14178048.0,
+      "livetime_days": 164.09777777777776
+    },
+    "L1": {
+      "detector": "L1",
+      "source": "completed_session_raw_blocks",
+      "quality": "upper_bound_proxy_excludes_no_nan_zero_or_preprocessing_failures",
+      "window_length_s": 32.0,
+      "n_windows": 441520,
+      "n_merged_intervals": 202,
+      "livetime_s": 14128640.0,
+      "livetime_days": 163.52592592592592
+    }
+  },
+  "coverage_exact_for_all_detectors": false,
+  "coverage_artifact": "data\\production\\aggregated\\processed_coverage_circular_shift_v2_idxq4-64_queryq4-64_o4a.json",
+  "observed": {
+    "covered_any": 131,
+    "covered_both": 118,
+    "overlap_any": 2,
+    "overlap_both": 0
+  },
+  "flagged_events": [
+    {
+      "name": "GW230709_063445",
+      "gps": 1372919703.1,
+      "snr": 7.9,
+      "dl_mpc": null,
+      "cov_H1": true,
+      "cov_L1": true,
+      "overlap_H1": true,
+      "overlap_L1": false,
+      "class_H1": "BACKGROUND",
+      "score_H1": 0.0913848727941513,
+      "class_L1": null,
+      "score_L1": null
+    },
+    {
+      "name": "GW231127_061546",
+      "gps": 1385100964.5,
+      "snr": 8.0,
+      "dl_mpc": null,
+      "cov_H1": true,
+      "cov_L1": true,
+      "overlap_H1": true,
+      "overlap_L1": false,
+      "class_H1": "ROBUST",
+      "score_H1": 0.4156478345394134,
+      "class_L1": null,
+      "score_L1": null
+    }
+  ],
+  "event_ledger": "data\\production\\aggregated\\catalog_cross_match_events_circular_shift_v2_idxq4-64_queryq4-64_o4a.csv",
+  "circular_shift_null": {
+    "method": "common-offset circular shifts of complete catalogue",
+    "n_shifts": 10000,
+    "seed": 42,
+    "minimum_shift_s": 86400.0,
+    "run_bounds_gps": [
+      1368975618.0,
+      1389456018.0
+    ],
+    "overlap_any": {
+      "observed": 2,
+      "null_mean": 2.1899,
+      "null_std": 1.466510502964616,
+      "null_median": 2.0,
+      "null_interval_95": [
+        0.0,
+        5.0
+      ],
+      "empirical_p_ge_observed": 0.6508349165083491
+    },
+    "overlap_both": {
+      "observed": 0,
+      "null_mean": 0.0134,
+      "null_std": 0.11585241550445906,
+      "null_median": 0.0,
+      "null_interval_95": [
+        0.0,
+        0.0
+      ],
+      "empirical_p_ge_observed": 1.0
+    },
+    "long_form_path": "data\\production\\aggregated\\catalog_cross_match_null_circular_shift_v2_idxq4-64_queryq4-64_o4a.csv"
+  },
+  "interpretation_note": "No excess of catalogue-window overlaps above the circular-shift null is resolved (empirical p=0.6508). This is not a recall estimate. Historical coverage is proxy-level, so coverage fractions remain non-paper-grade until an exact processed-window ledger is available."
+}

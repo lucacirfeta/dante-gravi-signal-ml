@@ -1,0 +1,71 @@
+{
+  "changed_dispositions": 4676,
+  "coherent_class_column": "robustness_class_idxq4_64_queryq4_64",
+  "coherent_representation": "idxq4-64_queryq4-64",
+  "current_class_counts": {
+    "AMBIGUOUS": 1275,
+    "BACKGROUND": 2789,
+    "ROBUST": 6365
+  },
+  "current_total": 10429,
+  "experiment": "detector_aware_representation_contract_transition",
+  "key_columns": [
+    "detector",
+    "gps_start"
+  ],
+  "matrix_column_order": [
+    "ROBUST",
+    "AMBIGUOUS",
+    "BACKGROUND"
+  ],
+  "matrix_row_order": [
+    "ROBUST",
+    "AMBIGUOUS",
+    "BACKGROUND",
+    "UNKNOWN"
+  ],
+  "mismatched_class_column": "robustness_class",
+  "mismatched_representation": "idxq4-32_queryq4-64",
+  "paired_missing": 0,
+  "paired_total": 10372,
+  "restored_class_counts": {
+    "AMBIGUOUS": 5,
+    "BACKGROUND": 26,
+    "ROBUST": 26
+  },
+  "restored_total": 57,
+  "schema_version": 1,
+  "source": {
+    "current_taxonomy": {
+      "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    },
+    "historical_taxonomy": {
+      "path": "data/production/aggregated/archive/detector_dedup_bug_20260805/Master_Taxonomy_O4a_idxq4-64_queryq4-64.pre_detector_aware.csv",
+      "sha256": "f88005919f044d9c035dc8d42f1215373470d14ee4e15b6b2002620bdeefa525"
+    }
+  },
+  "status": "final",
+  "transition_matrix": {
+    "AMBIGUOUS": {
+      "AMBIGUOUS": 68,
+      "BACKGROUND": 39,
+      "ROBUST": 1666
+    },
+    "BACKGROUND": {
+      "AMBIGUOUS": 1188,
+      "BACKGROUND": 2714,
+      "ROBUST": 1759
+    },
+    "ROBUST": {
+      "AMBIGUOUS": 14,
+      "BACKGROUND": 9,
+      "ROBUST": 2914
+    },
+    "UNKNOWN": {
+      "AMBIGUOUS": 0,
+      "BACKGROUND": 1,
+      "ROBUST": 0
+    }
+  }
+}
