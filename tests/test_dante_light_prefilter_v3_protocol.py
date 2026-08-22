@@ -61,6 +61,13 @@ def test_v3_protocol_rejects_iid_uncertainty(tmp_path):
         load_prefilter_v3_protocol(_write_protocol(tmp_path, payload))
 
 
+def test_v3_protocol_rejects_noncanonical_whitening_pad(tmp_path):
+    payload = deepcopy(dict(load_prefilter_v3_protocol().payload))
+    payload["feature_extraction"]["whitening_context_pad_s"] = 0.0
+    with pytest.raises(ContractError, match="four-second whitening pad"):
+        load_prefilter_v3_protocol(_write_protocol(tmp_path, payload))
+
+
 def test_v3_protocol_rejects_gate_drift(tmp_path):
     payload = deepcopy(dict(load_prefilter_v3_protocol().payload))
     payload["confirmation"]["minimum_retention_by_role"]["injection"] = 0.85

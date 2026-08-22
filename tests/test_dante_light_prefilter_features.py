@@ -187,6 +187,30 @@ def test_build_split_feature_ledger_preserves_frozen_partition(tmp_path):
     assert all(row["partition"] in {"development", "evaluation"} for row in rows)
 
 
+def test_split_feature_ledger_can_keep_confirmation_partition_sealed(tmp_path):
+    prepared = PreparedPrefilterFeatures(
+        features=ExcessEnergyFeatures(1.0, 3.0, 0.1, 2.0),
+        strain_sha256="a" * 64,
+        timings={"data_read_s": 0.1},
+    )
+    ledger = build_split_feature_ledger(
+        root=".",
+        split_path="config/dante_light_prefilter_splits_v1.json",
+        role="robust_candidate",
+        output_dir=tmp_path,
+        prepare=lambda _task: prepared,
+        file_version="v3_development",
+        partitions=("development",),
+    )
+    rows = [
+        json.loads(line)
+        for line in (tmp_path / ledger["rows_path"]).read_text(encoding="utf-8").splitlines()
+    ]
+    assert ledger["selection_partitions"] == ["development"]
+    assert ledger["row_count"] == 40
+    assert all(row["partition"] == "development" for row in rows)
+
+
 def test_split_feature_ledger_parallel_output_is_finally_deterministic(tmp_path):
     prepared = PreparedPrefilterFeatures(
         features=ExcessEnergyFeatures(1.0, 3.0, 0.1, 2.0),

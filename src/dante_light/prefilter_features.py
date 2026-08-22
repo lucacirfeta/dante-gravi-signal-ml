@@ -182,6 +182,7 @@ def build_split_feature_ledger(
     scientific_mode: str = "research_only_split_feature_extraction",
     accepted_split_statuses: tuple[str, ...] = ("locked_before_feature_extraction",),
     verify_preflight_strain: bool = False,
+    partitions: tuple[str, ...] | None = None,
 ) -> dict[str, Any]:
     """Extract a resumable role ledger from a frozen L4 split artifact."""
 
@@ -204,6 +205,15 @@ def build_split_feature_ledger(
         raise ContractError("L4 feature workers must be between 1 and 8")
     split_sha256 = str(cohort["split_sha256"])
     rows = list(cohort["rows"])
+    if partitions is not None:
+        if not partitions or len(partitions) != len(set(partitions)):
+            raise ContractError("feature partitions must be unique and non-empty")
+        if any(value not in {"development", "evaluation"} for value in partitions):
+            raise ContractError("unsupported feature partition")
+        selected_partitions = set(partitions)
+        rows = [row for row in rows if row["partition"] in selected_partitions]
+        if not rows:
+            raise ContractError("selected feature partitions are empty")
     if limit is not None:
         if limit <= 0:
             raise ContractError("feature limit must be positive")
@@ -300,6 +310,8 @@ def build_split_feature_ledger(
         "selection_limit": limit,
         "extraction_workers": int(workers),
     }
+    if partitions is not None:
+        ledger["selection_partitions"] = list(partitions)
     ledger["ledger_digest"] = canonical_json_sha256(ledger)
     ledger_path = output_dir / f"{role}_feature_ledger_{file_version}.json"
     ledger_path.write_text(

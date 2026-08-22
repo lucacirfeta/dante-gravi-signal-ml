@@ -211,6 +211,39 @@ def prepare_prefilter_v2_features(
     )
 
 
+def prepare_prefilter_v3_features(
+    window: WindowIdentity,
+    *,
+    local_only: bool,
+    remote_only: bool = False,
+    config: dict,
+    pad_s: float,
+) -> PreparedPrefilterFeatures:
+    """Extract frozen v3 A/B features from canonical whitened strain."""
+
+    from src.dante_light.prefilter_v3 import extract_prefilter_v3_features
+
+    clean, strain_sha256, stages, sample_rate_hz = _prepare_whitened_subwindow(
+        window,
+        local_only=local_only,
+        remote_only=remote_only,
+        pad_s=pad_s,
+    )
+    if int(round(sample_rate_hz)) != int(config["sample_rate_hz"]):
+        raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
+    began = time.perf_counter()
+    features = extract_prefilter_v3_features(
+        np.asarray(clean.value),
+        config=config,
+    )
+    stages["feature_extraction_s"] = time.perf_counter() - began
+    return PreparedPrefilterFeatures(
+        features=features,
+        strain_sha256=strain_sha256,
+        timings=stages,
+    )
+
+
 def prepare_canonical_window(
     window: WindowIdentity,
     *,

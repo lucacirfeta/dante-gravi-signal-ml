@@ -93,6 +93,7 @@
       20.0,
       1024.0
     ],
+    "whitening_context_pad_s": 4.0,
     "stft_frame_duration_s": 0.25,
     "stft_overlap_fraction": 0.5,
     "signed_ordering": {
@@ -211,5 +212,5 @@
       "injection": 90
     }
   },
-  "protocol_digest": "1c3bab89c6b7b31e45f55485cc4ff8a94e4992fbc5fd8fa2cde5534a9ebb7562"
+  "protocol_digest": "f138714c5f69251b0710096a04ed1b9a903ba29cfb9fa2d6fa90b1ca252cb099"
 }

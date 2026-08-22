@@ -251,6 +251,7 @@ def validate_prefilter_v3_protocol(payload: Mapping[str, Any]) -> None:
             "feature_version",
             "sample_rate_hz",
             "analysis_band_hz",
+            "whitening_context_pad_s",
             "stft_frame_duration_s",
             "stft_overlap_fraction",
             "signed_ordering",
@@ -266,6 +267,8 @@ def validate_prefilter_v3_protocol(payload: Mapping[str, Any]) -> None:
     band = features["analysis_band_hz"]
     if not isinstance(band, list) or len(band) != 2 or not 0 < float(band[0]) < float(band[1]):
         raise ContractError("invalid prefilter v3 analysis band")
+    if float(features["whitening_context_pad_s"]) != 4.0:
+        raise ContractError("prefilter v3 requires the canonical four-second whitening pad")
     _positive(features["stft_frame_duration_s"], "STFT frame duration")
     _fraction(features["stft_overlap_fraction"], "STFT overlap", positive=True)
     signed = _exact_mapping(
