@@ -87,6 +87,8 @@ STATIC_ALLOWLIST = (
     "data/production/aggregated/pem/idxq4-64_queryq4-64/pem_provenance_manifest.json",
     "data/production/aggregated/pem/idxq4-64_queryq4-64/selected_targets.csv",
     "data/production/aggregated/pem/idxq4-64_queryq4-64/selection_manifest.json",
+    "data/production/aggregated/pem/idxq4-64_queryq4-64/environment_pem_o4a_idxq4-64_queryq4-64.json",
+    "data/production/aggregated/pem/idxq4-64_queryq4-64/source_state_pem_o4a_idxq4-64_queryq4-64.zip",
     "data/production/aggregated/candidate_case_L1_1382955228_idxq4-64_queryq4-64.json",
     "data/production/aggregated/characterize_L1_1382955232.json",
     "data/production/aggregated/Multiscale_Profile_O4a_idxq4-64_queryq4-64.csv",

@@ -15,7 +15,9 @@ EOL_SENSITIVE_PATHS = (
     "data/production_reference/channel_thresholds.json",
     f"{PEM_DIRECTORY}/pem_family_wise_verdicts.csv",
     f"{PEM_DIRECTORY}/pem_class_association.json",
+    f"{PEM_DIRECTORY}/environment_pem_o4a_idxq4-64_queryq4-64.json",
 )
+SOURCE_STATE = f"{PEM_DIRECTORY}/source_state_pem_o4a_idxq4-64_queryq4-64.zip"
 HISTORICAL_BASELINE = (
     "data/production/aggregated/archive/detector_dedup_bug_20260805/"
     "Master_Taxonomy_O4a_idxq4-64_queryq4-64.pre_detector_aware.csv"
@@ -46,6 +48,7 @@ def test_pem_machine_hashed_text_bytes_match_provenance() -> None:
     } == {
         relative: expected[relative] for relative in EOL_SENSITIVE_PATHS
     }
+    assert _sha256(ROOT / SOURCE_STATE) == expected[SOURCE_STATE]
 
 
 def test_pem_machine_hashed_text_disables_git_eol_conversion() -> None:
