@@ -34,6 +34,12 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _sklearn_seed(seed: int) -> int:
+    """Map the frozen unsigned 64-bit seed into sklearn's uint32 domain."""
+
+    return int(seed) % (int(np.iinfo(np.uint32).max) + 1)
+
+
 def _load_development_ledger(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     try:
         ledger = json.loads(path.read_text(encoding="utf-8"))
@@ -202,7 +208,8 @@ def screen_prefilter_v4(
     if len(set(groups)) < folds:
         raise ContractError("insufficient detector/GPS blocks for v4 cross-validation")
     seed = int(protocol.payload["audit"]["seed"])
-    splitter = GroupKFold(n_splits=folds, shuffle=True, random_state=seed)
+    sklearn_seed = _sklearn_seed(seed)
+    splitter = GroupKFold(n_splits=folds, shuffle=True, random_state=sklearn_seed)
     oof_scores = np.full(len(all_rows), np.nan, dtype=np.float64)
     fold_records: list[dict[str, int]] = []
     for fold_index, (train, test) in enumerate(splitter.split(matrix, target, groups), 1):
@@ -214,7 +221,7 @@ def screen_prefilter_v4(
             weights[train],
             regularization_c=float(rules["regularization_c"]),
             maximum_iterations=int(rules["maximum_iterations"]),
-            seed=seed + fold_index,
+            seed=_sklearn_seed(seed + fold_index),
         )
         oof_scores[test] = _score_model(scaler, model, matrix[test])
         fold_records.append(
@@ -279,7 +286,7 @@ def screen_prefilter_v4(
                 _sample_weights(detector_rows),
                 regularization_c=float(rules["regularization_c"]),
                 maximum_iterations=int(rules["maximum_iterations"]),
-                seed=seed,
+                seed=sklearn_seed,
             )
             detector_scores = np.full(len(all_rows), np.nan, dtype=np.float64)
             detector_scores[indices] = _score_model(scaler, model, matrix[indices])
@@ -335,6 +342,9 @@ def screen_prefilter_v4(
         "screening": {
             "cross_validation_method": rules["cross_validation_method"],
             "gps_block_duration_s": int(rules["gps_block_duration_s"]),
+            "frozen_seed_uint64": seed,
+            "sklearn_random_state_seed_uint32": sklearn_seed,
+            "sklearn_seed_mapping": "uint64_modulo_2_pow_32",
             "folds": folds,
             "model": rules["model"],
             "class_weighting": rules["class_weighting"],
