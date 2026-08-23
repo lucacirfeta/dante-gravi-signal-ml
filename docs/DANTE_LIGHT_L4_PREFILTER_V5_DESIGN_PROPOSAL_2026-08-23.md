@@ -209,6 +209,14 @@ stress population only after waveform family, masses, spins, tides and
 precession scope are preregistered. Results for the two populations must not be
 pooled.
 
+This broader control is not deferred until after v5 confirmation. Its waveform
+scope, parameter grid, trial identities, development/confirmation allocation
+and separate gates are frozen in **Plan 2**, before any v5 training. The
+development instances are evaluated once in **Plan 4** and the already sealed
+confirmation instances once in **Plan 5**. Neither population enters the
+primary training loss, and a weak result cannot be repaired by adding new
+waveforms after development outcomes are known.
+
 ## Preregistered evaluation families
 
 Exact numbers belong in the future frozen config. The protocol should include
@@ -350,7 +358,10 @@ Task 2.1 — protocol and power contract
   `tests/test_dante_light_prefilter_v5_protocol.py`.
 - Action: freeze the approved teacher target, arms, architecture bounds,
   replicate seeds, loss, selection rule, cohort counts, per-stratum gates,
-  paired-compute gate and shortcut controls. Every numerical constant must
+  paired-compute gate and shortcut controls. Freeze both the legacy NSBH
+  comparability control and the separately gated, physically broader NSBH
+  stress population here, including waveform/parameter scope and disjoint
+  development/confirmation trial identities. Every numerical constant must
   come from versioned config.
 - Verify: exact power recomputation, protocol self-digest, schema validation,
   absence of hardcoded scientific constants and targeted tests.

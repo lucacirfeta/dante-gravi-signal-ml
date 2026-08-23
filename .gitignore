@@ -363,6 +363,8 @@ scripts/*
 !scripts/screen_dante_light_prefilter_v4.py
 !scripts/verify_dante_light_prefilter_v4_development.py
 !scripts/analyze_dante_light_prefilter_v4_diagnostics.py
+!scripts/audit_dante_light_prefilter_v5_identities.py
+!docs/DANTE_LIGHT_L4_PREFILTER_V5_IDENTITY_AUDIT_2026-08-23.md
 
 tmp
 archive/

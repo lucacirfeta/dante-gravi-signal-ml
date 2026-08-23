@@ -1,0 +1,69 @@
+{
+  "audit_id": "dante-light-l4-prefilter-v5-identity-feasibility",
+  "config_digest": "0efb47668f7b81a4279ef107c265a0cff43998414153c6b43943802d19b6d176",
+  "known_raw_quarantine_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_quarantine_v5.json",
+    "sha256": "831e2649ece2bd77cbfa9a2c2a1e5a46594e4d7594d75f5c9763dd2816f988da"
+  },
+  "prior_identity_sources": [
+    {
+      "protocol_version": "v1",
+      "split_header_reference": {
+        "path": "config/dante_light_prefilter_splits_v1.json",
+        "sha256": "40a23728c68500ff6a35391787fb40e37f02ea0467c836673b7b61279392656a"
+      }
+    },
+    {
+      "protocol_version": "v2",
+      "split_header_reference": {
+        "path": "config/dante_light_prefilter_splits_v2.json",
+        "sha256": "b31adb6fb6dbae9bf59ebcc69d4ff9d0cae67053df8b702129261ff7c484b3c9"
+      }
+    },
+    {
+      "protocol_version": "v4",
+      "split_header_reference": {
+        "path": "config/dante_light_prefilter_splits_v4.json",
+        "sha256": "72a76adcaf02d8042c2c479d48236710a6aa8a090adc77f16238b088adf08fba"
+      }
+    }
+  ],
+  "protocol_aliases": {
+    "v3": {
+      "protocol_reference": {
+        "path": "config/dante_light_prefilter_protocol_v3.json",
+        "sha256": "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28"
+      },
+      "reuses_split_protocol_version": "v2"
+    }
+  },
+  "raw_mirror_contract": {
+    "content_hash": "sha256_all_physical_files_resumable",
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "file_name_regex": "^(?P<detector>[A-Z][0-9])_(?P<start>[0-9]+)_(?P<end>[0-9]+)\\.hdf5$",
+    "group_block_duration_s": 4096,
+    "logical_id": "user_o4a_raw_mirror",
+    "raw_sample_rate_hz": 4096
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "allowed_operations": [
+      "read_prior_versioned_window_identities",
+      "read_raw_file_names_sizes_mtimes_and_bytes_for_sha256",
+      "read_hdf5_container_and_dataset_metadata_without_strain_values",
+      "derive_4096s_coverage_capacity"
+    ],
+    "may_assign_v5_partitions": false,
+    "may_freeze_v5": false,
+    "may_read_confirmation_outcomes": false,
+    "may_read_development_outcomes": false,
+    "may_read_feature_values": false,
+    "may_read_o4b": false,
+    "may_read_strain_arrays": false,
+    "may_read_teacher_scores": false
+  },
+  "status": "V5_PLAN1_IDENTITY_ONLY"
+}

@@ -1,0 +1,145 @@
+{
+  "artifact_digest": "2d761917e25c6a9758d056dabe2ff81750ce7eae12ab1f07045287b30cb1a690",
+  "files": [
+    {
+      "detector": "H1",
+      "filename": "H1_1375712512_1375716608.hdf5",
+      "gps_end": 1375716608,
+      "gps_start": 1375712512,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375712512_1375716608.hdf5",
+      "prior_protocol_block_references": [],
+      "sha256": "e3e96af0a1e8839f49e8c341db001459ac26c92c8e4dfe107ef0dae0f8c427ff",
+      "size_bytes": 125346941
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375954176_1375958272.hdf5",
+      "gps_end": 1375958272,
+      "gps_start": 1375954176,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": null,
+      "prior_protocol_block_references": [],
+      "sha256": "151d612e6b5cd1ee3c3429d84ced5af3358b48513c7a35407bac0a3b9382a76a",
+      "size_bytes": 68969297
+    },
+    {
+      "detector": "L1",
+      "filename": "L1_1376595456_1376599552.hdf5",
+      "gps_end": 1376599552,
+      "gps_start": 1376595456,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": null,
+      "prior_protocol_block_references": [],
+      "sha256": "deb497341b59c608c7d1164e23dac52f5c4e818ba4b7b98e61bf50993eecc275",
+      "size_bytes": 9828890
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375745280_1375749376.hdf5",
+      "gps_end": 1375749376,
+      "gps_start": 1375745280,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375745280_1375749376.hdf5",
+      "prior_protocol_block_references": [
+        {
+          "cohort_id": "v4-injection:H1:v4inj:BBH_10_10:400:4",
+          "partition": "development",
+          "protocol_version": "v4"
+        }
+      ],
+      "sha256": "bd3ff5a3962aaabac7cde5b0816bcbeed7cc725fb4c2c3a5099b8874045eabfb",
+      "size_bytes": 10179124
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375749376_1375753472.hdf5",
+      "gps_end": 1375753472,
+      "gps_start": 1375749376,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375749376_1375753472.hdf5",
+      "prior_protocol_block_references": [
+        {
+          "cohort_id": "v4-injection:H1:v4inj:NSBH_10_1.4:100:16",
+          "partition": "confirmation",
+          "protocol_version": "v4"
+        }
+      ],
+      "sha256": "50d36c70751b8c5e1558922471f64c846d0b8f2c2a3b4ede71c6a6423ac3785a",
+      "size_bytes": 110439811
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375876352_1375880448.hdf5",
+      "gps_end": 1375880448,
+      "gps_start": 1375876352,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375876352_1375880448.hdf5",
+      "prior_protocol_block_references": [
+        {
+          "cohort_id": "v4-injection:H1:v4inj:BBH_10_10:1600:1",
+          "partition": "confirmation",
+          "protocol_version": "v4"
+        }
+      ],
+      "sha256": "9fd247cb10e1331fb770616505e697fcc5dfe9cf593b68a9e10d7fb95834f007",
+      "size_bytes": 70371520
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375880448_1375884544.hdf5",
+      "gps_end": 1375884544,
+      "gps_start": 1375880448,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375880448_1375884544.hdf5",
+      "prior_protocol_block_references": [
+        {
+          "cohort_id": "v4-background:H1:cat1:H1:1375879200",
+          "partition": "development",
+          "protocol_version": "v4"
+        }
+      ],
+      "sha256": "dd5e4e5854d2e847db37d54ae61436449e309dafd62d9a65ac2ee2806d2fe36c",
+      "size_bytes": 56151503
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375921408_1375925504.hdf5",
+      "gps_end": 1375925504,
+      "gps_start": 1375921408,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375921408_1375925504.hdf5",
+      "prior_protocol_block_references": [],
+      "sha256": "ae830a1034acdb06e77c70a1a6aaf059f87566ccb7710344422e63e7a95af37b",
+      "size_bytes": 108617548
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375941888_1375945984.hdf5",
+      "gps_end": 1375945984,
+      "gps_start": 1375941888,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375941888_1375945984.hdf5",
+      "prior_protocol_block_references": [],
+      "sha256": "a7334f3c1a65df0f7f0b064ae9ddb5395784a93e56f473ef1c9b97f63bc376be",
+      "size_bytes": 69291845
+    },
+    {
+      "detector": "H1",
+      "filename": "H1_1375991040_1375995136.hdf5",
+      "gps_end": 1375995136,
+      "gps_start": 1375991040,
+      "hdf5_error": "bad object header version number",
+      "original_relative_path": "1375712512/H1_1375991040_1375995136.hdf5",
+      "prior_protocol_block_references": [],
+      "sha256": "1e11c2b7ed33e9bc1334a1b2e3ec7f441ab350dffbb235eecf9d1b3e99b05248",
+      "size_bytes": 111750189
+    }
+  ],
+  "quarantine_location_logical": "user_local_recoverable_quarantine",
+  "recoverable": true,
+  "schema_version": 1,
+  "status": "QUARANTINED_RECOVERABLE_RAW_INTEGRITY_FAILURES",
+  "strain_values_read": false,
+  "validation_scope": "HDF5 container and Strain dataset metadata only"
+}
