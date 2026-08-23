@@ -4,7 +4,7 @@
   "code_references": {
     "development_ledger": {
       "path": "src/dante_light/prefilter_v4_development.py",
-      "sha256": "dedbcf42a8a33be06939442883df5621b77ec0b4dc410965edc2f6729712e25f"
+      "sha256": "7e0fc6f9869c61f0187240e1febb76a5d14921c71b75a164d087b2339eaa9991"
     },
     "development_screening": {
       "path": "src/dante_light/prefilter_v4_screening.py",
@@ -48,7 +48,7 @@
       "root_id": "raw_strain"
     }
   ],
-  "freeze_commit": "cd21ffc88b1dd5353600fa5398f0ff20cb9d90d8",
+  "freeze_commit": "da817a52a670bd757d3b03f2d22cc68b2bc72d4b",
   "initial_access_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "manifest_digest": "9b0cafdb49d954c0399a4f45a47b785b1f59e10b6e4ce390c40c6a9ce1478363",
   "protocol_reference": {
@@ -64,6 +64,6 @@
     "sha256": "72a76adcaf02d8042c2c479d48236710a6aa8a090adc77f16238b088adf08fba"
   },
   "schema_version": 1,
-  "seal_digest": "baf27d4b0a306f6dd34beae0d5e419a4d7bf02fe77419c1130f57a1d2a240833",
+  "seal_digest": "fea6d13ff8c94dec7a8faa2fc774f7256e24be22806ecb495979c40c1c0ed483",
   "status": "SEALED_NOT_OPENED"
 }
