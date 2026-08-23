@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 from typing import Any, Mapping, Sequence
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
@@ -34,7 +35,27 @@ def repository_reference(root: Path, path: Path) -> dict[str, str]:
         relative = resolved.relative_to(root.resolve()).as_posix()
     except ValueError as exc:
         raise ContractError("frozen references must remain inside the repository") from exc
-    return {"path": relative, "sha256": sha256_path(resolved)}
+    digest = sha256_path(resolved)
+    try:
+        unchanged = subprocess.run(
+            ["git", "diff", "--quiet", "HEAD", "--", relative],
+            cwd=root,
+            check=False,
+        ).returncode == 0
+        tracked = subprocess.run(
+            ["git", "cat-file", "-e", f"HEAD:{relative}"],
+            cwd=root,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode == 0
+        if unchanged and tracked:
+            blob = subprocess.check_output(["git", "show", f"HEAD:{relative}"], cwd=root)
+            digest = hashlib.sha256(blob).hexdigest()
+    except (OSError, subprocess.SubprocessError):
+        # The byte hash remains a valid fallback outside a Git checkout.
+        pass
+    return {"path": relative, "sha256": digest}
 
 
 def derive_seed(protocol_id: str, purpose: str, parent_digests: Sequence[str]) -> int:

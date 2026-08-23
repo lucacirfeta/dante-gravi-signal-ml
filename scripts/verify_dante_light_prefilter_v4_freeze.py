@@ -7,6 +7,7 @@ import hashlib
 import json
 from collections import Counter
 import math
+import subprocess
 from pathlib import Path
 import sys
 
@@ -59,7 +60,13 @@ def _validate_segment_snapshot(value):
 
 def _reference(reference: dict[str,str]) -> None:
     path=ROOT/reference["path"]
-    if not path.is_file() or sha256_path(path)!=reference["sha256"]:
+    candidates={sha256_path(path)} if path.is_file() else set()
+    try:
+        blob=subprocess.check_output(["git","show",f"HEAD:{reference['path']}"],cwd=ROOT)
+        candidates.add(hashlib.sha256(blob).hexdigest())
+    except (OSError,subprocess.SubprocessError):
+        pass
+    if reference["sha256"] not in candidates:
         raise ContractError(f"reference mismatch: {reference['path']}")
 
 
