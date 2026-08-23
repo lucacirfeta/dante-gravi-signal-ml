@@ -95,11 +95,14 @@ presented as a scientific constant.
 
 Feasibility audit before freeze:
 
-- after excluding previously used identities and 4096 s blocks, each required
-  O3b detector/morphology pool still contains at least 951 distinct eligible
-  blocks;
-- the detector-aware O4a taxonomy retains 1,237 H1 and 1,539 L1 blocks with at
-  least one ROBUST row outside prior blocks;
+- after the confidence/SNR cuts, O3b DATA/padded-window check, prior-identity
+  exclusions, and one hash-priority representative per detector/morphology
+  block, the six known-glitch pools contain H1 Blip 1,464, H1 Koi Fish 1,538,
+  H1 Scattered Light 944, L1 Blip 1,214, L1 Koi Fish 1,309, and L1 Scattered
+  Light 1,298 eligible identities;
+- after CBC_CAT1/padded-window and prior-block exclusions, the detector-aware
+  O4a taxonomy retains 1,241 H1 and 1,541 L1 blocks with at least one ROBUST
+  row;
 - the ROBUST population is dominated by `Family_01`; its gate therefore
   protects the frozen DANTE ROBUST decision population, not broad glitch-family
   coverage. The independent known-glitch and injection gates remain essential.
