@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter
+import math
 from pathlib import Path
 import sys
 
@@ -13,14 +14,47 @@ ROOT=Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path: sys.path.insert(0,str(ROOT))
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
-from src.dante_light.prefilter_v4_freeze import (
-    DISTANCES, KNOWN, PAD_S, SYSTEMS, WINDOW_S, _contained,
-    _hardware_injection_clear, prior_exclusions, validate_segment_snapshot,
-)
-from src.dante_light.prefilter_v4_protocol import load_protocol, repository_reference, sha256_path
+from src.dante_light.prefilter_v4_protocol import load_protocol, sha256_path
 from src.dante_light.prefilter_v4_seal import (
     EMPTY_ACCESS_LOG_SHA256, validate_identity_manifest, verify_unopened_seal,
 )
+
+DISTANCES=(100.0,200.0,400.0,800.0,1600.0)
+KNOWN=("Blip","KoiFish","ScatteredLight")
+SYSTEMS=("BBH_30_30","BBH_10_10","NSBH_10_1.4")
+PAD_S=4.0
+WINDOW_S=32.0
+
+
+def _contained(segments,start,end):
+    return any(float(left)<=start and end<=float(right) for left,right in segments)
+
+
+def _hardware_injection_clear(flags,detector,start,end):
+    return all(
+        not (float(left)<end and start<float(right))
+        for suffix in ("HW_INJ","CBC_INJ","BURST_INJ")
+        for left,right in flags[f"{detector}_O4A_{suffix}"]["segments"]
+    )
+
+
+def _prior_exclusions():
+    blocks=set(); source_ids=set()
+    for path in sorted((ROOT/"config").glob("dante_light_prefilter_splits_v[12].jsonl")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip(): continue
+            row=json.loads(line); window=row["window"]
+            blocks.add(f"{window['detector']}:{math.floor(float(window['gps_start'])/4096)}")
+            if row.get("gravityspy_id"): source_ids.add(str(row["gravityspy_id"]))
+    return blocks,source_ids
+
+
+def _validate_segment_snapshot(value):
+    body=dict(value); declared=body.pop("snapshot_digest",None)
+    if declared!=canonical_json_sha256(body): raise ContractError("v4 segment snapshot digest mismatch")
+    if body.get("status")!="FROZEN_GWOSC_SEGMENT_IDENTITIES": raise ContractError("v4 segment snapshot is not frozen")
+    for item in body["flags"].values():
+        if item["segments_digest"]!=canonical_json_sha256(item["segments"]): raise ContractError("v4 segment list digest mismatch")
 
 
 def _reference(reference: dict[str,str]) -> None:
@@ -33,7 +67,7 @@ def verify() -> dict[str,object]:
     protocol=load_protocol(ROOT/"config/dante_light_prefilter_protocol_v4.json").payload
     for ref in protocol["parent_evidence"]: _reference(ref)
     _reference(protocol["source_contract"]["segment_snapshot"])
-    snapshot=json.loads((ROOT/protocol["source_contract"]["segment_snapshot"]["path"]).read_text(encoding="utf-8")); validate_segment_snapshot(snapshot)
+    snapshot=json.loads((ROOT/protocol["source_contract"]["segment_snapshot"]["path"]).read_text(encoding="utf-8")); _validate_segment_snapshot(snapshot)
     header_path=ROOT/"config/dante_light_prefilter_splits_v4.json"; header=json.loads(header_path.read_text(encoding="utf-8"))
     _reference(header["protocol_reference"]); _reference(header["selection_code_reference"])
     for ref in header["source_references"]: _reference(ref)
@@ -44,7 +78,7 @@ def verify() -> dict[str,object]:
     complete={k:v for k,v in header.items() if k!="entries_reference"}; complete["rows"]=rows
     complete["manifest_digest"]=canonical_json_sha256({k:v for k,v in complete.items() if k!="manifest_digest"})
     validate_identity_manifest(complete)
-    prior,_,prior_source_ids=prior_exclusions(ROOT)
+    prior,prior_source_ids=_prior_exclusions()
     if set(complete["prior_block_exclusions"]["block_keys"])!=prior:
         raise ContractError("v4 prior block exclusions no longer match v1/v2")
     seal=json.loads((ROOT/"config/dante_light_prefilter_v4_confirmation_seal.json").read_text(encoding="utf-8"))

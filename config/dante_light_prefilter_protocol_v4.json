@@ -1,0 +1,231 @@
+{
+  "cohort_contract": {
+    "block_duration_s": 4096,
+    "counts_per_detector_stratum": {
+      "background": {
+        "confirmation": 0,
+        "development": 300
+      },
+      "injection": {
+        "confirmation": 90,
+        "development": 35
+      },
+      "known_glitch": {
+        "confirmation": 60,
+        "development": 25
+      },
+      "robust_candidate": {
+        "confirmation": 60,
+        "development": 25
+      }
+    },
+    "injection_distances_mpc": [
+      100.0,
+      200.0,
+      400.0,
+      800.0,
+      1600.0
+    ],
+    "injection_trials_per_distance": {
+      "confirmation": 18,
+      "development": 7
+    },
+    "require_no_detector_4096s_block_overlap_with_v1_v3_or_between_partitions": true,
+    "robust_population_scope": "frozen_DANTE_ROBUST_decision_population_dominated_by_Family_01",
+    "selection_uses_only_identity_availability_class_and_hash_priority": true,
+    "whitening_pad_s": 4.0,
+    "window_duration_s": 32.0
+  },
+  "confirmation": {
+    "can_authorize_operational_pass": false,
+    "endpoint": "protected_stratum_retention_only",
+    "gate_operator": "AND",
+    "minimum_retention": 0.9,
+    "minimum_wilson_lower": 0.8,
+    "n90_boundary": {
+      "minimum_retained": 81,
+      "note": "80/90 passes Wilson lower 0.80 but fails point retention 0.90"
+    },
+    "one_shot": true,
+    "open_only_after_development_ready": true,
+    "wilson_confidence": 0.95
+  },
+  "development": {
+    "class_weighting": "equal_background_and_positive_strata",
+    "cross_validation_folds": 5,
+    "cross_validation_method": "shuffled_group_k_fold_detector_4096s_block",
+    "failed_primary_status": "V4_NOT_READY_NO_SAME_COHORT_RETUNING",
+    "feature_subset_selection_allowed": false,
+    "maximum_iterations": 2000,
+    "minimum_effective_reduction": 0.5,
+    "model": "l2_logistic_regression",
+    "regularization_c": 1.0
+  },
+  "feature_extraction": {
+    "analysis_band_hz": [
+      20.0,
+      1024.0
+    ],
+    "canonical_sequence": [
+      "fetch_padded_strain",
+      "whiten_context_pad_4s",
+      "extract_clean_32s_crop",
+      "phase_extractor"
+    ],
+    "failure_policy": "DEFER_TO_EXACT_PATH_NO_IMPUTATION",
+    "feature_version": "prefilter-v4-phase-primary",
+    "features": [
+      "phase_frequency_time_spearman",
+      "phase_frequency_positive_step_fraction",
+      "phase_inspiral_coordinate_residual",
+      "phase_cubic_circular_residual",
+      "phase_valid_frame_fraction",
+      "phase_accumulation_cycles"
+    ],
+    "phase_parameters": {
+      "active_envelope_quantile": 0.5,
+      "bandpass_order": 4,
+      "frame_hop_samples": 512,
+      "frequency_smoothing_frames": 9,
+      "frequency_smoothing_polynomial_order": 2,
+      "inspiral_coordinate_power": -2.6666666666666665,
+      "method": "analytic_phase_frame_evolution"
+    },
+    "sample_rate_hz": 4096,
+    "whitening_context_pad_s": 4.0
+  },
+  "o4b": {
+    "status": "SEALED_OUTSIDE_V4_DEVELOPMENT_AND_CONFIRMATION"
+  },
+  "parent_evidence": [
+    {
+      "path": "config/dante_light_prefilter_protocol_v3.json",
+      "sha256": "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28"
+    },
+    {
+      "path": "config/dante_light_prefilter_v4_feasibility.json",
+      "sha256": "e183d896e86a9449cb11acdb665378f336d709afd310a1249fcb9d1e0e8a6939"
+    },
+    {
+      "path": "artifacts/dante_light/prefilter_l4_v4_feasibility/feasibility_summary_v4.json",
+      "sha256": "0606c5e641fe72ca6721c94385691a0decf4ef4abbcce5c6cef19e385f6000d6"
+    },
+    {
+      "path": "config/dante_light_prefilter_v4_power_analysis.json",
+      "sha256": "5c9ef604696a3b4cdd857854a73dda193f5b9160fcc406eb8eff01ed40c3135a"
+    },
+    {
+      "path": "artifacts/dante_light/prefilter_l4_v4_design/confirmation_power_analysis_v4.json",
+      "sha256": "ee8d611450614cdf4ee5a20fea57a799202ff9d132f581cf1b74e4cdcb31b6ec"
+    },
+    {
+      "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    },
+    {
+      "path": "data/reference/gs_classifications_O3b_H1.csv",
+      "sha256": "f17ae6344220d985ddaf134481a9074f89c5dd2fcf345870b20381c008d7cb04"
+    },
+    {
+      "path": "data/reference/gs_classifications_O3b_L1.csv",
+      "sha256": "dd2e66c2afbdb6a80aec9081a9bfd29b577cf3f6e9c2d289300de33fc6c2c04a"
+    },
+    {
+      "path": "config/dante_light_prefilter_splits_v1.jsonl",
+      "sha256": "d7bac1a6d4f6e63382e3909d7aa4a3475937856c4d66d0c5fd3703bc955d6dd1"
+    },
+    {
+      "path": "config/dante_light_prefilter_splits_v2.jsonl",
+      "sha256": "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609"
+    },
+    {
+      "path": "src/dante_light/prefilter_v4_phase.py",
+      "sha256": "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12"
+    },
+    {
+      "path": "docs/DANTE_LIGHT_L4_PREFILTER_V4_PHASE_FREEZE_PROPOSAL_2026-08-23.md",
+      "sha256": "b9626d1f08ae3f45eee9ae1e89f84d844efc02d90c3e70d5cc7416129f62a745"
+    }
+  ],
+  "protocol_digest": "488153c4cab3eaf4d978ac41afd5343b081068734686d5f8ef96f801604f3cde",
+  "protocol_id": "dante-light-l4-prefilter-v4-phase-primary",
+  "required_detectors": [
+    "H1",
+    "L1"
+  ],
+  "required_morphologies_by_role": {
+    "injection": [
+      "BBH_30_30",
+      "BBH_10_10",
+      "NSBH_10_1.4"
+    ],
+    "known_glitch": [
+      "Blip",
+      "KoiFish",
+      "ScatteredLight"
+    ]
+  },
+  "schema_version": 4,
+  "scientific_boundary": {
+    "confirmation_outcomes_accessed_at_freeze": false,
+    "external_known_glitch_run": "O3B",
+    "o4b_outcomes_allowed": false,
+    "primary_development_run": "O4A",
+    "prior_v1_v3_interpretation": "EXPLORATORY_FOR_V4",
+    "prospective_evaluation_run": "O4B",
+    "routing_enabled": false
+  },
+  "seed_derivation": {
+    "method": "sha256_canonical_json_first_64_bits_big_endian",
+    "parent_digests": [
+      "0606c5e641fe72ca6721c94385691a0decf4ef4abbcce5c6cef19e385f6000d6",
+      "1377b45f7e2e9da1c1e29631c639c734ed894f69594b99efd12885f34500e3d4",
+      "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
+      "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609",
+      "5c9ef604696a3b4cdd857854a73dda193f5b9160fcc406eb8eff01ed40c3135a",
+      "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28",
+      "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12",
+      "b9626d1f08ae3f45eee9ae1e89f84d844efc02d90c3e70d5cc7416129f62a745",
+      "d7bac1a6d4f6e63382e3909d7aa4a3475937856c4d66d0c5fd3703bc955d6dd1",
+      "dd2e66c2afbdb6a80aec9081a9bfd29b577cf3f6e9c2d289300de33fc6c2c04a",
+      "e183d896e86a9449cb11acdb665378f336d709afd310a1249fcb9d1e0e8a6939",
+      "ee8d611450614cdf4ee5a20fea57a799202ff9d132f581cf1b74e4cdcb31b6ec",
+      "f17ae6344220d985ddaf134481a9074f89c5dd2fcf345870b20381c008d7cb04"
+    ],
+    "protocol_id": "dante-light-l4-prefilter-v4-phase-primary",
+    "purposes": [
+      "cohort",
+      "injection",
+      "audit",
+      "bootstrap"
+    ],
+    "seeds": {
+      "audit": 15283161646156351584,
+      "bootstrap": 7032766403229355999,
+      "cohort": 3100354300156499461,
+      "injection": 11931611653383106488
+    }
+  },
+  "source_contract": {
+    "gravity_spy_minimum_confidence": 0.95,
+    "gravity_spy_minimum_snr": 7.5,
+    "o3b_known_glitch_flag": "DATA",
+    "o4a_background_flag": "CBC_CAT1",
+    "o4a_hardware_injection_exclusion_flags": [
+      "HW_INJ",
+      "CBC_INJ",
+      "BURST_INJ"
+    ],
+    "segment_snapshot": {
+      "path": "config/dante_light_prefilter_v4_segments.json",
+      "sha256": "1377b45f7e2e9da1c1e29631c639c734ed894f69594b99efd12885f34500e3d4"
+    }
+  },
+  "status": "FROZEN_OUTCOME_BLIND",
+  "uncertainty": {
+    "confidence": 0.95,
+    "eligible_for_gate": false,
+    "method": "detector_gps_4096s_block_bootstrap",
+    "n_resamples": 2000
+  }
+}
