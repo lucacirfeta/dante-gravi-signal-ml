@@ -21,10 +21,16 @@ def main() -> int:
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--freeze-commit", help="full code commit bound into the confirmation seal")
     parser.add_argument("--refresh-segments", action="store_true")
+    parser.add_argument("--refresh-known-source", action="store_true")
     args=parser.parse_args()
     commit=args.freeze_commit or subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip()
     try:
-        result=build_freeze(ROOT,freeze_commit=commit,refresh_segments=args.refresh_segments)
+        result=build_freeze(
+            ROOT,
+            freeze_commit=commit,
+            refresh_segments=args.refresh_segments,
+            refresh_known_source=args.refresh_known_source,
+        )
     except ContractError as exc:
         print(f"NOT_READY: {exc}",file=sys.stderr); return 2
     print(json.dumps({"status":"PASS_IDENTITY_ONLY_NOT_OPENED","freeze_commit":commit,"counts":result["counts"]},indent=2,sort_keys=True))

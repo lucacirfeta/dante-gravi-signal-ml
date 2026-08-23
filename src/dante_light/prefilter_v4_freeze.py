@@ -120,7 +120,12 @@ def validate_segment_snapshot(value: Mapping[str, Any]) -> dict[str, Any]:
     return dict(value)
 
 
-def build_known_source_snapshot(root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def build_known_source_snapshot(
+    root: Path,
+    segments: Mapping[str, Any],
+    prior_blocks: set[str],
+    prior_source_ids: set[str],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     """Compact the public O3b catalogues to the predeclared selection fields."""
 
     rows: list[dict[str, Any]] = []
@@ -143,10 +148,20 @@ def build_known_source_snapshot(root: Path) -> tuple[dict[str, Any], list[dict[s
                 confidence = float(source["ml_confidence"]); snr = float(source["snr"])
                 if confidence < 0.95 or snr < 7.5:
                     continue
+                source_id = str(source["gravityspy_id"]); event_time = float(source["event_time"])
+                gps = event_time - 16.0
+                if source_id in prior_source_ids or _block(detector, gps) in prior_blocks:
+                    continue
+                if not _contained(
+                    segments[f"{detector}_O3B_DATA"]["segments"],
+                    gps - PAD_S,
+                    gps + WINDOW_S + PAD_S,
+                ):
+                    continue
                 rows.append({
                     "detector": detector,
-                    "event_time": float(source["event_time"]),
-                    "gravityspy_id": str(source["gravityspy_id"]),
+                    "event_time": event_time,
+                    "gravityspy_id": source_id,
                     "morphology": morphology,
                     "ml_confidence": confidence,
                     "snr": snr,
@@ -156,7 +171,9 @@ def build_known_source_snapshot(root: Path) -> tuple[dict[str, Any], list[dict[s
         "schema_version": 1,
         "status": "FROZEN_FILTERED_SOURCE_IDENTITIES_NO_V4_OUTCOMES",
         "external_sources": sources,
-        "filter": {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5},
+        "filter": {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5,
+            "require_o3b_data_for_padded_window": True,
+            "exclude_prior_source_ids_and_detector_4096s_blocks": True},
         "row_count": len(rows),
         "rows_digest": canonical_json_sha256(rows),
     }
@@ -169,7 +186,9 @@ def validate_known_source_snapshot(header: Mapping[str, Any], rows: Sequence[Map
         raise ContractError("known-glitch source snapshot digest/status mismatch")
     if header["row_count"] != len(rows) or header["rows_digest"] != canonical_json_sha256(rows):
         raise ContractError("known-glitch source snapshot rows mismatch")
-    if header["filter"] != {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5}:
+    if header["filter"] != {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5,
+            "require_o3b_data_for_padded_window": True,
+            "exclude_prior_source_ids_and_detector_4096s_blocks": True}:
         raise ContractError("known-glitch source filter changed")
 
 
@@ -402,14 +421,21 @@ def write_jsonl(path: Path, rows: Iterable[Mapping[str, Any]]) -> None:
     path.write_bytes("".join(json.dumps(row,sort_keys=True,separators=(",",":"))+"\n" for row in rows).encode("utf-8"))
 
 
-def build_freeze(root: Path, *, freeze_commit: str, refresh_segments: bool=False) -> dict[str, Any]:
+def build_freeze(
+    root: Path,
+    *,
+    freeze_commit: str,
+    refresh_segments: bool=False,
+    refresh_known_source: bool=False,
+) -> dict[str, Any]:
     segment_path=root/"config/dante_light_prefilter_v4_segments.json"
     if refresh_segments or not segment_path.exists(): write_json(segment_path,build_segment_snapshot())
     segments=validate_segment_snapshot(json.loads(segment_path.read_text(encoding="utf-8")))
+    prior_blocks,_,prior_sources=prior_exclusions(root)
     known_header_path=root/"config/dante_light_prefilter_v4_known_source_snapshot.json"
     known_entries_path=root/"config/dante_light_prefilter_v4_known_source_snapshot.jsonl"
-    if not known_header_path.exists() or not known_entries_path.exists():
-        known_header,known_catalog=build_known_source_snapshot(root)
+    if refresh_known_source or not known_header_path.exists() or not known_entries_path.exists():
+        known_header,known_catalog=build_known_source_snapshot(root,segments["flags"],prior_blocks,prior_sources)
         write_jsonl(known_entries_path,known_catalog)
         known_header["entries_reference"]=repository_reference(root,known_entries_path)
         known_header["snapshot_digest"]=canonical_json_sha256({k:v for k,v in known_header.items() if k!="snapshot_digest"})
@@ -429,7 +455,7 @@ def build_freeze(root: Path, *, freeze_commit: str, refresh_segments: bool=False
     known_refs=[repository_reference(root,known_header_path),repository_reference(root,known_entries_path)]
     protocol_path=root/"config/dante_light_prefilter_protocol_v4.json"
     protocol=build_protocol(root,repository_reference(root,segment_path),known_refs); write_json(protocol_path,protocol); validate_protocol(protocol)
-    prior_blocks,_,prior_sources=prior_exclusions(root); seed=protocol["seed_derivation"]["seeds"]["cohort"]
+    seed=protocol["seed_derivation"]["seeds"]["cohort"]
     robust,occupied=select_robust(root,segments["flags"],seed,prior_blocks)
     injections,trials,occupied=select_injections(segments["flags"],protocol["seed_derivation"]["seeds"]["injection"],occupied)
     background=select_background(segments["flags"],seed,occupied)
