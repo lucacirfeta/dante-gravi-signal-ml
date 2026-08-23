@@ -9,7 +9,6 @@ import math
 from pathlib import Path
 import time
 from typing import Any, Iterable, Mapping, Sequence
-from urllib.request import urlopen
 
 import numpy as np
 
@@ -46,13 +45,12 @@ def _contained(segments: Sequence[Sequence[int]], start: float, end: float) -> b
 
 
 def fetch_segments(flag: str, start: int, end: int, *, attempts: int = 6) -> list[list[int]]:
-    url = f"https://gwosc.org/timeline/segments/json/{flag}/{start}/{end}/"
+    from gwosc.timeline import get_segments
+
     last: Exception | None = None
     for attempt in range(attempts):
         try:
-            with urlopen(url, timeout=60) as response:
-                payload = json.load(response)
-            segments = payload.get("segments") or payload.get(flag) or payload
+            segments = get_segments(flag, start, end)
             result = [[int(item[0]), int(item[1])] for item in segments]
             if not result:
                 raise ContractError(f"empty GWOSC segment response for {flag}")
@@ -75,7 +73,7 @@ def build_segment_snapshot() -> dict[str, Any]:
     for name, (flag, start, end) in specs.items():
         segments = fetch_segments(flag, start, end)
         flags[name] = {
-            "source": f"https://gwosc.org/timeline/segments/json/{flag}/{start}/{end}/",
+            "source": "GWOSC API v2 via gwosc.timeline.get_segments",
             "flag": flag, "gps_bounds": [start, end], "segments": segments,
             "segment_count": len(segments),
             "livetime_s": sum(b - a for a, b in segments),
