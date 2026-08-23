@@ -94,10 +94,27 @@ an easier in-family aligned-spin diagnostic, not a population prior.
 | 16 | 0.198 | 0.205 | 0.506 | 19.742 ms |
 | 32 | 0.413 | 0.495 | 1.000 | 39.647 ms |
 
-No minimal-match acceptance threshold was defined, so this table is not a
-PASS/FAIL gate. Nevertheless, 4--8 templates leave most of even this limited
-grid poorly covered; 32 templates improve the median while the worst point
-remains only 0.413 and the filtering kernel is already about 40 ms at p95.
+No minimal-match acceptance threshold was defined before this table was
+computed, so the original table is not a preregistered PASS/FAIL gate.
+Subsequently, and with the original artifact fixed by SHA256, the author froze
+0.97 as the minimum-match gate for every future mini-bank evaluation. The
+current best minimum match, 0.413 at 32 templates, is therefore classified as
+`RETROSPECTIVE_EXTERNAL_BENCHMARK_FAIL`, never as a preregistered failure.
+For future work, every point in a newly locked grid must have match at least
+0.97; failure excludes that bank as a safety arm.
+
+The 0.97 criterion limits SNR loss from bank discreteness to 3%. Under the
+explicit approximation that sensitive Euclidean volume scales as recovered
+SNR cubed and all other factors are fixed, this corresponds to at most 8.73%
+volume loss. Capano et al. directly document the traditional 0.97 choice in
+LIGO/Virgo searches and report less than 3% maximum SNR loss for their bank.
+This is a more direct precedent than citing a generic modern bank-generation
+method.
+
+Independently of the formal classification, 4--8 templates leave most of even
+this limited grid poorly covered; 32 templates improve the median while the
+worst point remains only 0.413 and the filtering kernel is already about 40 ms
+at p95.
 For scale, the aligned-spin O4 GstLAL bank contains 1.8 million parameter sets
 over a much broader compact-binary space. The comparison is contextual, not a
 claim that this feasibility kernel implements GstLAL.
@@ -177,6 +194,9 @@ not scientific or operational PASS.
   matched-filter context.
 - Sakon et al., [O4 compact-binary template bank](https://arxiv.org/abs/2211.16674),
   for realistic bank scale and coverage context.
+- Capano et al.,
+  [Implementing a search for gravitational waves from non-precessing, spinning binary black holes](https://arxiv.org/abs/1602.03509),
+  for the traditional 0.97 minimal-match criterion and its SNR-loss meaning.
 - [LALSimulation IMRPhenomNSBH documentation](https://lscsoft.docs.ligo.org/lalsuite/lalsimulation/_l_a_l_sim_i_m_r_phenom_n_s_b_h_8c.html),
   for the waveform model and its domain limitations.
 - Hinton, Vinyals, and Dean,

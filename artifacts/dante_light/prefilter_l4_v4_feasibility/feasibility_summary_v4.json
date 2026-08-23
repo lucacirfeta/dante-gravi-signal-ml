@@ -43,8 +43,16 @@
         "p05_match": 0.13393901747936868
       }
     },
+    "future_minimum_match_gate": {
+      "metric": "minimum_time_and_phase_maximized_noise_weighted_match_over_locked_grid",
+      "pre_registered_for_future_evaluations": true,
+      "status": "DEFINED_NOT_EVALUATED",
+      "threshold": 0.97
+    },
     "grid_size": 108,
     "minimal_match_threshold_defined": false,
+    "retrospective_classification": "RETROSPECTIVE_EXTERNAL_BENCHMARK_FAIL",
+    "retrospective_pre_registered": false,
     "scope": "illustrative aligned-spin in-family grid only"
   },
   "outcome_access": {
@@ -76,6 +84,7 @@
     "compute": "8b0701e6e21c697eb1a36bd2fa4730e27ebe339ce846c1a10e5d187548f1993a",
     "config": "e183d896e86a9449cb11acdb665378f336d709afd310a1249fcb9d1e0e8a6939",
     "cost_accounting": "511bbde215a969f77ea50c17e833e18f5c958e0077dc7807d6765ec2185b175b",
-    "mini_bank": "b301711873b42c06a2745df5600c99fafed8fa4f6a698a9230d0c4178db34455"
+    "mini_bank": "b301711873b42c06a2745df5600c99fafed8fa4f6a698a9230d0c4178db34455",
+    "minimum_match_contract": "2eef3335b4294c51a902fd9eeac8c13eca37cec68315aeffc139948b7ad37f89"
   }
 }

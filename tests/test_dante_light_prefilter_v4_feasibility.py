@@ -30,6 +30,9 @@ from src.dante_light.prefilter_v4_student import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config" / "dante_light_prefilter_v4_feasibility.json"
+MINIMUM_MATCH_CONTRACT = (
+    ROOT / "config" / "dante_light_prefilter_v4_minimum_match_contract.json"
+)
 
 
 def _config() -> dict:
@@ -46,6 +49,26 @@ def test_feasibility_contract_cannot_freeze_or_access_outcomes() -> None:
     assert boundary["may_access_development_labels"] is False
     assert boundary["may_access_reserved_confirmation"] is False
     assert boundary["may_access_o4b_outcomes"] is False
+
+
+def test_future_minimum_match_gate_is_frozen_without_retroactive_preregistration() -> None:
+    payload = json.loads(MINIMUM_MATCH_CONTRACT.read_text(encoding="utf-8"))
+    assert payload["criterion_frozen"] is True
+    assert payload["v4_protocol_frozen"] is False
+    assert payload["routing_enabled"] is False
+    future = payload["future_preregistered_gate"]
+    assert future["status"] == "DEFINED_NOT_EVALUATED"
+    assert future["threshold"] == pytest.approx(0.97)
+    assert future["pre_registered_for_future_evaluations"] is True
+    assert future["physical_interpretation"][
+        "maximum_snr_loss_fraction_from_bank_discreteness"
+    ] == pytest.approx(0.03)
+    assert future["physical_interpretation"][
+        "minimum_euclidean_sensitive_volume_fraction_if_all_other_factors_are_fixed"
+    ] == pytest.approx(0.97**3)
+    observed = payload["already_observed_feasibility_artifact"]
+    assert observed["pre_registered_for_this_artifact"] is False
+    assert observed["classification"] == "RETROSPECTIVE_EXTERNAL_BENCHMARK_FAIL"
 
 
 def test_expected_cost_accounting_uses_means_and_marks_tail_unidentified() -> None:
@@ -225,6 +248,7 @@ def test_feasibility_verifier_passes_from_relocated_checkout(tmp_path: Path) -> 
         "src/dante_light/prefilter_v4_phase.py",
         "src/dante_light/prefilter_v4_student.py",
         "config/dante_light_prefilter_v4_feasibility.json",
+        "config/dante_light_prefilter_v4_minimum_match_contract.json",
         "artifacts/dante_light/prefilter_l4_v3/screening_summary_v3.json",
         "benchmarks/dante_light_l1_score_only_shared.json",
         "artifacts/dante_light/prefilter_l4_v4_feasibility/compute_feasibility_v4.json",

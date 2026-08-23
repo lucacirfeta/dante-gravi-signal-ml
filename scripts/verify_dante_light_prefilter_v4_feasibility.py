@@ -29,6 +29,9 @@ DEFAULT_ARTIFACT_ROOT = (
 )
 DEFAULT_SUMMARY = DEFAULT_ARTIFACT_ROOT / "feasibility_summary_v4.json"
 CONFIG = ROOT / "config/dante_light_prefilter_v4_feasibility.json"
+MINIMUM_MATCH_CONTRACT = (
+    ROOT / "config/dante_light_prefilter_v4_minimum_match_contract.json"
+)
 
 
 def _sha256(path: Path) -> str:
@@ -106,6 +109,7 @@ def main() -> int:
     compute = _load(compute_path)
     bank = _load(bank_path)
     cost = _load(cost_path)
+    minimum_match_contract = _load(MINIMUM_MATCH_CONTRACT)
 
     _require_boundary(compute, expected_status="COMPLETE_FEASIBILITY_ONLY")
     _require_boundary(bank, expected_status="COMPLETE_FEASIBILITY_ONLY")
@@ -193,6 +197,63 @@ def main() -> int:
             raise ContractError("bank minimum coverage is not monotone")
         previous = current
 
+    if minimum_match_contract.get("status") != (
+        "MINIMUM_MATCH_CRITERION_FROZEN_FOR_FUTURE_MINI_BANK_EVALUATIONS"
+    ):
+        raise ContractError("minimum-match contract status mismatch")
+    if minimum_match_contract.get("criterion_frozen") is not True:
+        raise ContractError("future minimum-match criterion is not frozen")
+    for key in ("v4_protocol_frozen", "routing_enabled", "candidate_selected"):
+        if minimum_match_contract.get(key) is not False:
+            raise ContractError(f"forbidden minimum-match contract state: {key}")
+    future_gate = minimum_match_contract["future_preregistered_gate"]
+    if future_gate.get("status") != "DEFINED_NOT_EVALUATED":
+        raise ContractError("future minimum-match gate was unexpectedly evaluated")
+    if future_gate.get("pre_registered_for_future_evaluations") is not True:
+        raise ContractError("future minimum-match gate is not preregistered")
+    if future_gate.get("metric") != (
+        "minimum_time_and_phase_maximized_noise_weighted_match_over_locked_grid"
+    ):
+        raise ContractError("future minimum-match metric mismatch")
+    _close(float(future_gate["threshold"]), 0.97, name="future minimum-match threshold")
+    interpretation = future_gate["physical_interpretation"]
+    _close(
+        interpretation["maximum_snr_loss_fraction_from_bank_discreteness"],
+        1.0 - float(future_gate["threshold"]),
+        name="maximum SNR loss",
+    )
+    _close(
+        interpretation[
+            "minimum_euclidean_sensitive_volume_fraction_if_all_other_factors_are_fixed"
+        ],
+        float(future_gate["threshold"]) ** 3,
+        name="minimum Euclidean sensitive-volume fraction",
+    )
+    observed = minimum_match_contract["already_observed_feasibility_artifact"]
+    _verify_file_hash(observed, bank_path)
+    if observed.get("observed_before_threshold_was_defined") is not True:
+        raise ContractError("retrospective ordering is not recorded")
+    if observed.get("pre_registered_for_this_artifact") is not False:
+        raise ContractError("observed mini-bank result cannot be called preregistered")
+    if observed.get("classification") != "RETROSPECTIVE_EXTERNAL_BENCHMARK_FAIL":
+        raise ContractError("retrospective mini-bank classification mismatch")
+    best_observed = max(
+        float(entry["minimum_match"])
+        for entry in bank["coverage"]["curve"].values()
+    )
+    _close(
+        observed["best_observed_minimum_match"],
+        best_observed,
+        name="retrospective best minimum match",
+    )
+    _close(
+        observed["gap_to_external_benchmark"],
+        float(future_gate["threshold"]) - best_observed,
+        name="retrospective threshold gap",
+    )
+    if best_observed >= float(future_gate["threshold"]):
+        raise ContractError("retrospective FAIL classification contradicts the data")
+
     phase = compute["phase_probe"]
     ordered = phase["synthetic_features"]["ordered_chirp"]
     scrambled = phase["phase_scrambled_control_distribution"]
@@ -246,6 +307,14 @@ def main() -> int:
             },
             "minimal_match_threshold_defined": False,
             "scope": "illustrative aligned-spin in-family grid only",
+            "retrospective_classification": observed["classification"],
+            "retrospective_pre_registered": False,
+            "future_minimum_match_gate": {
+                "status": future_gate["status"],
+                "threshold": future_gate["threshold"],
+                "metric": future_gate["metric"],
+                "pre_registered_for_future_evaluations": True,
+            },
         },
         "student_compute_probe": {
             "raw_1d_parameters": student["cpu"]["raw_1d_depthwise_proxy"]["trainable_parameters"],
@@ -260,6 +329,7 @@ def main() -> int:
             "mini_bank": _sha256(bank_path),
             "cost_accounting": _sha256(cost_path),
             "config": _sha256(CONFIG),
+            "minimum_match_contract": _sha256(MINIMUM_MATCH_CONTRACT),
         },
     }
     output = args.write_summary.resolve() if args.write_summary else None
