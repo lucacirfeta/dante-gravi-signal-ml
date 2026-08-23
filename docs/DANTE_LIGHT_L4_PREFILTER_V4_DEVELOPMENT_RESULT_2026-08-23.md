@@ -74,6 +74,59 @@ The near-random NSBH AUC in both detectors is evidence against this particular
 six-summary representation as the solution to the previously observed NSBH
 weakness; it is not evidence that phase information in general is useless.
 
+## Synthetic-to-real translation failure
+
+The label-blind feasibility probe established construct validity only on an
+ideal monocomponent signal. Its ordered quadratic chirp had frequency--time
+Spearman 0.839 and cubic circular-phase residual 0.0058; 64 phase-scrambled
+controls had Spearman p95 0.208 and median residual 0.926. Those clean
+synthetic contrasts did not survive contact with real detector strain. Across
+the closed development cohort, median frequency--time Spearman was 0.0109 for
+background and -0.0177 for protected windows, while median cubic residual was
+0.9241 and 0.9189, respectively. Under these summaries, both real populations
+therefore look much closer to the phase-scrambled controls than to the ideal
+ordered chirp.
+
+The post-hoc univariate diagnostics reinforce this interpretation. The frozen
+`phase_valid_frame_fraction` is effectively constant (median 0.5 and IQR 0 in
+both populations; orientation-free AUC 0.501), and the positive-step fraction
+is also near chance (AUC 0.508). The strongest individual summary is the
+inspiral-coordinate residual (orientation-free AUC 0.638), but it is not a
+uniform morphology discriminator and is correlated with measured injection
+SNR for BBH 10+10 (Spearman -0.466) and BBH 30+30 (-0.622). SNR was not used
+for fitting or gating; these correlations are diagnostic evidence that part of
+the response may track signal strength rather than a robust phase morphology.
+
+A plausible mechanism is that analytic instantaneous phase is well behaved
+for the ideal narrow, monocomponent chirp used in feasibility, but becomes
+unstable or diluted when computed globally over a whitened 20--1024 Hz,
+32-second window containing broadband, non-Gaussian and non-stationary detector
+noise or multiple transient components. This is a post-hoc explanation, not a
+demonstrated causal mechanism. The result falsifies these six global summaries,
+not phase-aware representations in general.
+
+The complete recomputable diagnostic is
+`artifacts/dante_light/prefilter_l4_v4_development/diagnostics_v4.json`. It is
+explicitly ineligible for PASS/FAIL, does not update the frozen screen, and
+records empty confirmation and O4b access lists.
+
+## Descriptive cross-protocol comparison
+
+| Development representation | Windows | Overall OOF AUC | Constrained effective reduction |
+|---|---:|---:|---:|
+| v2 spectral evolution baseline | 962 | 0.8052 | 8.70% |
+| v3 signed + ridge primary | 962 | 0.7179 | 3.08% |
+| v4 analytic-phase primary | 1,010 | 0.6341 | 0.67% |
+
+The 0.805 value reproduced in the v3 dossier belongs to the frozen v2 spectral
+control, not to the v3 A+B primary. V2 and v3 share the same 962-window cohort,
+so that pair is a direct representation comparison. V4 deliberately uses a
+fresh cohort with 600 rather than 552 background windows; its differences are
+therefore descriptive and cannot be attributed only to representation.
+Nevertheless, v4 is not merely below the 50% product target: on its own frozen
+real-strain development test it provides less aggregate ranking and almost no
+safe call reduction, despite the strong ideal-synthetic phase response.
+
 ## NSBH scientific boundary
 
 For comparability with v1--v3, development injections use the legacy
@@ -99,6 +152,7 @@ From the repository root:
 python scripts/verify_dante_light_prefilter_v4_freeze.py
 python scripts/verify_dante_light_prefilter_v4_development.py \
   --artifact-dir artifacts/dante_light/prefilter_l4_v4_development
+python scripts/analyze_dante_light_prefilter_v4_diagnostics.py --verify
 ```
 
 The exact recomputation verifier passed on both the Windows environment that
@@ -114,3 +168,8 @@ changing the decision.
 - O4b remains untouched.
 - Any new representation is a new protocol/version with a fresh development
   cohort; it cannot be presented as a retune of v4 on these same outcomes.
+- A v5 feasibility study should not assume that another global analytic-phase
+  summary repairs v4. It must first demonstrate real-strain construct validity
+  or pursue a representation that does not depend on global phase estimation;
+  any development and confirmation cohorts must remain new and independently
+  sealed.

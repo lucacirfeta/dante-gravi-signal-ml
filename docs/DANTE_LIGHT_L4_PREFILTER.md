@@ -2,11 +2,12 @@
 
 L4 is a research-only cheap prefilter evaluated in front of the unchanged
 DANTE-Light exact path. It is not active routing: every generated contract and
-result records `routing_enabled: false`. All three completed development
+result records `routing_enabled: false`. All four completed development
 protocols are negative: v1 reached 6.70% effective reduction, v2 reached at
-most 8.70%, and the predeclared v3 A+B primary reached 3.08%, below the frozen
-50% gate. No protocol opened its held-out O4b outcomes. The exact DANTE-Light
-path remains the supported path.
+most 8.70%, the predeclared v3 A+B primary reached 3.08%, and the v4
+analytic-phase primary reached 0.67%, all below the frozen 50% gate. No
+protocol opened its held-out confirmation or O4b outcomes. The exact
+DANTE-Light path remains the supported path.
 
 The scientific criteria live only in the versioned v1, v2, and v3 protocol JSON
 files under `config/`. The protocol, split, screening result, evaluation
@@ -15,11 +16,20 @@ Changing a criterion without freezing a new protocol fails closed.
 The compact robust-candidate manifest allows split regeneration without the
 312 MB P5 token cache while preserving its source SHA256 and candidate order.
 
-The v4 work is currently a label-blind feasibility study, not a fourth frozen
-protocol. It has not selected a candidate, enabled routing, opened the reserved
-confirmation cohort, or inspected O4b outcomes. Its methods, corrected cost
-accounting, results, commands, and limitations are recorded in
-`docs/DANTE_LIGHT_L4_PREFILTER_V4_FEASIBILITY_2026-08-23.md`.
+V4 progressed from a label-blind feasibility probe to a frozen development
+protocol on a fresh O4a cohort. Its primary returned `V4_NOT_READY`: overall
+OOF AUC 0.634 and 0.67% constrained effective reduction. The synthetic
+phase-ordering response did not translate into useful real-strain routing
+separation; confirmation and O4b remain sealed. The frozen result and its
+post-hoc, non-gating diagnostic are documented in
+`docs/DANTE_LIGHT_L4_PREFILTER_V4_DEVELOPMENT_RESULT_2026-08-23.md` and
+`artifacts/dante_light/prefilter_l4_v4_development/diagnostics_v4.json`.
+
+The cross-version AUC values must be read carefully: v2 spectral evolution is
+0.805, the v3 A+B primary is 0.718, and v4 is 0.634. The 0.805 value reproduced
+inside the v3 dossier is the v2 control, not the v3 primary. V4 uses a fresh
+1,010-window cohort rather than the shared 962-window v2/v3 cohort, so its
+cross-version differences are descriptive rather than a controlled ablation.
 
 ## Output location
 

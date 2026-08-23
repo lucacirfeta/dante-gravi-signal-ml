@@ -1,5 +1,11 @@
 # DANTE-Light L4 prefilter v4: feasibility dossier
 
+Historical scope note: this dossier records the label-blind feasibility stage.
+The subsequently frozen real-strain development experiment returned
+`V4_NOT_READY`; see
+`docs/DANTE_LIGHT_L4_PREFILTER_V4_DEVELOPMENT_RESULT_2026-08-23.md`. The ideal
+synthetic phase response below must not be read as real-strain validation.
+
 Date: 2026-08-23  
 Status: **FEASIBILITY COMPLETE; AWAITING SCIENTIFIC DECISION**  
 Boundary: **not a frozen v4 protocol; no candidate selected; routing disabled**
