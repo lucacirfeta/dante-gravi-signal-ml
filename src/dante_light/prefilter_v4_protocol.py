@@ -100,6 +100,8 @@ def validate_protocol(payload: Mapping[str, Any]) -> dict[str, Any]:
         raise ContractError("v4 freeze may not open O4b or enable routing")
     if boundary["prior_v1_v3_interpretation"] != "EXPLORATORY_FOR_V4":
         raise ContractError("prior cohort interpretation is not bounded")
+    if "sensitivity_to_physical_NSBH_waveforms_with_tidal_effects" not in boundary["does_not_establish"]:
+        raise ContractError("v4 protocol omits the approved NSBH tidal limitation")
     counts = value["cohort_contract"]["counts_per_detector_stratum"]
     expected = {
         "background": {"development": 300, "confirmation": 0},
@@ -116,11 +118,40 @@ def validate_protocol(payload: Mapping[str, Any]) -> dict[str, Any]:
         "fetch_padded_strain", "whiten_context_pad_4s", "extract_clean_32s_crop", "phase_extractor"
     ]:
         raise ContractError("v4 preprocessing order changed")
+    development = value["development"]
+    if (
+        development["cross_validation_folds"] != 5
+        or development["gps_block_duration_s"] != 4096
+        or development["regularization_c"] != 1.0
+        or development["minimum_effective_reduction"] != 0.5
+        or development["minimum_group_n_by_role"] != {
+            "robust_candidate": 25, "known_glitch": 25, "injection": 35
+        }
+        or any(rate != 0.9 for rate in development["minimum_retention_by_role"].values())
+        or any(rate != 0.8 for rate in development["minimum_wilson_lower_by_role"].values())
+    ):
+        raise ContractError("v4 development model or gate changed")
     confirmation = value["confirmation"]
     if confirmation["minimum_retention"] != 0.9 or confirmation["minimum_wilson_lower"] != 0.8:
         raise ContractError("v4 confirmation gate changed")
     if confirmation["gate_operator"] != "AND":
         raise ContractError("v4 point and Wilson retention gates must both pass")
+    injection = value["injection_waveform_contract"]
+    if (
+        injection["approximant"] != "IMRPhenomD"
+        or injection["sample_rate_hz"] != 4096
+        or injection["window_duration_s"] != 32.0
+        or injection["placement"]
+        != "geocentric_merger_at_window_midpoint_plus_detector_delay"
+        or injection["snr_role"] != "diagnostic_only_never_selection_or_gate"
+        or injection["systems"] != {
+            "BBH_30_30": {"mass_1_msun": 30.0, "mass_2_msun": 30.0, "f_low_hz": 20.0},
+            "BBH_10_10": {"mass_1_msun": 10.0, "mass_2_msun": 10.0, "f_low_hz": 25.0},
+            "NSBH_10_1.4": {"mass_1_msun": 10.0, "mass_2_msun": 1.4, "f_low_hz": 30.0,
+                "tidal_effects_included": False, "physical_scope": "point_particle_comparability_control_only"},
+        }
+    ):
+        raise ContractError("v4 legacy injection waveform contract changed")
     seeds = value["seed_derivation"]
     if seeds["method"] != SEED_METHOD or tuple(seeds["purposes"]) != SEED_PURPOSES:
         raise ContractError("v4 seed derivation changed")

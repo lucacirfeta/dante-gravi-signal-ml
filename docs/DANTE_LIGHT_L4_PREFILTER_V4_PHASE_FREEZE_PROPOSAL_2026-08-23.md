@@ -93,6 +93,15 @@ for ROBUST and known glitches are increased after the power analysis below. The
 50% compute-reduction target is inherited as a product requirement, not
 presented as a scientific constant.
 
+For strict v1--v3 comparability, v4 freezes the legacy `IMRPhenomD` injection
+generator: BBH 30+30 from 20 Hz, BBH 10+10 from 25 Hz, and NSBH 10+1.4 from
+30 Hz, at 4096 Hz in 32 s windows with geocentric merger at the midpoint plus
+the detector delay. Measured SNR is diagnostic only and cannot select rows or
+enter a gate. `IMRPhenomD` omits neutron-star tidal effects; consequently, an
+NSBH PASS would establish retention only for this point-particle comparability
+control. It would not establish sensitivity to physically realistic NSBH
+waveforms with significant tidal effects, precession, or higher modes.
+
 Feasibility audit before freeze:
 
 - after the confidence/SNR cuts, O3b DATA/padded-window check, prior-identity

@@ -73,6 +73,11 @@ def _seal(manifest):
         code_references={
             "split_builder": {"path": "src/builder.py", "sha256": SHA},
             "phase_extractor": {"path": "src/phase.py", "sha256": SHA},
+            "production_extractor": {"path": "src/production.py", "sha256": SHA},
+            "preprocessing": {"path": "src/preprocessing.py", "sha256": SHA},
+            "development_ledger": {"path": "src/ledger.py", "sha256": SHA},
+            "development_screening": {"path": "src/screening.py", "sha256": SHA},
+            "development_verifier": {"path": "scripts/verify_development.py", "sha256": SHA},
             "seal_verifier": {"path": "scripts/verify.py", "sha256": SHA},
         },
         declared_storage_roots=[

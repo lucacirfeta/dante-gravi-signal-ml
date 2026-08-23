@@ -22,10 +22,10 @@ class PreparedWindow:
 
 @dataclass(frozen=True, slots=True)
 class PreparedPrefilterFeatures:
-    features: "ExcessEnergyFeatures"
+    features: object
     strain_sha256: str
     timings: dict[str, float]
-    metadata: dict[str, float | str] = field(default_factory=dict)
+    metadata: dict[str, object] = field(default_factory=dict)
 
 
 def stage_canonical_strain(
@@ -241,6 +241,37 @@ def prepare_prefilter_v3_features(
         features=features,
         strain_sha256=strain_sha256,
         timings=stages,
+    )
+
+
+def prepare_prefilter_v4_features(
+    window: WindowIdentity,
+    *,
+    local_only: bool,
+    remote_only: bool = False,
+    config: dict,
+    pad_s: float,
+) -> PreparedPrefilterFeatures:
+    """Extract frozen v4 phase features after padded whitening and clean crop."""
+
+    from src.dante_light.prefilter_v4 import extract_prefilter_v4_features
+
+    clean, strain_sha256, stages, sample_rate_hz = _prepare_whitened_subwindow(
+        window,
+        local_only=local_only,
+        remote_only=remote_only,
+        pad_s=pad_s,
+    )
+    if int(round(sample_rate_hz)) != int(config["sample_rate_hz"]):
+        raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
+    began = time.perf_counter()
+    features = extract_prefilter_v4_features(np.asarray(clean.value), config=config)
+    stages["feature_extraction_s"] = time.perf_counter() - began
+    return PreparedPrefilterFeatures(
+        features=features,
+        strain_sha256=strain_sha256,
+        timings=stages,
+        metadata={"failure_policy": "DEFER_TO_EXACT_PATH_NO_IMPUTATION"},
     )
 
 

@@ -255,7 +255,17 @@ def build_confirmation_seal(
     commit = str(freeze_commit).lower()
     if _COMMIT.fullmatch(commit) is None:
         raise ContractError("confirmation seal requires a full Git commit")
-    if set(code_references) != {"split_builder", "phase_extractor", "seal_verifier"}:
+    required_code = {
+        "split_builder",
+        "phase_extractor",
+        "production_extractor",
+        "preprocessing",
+        "development_ledger",
+        "development_screening",
+        "development_verifier",
+        "seal_verifier",
+    }
+    if set(code_references) != required_code:
         raise ContractError("confirmation seal code references are incomplete")
     roots: list[dict[str, str]] = []
     root_ids: set[str] = set()

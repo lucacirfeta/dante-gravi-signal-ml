@@ -75,6 +75,7 @@ def verify() -> dict[str,object]:
     for ref in protocol["parent_evidence"]: _reference(ref)
     _reference(protocol["source_contract"]["segment_snapshot"])
     for ref in protocol["source_contract"]["gravity_spy_filtered_snapshot"]: _reference(ref)
+    _reference(protocol["injection_waveform_contract"]["generator_source"])
     known_header_ref,known_entries_ref=protocol["source_contract"]["gravity_spy_filtered_snapshot"]
     known_header=json.loads((ROOT/known_header_ref["path"]).read_text(encoding="utf-8"))
     known_rows=[json.loads(line) for line in (ROOT/known_entries_ref["path"]).read_text(encoding="utf-8").splitlines() if line.strip()]
