@@ -288,6 +288,7 @@ def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str
         "config/dante_light_prefilter_splits_v1.jsonl",
         "config/dante_light_prefilter_splits_v2.jsonl",
         "src/dante_light/prefilter_v4_phase.py",
+        "docs/DANTE_LIGHT_L4_PREFILTER_V4_PHASE_FREEZE_PROPOSAL_2026-08-23.md",
     ]
     parents=[_ref(root,path) for path in parent_paths]
     parent_digests=[x["sha256"] for x in parents] + [str(segment_reference["sha256"])]

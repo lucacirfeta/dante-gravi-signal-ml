@@ -2,27 +2,30 @@
 
 Date: 2026-08-23
 
-Status: **PROPOSAL; NOT FROZEN; NO PROTECTED OUTCOMES OPENED**
+Status: **AUTHOR-APPROVED AND FROZEN; NO DEVELOPMENT OR CONFIRMATION OUTCOMES OPENED**
 
 Boundary: **routing disabled; O4b sealed; confirmation feature values uncomputed**
 
-Increment 1 infrastructure was authorized on 2026-08-23. That authorization
-covers generic identity-only schemas, seal/access/unlock guards, and synthetic
-tests. It does not resolve or freeze the sample-size decisions below, so no
-final cohort identity manifest may be generated yet.
+Increment 1 infrastructure was authorized on 2026-08-23. After the independent
+power review, the author explicitly confirmed p1=0.95, 90% target power,
+n=60 for each ROBUST/known-glitch confirmation stratum, and n=300 per-detector
+development background. The frozen protocol and identity-only manifest now
+live in `config/dante_light_prefilter_protocol_v4.json` and
+`config/dante_light_prefilter_splits_v4.{json,jsonl}`. This freeze does not
+authorize feature extraction or access to development or confirmation outcomes.
 
-## Decision requested
+## Freeze decision recorded
 
-This document proposes a confirmatory path for a phase-aware DANTE-Light L4
-prefilter. It does not freeze a protocol, select an operating threshold, or
-authorize feature extraction on a reserved confirmation cohort. The proposed
+This document records the approved confirmatory path for a phase-aware
+DANTE-Light L4 prefilter. It does not select an operating threshold or
+authorize feature extraction on a development or reserved confirmation cohort. The frozen
 primary is the analytic-phase representation already tested only on synthetic,
 label-blind feasibility inputs. The earlier v1--v3 cohorts and results become
 design evidence only and are ineligible for v4 fitting, threshold selection,
 PASS/FAIL gates, or confirmation.
 
-The author must explicitly approve the choices in the final checkpoint table
-before implementation can change any scientific config.
+The final checkpoint table was explicitly approved on 2026-08-23. Any later
+change to the scientific config is a new protocol version, not a v4 retry.
 
 ## Scientific question and claim boundary
 
@@ -77,9 +80,9 @@ catalogue. Substituting it silently would change the measured population.
 
 | Role | Run/source | Development | Sealed confirmation | Selection rule |
 |---|---|---:|---:|---|
-| clean background | O4a CBC_CAT1 | **300/detector proposed** | none | availability-screened, one 32 s window per detector/4096 s block, hash priority only |
-| ROBUST candidate | frozen detector-aware O4a taxonomy | 25/detector | **60/detector proposed after power review** | class membership fixed first; one row per detector/4096 s block; no score ranking |
-| known glitch | O3b Gravity Spy | 25/detector/morphology | **60/detector/morphology proposed after power review** | confidence and SNR rules inherited from v3; unused IDs and unused 4096 s blocks only |
+| clean background | O4a CBC_CAT1 | **300/detector frozen** | none | availability-screened, one 32 s window per detector/4096 s block, hash priority only |
+| ROBUST candidate | frozen detector-aware O4a taxonomy | 25/detector | **60/detector frozen after power review** | class membership fixed first; one row per detector/4096 s block; no score ranking |
+| known glitch | O3b Gravity Spy | 25/detector/morphology | **60/detector/morphology frozen after power review** | confidence and SNR rules inherited from v3; unused IDs and unused 4096 s blocks only |
 | CBC injection | new O4a software-injection table | 35/detector/system | 90/detector/system | seven development and eighteen confirmation trials per distance; new GPS and extrinsics |
 
 The protected known-glitch morphologies remain Blip, Koi Fish, and Scattered
