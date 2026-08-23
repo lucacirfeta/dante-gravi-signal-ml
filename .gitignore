@@ -264,6 +264,7 @@ docs/*
 !docs/DANTE_LIGHT_L4_PREFILTER_NOT_READY_2026-08-22.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V2_NOT_READY_2026-08-22.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V4_FEASIBILITY_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V4_PHASE_FREEZE_PROPOSAL_2026-08-23.md
 runs/
 
 # Raw HDF5 strain data downloads
@@ -353,6 +354,7 @@ scripts/*
 !scripts/run_dante_light_prefilter_v4_bank_coverage.py
 !scripts/audit_dante_light_prefilter_v3_cost.py
 !scripts/verify_dante_light_prefilter_v4_feasibility.py
+!scripts/analyze_dante_light_prefilter_v4_power.py
 
 tmp
 archive/
