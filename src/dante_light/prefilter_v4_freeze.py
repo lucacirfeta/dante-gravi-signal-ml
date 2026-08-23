@@ -44,7 +44,19 @@ def _contained(segments: Sequence[Sequence[int]], start: float, end: float) -> b
     return any(float(a) <= start and end <= float(b) for a, b in segments)
 
 
-def fetch_segments(flag: str, start: int, end: int, *, attempts: int = 6) -> list[list[int]]:
+def _hardware_injection_clear(
+    flags: Mapping[str, Any], detector: str, start: float, end: float
+) -> bool:
+    for suffix in ("HW_INJ", "CBC_INJ", "BURST_INJ"):
+        for left, right in flags[f"{detector}_O4A_{suffix}"]["segments"]:
+            if float(left) < end and start < float(right):
+                return False
+    return True
+
+
+def fetch_segments(
+    flag: str, start: int, end: int, *, attempts: int = 6, allow_empty: bool = False
+) -> list[list[int]]:
     from gwosc.timeline import get_segments
 
     last: Exception | None = None
@@ -52,7 +64,7 @@ def fetch_segments(flag: str, start: int, end: int, *, attempts: int = 6) -> lis
         try:
             segments = get_segments(flag, start, end)
             result = [[int(item[0]), int(item[1])] for item in segments]
-            if not result:
+            if not result and not allow_empty:
                 raise ContractError(f"empty GWOSC segment response for {flag}")
             return result
         except Exception as exc:  # network errors are retried, never converted to PASS
@@ -69,9 +81,17 @@ def build_segment_snapshot() -> dict[str, Any]:
         "H1_O3B_DATA": ("H1_DATA", *O3B_BOUNDS),
         "L1_O3B_DATA": ("L1_DATA", *O3B_BOUNDS),
     }
+    for detector in DETECTORS:
+        for suffix in ("HW_INJ", "CBC_INJ", "BURST_INJ"):
+            specs[f"{detector}_O4A_{suffix}"] = (f"{detector}_{suffix}", *O4A_BOUNDS)
     flags: dict[str, Any] = {}
     for name, (flag, start, end) in specs.items():
-        segments = fetch_segments(flag, start, end)
+        segments = fetch_segments(
+            flag,
+            start,
+            end,
+            allow_empty=name.endswith(("HW_INJ", "CBC_INJ", "BURST_INJ")),
+        )
         flags[name] = {
             "source": "GWOSC API v2 via gwosc.timeline.get_segments",
             "flag": flag, "gps_bounds": [start, end], "segments": segments,
@@ -140,6 +160,7 @@ def select_robust(root: Path, segments: Mapping[str, Any], seed: int,
             if source["detector"] != detector or source["robustness_class"] != "ROBUST": continue
             event = float(source["gps_start"]); gps = event + 4.0; block = _block(detector, gps)
             if block in occupied or not _contained(segs, gps - PAD_S, gps + WINDOW_S + PAD_S): continue
+            if not _hardware_injection_clear(segments, detector, gps - PAD_S, gps + WINDOW_S + PAD_S): continue
             sid = f"taxonomy:{detector}:{event:.6f}"
             candidates.append({"gps": gps, "source_id": sid, "priority": _priority(seed, "robust", detector, sid)})
         # Enforce one row per detector block before applying partition quotas.
@@ -195,7 +216,11 @@ def common_o4a_windows(segments: Mapping[str, Any], excluded: set[str], seed: in
     for index in range(start, end):
         gps=float(index * BLOCK_S + 32)
         if any(f"{detector}:{index}" in excluded for detector in DETECTORS): continue
-        if all(_contained(segments[f"{d}_O4A_CBC_CAT1"]["segments"], gps-PAD_S, gps+WINDOW_S+PAD_S) for d in DETECTORS):
+        if all(
+            _contained(segments[f"{d}_O4A_CBC_CAT1"]["segments"], gps-PAD_S, gps+WINDOW_S+PAD_S)
+            and _hardware_injection_clear(segments, d, gps-PAD_S, gps+WINDOW_S+PAD_S)
+            for d in DETECTORS
+        ):
             result.append({"gps": gps, "block": index, "priority": _priority(seed, "common-o4a", index)})
     return sorted(result, key=lambda x: (x["priority"], x["block"]))
 
@@ -237,6 +262,7 @@ def select_background(segments: Mapping[str, Any], seed: int, excluded: set[str]
         for index in range(start,end):
             gps=float(index*BLOCK_S+32); key=f"{detector}:{index}"
             if key in excluded or not _contained(segs,gps-PAD_S,gps+WINDOW_S+PAD_S): continue
+            if not _hardware_injection_clear(segments,detector,gps-PAD_S,gps+WINDOW_S+PAD_S): continue
             candidates.append({"gps":gps,"source_id":f"cat1:{detector}:{int(gps)}","priority":_priority(seed,"background",detector,index)})
         for item, partition in _partition(candidates,300,0):
             rows.append(_identity(role="background",detector=detector,morphology="clean_background",partition=partition,
@@ -256,8 +282,15 @@ def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str
         "artifacts/dante_light/prefilter_l4_v4_feasibility/feasibility_summary_v4.json",
         "config/dante_light_prefilter_v4_power_analysis.json",
         "artifacts/dante_light/prefilter_l4_v4_design/confirmation_power_analysis_v4.json",
+        "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+        "data/reference/gs_classifications_O3b_H1.csv",
+        "data/reference/gs_classifications_O3b_L1.csv",
+        "config/dante_light_prefilter_splits_v1.jsonl",
+        "config/dante_light_prefilter_splits_v2.jsonl",
+        "src/dante_light/prefilter_v4_phase.py",
     ]
-    parents=[_ref(root,path) for path in parent_paths]; parent_digests=[x["sha256"] for x in parents]
+    parents=[_ref(root,path) for path in parent_paths]
+    parent_digests=[x["sha256"] for x in parents] + [str(segment_reference["sha256"])]
     phase_cfg=json.loads((root/"config/dante_light_prefilter_v4_feasibility.json").read_text())["phase_probe"]
     seeds={purpose:derive_seed(PROTOCOL_ID,purpose,parent_digests) for purpose in SEED_PURPOSES}
     body={
@@ -276,6 +309,7 @@ def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str
             "require_no_detector_4096s_block_overlap_with_v1_v3_or_between_partitions":True,
             "robust_population_scope":"frozen_DANTE_ROBUST_decision_population_dominated_by_Family_01"},
         "source_contract":{"segment_snapshot":dict(segment_reference),"o4a_background_flag":"CBC_CAT1","o3b_known_glitch_flag":"DATA",
+            "o4a_hardware_injection_exclusion_flags":["HW_INJ","CBC_INJ","BURST_INJ"],
             "gravity_spy_minimum_confidence":0.95,"gravity_spy_minimum_snr":7.5},
         "seed_derivation":{"method":SEED_METHOD,"protocol_id":PROTOCOL_ID,"purposes":list(SEED_PURPOSES),
             "parent_digests":sorted(parent_digests),"seeds":seeds},

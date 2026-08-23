@@ -56,6 +56,21 @@ def test_old_small_confirmation_strata_are_underpowered_at_true_095():
     assert gate_pass_probability(90, **common) == pytest.approx(0.985480633688403)
 
 
+def test_n90_compound_gate_rejects_80_even_though_wilson_passes():
+    from src.dante_light.prefilter_evaluation import wilson_interval
+
+    lower_80, _ = wilson_interval(80, 90, 0.95)
+    assert lower_80 == pytest.approx(0.8074222740736939)
+    assert lower_80 >= 0.8
+    assert 80 / 90 < 0.9
+    assert minimum_passing_successes(
+        90,
+        minimum_retention=0.9,
+        minimum_wilson_lower=0.8,
+        confidence=0.95,
+    ) == 81
+
+
 def test_background_precision_derives_300_as_rounded_not_minimal():
     assert first_even_n_for_half_width(confidence=0.95, maximum_half_width=0.06) == 264
     assert worst_case_wilson_half_width(250, confidence=0.95) > 0.06
