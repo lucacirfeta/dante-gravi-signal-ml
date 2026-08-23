@@ -253,7 +253,7 @@ def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str
     parent_paths = [
         "config/dante_light_prefilter_protocol_v3.json",
         "config/dante_light_prefilter_v4_feasibility.json",
-        "artifacts/dante_light/prefilter_l4_v4_design/feasibility_summary_v4.json",
+        "artifacts/dante_light/prefilter_l4_v4_feasibility/feasibility_summary_v4.json",
         "config/dante_light_prefilter_v4_power_analysis.json",
         "artifacts/dante_light/prefilter_l4_v4_design/confirmation_power_analysis_v4.json",
     ]
