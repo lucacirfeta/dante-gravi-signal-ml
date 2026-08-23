@@ -12,10 +12,10 @@
     },
     "split_builder": {
       "path": "src/dante_light/prefilter_v4_freeze.py",
-      "sha256": "ee31944924f624fcb582e9b89c5e072b24f13672c010cdec41ef16f78ef46fda"
+      "sha256": "e9e00f500379b4b3d598511d8cdf516d96a3dd5904718d9f5ed671e3b4917760"
     }
   },
-  "confirmation_identity_digest": "0aba1cc2d53fc2871a66ebb6e5e8ec951751539f9404b3846eeb67e0ce380dca",
+  "confirmation_identity_digest": "c30320b1cecf7c852b50fb9778d31baecb4b3b04117e75b47ded0d78dc5e1788",
   "declared_storage_roots": [
     {
       "kind": "repository_relative",
@@ -28,22 +28,22 @@
       "root_id": "raw_strain"
     }
   ],
-  "freeze_commit": "6264f9b001c9ec62b581595ebd3e79fa01813b33",
+  "freeze_commit": "7d8eb1f41c8b64907f984449317484c0194708b2",
   "initial_access_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "manifest_digest": "c567c8ce96b3c7cbf9f0e0f65156c6c6e91a133009a804724250f4ea2aeddff5",
+  "manifest_digest": "804551eac43f33ef419d2c6feb778e535adfccfda726917bfa5f6d29ff7af265",
   "protocol_reference": {
     "path": "config/dante_light_prefilter_protocol_v4.json",
-    "sha256": "e1891459d241d27fe34921a998ccfa4b9eeef27856fc00f994d083d1d6ede24a"
+    "sha256": "93d66ea7d836212492424470966056f964bda396ff7456ba47d2c249f79271b4"
   },
   "public_split_entries_reference": {
     "path": "config/dante_light_prefilter_splits_v4.jsonl",
-    "sha256": "35cdd2058a19a2e950121999aa752d82d61df86d7374d1cda01a6388aa0d5acf"
+    "sha256": "8215e1307b1df6218dc296139dadaccbc898110551122307552e2e7e933fd45d"
   },
   "public_split_header_reference": {
     "path": "config/dante_light_prefilter_splits_v4.json",
-    "sha256": "4c500677258b10a995b0a9b238ed2bfbf1c08932edd173d30add13ef53de6f10"
+    "sha256": "d519e99854197b20f5c8e57da6b14d3680bd1bf0710a9eb3e9bd64cc1eddbb68"
   },
   "schema_version": 1,
-  "seal_digest": "647e3361a971c41ce01591204f6a8c3485cfeddf6660bfbcd590367f844c8af7",
+  "seal_digest": "c430fea0d878191b258e6e15209e0c5a07b1260e5a7b8480ab1d3e7f69b8d91b",
   "status": "SEALED_NOT_OPENED"
 }

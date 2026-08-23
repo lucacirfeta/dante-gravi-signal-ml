@@ -1,0 +1,40 @@
+{
+  "entries_reference": {
+    "path": "config/dante_light_prefilter_v4_known_source_snapshot.jsonl",
+    "sha256": "9015d041d4308d50c8fbeb846ae744b303790dd34c58b072aa383aa8cb07a811"
+  },
+  "external_sources": {
+    "H1": {
+      "filename": "gs_classifications_O3b_H1.csv",
+      "sha256": "f17ae6344220d985ddaf134481a9074f89c5dd2fcf345870b20381c008d7cb04",
+      "zenodo_record": "5649212"
+    },
+    "L1": {
+      "filename": "gs_classifications_O3b_L1.csv",
+      "sha256": "dd2e66c2afbdb6a80aec9081a9bfd29b577cf3f6e9c2d289300de33fc6c2c04a",
+      "zenodo_record": "5649212"
+    }
+  },
+  "filter": {
+    "exclude_prior_source_ids_and_detector_4096s_blocks": true,
+    "minimum_ml_confidence": 0.95,
+    "minimum_snr": 7.5,
+    "morphologies": [
+      "Blip",
+      "KoiFish",
+      "ScatteredLight"
+    ],
+    "one_hash_priority_representative_per_detector_morphology_4096s_block": true,
+    "require_o3b_data_for_padded_window": true
+  },
+  "representative_selection": {
+    "method": "sha256_canonical_source_identity",
+    "seed": 12794460694692871216,
+    "seed_payload_digest": "b18f0e36bfddbc30db6d01a83ebc326eb52cae9a12c80fe9213e1d2d79238818"
+  },
+  "row_count": 7767,
+  "rows_digest": "d30f9f00bc2c9702b4a8ede78ce7326321b5e1e5407d996dd71313eed8068eff",
+  "schema_version": 1,
+  "snapshot_digest": "44da2673d2803207d4e77d0f785a9eb83c78f68efb811d7c4c78f254b44ee6d0",
+  "status": "FROZEN_FILTERED_SOURCE_IDENTITIES_NO_V4_OUTCOMES"
+}
