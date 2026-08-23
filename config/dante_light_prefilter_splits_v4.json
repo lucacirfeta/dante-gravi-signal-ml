@@ -1,9 +1,9 @@
 {
   "entries_reference": {
     "path": "config/dante_light_prefilter_splits_v4.jsonl",
-    "sha256": "be46b45297a4e70cf844828d44578e0e23607f7d010c052e18254a1c32761c4b"
+    "sha256": "35cdd2058a19a2e950121999aa752d82d61df86d7374d1cda01a6388aa0d5acf"
   },
-  "manifest_digest": "60e36d22d733ad4d5865e5c134d863735a07b2aaec1efaec98cfa93bf8c00a62",
+  "manifest_digest": "06ff9b535ef92509c08e92abe275f25a3051c1ee0de14973a14413013a71c301",
   "o4b_outcomes_used": [],
   "outcome_fields_present": [],
   "phase_features_extracted": [],
@@ -1535,17 +1535,17 @@
   },
   "protocol_reference": {
     "path": "config/dante_light_prefilter_protocol_v4.json",
-    "sha256": "18a2a713cc6fe1d68f686f2f6c13ca83b4c3596167b0f5b6538571398ecdf153"
+    "sha256": "e1891459d241d27fe34921a998ccfa4b9eeef27856fc00f994d083d1d6ede24a"
   },
   "schema_version": 1,
   "seed_derivation": {
     "method": "sha256_canonical_json_first_64_bits_big_endian",
     "parent_digests": [
       "0606c5e641fe72ca6721c94385691a0decf4ef4abbcce5c6cef19e385f6000d6",
-      "1377b45f7e2e9da1c1e29631c639c734ed894f69594b99efd12885f34500e3d4",
       "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
       "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609",
       "5c9ef604696a3b4cdd857854a73dda193f5b9160fcc406eb8eff01ed40c3135a",
+      "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008",
       "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28",
       "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12",
       "b9626d1f08ae3f45eee9ae1e89f84d844efc02d90c3e70d5cc7416129f62a745",
@@ -1565,16 +1565,16 @@
   },
   "selection_code_reference": {
     "path": "src/dante_light/prefilter_v4_freeze.py",
-    "sha256": "ea456e5a07c5ea977192752a882a434a20324548cd54bb0b1a90bfd1a7ca2aa4"
+    "sha256": "ee31944924f624fcb582e9b89c5e072b24f13672c010cdec41ef16f78ef46fda"
   },
   "source_references": [
     {
       "path": "config/dante_light_prefilter_v4_segments.json",
-      "sha256": "1377b45f7e2e9da1c1e29631c639c734ed894f69594b99efd12885f34500e3d4"
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
     },
     {
       "path": "config/dante_light_prefilter_v4_injection_trials.jsonl",
-      "sha256": "54cd1c002652adeb36390033c5cdf84b4bd1334ebab09c5f4389b4ade6ae01e4"
+      "sha256": "c2dd7d3c2ac4b1a2f52c72ad2f65544eaa2e235d44d3e9d326ddee1437bc01fc"
     },
     {
       "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",

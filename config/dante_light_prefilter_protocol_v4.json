@@ -147,7 +147,7 @@
       "sha256": "b9626d1f08ae3f45eee9ae1e89f84d844efc02d90c3e70d5cc7416129f62a745"
     }
   ],
-  "protocol_digest": "488153c4cab3eaf4d978ac41afd5343b081068734686d5f8ef96f801604f3cde",
+  "protocol_digest": "f9c41feb2b59b8adf08cb93d42643240b5a330571a1c651abb4952aa1be6d01d",
   "protocol_id": "dante-light-l4-prefilter-v4-phase-primary",
   "required_detectors": [
     "H1",
@@ -179,10 +179,10 @@
     "method": "sha256_canonical_json_first_64_bits_big_endian",
     "parent_digests": [
       "0606c5e641fe72ca6721c94385691a0decf4ef4abbcce5c6cef19e385f6000d6",
-      "1377b45f7e2e9da1c1e29631c639c734ed894f69594b99efd12885f34500e3d4",
       "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
       "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609",
       "5c9ef604696a3b4cdd857854a73dda193f5b9160fcc406eb8eff01ed40c3135a",
+      "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008",
       "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28",
       "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12",
       "b9626d1f08ae3f45eee9ae1e89f84d844efc02d90c3e70d5cc7416129f62a745",
@@ -200,10 +200,10 @@
       "bootstrap"
     ],
     "seeds": {
-      "audit": 15283161646156351584,
-      "bootstrap": 7032766403229355999,
-      "cohort": 3100354300156499461,
-      "injection": 11931611653383106488
+      "audit": 74732874346583942,
+      "bootstrap": 15197125648452230646,
+      "cohort": 16972943967686920513,
+      "injection": 17250363847813480324
     }
   },
   "source_contract": {
@@ -218,7 +218,7 @@
     ],
     "segment_snapshot": {
       "path": "config/dante_light_prefilter_v4_segments.json",
-      "sha256": "1377b45f7e2e9da1c1e29631c639c734ed894f69594b99efd12885f34500e3d4"
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
     }
   },
   "status": "FROZEN_OUTCOME_BLIND",
