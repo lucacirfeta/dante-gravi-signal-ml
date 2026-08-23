@@ -194,18 +194,39 @@ def build_development_ledger(
             "feature_contract_sha256":feature_contract_sha,"strain_sha256":prepared.strain_sha256,
             "features":asdict(prepared.features),"timings":prepared.timings,"preparation_metadata":prepared.metadata}
     pending=[task for task in tasks if task.window.window_id not in existing]
+    failures=[]
+    def failed(task: WindowTask, exc: Exception) -> None:
+        failures.append({
+            "window_id":task.window.window_id,
+            "cohort_id":task.payload["cohort_id"],
+            "source_id":task.payload["source"]["source_id"],
+            "exception_type":type(exc).__name__,
+            "reason":exc.reason.value if isinstance(exc,DeferredWindow) else str(exc),
+        })
     with partial.open("a",encoding="utf-8",newline="\n") as stream:
         if workers==1:
-            iterator=(one(task) for task in pending)
-            for window_id,row in iterator:
+            for task in pending:
+                try: window_id,row=one(task)
+                except Exception as exc: failed(task,exc); continue
                 stream.write(json.dumps(row,sort_keys=True,separators=(",",":"))+"\n"); stream.flush(); existing[window_id]=row
         else:
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 futures={pool.submit(one,task):task for task in pending}
                 for future in as_completed(futures):
-                    window_id,row=future.result()
+                    task=futures[future]
+                    try: window_id,row=future.result()
+                    except Exception as exc: failed(task,exc); continue
                     if window_id in existing: raise ContractError("duplicate concurrent v4 feature row")
                     stream.write(json.dumps(row,sort_keys=True,separators=(",",":"))+"\n"); stream.flush(); existing[window_id]=row
+    failure_path=output_dir/f"{role}_failures_v4_development.json"
+    if failures:
+        failure_body={"schema_version":4,"status":"V4_NOT_READY_INCOMPLETE_EXTRACTION","role":role,
+            "selection_partition":"development","confirmation_rows_accessed":[],"o4b_rows_accessed":[],
+            "failed_count":len(failures),"failures":sorted(failures,key=lambda row:row["window_id"])}
+        failure_body["artifact_digest"]=canonical_json_sha256(failure_body)
+        _write_json(failure_path,failure_body)
+        raise ContractError(f"v4 {role} extraction has {len(failures)} unresolved rows; see {failure_path}")
+    if failure_path.exists(): failure_path.unlink()
     if set(existing)!=expected_ids: raise ContractError("v4 development ledger incomplete")
     final_rows=[existing[task.window.window_id] for task in tasks]
     rows_path=output_dir/f"{role}_features_v4_development.jsonl"

@@ -9,12 +9,16 @@ import pytest
 
 from src.dante_light.contracts import ContractError, WindowIdentity, canonical_json_sha256
 from src.dante_light.prefilter_v4 import extract_prefilter_v4_features
+from src.dante_light.prefilter_v4 import PrefilterFeaturesV4
+from src.dante_light.prefilter_v4_development import build_development_ledger
 from src.dante_light.prefilter_v4_protocol import (
     PHASE_FEATURES,
     PrefilterProtocolV4,
     repository_reference,
+    load_protocol,
 )
 from src.dante_light.prefilter_v4_screening import screen_prefilter_v4
+from src.dante_light.preprocessing import PreparedPrefilterFeatures
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -204,3 +208,57 @@ def test_v4_screening_uses_only_primary_and_keeps_confirmation_sealed(tmp_path):
     assert result["o4b_outcomes_used"] == []
     assert result["routing_enabled"] is False
     assert result["next_stage"].startswith("await_explicit_authorization")
+
+
+def test_v4_concurrent_ledger_preserves_successes_and_retries_same_identities(tmp_path):
+    protocol = load_protocol(ROOT / "config/dante_light_prefilter_protocol_v4.json")
+    split = ROOT / "config/dante_light_prefilter_splits_v4.json"
+    calls = 0
+
+    def flaky(task):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise RuntimeError("synthetic transient")
+        return PreparedPrefilterFeatures(
+            features=PrefilterFeaturesV4({name: 0.1 for name in PHASE_FEATURES}),
+            strain_sha256="a" * 64,
+            timings={"feature_extraction_s": 0.001},
+        )
+
+    with pytest.raises(ContractError, match="1 unresolved rows"):
+        build_development_ledger(
+            root=ROOT,
+            split_path=split,
+            protocol=protocol,
+            role="background",
+            output_dir=tmp_path,
+            prepare=flaky,
+            workers=2,
+            limit=2,
+        )
+    partial = tmp_path / "background_features_v4_development.partial.jsonl"
+    assert len(partial.read_text(encoding="utf-8").splitlines()) == 1
+    assert (tmp_path / "background_failures_v4_development.json").is_file()
+
+    def stable(task):
+        return PreparedPrefilterFeatures(
+            features=PrefilterFeaturesV4({name: 0.2 for name in PHASE_FEATURES}),
+            strain_sha256="b" * 64,
+            timings={"feature_extraction_s": 0.001},
+        )
+
+    ledger = build_development_ledger(
+        root=ROOT,
+        split_path=split,
+        protocol=protocol,
+        role="background",
+        output_dir=tmp_path,
+        prepare=stable,
+        workers=2,
+        limit=2,
+    )
+    assert ledger["row_count"] == 2
+    assert ledger["status"] == "smoke_only"
+    assert not partial.exists()
+    assert not (tmp_path / "background_failures_v4_development.json").exists()
