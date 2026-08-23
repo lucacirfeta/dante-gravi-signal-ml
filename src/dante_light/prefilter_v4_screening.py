@@ -6,6 +6,7 @@ from collections import Counter
 import hashlib
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Mapping
 
 import numpy as np
@@ -38,6 +39,30 @@ def _sklearn_seed(seed: int) -> int:
     """Map the frozen unsigned 64-bit seed into sklearn's uint32 domain."""
 
     return int(seed) % (int(np.iinfo(np.uint32).max) + 1)
+
+
+def _v4_auc_diagnostics(
+    rows: list[dict[str, Any]],
+    target: np.ndarray,
+    scores: np.ndarray,
+    protocol: PrefilterProtocolV4,
+) -> dict[str, Any]:
+    """Reuse the audited bootstrap with the v4 development block contract."""
+
+    payload = dict(protocol.payload)
+    uncertainty = dict(payload["uncertainty"])
+    block_duration = int(payload["development"]["gps_block_duration_s"])
+    uncertainty["gps_block_duration_s"] = block_duration
+    payload["uncertainty"] = uncertainty
+    result = _auc_diagnostics(
+        rows,
+        target,
+        scores,
+        SimpleNamespace(payload=payload),
+        candidate="phase_primary",
+    )
+    result["gps_block_duration_s"] = block_duration
+    return result
 
 
 def _load_development_ledger(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -263,8 +288,8 @@ def screen_prefilter_v4(
         "oof_development_background_call_reduction": oof_reduction,
         "detectors": oof_points,
         "folds": fold_records,
-        "auc_diagnostics": _auc_diagnostics(
-            all_rows, target, oof_scores, protocol, candidate="phase_primary"
+        "auc_diagnostics": _v4_auc_diagnostics(
+            all_rows, target, oof_scores, protocol
         ),
     }
 

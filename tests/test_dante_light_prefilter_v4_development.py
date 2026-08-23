@@ -132,7 +132,6 @@ def _protocol() -> PrefilterProtocolV4:
         },
         "audit": {"fraction": 0.05, "seed": 1729},
         "uncertainty": {
-            "gps_block_duration_s": 4096,
             "n_resamples": 20,
             "confidence": 0.95,
             "seed": 2718,
