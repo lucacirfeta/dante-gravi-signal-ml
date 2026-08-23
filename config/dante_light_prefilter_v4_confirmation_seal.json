@@ -28,7 +28,7 @@
       "root_id": "raw_strain"
     }
   ],
-  "freeze_commit": "7d8eb1f41c8b64907f984449317484c0194708b2",
+  "freeze_commit": "7a1f539095587d94c6e99f27e8869f2a48bc359c",
   "initial_access_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "manifest_digest": "804551eac43f33ef419d2c6feb778e535adfccfda726917bfa5f6d29ff7af265",
   "protocol_reference": {
@@ -44,6 +44,6 @@
     "sha256": "d519e99854197b20f5c8e57da6b14d3680bd1bf0710a9eb3e9bd64cc1eddbb68"
   },
   "schema_version": 1,
-  "seal_digest": "c430fea0d878191b258e6e15209e0c5a07b1260e5a7b8480ab1d3e7f69b8d91b",
+  "seal_digest": "461d106179a22fe70b81205a72d617b82d37445005040d1d068db1a89461f998",
   "status": "SEALED_NOT_OPENED"
 }
