@@ -1,9 +1,9 @@
 {
   "entries_reference": {
     "path": "config/dante_light_prefilter_splits_v4.jsonl",
-    "sha256": "8215e1307b1df6218dc296139dadaccbc898110551122307552e2e7e933fd45d"
+    "sha256": "a6bfc44dc1005953758e492d023acf03e17627bd93da550443851e9dca74e848"
   },
-  "manifest_digest": "3cca5282cb4facfa56a1b51c61daed1f6833c44819b35b1b349a762c72598abe",
+  "manifest_digest": "ea6b750d32e3239eae216908b93dd5e029ca816b70de8dd27aa4be48ffd444bf",
   "o4b_outcomes_used": [],
   "outcome_fields_present": [],
   "phase_features_extracted": [],
@@ -1535,18 +1535,18 @@
   },
   "protocol_reference": {
     "path": "config/dante_light_prefilter_protocol_v4.json",
-    "sha256": "93d66ea7d836212492424470966056f964bda396ff7456ba47d2c249f79271b4"
+    "sha256": "9e6b89146e63cd7717e1fcd56c6bddb6f5337ca739863f5b3bfae9e5a8ae7f42"
   },
   "schema_version": 1,
   "seed_derivation": {
     "method": "sha256_canonical_json_first_64_bits_big_endian",
     "parent_digests": [
       "0606c5e641fe72ca6721c94385691a0decf4ef4abbcce5c6cef19e385f6000d6",
+      "140c58ddcd2a1bc90c732ebc2e3a38dabd6a759238f9f139c1cce1a4e19fee3c",
       "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
       "3643a80be97607a06e8c4e159c607450050f440dac30437fe8bbfb650bb55f69",
       "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609",
       "5c9ef604696a3b4cdd857854a73dda193f5b9160fcc406eb8eff01ed40c3135a",
-      "6ebe2e18ede89ac78786191ff94f6f42b80bc10476ce6f251cc6403906239f2a",
       "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008",
       "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28",
       "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12",
@@ -1565,7 +1565,7 @@
   },
   "selection_code_reference": {
     "path": "src/dante_light/prefilter_v4_freeze.py",
-    "sha256": "e9e00f500379b4b3d598511d8cdf516d96a3dd5904718d9f5ed671e3b4917760"
+    "sha256": "2d582381d3f5560735c3df2f8dcaae98e3027c0718838d6abd8e04ba5b34cc8f"
   },
   "source_references": [
     {
@@ -1574,7 +1574,7 @@
     },
     {
       "path": "config/dante_light_prefilter_v4_injection_trials.jsonl",
-      "sha256": "a55a40a3410d577bc708ea69634932a321d2ce0b47c1da3683a10c5a885c3a55"
+      "sha256": "fd167caea003d6d21d3ebe65d4592e50b7b428034479558cb07a6d6515c2a6ff"
     },
     {
       "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",

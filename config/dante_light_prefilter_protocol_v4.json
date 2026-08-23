@@ -1,4 +1,8 @@
 {
+  "audit": {
+    "fraction": 0.05,
+    "seed": 15621696242067692811
+  },
   "cohort_contract": {
     "block_duration_s": 4096,
     "counts_per_detector_stratum": {
@@ -56,16 +60,35 @@
     "cross_validation_method": "shuffled_group_k_fold_detector_4096s_block",
     "failed_primary_status": "V4_NOT_READY_NO_SAME_COHORT_RETUNING",
     "feature_subset_selection_allowed": false,
+    "final_calibration_method": "full_development_model_threshold_on_full_development",
+    "gps_block_duration_s": 4096,
     "maximum_iterations": 2000,
     "minimum_effective_reduction": 0.5,
+    "minimum_group_n_by_role": {
+      "injection": 35,
+      "known_glitch": 25,
+      "robust_candidate": 25
+    },
+    "minimum_retention_by_role": {
+      "injection": 0.9,
+      "known_glitch": 0.9,
+      "robust_candidate": 0.9
+    },
+    "minimum_wilson_lower_by_role": {
+      "injection": 0.8,
+      "known_glitch": 0.8,
+      "robust_candidate": 0.8
+    },
     "model": "l2_logistic_regression",
-    "regularization_c": 1.0
+    "regularization_c": 1.0,
+    "wilson_confidence": 0.95
   },
   "feature_extraction": {
     "analysis_band_hz": [
       20.0,
       1024.0
     ],
+    "analysis_duration_s": 32.0,
     "canonical_sequence": [
       "fetch_padded_strain",
       "whiten_context_pad_4s",
@@ -93,6 +116,37 @@
     },
     "sample_rate_hz": 4096,
     "whitening_context_pad_s": 4.0
+  },
+  "injection_waveform_contract": {
+    "approximant": "IMRPhenomD",
+    "generator_source": {
+      "path": "src/pipeline_v2_production/astrophysical_injection.py",
+      "sha256": "e1204a2d0f288b554d05ad2ef802b14452a84905142bd2b9f547a509f654df95"
+    },
+    "placement": "geocentric_merger_at_window_midpoint_plus_detector_delay",
+    "purpose": "legacy_comparability_isolating_phase_representation",
+    "sample_rate_hz": 4096,
+    "snr_role": "diagnostic_only_never_selection_or_gate",
+    "systems": {
+      "BBH_10_10": {
+        "f_low_hz": 25.0,
+        "mass_1_msun": 10.0,
+        "mass_2_msun": 10.0
+      },
+      "BBH_30_30": {
+        "f_low_hz": 20.0,
+        "mass_1_msun": 30.0,
+        "mass_2_msun": 30.0
+      },
+      "NSBH_10_1.4": {
+        "f_low_hz": 30.0,
+        "mass_1_msun": 10.0,
+        "mass_2_msun": 1.4,
+        "physical_scope": "point_particle_comparability_control_only",
+        "tidal_effects_included": false
+      }
+    },
+    "window_duration_s": 32.0
   },
   "o4b": {
     "status": "SEALED_OUTSIDE_V4_DEVELOPMENT_AND_CONFIRMATION"
@@ -136,10 +190,10 @@
     },
     {
       "path": "docs/DANTE_LIGHT_L4_PREFILTER_V4_PHASE_FREEZE_PROPOSAL_2026-08-23.md",
-      "sha256": "6ebe2e18ede89ac78786191ff94f6f42b80bc10476ce6f251cc6403906239f2a"
+      "sha256": "140c58ddcd2a1bc90c732ebc2e3a38dabd6a759238f9f139c1cce1a4e19fee3c"
     }
   ],
-  "protocol_digest": "cf68ec41bc659fd6e0cdab983ce38b3df6a5f72fd72338a5efa2761324d95268",
+  "protocol_digest": "b9e43801f091413a13b45cda40f39c0e3b070385bb3ec12d2cca2137167fef61",
   "protocol_id": "dante-light-l4-prefilter-v4-phase-primary",
   "required_detectors": [
     "H1",
@@ -160,7 +214,13 @@
   "schema_version": 4,
   "scientific_boundary": {
     "confirmation_outcomes_accessed_at_freeze": false,
+    "does_not_establish": [
+      "sensitivity_to_physical_NSBH_waveforms_with_tidal_effects",
+      "sensitivity_to_precessing_or_higher_mode_CBC_waveforms",
+      "astrophysical_sensitivity_or_operational_routing_readiness"
+    ],
     "external_known_glitch_run": "O3B",
+    "nsbh_injection_limitation": "IMRPhenomD treats the NSBH benchmark as point-particle aligned-spin inspiral-merger-ringdown and omits neutron-star tidal effects",
     "o4b_outcomes_allowed": false,
     "primary_development_run": "O4A",
     "prior_v1_v3_interpretation": "EXPLORATORY_FOR_V4",
@@ -171,11 +231,11 @@
     "method": "sha256_canonical_json_first_64_bits_big_endian",
     "parent_digests": [
       "0606c5e641fe72ca6721c94385691a0decf4ef4abbcce5c6cef19e385f6000d6",
+      "140c58ddcd2a1bc90c732ebc2e3a38dabd6a759238f9f139c1cce1a4e19fee3c",
       "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca",
       "3643a80be97607a06e8c4e159c607450050f440dac30437fe8bbfb650bb55f69",
       "37fa7c768fe66f2118e110c4d8a4024ca06caad34f5e4dc9552cf8c7bcc88609",
       "5c9ef604696a3b4cdd857854a73dda193f5b9160fcc406eb8eff01ed40c3135a",
-      "6ebe2e18ede89ac78786191ff94f6f42b80bc10476ce6f251cc6403906239f2a",
       "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008",
       "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28",
       "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12",
@@ -192,10 +252,10 @@
       "bootstrap"
     ],
     "seeds": {
-      "audit": 5709403499475046035,
-      "bootstrap": 260170201648854045,
-      "cohort": 14892997723964161560,
-      "injection": 7772599308299835324
+      "audit": 15621696242067692811,
+      "bootstrap": 8299165393489582,
+      "cohort": 10133760211474444922,
+      "injection": 6052385332562858808
     }
   },
   "source_contract": {
@@ -233,6 +293,7 @@
     "confidence": 0.95,
     "eligible_for_gate": false,
     "method": "detector_gps_4096s_block_bootstrap",
-    "n_resamples": 2000
+    "n_resamples": 2000,
+    "seed": 8299165393489582
   }
 }
