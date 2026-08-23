@@ -15,6 +15,12 @@ Changing a criterion without freezing a new protocol fails closed.
 The compact robust-candidate manifest allows split regeneration without the
 312 MB P5 token cache while preserving its source SHA256 and candidate order.
 
+The v4 work is currently a label-blind feasibility study, not a fourth frozen
+protocol. It has not selected a candidate, enabled routing, opened the reserved
+confirmation cohort, or inspected O4b outcomes. Its methods, corrected cost
+accounting, results, commands, and limitations are recorded in
+`docs/DANTE_LIGHT_L4_PREFILTER_V4_FEASIBILITY_2026-08-23.md`.
+
 ## Output location
 
 The scripts never write into historical `data/production` implicitly. Every

@@ -1,0 +1,272 @@
+{
+  "candidate_selected": false,
+  "config": {
+    "path": "config\\dante_light_prefilter_v4_feasibility.json",
+    "sha256": "e183d896e86a9449cb11acdb665378f336d709afd310a1249fcb9d1e0e8a6939"
+  },
+  "environment": {
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 5070",
+    "logical_cpu_count": 16,
+    "numpy": "2.4.5",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+    "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]",
+    "scipy": "1.17.1",
+    "torch": "2.12.0.dev20260408+cu128"
+  },
+  "outcome_access": {
+    "development_labels": false,
+    "o4b": false,
+    "reserved_confirmation": false
+  },
+  "phase_probe": {
+    "interpretation": "Synthetic behavior and runtime only; no discriminative or retention claim.",
+    "noise_control_distribution": {
+      "phase_accumulation_cycles": {
+        "count": 64,
+        "maximum": 14622.124638040175,
+        "mean": 14367.741486937119,
+        "median": 14398.391008979925,
+        "p95": 14540.35195008322
+      },
+      "phase_cubic_circular_residual": {
+        "count": 64,
+        "maximum": 0.9867693610396824,
+        "mean": 0.9193921458003936,
+        "median": 0.9266353188985226,
+        "p95": 0.9788404679238668
+      },
+      "phase_frequency_positive_step_fraction": {
+        "count": 64,
+        "maximum": 0.5793650793650794,
+        "mean": 0.49677579365079366,
+        "median": 0.49206349206349204,
+        "p95": 0.5555555555555556
+      },
+      "phase_frequency_time_spearman": {
+        "count": 64,
+        "maximum": 0.26482822459692534,
+        "mean": -0.011368513017904015,
+        "median": -0.01599995313085864,
+        "p95": 0.18847985798650152
+      },
+      "phase_inspiral_coordinate_residual": {
+        "count": 64,
+        "maximum": 0.24140340714057718,
+        "mean": 0.19675623233378736,
+        "median": 0.1957307553313859,
+        "p95": 0.23230134378295234
+      },
+      "phase_valid_frame_fraction": {
+        "count": 64,
+        "maximum": 0.5,
+        "mean": 0.5,
+        "median": 0.5,
+        "p95": 0.5
+      }
+    },
+    "phase_scrambled_control_distribution": {
+      "phase_accumulation_cycles": {
+        "count": 64,
+        "maximum": 5987.847424453397,
+        "mean": 5868.0700180981585,
+        "median": 5870.092748243138,
+        "p95": 5972.553358783092
+      },
+      "phase_cubic_circular_residual": {
+        "count": 64,
+        "maximum": 0.9889787984653856,
+        "mean": 0.9248726012767027,
+        "median": 0.9257529822402963,
+        "p95": 0.9784400005114857
+      },
+      "phase_frequency_positive_step_fraction": {
+        "count": 64,
+        "maximum": 0.5555555555555556,
+        "mean": 0.4935515873015873,
+        "median": 0.49603174603174605,
+        "p95": 0.5396825396825397
+      },
+      "phase_frequency_time_spearman": {
+        "count": 64,
+        "maximum": 0.2855561023622047,
+        "mean": -0.016088565101237344,
+        "median": -0.026094394450693663,
+        "p95": 0.2079539862204724
+      },
+      "phase_inspiral_coordinate_residual": {
+        "count": 64,
+        "maximum": 0.23722220589015922,
+        "mean": 0.18180167453596857,
+        "median": 0.182592135847864,
+        "p95": 0.22123742072818084
+      },
+      "phase_valid_frame_fraction": {
+        "count": 64,
+        "maximum": 0.5,
+        "mean": 0.5,
+        "median": 0.5,
+        "p95": 0.5
+      }
+    },
+    "synthetic_features": {
+      "noise": {
+        "phase_accumulation_cycles": 14509.733735629521,
+        "phase_cubic_circular_residual": 0.8240875955693054,
+        "phase_frequency_positive_step_fraction": 0.5,
+        "phase_frequency_time_spearman": -0.14450928008998876,
+        "phase_inspiral_coordinate_residual": 0.2101242301712639,
+        "phase_valid_frame_fraction": 0.5
+      },
+      "ordered_chirp": {
+        "phase_accumulation_cycles": 6688.472427095488,
+        "phase_cubic_circular_residual": 0.0057938579825886904,
+        "phase_frequency_positive_step_fraction": 0.8666666666666667,
+        "phase_frequency_time_spearman": 0.8393849071941468,
+        "phase_inspiral_coordinate_residual": 0.07142057034786814,
+        "phase_valid_frame_fraction": 0.4763779527559055
+      },
+      "phase_scrambled": {
+        "phase_accumulation_cycles": 5426.001389406507,
+        "phase_cubic_circular_residual": 0.9465791401465841,
+        "phase_frequency_positive_step_fraction": 0.48412698412698413,
+        "phase_frequency_time_spearman": 0.19705544619422574,
+        "phase_inspiral_coordinate_residual": 0.19307400603649652,
+        "phase_valid_frame_fraction": 0.5
+      }
+    },
+    "timing": {
+      "count": 100,
+      "maximum_s": 0.013389400000050955,
+      "mean_s": 0.012393537000004926,
+      "median_s": 0.012356700000054843,
+      "p95_s": 0.012848179999866715
+    }
+  },
+  "protocol_frozen": false,
+  "routing_enabled": false,
+  "schema_version": 1,
+  "source_sha256": {
+    "phase_module": "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12",
+    "runner": "d2e129058fcfae23bf88fb2494f64818d550f0aed7fe88574029b882b5db0ee5",
+    "student_module": "b6be0b5a6dae256fcbeff8cba66703ba8c5efc62c4f1f8960e222712d1f74019"
+  },
+  "status": "COMPLETE_FEASIBILITY_ONLY",
+  "student_probe": {
+    "benchmarks": {
+      "complex_stft_preprocessing_cpu": {
+        "count": 100,
+        "maximum_s": 0.0022136000000045897,
+        "mean_s": 0.0019504549999987831,
+        "median_s": 0.0019911000000547574,
+        "p95_s": 0.0021816150000063318
+      },
+      "cpu": {
+        "complex_stft_2d_proxy": {
+          "timings_by_batch": {
+            "1": {
+              "transfer_and_inference_excluding_stft": {
+                "count": 100,
+                "maximum_s": 0.0007884999999987485,
+                "mean_per_window_s": 0.0004765860000043176,
+                "mean_s": 0.0004765860000043176,
+                "median_s": 0.00045005000004039175,
+                "p95_s": 0.0006491000001346947
+              }
+            },
+            "16": {
+              "transfer_and_inference_excluding_stft": {
+                "count": 100,
+                "maximum_s": 0.0016293999999561493,
+                "mean_per_window_s": 6.289006250085549e-05,
+                "mean_s": 0.0010062410000136878,
+                "median_s": 0.0010007500000028813,
+                "p95_s": 0.0012044449999393692
+              }
+            }
+          },
+          "trainable_parameters": 1369
+        },
+        "raw_1d_depthwise_proxy": {
+          "timings_by_batch": {
+            "1": {
+              "transfer_and_inference": {
+                "count": 100,
+                "maximum_s": 0.0014447999999447347,
+                "mean_per_window_s": 0.0009423269999888362,
+                "mean_s": 0.0009423269999888362,
+                "median_s": 0.0009632500000407163,
+                "p95_s": 0.0011790350000069338
+              }
+            },
+            "16": {
+              "transfer_and_inference": {
+                "count": 100,
+                "maximum_s": 0.004354499999863037,
+                "mean_per_window_s": 0.00023906193750079297,
+                "mean_s": 0.0038249910000126876,
+                "median_s": 0.0038579499999968903,
+                "p95_s": 0.004172135000010258
+              }
+            }
+          },
+          "trainable_parameters": 3665
+        }
+      },
+      "cuda": {
+        "complex_stft_2d_proxy": {
+          "timings_by_batch": {
+            "1": {
+              "transfer_and_inference_excluding_stft": {
+                "count": 100,
+                "maximum_s": 0.0006153000001631881,
+                "mean_per_window_s": 0.00043493699999544336,
+                "mean_s": 0.00043493699999544336,
+                "median_s": 0.00042754999992666853,
+                "p95_s": 0.0005058249999137842
+              }
+            },
+            "16": {
+              "transfer_and_inference_excluding_stft": {
+                "count": 100,
+                "maximum_s": 0.0011916999999357358,
+                "mean_per_window_s": 4.9499812499931296e-05,
+                "mean_s": 0.0007919969999989007,
+                "median_s": 0.000754200000073979,
+                "p95_s": 0.0009877350000010664
+              }
+            }
+          },
+          "trainable_parameters": 1369
+        },
+        "raw_1d_depthwise_proxy": {
+          "timings_by_batch": {
+            "1": {
+              "transfer_and_inference": {
+                "count": 100,
+                "maximum_s": 0.00091759999986607,
+                "mean_per_window_s": 0.0006056160000002819,
+                "mean_s": 0.0006056160000002819,
+                "median_s": 0.0005814500000269618,
+                "p95_s": 0.0008193999999321021
+              }
+            },
+            "16": {
+              "transfer_and_inference": {
+                "count": 100,
+                "maximum_s": 0.0012974999999642023,
+                "mean_per_window_s": 5.547037500065244e-05,
+                "mean_s": 0.000887526000010439,
+                "median_s": 0.0008651499999814405,
+                "p95_s": 0.0011176150001688256
+              }
+            }
+          },
+          "trainable_parameters": 3665
+        }
+      }
+    },
+    "interpretation": "Random-weight inference cost only; no learnability, fidelity, or retention claim."
+  }
+}
