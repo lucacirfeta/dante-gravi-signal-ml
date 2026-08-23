@@ -28,6 +28,10 @@ def test_repository_reference_uses_canonical_git_blob_across_line_endings(tmp_pa
     subprocess.run(["git","init","-q"],cwd=tmp_path,check=True)
     subprocess.run(["git","config","user.name","Test"],cwd=tmp_path,check=True)
     subprocess.run(["git","config","user.email","test@example.invalid"],cwd=tmp_path,check=True)
+    # Model a Windows checkout. Without this conversion contract, replacing LF
+    # with CRLF is correctly a manual worktree edit rather than an equivalent
+    # checkout representation, and repository_reference must hash the bytes.
+    subprocess.run(["git","config","core.autocrlf","true"],cwd=tmp_path,check=True)
     path=tmp_path/"sample.py"; path.write_bytes(b"a=1\nb=2\n")
     subprocess.run(["git","add","sample.py"],cwd=tmp_path,check=True)
     subprocess.run(["git","commit","-q","-m","fixture"],cwd=tmp_path,check=True)
