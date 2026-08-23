@@ -1,0 +1,34 @@
+{
+  "confirmation_rows_accessed": [],
+  "expected_full_row_count": 600,
+  "extraction_workers": 6,
+  "feature_contract_sha256": "07d9d5b1357959d252cb156c0f383f967e1ab30e4844a9ec328486933abca62f",
+  "ledger_digest": "358a0410664f33a227476896e08f087d01427758a85cab822c7a580b923e2ee6",
+  "manifest_digest": "9b0cafdb49d954c0399a4f45a47b785b1f59e10b6e4ce390c40c6a9ce1478363",
+  "o4b_rows_accessed": [],
+  "outcome_fields_used_for_feature_extraction": [],
+  "protocol": {
+    "path": "config/dante_light_prefilter_protocol_v4.json",
+    "sha256": "9e6b89146e63cd7717e1fcd56c6bddb6f5337ca739863f5b3bfae9e5a8ae7f42"
+  },
+  "public_split_header_digest": "ea6b750d32e3239eae216908b93dd5e029ca816b70de8dd27aa4be48ffd444bf",
+  "role": "background",
+  "row_count": 600,
+  "rows_path": "background_features_v4_development.jsonl",
+  "rows_sha256": "b3f377e9f7ecd91541220890e8cd6c7b1235a8133ba58816c89c739546859af2",
+  "schema_version": 4,
+  "scientific_mode": "v4_frozen_development_only_feature_extraction",
+  "selection_limit": null,
+  "selection_partitions": [
+    "development"
+  ],
+  "source_split_entries": {
+    "path": "config/dante_light_prefilter_splits_v4.jsonl",
+    "sha256": "a6bfc44dc1005953758e492d023acf03e17627bd93da550443851e9dca74e848"
+  },
+  "source_split_header": {
+    "path": "config/dante_light_prefilter_splits_v4.json",
+    "sha256": "72a76adcaf02d8042c2c479d48236710a6aa8a090adc77f16238b088adf08fba"
+  },
+  "status": "complete"
+}
