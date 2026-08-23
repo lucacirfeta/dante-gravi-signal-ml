@@ -355,6 +355,8 @@ scripts/*
 !scripts/audit_dante_light_prefilter_v3_cost.py
 !scripts/verify_dante_light_prefilter_v4_feasibility.py
 !scripts/analyze_dante_light_prefilter_v4_power.py
+!scripts/build_dante_light_prefilter_v4_freeze.py
+!scripts/verify_dante_light_prefilter_v4_freeze.py
 
 tmp
 archive/

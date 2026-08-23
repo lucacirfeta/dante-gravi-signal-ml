@@ -171,7 +171,7 @@ def build_identity_manifest(
     _validate_row_set(normalized, prior_block_keys=prior)
     if set(seed_derivation) != {"method", "protocol_id", "purposes", "parent_digests"}:
         raise ContractError("seed derivation contract is incomplete")
-    if seed_derivation["method"] != "sha256_first_64_bits":
+    if seed_derivation["method"] != "sha256_canonical_json_first_64_bits_big_endian":
         raise ContractError("v4 seeds must use the proposed deterministic derivation")
     references = [
         _reference(reference, f"source_references[{index}]")

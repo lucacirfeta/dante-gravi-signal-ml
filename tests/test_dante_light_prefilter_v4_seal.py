@@ -57,7 +57,7 @@ def _manifest():
         source_references=[{"path": "data/source.json", "sha256": SHA}],
         selection_code_reference={"path": "src/builder.py", "sha256": SHA},
         seed_derivation={
-            "method": "sha256_first_64_bits",
+            "method": "sha256_canonical_json_first_64_bits_big_endian",
             "protocol_id": "v4-test",
             "purposes": ["cohort"],
             "parent_digests": [SHA],
@@ -109,7 +109,7 @@ def test_identity_manifest_rejects_outcome_fields_and_prior_blocks():
             source_references=[],
             selection_code_reference={"path": "src/builder.py", "sha256": SHA},
             seed_derivation={
-                "method": "sha256_first_64_bits",
+                "method": "sha256_canonical_json_first_64_bits_big_endian",
                 "protocol_id": "v4-test",
                 "purposes": ["cohort"],
                 "parent_digests": [SHA],
@@ -125,7 +125,7 @@ def test_identity_manifest_rejects_outcome_fields_and_prior_blocks():
             source_references=[],
             selection_code_reference={"path": "src/builder.py", "sha256": SHA},
             seed_derivation={
-                "method": "sha256_first_64_bits",
+                "method": "sha256_canonical_json_first_64_bits_big_endian",
                 "protocol_id": "v4-test",
                 "purposes": ["cohort"],
                 "parent_digests": [SHA],
@@ -145,7 +145,7 @@ def test_development_confirmation_block_overlap_fails_closed():
             source_references=[],
             selection_code_reference={"path": "src/builder.py", "sha256": SHA},
             seed_derivation={
-                "method": "sha256_first_64_bits",
+                "method": "sha256_canonical_json_first_64_bits_big_endian",
                 "protocol_id": "v4-test",
                 "purposes": ["cohort"],
                 "parent_digests": [SHA],

@@ -132,6 +132,13 @@ facts inferred from opened outcomes.
 | 60 | 55 | 0.917 | **0.921** |
 | 90 | 81 | 0.900 | **0.985** |
 
+The n=90 boundary is a useful compound-gate check. At 80 retained events the
+Wilson lower bound is 0.8074 and therefore clears 0.80, but the point estimate
+is 80/90=0.8889 and fails the separate 0.90 retention requirement. Both gates
+are joined by AND, so the first passing count is 81 and
+P(K>=81 | p=0.95)=0.98548. The value P(K>=80)=0.99471 describes the
+Wilson-only event and is not the frozen confirmation endpoint.
+
 The old n=18 and n=20 confirmation strata are therefore substantially
 underpowered even when true retention is 0.95. The smallest integer n reaching
 the proposed 90% power target is 47, but binomial/Wilson gates have discrete
