@@ -67,6 +67,18 @@ def verify() -> dict[str,object]:
     protocol=load_protocol(ROOT/"config/dante_light_prefilter_protocol_v4.json").payload
     for ref in protocol["parent_evidence"]: _reference(ref)
     _reference(protocol["source_contract"]["segment_snapshot"])
+    for ref in protocol["source_contract"]["gravity_spy_filtered_snapshot"]: _reference(ref)
+    known_header_ref,known_entries_ref=protocol["source_contract"]["gravity_spy_filtered_snapshot"]
+    known_header=json.loads((ROOT/known_header_ref["path"]).read_text(encoding="utf-8"))
+    known_rows=[json.loads(line) for line in (ROOT/known_entries_ref["path"]).read_text(encoding="utf-8").splitlines() if line.strip()]
+    if known_header["snapshot_digest"]!=canonical_json_sha256({k:v for k,v in known_header.items() if k!="snapshot_digest"}):
+        raise ContractError("known-glitch source snapshot header digest mismatch")
+    if known_header["entries_reference"]!=known_entries_ref or known_header["row_count"]!=len(known_rows):
+        raise ContractError("known-glitch source snapshot entries/count mismatch")
+    if known_header["rows_digest"]!=canonical_json_sha256(known_rows):
+        raise ContractError("known-glitch source snapshot rows digest mismatch")
+    if any(set(row)!={"detector","event_time","gravityspy_id","ml_confidence","morphology","snr"} for row in known_rows):
+        raise ContractError("known-glitch compact source contains unexpected fields")
     snapshot=json.loads((ROOT/protocol["source_contract"]["segment_snapshot"]["path"]).read_text(encoding="utf-8")); _validate_segment_snapshot(snapshot)
     header_path=ROOT/"config/dante_light_prefilter_splits_v4.json"; header=json.loads(header_path.read_text(encoding="utf-8"))
     _reference(header["protocol_reference"]); _reference(header["selection_code_reference"])

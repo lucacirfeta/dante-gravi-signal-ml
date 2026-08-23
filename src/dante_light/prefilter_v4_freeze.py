@@ -30,6 +30,11 @@ WINDOW_S = 32.0
 PAD_S = 4.0
 O4A_BOUNDS = (1368975618, 1389456018)
 O3B_BOUNDS = (1256655618, 1269363618)
+GRAVITY_SPY_ZENODO_RECORD = "5649212"
+GRAVITY_SPY_SHA256 = {
+    "H1": "f17ae6344220d985ddaf134481a9074f89c5dd2fcf345870b20381c008d7cb04",
+    "L1": "dd2e66c2afbdb6a80aec9081a9bfd29b577cf3f6e9c2d289300de33fc6c2c04a",
+}
 
 
 def _priority(seed: int, *parts: object) -> str:
@@ -115,6 +120,59 @@ def validate_segment_snapshot(value: Mapping[str, Any]) -> dict[str, Any]:
     return dict(value)
 
 
+def build_known_source_snapshot(root: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Compact the public O3b catalogues to the predeclared selection fields."""
+
+    rows: list[dict[str, Any]] = []
+    sources: dict[str, Any] = {}
+    for detector in DETECTORS:
+        path = root / f"data/reference/gs_classifications_O3b_{detector}.csv"
+        if not path.is_file() or sha256_path(path) != GRAVITY_SPY_SHA256[detector]:
+            raise ContractError(f"Gravity Spy source missing or hash-mismatched for {detector}")
+        sources[detector] = {
+            "zenodo_record": GRAVITY_SPY_ZENODO_RECORD,
+            "filename": path.name,
+            "sha256": GRAVITY_SPY_SHA256[detector],
+        }
+        with path.open(newline="", encoding="utf-8") as stream:
+            for source in csv.DictReader(stream):
+                label = str(source["ml_label"])
+                morphology = next((m for m in KNOWN if KNOWN_LABEL[m] == label), None)
+                if morphology is None or source["ifo"] != detector:
+                    continue
+                confidence = float(source["ml_confidence"]); snr = float(source["snr"])
+                if confidence < 0.95 or snr < 7.5:
+                    continue
+                rows.append({
+                    "detector": detector,
+                    "event_time": float(source["event_time"]),
+                    "gravityspy_id": str(source["gravityspy_id"]),
+                    "morphology": morphology,
+                    "ml_confidence": confidence,
+                    "snr": snr,
+                })
+    rows.sort(key=lambda row: (row["detector"], row["morphology"], row["gravityspy_id"]))
+    body = {
+        "schema_version": 1,
+        "status": "FROZEN_FILTERED_SOURCE_IDENTITIES_NO_V4_OUTCOMES",
+        "external_sources": sources,
+        "filter": {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5},
+        "row_count": len(rows),
+        "rows_digest": canonical_json_sha256(rows),
+    }
+    return {**body, "snapshot_digest": canonical_json_sha256(body)}, rows
+
+
+def validate_known_source_snapshot(header: Mapping[str, Any], rows: Sequence[Mapping[str, Any]]) -> None:
+    body = dict(header); declared = body.pop("snapshot_digest", None)
+    if declared != canonical_json_sha256(body) or header.get("status") != "FROZEN_FILTERED_SOURCE_IDENTITIES_NO_V4_OUTCOMES":
+        raise ContractError("known-glitch source snapshot digest/status mismatch")
+    if header["row_count"] != len(rows) or header["rows_digest"] != canonical_json_sha256(rows):
+        raise ContractError("known-glitch source snapshot rows mismatch")
+    if header["filter"] != {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5}:
+        raise ContractError("known-glitch source filter changed")
+
+
 def prior_exclusions(root: Path) -> tuple[set[str], set[str], set[str]]:
     blocks: set[str] = set(); windows: set[str] = set(); source_ids: set[str] = set()
     for path in sorted((root / "config").glob("dante_light_prefilter_splits_v[12].jsonl")):
@@ -176,19 +234,15 @@ def select_robust(root: Path, segments: Mapping[str, Any], seed: int,
     return rows, occupied
 
 
-def select_known(root: Path, segments: Mapping[str, Any], seed: int, prior_blocks: set[str],
+def select_known(catalog: Sequence[Mapping[str, Any]], segments: Mapping[str, Any], seed: int, prior_blocks: set[str],
                  prior_source_ids: set[str]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []; occupied = set(prior_blocks)
     for detector in DETECTORS:
-        path = root / f"data/reference/gs_classifications_O3b_{detector}.csv"
-        with path.open(newline="", encoding="utf-8") as stream: catalog = list(csv.DictReader(stream))
         segs = segments[f"{detector}_O3B_DATA"]["segments"]
         pool: list[dict[str, Any]] = []
         for source in catalog:
-            sid = str(source["gravityspy_id"]); label = str(source["ml_label"])
-            morphology = next((m for m in KNOWN if KNOWN_LABEL[m] == label), None)
-            if morphology is None or sid in prior_source_ids or source["ifo"] != detector: continue
-            if float(source["ml_confidence"]) < 0.95 or float(source["snr"]) < 7.5: continue
+            sid = str(source["gravityspy_id"]); morphology = str(source["morphology"])
+            if morphology not in KNOWN or sid in prior_source_ids or source["detector"] != detector: continue
             event = float(source["event_time"]); gps = event - 16.0; block = _block(detector, gps)
             if block in occupied or not _contained(segs, gps - PAD_S, gps + WINDOW_S + PAD_S): continue
             pool.append({"gps": gps, "source_id": sid, "morphology": morphology,
@@ -275,7 +329,11 @@ def _ref(root: Path, relative: str) -> dict[str, str]:
     return repository_reference(root, root / relative)
 
 
-def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str, Any]:
+def build_protocol(
+    root: Path,
+    segment_reference: Mapping[str, str],
+    known_source_references: Sequence[Mapping[str, str]],
+) -> dict[str, Any]:
     parent_paths = [
         "config/dante_light_prefilter_protocol_v3.json",
         "config/dante_light_prefilter_v4_feasibility.json",
@@ -283,15 +341,13 @@ def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str
         "config/dante_light_prefilter_v4_power_analysis.json",
         "artifacts/dante_light/prefilter_l4_v4_design/confirmation_power_analysis_v4.json",
         "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
-        "data/reference/gs_classifications_O3b_H1.csv",
-        "data/reference/gs_classifications_O3b_L1.csv",
         "config/dante_light_prefilter_splits_v1.jsonl",
         "config/dante_light_prefilter_splits_v2.jsonl",
         "src/dante_light/prefilter_v4_phase.py",
         "docs/DANTE_LIGHT_L4_PREFILTER_V4_PHASE_FREEZE_PROPOSAL_2026-08-23.md",
     ]
     parents=[_ref(root,path) for path in parent_paths]
-    parent_digests=[x["sha256"] for x in parents] + [str(segment_reference["sha256"])]
+    parent_digests=[x["sha256"] for x in parents] + [str(segment_reference["sha256"])] + [str(ref["sha256"]) for ref in known_source_references]
     phase_cfg=json.loads((root/"config/dante_light_prefilter_v4_feasibility.json").read_text())["phase_probe"]
     seeds={purpose:derive_seed(PROTOCOL_ID,purpose,parent_digests) for purpose in SEED_PURPOSES}
     body={
@@ -311,6 +367,9 @@ def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str
             "robust_population_scope":"frozen_DANTE_ROBUST_decision_population_dominated_by_Family_01"},
         "source_contract":{"segment_snapshot":dict(segment_reference),"o4a_background_flag":"CBC_CAT1","o3b_known_glitch_flag":"DATA",
             "o4a_hardware_injection_exclusion_flags":["HW_INJ","CBC_INJ","BURST_INJ"],
+            "gravity_spy_filtered_snapshot":[dict(ref) for ref in known_source_references],
+            "gravity_spy_external_zenodo_record":GRAVITY_SPY_ZENODO_RECORD,
+            "gravity_spy_catalog_sha256":GRAVITY_SPY_SHA256,
             "gravity_spy_minimum_confidence":0.95,"gravity_spy_minimum_snr":7.5},
         "seed_derivation":{"method":SEED_METHOD,"protocol_id":PROTOCOL_ID,"purposes":list(SEED_PURPOSES),
             "parent_digests":sorted(parent_digests),"seeds":seeds},
@@ -347,17 +406,38 @@ def build_freeze(root: Path, *, freeze_commit: str, refresh_segments: bool=False
     segment_path=root/"config/dante_light_prefilter_v4_segments.json"
     if refresh_segments or not segment_path.exists(): write_json(segment_path,build_segment_snapshot())
     segments=validate_segment_snapshot(json.loads(segment_path.read_text(encoding="utf-8")))
+    known_header_path=root/"config/dante_light_prefilter_v4_known_source_snapshot.json"
+    known_entries_path=root/"config/dante_light_prefilter_v4_known_source_snapshot.jsonl"
+    if not known_header_path.exists() or not known_entries_path.exists():
+        known_header,known_catalog=build_known_source_snapshot(root)
+        write_jsonl(known_entries_path,known_catalog)
+        known_header["entries_reference"]=repository_reference(root,known_entries_path)
+        known_header["snapshot_digest"]=canonical_json_sha256({k:v for k,v in known_header.items() if k!="snapshot_digest"})
+        write_json(known_header_path,known_header)
+    known_header=json.loads(known_header_path.read_text(encoding="utf-8"))
+    known_catalog=[json.loads(line) for line in known_entries_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    entries_reference=known_header.pop("entries_reference")
+    public_snapshot_digest=known_header.pop("snapshot_digest")
+    known_header["snapshot_digest"]=canonical_json_sha256(known_header)
+    validate_known_source_snapshot(known_header,known_catalog)
+    known_header["snapshot_digest"]=public_snapshot_digest
+    known_header["entries_reference"]=entries_reference
+    if public_snapshot_digest != canonical_json_sha256({k:v for k,v in known_header.items() if k!="snapshot_digest"}):
+        raise ContractError("public known-glitch snapshot header digest mismatch")
+    if entries_reference != repository_reference(root,known_entries_path):
+        raise ContractError("known-glitch snapshot entries reference mismatch")
+    known_refs=[repository_reference(root,known_header_path),repository_reference(root,known_entries_path)]
     protocol_path=root/"config/dante_light_prefilter_protocol_v4.json"
-    protocol=build_protocol(root,repository_reference(root,segment_path)); write_json(protocol_path,protocol); validate_protocol(protocol)
+    protocol=build_protocol(root,repository_reference(root,segment_path),known_refs); write_json(protocol_path,protocol); validate_protocol(protocol)
     prior_blocks,_,prior_sources=prior_exclusions(root); seed=protocol["seed_derivation"]["seeds"]["cohort"]
     robust,occupied=select_robust(root,segments["flags"],seed,prior_blocks)
     injections,trials,occupied=select_injections(segments["flags"],protocol["seed_derivation"]["seeds"]["injection"],occupied)
     background=select_background(segments["flags"],seed,occupied)
-    known=select_known(root,segments["flags"],seed,prior_blocks,prior_sources)
+    known=select_known(known_catalog,segments["flags"],seed,prior_blocks,prior_sources)
     trial_path=root/"config/dante_light_prefilter_v4_injection_trials.jsonl"; write_jsonl(trial_path,trials)
     sources=[repository_reference(root,segment_path),repository_reference(root,trial_path),
         _ref(root,"data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv"),
-        _ref(root,"data/reference/gs_classifications_O3b_H1.csv"),_ref(root,"data/reference/gs_classifications_O3b_L1.csv"),
+        *known_refs,
         _ref(root,"config/dante_light_prefilter_splits_v1.jsonl"),_ref(root,"config/dante_light_prefilter_splits_v2.jsonl")]
     seed_contract={k:protocol["seed_derivation"][k] for k in ("method","protocol_id","purposes","parent_digests")}
     manifest=build_identity_manifest([*background,*robust,*known,*injections],protocol_reference=repository_reference(root,protocol_path),
