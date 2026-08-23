@@ -364,7 +364,9 @@ scripts/*
 !scripts/verify_dante_light_prefilter_v4_development.py
 !scripts/analyze_dante_light_prefilter_v4_diagnostics.py
 !scripts/audit_dante_light_prefilter_v5_identities.py
+!scripts/run_dante_light_prefilter_v5_scattering_feasibility.py
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_IDENTITY_AUDIT_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V5_SCATTERING_FEASIBILITY_2026-08-23.md
 
 tmp
 archive/

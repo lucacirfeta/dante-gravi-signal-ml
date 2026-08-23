@@ -344,6 +344,12 @@ Task 1.2 — optional scattering feasibility
   eligible to be proposed at a later checkpoint; it is not selected for v5 by
   this task.
 
+Execution note (2026-08-23): the WSL-only feasibility benchmark is complete as
+`COMPLETE_FEASIBILITY_ONLY_NOT_SELECTED`. It does not decide eligibility; that
+separate checkpoint must weigh the measured cost and the observed dependency
+maintenance/API risk. See
+`DANTE_LIGHT_L4_PREFILTER_V5_SCATTERING_FEASIBILITY_2026-08-23.md`.
+
 ### Plan 2 — scientific freeze checkpoint
 
 **Objective:** convert the approved choices into an immutable protocol before

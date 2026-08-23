@@ -1,0 +1,816 @@
+{
+  "artifact_digest": "600c8a72af2aa21f457f704270edb4f45cbdbc5023c7a27fa5ae30f22b863ebc",
+  "audit_id": "dante-light-l4-prefilter-v5-scattering-feasibility",
+  "candidate_selected": false,
+  "dependency": {
+    "distribution": "kymatio",
+    "execution_scope": "isolated_wsl_only_not_production",
+    "import_status": {
+      "public_import_error": {
+        "reason": "SCIPY_SPECIAL_SPH_HARM_UNAVAILABLE",
+        "type": "ImportError"
+      },
+      "public_import_succeeded": false,
+      "strategy": "scoped_internal_1d_frontend_compatibility_fallback"
+    },
+    "imported_version": "0.3.0",
+    "installed_metadata_license": "BSD-3-Clause",
+    "license": "BSD-3-Clause",
+    "official_supported_operating_systems": [
+      "Linux",
+      "macOS"
+    ],
+    "production_dependency_added": false,
+    "public_import_compatibility_must_be_measured": true,
+    "source_urls": {
+      "documentation": "https://www.kymat.io/",
+      "package_index": "https://pypi.org/project/kymatio/"
+    },
+    "version": "0.3.0",
+    "wheel": {
+      "filename": "kymatio-0.3.0-py3-none-any.whl",
+      "sha256": "e517113bc98a52795144eb80549f0686ee8a57dbbd9839b935f10dbceba0ec6b"
+    }
+  },
+  "determinism": {
+    "all_repetitions_bitwise_equal": true,
+    "atol": 0.0,
+    "criterion": "bitwise_equal_repeated_cpu_outputs",
+    "probes": {
+      "centered_impulse": {
+        "all_finite": true,
+        "coefficient_count": 47872,
+        "input_sha256": "8c8baec5a8cf5e613f703da5d854088316a831de59fff38c9811321b6b279be9",
+        "output_dtype": "float32",
+        "output_sha256_by_repetition": [
+          "bd88a2c0e3b969a258f9f922d2094f2e8063f84a87dd90026f4b2afe36dbbd24",
+          "bd88a2c0e3b969a258f9f922d2094f2e8063f84a87dd90026f4b2afe36dbbd24",
+          "bd88a2c0e3b969a258f9f922d2094f2e8063f84a87dd90026f4b2afe36dbbd24",
+          "bd88a2c0e3b969a258f9f922d2094f2e8063f84a87dd90026f4b2afe36dbbd24",
+          "bd88a2c0e3b969a258f9f922d2094f2e8063f84a87dd90026f4b2afe36dbbd24"
+        ],
+        "output_shape": [
+          1,
+          374,
+          128
+        ]
+      },
+      "linear_chirp": {
+        "all_finite": true,
+        "coefficient_count": 47872,
+        "input_sha256": "c940a4af02a5d16c6fed42f7ce51ba2383ab6b27831c33bb73bcab24dfb5f26a",
+        "output_dtype": "float32",
+        "output_sha256_by_repetition": [
+          "6af267535e260eeedd34d775f0873628c340ccde01b927d6b589d2f18170b27d",
+          "6af267535e260eeedd34d775f0873628c340ccde01b927d6b589d2f18170b27d",
+          "6af267535e260eeedd34d775f0873628c340ccde01b927d6b589d2f18170b27d",
+          "6af267535e260eeedd34d775f0873628c340ccde01b927d6b589d2f18170b27d",
+          "6af267535e260eeedd34d775f0873628c340ccde01b927d6b589d2f18170b27d"
+        ],
+        "output_shape": [
+          1,
+          374,
+          128
+        ]
+      },
+      "white_noise": {
+        "all_finite": true,
+        "coefficient_count": 47872,
+        "input_sha256": "01eb3a45231b17f48d60c68c0b0148fa30cda1609ad4aab77876f52668caccd4",
+        "output_dtype": "float32",
+        "output_sha256_by_repetition": [
+          "2682e272ad458be872030cdd21a3d34924bd02bdfb462f8bbd4e6197a861cd54",
+          "2682e272ad458be872030cdd21a3d34924bd02bdfb462f8bbd4e6197a861cd54",
+          "2682e272ad458be872030cdd21a3d34924bd02bdfb462f8bbd4e6197a861cd54",
+          "2682e272ad458be872030cdd21a3d34924bd02bdfb462f8bbd4e6197a861cd54",
+          "2682e272ad458be872030cdd21a3d34924bd02bdfb462f8bbd4e6197a861cd54"
+        ],
+        "output_shape": [
+          1,
+          374,
+          128
+        ]
+      }
+    },
+    "rtol": 0.0
+  },
+  "eligibility_decision": "DEFERRED_TO_SEPARATE_SCIENTIFIC_CHECKPOINT",
+  "input_contract": {
+    "batch_size": 1,
+    "dtype": "float32",
+    "duration_s": 32.0,
+    "outcome_blind_probes": [
+      "white_noise",
+      "centered_impulse",
+      "linear_chirp"
+    ],
+    "sample_rate_hz": 4096,
+    "seed": 20260823,
+    "synthetic_chirp": {
+      "duration_s": 12.0,
+      "f0_hz": 30.0,
+      "f1_hz": 512.0,
+      "start_s": 4.0
+    }
+  },
+  "interpretation_boundary": {
+    "does_not_establish": [
+      "teacher fidelity",
+      "morphology retention",
+      "background reduction",
+      "cross-platform transform support",
+      "routing readiness",
+      "scientific independence from exact DANTE"
+    ],
+    "establishes": [
+      "output dimension on deterministic outcome-blind inputs",
+      "same-runtime CPU determinism",
+      "batch-1 CPU cost on the recorded WSL runtime",
+      "current dependency compatibility behavior"
+    ],
+    "maintenance_risk_must_be_reassessed_before_protocol_entry": true
+  },
+  "outcome_access": {
+    "development_outcomes": [],
+    "o4b": [],
+    "reserved_confirmation": [],
+    "teacher_scores": []
+  },
+  "protocol_frozen": false,
+  "routing_enabled": false,
+  "runtime": {
+    "batch_size": 1,
+    "device": "cpu",
+    "execution_scope": "WSL_ONLY",
+    "numpy": "2.4.6",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "python": "3.11.15",
+    "scipy": "1.17.1",
+    "torch": "2.12.1+cu130",
+    "torch_cpu_threads": 8
+  },
+  "schema_version": 1,
+  "source_references": {
+    "config": {
+      "path": "config/dante_light_prefilter_v5_scattering_feasibility.json",
+      "sha256": "3e2a4c34b070ad63c3ebd8ac2f5e26c1107a1142ca13120dee4923f870a66cae"
+    },
+    "implementation": {
+      "path": "src/dante_light/prefilter_v5_scattering.py",
+      "sha256": "eaab3ad1c5418e2d97fd01621d5f0705646cad4d3cf114fb97eff43b2ac80cbb"
+    },
+    "runner": {
+      "path": "scripts/run_dante_light_prefilter_v5_scattering_feasibility.py",
+      "sha256": "471371dfcd390d554428bd2421dd404d5448760f5ad6efc59c56f3bfa2b937c4"
+    }
+  },
+  "status": "COMPLETE_FEASIBILITY_ONLY_NOT_SELECTED",
+  "timing": {
+    "clock": "time.perf_counter_ns",
+    "garbage_collection_disabled_during_measurement": true,
+    "paired_batch1_cpu_ledger": [
+      {
+        "control_s": 2.0749e-05,
+        "index": 0,
+        "order": "scattering_first",
+        "scattering_s": 0.151108882
+      },
+      {
+        "control_s": 5.16e-06,
+        "index": 1,
+        "order": "control_first",
+        "scattering_s": 0.169336568
+      },
+      {
+        "control_s": 1.9937e-05,
+        "index": 2,
+        "order": "scattering_first",
+        "scattering_s": 0.156262327
+      },
+      {
+        "control_s": 4.608e-06,
+        "index": 3,
+        "order": "control_first",
+        "scattering_s": 0.160124671
+      },
+      {
+        "control_s": 2.4627e-05,
+        "index": 4,
+        "order": "scattering_first",
+        "scattering_s": 0.158655528
+      },
+      {
+        "control_s": 7.695e-06,
+        "index": 5,
+        "order": "control_first",
+        "scattering_s": 0.171387558
+      },
+      {
+        "control_s": 2.3384e-05,
+        "index": 6,
+        "order": "scattering_first",
+        "scattering_s": 0.175226631
+      },
+      {
+        "control_s": 4.378e-06,
+        "index": 7,
+        "order": "control_first",
+        "scattering_s": 0.169285757
+      },
+      {
+        "control_s": 3.5588e-05,
+        "index": 8,
+        "order": "scattering_first",
+        "scattering_s": 0.167820325
+      },
+      {
+        "control_s": 6.062e-06,
+        "index": 9,
+        "order": "control_first",
+        "scattering_s": 0.197591412
+      },
+      {
+        "control_s": 2.0599e-05,
+        "index": 10,
+        "order": "scattering_first",
+        "scattering_s": 0.162234639
+      },
+      {
+        "control_s": 5.951e-06,
+        "index": 11,
+        "order": "control_first",
+        "scattering_s": 0.178149046
+      },
+      {
+        "control_s": 3.0327e-05,
+        "index": 12,
+        "order": "scattering_first",
+        "scattering_s": 0.175574022
+      },
+      {
+        "control_s": 1.1812e-05,
+        "index": 13,
+        "order": "control_first",
+        "scattering_s": 0.160739424
+      },
+      {
+        "control_s": 1.8886e-05,
+        "index": 14,
+        "order": "scattering_first",
+        "scattering_s": 0.157179944
+      },
+      {
+        "control_s": 4.599e-06,
+        "index": 15,
+        "order": "control_first",
+        "scattering_s": 0.169361481
+      },
+      {
+        "control_s": 2.5618e-05,
+        "index": 16,
+        "order": "scattering_first",
+        "scattering_s": 0.161481118
+      },
+      {
+        "control_s": 5.039e-06,
+        "index": 17,
+        "order": "control_first",
+        "scattering_s": 0.167895888
+      },
+      {
+        "control_s": 2.7482e-05,
+        "index": 18,
+        "order": "scattering_first",
+        "scattering_s": 0.159611759
+      },
+      {
+        "control_s": 5.991e-06,
+        "index": 19,
+        "order": "control_first",
+        "scattering_s": 0.16659321
+      },
+      {
+        "control_s": 1.9728e-05,
+        "index": 20,
+        "order": "scattering_first",
+        "scattering_s": 0.168230912
+      },
+      {
+        "control_s": 4.579e-06,
+        "index": 21,
+        "order": "control_first",
+        "scattering_s": 0.167751755
+      },
+      {
+        "control_s": 1.8285e-05,
+        "index": 22,
+        "order": "scattering_first",
+        "scattering_s": 0.158926476
+      },
+      {
+        "control_s": 3.9066e-05,
+        "index": 23,
+        "order": "control_first",
+        "scattering_s": 0.170677254
+      },
+      {
+        "control_s": 3.0437e-05,
+        "index": 24,
+        "order": "scattering_first",
+        "scattering_s": 0.158906848
+      },
+      {
+        "control_s": 8.326e-06,
+        "index": 25,
+        "order": "control_first",
+        "scattering_s": 0.174564695
+      },
+      {
+        "control_s": 2.8164e-05,
+        "index": 26,
+        "order": "scattering_first",
+        "scattering_s": 0.16352824
+      },
+      {
+        "control_s": 8.055e-06,
+        "index": 27,
+        "order": "control_first",
+        "scattering_s": 0.173072926
+      },
+      {
+        "control_s": 2.5398e-05,
+        "index": 28,
+        "order": "scattering_first",
+        "scattering_s": 0.165689192
+      },
+      {
+        "control_s": 6.732e-06,
+        "index": 29,
+        "order": "control_first",
+        "scattering_s": 0.166948949
+      },
+      {
+        "control_s": 2.3875e-05,
+        "index": 30,
+        "order": "scattering_first",
+        "scattering_s": 0.167081656
+      },
+      {
+        "control_s": 6.843e-06,
+        "index": 31,
+        "order": "control_first",
+        "scattering_s": 0.171724131
+      },
+      {
+        "control_s": 2.639e-05,
+        "index": 32,
+        "order": "scattering_first",
+        "scattering_s": 0.171609757
+      },
+      {
+        "control_s": 1.2413e-05,
+        "index": 33,
+        "order": "control_first",
+        "scattering_s": 0.17239746
+      },
+      {
+        "control_s": 2.5227e-05,
+        "index": 34,
+        "order": "scattering_first",
+        "scattering_s": 0.162159841
+      },
+      {
+        "control_s": 7.814e-06,
+        "index": 35,
+        "order": "control_first",
+        "scattering_s": 0.172027506
+      },
+      {
+        "control_s": 2.0168e-05,
+        "index": 36,
+        "order": "scattering_first",
+        "scattering_s": 0.171985865
+      },
+      {
+        "control_s": 4.348e-06,
+        "index": 37,
+        "order": "control_first",
+        "scattering_s": 0.152953161
+      },
+      {
+        "control_s": 2.6881e-05,
+        "index": 38,
+        "order": "scattering_first",
+        "scattering_s": 0.165088894
+      },
+      {
+        "control_s": 9.568e-06,
+        "index": 39,
+        "order": "control_first",
+        "scattering_s": 0.15736785
+      },
+      {
+        "control_s": 1.8145e-05,
+        "index": 40,
+        "order": "scattering_first",
+        "scattering_s": 0.151823741
+      },
+      {
+        "control_s": 9.919e-06,
+        "index": 41,
+        "order": "control_first",
+        "scattering_s": 0.181184812
+      },
+      {
+        "control_s": 1.7413e-05,
+        "index": 42,
+        "order": "scattering_first",
+        "scattering_s": 0.159085362
+      },
+      {
+        "control_s": 4.799e-06,
+        "index": 43,
+        "order": "control_first",
+        "scattering_s": 0.172750058
+      },
+      {
+        "control_s": 2.5568e-05,
+        "index": 44,
+        "order": "scattering_first",
+        "scattering_s": 0.148854256
+      },
+      {
+        "control_s": 6.733e-06,
+        "index": 45,
+        "order": "control_first",
+        "scattering_s": 0.157352525
+      },
+      {
+        "control_s": 1.7433e-05,
+        "index": 46,
+        "order": "scattering_first",
+        "scattering_s": 0.157326896
+      },
+      {
+        "control_s": 4.368e-06,
+        "index": 47,
+        "order": "control_first",
+        "scattering_s": 0.158647091
+      },
+      {
+        "control_s": 2.1391e-05,
+        "index": 48,
+        "order": "scattering_first",
+        "scattering_s": 0.16482185
+      },
+      {
+        "control_s": 4.839e-06,
+        "index": 49,
+        "order": "control_first",
+        "scattering_s": 0.154073654
+      },
+      {
+        "control_s": 1.9376e-05,
+        "index": 50,
+        "order": "scattering_first",
+        "scattering_s": 0.158960295
+      },
+      {
+        "control_s": 4.779e-06,
+        "index": 51,
+        "order": "control_first",
+        "scattering_s": 0.166113579
+      },
+      {
+        "control_s": 2.3695e-05,
+        "index": 52,
+        "order": "scattering_first",
+        "scattering_s": 0.180841553
+      },
+      {
+        "control_s": 6.583e-06,
+        "index": 53,
+        "order": "control_first",
+        "scattering_s": 0.144855065
+      },
+      {
+        "control_s": 2.3635e-05,
+        "index": 54,
+        "order": "scattering_first",
+        "scattering_s": 0.161666467
+      },
+      {
+        "control_s": 6.312e-06,
+        "index": 55,
+        "order": "control_first",
+        "scattering_s": 0.171495922
+      },
+      {
+        "control_s": 2.1431e-05,
+        "index": 56,
+        "order": "scattering_first",
+        "scattering_s": 0.169887326
+      },
+      {
+        "control_s": 8.216e-06,
+        "index": 57,
+        "order": "control_first",
+        "scattering_s": 0.159760557
+      },
+      {
+        "control_s": 2.3093e-05,
+        "index": 58,
+        "order": "scattering_first",
+        "scattering_s": 0.160186465
+      },
+      {
+        "control_s": 1.1191e-05,
+        "index": 59,
+        "order": "control_first",
+        "scattering_s": 0.156294864
+      },
+      {
+        "control_s": 2.126e-05,
+        "index": 60,
+        "order": "scattering_first",
+        "scattering_s": 0.154345073
+      },
+      {
+        "control_s": 6.573e-06,
+        "index": 61,
+        "order": "control_first",
+        "scattering_s": 0.158216151
+      },
+      {
+        "control_s": 2.8705e-05,
+        "index": 62,
+        "order": "scattering_first",
+        "scattering_s": 0.162357276
+      },
+      {
+        "control_s": 1.6461e-05,
+        "index": 63,
+        "order": "control_first",
+        "scattering_s": 0.154094022
+      },
+      {
+        "control_s": 2.8725e-05,
+        "index": 64,
+        "order": "scattering_first",
+        "scattering_s": 0.165118615
+      },
+      {
+        "control_s": 8.466e-06,
+        "index": 65,
+        "order": "control_first",
+        "scattering_s": 0.158570142
+      },
+      {
+        "control_s": 2.0389e-05,
+        "index": 66,
+        "order": "scattering_first",
+        "scattering_s": 0.15059361
+      },
+      {
+        "control_s": 5.901e-06,
+        "index": 67,
+        "order": "control_first",
+        "scattering_s": 0.15588266
+      },
+      {
+        "control_s": 2.7222e-05,
+        "index": 68,
+        "order": "scattering_first",
+        "scattering_s": 0.148213721
+      },
+      {
+        "control_s": 8.787e-06,
+        "index": 69,
+        "order": "control_first",
+        "scattering_s": 0.169419063
+      },
+      {
+        "control_s": 2.9956e-05,
+        "index": 70,
+        "order": "scattering_first",
+        "scattering_s": 0.163923112
+      },
+      {
+        "control_s": 1.3536e-05,
+        "index": 71,
+        "order": "control_first",
+        "scattering_s": 0.156012294
+      },
+      {
+        "control_s": 2.7492e-05,
+        "index": 72,
+        "order": "scattering_first",
+        "scattering_s": 0.182532735
+      },
+      {
+        "control_s": 7.314e-06,
+        "index": 73,
+        "order": "control_first",
+        "scattering_s": 0.162156395
+      },
+      {
+        "control_s": 2.2142e-05,
+        "index": 74,
+        "order": "scattering_first",
+        "scattering_s": 0.173672421
+      },
+      {
+        "control_s": 4.658e-06,
+        "index": 75,
+        "order": "control_first",
+        "scattering_s": 0.17082187
+      },
+      {
+        "control_s": 2.3164e-05,
+        "index": 76,
+        "order": "scattering_first",
+        "scattering_s": 0.159243195
+      },
+      {
+        "control_s": 5.019e-06,
+        "index": 77,
+        "order": "control_first",
+        "scattering_s": 0.158117203
+      },
+      {
+        "control_s": 2.4456e-05,
+        "index": 78,
+        "order": "scattering_first",
+        "scattering_s": 0.161473813
+      },
+      {
+        "control_s": 7.735e-06,
+        "index": 79,
+        "order": "control_first",
+        "scattering_s": 0.170295542
+      },
+      {
+        "control_s": 2.4146e-05,
+        "index": 80,
+        "order": "scattering_first",
+        "scattering_s": 0.162720836
+      },
+      {
+        "control_s": 1.1071e-05,
+        "index": 81,
+        "order": "control_first",
+        "scattering_s": 0.14815967
+      },
+      {
+        "control_s": 2.0639e-05,
+        "index": 82,
+        "order": "scattering_first",
+        "scattering_s": 0.151446245
+      },
+      {
+        "control_s": 6.312e-06,
+        "index": 83,
+        "order": "control_first",
+        "scattering_s": 0.164898649
+      },
+      {
+        "control_s": 1.9176e-05,
+        "index": 84,
+        "order": "scattering_first",
+        "scattering_s": 0.163843796
+      },
+      {
+        "control_s": 4.669e-06,
+        "index": 85,
+        "order": "control_first",
+        "scattering_s": 0.147008133
+      },
+      {
+        "control_s": 2.4316e-05,
+        "index": 86,
+        "order": "scattering_first",
+        "scattering_s": 0.158678616
+      },
+      {
+        "control_s": 6.532e-06,
+        "index": 87,
+        "order": "control_first",
+        "scattering_s": 0.172452309
+      },
+      {
+        "control_s": 1.9827e-05,
+        "index": 88,
+        "order": "scattering_first",
+        "scattering_s": 0.161143297
+      },
+      {
+        "control_s": 4.458e-06,
+        "index": 89,
+        "order": "control_first",
+        "scattering_s": 0.153073781
+      },
+      {
+        "control_s": 2.6501e-05,
+        "index": 90,
+        "order": "scattering_first",
+        "scattering_s": 0.157461081
+      },
+      {
+        "control_s": 6.082e-06,
+        "index": 91,
+        "order": "control_first",
+        "scattering_s": 0.176087732
+      },
+      {
+        "control_s": 1.7924e-05,
+        "index": 92,
+        "order": "scattering_first",
+        "scattering_s": 0.160708351
+      },
+      {
+        "control_s": 5.1e-06,
+        "index": 93,
+        "order": "control_first",
+        "scattering_s": 0.156450545
+      },
+      {
+        "control_s": 2.2603e-05,
+        "index": 94,
+        "order": "scattering_first",
+        "scattering_s": 0.145863201
+      },
+      {
+        "control_s": 6.542e-06,
+        "index": 95,
+        "order": "control_first",
+        "scattering_s": 0.1532697
+      },
+      {
+        "control_s": 1.7153e-05,
+        "index": 96,
+        "order": "scattering_first",
+        "scattering_s": 0.161631108
+      },
+      {
+        "control_s": 4.469e-06,
+        "index": 97,
+        "order": "control_first",
+        "scattering_s": 0.162049226
+      },
+      {
+        "control_s": 4.6718e-05,
+        "index": 98,
+        "order": "scattering_first",
+        "scattering_s": 0.169142044
+      },
+      {
+        "control_s": 5.34e-06,
+        "index": 99,
+        "order": "control_first",
+        "scattering_s": 0.157392539
+      }
+    ],
+    "summary": {
+      "control": {
+        "count": 100,
+        "maximum_s": 4.6718e-05,
+        "mean_s": 1.577247e-05,
+        "median_s": 1.7283e-05,
+        "minimum_s": 4.348e-06,
+        "p95_s": 2.997455e-05
+      },
+      "paired_delta": {
+        "count": 100,
+        "maximum_s": 0.19758535,
+        "mean_s": 0.16321258420999998,
+        "median_s": 0.1620896855,
+        "minimum_s": 0.144848482,
+        "p95_s": 0.17618472225
+      },
+      "scattering": {
+        "count": 100,
+        "maximum_s": 0.197591412,
+        "mean_s": 0.16322835668,
+        "median_s": 0.1621028105,
+        "minimum_s": 0.144855065,
+        "p95_s": 0.17619079769999998
+      }
+    },
+    "warmup_repetitions": 10
+  },
+  "transform": {
+    "J": 10,
+    "Q": [
+      8,
+      1
+    ],
+    "T": 1024,
+    "average": true,
+    "backend": "torch",
+    "device": "cpu",
+    "frontend": "torch",
+    "max_order": 2,
+    "out_type": "array",
+    "oversampling": 0
+  }
+}

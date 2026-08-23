@@ -86,10 +86,9 @@ python scripts/audit_dante_light_prefilter_v5_identities.py
 The rebuild defaults to a full rehash. `--reuse-hash-cache` is only a resumable
 local convenience and must not be used to generate final evidence.
 
-## Remaining Plan 1 checkpoint
+## Plan 1 scattering checkpoint
 
-Wavelet scattering remains an optional label-blind feasibility comparator, not
-a selected v5 arm. Kymatio is not installed in either current project
-environment. Adding it must be isolated from production dependencies and
-reviewed as a separate dependency/architecture checkpoint before any benchmark;
-no protected cohort is needed for that decision.
+The optional label-blind wavelet-scattering feasibility benchmark was completed
+separately in an isolated WSL runtime. It remains unselected and outside all
+production dependencies. Its results and dependency limitations are recorded in
+`DANTE_LIGHT_L4_PREFILTER_V5_SCATTERING_FEASIBILITY_2026-08-23.md`.
