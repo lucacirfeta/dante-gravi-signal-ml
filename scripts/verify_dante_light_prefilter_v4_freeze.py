@@ -77,8 +77,11 @@ def verify() -> dict[str,object]:
         raise ContractError("known-glitch source snapshot entries/count mismatch")
     if known_header["rows_digest"]!=canonical_json_sha256(known_rows):
         raise ContractError("known-glitch source snapshot rows digest mismatch")
-    if any(set(row)!={"detector","event_time","gravityspy_id","ml_confidence","morphology","snr"} for row in known_rows):
+    if any(set(row)!={"detector","event_time","gravityspy_id","ml_confidence","morphology","snr","source_priority"} for row in known_rows):
         raise ContractError("known-glitch compact source contains unexpected fields")
+    known_block_keys=[(row["detector"],row["morphology"],math.floor((float(row["event_time"])-16.0)/4096)) for row in known_rows]
+    if len(known_block_keys)!=len(set(known_block_keys)):
+        raise ContractError("known-glitch compact source has duplicate detector/morphology blocks")
     snapshot=json.loads((ROOT/protocol["source_contract"]["segment_snapshot"]["path"]).read_text(encoding="utf-8")); _validate_segment_snapshot(snapshot)
     header_path=ROOT/"config/dante_light_prefilter_splits_v4.json"; header=json.loads(header_path.read_text(encoding="utf-8"))
     _reference(header["protocol_reference"]); _reference(header["selection_code_reference"])

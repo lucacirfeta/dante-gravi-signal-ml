@@ -130,6 +130,16 @@ def build_known_source_snapshot(
 
     rows: list[dict[str, Any]] = []
     sources: dict[str, Any] = {}
+    source_seed_payload = {
+        "purpose": "known-source-one-representative-per-detector-morphology-block",
+        "catalog_sha256": GRAVITY_SPY_SHA256,
+        "o3b_data_segment_digests": {
+            detector: segments[f"{detector}_O3B_DATA"]["segments_digest"] for detector in DETECTORS
+        },
+        "prior_block_digest": canonical_json_sha256(sorted(prior_blocks)),
+        "prior_source_id_digest": canonical_json_sha256(sorted(prior_source_ids)),
+    }
+    source_seed = int.from_bytes(bytes.fromhex(canonical_json_sha256(source_seed_payload))[:8], "big")
     for detector in DETECTORS:
         path = root / f"data/reference/gs_classifications_O3b_{detector}.csv"
         if not path.is_file() or sha256_path(path) != GRAVITY_SPY_SHA256[detector]:
@@ -165,15 +175,24 @@ def build_known_source_snapshot(
                     "morphology": morphology,
                     "ml_confidence": confidence,
                     "snr": snr,
+                    "source_priority": _priority(source_seed, detector, morphology, _block(detector, gps), source_id),
                 })
-    rows.sort(key=lambda row: (row["detector"], row["morphology"], row["gravityspy_id"]))
+    representatives: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for row in rows:
+        key=(row["detector"],row["morphology"],_block(row["detector"],float(row["event_time"])-16.0))
+        if key not in representatives or (row["source_priority"],row["gravityspy_id"]) < (representatives[key]["source_priority"],representatives[key]["gravityspy_id"]):
+            representatives[key]=row
+    rows=sorted(representatives.values(),key=lambda row:(row["detector"],row["morphology"],row["gravityspy_id"]))
     body = {
         "schema_version": 1,
         "status": "FROZEN_FILTERED_SOURCE_IDENTITIES_NO_V4_OUTCOMES",
         "external_sources": sources,
         "filter": {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5,
             "require_o3b_data_for_padded_window": True,
-            "exclude_prior_source_ids_and_detector_4096s_blocks": True},
+            "exclude_prior_source_ids_and_detector_4096s_blocks": True,
+            "one_hash_priority_representative_per_detector_morphology_4096s_block": True},
+        "representative_selection": {"method":"sha256_canonical_source_identity","seed":source_seed,
+            "seed_payload_digest":canonical_json_sha256(source_seed_payload)},
         "row_count": len(rows),
         "rows_digest": canonical_json_sha256(rows),
     }
@@ -188,7 +207,8 @@ def validate_known_source_snapshot(header: Mapping[str, Any], rows: Sequence[Map
         raise ContractError("known-glitch source snapshot rows mismatch")
     if header["filter"] != {"morphologies": list(KNOWN), "minimum_ml_confidence": 0.95, "minimum_snr": 7.5,
             "require_o3b_data_for_padded_window": True,
-            "exclude_prior_source_ids_and_detector_4096s_blocks": True}:
+            "exclude_prior_source_ids_and_detector_4096s_blocks": True,
+            "one_hash_priority_representative_per_detector_morphology_4096s_block": True}:
         raise ContractError("known-glitch source filter changed")
 
 
