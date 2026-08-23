@@ -334,12 +334,13 @@ def build_protocol(root: Path, segment_reference: Mapping[str, str]) -> dict[str
 
 
 def write_json(path: Path, value: Mapping[str, Any]) -> None:
-    path.parent.mkdir(parents=True,exist_ok=True); path.write_text(json.dumps(value,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+    path.parent.mkdir(parents=True,exist_ok=True)
+    path.write_bytes((json.dumps(value,indent=2,sort_keys=True)+"\n").encode("utf-8"))
 
 
 def write_jsonl(path: Path, rows: Iterable[Mapping[str, Any]]) -> None:
     path.parent.mkdir(parents=True,exist_ok=True)
-    path.write_text("".join(json.dumps(row,sort_keys=True,separators=(",",":"))+"\n" for row in rows),encoding="utf-8")
+    path.write_bytes("".join(json.dumps(row,sort_keys=True,separators=(",",":"))+"\n" for row in rows).encode("utf-8"))
 
 
 def build_freeze(root: Path, *, freeze_commit: str, refresh_segments: bool=False) -> dict[str, Any]:
