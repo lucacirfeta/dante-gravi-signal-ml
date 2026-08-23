@@ -71,7 +71,7 @@ controls, and 64 Gaussian-noise controls:
 | frequency-time Spearman | 0.839 | p95 0.208 |
 | cubic circular-phase residual | 0.0058 | median 0.926 |
 
-Mean CPU runtime is 12.394 ms/window on the recorded machine. This establishes
+Mean CPU runtime is 12.386 ms/window on the recorded machine. This establishes
 only that the implementation responds to phase ordering in an ideal synthetic
 case. It does not show separability for realistic NSBH signals in detector
 noise, robustness across masses/spins/SNR, or safe retention of non-CBC
@@ -114,8 +114,8 @@ Two untrained proxies were timed only to bound architecture cost:
 
 | Proxy | Parameters | CPU batch-1 mean | Additional preprocessing |
 |---|---:|---:|---:|
-| raw 1-D depthwise CNN | 3,665 | 0.942 ms | none beyond the contracted input |
-| complex-STFT 2-D CNN | 1,369 | 0.477 ms | 1.950 ms mean CPU STFT |
+| raw 1-D depthwise CNN | 3,665 | 0.941 ms | none beyond the contracted input |
+| complex-STFT 2-D CNN | 1,369 | 0.468 ms | 1.977 ms mean CPU STFT |
 
 Random weights provide no evidence of learnability, calibration, teacher
 fidelity, morphology retention, or useful rejection. A real distillation study

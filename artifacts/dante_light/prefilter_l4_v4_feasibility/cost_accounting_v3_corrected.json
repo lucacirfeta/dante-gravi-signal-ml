@@ -29,7 +29,7 @@
   },
   "provenance": {
     "benchmark": {
-      "path": "C:\\Users\\atafe\\PycharmProjects\\dante-gravi-signal-ml\\benchmarks\\dante_light_l1_score_only_shared.json",
+      "path": "benchmarks/dante_light_l1_score_only_shared.json",
       "sha256": "57c029a49ab5694c5068702b8b2ceec39fde683d339975ffd89d06e39b7c8ebd"
     },
     "cost_module_sha256": "e516f62f11551964c133e55006f2c588fd94137c437d65970a3b79521eb0770e",
@@ -52,9 +52,9 @@
       "known_glitch": "665a0fe8953fda51c35c448710927cd3183dbc9e66878f65cf31139b5684af92",
       "robust_candidate": "43fe66c8917b6fa31b3c6f08e7997a88152d0903b42ff6f2bf2c0a99b14aaf5f"
     },
-    "runner_sha256": "d08205a6da255d4654e85bc90d2a6ab5cbcf12c9b64564678ebc17ad87d2d623",
+    "runner_sha256": "b4b239339123bda425fc5a97ab6d830f1bcd12ad3d4614b3d1a9344c6f6e1b92",
     "screening": {
-      "path": "C:\\Users\\atafe\\PycharmProjects\\dante-gravi-signal-ml\\artifacts\\dante_light\\prefilter_l4_v3\\screening_summary_v3.json",
+      "path": "artifacts/dante_light/prefilter_l4_v3/screening_summary_v3.json",
       "sha256": "2e06b2d24b22609797a30d70e7bfc076435433384c27958dd5940a4bd8774ce3"
     }
   },

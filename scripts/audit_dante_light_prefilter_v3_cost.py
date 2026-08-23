@@ -48,6 +48,13 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _repo_relative(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError as exc:
+        raise ContractError(f"provenance input is outside the repository: {path}") from exc
+
+
 def _atomic_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -147,8 +154,14 @@ def main() -> int:
             ),
         },
         "provenance": {
-            "screening": {"path": str(screening_path), "sha256": _sha256(screening_path)},
-            "benchmark": {"path": str(benchmark_path), "sha256": _sha256(benchmark_path)},
+            "screening": {
+                "path": _repo_relative(screening_path),
+                "sha256": _sha256(screening_path),
+            },
+            "benchmark": {
+                "path": _repo_relative(benchmark_path),
+                "sha256": _sha256(benchmark_path),
+            },
             "ledger_root": str(root),
             "ledger_sha256_by_role": actual_hashes,
             "row_ledger_sha256_by_role": row_hashes,

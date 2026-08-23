@@ -64,7 +64,17 @@ def _require_boundary(payload: dict, *, expected_status: str) -> None:
 
 
 def _verify_file_hash(reference: dict, expected_path: Path) -> None:
-    path = ROOT / Path(str(reference["path"]).replace("\\", "/"))
+    raw_path = str(reference["path"])
+    if "\\" in raw_path:
+        raise ContractError("provenance paths must use repository-relative POSIX syntax")
+    relative = Path(raw_path)
+    if relative.is_absolute() or relative.drive or ".." in relative.parts:
+        raise ContractError(f"provenance path must be repository-relative: {raw_path}")
+    path = (ROOT / relative).resolve()
+    try:
+        path.relative_to(ROOT.resolve())
+    except ValueError as exc:
+        raise ContractError(f"provenance path escapes the repository: {raw_path}") from exc
     if path.resolve() != expected_path.resolve():
         raise ContractError(f"unexpected provenance path: {path}")
     if _sha256(path) != reference["sha256"]:
@@ -123,10 +133,14 @@ def main() -> int:
     if boundary.get("reserved_confirmation_accessed") is not False or boundary.get("o4b_accessed") is not False:
         raise ContractError("cost audit accessed protected outcomes")
     provenance = cost["provenance"]
-    for key in ("screening", "benchmark"):
-        path = Path(provenance[key]["path"])
-        if not path.is_file() or _sha256(path) != provenance[key]["sha256"]:
-            raise ContractError(f"cost input provenance mismatch: {key}")
+    _verify_file_hash(
+        provenance["screening"],
+        ROOT / "artifacts/dante_light/prefilter_l4_v3/screening_summary_v3.json",
+    )
+    _verify_file_hash(
+        provenance["benchmark"],
+        ROOT / "benchmarks/dante_light_l1_score_only_shared.json",
+    )
     if _sha256(ROOT / "scripts/audit_dante_light_prefilter_v3_cost.py") != provenance["runner_sha256"]:
         raise ContractError("cost runner hash mismatch")
     if _sha256(ROOT / "src/dante_light/prefilter_v4_cost.py") != provenance["cost_module_sha256"]:

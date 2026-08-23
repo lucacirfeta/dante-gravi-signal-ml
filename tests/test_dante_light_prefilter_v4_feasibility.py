@@ -196,6 +196,60 @@ def test_committed_feasibility_artifacts_verify_fail_closed(tmp_path: Path) -> N
     assert payload["cost_accounting"]["tail_latency_identified"] is False
 
 
+def test_cost_provenance_paths_are_repository_relative() -> None:
+    path = (
+        ROOT
+        / "artifacts/dante_light/prefilter_l4_v4_feasibility"
+        / "cost_accounting_v3_corrected.json"
+    )
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    for key in ("screening", "benchmark"):
+        stored = payload["provenance"][key]["path"]
+        assert not Path(stored).is_absolute()
+        assert "\\" not in stored
+        assert ".." not in Path(stored).parts
+
+
+def test_feasibility_verifier_passes_from_relocated_checkout(tmp_path: Path) -> None:
+    clone = tmp_path / "independent_checkout"
+    required = (
+        "scripts/verify_dante_light_prefilter_v4_feasibility.py",
+        "scripts/run_dante_light_prefilter_v4_feasibility.py",
+        "scripts/run_dante_light_prefilter_v4_bank_coverage.py",
+        "scripts/audit_dante_light_prefilter_v3_cost.py",
+        "src/__init__.py",
+        "src/dante_light/__init__.py",
+        "src/dante_light/contracts.py",
+        "src/dante_light/prefilter_v4_bank.py",
+        "src/dante_light/prefilter_v4_cost.py",
+        "src/dante_light/prefilter_v4_phase.py",
+        "src/dante_light/prefilter_v4_student.py",
+        "config/dante_light_prefilter_v4_feasibility.json",
+        "artifacts/dante_light/prefilter_l4_v3/screening_summary_v3.json",
+        "benchmarks/dante_light_l1_score_only_shared.json",
+        "artifacts/dante_light/prefilter_l4_v4_feasibility/compute_feasibility_v4.json",
+        "artifacts/dante_light/prefilter_l4_v4_feasibility/mini_bank_coverage_v4.json",
+        "artifacts/dante_light/prefilter_l4_v4_feasibility/cost_accounting_v3_corrected.json",
+    )
+    for relative in required:
+        source = ROOT / relative
+        destination = clone / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(clone / "scripts/verify_dante_light_prefilter_v4_feasibility.py"),
+        ],
+        cwd=clone,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert '"status": "PASS"' in completed.stdout
+
+
 def test_feasibility_verifier_rejects_corrupted_match_matrix(tmp_path: Path) -> None:
     source = ROOT / "artifacts/dante_light/prefilter_l4_v4_feasibility"
     for name in (

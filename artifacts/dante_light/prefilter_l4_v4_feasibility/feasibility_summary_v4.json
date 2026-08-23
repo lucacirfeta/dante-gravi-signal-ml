@@ -55,7 +55,7 @@
   "phase_probe": {
     "ordered_chirp_cubic_residual": 0.0057938579825886904,
     "ordered_chirp_spearman": 0.8393849071941468,
-    "runtime_mean_ms": 12.393537000004926,
+    "runtime_mean_ms": 12.386330999979691,
     "scope": "ideal synthetic behavior and runtime only",
     "scrambled_cubic_residual_median": 0.9257529822402963,
     "scrambled_spearman_p95": 0.2079539862204724
@@ -65,17 +65,17 @@
   "schema_version": 1,
   "status": "FEASIBILITY_COMPLETE_AWAITING_SCIENTIFIC_DECISION",
   "student_compute_probe": {
-    "complex_stft_cpu_batch1_inference_mean_ms": 0.4765860000043176,
-    "complex_stft_cpu_preprocess_mean_ms": 1.950454999998783,
+    "complex_stft_cpu_batch1_inference_mean_ms": 0.468287000003329,
+    "complex_stft_cpu_preprocess_mean_ms": 1.9769410000299104,
     "complex_stft_parameters": 1369,
-    "raw_1d_cpu_batch1_mean_ms": 0.9423269999888362,
+    "raw_1d_cpu_batch1_mean_ms": 0.9414109999988796,
     "raw_1d_parameters": 3665,
     "scope": "random-weight compute only; no learnability or fidelity evidence"
   },
   "verified_artifact_sha256": {
-    "compute": "c7c35f802d8dd9c259641384fc2a67fd211d9ee3c6a5605c7dd48ec549033abf",
+    "compute": "8b0701e6e21c697eb1a36bd2fa4730e27ebe339ce846c1a10e5d187548f1993a",
     "config": "e183d896e86a9449cb11acdb665378f336d709afd310a1249fcb9d1e0e8a6939",
-    "cost_accounting": "de2ffb5259e3dd41269a2f72b8d95c704deb7ab844f8be8e4211ddb74e46657e",
+    "cost_accounting": "511bbde215a969f77ea50c17e833e18f5c958e0077dc7807d6765ec2185b175b",
     "mini_bank": "b301711873b42c06a2745df5600c99fafed8fa4f6a698a9230d0c4178db34455"
   }
 }

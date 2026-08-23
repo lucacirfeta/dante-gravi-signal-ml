@@ -314,7 +314,10 @@ def main() -> int:
             "reserved_confirmation": False,
             "o4b": False,
         },
-        "config": {"path": str(config_path.relative_to(ROOT)), "sha256": _sha256(config_path)},
+        "config": {
+            "path": config_path.relative_to(ROOT).as_posix(),
+            "sha256": _sha256(config_path),
+        },
         "phase_probe": {
             "interpretation": (
                 "Synthetic behavior and runtime only; no discriminative or retention claim."
