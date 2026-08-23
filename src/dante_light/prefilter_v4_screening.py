@@ -41,6 +41,22 @@ def _sklearn_seed(seed: int) -> int:
     return int(seed) % (int(np.iinfo(np.uint32).max) + 1)
 
 
+def _portable_numbers(value: Any) -> Any:
+    """Canonicalize serialized floats without changing raw gate evaluation."""
+
+    if isinstance(value, float):
+        if not np.isfinite(value):
+            raise ContractError("v4 result contains a non-finite float")
+        return float(format(value, ".15g"))
+    if isinstance(value, dict):
+        return {key: _portable_numbers(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_portable_numbers(item) for item in value]
+    if isinstance(value, tuple):
+        return [_portable_numbers(item) for item in value]
+    return value
+
+
 def _v4_auc_diagnostics(
     rows: list[dict[str, Any]],
     target: np.ndarray,
@@ -332,22 +348,24 @@ def screen_prefilter_v4(
         final_reduction = _combined_reduction(final_points)
         if final_reduction >= float(rules["minimum_effective_reduction"]):
             status = "READY_FOR_CONFIRMATION"
+            portable_models = _portable_numbers(final_models)
+            portable_points = _portable_numbers(final_points)
             selected = {
                 "feature_set": "phase_primary",
                 "selection_basis": "predeclared_primary_only",
                 "calibration_method": rules["final_calibration_method"],
                 "oof_development_background_call_reduction": oof_reduction,
                 "full_development_calibration_call_reduction": final_reduction,
-                "detectors": final_points,
-                "models": final_models,
+                "detectors": portable_points,
+                "models": portable_models,
             }
             development_result = {
                 "status": status,
                 "protocol_sha256": protocol_references[0]["sha256"],
                 "manifest_digest": next(iter(manifest_digests)),
                 "phase_extractor_sha256": phase_reference["sha256"],
-                "model_digest": canonical_json_sha256(final_models),
-                "threshold_digest": canonical_json_sha256(final_points),
+                "model_digest": canonical_json_sha256(portable_models),
+                "threshold_digest": canonical_json_sha256(portable_points),
                 "verifier_digest": verifier_reference["sha256"],
             }
 
@@ -397,7 +415,12 @@ def screen_prefilter_v4(
             if status == "READY_FOR_CONFIRMATION"
             else "stop_without_opening_confirmation_or_o4b_and_do_not_retune_on_same_cohort"
         ),
+        "portable_float_serialization": {
+            "significant_digits": 15,
+            "applied_after_unrounded_gate_evaluation": True,
+        },
     }
+    result = _portable_numbers(result)
     result["artifact_digest"] = canonical_json_sha256(result)
     return result
 

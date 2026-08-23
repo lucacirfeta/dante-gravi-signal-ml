@@ -17,7 +17,11 @@ from src.dante_light.prefilter_v4_protocol import (
     repository_reference,
     load_protocol,
 )
-from src.dante_light.prefilter_v4_screening import _sklearn_seed, screen_prefilter_v4
+from src.dante_light.prefilter_v4_screening import (
+    _portable_numbers,
+    _sklearn_seed,
+    screen_prefilter_v4,
+)
 from src.dante_light.preprocessing import PreparedPrefilterFeatures
 
 
@@ -61,6 +65,13 @@ def test_v4_production_extractor_is_deterministic_and_schema_exact():
 def test_v4_sklearn_seed_mapping_preserves_frozen_low_32_bits():
     seed = (7 << 32) + 12345
     assert _sklearn_seed(seed) == 12345
+
+
+def test_v4_portable_float_serialization_removes_one_ulp_platform_drift():
+    left = 0.13839879570152025
+    right = 0.1383987957015203
+    assert left != right
+    assert _portable_numbers(left) == _portable_numbers(right)
 
 
 def _row(role: str, detector: str, morphology: str, index: int, positive: bool) -> dict:
