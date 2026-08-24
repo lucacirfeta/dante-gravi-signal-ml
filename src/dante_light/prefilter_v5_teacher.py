@@ -288,6 +288,94 @@ def load_teacher_contract(
     )
 
 
+def read_contiguous_teacher_span(
+    entries: Sequence[tuple[float, float, Path]],
+    *,
+    gps_start: float,
+    gps_end: float,
+    sample_rate_hz: int,
+) -> object | None:
+    """Join a padded teacher request across contiguous immutable raw files."""
+
+    from gwpy.timeseries import TimeSeries, TimeSeriesList
+
+    overlapping = sorted(
+        (
+            (float(start), float(end), Path(path))
+            for start, end, path in entries
+            if float(end) > gps_start and float(start) < gps_end
+        ),
+        key=lambda item: (item[0], item[1], str(item[2])),
+    )
+    if len(overlapping) < 2:
+        return None
+    selected = []
+    covered_until = gps_start
+    tolerance = 1.0 / float(sample_rate_hz)
+    for start, end, path in overlapping:
+        if end <= covered_until + tolerance:
+            continue
+        if start > covered_until + tolerance:
+            return None
+        selected.append((start, end, path))
+        covered_until = max(covered_until, end)
+        if covered_until >= gps_end - tolerance:
+            break
+    if len(selected) < 2 or covered_until < gps_end - tolerance:
+        return None
+    pieces = TimeSeriesList()
+    for start, end, path in selected:
+        piece = TimeSeries.read(path).crop(max(start, gps_start), min(end, gps_end))
+        if int(round(float(piece.sample_rate.value))) != sample_rate_hz:
+            piece = piece.resample(sample_rate_hz)
+        pieces.append(piece)
+    try:
+        joined = pieces.join(gap="raise").crop(gps_start, gps_end)
+    except (ValueError, RuntimeError):
+        return None
+    actual_start = float(joined.t0.value)
+    actual_end = actual_start + float(joined.duration.value)
+    if actual_start > gps_start + tolerance or actual_end < gps_end - tolerance:
+        return None
+    return joined
+
+
+def _fetch_teacher_strain(
+    window: WindowIdentity,
+    *,
+    representation: RepresentationContract,
+    local_only: bool,
+) -> object:
+    from src.core import data_loader
+
+    start = window.gps_start - representation.whitening_pad_s
+    end = window.gps_start + window.duration_s + representation.whitening_pad_s
+    try:
+        return data_loader.fetch_strain_data(
+            window.detector,
+            start,
+            end,
+            sample_rate=representation.sample_rate_hz,
+            local_only=local_only,
+            remote_only=False,
+        )
+    except RuntimeError as exc:
+        if not local_only:
+            raise
+        for directory in data_loader._DATA_DIRECTORIES:
+            if not directory.exists():
+                continue
+            stitched = read_contiguous_teacher_span(
+                data_loader._local_block_index(directory, window.detector),
+                gps_start=start,
+                gps_end=end,
+                sample_rate_hz=representation.sample_rate_hz,
+            )
+            if stitched is not None:
+                return stitched
+        raise DeferredWindow(FailClosedReason.DEPENDENCY_UNAVAILABLE) from exc
+
+
 def prepare_teacher_input(
     window: WindowIdentity,
     *,
@@ -298,16 +386,43 @@ def prepare_teacher_input(
 
     import matplotlib.pyplot as plt
 
-    from src.core.preprocessor import generate_qtransform
-    from src.dante_light.preprocessing import _prepare_whitened_subwindow
-
-    clean, raw_sha256, timings, sample_rate_hz = _prepare_whitened_subwindow(
-        window,
-        local_only=local_only,
-        remote_only=False,
-        pad_s=representation.whitening_pad_s,
+    from src.core.preprocessor import (
+        extract_clean_subwindow,
+        generate_qtransform,
+        whiten_context,
     )
-    if int(round(sample_rate_hz)) != representation.sample_rate_hz:
+
+    timings: dict[str, float] = {}
+    start = window.gps_start
+    end = start + window.duration_s
+    began = time.perf_counter()
+    strain = _fetch_teacher_strain(
+        window, representation=representation, local_only=local_only
+    )
+    timings["data_read_s"] = time.perf_counter() - began
+    sample_rate_hz = float(strain.sample_rate.value)
+    tolerance = 1.0 / sample_rate_hz
+    actual_start = float(strain.t0.value)
+    actual_end = actual_start + float(strain.duration.value)
+    pad = representation.whitening_pad_s
+    if (
+        int(round(sample_rate_hz)) != representation.sample_rate_hz
+        or actual_start > start - pad + tolerance
+        or actual_end < end + pad - tolerance
+        or not np.isfinite(strain.value).all()
+    ):
+        raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
+    raw_values = np.ascontiguousarray(strain.value)
+    raw_sha256 = hashlib.sha256(raw_values.tobytes()).hexdigest()
+    began = time.perf_counter()
+    whitened, padding = whiten_context(strain, start, end, pad=pad)
+    clean = extract_clean_subwindow(whitened, start, end)
+    timings["whitening_s"] = time.perf_counter() - began
+    if (
+        float(padding.get("effective_left", 0.0)) + tolerance < pad
+        or float(padding.get("effective_right", 0.0)) + tolerance < pad
+        or abs(float(clean.duration.value) - window.duration_s) > tolerance
+    ):
         raise DeferredWindow(FailClosedReason.INCOMPLETE_DATA)
     clean_values = np.ascontiguousarray(clean.value, dtype=np.float32)
     expected_samples = int(round(representation.sample_rate_hz * representation.analysis_duration_s))
@@ -319,6 +434,8 @@ def prepare_teacher_input(
         save_path=None,
         cmap=representation.colormap,
         qrange=representation.query_qrange,
+        frange=representation.frequency_range_hz,
+        output_size=representation.image_shape[:2],
     )
     timings["q_transform_s"] = time.perf_counter() - began
     began = time.perf_counter()
@@ -405,8 +522,21 @@ def _atomic_npz(path: Path, **arrays: np.ndarray) -> None:
 def teacher_run_key(
     contract: Mapping[str, Any], *, code_references: Mapping[str, Mapping[str, str]]
 ) -> str:
-    if set(code_references) != {"teacher_implementation", "ledger_builder"}:
-        raise ContractError("v5 teacher run key requires both code references")
+    required = {
+        "artifact_manifest",
+        "core_preprocessor",
+        "core_utils",
+        "dante_preprocessing",
+        "data_loader",
+        "encoder",
+        "ledger_builder",
+        "model_loader",
+        "patch_scorer",
+        "runtime_config",
+        "teacher_implementation",
+    }
+    if set(code_references) != required:
+        raise ContractError("v5 teacher run key lacks exact-path code references")
     return canonical_json_sha256(
         {
             "teacher_contract_digest": contract["teacher_contract_digest"],

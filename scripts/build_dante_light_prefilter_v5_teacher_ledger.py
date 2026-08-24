@@ -46,11 +46,22 @@ def main() -> int:
     teacher = ExactNativeTeacher(
         root=ROOT, representation=representation, device=args.device
     )
+    code_paths = {
+        "artifact_manifest": "src/core/artifact_manifest.py",
+        "core_preprocessor": "src/core/preprocessor.py",
+        "core_utils": "src/core/utils.py",
+        "dante_preprocessing": "src/dante_light/preprocessing.py",
+        "data_loader": "src/core/data_loader.py",
+        "encoder": "src/core/encoder.py",
+        "ledger_builder": Path(__file__).relative_to(ROOT).as_posix(),
+        "model_loader": "src/core/model_loader.py",
+        "patch_scorer": "src/core/patch_scorer.py",
+        "runtime_config": "config.yaml",
+        "teacher_implementation": "src/dante_light/prefilter_v5_teacher.py",
+    }
     code_references = {
-        "teacher_implementation": repository_reference(
-            ROOT, ROOT / "src/dante_light/prefilter_v5_teacher.py"
-        ),
-        "ledger_builder": repository_reference(ROOT, Path(__file__)),
+        label: repository_reference(ROOT, ROOT / path)
+        for label, path in code_paths.items()
     }
     summary = build_teacher_ledger(
         root=ROOT,

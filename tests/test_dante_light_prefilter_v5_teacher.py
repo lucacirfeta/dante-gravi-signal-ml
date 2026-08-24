@@ -6,6 +6,7 @@ import json
 
 import numpy as np
 import pytest
+from gwpy.timeseries import TimeSeries
 
 from src.dante_light.contracts import ContractError, RepresentationContract
 from src.dante_light.prefilter_v5_protocol import ROOT
@@ -14,6 +15,7 @@ from src.dante_light.prefilter_v5_teacher import (
     build_teacher_ledger,
     build_teacher_contract,
     load_training_rows,
+    read_contiguous_teacher_span,
     validate_teacher_contract,
     verify_teacher_ledger_summary,
 )
@@ -80,19 +82,71 @@ def test_teacher_contract_self_digest_is_fail_closed() -> None:
         validate_teacher_contract(contract, root=ROOT)
 
 
+def test_teacher_stitches_only_contiguous_local_raw_files(tmp_path) -> None:
+    boundary = 1369889024
+    first_start = boundary - 64
+    second_end = boundary + 64
+    first = tmp_path / f"H1_{first_start}_{boundary}.hdf5"
+    second = tmp_path / f"H1_{boundary}_{second_end}.hdf5"
+    TimeSeries(
+        np.zeros(64 * 4096, dtype=np.float32), sample_rate=4096, t0=first_start
+    ).write(first, format="hdf5", path="strain")
+    TimeSeries(
+        np.ones(64 * 4096, dtype=np.float32), sample_rate=4096, t0=boundary
+    ).write(second, format="hdf5", path="strain")
+    joined = read_contiguous_teacher_span(
+        [(first_start, boundary, first), (boundary, second_end, second)],
+        gps_start=boundary - 24,
+        gps_end=boundary + 16,
+        sample_rate_hz=4096,
+    )
+    assert joined is not None
+    assert joined.size == 40 * 4096
+    assert np.all(joined.value[: 24 * 4096] == 0.0)
+    assert np.all(joined.value[24 * 4096 :] == 1.0)
+
+
+def test_teacher_refuses_to_stitch_across_local_gap(tmp_path) -> None:
+    first = tmp_path / "L1_1000_1010.hdf5"
+    second = tmp_path / "L1_1011_1021.hdf5"
+    TimeSeries(np.zeros(10 * 4096), sample_rate=4096, t0=1000).write(
+        first, format="hdf5", path="strain"
+    )
+    TimeSeries(np.ones(10 * 4096), sample_rate=4096, t0=1011).write(
+        second, format="hdf5", path="strain"
+    )
+    assert (
+        read_contiguous_teacher_span(
+            [(1000, 1010, first), (1011, 1021, second)],
+            gps_start=1005,
+            gps_end=1016,
+            sample_rate_hz=4096,
+        )
+        is None
+    )
+
+
 def test_teacher_ledger_smoke_is_training_only_and_resumable(tmp_path) -> None:
     contract = build_teacher_contract(root=ROOT)
-    implementation = ROOT / "src/dante_light/prefilter_v5_teacher.py"
-    builder = ROOT / "scripts/build_dante_light_prefilter_v5_teacher_ledger.py"
+    paths = {
+        "artifact_manifest": "src/core/artifact_manifest.py",
+        "core_preprocessor": "src/core/preprocessor.py",
+        "core_utils": "src/core/utils.py",
+        "dante_preprocessing": "src/dante_light/preprocessing.py",
+        "data_loader": "src/core/data_loader.py",
+        "encoder": "src/core/encoder.py",
+        "ledger_builder": "scripts/build_dante_light_prefilter_v5_teacher_ledger.py",
+        "model_loader": "src/core/model_loader.py",
+        "patch_scorer": "src/core/patch_scorer.py",
+        "runtime_config": "config.yaml",
+        "teacher_implementation": "src/dante_light/prefilter_v5_teacher.py",
+    }
     references = {
-        "teacher_implementation": {
-            "path": implementation.relative_to(ROOT).as_posix(),
-            "sha256": hashlib.sha256(implementation.read_bytes()).hexdigest(),
-        },
-        "ledger_builder": {
-            "path": builder.relative_to(ROOT).as_posix(),
-            "sha256": hashlib.sha256(builder.read_bytes()).hexdigest(),
-        },
+        label: {
+            "path": path,
+            "sha256": hashlib.sha256((ROOT / path).read_bytes()).hexdigest(),
+        }
+        for label, path in paths.items()
     }
 
     def prepare(window):
