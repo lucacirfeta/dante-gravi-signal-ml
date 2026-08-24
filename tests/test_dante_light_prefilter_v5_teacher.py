@@ -8,7 +8,12 @@ import numpy as np
 import pytest
 from gwpy.timeseries import TimeSeries
 
-from src.dante_light.contracts import ContractError, RepresentationContract
+from scripts import verify_dante_light_prefilter_v5_teacher_ledger as teacher_verifier
+from src.dante_light.contracts import (
+    ContractError,
+    RepresentationContract,
+    WindowIdentity,
+)
 from src.dante_light.prefilter_v5_protocol import ROOT
 from src.dante_light.prefilter_v5_teacher import (
     PreparedTeacherInput,
@@ -194,3 +199,110 @@ def test_teacher_ledger_smoke_is_training_only_and_resumable(tmp_path) -> None:
     )
     assert verified["status"] == "PASS_SMOKE_ONLY"
     assert verified["row_count"] == 8
+
+
+def test_teacher_verifier_replays_frozen_samples_exactly(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    identities = [
+        WindowIdentity(run="O4A", detector="H1", gps_start=1_370_000_000.0),
+        WindowIdentity(run="O4A", detector="L1", gps_start=1_370_004_096.0),
+    ]
+    images = {
+        identity.window_id: np.full((2, 2, 3), index + 1, dtype=np.uint8)
+        for index, identity in enumerate(identities)
+    }
+    clean = {
+        identity.window_id: np.full(16, index + 0.25, dtype=np.float32)
+        for index, identity in enumerate(identities)
+    }
+    scores = {
+        identity.window_id: np.float32(index + 0.125)
+        for index, identity in enumerate(identities)
+    }
+    run_dir = tmp_path / "cache" / "teacher_test"
+    block_dir = run_dir / "blocks"
+    block_dir.mkdir(parents=True)
+    references = []
+    training_rows = []
+    for identity in identities:
+        row = {
+            "window": identity.to_dict(),
+            "raw_strain_sha256": "a" * 64,
+            "clean_strain_sha256": hashlib.sha256(
+                clean[identity.window_id].tobytes()
+            ).hexdigest(),
+            "image_sha256": hashlib.sha256(
+                images[identity.window_id].tobytes()
+            ).hexdigest(),
+            "teacher_target": {
+                "float32_hex": scores[identity.window_id].tobytes().hex()
+            },
+        }
+        path = block_dir / f"{identity.detector}.json"
+        path.write_text(json.dumps({"rows": [row]}), encoding="utf-8")
+        references.append({"path": f"blocks/{path.name}"})
+        training_rows.append({"window": identity.to_dict()})
+    artifact = tmp_path / "summary.json"
+    artifact.write_text(
+        json.dumps(
+            {
+                "cache_location": {"run_subdirectory": "teacher_test"},
+                "block_references": references,
+            }
+        ),
+        encoding="utf-8",
+    )
+    contract = build_teacher_contract(root=ROOT)
+    contract["replay_sample_window_ids"] = [
+        identity.window_id for identity in identities
+    ]
+
+    def prepare(identity, **_kwargs):
+        return PreparedTeacherInput(
+            image=images[identity.window_id],
+            clean_strain=clean[identity.window_id],
+            raw_strain_sha256="a" * 64,
+            clean_strain_sha256=hashlib.sha256(
+                clean[identity.window_id].tobytes()
+            ).hexdigest(),
+            image_sha256=hashlib.sha256(
+                images[identity.window_id].tobytes()
+            ).hexdigest(),
+            timings={"test_s": 0.0},
+        )
+
+    class FakeTeacher:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        def score(self, batch):
+            by_bytes = {
+                image.tobytes(): scores[window_id]
+                for window_id, image in images.items()
+            }
+            return [by_bytes[image.tobytes()] for image in batch], {}
+
+    monkeypatch.setattr(teacher_verifier, "load_teacher_contract", lambda **_kwargs: contract)
+    monkeypatch.setattr(
+        teacher_verifier,
+        "verify_teacher_ledger_summary",
+        lambda *_args, **_kwargs: {"status": "PASS_COMPLETE"},
+    )
+    monkeypatch.setattr(
+        teacher_verifier, "load_training_rows", lambda **_kwargs: ({}, training_rows)
+    )
+    monkeypatch.setattr(teacher_verifier, "prepare_teacher_input", prepare)
+    monkeypatch.setattr(teacher_verifier, "ExactNativeTeacher", FakeTeacher)
+
+    result = teacher_verifier.verify(
+        artifact=artifact,
+        cache_root=tmp_path / "cache",
+        replay_samples=True,
+        device="cpu",
+    )
+    assert result["status"] == "PASS_COMPLETE"
+    assert [row["status"] for row in result["exact_replay_samples"]] == [
+        "EXACT_MATCH",
+        "EXACT_MATCH",
+    ]
