@@ -63,9 +63,11 @@ def test_unlock_receipt_binds_teacher_and_cost_contracts() -> None:
     manifest = _manifest(); seal = _seal(manifest)
     development = {
         "status": "READY_FOR_CONFIRMATION", "protocol_sha256": seal["protocol_reference"]["sha256"],
-        "manifest_digest": seal["manifest_digest"], "model_digest": HEX, "threshold_digest": HEX,
+        "manifest_digest": seal["manifest_digest"], "model_digest": HEX,
+        "model_code_digest": HEX, "threshold_digest": HEX,
         "teacher_contract_digest": HEX, "paired_cost_contract_digest": HEX,
-        "replicate_selection_digest": HEX, "verifier_digest": HEX,
+        "injection_generator_digest": HEX, "replicate_selection_digest": HEX,
+        "verifier_digest": HEX,
     }
     receipt = build_unlock_receipt(manifest, seal, development, access_log_bytes=b"")
     assert receipt["receipt_digest"] == canonical_json_sha256({key: value for key, value in receipt.items() if key != "receipt_digest"})

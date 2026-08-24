@@ -235,7 +235,7 @@ def _injection_rows(design: Mapping[str, Any], selected: Mapping[tuple[str, str]
                 cell_cursor = 0
                 for distance in distances:
                     cell_seed = int(_priority(seed, detector, partition, system, distance)[:16], 16)
-                    samples = _lhs(cell_seed, 7, per_distance)
+                    samples = _lhs(cell_seed, 8, per_distance)
                     for local_index in range(per_distance):
                         block = ordered_blocks[cell_cursor]; cell_cursor += 1
                         gps = _choose_starts(valid[(detector, block)], 1, seed=seed, identity=f"injection:{detector}:{partition}:{system}:{distance}:{local_index}", forbidden=occupied[(detector, block)])[0]
@@ -257,7 +257,7 @@ def _injection_rows(design: Mapping[str, Any], selected: Mapping[tuple[str, str]
                                 "mass_2_msun": float(stress["neutron_star_mass_msun"][0] + u[5] * (stress["neutron_star_mass_msun"][1] - stress["neutron_star_mass_msun"][0])),
                                 "spin_1z": float(stress["black_hole_aligned_spin"][0] + u[6] * (stress["black_hole_aligned_spin"][1] - stress["black_hole_aligned_spin"][0])),
                                 "spin_2z": float(stress["neutron_star_aligned_spin"]),
-                                "lambda_2": float(stress["neutron_star_tidal_lambda"][0] + ((u[4]+u[5]) % 1.0) * (stress["neutron_star_tidal_lambda"][1] - stress["neutron_star_tidal_lambda"][0])),
+                                "lambda_2": float(stress["neutron_star_tidal_lambda"][0] + u[7] * (stress["neutron_star_tidal_lambda"][1] - stress["neutron_star_tidal_lambda"][0])),
                                 "f_low_hz": float(stress["f_low_hz"]),
                             })
                         trial["trial_digest"] = canonical_json_sha256(trial); trials.append(trial)

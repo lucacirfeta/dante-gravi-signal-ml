@@ -202,7 +202,12 @@ def verify_unopened_seal(manifest: Mapping[str, Any], seal: Mapping[str, Any], *
 
 def build_unlock_receipt(manifest: Mapping[str, Any], seal: Mapping[str, Any], development_result: Mapping[str, Any], *, access_log_bytes: bytes) -> dict[str, Any]:
     verify_unopened_seal(manifest, seal, access_log_bytes=access_log_bytes)
-    required = {"status", "protocol_sha256", "manifest_digest", "model_digest", "threshold_digest", "teacher_contract_digest", "paired_cost_contract_digest", "replicate_selection_digest", "verifier_digest"}
+    required = {
+        "status", "protocol_sha256", "manifest_digest", "model_digest",
+        "model_code_digest", "threshold_digest", "teacher_contract_digest",
+        "paired_cost_contract_digest", "injection_generator_digest",
+        "replicate_selection_digest", "verifier_digest",
+    }
     if set(development_result) != required or development_result["status"] != "READY_FOR_CONFIRMATION":
         raise ContractError("v5 development result cannot authorize confirmation")
     if development_result["protocol_sha256"] != seal["protocol_reference"]["sha256"] or development_result["manifest_digest"] != seal["manifest_digest"]:
