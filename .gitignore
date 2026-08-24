@@ -368,6 +368,10 @@ scripts/*
 !scripts/analyze_dante_light_prefilter_v5_power.py
 !scripts/build_dante_light_prefilter_v5_freeze.py
 !scripts/verify_dante_light_prefilter_v5_freeze.py
+!scripts/freeze_dante_light_prefilter_v5_development.py
+!scripts/build_dante_light_prefilter_v5_waveforms.py
+!scripts/run_dante_light_prefilter_v5_development.py
+!scripts/verify_dante_light_prefilter_v5_development.py
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_IDENTITY_AUDIT_2026-08-23.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_SCATTERING_FEASIBILITY_2026-08-23.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_FREEZE_2026-08-24.md

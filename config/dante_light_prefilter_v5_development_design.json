@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "status": "APPROVED_OUTCOME_BLIND_DEVELOPMENT_FREEZE_INPUT",
+  "decision_date": "2026-08-25",
+  "scope": {
+    "allowed_partition": "development",
+    "confirmation_access_allowed": false,
+    "o4b_access_allowed": false,
+    "routing_enabled": false,
+    "evaluate_all_frozen_arms": true,
+    "evaluate_all_frozen_replicates": true
+  },
+  "audit_stream": {
+    "fraction": 0.05,
+    "selection": "sha256_seed_colon_window_id_first_u64_uniform_lt_fraction",
+    "seed_derivation": "sha256_canonical_json_first_64_bits_big_endian",
+    "seed_purpose": "development_audit_stream",
+    "cost_included": true
+  },
+  "teacher_fidelity": {
+    "gate_population": "all_development_rows_separate_by_detector",
+    "metric": "spearman_rank_correlation",
+    "report_combined_and_per_role_morphology_diagnostics": true,
+    "bootstrap_unit": "detector_gps_4096s_block",
+    "bootstrap_interval": "equal_tailed_two_sided",
+    "bootstrap_quantile_method": "linear"
+  },
+  "threshold_selection": {
+    "score": "student_prediction_standardized_with_frozen_training_fit_statistics",
+    "routing_rule": "call_exact_if_student_score_gte_threshold_or_audit_selected",
+    "candidate_thresholds": "all_unique_observed_development_scores_plus_positive_infinity",
+    "detector_specific": true,
+    "method": "maximum_background_reduction_subject_to_all_development_gates",
+    "ties": "lowest_numeric_threshold_then_lexicographic_identity",
+    "protected_gates_separate_by_detector_role_and_morphology": true,
+    "no_cross_morphology_aggregation": true
+  },
+  "replicates": {
+    "candidate_identity": "architecture_plus_all_five_frozen_replicates",
+    "promotion_basis": "worst_replicate_all_gates",
+    "favorable_seed_selection_allowed": false,
+    "confirmation_candidate_if_ready": "same_architecture_all_five_replicates_and_their_detector_specific_thresholds"
+  },
+  "paired_cost": {
+    "population": "development_background_only",
+    "common_upstream_excluded": [
+      "data_read",
+      "whitening_with_context",
+      "clean_32s_crop"
+    ],
+    "prefilter_cost_included": [
+      "student_input_transform",
+      "student_batch1_inference"
+    ],
+    "avoidable_exact_path_cost_included": [
+      "q_transform",
+      "rendering",
+      "dino_embedding",
+      "native_index_scoring"
+    ],
+    "per_window_net_saving": "exact_call_avoided_times_avoidable_exact_path_cost_minus_prefilter_cost",
+    "audit_selected_windows_call_exact": true,
+    "bootstrap_unit": "detector_gps_4096s_block",
+    "bootstrap_interval": "equal_tailed_two_sided",
+    "bootstrap_quantile_method": "linear"
+  },
+  "shortcut_controls": {
+    "role": "diagnostic_only_no_unfrozen_pass_fail_threshold",
+    "report_detector_score_shift": true,
+    "report_error_by_role_and_morphology": true,
+    "report_calibration_by_teacher_quantile": true,
+    "teacher_quantile_bins": 10
+  },
+  "one_shot": {
+    "access_record": "append_only_before_first_development_strain_or_outcome_read",
+    "resume_same_run_key_after_infrastructure_interruption": true,
+    "changed_contract_code_model_or_split_requires_new_run_key_and_is_forbidden_after_first_access": true
+  }
+}
