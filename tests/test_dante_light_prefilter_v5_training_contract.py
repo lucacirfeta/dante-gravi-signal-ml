@@ -9,9 +9,11 @@ import pytest
 from src.dante_light.contracts import ContractError
 from src.dante_light.prefilter_v5_protocol import ROOT
 from src.dante_light.prefilter_v5_training_contract import (
+    DEFAULT_CONTRACT,
     DEFAULT_DESIGN,
     _float32_from_hex,
     assign_training_blocks,
+    load_training_freeze,
     target_standardization,
     validate_training_design,
 )
@@ -130,3 +132,22 @@ def test_float32_target_parser_rejects_nonfinite_values() -> None:
 
 def test_training_design_is_inside_repository() -> None:
     assert DEFAULT_DESIGN.resolve().is_relative_to(ROOT.resolve())
+
+
+def test_saved_training_freeze_is_complete_portable_and_outcome_closed() -> None:
+    contract = load_training_freeze(DEFAULT_CONTRACT, root=ROOT)
+    assert contract["status"] == "FROZEN_TRAINING_ONLY_BEFORE_STUDENT_FIT"
+    assert contract["training_contract_digest"] == (
+        "e2d21a930d71fe8ff276c0b3814ccaf73603fdaba02bd27cce2f400bd38a3e25"
+    )
+    assert contract["internal_split"]["block_counts"] == {
+        "H1": {"fit": 1080, "validation": 120},
+        "L1": {"fit": 1080, "validation": 120},
+    }
+    assert contract["internal_split"]["row_counts"] == {
+        "H1": {"fit": 8640, "validation": 960},
+        "L1": {"fit": 8640, "validation": 960},
+    }
+    assert contract["development_rows_accessed"] == []
+    assert contract["confirmation_rows_accessed"] == []
+    assert contract["o4b_rows_accessed"] == []
