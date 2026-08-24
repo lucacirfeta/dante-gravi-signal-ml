@@ -98,6 +98,9 @@ def build_identity_manifest(
     cohort_ids = [row["cohort_id"] for row in normalized]
     if len(cohort_ids) != len(set(cohort_ids)):
         raise ContractError("v5 manifest contains duplicate cohort identities")
+    window_ids = [row["window"]["window_id"] for row in normalized]
+    if len(window_ids) != len(set(window_ids)):
+        raise ContractError("v5 manifest contains duplicate detector/window identities")
     blocks_by_partition = {name: set() for name in PARTITIONS}
     for row in normalized:
         block = gps_block_key(row)
