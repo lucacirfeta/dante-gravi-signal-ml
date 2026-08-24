@@ -2,9 +2,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
+from gwpy.timeseries import TimeSeries
 
+from src.dante_light.contracts import FailClosedReason, WindowIdentity
+from src.dante_light.executor import DeferredWindow
+import src.dante_light.prefilter_v5_development as development_module
 from src.dante_light.prefilter_v5_development_contract import (
     build_development_contract,
     validate_development_contract,
@@ -128,3 +133,40 @@ def test_v5_development_design_declares_diagnostic_shortcuts_not_hidden_gates() 
     )
     assert design["shortcut_controls"]["role"] == "diagnostic_only_no_unfrozen_pass_fail_threshold"
     assert design["replicates"]["favorable_seed_selection_allowed"] is False
+
+
+def test_v5_remote_strain_is_cached_only_inside_open_development_run(
+    tmp_path: Path, monkeypatch
+) -> None:
+    window = WindowIdentity(run="O3B", detector="H1", gps_start=1_264_000_000.0)
+    representation = SimpleNamespace(
+        whitening_pad_s=4.0,
+        sample_rate_hz=4096,
+    )
+    values = np.zeros(40 * 4096, dtype=np.float64)
+    fetched = TimeSeries(values, sample_rate=4096, t0=window.gps_start - 4.0)
+    calls = {"remote": 0}
+
+    def local_miss(*args, **kwargs):
+        raise DeferredWindow(FailClosedReason.DEPENDENCY_UNAVAILABLE)
+
+    def remote_fetch(*args, **kwargs):
+        calls["remote"] += 1
+        return fetched
+
+    monkeypatch.setattr(development_module, "_fetch_teacher_strain", local_miss)
+    from src.core import data_loader
+
+    monkeypatch.setattr(data_loader, "fetch_strain_data", remote_fetch)
+    cache = tmp_path / "development_run" / "raw_strain_cache"
+    first, first_meta = development_module._fetch_development_strain(
+        window, representation=representation, raw_cache_dir=cache
+    )
+    second, second_meta = development_module._fetch_development_strain(
+        window, representation=representation, raw_cache_dir=cache
+    )
+    assert calls["remote"] == 1
+    assert np.array_equal(first.value, second.value)
+    assert first_meta["strain_source"] == "gwosc_fetched_into_development_run_cache"
+    assert second_meta["strain_source"] == "development_run_cache"
+    assert first_meta["raw_cache_file_sha256"] == second_meta["raw_cache_file_sha256"]

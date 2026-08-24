@@ -263,6 +263,59 @@ def _digest_array(value: np.ndarray) -> str:
     return hashlib.sha256(np.ascontiguousarray(value).tobytes()).hexdigest()
 
 
+def _fetch_development_strain(
+    window: WindowIdentity,
+    *,
+    representation: RepresentationContract,
+    raw_cache_dir: Path,
+) -> tuple[object, dict[str, Any]]:
+    """Read local strain or fetch once into the versioned E: run cache."""
+
+    from gwpy.timeseries import TimeSeries
+
+    from src.core import data_loader
+
+    start = window.gps_start - representation.whitening_pad_s
+    end = window.gps_start + window.duration_s + representation.whitening_pad_s
+    cache_name = f"{window.detector}_{start}_{end}.hdf5"
+    cache_path = raw_cache_dir / cache_name
+    if cache_path.is_file():
+        strain = TimeSeries.read(cache_path)
+        source = "development_run_cache"
+    else:
+        try:
+            strain = _fetch_teacher_strain(
+                window, representation=representation, local_only=True
+            )
+            source = "preexisting_local_raw_mirror"
+        except DeferredWindow as exc:
+            if exc.reason != FailClosedReason.DEPENDENCY_UNAVAILABLE:
+                raise
+            strain = data_loader.fetch_strain_data(
+                window.detector,
+                start,
+                end,
+                sample_rate=representation.sample_rate_hz,
+                local_only=False,
+                remote_only=False,
+                cache_raw=False,
+            )
+            raw_cache_dir.mkdir(parents=True, exist_ok=True)
+            temporary = cache_path.with_suffix(".tmp.hdf5")
+            strain.write(temporary, format="hdf5", path="strain")
+            temporary.replace(cache_path)
+            source = "gwosc_fetched_into_development_run_cache"
+    return strain, {
+        "strain_source": source,
+        "raw_cache_path": (
+            cache_path.relative_to(raw_cache_dir.parent).as_posix()
+            if cache_path.is_file()
+            else None
+        ),
+        "raw_cache_file_sha256": sha256_path(cache_path) if cache_path.is_file() else None,
+    }
+
+
 def _prepare_from_strain(
     strain: object,
     *,
@@ -338,12 +391,17 @@ def _prepare_injection(
     representation: RepresentationContract,
     waveform_run_dir: Path,
     waveform_record: Mapping[str, Any],
+    raw_cache_dir: Path,
 ) -> tuple[PreparedTeacherInput, dict[str, Any]]:
     from src.core.injection import InjectionEngine
 
     window = WindowIdentity.from_dict(row["window"])
     began = time.perf_counter()
-    raw = _fetch_teacher_strain(window, representation=representation, local_only=True)
+    raw, source_metadata = _fetch_development_strain(
+        window,
+        representation=representation,
+        raw_cache_dir=raw_cache_dir,
+    )
     data_read_s = time.perf_counter() - began
     raw_values = np.ascontiguousarray(raw.value)
     with np.load(waveform_run_dir / waveform_record["array_path"], allow_pickle=False) as values:
@@ -368,6 +426,7 @@ def _prepare_injection(
         "projected_waveform_sha256": waveform_record["array_sha256"],
         "waveform_record_digest": waveform_record["record_digest"],
         "snr_used_for_selection_or_gate": False,
+        **source_metadata,
     }
 
 
@@ -548,12 +607,25 @@ def run_development_evaluation(
                 representation=representation,
                 waveform_run_dir=waveform_dir,
                 waveform_record=waveforms[source_id],
+                raw_cache_dir=run_dir / "raw_strain_cache",
             )
         window = WindowIdentity.from_dict(row["window"])
-        prepared = __import__(
-            "src.dante_light.prefilter_v5_teacher", fromlist=["prepare_teacher_input"]
-        ).prepare_teacher_input(window, representation=representation, local_only=True)
-        return prepared, {}
+        began = time.perf_counter()
+        strain, source_metadata = _fetch_development_strain(
+            window,
+            representation=representation,
+            raw_cache_dir=run_dir / "raw_strain_cache",
+        )
+        data_read_s = time.perf_counter() - began
+        raw_values = np.ascontiguousarray(strain.value)
+        prepared = _prepare_from_strain(
+            strain,
+            window=window,
+            representation=representation,
+            raw_sha256=_digest_array(raw_values),
+        )
+        prepared.timings["data_read_s"] = data_read_s
+        return prepared, source_metadata
 
     pending = []
     completed: dict[str, dict[str, Any]] = {}
