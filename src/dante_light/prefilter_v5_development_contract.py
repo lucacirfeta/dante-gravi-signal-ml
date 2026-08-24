@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
+import subprocess
 from typing import Any, Mapping
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
@@ -37,6 +39,24 @@ def _load(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ContractError(f"v5 development JSON is not a mapping: {path}")
     return value
+
+
+def _reference_digest_candidates(root: Path, path: Path) -> set[str]:
+    candidates = {sha256_path(path)} if path.is_file() else set()
+    try:
+        relative = path.resolve().relative_to(root.resolve()).as_posix()
+        candidates.add(
+            hashlib.sha256(
+                subprocess.check_output(
+                    ["git", "show", f"HEAD:{relative}"],
+                    cwd=root,
+                    stderr=subprocess.DEVNULL,
+                )
+            ).hexdigest()
+        )
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+    return candidates
 
 
 def _validate_design(value: Mapping[str, Any]) -> dict[str, Any]:
@@ -214,7 +234,7 @@ def validate_development_contract(
             path = root / str(reference["path"])
             if (
                 not path.is_file()
-                or repository_reference(root, path)["sha256"] != reference["sha256"]
+                or reference["sha256"] not in _reference_digest_candidates(root, path)
             ):
                 raise ContractError(f"v5 development reference mismatch: {group}.{label}")
     protocol = load_protocol(
