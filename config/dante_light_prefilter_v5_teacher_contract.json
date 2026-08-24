@@ -1,0 +1,99 @@
+{
+  "access_boundary": {
+    "allowed_partitions": [
+      "training"
+    ],
+    "allowed_roles": [
+      "background"
+    ],
+    "confirmation_rows_allowed": false,
+    "development_rows_allowed": false,
+    "morphology_labels_used": false,
+    "o4b_rows_allowed": false
+  },
+  "cache": {
+    "canonical_whitened_float32_cached": true,
+    "default_windows_location": "E:/dante_cache/dante_light/prefilter_l4_v5_training",
+    "environment_alias": "DANTE_V5_CACHE_ROOT",
+    "incompatible_run_reuse_allowed": false,
+    "large_ledgers_committed_to_git": false
+  },
+  "protocol_reference": {
+    "path": "config/dante_light_prefilter_protocol_v5.json",
+    "sha256": "9eef90c51fde30c539fff770ab9970d9666e47b4fa49314c815f6d0a7d4486fd"
+  },
+  "reference_manifest_reference": {
+    "path": "config/reference_artifacts.json",
+    "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+  },
+  "replay_sample_window_ids": [
+    "dlw1-3512749a443710c07627e2a0",
+    "dlw1-20e17f505ba90d9e17c933a6"
+  ],
+  "representation": {
+    "analysis_duration_s": 32.0,
+    "colormap": "cividis",
+    "contract_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+    "encoder_input_size": [
+      518,
+      518
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "model_artifact_id": "dinov2_vits14_reg",
+    "model_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "model_source_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+    "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "primary_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "query_qrange": [
+      4,
+      64
+    ],
+    "sample_rate_hz": 4096,
+    "schema_version": 1,
+    "top_k": 68,
+    "variant": "idxq4-64_queryq4-64",
+    "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+    "whitening_pad_s": 4.0
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "distils_exact_runtime_routing_score": true,
+    "does_not_authorize_development_confirmation_o4b_or_routing": true,
+    "does_not_establish_physical_truth": true,
+    "outcome_fields_accessed_at_freeze": []
+  },
+  "split_entries_reference": {
+    "path": "config/dante_light_prefilter_splits_v5.jsonl",
+    "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+  },
+  "split_header_reference": {
+    "path": "config/dante_light_prefilter_splits_v5.json",
+    "sha256": "72590d1d01cf0c8cd3f197f95966c734152fc483302b3b2311ca2070bd69607b"
+  },
+  "status": "FROZEN_TRAINING_ONLY",
+  "teacher": {
+    "decision_score_key": "native",
+    "encoder_index_artifact_id": "o3b_production_k275",
+    "encoder_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "engine": "shared_encoder_score_only",
+    "output_mode": "score_only",
+    "physical_truth_label": false,
+    "primary_o3b_score_as_target": false,
+    "standardization": "per_detector_mean_and_std_fit_on_training_only",
+    "target_index_artifact_id": "o4a_native_q4_64_k1216",
+    "target_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "target_name": "native_o4a_novelty_score",
+    "threshold_applied": false
+  },
+  "teacher_contract_digest": "0b7abca302097714410282df7dfaa79722e8069f29a81f93158ad81feb1f24b1",
+  "training_identity_count": 19200,
+  "training_identity_digest": "651a980f046ff270ea30e2301371167f06ebb6d027aa945aa854f45387277dd3"
+}
