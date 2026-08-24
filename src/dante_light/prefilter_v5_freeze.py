@@ -68,16 +68,17 @@ def _valid_starts(flags: Mapping[str, Any], detector: str, block: int, *, durati
 
 
 def _choose_starts(candidates: Sequence[float], count: int, *, seed: int, identity: str, forbidden: Sequence[tuple[float, float]] = ()) -> list[float]:
-    chosen: list[float] = []
     occupied = list(forbidden)
-    for start in sorted(candidates, key=lambda value: (_priority(seed, identity, value), value)):
+    maximal: list[float] = []
+    # Earliest-finish interval scheduling gives a maximum-cardinality set.
+    for start in sorted(candidates):
         interval = (start - 4.0, start + 36.0)
         if any(left < interval[1] and interval[0] < right for left, right in occupied):
             continue
-        chosen.append(start); occupied.append(interval)
-        if len(chosen) == count:
-            return chosen
-    raise ContractError(f"insufficient disjoint valid windows for {identity}: {len(chosen)}/{count}")
+        maximal.append(start); occupied.append(interval)
+    if len(maximal) < count:
+        raise ContractError(f"insufficient disjoint valid windows for {identity}: {len(maximal)}/{count}")
+    return sorted(maximal, key=lambda value: (_priority(seed, identity, value), value))[:count]
 
 
 def _identity(*, role: str, detector: str, morphology: str, partition: str, gps: float, priority: str, source_kind: str, run: str, source_id: str, stratum: Mapping[str, Any]) -> dict[str, Any]:
