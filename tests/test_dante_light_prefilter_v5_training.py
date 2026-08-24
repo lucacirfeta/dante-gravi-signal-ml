@@ -9,12 +9,14 @@ import torch
 from src.dante_light.contracts import ContractError
 from src.dante_light.prefilter_v5_protocol import ROOT
 from src.dante_light.prefilter_v5_training import (
+    BlockBatch,
     NumericalTrainingFailure,
     _finite_tensor,
     _model,
     _optimizer,
     epoch_block_batches,
     student_input,
+    train_replicate,
     training_run_key,
 )
 from src.dante_light.prefilter_v5_training_contract import load_training_freeze
@@ -135,3 +137,35 @@ def test_training_contract_keeps_all_protected_partitions_closed() -> None:
     assert contract["confirmation_rows_accessed"] == []
     assert contract["o4b_rows_accessed"] == []
     assert contract["design"]["scope"]["morphology_labels_allowed"] is False
+
+
+def test_nonfinite_replicate_is_failed_and_cannot_be_promoted(tmp_path) -> None:
+    class NonfiniteCache:
+        def block_indices(self, _subset: str) -> dict[str, list[int]]:
+            return {"H1": [0, 1, 2, 3], "L1": [0, 1, 2, 3]}
+
+        def load_batch(self, _h1, _l1) -> BlockBatch:
+            return BlockBatch(
+                strain=np.full((64, 1024), np.nan, dtype=np.float32),
+                targets=np.zeros(64, dtype=np.float32),
+                detectors=np.repeat(np.asarray([0, 1], dtype=np.int8), 32),
+                window_ids=tuple(f"window-{index}" for index in range(64)),
+            )
+
+    summary = train_replicate(
+        root=ROOT,
+        contract=_contract(),
+        cache=NonfiniteCache(),
+        run_dir=tmp_path,
+        run_key="a" * 64,
+        arm="raw_1d_depthwise",
+        replicate_index=0,
+        seed=123,
+        device=torch.device("cpu"),
+        maximum_epochs=1,
+        limit_batches=1,
+        smoke=True,
+    )
+    assert summary["status"] == "FAILED_NUMERICAL"
+    assert summary["candidate_promotion_allowed"] is False
+    assert "non-finite" in summary["reason"]
