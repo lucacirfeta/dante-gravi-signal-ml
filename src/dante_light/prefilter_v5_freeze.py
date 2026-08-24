@@ -47,10 +47,22 @@ def _hardware_clear(flags: Mapping[str, Any], detector: str, start: float, end: 
 
 def _valid_starts(flags: Mapping[str, Any], detector: str, block: int, *, duration: float, pad: float) -> list[float]:
     left = block * 4096
+    right = left + 4096
+    cat1 = [
+        (float(start), float(end))
+        for start, end in flags[f"{detector}_O4A_CBC_CAT1"]["segments"]
+        if float(start) < right and left < float(end)
+    ]
+    excluded = [
+        (float(start), float(end))
+        for suffix in ("HW_INJ", "CBC_INJ", "BURST_INJ")
+        for start, end in flags[f"{detector}_O4A_{suffix}"]["segments"]
+        if float(start) < right and left < float(end)
+    ]
     result = []
     for offset in range(int(pad), 4096 - int(duration + pad) + 1, 4):
         start = float(left + offset); padded_left = start - pad; padded_right = start + duration + pad
-        if _contained(flags[f"{detector}_O4A_CBC_CAT1"]["segments"], padded_left, padded_right) and _hardware_clear(flags, detector, padded_left, padded_right):
+        if any(a <= padded_left and padded_right <= b for a, b in cat1) and all(not (a < padded_right and padded_left < b) for a, b in excluded):
             result.append(start)
     return result
 
