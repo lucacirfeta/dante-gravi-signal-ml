@@ -87,7 +87,7 @@
     },
     "development_contract": {
       "path": "src/dante_light/prefilter_v5_development_contract.py",
-      "sha256": "10fe0296325859c9583f7bdf4277e0e75d5ca8a2c3459fc87e0c7395b2644aaf"
+      "sha256": "dbe4ded9fede7943a6ee58d6e9c45414a079632cb1c757a57abe7d6135b1f1f3"
     },
     "development_evaluator": {
       "path": "src/dante_light/prefilter_v5_development.py",
@@ -124,7 +124,7 @@
   },
   "confirmation_access_at_freeze": [],
   "development_access_at_freeze": [],
-  "development_contract_digest": "eed822be414894dadf91e393854c8dd7b6bb265a072b93d33d134a463d53c83b",
+  "development_contract_digest": "66871d3402b33082435a1887dd60bee0fc793a2654f60d35b279f3c13e167b53",
   "o4b_access_at_freeze": [],
   "parent_digests": [
     "30710d617c5c5ae25b243d406704cced2860dd36d2f262d6fef42b914cca81cd",
