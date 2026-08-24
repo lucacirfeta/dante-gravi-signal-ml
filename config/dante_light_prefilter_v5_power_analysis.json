@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_POWER_CONTRACT",
+  "analysis_id": "dante-light-l4-prefilter-v5-confirmation-power",
+  "design_path": "config/dante_light_prefilter_v5_design.json",
+  "retention_sample_sizes": [18, 20, 25, 35, 39, 60, 90],
+  "contract_digest": "b5f47d7ce5c84cef3ce5cf233dd00c32277ed72cd39950fca960afb90d14d13d"
+}

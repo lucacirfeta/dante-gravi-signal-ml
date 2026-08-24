@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "status": "APPROVED_OUTCOME_BLIND_FREEZE_INPUT",
+  "design_id": "dante-light-l4-prefilter-v5-learned-surrogate",
+  "scientific_boundary": {
+    "development_outcomes_allowed": false,
+    "confirmation_outcomes_allowed": false,
+    "o4b_outcomes_allowed": false,
+    "routing_enabled": false,
+    "prior_v1_v4_results": "EXPLORATORY_FOR_V5",
+    "scattering": "EXCLUDED_AFTER_NEGATIVE_FEASIBILITY",
+    "does_not_establish": [
+      "independent_physical_or_astrophysical_classification",
+      "sensitivity_to_precessing_NSBH_waveforms",
+      "NSBH_coverage_outside_the_preregistered_aligned_spin_tidal_box",
+      "O4b_or_operational_routing_readiness"
+    ]
+  },
+  "signal": {
+    "detectors": ["H1", "L1"],
+    "run": "O4A",
+    "sample_rate_hz": 4096,
+    "window_duration_s": 32.0,
+    "whitening_context_pad_s": 4.0,
+    "gps_block_duration_s": 4096,
+    "canonical_sequence": [
+      "fetch_padded_strain",
+      "whiten_context_pad_4s",
+      "extract_clean_32s_crop",
+      "student_input_transform"
+    ]
+  },
+  "partition_contract": {
+    "blocks_per_detector": {
+      "training": 1200,
+      "development": 300,
+      "confirmation": 300
+    },
+    "background_windows_per_block": {
+      "training": 8,
+      "development": 1,
+      "confirmation": 1
+    },
+    "protected_per_detector_stratum": {
+      "robust_candidate": {"development": 60, "confirmation": 60},
+      "known_glitch": {"development": 60, "confirmation": 60},
+      "injection": {"development": 90, "confirmation": 90}
+    },
+    "known_glitch_morphologies": ["Blip", "KoiFish", "ScatteredLight"],
+    "require_detector_gps_block_disjoint_partitions": true,
+    "background_population": "CBC_CAT1_shadow_traffic_not_morphology_clean",
+    "background_window_may_not_overlap_a_protected_window_in_the_same_block": true,
+    "training_labels_used": false,
+    "training_teacher_scores_used": true
+  },
+  "teacher": {
+    "target": "continuous_exact_DANTE_novelty_score",
+    "standardization": "per_detector_mean_and_std_fit_on_training_only",
+    "model_scope": "one_shared_H1_L1_model_without_detector_input",
+    "threshold_scope": "detector_specific",
+    "physical_truth_label": false
+  },
+  "students": {
+    "selection_priority": ["raw_1d_depthwise", "complex_stft_2d"],
+    "raw_1d_depthwise": {
+      "input": "whitened_1d_float32",
+      "implementation_class": "Raw1DDepthwiseStudentProxy",
+      "implementation_reference": "src/dante_light/prefilter_v4_student.py",
+      "trainable_parameters": 3665
+    },
+    "complex_stft_2d": {
+      "input": "whitened_complex_stft_real_imag_float32",
+      "implementation_class": "ComplexSTFT2DStudentProxy",
+      "implementation_reference": "src/dante_light/prefilter_v4_student.py",
+      "trainable_parameters": 1369,
+      "stft": {
+        "window": "hann",
+        "nperseg": 1024,
+        "noverlap": 512,
+        "nfft": 1024,
+        "boundary": null,
+        "padded": false,
+        "frequency_band_hz": [20.0, 1024.0]
+      }
+    },
+    "loss": {"name": "SmoothL1Loss", "protected_morphology_labels_in_loss": false},
+    "replicate_count": 5,
+    "promotion_basis": "worst_replicate_all_gates",
+    "favorable_seed_selection_allowed": false
+  },
+  "gates": {
+    "protected_retention": {
+      "minimum_point_retention": 0.9,
+      "minimum_wilson_lower": 0.8,
+      "wilson_confidence": 0.95,
+      "operator": "AND",
+      "separate_by_detector_and_morphology": true
+    },
+    "teacher_fidelity": {
+      "minimum_spearman": 0.9,
+      "minimum_block_bootstrap_lower": 0.85,
+      "separate_by_detector": true
+    },
+    "operational": {
+      "minimum_background_call_reduction": 0.5,
+      "background_call_reduction_role": "product_requirement_not_significance",
+      "minimum_mean_net_saving_s": 0.0,
+      "mean_net_saving_lower_operator": ">",
+      "paired_per_window_costs_required": true,
+      "deterministic_audit_stream_cost_included": true
+    },
+    "uncertainty": {
+      "method": "detector_gps_4096s_block_bootstrap",
+      "confidence": 0.95,
+      "n_resamples": 2000,
+      "iid_bootstrap_allowed": false
+    },
+    "threshold_selection": {
+      "method": "maximum_background_reduction_subject_to_all_development_gates",
+      "ties": "lowest_numeric_threshold_then_lexicographic_identity",
+      "no_cross_morphology_aggregation": true
+    }
+  },
+  "power": {
+    "true_retention_alternative": 0.95,
+    "minimum_pass_probability": 0.9,
+    "background_maximum_wilson_half_width": 0.06,
+    "background_precision_reference_probability": 0.5
+  },
+  "waveforms": {
+    "sample_rate_hz": 4096,
+    "window_duration_s": 32.0,
+    "placement": "geocentric_merger_at_window_midpoint_plus_detector_delay",
+    "snr_role": "diagnostic_only_never_selection_or_gate",
+    "distance_mpc": [100.0, 200.0, 400.0, 800.0, 1600.0],
+    "trials_per_distance_detector_partition": 18,
+    "legacy_comparability": {
+      "approximant": "IMRPhenomD",
+      "systems": {
+        "BBH_30_30": {"mass_1_msun": 30.0, "mass_2_msun": 30.0, "f_low_hz": 20.0},
+        "BBH_10_10": {"mass_1_msun": 10.0, "mass_2_msun": 10.0, "f_low_hz": 25.0},
+        "NSBH_10_1.4_LEGACY": {
+          "mass_1_msun": 10.0,
+          "mass_2_msun": 1.4,
+          "f_low_hz": 30.0,
+          "tidal_effects_included": false,
+          "physical_scope": "point_particle_comparability_control_only"
+        }
+      }
+    },
+    "aligned_tidal_nsbh_stress": {
+      "system": "NSBH_ALIGNED_TIDAL_STRESS",
+      "approximant": "IMRPhenomNSBH",
+      "f_low_hz": 30.0,
+      "black_hole_mass_msun": [5.0, 20.0],
+      "neutron_star_mass_msun": [1.2, 2.0],
+      "black_hole_aligned_spin": [-0.5, 0.75],
+      "neutron_star_aligned_spin": 0.0,
+      "neutron_star_tidal_lambda": [100.0, 1000.0],
+      "sampling": "seeded_stratified_LatinHypercube_no_optimization",
+      "precession": "OUT_OF_SCOPE",
+      "separate_gate_from_legacy_NS_BH": true
+    }
+  },
+  "seed_derivation": {
+    "method": "sha256_canonical_json_first_64_bits_big_endian",
+    "purposes": [
+      "partition",
+      "background_windows",
+      "robust_selection",
+      "known_selection",
+      "injection_trials",
+      "bootstrap",
+      "training_replicate_0",
+      "training_replicate_1",
+      "training_replicate_2",
+      "training_replicate_3",
+      "training_replicate_4"
+    ]
+  },
+  "confirmation": {
+    "one_shot": true,
+    "open_only_after_development_ready": true,
+    "protected_endpoints": [
+      "teacher_scores",
+      "student_outputs",
+      "protected_stratum_retention",
+      "background_routing_decisions",
+      "paired_prefilter_costs",
+      "paired_avoidable_exact_path_costs",
+      "teacher_fidelity",
+      "block_bootstrap_net_saving"
+    ],
+    "endpoint": "retention_fidelity_and_paired_cost_benefit",
+    "can_authorize_o4b_or_routing": false
+  }
+}
