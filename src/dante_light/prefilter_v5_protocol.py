@@ -67,7 +67,8 @@ def _reference(root: Path, value: Mapping[str, Any], label: str) -> Path:
     candidates = {sha256_path(path)} if path.is_file() else set()
     try:
         candidates.add(hashlib.sha256(subprocess.check_output(
-            ["git", "show", f"HEAD:{value['path']}"], cwd=root
+            ["git", "show", f"HEAD:{value['path']}"], cwd=root,
+            stderr=subprocess.DEVNULL,
         )).hexdigest())
     except (OSError, subprocess.SubprocessError):
         pass

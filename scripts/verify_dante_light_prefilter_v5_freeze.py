@@ -24,7 +24,10 @@ def _reference(reference: dict[str, str]) -> Path:
     path = ROOT / reference["path"]
     candidates = {sha256_path(path)} if path.is_file() else set()
     try:
-        candidates.add(hashlib.sha256(subprocess.check_output(["git", "show", f"HEAD:{reference['path']}"], cwd=ROOT)).hexdigest())
+        candidates.add(hashlib.sha256(subprocess.check_output(
+            ["git", "show", f"HEAD:{reference['path']}"], cwd=ROOT,
+            stderr=subprocess.DEVNULL,
+        )).hexdigest())
     except (OSError, subprocess.SubprocessError):
         pass
     if reference["sha256"] not in candidates:
