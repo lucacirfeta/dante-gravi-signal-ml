@@ -54,6 +54,15 @@ background-call reduction, including the deterministic audit stream, must be
 at least 0.50. Finally, the 95% detector/GPS-block-bootstrap lower bound on
 mean net saving must be positive.
 
+The failure hierarchy is important. Protected retention is not the failed
+scientific endpoint: every detector/morphology retention gate passes at the
+selected thresholds for all ten candidates. The primary failure is that no
+student reproduces the continuous teacher ordering with the required
+detector-wise fidelity. A separate operational failure then remains because
+the retention-compatible thresholds avoid only 1.83--10.83% of background
+calls, rather than the required 50%. This differs from interpreting the result
+as a morphology-specific retention failure.
+
 The fidelity gate fails decisively for every replicate:
 
 | Architecture | Development Spearman range | Bootstrap lower-bound range | Replicates passing fidelity |
@@ -92,11 +101,20 @@ gate has already failed.
 
 Training-only SmoothL1 favored the raw 1-D student, and the independent
 development result confirms that it generalizes better than the STFT
-comparator in rank agreement. It does **not** confirm adequate distillation:
-the raw model preserves only moderate ordering agreement with exact DANTE, and
-that agreement is weaker in L1 for four of five replicates. The complex-STFT
-representation does not repair this deficit and is more variable across
-replicates.
+comparator in rank agreement. The best internal validation SmoothL1 values
+span 0.106--0.143 for raw 1-D and 0.142--0.182 for complex STFT, in
+per-detector standardized target units. These values are neither training-set
+Spearman coefficients nor a frozen fidelity gate. Their non-zero magnitude
+therefore does not by itself establish that the student fails to rank the
+teacher even on the fit identities, or that the approximation has reached an
+irreducible structural limit. SmoothL1 error and rank agreement are related
+but not interchangeable.
+
+What the independent development result does establish is inadequate
+out-of-sample distillation under the frozen contract: the raw model preserves
+only moderate ordering agreement with exact DANTE, and that agreement is
+weaker in L1 for four of five replicates. The complex-STFT representation does
+not repair this deficit and is more variable across replicates.
 
 The result establishes that these frozen architectures, training population,
 loss, and optimization contract do not yield a safe operational surrogate of
@@ -107,12 +125,15 @@ at a low routing threshold is also not evidence of useful discrimination: a
 filter can retain nearly everything by calling the exact path nearly
 everywhere.
 
-No causal diagnosis is proven by this screen. Plausible questions for a future
-feasibility protocol include whether continuous-score distillation needs
-rank-aware supervision, whether the student capacity or receptive field is
-insufficient, and whether the training identities cover the teacher-score
-support needed for detector-wise generalization. Those are hypotheses for a
-new outcome-blind design, not post-hoc changes to v5.
+No causal diagnosis is proven by this screen. In particular, v5 does not
+distinguish among insufficient student capacity, an objective mismatch between
+SmoothL1 and rank fidelity, inadequate teacher-score support in the training
+identities, or detector-dependent generalization. Distinguishing those
+mechanisms requires training-only fit/validation rank diagnostics, a
+predeclared capacity scaling study, and a rank-aware objective comparator
+before any fresh development cohort is opened. Those are hypotheses and
+requirements for a new outcome-blind design, not post-hoc changes to v5 or a
+reason to declare distillation in general closed.
 
 ## Reproduction
 
