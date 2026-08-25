@@ -83,3 +83,15 @@ python scripts/verify_dante_light_prefilter_v5_training_diagnostics.py
 
 The compact result is
 `artifacts/dante_light/prefilter_l4_v5_training/diagnostics_v5.json`.
+
+## Verification evidence
+
+- Targeted diagnostic/training suite on the producing checkout: 25 passed.
+- Full producing-checkout suite: 504 passed, 1 skipped, 0 failed.
+- Fresh-clone diagnostic verifier: PASS; targeted tests: 5 passed.
+- Full fresh-clone suite: 500 passed, 5 skipped, 0 failed.
+
+The fresh-clone skips are explicit missing optional resources: published
+reference artifacts, production reference index, calibrated thresholds, the
+smoke-test reference index, and the `nds2` Python client. They are not v5/v6
+diagnostic gates and were not converted into PASS.
