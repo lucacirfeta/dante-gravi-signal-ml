@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
-from src.dante_light.prefilter_v5_protocol import sha256_path
+from src.dante_light.prefilter_v5_protocol import repository_reference, sha256_path
 from src.dante_light.prefilter_v6_phase_b import load_phase_b_contract, select_phase_b_arm
 from src.dante_light.prefilter_v6_training import training_run_key
 from src.dante_light.prefilter_v6_training_contract import load_training_freeze
@@ -48,7 +48,10 @@ def verify(*, artifact: Path, cache_root: Path, require_complete: bool = True) -
             raise ContractError(f"v6 Phase-B summary crossed protected boundary: {field}")
     for name, reference in summary.get("code_references", {}).items():
         source = ROOT / reference["path"]
-        if not source.is_file() or sha256_path(source) != reference["sha256"]:
+        if (
+            not source.is_file()
+            or repository_reference(ROOT, source)["sha256"] != reference["sha256"]
+        ):
             raise ContractError(f"v6 Phase-B code reference mismatch: {name}")
     expected_run_key = training_run_key(
         contract,

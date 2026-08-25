@@ -140,7 +140,10 @@ def load_teacher_contract(path: Path = DEFAULT_CONTRACT, *, root: Path = ROOT) -
         raise ContractError("v6 teacher contract is not frozen")
     for name, reference in payload["source_references"].items():
         source = root / reference["path"]
-        if not source.is_file() or sha256_path(source) != reference["sha256"]:
+        if (
+            not source.is_file()
+            or repository_reference(root, source)["sha256"] != reference["sha256"]
+        ):
             raise ContractError(f"v6 teacher source mismatch: {name}")
     rows = phase_b_windows(root=root)
     if payload["identity_count"] != len(rows) or payload["identity_digest"] != canonical_json_sha256(
@@ -230,7 +233,10 @@ def build_teacher_ledger(
         raise ContractError("v6 teacher worker count is outside [1,16]")
     for name, reference in code_references.items():
         source = root / reference["path"]
-        if not source.is_file() or sha256_path(source) != reference["sha256"]:
+        if (
+            not source.is_file()
+            or repository_reference(root, source)["sha256"] != reference["sha256"]
+        ):
             raise ContractError(f"v6 teacher code reference mismatch: {name}")
     run_key = teacher_run_key(checked, code_references)
     run_dir = cache_root / f"teacher_{run_key}"
@@ -411,7 +417,10 @@ def verify_teacher_ledger_summary(
         raise ContractError("v6 teacher ledger has no code provenance")
     for name, reference in code_references.items():
         source = root / reference["path"]
-        if not source.is_file() or sha256_path(source) != reference["sha256"]:
+        if (
+            not source.is_file()
+            or repository_reference(root, source)["sha256"] != reference["sha256"]
+        ):
             raise ContractError(f"v6 teacher ledger code mismatch: {name}")
     expected_run_key = teacher_run_key(contract, code_references)
     if summary.get("run_key") != expected_run_key:

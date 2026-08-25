@@ -185,7 +185,10 @@ def load_training_freeze(path: Path = DEFAULT_CONTRACT, *, root: Path = ROOT) ->
         raise ContractError("v6 training contract is not frozen")
     for name, reference in payload["source_references"].items():
         source = root / reference["path"]
-        if not source.is_file() or sha256_path(source) != reference["sha256"]:
+        if (
+            not source.is_file()
+            or repository_reference(root, source)["sha256"] != reference["sha256"]
+        ):
             raise ContractError(f"v6 training source mismatch: {name}")
     phase_b = load_phase_b_contract(root=root)
     if payload["phase_b_contract_digest"] != phase_b["contract_digest"]:

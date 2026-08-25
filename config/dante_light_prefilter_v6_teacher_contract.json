@@ -1,0 +1,103 @@
+{
+  "access_boundary": {
+    "allowed_partition": "phase_b",
+    "allowed_role": "background",
+    "morphology_labels_allowed": false,
+    "o4b_rows_allowed": false,
+    "phase_c_rows_allowed": false,
+    "phase_d_rows_allowed": false
+  },
+  "block_count": 360,
+  "cache": {
+    "canonical_whitened_float32_cached": true,
+    "default_location": "E:/dante_cache/dante_light/prefilter_l4_v6_training",
+    "environment_alias": "DANTE_V6_TRAINING_CACHE_ROOT",
+    "incompatible_run_reuse_allowed": false
+  },
+  "identity_count": 2880,
+  "identity_digest": "b1d78e2d8a259592558e485e479add67d711b5c37d39ef6ace50d88753543f5b",
+  "outcome_access_at_freeze": {
+    "morphology_labels": [],
+    "o4b": [],
+    "phase_c": [],
+    "phase_d": [],
+    "student_outputs": [],
+    "teacher_scores": []
+  },
+  "representation": {
+    "analysis_duration_s": 32.0,
+    "colormap": "cividis",
+    "contract_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+    "encoder_input_size": [
+      518,
+      518
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "model_artifact_id": "dinov2_vits14_reg",
+    "model_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "model_source_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+    "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "primary_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "query_qrange": [
+      4,
+      64
+    ],
+    "sample_rate_hz": 4096,
+    "schema_version": 1,
+    "top_k": 68,
+    "variant": "idxq4-64_queryq4-64",
+    "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+    "whitening_pad_s": 4.0
+  },
+  "schema_version": 1,
+  "source_references": {
+    "partition_entries": {
+      "path": "config/dante_light_prefilter_v6_partitions.jsonl",
+      "sha256": "4be7725b4d3a6376132fa14ef2ccc3881f262baa818a3ef59bd9eea25491b27e"
+    },
+    "partition_header": {
+      "path": "config/dante_light_prefilter_v6_partitions.json",
+      "sha256": "e27c9c5bffac9f36d03bc4f7b6b8bb9374b37a65c98e8d56a8ab3cfefd2eb164"
+    },
+    "phase_b_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_b_freeze.json",
+      "sha256": "8839ab48370c7f5e76aaf3130a9475a20be2d084d11d5aa22c6676183b74f00c"
+    },
+    "raw_cache_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_cache/phase_b_raw_cache_summary_v6.json",
+      "sha256": "74c9433bbde7b02713fe03b1e13e9adc3971c4a86114acf3f3817c927498ad77"
+    },
+    "reference_manifest": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+    },
+    "v5_teacher_contract": {
+      "path": "config/dante_light_prefilter_v5_teacher_contract.json",
+      "sha256": "5772f4f0ff2f622ab2ab7cc8680c07b1ff26c8a846b4a26deeb3a1d4a210771b"
+    }
+  },
+  "status": "FROZEN_PHASE_B_TEACHER_ONLY",
+  "teacher": {
+    "decision_score_key": "native",
+    "encoder_index_artifact_id": "o3b_production_k275",
+    "encoder_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "engine": "shared_encoder_score_only",
+    "output_mode": "score_only",
+    "physical_truth_label": false,
+    "standardization_deferred_to_training_fit_subset": true,
+    "target_index_artifact_id": "o4a_native_q4_64_k1216",
+    "target_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "target_name": "native_o4a_novelty_score",
+    "threshold_applied": false
+  },
+  "teacher_contract_digest": "199a7bb16a53521c609c6c0db33ac64578bf08800ef5fdd4ed927f6c530b559f",
+  "teacher_id": "dante-light-l4-prefilter-v6-phase-b-native-teacher"
+}
