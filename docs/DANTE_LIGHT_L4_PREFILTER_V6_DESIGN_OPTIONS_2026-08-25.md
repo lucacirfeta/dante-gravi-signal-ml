@@ -1,6 +1,13 @@
 # DANTE-Light L4 v6 design options (2026-08-25)
 
-Status: **PHASE A COMPUTE FEASIBILITY COMPLETE; PHASE B NOT FROZEN**
+Status: **PHASE B COMPLETE; PHASE C LOCKED; V6 NOT READY**
+
+Phase B has now completed under the frozen five-arm contract.  The selected
+screening arm reached a worst detector-by-replicate Spearman correlation of
+`0.383779623757681`, below the pre-registered `0.90` Phase-C unlock gate.
+Phase C was therefore not opened.  See
+`docs/DANTE_LIGHT_L4_PREFILTER_V6_PHASE_B_RESULT_2026-08-25.md` for the bounded
+result and provenance.
 
 Phase A was frozen in
 `docs/DANTE_LIGHT_L4_PREFILTER_V6_PHASE_A_FREEZE_2026-08-25.md` and completed
@@ -125,7 +132,8 @@ Pearson/Spearman split. It is still a hypothesis: a negative outcome would not
 be surprising because the DINOv2/VQ representation may contain information
 that a cheap raw-strain network cannot recover at the permitted cost.
 
-The next checkpoint must approve the architecture feasibility matrix and the
-rank-aware loss family before code is written. Exact numerical budgets and
-gates should come from outcome-blind compute measurements and a new power
-analysis, not from the v5 development result.
+The completed Phase-B experiment now rejects this specific small-student
+matrix as a fidelity-ready successor.  The next checkpoint must choose a
+materially different task or representation; it must not retune these five
+arms on the observed Phase-B outcomes or unlock Phase C despite the failed
+gate.

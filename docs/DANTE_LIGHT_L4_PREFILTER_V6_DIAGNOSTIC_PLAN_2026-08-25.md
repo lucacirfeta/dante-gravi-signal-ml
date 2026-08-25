@@ -1,12 +1,16 @@
 # DANTE-Light L4 successor diagnostic plan (2026-08-25)
 
-Status: **TRAINING-ONLY DIAGNOSTIC COMPLETE; NO V6 SCIENTIFIC PROTOCOL**
+Status: **V5 DIAGNOSTIC COMPLETE; V6 PHASE B COMPLETE AND NOT READY**
 
 Execution update: Increments 1--2 completed with result digest
 `0efeb42b207e563737e9aadaa20bf202e877d42046f456c26074c7d3bbdbb134`.
 The bounded interpretation is recorded in
 `docs/DANTE_LIGHT_L4_PREFILTER_V5_TRAINING_DIAGNOSTIC_RESULT_2026-08-25.md`.
-Increment 3 remains a human scientific checkpoint.
+Increment 3 produced the frozen v6 Phase-A/Phase-B design.  Phase B is now
+complete, but its selected arm missed the Phase-C fidelity-unlock gate
+decisively.  The bounded result is recorded in
+`docs/DANTE_LIGHT_L4_PREFILTER_V6_PHASE_B_RESULT_2026-08-25.md`; Phase C,
+Phase D, and O4b remain unopened.
 
 ## Objective and boundary
 
