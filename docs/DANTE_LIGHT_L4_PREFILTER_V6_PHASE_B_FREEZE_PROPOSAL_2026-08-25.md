@@ -34,7 +34,7 @@ The recommended allocation is the unselected planning scenario
 | Partition | Blocks per detector | Background windows per block | Role |
 |---|---:|---:|---|
 | Phase B selection | 180 | 8 | fresh fit/internal-validation ablation |
-| Phase C training confirmation | 60 | 8 | sealed one-shot fidelity confirmation |
+| Phase C training confirmation | 60 | **1** | sealed one-shot fidelity confirmation |
 | Phase D development | 150 | 1 initially | fresh routing/cost development |
 | Phase D confirmation | 150 | 1 initially | sealed routing/cost confirmation |
 
@@ -133,10 +133,18 @@ Selection in Phase B should be lexicographic and frozen before teacher scoring:
    cost, then fewer parameters;
 4. never select a favorable seed within an arm.
 
-The selected arm then enters sealed Phase C. Phase C must use a predeclared
-block-bootstrap fidelity interval and an absolute detector-wise fidelity gate;
-its exact confidence-bound rule remains a separate numerical freeze item. No
-development or O4b access follows automatically from a Phase-B winner.
+The selected arm then enters sealed Phase C. Its dedicated gate is now frozen
+separately in `config/dante_light_prefilter_v6_phase_c_power.json`. Phase C
+uses exactly one hash-selected paired observation from each fresh
+detector/4,096 s block, so its sample size is 60 independent blocks rather
+than 480 windows treated as independent. Every detector/replicate cell must
+satisfy point Spearman at least 0.90 and a one-sided 95% Bonett--Wright lower
+bound at least 0.85. Under the explicitly model-based alternative
+`rho_s=0.95`, the approximate single-cell pass probability is 0.9764. No
+familywise pass probability is claimed because dependence among the five
+replicas is not assumed. Any bootstrap sensitivity analysis is non-gating and
+may resample only whole detector/GPS blocks. No development or O4b access
+follows automatically from a Phase-B winner.
 
 ## Decisions requiring confirmation
 
@@ -147,6 +155,5 @@ approve or replace:
 2. per-batch equal-gradient scalarization rather than a fixed `lambda` or full
    GradNorm;
 3. the five-arm matrix and lexicographic Phase-B selection rule;
-4. deferral of the exact Phase-C confidence-bound threshold to a dedicated,
-   outcome-blind power/precision freeze before Phase-B teacher outcomes are
-   opened.
+4. the separately frozen Phase-C fidelity gate and its model-based power
+   boundary before Phase-B teacher outcomes are opened.

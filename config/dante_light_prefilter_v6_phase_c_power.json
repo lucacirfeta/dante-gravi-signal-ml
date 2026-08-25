@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_PHASE_C_FIDELITY_GATE",
+  "analysis_id": "dante-light-l4-prefilter-v6-phase-c-fidelity-power",
+  "outcome_access": {
+    "teacher_scores": false,
+    "student_outputs": false,
+    "development": false,
+    "confirmation": false,
+    "o4b": false
+  },
+  "sampling_contract": {
+    "detectors": ["H1", "L1"],
+    "independence_unit": "detector_gps_4096s_block",
+    "blocks_per_detector": 60,
+    "windows_per_block": 1,
+    "window_duration_s": 32,
+    "window_selection": "deterministic_hash_selected_valid_start_from_frozen_manifest",
+    "separate_by_detector": true,
+    "all_five_replicates_must_pass": true
+  },
+  "fidelity_gate": {
+    "operator": "AND",
+    "minimum_point_spearman": 0.9,
+    "minimum_one_sided_lower_bound": 0.85,
+    "confidence": 0.95,
+    "interval_method": "bonett_wright_fisher_z",
+    "multiple_testing_adjustment": "not_applicable_all_detector_replicate_cells_must_pass"
+  },
+  "power_model": {
+    "true_spearman_alternative": 0.95,
+    "minimum_gate_pass_probability": 0.9,
+    "candidate_block_counts": [18, 20, 25, 35, 40, 45, 47, 50, 60, 90],
+    "distributional_approximation": "atanh_sample_spearman_normal",
+    "transformed_variance": "(1+rho_s^2/2)/(n-3)",
+    "power_scope": "single_detector_single_replicate_under_the_declared_asymptotic_model"
+  },
+  "uncertainty_boundary": {
+    "iid_windows_allowed": false,
+    "cluster_correction_needed": false,
+    "reason": "Exactly one paired observation is selected from each independent detector/4096 s block.",
+    "bootstrap_role": "non_gating_sensitivity_only",
+    "bootstrap_if_reported": "resample_detector_gps_4096s_blocks_only"
+  },
+  "scientific_boundary": {
+    "phase_b_selection_authorized": false,
+    "phase_c_access_authorized": false,
+    "development_access_authorized": false,
+    "confirmation_access_authorized": false,
+    "o4b_access_authorized": false,
+    "operational_routing_authorized": false,
+    "does_not_establish": [
+      "student fidelity outside the future frozen Phase-C identities",
+      "protected-morphology retention",
+      "positive net compute saving",
+      "operational readiness",
+      "physical discovery sensitivity"
+    ]
+  },
+  "method_reference": {
+    "citation": "Bonett DG, Wright TA, Psychometrika 65, 23-28 (2000)",
+    "doi": "10.1007/BF02294183"
+  },
+  "contract_digest": "6dd4c08fcfa1e74804a4679e3faef9523f3b02e33bc21232a39a09021d2bdc81"
+}

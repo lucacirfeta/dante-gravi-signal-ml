@@ -1,0 +1,122 @@
+{
+  "analysis_id": "dante-light-l4-prefilter-v6-phase-c-fidelity-power",
+  "artifact_digest": "c968e467c1090151c1068662c20bbebca093d3efcc61455b7d489f0872fbf12e",
+  "candidate_results": [
+    {
+      "approximate_pass_probability_at_true_alternative": 0.5829291626728571,
+      "critical_observed_spearman": 0.943241088634212,
+      "lower_bound_at_true_alternative": 0.8668223857885309,
+      "n_blocks": 18
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.6296115900992308,
+      "critical_observed_spearman": 0.9396582338345728,
+      "lower_bound_at_true_alternative": 0.8743342795381042,
+      "n_blocks": 20
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.7276718977000686,
+      "critical_observed_spearman": 0.9323655703854672,
+      "lower_bound_at_true_alternative": 0.8873495224242364,
+      "n_blocks": 25
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.858359911056887,
+      "critical_observed_spearman": 0.9221608007851331,
+      "lower_bound_at_true_alternative": 0.9017475829920406,
+      "n_blocks": 35
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.8994601159552315,
+      "critical_observed_spearman": 0.9183798843191132,
+      "lower_bound_at_true_alternative": 0.906230379022789,
+      "n_blocks": 40
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.9292639257396258,
+      "critical_observed_spearman": 0.9151717566371723,
+      "lower_bound_at_true_alternative": 0.9097420192295904,
+      "n_blocks": 45
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.938682709342683,
+      "critical_observed_spearman": 0.9140172439551117,
+      "lower_bound_at_true_alternative": 0.9109460210337277,
+      "n_blocks": 47
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.9506231738797276,
+      "critical_observed_spearman": 0.9124021400644025,
+      "lower_bound_at_true_alternative": 0.9125807240080397,
+      "n_blocks": 50
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.9764284791664605,
+      "critical_observed_spearman": 0.9078302815239272,
+      "lower_bound_at_true_alternative": 0.9169178713929138,
+      "n_blocks": 60
+    },
+    {
+      "approximate_pass_probability_at_true_alternative": 0.9973149376620057,
+      "critical_observed_spearman": 0.9,
+      "lower_bound_at_true_alternative": 0.9245283594808376,
+      "n_blocks": 90
+    }
+  ],
+  "contract_digest": "6dd4c08fcfa1e74804a4679e3faef9523f3b02e33bc21232a39a09021d2bdc81",
+  "fidelity_gate": {
+    "confidence": 0.95,
+    "interval_method": "bonett_wright_fisher_z",
+    "minimum_one_sided_lower_bound": 0.85,
+    "minimum_point_spearman": 0.9,
+    "multiple_testing_adjustment": "not_applicable_all_detector_replicate_cells_must_pass",
+    "operator": "AND"
+  },
+  "frozen_recommendation": {
+    "approximate_pass_probability_at_true_alternative": 0.9764284791664605,
+    "critical_observed_spearman": 0.9078302815239272,
+    "lower_bound_at_true_alternative": 0.9169178713929138,
+    "n_blocks": 60
+  },
+  "interpretation": {
+    "familywise_pass_probability_claimed": false,
+    "power_is_model_based": true,
+    "reason": "Promotion requires every detector/replicate cell to pass; dependence across replicas is not assumed prospectively.",
+    "single_cell_power_only": true
+  },
+  "outcomes_accessed": [],
+  "power_model": {
+    "candidate_block_counts": [
+      18,
+      20,
+      25,
+      35,
+      40,
+      45,
+      47,
+      50,
+      60,
+      90
+    ],
+    "distributional_approximation": "atanh_sample_spearman_normal",
+    "minimum_gate_pass_probability": 0.9,
+    "power_scope": "single_detector_single_replicate_under_the_declared_asymptotic_model",
+    "transformed_variance": "(1+rho_s^2/2)/(n-3)",
+    "true_spearman_alternative": 0.95
+  },
+  "sampling_contract": {
+    "all_five_replicates_must_pass": true,
+    "blocks_per_detector": 60,
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "independence_unit": "detector_gps_4096s_block",
+    "separate_by_detector": true,
+    "window_duration_s": 32,
+    "window_selection": "deterministic_hash_selected_valid_start_from_frozen_manifest",
+    "windows_per_block": 1
+  },
+  "schema_version": 1,
+  "status": "FROZEN_PHASE_C_FIDELITY_POWER_VERIFIED"
+}
