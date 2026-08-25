@@ -9,6 +9,13 @@ with artifact digest
 All four random-weight graphs were compute-feasible on the audited host. This
 is not a scientific candidate selection and does not authorize training.
 
+The required pre-Phase-B capacity and gradient-scale audit is complete with
+artifact digest
+`c532891d014feb1720210072fe1302a69bb6f3c4a346d0509927c7370a918073`.
+It rejects the proposed justification for `lambda = 1` and does not authorize
+partial O4a blocks; see
+`docs/DANTE_LIGHT_L4_PREFILTER_V6_PRE_PHASE_B_AUDIT_2026-08-25.md`.
+
 ## What v5 now establishes
 
 V5 does not fail because protected morphologies are discarded at its selected
