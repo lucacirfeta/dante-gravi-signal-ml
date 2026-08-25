@@ -1,0 +1,197 @@
+{
+  "access_boundary": {
+    "morphology_labels": [],
+    "o4b": [],
+    "phase_c": [],
+    "phase_d": []
+  },
+  "arms": [
+    {
+      "architecture_id": "raw_v5_global_average",
+      "id": "global_average_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_teacher_top_fraction",
+      "id": "teacher_top_fraction_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_attention_mil",
+      "id": "attention_mil_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_teacher_top_fraction_x2",
+      "id": "teacher_top_fraction_x2_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_teacher_top_fraction",
+      "id": "teacher_top_fraction_equal_gradient_ranknet",
+      "objective_id": "equal_gradient_smooth_l1_ranknet"
+    }
+  ],
+  "objective": {
+    "equal_gradient": {
+      "algorithm": "normalized_component_direction_sum_rescaled_to_value_gradient_norm",
+      "clipping_or_bounds": null,
+      "component_weight_learning_rate": null,
+      "ema_or_smoothing": null,
+      "fail_on_zero_nonfinite_component_or_combined_norm": true,
+      "formula": "g_final=norm(g_value)*(g_value/norm(g_value)+g_rank/norm(g_rank))/norm(g_value/norm(g_value)+g_rank/norm(g_rank))",
+      "gradient_scope": "all_trainable_parameters_none_as_zero",
+      "log_each_step": [
+        "value_gradient_l2",
+        "rank_gradient_l2",
+        "detached_lambda_equivalent",
+        "component_cosine",
+        "unscaled_direction_l2",
+        "final_gradient_l2"
+      ],
+      "post_hoc_sweep_allowed": false,
+      "warmup_epochs": 0
+    },
+    "rank": {
+      "cross_block_pairs": false,
+      "cross_detector_pairs": false,
+      "exact_target_ties_excluded": true,
+      "margin": null,
+      "name": "RankNet_pairwise_logistic",
+      "pairs": "all_28_unordered_pairs_within_each_detector_GPS_block",
+      "reduction": "pair_mean_then_block_mean_then_detector_mean"
+    },
+    "value": {
+      "beta": 1.0,
+      "name": "SmoothL1Loss",
+      "reduction": "window_mean_then_detector_mean"
+    }
+  },
+  "optimization": {
+    "automatic_mixed_precision": false,
+    "batch": {
+      "H1_windows": 32,
+      "L1_windows": 32,
+      "blocks_per_detector": 4,
+      "detector_balanced": true,
+      "total_windows": 64,
+      "whole_blocks_only": true,
+      "windows_per_block": 8
+    },
+    "checkpoint_selection": {
+      "first_tie_break": "equal_detector_mean_internal_validation_smooth_l1_minimum",
+      "no_eligible_checkpoint_after_100_epochs": "FAILED_DEGENERATE_REPLICATE",
+      "nonfinite_primary_metric_epoch": "INELIGIBLE_FOR_CHECKPOINT",
+      "primary_direction": "maximum",
+      "primary_metric": "minimum_detector_internal_validation_spearman",
+      "second_tie_break": "earliest_epoch"
+    },
+    "dtype": "float32",
+    "early_stopping": false,
+    "gradient_clipping": false,
+    "maximum_epochs": 100,
+    "optimizer": {
+      "amsgrad": false,
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "learning_rate": 0.001,
+      "name": "AdamW",
+      "weight_decay": 0.0001
+    },
+    "scheduler": {
+      "intentional": true,
+      "name": "none"
+    }
+  },
+  "phase_b_contract_digest": "ec139bfb525993e45616fcb07f6fd485d622b408441094b0292848407ca52af7",
+  "population": {
+    "allowed_partition": "phase_b",
+    "allowed_role": "background",
+    "block_count": 360,
+    "counts": {
+      "H1": {
+        "fit": 1152,
+        "internal_validation": 288
+      },
+      "L1": {
+        "fit": 1152,
+        "internal_validation": 288
+      }
+    },
+    "independence_unit": "detector_gps_4096s_block",
+    "row_count": 2880
+  },
+  "replicate_seeds": [
+    8189967110166173981,
+    7494856024938965935,
+    6212778538122930299,
+    2837232662541242562,
+    7859891148182819780
+  ],
+  "schema_version": 1,
+  "selection_rule": {
+    "exclude_any_arm_with_failed_replicate": true,
+    "final_tie_break": "lexicographic_arm_id",
+    "first_tie_break": "minimum_worst_detector_replicate_smooth_l1",
+    "minimum_worst_cell_spearman_for_phase_c_unlock": 0.9,
+    "multiplicity_interpretation": "Phase_B_selects_one_configuration_from_five_and_makes_no_confirmatory_claim; only_the_independent_sealed_Phase_C_can_confirm_fidelity",
+    "phase_c_automatic_access": false,
+    "primary": "maximum_of_minimum_internal_validation_spearman_over_detector_and_replicate",
+    "second_tie_break": "minimum_phase_a_cpu_mean_batch1_inference_seconds",
+    "stage_role": "screening_only_best_of_five_not_confirmatory_evidence",
+    "third_tie_break": "minimum_trainable_parameter_count"
+  },
+  "source_references": {
+    "partitions": {
+      "path": "config/dante_light_prefilter_v6_partitions.jsonl",
+      "sha256": "4be7725b4d3a6376132fa14ef2ccc3881f262baa818a3ef59bd9eea25491b27e"
+    },
+    "phase_a_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_a.json",
+      "sha256": "1833524ef4a9b355e8f0f9ce5481be36044f5a514a1276ba8b4bef80a0d218c6"
+    },
+    "phase_b_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_b_freeze.json",
+      "sha256": "8839ab48370c7f5e76aaf3130a9475a20be2d084d11d5aa22c6676183b74f00c"
+    },
+    "teacher_contract": {
+      "path": "config/dante_light_prefilter_v6_teacher_contract.json",
+      "sha256": "80130cbed1250318307c0e296fbd2892f6a0df2a1dccceee719096f6776d9a7d"
+    },
+    "teacher_ledger_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_training/teacher_ledger_summary_v6.json",
+      "sha256": "8bea69b516e8265ef453a80d0f453f1275975d0bbaf3d32ab65d82ab26537fe8"
+    },
+    "teacher_targets_compact": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_training/teacher_targets_compact_v6.jsonl",
+      "sha256": "0194cb00289523e7ba284474e88ba7a1dd32f8e8363c3b51e846ec775d8ee9b3"
+    }
+  },
+  "status": "FROZEN_PHASE_B_TRAINING_INPUT",
+  "target": {
+    "clipping": false,
+    "name": "native_o4a_novelty_score",
+    "physical_truth_label": false,
+    "serialization": "float32_hex",
+    "standardization": "per_detector_fit_subset_mean_std_ddof0"
+  },
+  "target_standardization": {
+    "H1": {
+      "fit_window_count": 1152,
+      "mean_float64": 0.07361939790684523,
+      "standard_deviation_float64_ddof0": 0.04205680005543681
+    },
+    "L1": {
+      "fit_window_count": 1152,
+      "mean_float64": 0.08047843438948298,
+      "standard_deviation_float64_ddof0": 0.05966913431921646
+    }
+  },
+  "teacher_contract_digest": "199a7bb16a53521c609c6c0db33ac64578bf08800ef5fdd4ed927f6c530b559f",
+  "teacher_ledger_digest": "dd5e701b0b562484cec37e0f8f14272fe2ce992fbaa3bed6aabb8dbc50627db3",
+  "training_contract_digest": "d6115051eff7b0f446956a78649fcb5893a3e9ac217df70461e175e74a5b2a79",
+  "training_id": "dante-light-l4-prefilter-v6-phase-b-training"
+}
