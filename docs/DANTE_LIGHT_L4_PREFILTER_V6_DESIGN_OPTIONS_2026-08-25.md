@@ -1,6 +1,13 @@
 # DANTE-Light L4 v6 design options (2026-08-25)
 
-Status: **DESIGN PROPOSAL; SCIENTIFIC FREEZE NOT AUTHORIZED**
+Status: **PHASE A COMPUTE FEASIBILITY COMPLETE; PHASE B NOT FROZEN**
+
+Phase A was frozen in
+`docs/DANTE_LIGHT_L4_PREFILTER_V6_PHASE_A_FREEZE_2026-08-25.md` and completed
+with artifact digest
+`730e59b2845375187a0a99b639ec37901bcd85d5d687aaf204bdb541e12c002f`.
+All four random-weight graphs were compute-feasible on the audited host. This
+is not a scientific candidate selection and does not authorize training.
 
 ## What v5 now establishes
 
@@ -39,11 +46,13 @@ peak memory. This phase selects only architectures that can plausibly yield a
 positive compute balance; it cannot select a scientific winner.
 
 The primary architectural direction should preserve local instance scores and
-aggregate them with a differentiable analogue of the teacher's top-k behavior.
-Attention pooling is a reasonable comparator, not an automatic primary. Exact
-pooling temperature, retained fraction, width, depth, receptive field, and
-parameter budgets must be frozen before benchmarking; they are not set in this
-document.
+aggregate them with a teacher-aligned top-fraction behavior. Attention pooling
+is a reasonable comparator, not an automatic primary. Phase A froze the
+retained fraction as `68/1369`, because 68 is the number of patch anomaly
+scores retained from the 37 x 37 DINOv2 patch grid. The VQ codebook size 275 is
+a different axis and is not the denominator. To avoid silently choosing a
+relaxation temperature, Phase A used the exact, piecewise-differentiable
+top-fraction mean; any fully smooth relaxation remains a Phase-B decision.
 
 ### Phase B — fresh training-only factorial ablation
 

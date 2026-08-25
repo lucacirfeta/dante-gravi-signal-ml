@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_OUTCOME_BLIND_COMPUTE_FEASIBILITY",
+  "phase_id": "dante-light-l4-prefilter-v6-phase-a",
+  "decision_date": "2026-08-25",
+  "scientific_boundary": {
+    "training_allowed": false,
+    "teacher_scores_allowed": false,
+    "morphology_labels_allowed": false,
+    "development_access_allowed": false,
+    "confirmation_access_allowed": false,
+    "o4b_access_allowed": false,
+    "candidate_promotion_allowed": false,
+    "routing_enabled": false,
+    "scope": "random-weight compute and memory feasibility only"
+  },
+  "parent_references": {
+    "teacher_contract": {
+      "path": "config/dante_light_prefilter_v5_teacher_contract.json",
+      "sha256": "5772f4f0ff2f622ab2ab7cc8680c07b1ff26c8a846b4a26deeb3a1d4a210771b"
+    },
+    "v5_student_architectures": {
+      "path": "src/dante_light/prefilter_v4_student.py",
+      "sha256": "b6be0b5a6dae256fcbeff8cba66703ba8c5efc62c4f1f8960e222712d1f74019"
+    },
+    "teacher_scoring_implementation": {
+      "path": "src/core/patch_scorer.py",
+      "sha256": "6367d7dfff43d2225d41ea9723b18fd8dbab3e4bce4dfefc1d52f902e9ef6363"
+    },
+    "v5_training_diagnostic": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/diagnostics_v5.json",
+      "sha256": "87934e7a784c0d5440b0e8505698dad413e6d9a96f85e9697dce99a88ee863af"
+    }
+  },
+  "signal_contract": {
+    "sample_rate_hz_source": "teacher_contract.representation.sample_rate_hz",
+    "duration_s_source": "teacher_contract.representation.analysis_duration_s",
+    "input_channels": 1,
+    "dtype": "float32",
+    "batch_sizes": [1],
+    "synthetic_input_distribution": "standard_normal",
+    "synthetic_seed_method": "sha256_canonical_json_first_64_bits_big_endian",
+    "synthetic_seed_purpose": "v6_phase_a_outcome_blind_compute_input"
+  },
+  "teacher_aligned_aggregation": {
+    "teacher_top_k_source": "teacher_contract.representation.top_k",
+    "teacher_patch_grid": [37, 37],
+    "teacher_instance_count": 1369,
+    "retained_fraction_formula": "teacher_top_k / teacher_instance_count",
+    "student_local_k_rule": "floor(student_instance_count * retained_fraction + 0.5), minimum 1",
+    "operator": "exact_top_fraction_mean",
+    "gradient_property": "piecewise_differentiable_through_selected_values",
+    "soft_relaxation_frozen": false,
+    "reason_no_temperature": "Phase A does not introduce an unapproved relaxation temperature; any smooth relaxation is a separate Phase B freeze"
+  },
+  "candidate_matrix": [
+    {
+      "id": "raw_v5_global_average",
+      "architecture": "Raw1DDepthwiseStudentProxy",
+      "source": "unchanged_v5_baseline",
+      "pooling": "global_average",
+      "width_multiplier": 1
+    },
+    {
+      "id": "raw_teacher_top_fraction",
+      "architecture": "Raw1DTeacherAlignedStudent",
+      "source": "v5_local_encoder",
+      "pooling": "exact_top_fraction_mean",
+      "width_multiplier": 1
+    },
+    {
+      "id": "raw_attention_mil",
+      "architecture": "Raw1DAttentionMILStudent",
+      "source": "v5_local_encoder",
+      "pooling": "single_head_attention",
+      "width_multiplier": 1
+    },
+    {
+      "id": "raw_teacher_top_fraction_x2",
+      "architecture": "Raw1DTeacherAlignedStudent",
+      "source": "v5_local_encoder_scaled_uniformly",
+      "pooling": "exact_top_fraction_mean",
+      "width_multiplier": 2
+    }
+  ],
+  "benchmark": {
+    "cache_root": "E:/dante_cache/dante_light/prefilter_l4_v6_phase_a",
+    "cpu": {
+      "enabled": true,
+      "torch_num_threads": 1,
+      "warmup_repetitions": 20,
+      "repetitions": 100
+    },
+    "cuda": {
+      "enabled_if_available": true,
+      "warmup_repetitions": 50,
+      "repetitions": 200,
+      "include_host_to_device": true
+    },
+    "latency_statistics": ["mean", "median", "p95", "maximum"],
+    "memory_statistics": [
+      "parameter_bytes",
+      "input_bytes",
+      "leaf_activation_bytes_per_forward",
+      "cuda_peak_incremental_allocated_bytes"
+    ],
+    "deterministic_algorithms": true,
+    "automatic_mixed_precision": false
+  },
+  "decision_rule": {
+    "scientific_winner_selected": false,
+    "allowed_conclusion": "compute_feasible_or_compute_infeasible_for_later_training_ablation",
+    "forbidden_conclusions": [
+      "teacher_fidelity",
+      "protected_morphology_retention",
+      "background_call_reduction",
+      "net_operational_saving",
+      "physical_sensitivity"
+    ]
+  },
+  "contract_digest": "25de54fb06ad897f5bbbabff4546d25398bc258fe83b288785b1b0c58e4ab9b5"
+}

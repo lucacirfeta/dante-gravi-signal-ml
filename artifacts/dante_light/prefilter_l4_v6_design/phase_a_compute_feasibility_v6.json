@@ -1,0 +1,275 @@
+{
+  "aggregation": {
+    "centroid_count_not_used_as_denominator": true,
+    "retained_fraction": 0.04967129291453616,
+    "teacher_instance_count": 1369,
+    "teacher_top_k": 68
+  },
+  "artifact_digest": "730e59b2845375187a0a99b639ec37901bcd85d5d687aaf204bdb541e12c002f",
+  "contract_digest": "25de54fb06ad897f5bbbabff4546d25398bc258fe83b288785b1b0c58e4ab9b5",
+  "decision": {
+    "candidate_selected": false,
+    "routing_enabled": false,
+    "scope": "compute_feasible_or_compute_infeasible_for_later_training_ablation",
+    "training_authorized": false
+  },
+  "environment": {
+    "automatic_mixed_precision": false,
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 5070",
+    "cuda_runtime": "12.8",
+    "cudnn": 92000,
+    "deterministic_algorithms": true,
+    "numpy": "2.4.5",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.5",
+    "torch": "2.12.0.dev20260408+cu128",
+    "torch_num_threads": 1
+  },
+  "outcome_access": {
+    "confirmation": [],
+    "development": [],
+    "morphology_labels": [],
+    "o4b": [],
+    "teacher_scores": []
+  },
+  "phase_id": "dante-light-l4-prefilter-v6-phase-a",
+  "results": {
+    "raw_attention_mil": {
+      "candidate_contract": {
+        "architecture": "Raw1DAttentionMILStudent",
+        "id": "raw_attention_mil",
+        "pooling": "single_head_attention",
+        "source": "v5_local_encoder",
+        "width_multiplier": 1
+      },
+      "devices": {
+        "cpu": {
+          "cuda_peak_incremental_allocated_bytes": null,
+          "device": "cpu",
+          "host_to_device_and_inference": null,
+          "inference_only": {
+            "count": 100,
+            "maximum_s": 0.0012403000000631437,
+            "mean_s": 0.001157210000528721,
+            "median_s": 0.0011564500018721446,
+            "p95_s": 0.0012048250013322102
+          }
+        },
+        "cuda": {
+          "cuda_peak_incremental_allocated_bytes": 1048576,
+          "device": "cuda",
+          "host_to_device_and_inference": {
+            "count": 200,
+            "maximum_s": 0.0009869999921647832,
+            "mean_s": 0.0006240614997659578,
+            "median_s": 0.0006100499958847649,
+            "p95_s": 0.0007164149923482907
+          },
+          "inference_only": {
+            "count": 200,
+            "maximum_s": 0.0008079999970505014,
+            "mean_s": 0.0005420799995044945,
+            "median_s": 0.0005305500017129816,
+            "p95_s": 0.0005896700131415851
+          }
+        }
+      },
+      "static": {
+        "input_bytes": 524288,
+        "leaf_activation_bytes_per_forward": 2197504,
+        "parameter_bytes": 14920,
+        "student_instance_count": 256,
+        "student_top_k": 13,
+        "trainable_parameters": 3730
+      }
+    },
+    "raw_teacher_top_fraction": {
+      "candidate_contract": {
+        "architecture": "Raw1DTeacherAlignedStudent",
+        "id": "raw_teacher_top_fraction",
+        "pooling": "exact_top_fraction_mean",
+        "source": "v5_local_encoder",
+        "width_multiplier": 1
+      },
+      "devices": {
+        "cpu": {
+          "cuda_peak_incremental_allocated_bytes": null,
+          "device": "cpu",
+          "host_to_device_and_inference": null,
+          "inference_only": {
+            "count": 100,
+            "maximum_s": 0.001225300002261065,
+            "mean_s": 0.0011645150001277215,
+            "median_s": 0.001163199995062314,
+            "p95_s": 0.001207219995558262
+          }
+        },
+        "cuda": {
+          "cuda_peak_incremental_allocated_bytes": 1048576,
+          "device": "cuda",
+          "host_to_device_and_inference": {
+            "count": 200,
+            "maximum_s": 0.0008667000074638054,
+            "mean_s": 0.0005819815004360862,
+            "median_s": 0.0005650500024785288,
+            "p95_s": 0.0006886700000904964
+          },
+          "inference_only": {
+            "count": 200,
+            "maximum_s": 0.000792199993156828,
+            "mean_s": 0.0005026010003348347,
+            "median_s": 0.0004927999980282038,
+            "p95_s": 0.0005569300039496738
+          }
+        }
+      },
+      "static": {
+        "input_bytes": 524288,
+        "leaf_activation_bytes_per_forward": 2196484,
+        "parameter_bytes": 14660,
+        "student_instance_count": 256,
+        "student_top_k": 13,
+        "trainable_parameters": 3665
+      }
+    },
+    "raw_teacher_top_fraction_x2": {
+      "candidate_contract": {
+        "architecture": "Raw1DTeacherAlignedStudent",
+        "id": "raw_teacher_top_fraction_x2",
+        "pooling": "exact_top_fraction_mean",
+        "source": "v5_local_encoder_scaled_uniformly",
+        "width_multiplier": 2
+      },
+      "devices": {
+        "cpu": {
+          "cuda_peak_incremental_allocated_bytes": null,
+          "device": "cpu",
+          "host_to_device_and_inference": null,
+          "inference_only": {
+            "count": 100,
+            "maximum_s": 0.002200500006438233,
+            "mean_s": 0.0018064120004419237,
+            "median_s": 0.001800799996999558,
+            "p95_s": 0.001850864998414181
+          }
+        },
+        "cuda": {
+          "cuda_peak_incremental_allocated_bytes": 2097152,
+          "device": "cuda",
+          "host_to_device_and_inference": {
+            "count": 200,
+            "maximum_s": 0.000800499998149462,
+            "mean_s": 0.0005849850006052293,
+            "median_s": 0.0005740999986301176,
+            "p95_s": 0.0006244950047403106
+          },
+          "inference_only": {
+            "count": 200,
+            "maximum_s": 0.0007459000044036657,
+            "mean_s": 0.0005103359995700885,
+            "median_s": 0.000501599999552127,
+            "p95_s": 0.0005532299946935376
+          }
+        }
+      },
+      "static": {
+        "input_bytes": 524288,
+        "leaf_activation_bytes_per_forward": 4391940,
+        "parameter_bytes": 50820,
+        "student_instance_count": 256,
+        "student_top_k": 13,
+        "trainable_parameters": 12705
+      }
+    },
+    "raw_v5_global_average": {
+      "candidate_contract": {
+        "architecture": "Raw1DDepthwiseStudentProxy",
+        "id": "raw_v5_global_average",
+        "pooling": "global_average",
+        "source": "unchanged_v5_baseline",
+        "width_multiplier": 1
+      },
+      "devices": {
+        "cpu": {
+          "cuda_peak_incremental_allocated_bytes": null,
+          "device": "cpu",
+          "host_to_device_and_inference": null,
+          "inference_only": {
+            "count": 100,
+            "maximum_s": 0.0012700999941444024,
+            "mean_s": 0.0011489740003889893,
+            "median_s": 0.0011473999984445982,
+            "p95_s": 0.0011845449967950116
+          }
+        },
+        "cuda": {
+          "cuda_peak_incremental_allocated_bytes": 1048576,
+          "device": "cuda",
+          "host_to_device_and_inference": {
+            "count": 200,
+            "maximum_s": 0.001021999996737577,
+            "mean_s": 0.000536531000470859,
+            "median_s": 0.0005263999992166646,
+            "p95_s": 0.0005911250002100131
+          },
+          "inference_only": {
+            "count": 200,
+            "maximum_s": 0.0006352000054903328,
+            "mean_s": 0.000462560000596568,
+            "median_s": 0.0004523999959928915,
+            "p95_s": 0.0005437600026198195
+          }
+        }
+      },
+      "static": {
+        "input_bytes": 524288,
+        "leaf_activation_bytes_per_forward": 2195716,
+        "parameter_bytes": 14660,
+        "student_instance_count": null,
+        "student_top_k": null,
+        "trainable_parameters": 3665
+      }
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_promotion_allowed": false,
+    "confirmation_access_allowed": false,
+    "development_access_allowed": false,
+    "morphology_labels_allowed": false,
+    "o4b_access_allowed": false,
+    "routing_enabled": false,
+    "scope": "random-weight compute and memory feasibility only",
+    "teacher_scores_allowed": false,
+    "training_allowed": false
+  },
+  "signal": {
+    "batch_size": 1,
+    "dtype": "float32",
+    "duration_s": 32.0,
+    "input_length": 131072,
+    "sample_rate_hz": 4096,
+    "seed": 13860550291162007449,
+    "source": "deterministic_standard_normal_synthetic"
+  },
+  "source_references": {
+    "architecture": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    },
+    "config": {
+      "path": "config/dante_light_prefilter_v6_phase_a.json",
+      "sha256": "1833524ef4a9b355e8f0f9ce5481be36044f5a514a1276ba8b4bef80a0d218c6"
+    },
+    "runner": {
+      "path": "scripts/run_dante_light_prefilter_v6_phase_a.py",
+      "sha256": "5730c8031dbd6c350aacefc08b02aa303af2f37862b47405c923e74f0fd88f11"
+    },
+    "v5_baseline": {
+      "path": "src/dante_light/prefilter_v4_student.py",
+      "sha256": "b6be0b5a6dae256fcbeff8cba66703ba8c5efc62c4f1f8960e222712d1f74019"
+    }
+  },
+  "status": "PHASE_A_COMPUTE_FEASIBILITY_COMPLETE"
+}
