@@ -3,7 +3,7 @@
 Status: **TRAINING-ONLY DIAGNOSTIC COMPLETE; NO V6 SCIENTIFIC PROTOCOL**
 
 Execution update: Increments 1--2 completed with result digest
-`4910f695528342962e16b226f7e1fb27129a3ea92f5c029be0445c7a7220232b`.
+`0efeb42b207e563737e9aadaa20bf202e877d42046f456c26074c7d3bbdbb134`.
 The bounded interpretation is recorded in
 `docs/DANTE_LIGHT_L4_PREFILTER_V5_TRAINING_DIAGNOSTIC_RESULT_2026-08-25.md`.
 Increment 3 remains a human scientific checkpoint.

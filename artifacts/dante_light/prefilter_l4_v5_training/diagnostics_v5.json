@@ -1,5 +1,5 @@
 {
-  "artifact_digest": "4910f695528342962e16b226f7e1fb27129a3ea92f5c029be0445c7a7220232b",
+  "artifact_digest": "0efeb42b207e563737e9aadaa20bf202e877d42046f456c26074c7d3bbdbb134",
   "candidate_promotion_allowed": false,
   "code_references": {
     "diagnostic_cli": {
@@ -8,7 +8,7 @@
     },
     "diagnostic_implementation": {
       "path": "src/dante_light/prefilter_v5_training_diagnostics.py",
-      "sha256": "c20972c3244925bec4255d16544419043e54f04808d56845972f01ef9a694c4b"
+      "sha256": "0a05c9c5ed4a4cd29e4e8362d51b05a5dd6ab6a292717d76b8392325d1b7b155"
     }
   },
   "confirmation_rows_accessed": [],
@@ -17,7 +17,7 @@
     "path": "config/dante_light_prefilter_v5_training_diagnostic.json",
     "sha256": "0abf76186d4517a6b364e5c218aee658b459ecd08ae7e1479cb9c8e98bc6dae8"
   },
-  "elapsed_s": 49.04441719999886,
+  "elapsed_s": 48.52743139999802,
   "environment": {
     "automatic_mixed_precision": false,
     "device_name": "NVIDIA GeForce RTX 5070",
@@ -31,6 +31,7 @@
   "o4b_rows_accessed": [],
   "parent_training_artifact_digest": "a0ac022d021bf543f18ead901b9cde97bf9e21e461624eb6d0d0e7e6ccd359ce",
   "pass_fail_gate_evaluated": false,
+  "result_matrix_digest": "c74d7a2ca887e08a123c328e5d8f247492774f8a579d0f2e65f1f082e1b8b073",
   "results": {
     "complex_stft_2d": {
       "replicates": [
