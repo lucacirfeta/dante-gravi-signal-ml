@@ -84,3 +84,35 @@ def test_smoke_cache_records_no_sealed_access(tmp_path: Path) -> None:
     )
     assert checked["status"] == "PASS"
     assert checked["cached_interval_count"] == 2
+
+
+def test_fetches_within_each_block_are_serialized(tmp_path: Path) -> None:
+    active: set[tuple[str, int]] = set()
+    calls: list[tuple[str, int]] = []
+
+    def guarded_fetch(detector: str, start: float, end: float, sample_rate_hz: int) -> TimeSeries:
+        block = int(start // 4096)
+        key = (detector, block)
+        assert key not in active
+        active.add(key)
+        calls.append(key)
+        result = _fake_fetch(detector, start, end, sample_rate_hz)
+        active.remove(key)
+        return result
+
+    references = {
+        "cache_implementation": repository_reference(ROOT, ROOT / "src/dante_light/prefilter_v6_cache.py"),
+        "test_driver": repository_reference(ROOT, Path(__file__).resolve()),
+    }
+    summary = build_phase_b_cache(
+        root=ROOT,
+        cache_root=tmp_path / "cache",
+        artifact_path=tmp_path / "summary.json",
+        implementation_references=references,
+        workers=2,
+        retries=1,
+        fetch=guarded_fetch,
+        limit=10,
+    )
+    assert summary["cached_interval_count"] == 10
+    assert len(calls) == 10

@@ -191,6 +191,39 @@ def default_fetch(detector: str, start: float, end: float, sample_rate_hz: int) 
     )
 
 
+def _cache_block_group(
+    identities: Sequence[Mapping[str, Any]],
+    *,
+    cache_root: Path,
+    sample_rate_hz: int,
+    fetch: Callable[[str, float, float, int], object],
+    retries: int,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Fetch one detector/block sequentially to avoid shared GWOSC-cache races."""
+    records: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    for identity in identities:
+        try:
+            records.append(
+                ensure_interval(
+                    identity=identity,
+                    cache_root=cache_root,
+                    sample_rate_hz=sample_rate_hz,
+                    fetch=fetch,
+                    retries=retries,
+                )
+            )
+        except Exception as exc:
+            failures.append(
+                {
+                    **identity,
+                    "exception_type": type(exc).__name__,
+                    "message": str(exc),
+                }
+            )
+    return records, failures
+
+
 def build_phase_b_cache(
     *,
     root: Path,
@@ -226,38 +259,50 @@ def build_phase_b_cache(
     )
     run_dir = cache_root / f"raw_{run_key}"
     run_dir.mkdir(parents=True, exist_ok=True)
+    grouped: dict[tuple[str, int], list[dict[str, Any]]] = {}
+    for identity in identities:
+        grouped.setdefault(
+            (str(identity["detector"]), int(identity["block_index"])), []
+        ).append(identity)
+    groups = [
+        sorted(values, key=lambda row: float(row["gps_start"]))
+        for _key, values in sorted(grouped.items())
+    ]
     records: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
             pool.submit(
-                ensure_interval,
-                identity=identity,
+                _cache_block_group,
+                group,
                 cache_root=run_dir,
                 sample_rate_hz=4096,
                 fetch=fetch,
                 retries=retries,
-            ): identity
-            for identity in identities
+            ): group
+            for group in groups
         }
         for future in as_completed(futures):
-            identity = futures[future]
             try:
-                record = future.result()
-                path = Path(record["relative_path"])
-                record["relative_path"] = path.relative_to(run_dir).as_posix()
-                record["record_digest"] = canonical_json_sha256(
-                    {key: value for key, value in record.items() if key != "record_digest"}
-                )
-                records.append(record)
+                group_records, group_failures = future.result()
+                failures.extend(group_failures)
+                for record in group_records:
+                    path = Path(record["relative_path"])
+                    record["relative_path"] = path.relative_to(run_dir).as_posix()
+                    record["record_digest"] = canonical_json_sha256(
+                        {key: value for key, value in record.items() if key != "record_digest"}
+                    )
+                    records.append(record)
             except Exception as exc:
-                failures.append(
-                    {
-                        **identity,
-                        "exception_type": type(exc).__name__,
-                        "message": str(exc),
-                    }
-                )
+                group = futures[future]
+                for identity in group:
+                    failures.append(
+                        {
+                            **identity,
+                            "exception_type": type(exc).__name__,
+                            "message": str(exc),
+                        }
+                    )
     records.sort(key=lambda row: (row["detector"], row["block_index"], row["gps_start"]))
     failures.sort(key=lambda row: (row["detector"], row["block_index"], row["gps_start"]))
     ledger_path = run_dir / "cache_manifest_v6.jsonl"
