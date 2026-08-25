@@ -27,7 +27,7 @@ norm ratio with `lambda = 1` was:
 | Gradient space | Minimum | Median | Maximum |
 |---|---:|---:|---:|
 | prediction vector | 1.047 | 1.050 | 1.053 |
-| trainable parameters | 15.1 | 178.1 | 316.8 |
+| trainable parameters | 14.118 | 179.106 | 298.890 |
 
 The two losses have similar derivatives with respect to the prediction vector,
 but RankNet's parameter gradient nearly cancels through the initially almost

@@ -25,6 +25,7 @@ ARTIFACT = (
     / "artifacts/dante_light/prefilter_l4_v6_design"
     / "pre_phase_b_audit_v6.json"
 )
+REPORT = ROOT / "docs/DANTE_LIGHT_L4_PREFILTER_V6_PRE_PHASE_B_AUDIT_2026-08-25.md"
 
 
 def test_pre_phase_b_contract_cannot_freeze_or_access_outcomes() -> None:
@@ -146,6 +147,27 @@ def test_committed_pre_phase_b_audit_is_bounded_and_verifies() -> None:
     assert payload["gradient_scale"]["input"]["teacher_targets_read"] is False
     assert payload["capacity"]["block_identity"]["duration_s"] == 4096
     assert payload["capacity"]["block_identity"]["window_level_Wilson_independence_established"] is False
+
+
+def test_reported_gradient_summary_matches_committed_artifact() -> None:
+    payload = json.loads(ARTIFACT.read_text(encoding="utf-8"))
+    report = REPORT.read_text(encoding="utf-8")
+    prediction = payload["gradient_scale"]["summary"][
+        "prediction_value_to_rank_gradient_ratio"
+    ]
+    parameter = payload["gradient_scale"]["summary"][
+        "parameter_value_to_rank_gradient_ratio"
+    ]
+    expected_rows = (
+        "| prediction vector | "
+        f"{prediction['minimum']:.3f} | {prediction['median']:.3f} | "
+        f"{prediction['maximum']:.3f} |",
+        "| trainable parameters | "
+        f"{parameter['minimum']:.3f} | {parameter['median']:.3f} | "
+        f"{parameter['maximum']:.3f} |",
+    )
+    for row in expected_rows:
+        assert row in report
 
 
 def test_verifier_rejects_tampered_gradient_ratio(tmp_path: Path) -> None:

@@ -121,6 +121,10 @@ def test_pipeline_end_to_end(temp_workspace, obs_run, monkeypatch):
          patch(
              "src.pipeline_v2_production.background_calibration.resolve_run_bounds",
              return_value=(1234567800.0, 1234570300.0),
+         ), \
+         patch(
+             "src.pipeline_v2_production.cross_detector_veto.get_observing_run",
+             return_value=obs_run,
          ):
         cmd_aggregate_report(agg_args)
         
