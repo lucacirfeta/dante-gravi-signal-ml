@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "status": "APPROVED_TRAINING_ONLY_FREEZE_INPUT",
+  "design_id": "dante-light-l4-prefilter-v5-training",
+  "decision_date": "2026-08-24",
+  "scope": {
+    "allowed_partition": "training",
+    "allowed_role": "background",
+    "development_access_allowed": false,
+    "confirmation_access_allowed": false,
+    "o4b_access_allowed": false,
+    "morphology_labels_allowed": false,
+    "routing_enabled": false
+  },
+  "internal_split": {
+    "unit": "detector_gps_4096s_block",
+    "fit_fraction": 0.9,
+    "validation_fraction": 0.1,
+    "stratify_by": "detector",
+    "seed_method": "sha256_canonical_json_first_64_bits_big_endian",
+    "seed_purpose": "training_fit_validation_split",
+    "block_overlap_allowed": false
+  },
+  "target": {
+    "name": "native_o4a_novelty_score",
+    "serialization": "float32_hex",
+    "standardization": "per_detector_population_mean_std_fit_subset_only",
+    "standard_deviation_ddof": 0,
+    "clipping": false,
+    "physical_truth_label": false
+  },
+  "optimization": {
+    "optimizer": {
+      "name": "AdamW",
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "betas": [0.9, 0.999],
+      "epsilon": 1e-08,
+      "amsgrad": false
+    },
+    "scheduler": {
+      "name": "none",
+      "intentional": true,
+      "reason": "simplicity_comparability_and_reduced_post_hoc_flexibility"
+    },
+    "loss": {
+      "name": "SmoothL1Loss",
+      "beta": 1.0,
+      "reduction": "mean"
+    },
+    "batch": {
+      "total_size": 64,
+      "H1_size": 32,
+      "L1_size": 32,
+      "detector_balanced": true,
+      "drop_last": false
+    },
+    "maximum_epochs": 100,
+    "early_stopping": false,
+    "checkpoint_selection": {
+      "metric": "equal_detector_mean_validation_SmoothL1",
+      "direction": "minimum",
+      "tie_break": "earliest_epoch"
+    },
+    "gradient_clipping": false,
+    "precision": {
+      "model_and_inputs": "float32",
+      "automatic_mixed_precision": false
+    }
+  },
+  "replicates": {
+    "count": 5,
+    "seeds_from_frozen_protocol": true,
+    "favorable_seed_selection_allowed": false,
+    "promotion_basis": "worst_replicate_all_gates"
+  },
+  "numerical_failure": {
+    "nonfinite_input_activation_prediction_loss_gradient_or_parameter": "FAILED",
+    "optimizer_exception_caused_by_nonfinite_state": "FAILED",
+    "failed_replicate_blocks_candidate_promotion": true,
+    "infrastructure_interruption": "INCOMPLETE_RERUN_SAME_SEED_ALLOWED"
+  },
+  "checkpoint_boundary": {
+    "student_training_authorized_after_teacher_ledger_PASS_COMPLETE": true,
+    "student_outputs_are_training_only": true,
+    "development_threshold_selection_authorized": false,
+    "confirmation_unlock_authorized": false,
+    "o4b_access_authorized": false
+  }
+}

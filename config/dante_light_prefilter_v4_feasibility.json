@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "status": "FEASIBILITY_ONLY_NOT_A_V4_PROTOCOL",
+  "routing_enabled": false,
+  "scientific_boundary": {
+    "may_freeze_v4": false,
+    "may_select_a_candidate": false,
+    "may_access_development_labels": false,
+    "may_access_reserved_confirmation": false,
+    "may_access_o4b_outcomes": false,
+    "allowed_inputs": [
+      "deterministic synthetic probes",
+      "unlabelled random arrays",
+      "versioned runtime benchmarks",
+      "waveform parameter grids without detector outcomes"
+    ]
+  },
+  "signal_contract": {
+    "sample_rate_hz": 4096,
+    "duration_s": 32.0,
+    "analysis_band_hz": [
+      20.0,
+      1024.0
+    ]
+  },
+  "phase_probe": {
+    "method": "analytic_phase_frame_evolution",
+    "bandpass_order": 4,
+    "frame_hop_samples": 512,
+    "frequency_smoothing_frames": 9,
+    "frequency_smoothing_polynomial_order": 2,
+    "active_envelope_quantile": 0.5,
+    "inspiral_coordinate_power": -2.6666666666666665,
+    "benchmark_repetitions": 100,
+    "warmup_repetitions": 10,
+    "synthetic_control_repetitions": 64,
+    "synthetic_seed": 20260823,
+    "synthetic_chirp": {
+      "start_s": 4.0,
+      "duration_s": 12.0,
+      "f0_hz": 30.0,
+      "f1_hz": 512.0,
+      "method": "quadratic"
+    }
+  },
+  "mini_bank_probe": {
+    "status": "illustrative_aligned_spin_in_family_coverage_only",
+    "waveform_approximant": "IMRPhenomNSBH",
+    "reference_psd": "aLIGOZeroDetHighPower",
+    "f_low_hz": 30.0,
+    "f_high_hz": 1024.0,
+    "delta_f_hz": 0.03125,
+    "distance_mpc": 100.0,
+    "inclination_rad": 0.0,
+    "black_hole_mass_msun": [
+      5.0,
+      10.0,
+      20.0
+    ],
+    "neutron_star_mass_msun": [
+      1.0,
+      1.4,
+      2.0,
+      3.0
+    ],
+    "black_hole_aligned_spin": [
+      -0.5,
+      0.0,
+      0.5
+    ],
+    "neutron_star_tidal_lambda": [
+      0.0,
+      400.0,
+      800.0
+    ],
+    "anchor": {
+      "black_hole_mass_msun": 10.0,
+      "neutron_star_mass_msun": 1.4,
+      "black_hole_aligned_spin": 0.0,
+      "neutron_star_tidal_lambda": 400.0
+    },
+    "bank_sizes": [
+      1,
+      4,
+      8,
+      16,
+      32
+    ],
+    "kernel_benchmark_repetitions": 20,
+    "kernel_benchmark_warmup": 5,
+    "limitations": [
+      "The grid is an explicit feasibility stress grid, not a population prior.",
+      "Coverage is in-family and aligned-spin; it does not establish coverage for precession, eccentricity, higher modes, or waveform-systematic error.",
+      "No minimal-match acceptance threshold is defined or implied."
+    ]
+  },
+  "student_probe": {
+    "status": "random_weight_inference_cost_only",
+    "architectures": [
+      "raw_1d_depthwise_proxy",
+      "complex_stft_2d_proxy"
+    ],
+    "batch_sizes": [
+      1,
+      16
+    ],
+    "benchmark_repetitions": 100,
+    "warmup_repetitions": 10,
+    "seed": 20260823,
+    "limitations": [
+      "Random-weight timing does not establish learnability, calibration, retention, or teacher fidelity.",
+      "The proxy architectures are not candidates for promotion and are not a frozen v4 design."
+    ]
+  }
+}

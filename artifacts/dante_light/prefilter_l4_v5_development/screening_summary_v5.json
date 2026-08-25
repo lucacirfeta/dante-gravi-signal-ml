@@ -1,0 +1,4358 @@
+{
+  "architectures": {
+    "complex_stft_2d": {
+      "favorable_seed_selection_used": false,
+      "replicates": [
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.05666666666666664,
+              "background_exact_calls": 283,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9888888888888889,
+                  "retained": 89,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9397159168824657,
+                    0.9980359158990818
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9222222222222223,
+                  "retained": 83,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8480613981740798,
+                    0.9618151846827111
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.95,
+                  "retained": 57,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8629948352365148,
+                    0.9828504978356042
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.12928202748298645
+            },
+            "L1": {
+              "background_call_reduction": 0.05666666666666664,
+              "background_exact_calls": 283,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9222222222222223,
+                  "retained": 83,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8480613981740798,
+                    0.9618151846827111
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9666666666666667,
+                  "retained": 87,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9065271396961013,
+                    0.9885996097771937
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9666666666666667,
+                  "retained": 58,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.886362257256914,
+                    0.9908106807438021
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.12777310609817505
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.29141531170021984,
+                "mean_error_standardized": -0.07487487501554092,
+                "n": 300,
+                "spearman": 0.06818786875409727
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.688330679552846,
+                "mean_error_standardized": -1.5444626991143602,
+                "n": 90,
+                "spearman": 0.18832777709182202
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.6673634546684366,
+                "mean_error_standardized": -1.5505737734975138,
+                "n": 90,
+                "spearman": 0.3303206157138741
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.5536177164002125,
+                "mean_error_standardized": -0.36104271274830513,
+                "n": 90,
+                "spearman": -0.2415195291599786
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5944651862064784,
+                "mean_error_standardized": -0.39542694902015,
+                "n": 90,
+                "spearman": -0.026480635469399515
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.40469600045924475,
+                "mean_error_standardized": -0.03844411605850953,
+                "n": 60,
+                "spearman": 0.12420116699083082
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 4.167339241191699,
+                "mean_error_standardized": -4.103305516993505,
+                "n": 60,
+                "spearman": 0.15615448735759938
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 2.521792790810625,
+                "mean_error_standardized": -2.5135989721024727,
+                "n": 60,
+                "spearman": 0.2899138649624896
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 8.716977217874817,
+                "mean_error_standardized": -2.294339799323072,
+                "n": 60,
+                "spearman": 0.3996110030564046
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.29705353205049584,
+                "mean_error_standardized": -0.0628745694446549,
+                "n": 300,
+                "spearman": 0.034186602073356366
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.3253289318411097,
+                "mean_error_standardized": -1.2028707379624932,
+                "n": 90,
+                "spearman": 0.25669835782195327
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.9962065302190928,
+                "mean_error_standardized": -1.9089547362189725,
+                "n": 90,
+                "spearman": 0.4939457546199118
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.7924965923192426,
+                "mean_error_standardized": -0.6038647633918126,
+                "n": 90,
+                "spearman": 0.05797423550232538
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5824280794545675,
+                "mean_error_standardized": -0.3646286479310884,
+                "n": 90,
+                "spearman": -0.2538008807671729
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.310226161192401,
+                "mean_error_standardized": -0.11256862452298422,
+                "n": 60,
+                "spearman": 0.11436510141706033
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 3.049089265652752,
+                "mean_error_standardized": -2.1964804049643987,
+                "n": 60,
+                "spearman": 0.6595721033620451
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 1.2984545427074319,
+                "mean_error_standardized": -1.2877827084748659,
+                "n": 60,
+                "spearman": 0.22795220894692977
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 6.300791469873642,
+                "mean_error_standardized": -4.733582448386719,
+                "n": 60,
+                "spearman": 0.2921922756321201
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.3141064393874216,
+                "mean_error_standardized": 0.3141064393874216,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.21839059465181718,
+                "mean_error_standardized": 0.21839059465181718,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.15270574006320176,
+                "mean_error_standardized": 0.15270574006320176,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.08694226160149338,
+                "mean_error_standardized": 0.08694226160149338,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.02637414997474126,
+                "mean_error_standardized": 0.007135421096550672,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.12115899606147913,
+                "mean_error_standardized": -0.11095921361435515,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.4005842886669276,
+                "mean_error_standardized": -0.37917167887019315,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.4152640001638077,
+                "mean_error_standardized": -1.3560880870550658,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 4.01469198988724,
+                "mean_error_standardized": -3.936024342564865,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 7.753803761044926,
+                "mean_error_standardized": -4.952566249014189,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.05666666666666664,
+            "background_exact_calls": 566,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.016850132804007746,
+              0.03376881744998384
+            ],
+            "block_bootstrap_net_saving_lower": 0.016850132804007746,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.02504556883326586,
+            "mean_prefilter_cost_s": 0.0020146844999908353,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 0,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.2617943238053075,
+                0.3854895811605336
+              ],
+              "block_bootstrap_lower": 0.2617943238053075,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.3262642711081537
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.302056489145204,
+                0.4283164030281501
+              ],
+              "block_bootstrap_lower": 0.302056489145204,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.36678346516477184
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.010000000000000009,
+              "background_exact_calls": 297,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9888888888888889,
+                  "retained": 89,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9397159168824657,
+                    0.9980359158990818
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.16541188955307007
+            },
+            "L1": {
+              "background_call_reduction": 0.13666666666666671,
+              "background_exact_calls": 259,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.95,
+                  "retained": 57,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8629948352365148,
+                    0.9828504978356042
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.17214754223823547
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.27837569049496674,
+                "mean_error_standardized": -0.011194000633084782,
+                "n": 300,
+                "spearman": 0.2095658840653785
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.6019530601070762,
+                "mean_error_standardized": -1.4361367676017132,
+                "n": 90,
+                "spearman": 0.6135654607564719
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.3713924928564913,
+                "mean_error_standardized": -1.2105001967623878,
+                "n": 90,
+                "spearman": 0.6527472527472526
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.5364214563981691,
+                "mean_error_standardized": -0.30986071315433195,
+                "n": 90,
+                "spearman": 0.2788410091780878
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.6033067403853942,
+                "mean_error_standardized": -0.31808517648702467,
+                "n": 90,
+                "spearman": 0.10174918714244556
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.46163904112847626,
+                "mean_error_standardized": 0.02240951306615175,
+                "n": 60,
+                "spearman": 0.17227007502083916
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 3.4579898619509017,
+                "mean_error_standardized": -3.162642836675546,
+                "n": 60,
+                "spearman": 0.16310086135037513
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 2.142577454095443,
+                "mean_error_standardized": -2.1313727720732194,
+                "n": 60,
+                "spearman": 0.7629897193664907
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.121778336322999,
+                "mean_error_standardized": -1.844305790030351,
+                "n": 60,
+                "spearman": 0.3224228952486803
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.26217117274453605,
+                "mean_error_standardized": -0.0747952179350441,
+                "n": 300,
+                "spearman": 0.19935332614806833
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.205316346166821,
+                "mean_error_standardized": -1.0110833939107613,
+                "n": 90,
+                "spearman": 0.4169650574144956
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.6577550565725865,
+                "mean_error_standardized": -1.5800104337859056,
+                "n": 90,
+                "spearman": 0.7429641519529159
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.6677177688761144,
+                "mean_error_standardized": -0.4922643074189291,
+                "n": 90,
+                "spearman": 0.26318475531958674
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5645419897650436,
+                "mean_error_standardized": -0.3776668621444067,
+                "n": 90,
+                "spearman": 0.21983784006255913
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.3302673584561611,
+                "mean_error_standardized": -0.02199931910306232,
+                "n": 60,
+                "spearman": -0.0035565434843011956
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.1376954163366495,
+                "mean_error_standardized": -1.3770399792803447,
+                "n": 60,
+                "spearman": 0.41656015559877746
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 1.116469046093957,
+                "mean_error_standardized": -1.0919082134156142,
+                "n": 60,
+                "spearman": 0.5065295915532093
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.1656404571652805,
+                "mean_error_standardized": -2.2515566189324563,
+                "n": 60,
+                "spearman": 0.21066963045290366
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.3205506612465986,
+                "mean_error_standardized": 0.3205506612465986,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.21466257504011416,
+                "mean_error_standardized": 0.21466257504011416,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.1532206119386468,
+                "mean_error_standardized": 0.1532206119386468,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.10398051537381146,
+                "mean_error_standardized": 0.10332514318658804,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.06711494228184339,
+                "mean_error_standardized": 0.021602655881908784,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.12723251189480786,
+                "mean_error_standardized": -0.0729566878890567,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.418421370012894,
+                "mean_error_standardized": -0.2950686919723339,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.2845096737498252,
+                "mean_error_standardized": -1.1236505247748347,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 3.3466010204093,
+                "mean_error_standardized": -3.2184495200347145,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 4.946839002865133,
+                "mean_error_standardized": -3.567160851350675,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.07333333333333336,
+            "background_exact_calls": 556,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.023674557596200733,
+              0.04434164486277828
+            ],
+            "block_bootstrap_net_saving_lower": 0.023674557596200733,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.033946379833541866,
+            "mean_prefilter_cost_s": 0.0018965191665362606,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 1,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.5360677828782963,
+                0.6288145571201947
+              ],
+              "block_bootstrap_lower": 0.5360677828782963,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.5855866488724061
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.5452841002666678,
+                0.6404650127576975
+              ],
+              "block_bootstrap_lower": 0.5452841002666678,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.5942041080709154
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.09333333333333338,
+              "background_exact_calls": 272,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9666666666666667,
+                  "retained": 87,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9065271396961013,
+                    0.9885996097771937
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9666666666666667,
+                  "retained": 58,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.886362257256914,
+                    0.9908106807438021
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 56,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8407464268680284,
+                    0.9737713012754937
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.11847903579473495
+            },
+            "L1": {
+              "background_call_reduction": 0.1233333333333333,
+              "background_exact_calls": 263,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9222222222222223,
+                  "retained": 83,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8480613981740798,
+                    0.9618151846827111
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9111111111111111,
+                  "retained": 82,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8342945337394592,
+                    0.9542695074632055
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9666666666666667,
+                  "retained": 58,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.886362257256914,
+                    0.9908106807438021
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.119028739631176
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2955922661186916,
+                "mean_error_standardized": -0.07191159560434421,
+                "n": 300,
+                "spearman": -0.005995622173579706
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.7103018640365735,
+                "mean_error_standardized": -1.5630187301196103,
+                "n": 90,
+                "spearman": 0.17897682841503065
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.6673250665453219,
+                "mean_error_standardized": -1.5499192357700784,
+                "n": 90,
+                "spearman": 0.40297156027493103
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.5513436556507071,
+                "mean_error_standardized": -0.3547507067888208,
+                "n": 90,
+                "spearman": -0.1552866609046384
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5942804600545833,
+                "mean_error_standardized": -0.3918857470048031,
+                "n": 90,
+                "spearman": -0.019615590402107256
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.48829182446313185,
+                "mean_error_standardized": 0.09514410946015418,
+                "n": 60,
+                "spearman": 0.12736871353153656
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 4.215568495353017,
+                "mean_error_standardized": -4.178937840690714,
+                "n": 60,
+                "spearman": 0.20922478466240624
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 2.529487567787727,
+                "mean_error_standardized": -2.521759352997412,
+                "n": 60,
+                "spearman": 0.4168380105584885
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 7.120645236964042,
+                "mean_error_standardized": -4.5010776974890545,
+                "n": 60,
+                "spearman": 0.4440677966101696
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.29963618601310227,
+                "mean_error_standardized": -0.061249256331521784,
+                "n": 300,
+                "spearman": -0.024750497227746974
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.328872211638131,
+                "mean_error_standardized": -1.1996273337495682,
+                "n": 90,
+                "spearman": 0.1850845783430053
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 2.0023137449279127,
+                "mean_error_standardized": -1.9163006095019879,
+                "n": 90,
+                "spearman": 0.46464172531588255
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.7940524831242551,
+                "mean_error_standardized": -0.6050189575017823,
+                "n": 90,
+                "spearman": 0.08884224389842367
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5830085494191781,
+                "mean_error_standardized": -0.3603524541699251,
+                "n": 90,
+                "spearman": -0.15024900193439517
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.318810963007609,
+                "mean_error_standardized": -0.11302519895801959,
+                "n": 60,
+                "spearman": 0.1772714642956377
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.9807285326921282,
+                "mean_error_standardized": -2.6043297812405344,
+                "n": 60,
+                "spearman": 0.6809113642678524
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 1.3048863769345942,
+                "mean_error_standardized": -1.2944150117972208,
+                "n": 60,
+                "spearman": 0.31403167546540706
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 6.217166198886172,
+                "mean_error_standardized": -5.19905711479343,
+                "n": 60,
+                "spearman": 0.27113086968602396
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.3166507284697104,
+                "mean_error_standardized": 0.3166507284697104,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.22104262506930586,
+                "mean_error_standardized": 0.22104262506930586,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.155975568877801,
+                "mean_error_standardized": 0.155975568877801,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.09228491329816212,
+                "mean_error_standardized": 0.09228491329816212,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.026815123331513795,
+                "mean_error_standardized": 0.010914785391026654,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.11660553138812432,
+                "mean_error_standardized": -0.1083704093412134,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.3902832690405273,
+                "mean_error_standardized": -0.38368176152650385,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.4077825318190795,
+                "mean_error_standardized": -1.3708934861434618,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 4.047944854590776,
+                "mean_error_standardized": -4.014296770307545,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 7.22427302406246,
+                "mean_error_standardized": -5.8844837971524235,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.10833333333333328,
+            "background_exact_calls": 535,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.038374848696306495,
+              0.06186198182543739
+            ],
+            "block_bootstrap_net_saving_lower": 0.038374848696306495,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.0495849351671374,
+            "mean_prefilter_cost_s": 0.0018857684995479455,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 2,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.26892410997265137,
+                0.3964090606743167
+              ],
+              "block_bootstrap_lower": 0.26892410997265137,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.3362305385562204
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.30475395493520796,
+                0.42376243780121675
+              ],
+              "block_bootstrap_lower": 0.30475395493520796,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.3644586721712002
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.06666666666666665,
+              "background_exact_calls": 280,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9222222222222223,
+                  "retained": 83,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8480613981740798,
+                    0.9618151846827111
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9111111111111111,
+                  "retained": 82,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8342945337394592,
+                    0.9542695074632055
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                }
+              },
+              "threshold_standardized": -0.17985668778419495
+            },
+            "L1": {
+              "background_call_reduction": 0.10333333333333339,
+              "background_exact_calls": 269,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9222222222222223,
+                  "retained": 83,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8480613981740798,
+                    0.9618151846827111
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9111111111111111,
+                  "retained": 82,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8342945337394592,
+                    0.9542695074632055
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.18753798305988312
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2676378120159406,
+                "mean_error_standardized": -0.07327566736467084,
+                "n": 300,
+                "spearman": 0.22863454038378203
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.6752408989736485,
+                "mean_error_standardized": -1.5447159957578558,
+                "n": 90,
+                "spearman": 0.4865374326048483
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.5092609154403789,
+                "mean_error_standardized": -1.392928567054376,
+                "n": 90,
+                "spearman": 0.569411861546693
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.5414786431371357,
+                "mean_error_standardized": -0.3639833503252163,
+                "n": 90,
+                "spearman": 0.04244968514631435
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5949219852423572,
+                "mean_error_standardized": -0.4057044455467887,
+                "n": 90,
+                "spearman": 0.05147137506688069
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.37943390582793657,
+                "mean_error_standardized": -0.009667382232905416,
+                "n": 60,
+                "spearman": 0.1536537927202001
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 4.035899803903539,
+                "mean_error_standardized": -4.000096579466513,
+                "n": 60,
+                "spearman": 0.3513753820505697
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 2.4170468189334975,
+                "mean_error_standardized": -2.410335394562999,
+                "n": 60,
+                "spearman": 0.601055848846902
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.413287369172701,
+                "mean_error_standardized": -2.402817248771231,
+                "n": 60,
+                "spearman": 0.2905807168657961
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2666826594767789,
+                "mean_error_standardized": -0.09499753578136216,
+                "n": 300,
+                "spearman": 0.18645184946499407
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.234248938132003,
+                "mean_error_standardized": -1.0285116321453476,
+                "n": 90,
+                "spearman": 0.4354218027851127
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.8599817283570474,
+                "mean_error_standardized": -1.7183598922369778,
+                "n": 90,
+                "spearman": 0.7278017862287525
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.6913633602060986,
+                "mean_error_standardized": -0.5546400811774531,
+                "n": 90,
+                "spearman": 0.13347326830472897
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5697167598481899,
+                "mean_error_standardized": -0.40321521129972676,
+                "n": 90,
+                "spearman": 0.06182656295015845
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.26542878209195253,
+                "mean_error_standardized": -0.1051633556874595,
+                "n": 60,
+                "spearman": 0.10675187552097806
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.842056671645763,
+                "mean_error_standardized": -2.446721223530731,
+                "n": 60,
+                "spearman": 0.47452070019449855
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 1.2367989425376917,
+                "mean_error_standardized": -1.2273573249082979,
+                "n": 60,
+                "spearman": 0.33153653792720206
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.688207465547878,
+                "mean_error_standardized": -2.61015075508984,
+                "n": 60,
+                "spearman": 0.251736593498194
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.279255729947028,
+                "mean_error_standardized": 0.279255729947028,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.1812993784965928,
+                "mean_error_standardized": 0.1812993784965928,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.11992843946199751,
+                "mean_error_standardized": 0.11992843946199751,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.06218256960088529,
+                "mean_error_standardized": 0.058829155315133226,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.04482853098784392,
+                "mean_error_standardized": -0.025861434020829948,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.14649512476691262,
+                "mean_error_standardized": -0.1364362274858428,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.40529380909092116,
+                "mean_error_standardized": -0.402015512903636,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.381640292234932,
+                "mean_error_standardized": -1.3310979300377885,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 3.789138942646241,
+                "mean_error_standardized": -3.659674083011638,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 5.57796450314326,
+                "mean_error_standardized": -4.141482196859601,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.08499999999999996,
+            "background_exact_calls": 549,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.02857382557960046,
+              0.0499111160082857
+            ],
+            "block_bootstrap_net_saving_lower": 0.02857382557960046,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.03903330116685538,
+            "mean_prefilter_cost_s": 0.0018772596666046107,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 3,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.4639188178021158,
+                0.576598458399772
+              ],
+              "block_bootstrap_lower": 0.4639188178021158,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.5241370092226452
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.4878204738645128,
+                0.5957164688930663
+              ],
+              "block_bootstrap_lower": 0.4878204738645128,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.545394585036091
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.036666666666666625,
+              "background_exact_calls": 289,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9888888888888889,
+                  "retained": 89,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9397159168824657,
+                    0.9980359158990818
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.95,
+                  "retained": 57,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8629948352365148,
+                    0.9828504978356042
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.133724182844162
+            },
+            "L1": {
+              "background_call_reduction": 0.013333333333333308,
+              "background_exact_calls": 296,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9666666666666667,
+                  "retained": 87,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9065271396961013,
+                    0.9885996097771937
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9888888888888889,
+                  "retained": 89,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9397159168824657,
+                    0.9980359158990818
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9888888888888889,
+                  "retained": 89,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9397159168824657,
+                    0.9980359158990818
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 56,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8407464268680284,
+                    0.9737713012754937
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.14240899682044983
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2863434211068365,
+                "mean_error_standardized": -0.06195642422042688,
+                "n": 300,
+                "spearman": 0.13669485216502406
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.6991726210172213,
+                "mean_error_standardized": -1.420403053458692,
+                "n": 90,
+                "spearman": 0.49684323167469224
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.5007970336803604,
+                "mean_error_standardized": -1.381389133385491,
+                "n": 90,
+                "spearman": 0.5963946166193357
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.5374360158028457,
+                "mean_error_standardized": -0.34276178333850976,
+                "n": 90,
+                "spearman": 0.09715602749310615
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.59348394388884,
+                "mean_error_standardized": -0.3770367519202392,
+                "n": 90,
+                "spearman": 0.0016215993744083629
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.46207704509504044,
+                "mean_error_standardized": 0.06605176970791224,
+                "n": 60,
+                "spearman": 0.11653237010280636
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 3.7815418919808956,
+                "mean_error_standardized": -3.755089629204821,
+                "n": 60,
+                "spearman": 0.4580716865796055
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 2.258069050130482,
+                "mean_error_standardized": -2.249769368357802,
+                "n": 60,
+                "spearman": 0.6862461794943041
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 6.439603237957945,
+                "mean_error_standardized": 0.24727208111346727,
+                "n": 60,
+                "spearman": 0.3371492081133649
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2840670789332531,
+                "mean_error_standardized": -0.058997332601545785,
+                "n": 300,
+                "spearman": 0.052593473260814004
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.2296354386351722,
+                "mean_error_standardized": -1.054327417366275,
+                "n": 90,
+                "spearman": 0.3444458163559287
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.8179500024552346,
+                "mean_error_standardized": -1.6977925592527192,
+                "n": 90,
+                "spearman": 0.6815738568547557
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.722377536872708,
+                "mean_error_standardized": -0.5399806338924169,
+                "n": 90,
+                "spearman": 0.04256492571099312
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5703030628158099,
+                "mean_error_standardized": -0.3651675740473827,
+                "n": 90,
+                "spearman": 0.1767543318105116
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.267907501033292,
+                "mean_error_standardized": -0.0739186677030724,
+                "n": 60,
+                "spearman": -0.0014448457904973607
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.5366989223604315,
+                "mean_error_standardized": -2.206582350103867,
+                "n": 60,
+                "spearman": 0.4801333703806614
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 1.2524244957680615,
+                "mean_error_standardized": -1.2413918993561182,
+                "n": 60,
+                "spearman": 0.3108085579327592
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.897032775560501,
+                "mean_error_standardized": -2.7864989059528416,
+                "n": 60,
+                "spearman": 0.22106140594609616
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.3180265930400499,
+                "mean_error_standardized": 0.3180265930400499,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.21451209978231348,
+                "mean_error_standardized": 0.21451209978231348,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.15009705327415931,
+                "mean_error_standardized": 0.15009705327415931,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.08583507204553051,
+                "mean_error_standardized": 0.08583507204553051,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.027886434214418346,
+                "mean_error_standardized": 0.0023784069726208003,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.11343365270225958,
+                "mean_error_standardized": -0.11201836056416958,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.40176585855998626,
+                "mean_error_standardized": -0.3579529361709343,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.3367886698665812,
+                "mean_error_standardized": -1.2971042426554067,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 3.674781396015676,
+                "mean_error_standardized": -3.596306657211233,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 6.26158680477882,
+                "mean_error_standardized": -3.1984617331661287,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.025000000000000022,
+            "background_exact_calls": 585,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.00465152516696738,
+              0.01655165965003622
+            ],
+            "block_bootstrap_net_saving_lower": 0.00465152516696738,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.010235067333342158,
+            "mean_prefilter_cost_s": 0.0018773893333855086,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 4,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.47246436233527694,
+                0.5837370634096525
+              ],
+              "block_bootstrap_lower": 0.47246436233527694,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.528540603136547
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.44889340421938106,
+                0.559586615482169
+              ],
+              "block_bootstrap_lower": 0.44889340421938106,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.5040030255181386
+            }
+          }
+        }
+      ],
+      "worst_replicate_all_gates_pass": false
+    },
+    "raw_1d_depthwise": {
+      "favorable_seed_selection_used": false,
+      "replicates": [
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.010000000000000009,
+              "background_exact_calls": 297,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.95,
+                  "retained": 57,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8629948352365148,
+                    0.9828504978356042
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.2134595364332199
+            },
+            "L1": {
+              "background_call_reduction": 0.09333333333333338,
+              "background_exact_calls": 272,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9222222222222223,
+                  "retained": 83,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8480613981740798,
+                    0.9618151846827111
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.20137664675712585
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.24837885069863824,
+                "mean_error_standardized": 0.015035983419394479,
+                "n": 300,
+                "spearman": 0.4190824342492694
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.1560101857539908,
+                "mean_error_standardized": -0.733346300077847,
+                "n": 90,
+                "spearman": 0.6815244680413219
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 0.8796923722617959,
+                "mean_error_standardized": -0.33292353664587426,
+                "n": 90,
+                "spearman": 0.8624850804626084
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.490330239449556,
+                "mean_error_standardized": -0.25930304444027225,
+                "n": 90,
+                "spearman": 0.4890562620899699
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5888902444696789,
+                "mean_error_standardized": -0.28259220395411655,
+                "n": 90,
+                "spearman": 0.35203523068691606
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.3064950134558824,
+                "mean_error_standardized": -0.008927995617251583,
+                "n": 60,
+                "spearman": 0.1942206168380106
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.5787352558741157,
+                "mean_error_standardized": -1.360544773420197,
+                "n": 60,
+                "spearman": 0.537427063073076
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 4.032987884888937,
+                "mean_error_standardized": 2.878703215678066,
+                "n": 60,
+                "spearman": 0.8479021950541819
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 3.5192948158683137,
+                "mean_error_standardized": -2.8458130445961065,
+                "n": 60,
+                "spearman": 0.3275909974993054
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.23331459233012372,
+                "mean_error_standardized": -0.0672838217256452,
+                "n": 300,
+                "spearman": 0.1995724396937744
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.2529834219093599,
+                "mean_error_standardized": -0.04746234958625729,
+                "n": 90,
+                "spearman": 0.7387002510598015
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 0.6599348021595481,
+                "mean_error_standardized": -0.2808411862712337,
+                "n": 90,
+                "spearman": 0.851817096760917
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.6382679033268223,
+                "mean_error_standardized": -0.5026373559032545,
+                "n": 90,
+                "spearman": 0.5080544923241552
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5162074030261005,
+                "mean_error_standardized": -0.3826038106458082,
+                "n": 90,
+                "spearman": 0.22910647405029427
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.32105675840013836,
+                "mean_error_standardized": 0.003324162878890661,
+                "n": 60,
+                "spearman": 0.2452347874409559
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.1579845209363606,
+                "mean_error_standardized": -0.4477502565893649,
+                "n": 60,
+                "spearman": 0.6401778271742151
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 1.0922915666633406,
+                "mean_error_standardized": 0.37207636040312886,
+                "n": 60,
+                "spearman": 0.6965823839955545
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.272760049610076,
+                "mean_error_standardized": -0.42463811702884285,
+                "n": 60,
+                "spearman": 0.30236176715754387
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.27720085386828,
+                "mean_error_standardized": 0.27720085386828,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.1761191110036627,
+                "mean_error_standardized": 0.1761191110036627,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.11314236902906963,
+                "mean_error_standardized": 0.11314236902906963,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.09533718301728847,
+                "mean_error_standardized": 0.08863248845687074,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.09039537091819436,
+                "mean_error_standardized": 0.004526147636374416,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.17743217422119692,
+                "mean_error_standardized": -0.04471185941486619,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.4453404995211017,
+                "mean_error_standardized": -0.16437852731523123,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.176192655692385,
+                "mean_error_standardized": -0.37838943429835487,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 2.8954168353392515,
+                "mean_error_standardized": -0.8399327446029825,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 4.541272260514987,
+                "mean_error_standardized": -1.3413331780661315,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.05166666666666664,
+            "background_exact_calls": 569,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.016070171745577688,
+              0.03257411077902816
+            ],
+            "block_bootstrap_net_saving_lower": 0.016070171745577688,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.02376811833314908,
+            "mean_prefilter_cost_s": 0.0012408816668660924,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 0,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.6771630841344333,
+                0.7565003765783943
+              ],
+              "block_bootstrap_lower": 0.6771630841344333,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.717882499443415
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.6314652319986106,
+                0.7201551988844153
+              ],
+              "block_bootstrap_lower": 0.6314652319986106,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.6794544849232325
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.036666666666666625,
+              "background_exact_calls": 289,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 56,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8407464268680284,
+                    0.9737713012754937
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.18658608198165894
+            },
+            "L1": {
+              "background_call_reduction": 0.0,
+              "background_exact_calls": 300,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.20297637581825256
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2506063575176206,
+                "mean_error_standardized": -0.05060121570337465,
+                "n": 300,
+                "spearman": 0.452009466771853
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.3409286881644973,
+                "mean_error_standardized": -1.211716730068505,
+                "n": 90,
+                "spearman": 0.6824463925587521
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.1716179725139675,
+                "mean_error_standardized": -0.9985665010304964,
+                "n": 90,
+                "spearman": 0.8620076552660821
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.5157228396208154,
+                "mean_error_standardized": -0.30938330896555327,
+                "n": 90,
+                "spearman": 0.5158249989710664
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5901499042172679,
+                "mean_error_standardized": -0.3513262426994801,
+                "n": 90,
+                "spearman": 0.24952051693624724
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.3076456128850525,
+                "mean_error_standardized": -0.06561655392752189,
+                "n": 60,
+                "spearman": 0.32008891358710756
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 3.4946672322415893,
+                "mean_error_standardized": -3.272645901434622,
+                "n": 60,
+                "spearman": 0.72342317310364
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 1.7192683164444091,
+                "mean_error_standardized": 0.013385093047748202,
+                "n": 60,
+                "spearman": 0.8533481522645182
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.844591608572177,
+                "mean_error_standardized": -3.479577433194608,
+                "n": 60,
+                "spearman": 0.35926646290636294
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2359908198097071,
+                "mean_error_standardized": -0.07354568096379291,
+                "n": 300,
+                "spearman": 0.15615862398471092
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 0.9185305715835038,
+                "mean_error_standardized": -0.7617385915940692,
+                "n": 90,
+                "spearman": 0.5331604724863152
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.3067174159442785,
+                "mean_error_standardized": -1.0244422568640343,
+                "n": 90,
+                "spearman": 0.8879367823188047
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.7133754392129559,
+                "mean_error_standardized": -0.5915584149504369,
+                "n": 90,
+                "spearman": 0.17227641272585092
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5459998451575372,
+                "mean_error_standardized": -0.39410903338028597,
+                "n": 90,
+                "spearman": 0.03915709758406387
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.25224559197777835,
+                "mean_error_standardized": -0.12281449557210337,
+                "n": 60,
+                "spearman": 0.32981383717699364
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.4563244831961324,
+                "mean_error_standardized": -2.2094334006372214,
+                "n": 60,
+                "spearman": 0.7391497638232845
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 0.7180428281596588,
+                "mean_error_standardized": -0.35758791117009675,
+                "n": 60,
+                "spearman": 0.7044178938594056
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.100427903580001,
+                "mean_error_standardized": -2.251934408320557,
+                "n": 60,
+                "spearman": 0.3882189497082524
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.2625883221849499,
+                "mean_error_standardized": 0.2625883221849499,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.16820158869576346,
+                "mean_error_standardized": 0.16820158869576346,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.11372369861337243,
+                "mean_error_standardized": 0.11372369861337243,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.056929534527997046,
+                "mean_error_standardized": 0.05442614486914997,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.058528894555657886,
+                "mean_error_standardized": -0.02046054498639521,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.15263543941678093,
+                "mean_error_standardized": -0.08910325438021682,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.38218652996645724,
+                "mean_error_standardized": -0.2935663005454064,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.1250319671862892,
+                "mean_error_standardized": -0.9921522474846537,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 3.073550266339128,
+                "mean_error_standardized": -2.846846759882858,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 4.93354491795216,
+                "mean_error_standardized": -3.3005510183750757,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.018333333333333313,
+            "background_exact_calls": 589,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.003256159108320996,
+              0.013327558533340982
+            ],
+            "block_bootstrap_net_saving_lower": 0.003256159108320996,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.008120162166633235,
+            "mean_prefilter_cost_s": 0.0007291953333454633,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 1,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.6737716720795804,
+                0.7548614279918141
+              ],
+              "block_bootstrap_lower": 0.6737716720795804,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.7177182523270605
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.5623494597289757,
+                0.6678862056399449
+              ],
+              "block_bootstrap_lower": 0.5623494597289757,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.6165825225298632
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.013333333333333308,
+              "background_exact_calls": 296,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.1648414433002472
+            },
+            "L1": {
+              "background_call_reduction": 0.07333333333333336,
+              "background_exact_calls": 278,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9666666666666667,
+                  "retained": 58,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.886362257256914,
+                    0.9908106807438021
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.16147717833518982
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2723026738306262,
+                "mean_error_standardized": 0.04837154905843336,
+                "n": 300,
+                "spearman": 0.43534528161424013
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.1435722798406842,
+                "mean_error_standardized": -0.7715817867077834,
+                "n": 90,
+                "spearman": 0.6887187718648392
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.0837035055109405,
+                "mean_error_standardized": -0.41482996309549103,
+                "n": 90,
+                "spearman": 0.8073836276083466
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.5243670223535338,
+                "mean_error_standardized": -0.22518352331743252,
+                "n": 90,
+                "spearman": 0.49569082602790465
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5928042097169207,
+                "mean_error_standardized": -0.2409901816705095,
+                "n": 90,
+                "spearman": 0.33958924970160925
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.44694995563665957,
+                "mean_error_standardized": 0.0011024146973481058,
+                "n": 60,
+                "spearman": 0.29352597943873304
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.522670735629037,
+                "mean_error_standardized": -1.9968947785402358,
+                "n": 60,
+                "spearman": 0.5353709363712144
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 2.061836914075518,
+                "mean_error_standardized": 0.31770573117785667,
+                "n": 60,
+                "spearman": 0.8430675187552099
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 3.3459211871847216,
+                "mean_error_standardized": -2.5673574849351155,
+                "n": 60,
+                "spearman": 0.37182550708530154
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.243390382409605,
+                "mean_error_standardized": -0.04970545468111687,
+                "n": 300,
+                "spearman": 0.19906798964432934
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.0175672845780532,
+                "mean_error_standardized": -0.3355326461651944,
+                "n": 90,
+                "spearman": 0.6554965633617319
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 1.0155963831889536,
+                "mean_error_standardized": -0.7649048203820552,
+                "n": 90,
+                "spearman": 0.8244886199942378
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.6185725404315091,
+                "mean_error_standardized": -0.4641276033846537,
+                "n": 90,
+                "spearman": 0.4330493476560892
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5447778914469089,
+                "mean_error_standardized": -0.369499503573778,
+                "n": 90,
+                "spearman": 0.1399596658023624
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.32258398270596983,
+                "mean_error_standardized": 0.07602135344674173,
+                "n": 60,
+                "spearman": 0.21355932203389838
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.2193821709495696,
+                "mean_error_standardized": -0.5671041205588102,
+                "n": 60,
+                "spearman": 0.6240066685190332
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 0.6501880249431959,
+                "mean_error_standardized": -0.22301332271980404,
+                "n": 60,
+                "spearman": 0.7814392886913033
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.21756518949475,
+                "mean_error_standardized": -0.7740596129731044,
+                "n": 60,
+                "spearman": 0.27857738260627957
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.32015335402782175,
+                "mean_error_standardized": 0.32015335402782175,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.22267712402395298,
+                "mean_error_standardized": 0.22267712402395298,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.16337414682290094,
+                "mean_error_standardized": 0.16337414682290094,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.13652255751248632,
+                "mean_error_standardized": 0.13651542959445612,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.09354765896886834,
+                "mean_error_standardized": 0.05904201539946985,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.15042873170897864,
+                "mean_error_standardized": -0.011003267779837685,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.35227072598472164,
+                "mean_error_standardized": -0.1809404954845098,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.031206856771027,
+                "mean_error_standardized": -0.6635507851107041,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 2.5897353004390338,
+                "mean_error_standardized": -1.7458491358125778,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 4.332418582880819,
+                "mean_error_standardized": -2.007166516002268,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.043333333333333335,
+            "background_exact_calls": 574,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.012818589566734779,
+              0.028650682029186404
+            ],
+            "block_bootstrap_net_saving_lower": 0.012818589566734779,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.020370698833333638,
+            "mean_prefilter_cost_s": 0.0006979453333527393,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 2,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.6756903813789789,
+                0.7490372771166055
+              ],
+              "block_bootstrap_lower": 0.6756903813789789,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.7144906763259379
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.6148252103289952,
+                0.7072342486343626
+              ],
+              "block_bootstrap_lower": 0.6148252103289952,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.6630335757616163
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.05666666666666664,
+              "background_exact_calls": 283,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9555555555555556,
+                  "retained": 86,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8912314496718777,
+                    0.9825827581472913
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9444444444444444,
+                  "retained": 85,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8764626377820048,
+                    0.976039028383038
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.1898101270198822
+            },
+            "L1": {
+              "background_call_reduction": 0.043333333333333335,
+              "background_exact_calls": 287,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 84,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8620990522567448,
+                    0.9690900722541721
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.18490496277809143
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.2487797888768853,
+                "mean_error_standardized": -0.039542739556753644,
+                "n": 300,
+                "spearman": 0.36212846809408994
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.1881700596848717,
+                "mean_error_standardized": -0.9585372981121918,
+                "n": 90,
+                "spearman": 0.6563690990657283
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 0.7740350023388649,
+                "mean_error_standardized": -0.40422129347672553,
+                "n": 90,
+                "spearman": 0.893106144791538
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.503070925005503,
+                "mean_error_standardized": -0.31795864572484245,
+                "n": 90,
+                "spearman": 0.41110425155368974
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5696058250673226,
+                "mean_error_standardized": -0.36381406071045935,
+                "n": 90,
+                "spearman": 0.25357039963781536
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.40523242541881555,
+                "mean_error_standardized": 0.1523410750875265,
+                "n": 60,
+                "spearman": 0.2956932481244791
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.562228778346292,
+                "mean_error_standardized": -1.8854735021596172,
+                "n": 60,
+                "spearman": 0.6076687968880246
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 3.7064318000745646,
+                "mean_error_standardized": 2.0591095633402765,
+                "n": 60,
+                "spearman": 0.807224228952487
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 3.2020613288473667,
+                "mean_error_standardized": -1.7162253057593013,
+                "n": 60,
+                "spearman": 0.39294248402333987
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.23407975210721635,
+                "mean_error_standardized": -0.07419362385948353,
+                "n": 300,
+                "spearman": 0.18075045278280868
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.1228062035308681,
+                "mean_error_standardized": -0.38111747341278746,
+                "n": 90,
+                "spearman": 0.5478454130139523
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 0.5300784661041624,
+                "mean_error_standardized": -0.22585724190816944,
+                "n": 90,
+                "spearman": 0.8533810758529858
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.6365941925224735,
+                "mean_error_standardized": -0.5152902203759882,
+                "n": 90,
+                "spearman": 0.2296826768736881
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5400891294654706,
+                "mean_error_standardized": -0.395369543053378,
+                "n": 90,
+                "spearman": 0.1638144626908672
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.25895072672095976,
+                "mean_error_standardized": -0.015563273759385127,
+                "n": 60,
+                "spearman": 0.18833009169213674
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.111773891027125,
+                "mean_error_standardized": -0.715967274960192,
+                "n": 60,
+                "spearman": 0.6313976104473465
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 0.9349586960806311,
+                "mean_error_standardized": 0.07909705075733703,
+                "n": 60,
+                "spearman": 0.645512642400667
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.944043043895506,
+                "mean_error_standardized": 0.15170014731727993,
+                "n": 60,
+                "spearman": 0.2910808557932759
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.2699328124959808,
+                "mean_error_standardized": 0.2699328124959808,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.17105653871812976,
+                "mean_error_standardized": 0.17105653871812976,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.11891504654832485,
+                "mean_error_standardized": 0.11891504654832485,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.05837086442494385,
+                "mean_error_standardized": 0.054812754213815554,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.07796238628227194,
+                "mean_error_standardized": 0.0005179882638327779,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.15699306340907518,
+                "mean_error_standardized": -0.1024998590084155,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.42265207218055484,
+                "mean_error_standardized": -0.25948436029596994,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.1675653390378153,
+                "mean_error_standardized": -0.6965269494483656,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 2.6517123357101404,
+                "mean_error_standardized": -1.383179021921215,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 4.683723908163121,
+                "mean_error_standardized": -0.7745156170258094,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.050000000000000044,
+            "background_exact_calls": 570,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.015881402687588583,
+              0.032393976287842026
+            ],
+            "block_bootstrap_net_saving_lower": 0.015881402687588583,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.023490180000129233,
+            "mean_prefilter_cost_s": 0.0006865591665943309,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 3,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.6403568745584628,
+                0.7293783593174353
+              ],
+              "block_bootstrap_lower": 0.6403568745584628,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.6850073312847711
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.5774279040870682,
+                0.6788590300796284
+              ],
+              "block_bootstrap_lower": 0.5774279040870682,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.6297925470689882
+            }
+          }
+        },
+        {
+          "detector_thresholds": {
+            "H1": {
+              "background_call_reduction": 0.01666666666666672,
+              "background_exact_calls": 295,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9888888888888889,
+                  "retained": 89,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9397159168824657,
+                    0.9980359158990818
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 90,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9590643744356734,
+                    1.0
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9333333333333333,
+                  "retained": 56,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8407464268680284,
+                    0.9737713012754937
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.21509873867034912
+            },
+            "L1": {
+              "background_call_reduction": 0.030000000000000027,
+              "background_exact_calls": 291,
+              "background_total": 300,
+              "protected_retention": {
+                "injection|BBH_10_10": {
+                  "pass": true,
+                  "point_retention": 0.9,
+                  "retained": 81,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8207582512456636,
+                    0.9464932483028751
+                  ]
+                },
+                "injection|BBH_30_30": {
+                  "pass": true,
+                  "point_retention": 0.9777777777777777,
+                  "retained": 88,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.9225547331137463,
+                    0.9938845580136748
+                  ]
+                },
+                "injection|NSBH_10_1.4_LEGACY": {
+                  "pass": true,
+                  "point_retention": 0.9222222222222223,
+                  "retained": 83,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8480613981740798,
+                    0.9618151846827111
+                  ]
+                },
+                "injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                  "pass": true,
+                  "point_retention": 0.9111111111111111,
+                  "retained": 82,
+                  "total": 90,
+                  "wilson_interval": [
+                    0.8342945337394592,
+                    0.9542695074632055
+                  ]
+                },
+                "known_glitch|Blip": {
+                  "pass": true,
+                  "point_retention": 0.9166666666666666,
+                  "retained": 55,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.8193105798166558,
+                    0.9638795433982692
+                  ]
+                },
+                "known_glitch|KoiFish": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                },
+                "known_glitch|ScatteredLight": {
+                  "pass": true,
+                  "point_retention": 0.9833333333333333,
+                  "retained": 59,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.9114487027240993,
+                    0.9970518402052136
+                  ]
+                },
+                "robust_candidate|DANTE_ROBUST": {
+                  "pass": true,
+                  "point_retention": 1.0,
+                  "retained": 60,
+                  "total": 60,
+                  "wilson_interval": [
+                    0.93982814785791,
+                    0.9999999999999998
+                  ]
+                }
+              },
+              "threshold_standardized": -0.20219294726848602
+            }
+          },
+          "diagnostics": {
+            "by_detector_role_morphology": {
+              "H1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.24116599283949497,
+                "mean_error_standardized": 0.006482409272070715,
+                "n": 300,
+                "spearman": 0.40128045867176293
+              },
+              "H1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.0426483951617473,
+                "mean_error_standardized": -0.5851997801851015,
+                "n": 90,
+                "spearman": 0.697773387661028
+              },
+              "H1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 0.8840279808469443,
+                "mean_error_standardized": -0.41096897040556357,
+                "n": 90,
+                "spearman": 0.8794748322838208
+              },
+              "H1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.51325416180492,
+                "mean_error_standardized": -0.24779612508441617,
+                "n": 90,
+                "spearman": 0.3926986870807095
+              },
+              "H1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5870746145224872,
+                "mean_error_standardized": -0.2921119280052742,
+                "n": 90,
+                "spearman": 0.3103510721488249
+              },
+              "H1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.5903550890155446,
+                "mean_error_standardized": 0.2726661567588041,
+                "n": 60,
+                "spearman": 0.14965268130036125
+              },
+              "H1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.4560903087228527,
+                "mean_error_standardized": -0.6210505304043512,
+                "n": 60,
+                "spearman": 0.5319255348707975
+              },
+              "H1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 3.8864096323566204,
+                "mean_error_standardized": 2.351485961511264,
+                "n": 60,
+                "spearman": 0.8450125034731871
+              },
+              "H1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 3.9592975793048595,
+                "mean_error_standardized": -2.002681172081223,
+                "n": 60,
+                "spearman": 0.27335370936371217
+              },
+              "L1|background|o4a_shadow_traffic": {
+                "mean_absolute_error_standardized": 0.23726447238293066,
+                "mean_error_standardized": -0.08291472765187276,
+                "n": 300,
+                "spearman": 0.1659098434427049
+              },
+              "L1|injection|BBH_10_10": {
+                "mean_absolute_error_standardized": 1.064046240401084,
+                "mean_error_standardized": -0.0781473908516125,
+                "n": 90,
+                "spearman": 0.6481211672222909
+              },
+              "L1|injection|BBH_30_30": {
+                "mean_absolute_error_standardized": 0.7726162290817439,
+                "mean_error_standardized": -0.5079530370329386,
+                "n": 90,
+                "spearman": 0.8482775651314977
+              },
+              "L1|injection|NSBH_10_1.4_LEGACY": {
+                "mean_absolute_error_standardized": 0.6159885465870878,
+                "mean_error_standardized": -0.4610264706573221,
+                "n": 90,
+                "spearman": 0.2942009301559863
+              },
+              "L1|injection|NSBH_ALIGNED_TIDAL_STRESS": {
+                "mean_absolute_error_standardized": 0.5102756859572426,
+                "mean_error_standardized": -0.35804786160687874,
+                "n": 90,
+                "spearman": 0.15676832530765114
+              },
+              "L1|known_glitch|Blip": {
+                "mean_absolute_error_standardized": 0.2988481551052703,
+                "mean_error_standardized": 0.016484163868725112,
+                "n": 60,
+                "spearman": 0.09091414281744932
+              },
+              "L1|known_glitch|KoiFish": {
+                "mean_absolute_error_standardized": 2.602260435748229,
+                "mean_error_standardized": 0.3018254602886122,
+                "n": 60,
+                "spearman": 0.4888580161155877
+              },
+              "L1|known_glitch|ScatteredLight": {
+                "mean_absolute_error_standardized": 0.8344102475144255,
+                "mean_error_standardized": -0.0017014096616423094,
+                "n": 60,
+                "spearman": 0.7105862739649903
+              },
+              "L1|robust_candidate|DANTE_ROBUST": {
+                "mean_absolute_error_standardized": 4.817826722498444,
+                "mean_error_standardized": 0.004129606809645411,
+                "n": 60,
+                "spearman": 0.23161989441511535
+              }
+            },
+            "teacher_quantile_bins": [
+              {
+                "bin": 0,
+                "mean_absolute_error_standardized": 0.29116711335276974,
+                "mean_error_standardized": 0.29116711335276974,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.5645885328169594,
+                  -0.3601461437576795
+                ]
+              },
+              {
+                "bin": 1,
+                "mean_absolute_error_standardized": 0.19080965256245822,
+                "mean_error_standardized": 0.19080965256245822,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.3601461437576795,
+                  -0.2889301950795566
+                ]
+              },
+              {
+                "bin": 2,
+                "mean_absolute_error_standardized": 0.12338951520172559,
+                "mean_error_standardized": 0.12338951520172559,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.2889301950795566,
+                  -0.22724743501157696
+                ]
+              },
+              {
+                "bin": 3,
+                "mean_absolute_error_standardized": 0.0874124364485977,
+                "mean_error_standardized": 0.07859051751097602,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.22724743501157696,
+                  -0.15335053061749376
+                ]
+              },
+              {
+                "bin": 4,
+                "mean_absolute_error_standardized": 0.09939043007394237,
+                "mean_error_standardized": 0.011516302427583848,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.15335053061749376,
+                  -0.06360385457518083
+                ]
+              },
+              {
+                "bin": 5,
+                "mean_absolute_error_standardized": 0.20021875088375224,
+                "mean_error_standardized": -0.04487859525437881,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  -0.06360385457518083,
+                  0.11248316423689626
+                ]
+              },
+              {
+                "bin": 6,
+                "mean_absolute_error_standardized": 0.44503380896365474,
+                "mean_error_standardized": -0.15102017597533468,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.11248316423689626,
+                  0.5636261675859575
+                ]
+              },
+              {
+                "bin": 7,
+                "mean_absolute_error_standardized": 1.1515070815952089,
+                "mean_error_standardized": -0.4993275284449046,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  0.5636261675859575,
+                  2.6100172930620773
+                ]
+              },
+              {
+                "bin": 8,
+                "mean_absolute_error_standardized": 2.801049926705528,
+                "mean_error_standardized": -0.7797857176560073,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  2.6100172930620773,
+                  6.5325327604923595
+                ]
+              },
+              {
+                "bin": 9,
+                "mean_absolute_error_standardized": 4.884204043520116,
+                "mean_error_standardized": -0.7114213172425002,
+                "n": 180,
+                "teacher_standardized_interval": [
+                  6.5325327604923595,
+                  12.093327282354768
+                ]
+              }
+            ]
+          },
+          "operational": {
+            "background_call_reduction": 0.023333333333333317,
+            "background_exact_calls": 586,
+            "background_total": 600,
+            "block_bootstrap_net_saving_interval": [
+              0.005177290995726556,
+              0.017224810491568546
+            ],
+            "block_bootstrap_net_saving_lower": 0.005177290995726556,
+            "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+            "mean_net_saving_s": 0.010956615666594493,
+            "mean_prefilter_cost_s": 0.0006980493333927977,
+            "pass": false
+          },
+          "pass": false,
+          "replicate_index": 4,
+          "teacher_fidelity": {
+            "H1": {
+              "block_bootstrap_interval": [
+                0.658585037371338,
+                0.7382180658223506
+              ],
+              "block_bootstrap_lower": 0.658585037371338,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.6986436608769476
+            },
+            "L1": {
+              "block_bootstrap_interval": [
+                0.5803468380202716,
+                0.6770917765143546
+              ],
+              "block_bootstrap_lower": 0.5803468380202716,
+              "n": 900,
+              "pass": false,
+              "spearman": 0.6324765668434982
+            }
+          }
+        }
+      ],
+      "worst_replicate_all_gates_pass": false
+    }
+  },
+  "artifact_digest": "4295ae5cae39dbc5a298b82f44f0dee30702a9c0fe9581596f7b249eae565bcb",
+  "audit_fraction": 0.05,
+  "audit_seed_uint64": 4959280729208813634,
+  "can_authorize_operational_pass": false,
+  "confirmation_rows_accessed": [],
+  "development_contract_digest": "003e83ead7d416f2fd6f6bfa010f65ddf4f180c6f0ba98b8f46a1e13062e5b48",
+  "development_result_digest": "9860d39b39355bde032d7526ba136edd65940741157a2f963d8e8badc42fe63b",
+  "next_stage": "stop_without_opening_confirmation_or_o4b_and_do_not_retune_on_same_cohort",
+  "o4b_rows_accessed": [],
+  "ready_architectures": [],
+  "routing_enabled": false,
+  "schema_version": 1,
+  "scientific_mode": "one_shot_frozen_v5_development_only",
+  "selected_architecture": null,
+  "status": "V5_NOT_READY",
+  "uncertainty": {
+    "confidence": 0.95,
+    "iid_bootstrap_allowed": false,
+    "method": "detector_gps_4096s_block_bootstrap",
+    "n_resamples": 2000
+  },
+  "unlock_authorization_material": null
+}

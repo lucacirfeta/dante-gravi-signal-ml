@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 
@@ -19,6 +20,7 @@ from src.dante_light.prefilter_features import (
     build_shadow_feature_ledger,
     build_split_feature_ledger,
 )
+from src.dante_light.prefilter_injections import resolve_frozen_injection_trials
 from src.dante_light.preprocessing import PreparedPrefilterFeatures
 
 
@@ -187,6 +189,30 @@ def test_build_split_feature_ledger_preserves_frozen_partition(tmp_path):
     assert all(row["partition"] in {"development", "evaluation"} for row in rows)
 
 
+def test_split_feature_ledger_can_keep_confirmation_partition_sealed(tmp_path):
+    prepared = PreparedPrefilterFeatures(
+        features=ExcessEnergyFeatures(1.0, 3.0, 0.1, 2.0),
+        strain_sha256="a" * 64,
+        timings={"data_read_s": 0.1},
+    )
+    ledger = build_split_feature_ledger(
+        root=".",
+        split_path="config/dante_light_prefilter_splits_v1.json",
+        role="robust_candidate",
+        output_dir=tmp_path,
+        prepare=lambda _task: prepared,
+        file_version="v3_development",
+        partitions=("development",),
+    )
+    rows = [
+        json.loads(line)
+        for line in (tmp_path / ledger["rows_path"]).read_text(encoding="utf-8").splitlines()
+    ]
+    assert ledger["selection_partitions"] == ["development"]
+    assert ledger["row_count"] == 40
+    assert all(row["partition"] == "development" for row in rows)
+
+
 def test_split_feature_ledger_parallel_output_is_finally_deterministic(tmp_path):
     prepared = PreparedPrefilterFeatures(
         features=ExcessEnergyFeatures(1.0, 3.0, 0.1, 2.0),
@@ -287,3 +313,14 @@ def test_v2_split_ledger_rejects_changed_preflight_strain(tmp_path):
             accepted_split_statuses=("availability_screened_before_feature_extraction",),
             verify_preflight_strain=True,
         )
+
+def test_v2_injection_trial_provenance_chain_resolves_exact_published_csv():
+    root = Path(__file__).resolve().parents[1]
+    result = resolve_frozen_injection_trials(
+        root / "config/dante_light_prefilter_splits_v2.json",
+        root=root,
+    )
+    assert result == (
+        root
+        / "data/production/aggregated/astrophysical_injection_trials_o4a_idxq4-64_queryq4-64.csv"
+    )

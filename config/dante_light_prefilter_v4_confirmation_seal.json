@@ -1,0 +1,69 @@
+{
+  "access_entries_at_freeze": 0,
+  "claim_boundary": "declared_storage_and_access_ledger_only",
+  "code_references": {
+    "development_ledger": {
+      "path": "src/dante_light/prefilter_v4_development.py",
+      "sha256": "7e0fc6f9869c61f0187240e1febb76a5d14921c71b75a164d087b2339eaa9991"
+    },
+    "development_screening": {
+      "path": "src/dante_light/prefilter_v4_screening.py",
+      "sha256": "0c6d7dc8586bf2cb43991a0a9de7004a54e8d69aaf884573ee1526c3f70650ab"
+    },
+    "development_verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v4_development.py",
+      "sha256": "b4943e97b2b6912c0a81c36186ce4deb7f00fbc23120193f315c42246d9a216e"
+    },
+    "phase_extractor": {
+      "path": "src/dante_light/prefilter_v4_phase.py",
+      "sha256": "8fa07062d1a2d18d79f120b0d325a2e7045ac79753a29e6656b5964c076aee12"
+    },
+    "preprocessing": {
+      "path": "src/dante_light/preprocessing.py",
+      "sha256": "164cf1a14f0dab19ff22905b21eed63522179602abb9ed5ca0e2b1e8878234d0"
+    },
+    "production_extractor": {
+      "path": "src/dante_light/prefilter_v4.py",
+      "sha256": "70c9299f6729a89b3857db341c9e45f975b0cecf0449d9fc242565f40a6b4ed7"
+    },
+    "seal_verifier": {
+      "path": "src/dante_light/prefilter_v4_seal.py",
+      "sha256": "627d9ee80ddb12081e233c1b162467c0887584c38671b89ea9be333863063f7f"
+    },
+    "split_builder": {
+      "path": "src/dante_light/prefilter_v4_freeze.py",
+      "sha256": "2d582381d3f5560735c3df2f8dcaae98e3027c0718838d6abd8e04ba5b34cc8f"
+    }
+  },
+  "confirmation_identity_digest": "7bda65d29d0e684f61c67ff80dca74ce99710e87024010f1dfbd3cf66ea722e3",
+  "declared_storage_roots": [
+    {
+      "kind": "repository_relative",
+      "location": ".",
+      "root_id": "repository"
+    },
+    {
+      "kind": "environment_alias",
+      "location": "DANTE_RAW_STRAIN_ROOT",
+      "root_id": "raw_strain"
+    }
+  ],
+  "freeze_commit": "2d3538cfa38d1b49d49235ed681dc66e8a4ad160",
+  "initial_access_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "manifest_digest": "9b0cafdb49d954c0399a4f45a47b785b1f59e10b6e4ce390c40c6a9ce1478363",
+  "protocol_reference": {
+    "path": "config/dante_light_prefilter_protocol_v4.json",
+    "sha256": "9e6b89146e63cd7717e1fcd56c6bddb6f5337ca739863f5b3bfae9e5a8ae7f42"
+  },
+  "public_split_entries_reference": {
+    "path": "config/dante_light_prefilter_splits_v4.jsonl",
+    "sha256": "a6bfc44dc1005953758e492d023acf03e17627bd93da550443851e9dca74e848"
+  },
+  "public_split_header_reference": {
+    "path": "config/dante_light_prefilter_splits_v4.json",
+    "sha256": "72a76adcaf02d8042c2c479d48236710a6aa8a090adc77f16238b088adf08fba"
+  },
+  "schema_version": 1,
+  "seal_digest": "430074c23d0952cf0b8506f05f7d72d0070a16b5db01bb81205eb803d6a6755e",
+  "status": "SEALED_NOT_OPENED"
+}

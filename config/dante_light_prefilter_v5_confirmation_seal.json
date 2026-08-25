@@ -1,0 +1,76 @@
+{
+  "access_entries_at_freeze": 0,
+  "claim_boundary": "declared_storage_access_ledger_and_protected_endpoint_scope",
+  "code_references": {
+    "exact_dante_runner": {
+      "path": "src/dante_light/runner.py",
+      "sha256": "5b68dd7976ae6623e30ef02226c1c90e540c3326c21aaed55987e648d1148570"
+    },
+    "preprocessing": {
+      "path": "src/dante_light/preprocessing.py",
+      "sha256": "164cf1a14f0dab19ff22905b21eed63522179602abb9ed5ca0e2b1e8878234d0"
+    },
+    "protocol_validator": {
+      "path": "src/dante_light/prefilter_v5_protocol.py",
+      "sha256": "ff144d5b0730ae0cd01661885a7f365bdc2e423f0216354ce03e380fc015ce78"
+    },
+    "seal_verifier": {
+      "path": "src/dante_light/prefilter_v5_seal.py",
+      "sha256": "7e16854a1cf744074d6359c897337c33259b2b7dbd2fa7da1889b7f2d9ada3c1"
+    },
+    "split_builder": {
+      "path": "src/dante_light/prefilter_v5_freeze.py",
+      "sha256": "5c0050b9e3f63f0a1c0f80341e752f9c587de2d77fb744306c1930aa30c614c2"
+    }
+  },
+  "confirmation_identity_digest": "6a999e366a31dd349bc8699f508a646b327c6bcb57689932c925bd58bfaae2bc",
+  "declared_storage_roots": [
+    {
+      "kind": "repository_relative",
+      "location": ".",
+      "root_id": "repository"
+    },
+    {
+      "kind": "environment_alias",
+      "location": "DANTE_RAW_STRAIN_ROOT",
+      "root_id": "raw_strain"
+    },
+    {
+      "kind": "environment_alias",
+      "location": "DANTE_V5_CACHE_ROOT",
+      "root_id": "v5_cache"
+    }
+  ],
+  "freeze_commit": "377f8388877e50720d7cf179965be8d398f74879",
+  "initial_access_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "injection_trials_reference": {
+    "path": "config/dante_light_prefilter_v5_injection_trials.jsonl",
+    "sha256": "8ca3e73e9a5c5a747342db8c937f335dc10eb48f2bcf81e2b2875ce1a60d52ce"
+  },
+  "manifest_digest": "7f65e382d8ba8649019fb177e3a3b648c699d3b8cc6e594d2013d7ad9afed2dc",
+  "protected_endpoints": [
+    "background_routing_decisions",
+    "block_bootstrap_net_saving",
+    "paired_avoidable_exact_path_costs",
+    "paired_prefilter_costs",
+    "protected_stratum_retention",
+    "student_outputs",
+    "teacher_fidelity",
+    "teacher_scores"
+  ],
+  "protocol_reference": {
+    "path": "config/dante_light_prefilter_protocol_v5.json",
+    "sha256": "9eef90c51fde30c539fff770ab9970d9666e47b4fa49314c815f6d0a7d4486fd"
+  },
+  "public_split_entries_reference": {
+    "path": "config/dante_light_prefilter_splits_v5.jsonl",
+    "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+  },
+  "public_split_header_reference": {
+    "path": "config/dante_light_prefilter_splits_v5.json",
+    "sha256": "72590d1d01cf0c8cd3f197f95966c734152fc483302b3b2311ca2070bd69607b"
+  },
+  "schema_version": 1,
+  "seal_digest": "30710d617c5c5ae25b243d406704cced2860dd36d2f262d6fef42b914cca81cd",
+  "status": "SEALED_NOT_OPENED"
+}

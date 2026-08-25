@@ -1,0 +1,339 @@
+{
+  "analyzer": {
+    "path": "src/dante_light/prefilter_v4_diagnostics.py",
+    "sha256": "22f8c3b32742d175ab916774a9436d32ae9ccb526c3db57558ab6a1f42264dba"
+  },
+  "artifact_digest": "11a83fbb6b29a5ae1b8056c275a308f7b25679d3a6ea9352436ceb1c19fd72b9",
+  "confirmation_values_used": [],
+  "cross_protocol_descriptive_comparison": {
+    "comparability_warning": "v2 and v3 share 962 development windows; v4 uses a fresh 1010-window development cohort, so differences cannot be attributed only to representation",
+    "controlled_head_to_head": false,
+    "v2_spectral_baseline": {
+      "development_n": 962,
+      "effective_background_call_reduction": 0.0869565217391305,
+      "overall_roc_auc": 0.805231530576175,
+      "source": {
+        "path": "artifacts/dante_light/prefilter_l4_v2/diagnostics_v2.json",
+        "sha256": "5536d195d72099dfe0495356dcbb64c473115dbf087e27631a3bcf726054131a"
+      }
+    },
+    "v3_signed_plus_ridge_primary": {
+      "development_n": 962,
+      "effective_background_call_reduction": 0.0307971014492754,
+      "overall_roc_auc": 0.717934782608696,
+      "source": {
+        "path": "artifacts/dante_light/prefilter_l4_v3/screening_summary_v3.json",
+        "sha256": "2e06b2d24b22609797a30d70e7bfc076435433384c27958dd5940a4bd8774ce3"
+      }
+    },
+    "v4_phase_primary": {
+      "development_n": 1010,
+      "effective_background_call_reduction": 0.00666666666666671,
+      "overall_roc_auc": 0.634113821138211,
+      "source": {
+        "path": "artifacts/dante_light/prefilter_l4_v4_development/screening_result_v4.json",
+        "sha256": "edb81f9a8f4d7274d737d3dddd8e770f32f0b450ceb716af0b2060318f2a0830"
+      }
+    }
+  },
+  "development_counts": {
+    "background": 600,
+    "protected": 410,
+    "total": 1010
+  },
+  "eligible_for_pass_fail_gate": false,
+  "injection_snr_diagnostics": {
+    "BBH_10_10": {
+      "inspiral_residual_snr_spearman": -0.46573353162453,
+      "snr": {
+        "iqr": 23.230313489806,
+        "median": 9.16191183038071,
+        "n": 70,
+        "q25": 4.03019801315528,
+        "q75": 27.2605115029613,
+        "unique_value_count": 70
+      }
+    },
+    "BBH_30_30": {
+      "inspiral_residual_snr_spearman": -0.622255270754964,
+      "snr": {
+        "iqr": 39.0084021933265,
+        "median": 20.9199052829361,
+        "n": 70,
+        "q25": 8.00500458985111,
+        "q75": 47.0134067831776,
+        "unique_value_count": 70
+      }
+    },
+    "NSBH_10_1.4": {
+      "inspiral_residual_snr_spearman": -0.0439681567666871,
+      "snr": {
+        "iqr": 6.9147329595903,
+        "median": 3.55224734650549,
+        "n": 70,
+        "q25": 1.54343031742205,
+        "q75": 8.45816327701235,
+        "unique_value_count": 70
+      }
+    }
+  },
+  "interpretation_boundary": {
+    "does_not_establish": [
+      "phase information is generally useless",
+      "all phase-aware representations fail",
+      "the cross-protocol performance difference is caused only by representation",
+      "confirmation or O4b performance"
+    ],
+    "plausible_not_established": "broadband non-Gaussian non-stationary strain and global 32-second phase summaries may destabilize or dilute analytic instantaneous phase",
+    "supported": "the frozen global analytic-phase summaries did not transfer the ideal synthetic phase-ordering response into safe real-strain routing separation"
+  },
+  "o4b_outcomes_used": [],
+  "routing_enabled": false,
+  "schema_version": 4,
+  "scientific_mode": "closed_v4_development_hypothesis_generating",
+  "source_feasibility": {
+    "path": "artifacts/dante_light/prefilter_l4_v4_feasibility/feasibility_summary_v4.json",
+    "sha256": "0606c5e641fe72ca6721c94385691a0decf4ef4abbcce5c6cef19e385f6000d6"
+  },
+  "source_ledgers": [
+    {
+      "ledger": {
+        "path": "artifacts/dante_light/prefilter_l4_v4_development/background_feature_ledger_v4_development.json",
+        "sha256": "ce6fcfa3e9672a01680eed156f652e1dff0d51cdaa30bbd8fd300a1c5500d90f"
+      },
+      "role": "background",
+      "row_count": 600,
+      "rows_sha256": "b3f377e9f7ecd91541220890e8cd6c7b1235a8133ba58816c89c739546859af2"
+    },
+    {
+      "ledger": {
+        "path": "artifacts/dante_light/prefilter_l4_v4_development/robust_candidate_feature_ledger_v4_development.json",
+        "sha256": "16e625500833f9f8ef202f25f93942a9cd3326adb4793f986a5aa678c5f1effc"
+      },
+      "role": "robust_candidate",
+      "row_count": 50,
+      "rows_sha256": "0f4bd62ca34cfc9f12a63b25da8e31b89467e92c8d7709145e05c783d6a4b706"
+    },
+    {
+      "ledger": {
+        "path": "artifacts/dante_light/prefilter_l4_v4_development/known_glitch_feature_ledger_v4_development.json",
+        "sha256": "4c08ceb6624695f71efedbfea857adb50e9d161f275e45f2d744de779d6a7ab0"
+      },
+      "role": "known_glitch",
+      "row_count": 150,
+      "rows_sha256": "f53270ee0f501d8b60a7f2308c46d662dbbf27224fac93b33707147fa5390e25"
+    },
+    {
+      "ledger": {
+        "path": "artifacts/dante_light/prefilter_l4_v4_development/injection_feature_ledger_v4_development.json",
+        "sha256": "8779ba5aaa5c079ad43e35e95fa2c8e2802e090ad095bf3eb7cb4917a434b93c"
+      },
+      "role": "injection",
+      "row_count": 210,
+      "rows_sha256": "6ac6bae4e2c1a4f667c852c1aca3ceb6b15d70bc49bcef81751cac5b5b7ff46c"
+    }
+  ],
+  "source_screening": {
+    "artifact_digest": "b6c0e75d61ed3d84475d511ff915057de3c4ff2a08e3c1010a1f208b43c65058",
+    "path": "artifacts/dante_light/prefilter_l4_v4_development/screening_result_v4.json",
+    "sha256": "edb81f9a8f4d7274d737d3dddd8e770f32f0b450ceb716af0b2060318f2a0830"
+  },
+  "status": "POSTHOC_DIAGNOSTIC_ONLY",
+  "stratum_phase_summaries": {
+    "background/clean_background": {
+      "n": 600,
+      "phase_cubic_circular_residual_median": 0.9240501775254,
+      "phase_frequency_time_spearman_median": 0.0109292979002625,
+      "phase_inspiral_coordinate_residual_median": 0.19430754381987
+    },
+    "injection/BBH_10_10": {
+      "n": 70,
+      "phase_cubic_circular_residual_median": 0.918570265041414,
+      "phase_frequency_time_spearman_median": -0.0345044760029996,
+      "phase_inspiral_coordinate_residual_median": 0.183373202207623
+    },
+    "injection/BBH_30_30": {
+      "n": 70,
+      "phase_cubic_circular_residual_median": 0.92305817440648,
+      "phase_frequency_time_spearman_median": -0.0195971597300337,
+      "phase_inspiral_coordinate_residual_median": 0.163341806171412
+    },
+    "injection/NSBH_10_1.4": {
+      "n": 70,
+      "phase_cubic_circular_residual_median": 0.917515898063232,
+      "phase_frequency_time_spearman_median": -0.0072559289463817,
+      "phase_inspiral_coordinate_residual_median": 0.192856743520736
+    },
+    "known_glitch/Blip": {
+      "n": 50,
+      "phase_cubic_circular_residual_median": 0.933041410584716,
+      "phase_frequency_time_spearman_median": -0.0358636811023622,
+      "phase_inspiral_coordinate_residual_median": 0.191826450959412
+    },
+    "known_glitch/KoiFish": {
+      "n": 50,
+      "phase_cubic_circular_residual_median": 0.920848429220077,
+      "phase_frequency_time_spearman_median": -0.00796189538807649,
+      "phase_inspiral_coordinate_residual_median": 0.152584250689359
+    },
+    "known_glitch/ScatteredLight": {
+      "n": 50,
+      "phase_cubic_circular_residual_median": 0.906437589057405,
+      "phase_frequency_time_spearman_median": 0.00759573022122235,
+      "phase_inspiral_coordinate_residual_median": 0.184871260801363
+    },
+    "robust_candidate/unknown": {
+      "n": 50,
+      "phase_cubic_circular_residual_median": 0.909350929060598,
+      "phase_frequency_time_spearman_median": -0.0672132780277465,
+      "phase_inspiral_coordinate_residual_median": 0.174758054726888
+    }
+  },
+  "synthetic_to_real": {
+    "ideal_ordered_chirp": {
+      "phase_cubic_circular_residual": 0.00579385798258869,
+      "phase_frequency_time_spearman": 0.839384907194147
+    },
+    "phase_scrambled_controls": {
+      "phase_cubic_circular_residual_median": 0.925752982240296,
+      "phase_frequency_time_spearman_p95": 0.207953986220472
+    },
+    "real_development_background": {
+      "phase_cubic_circular_residual_median": 0.9240501775254,
+      "phase_frequency_time_spearman_median": 0.0109292979002625
+    },
+    "real_development_protected": {
+      "phase_cubic_circular_residual_median": 0.918877708661635,
+      "phase_frequency_time_spearman_median": -0.017713606111736
+    }
+  },
+  "univariate_feature_diagnostics": {
+    "phase_accumulation_cycles": {
+      "all_unique_value_count": 1010,
+      "background": {
+        "iqr": 246.999846093224,
+        "median": 14667.3728685675,
+        "n": 600,
+        "q25": 14527.6101479914,
+        "q75": 14774.6099940846,
+        "unique_value_count": 600
+      },
+      "orientation_free_roc_auc": 0.584357723577236,
+      "protected": {
+        "iqr": 277.135746147898,
+        "median": 14611.4462951072,
+        "n": 410,
+        "q25": 14461.2012184519,
+        "q75": 14738.3369645998,
+        "unique_value_count": 410
+      },
+      "raw_roc_auc": 0.415642276422764
+    },
+    "phase_cubic_circular_residual": {
+      "all_unique_value_count": 1010,
+      "background": {
+        "iqr": 0.0560165844012581,
+        "median": 0.9240501775254,
+        "n": 600,
+        "q25": 0.89512980793506,
+        "q75": 0.951146392336319,
+        "unique_value_count": 600
+      },
+      "orientation_free_roc_auc": 0.530414634146341,
+      "protected": {
+        "iqr": 0.0674790479025107,
+        "median": 0.918877708661635,
+        "n": 410,
+        "q25": 0.883939059542223,
+        "q75": 0.951418107444734,
+        "unique_value_count": 410
+      },
+      "raw_roc_auc": 0.469585365853659
+    },
+    "phase_frequency_positive_step_fraction": {
+      "all_unique_value_count": 25,
+      "background": {
+        "iqr": 0.0396825396825398,
+        "median": 0.5,
+        "n": 600,
+        "q25": 0.476190476190476,
+        "q75": 0.515873015873016,
+        "unique_value_count": 24
+      },
+      "orientation_free_roc_auc": 0.508211382113821,
+      "protected": {
+        "iqr": 0.0476190476190477,
+        "median": 0.5,
+        "n": 410,
+        "q25": 0.476190476190476,
+        "q75": 0.523809523809524,
+        "unique_value_count": 23
+      },
+      "raw_roc_auc": 0.508211382113821
+    },
+    "phase_frequency_time_spearman": {
+      "all_unique_value_count": 1006,
+      "background": {
+        "iqr": 0.219975920978628,
+        "median": 0.0109292979002625,
+        "n": 600,
+        "q25": -0.10244715504312,
+        "q75": 0.117528765935508,
+        "unique_value_count": 600
+      },
+      "orientation_free_roc_auc": 0.530451219512195,
+      "protected": {
+        "iqr": 0.229365860517435,
+        "median": -0.017713606111736,
+        "n": 410,
+        "q25": -0.115113540494938,
+        "q75": 0.114252320022497,
+        "unique_value_count": 410
+      },
+      "raw_roc_auc": 0.469548780487805
+    },
+    "phase_inspiral_coordinate_residual": {
+      "all_unique_value_count": 1010,
+      "background": {
+        "iqr": 0.0287036986510364,
+        "median": 0.19430754381987,
+        "n": 600,
+        "q25": 0.180324205508707,
+        "q75": 0.209027904159744,
+        "unique_value_count": 600
+      },
+      "orientation_free_roc_auc": 0.637910569105691,
+      "protected": {
+        "iqr": 0.0477964365802656,
+        "median": 0.18168244954043,
+        "n": 410,
+        "q25": 0.153206531346951,
+        "q75": 0.201002967927217,
+        "unique_value_count": 410
+      },
+      "raw_roc_auc": 0.362089430894309
+    },
+    "phase_valid_frame_fraction": {
+      "all_unique_value_count": 2,
+      "background": {
+        "iqr": 0.0,
+        "median": 0.5,
+        "n": 600,
+        "q25": 0.5,
+        "q75": 0.5,
+        "unique_value_count": 1
+      },
+      "orientation_free_roc_auc": 0.501219512195122,
+      "protected": {
+        "iqr": 0.0,
+        "median": 0.5,
+        "n": 410,
+        "q25": 0.5,
+        "q75": 0.5,
+        "unique_value_count": 2
+      },
+      "raw_roc_auc": 0.498780487804878
+    }
+  },
+  "updates_frozen_screening": false
+}

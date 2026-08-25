@@ -1,0 +1,82 @@
+{
+  "audit_id": "dante-light-l4-prefilter-v5-scattering-feasibility",
+  "benchmark": {
+    "batch_size": 1,
+    "determinism_atol": 0.0,
+    "determinism_repetitions": 5,
+    "determinism_rtol": 0.0,
+    "paired_control": "contiguous_input_clone",
+    "paired_order": "alternating_scattering_first_control_first",
+    "repetitions": 100,
+    "warmup_repetitions": 10
+  },
+  "config_digest": "e1b3d9613d6a77b87db988663ea0003912d72e9b96bbaef3e01e76b9efc3bbcb",
+  "dependency": {
+    "distribution": "kymatio",
+    "execution_scope": "isolated_wsl_only_not_production",
+    "license": "BSD-3-Clause",
+    "official_supported_operating_systems": [
+      "Linux",
+      "macOS"
+    ],
+    "production_dependency_added": false,
+    "public_import_compatibility_must_be_measured": true,
+    "source_urls": {
+      "documentation": "https://www.kymat.io/",
+      "package_index": "https://pypi.org/project/kymatio/"
+    },
+    "version": "0.3.0",
+    "wheel": {
+      "filename": "kymatio-0.3.0-py3-none-any.whl",
+      "sha256": "e517113bc98a52795144eb80549f0686ee8a57dbbd9839b935f10dbceba0ec6b"
+    }
+  },
+  "input_contract": {
+    "batch_size": 1,
+    "dtype": "float32",
+    "duration_s": 32.0,
+    "outcome_blind_probes": [
+      "white_noise",
+      "centered_impulse",
+      "linear_chirp"
+    ],
+    "sample_rate_hz": 4096,
+    "seed": 20260823,
+    "synthetic_chirp": {
+      "duration_s": 12.0,
+      "f0_hz": 30.0,
+      "f1_hz": 512.0,
+      "start_s": 4.0
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "allowed_inputs": [
+      "deterministic synthetic probes",
+      "unlabelled random arrays"
+    ],
+    "may_access_development_outcomes": false,
+    "may_access_o4b": false,
+    "may_access_reserved_confirmation": false,
+    "may_access_teacher_scores": false,
+    "may_freeze_v5": false,
+    "may_select_scattering": false,
+    "routing_enabled": false
+  },
+  "status": "FEASIBILITY_ONLY_NOT_A_V5_PROTOCOL",
+  "transform": {
+    "J": 10,
+    "Q": [
+      8,
+      1
+    ],
+    "T": 1024,
+    "average": true,
+    "backend": "torch",
+    "device": "cpu",
+    "frontend": "torch",
+    "max_order": 2,
+    "out_type": "array",
+    "oversampling": 0
+  }
+}

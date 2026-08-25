@@ -1,0 +1,184 @@
+{
+  "approved_design": {
+    "audit_stream": {
+      "cost_included": true,
+      "fraction": 0.05,
+      "seed_derivation": "sha256_canonical_json_first_64_bits_big_endian",
+      "seed_purpose": "development_audit_stream",
+      "selection": "sha256_seed_colon_window_id_first_u64_uniform_lt_fraction"
+    },
+    "decision_date": "2026-08-25",
+    "one_shot": {
+      "access_record": "append_only_before_first_development_strain_or_outcome_read",
+      "changed_contract_code_model_or_split_requires_new_run_key_and_is_forbidden_after_first_access": true,
+      "resume_same_run_key_after_infrastructure_interruption": true
+    },
+    "paired_cost": {
+      "audit_selected_windows_call_exact": true,
+      "avoidable_exact_path_cost_included": [
+        "q_transform",
+        "rendering",
+        "dino_embedding",
+        "native_index_scoring"
+      ],
+      "bootstrap_interval": "equal_tailed_two_sided",
+      "bootstrap_quantile_method": "linear",
+      "bootstrap_unit": "detector_gps_4096s_block",
+      "common_upstream_excluded": [
+        "data_read",
+        "whitening_with_context",
+        "clean_32s_crop"
+      ],
+      "per_window_net_saving": "exact_call_avoided_times_avoidable_exact_path_cost_minus_prefilter_cost",
+      "population": "development_background_only",
+      "prefilter_cost_included": [
+        "student_input_transform",
+        "student_batch1_inference"
+      ]
+    },
+    "replicates": {
+      "candidate_identity": "architecture_plus_all_five_frozen_replicates",
+      "confirmation_candidate_if_ready": "same_architecture_all_five_replicates_and_their_detector_specific_thresholds",
+      "favorable_seed_selection_allowed": false,
+      "promotion_basis": "worst_replicate_all_gates"
+    },
+    "schema_version": 1,
+    "scope": {
+      "allowed_partition": "development",
+      "confirmation_access_allowed": false,
+      "evaluate_all_frozen_arms": true,
+      "evaluate_all_frozen_replicates": true,
+      "o4b_access_allowed": false,
+      "routing_enabled": false
+    },
+    "shortcut_controls": {
+      "report_calibration_by_teacher_quantile": true,
+      "report_detector_score_shift": true,
+      "report_error_by_role_and_morphology": true,
+      "role": "diagnostic_only_no_unfrozen_pass_fail_threshold",
+      "teacher_quantile_bins": 10
+    },
+    "status": "APPROVED_OUTCOME_BLIND_DEVELOPMENT_FREEZE_INPUT",
+    "teacher_fidelity": {
+      "bootstrap_interval": "equal_tailed_two_sided",
+      "bootstrap_quantile_method": "linear",
+      "bootstrap_unit": "detector_gps_4096s_block",
+      "gate_population": "all_development_rows_separate_by_detector",
+      "metric": "spearman_rank_correlation",
+      "report_combined_and_per_role_morphology_diagnostics": true
+    },
+    "threshold_selection": {
+      "candidate_thresholds": "all_unique_observed_development_scores_plus_positive_infinity",
+      "detector_specific": true,
+      "method": "maximum_background_reduction_subject_to_all_development_gates",
+      "no_cross_morphology_aggregation": true,
+      "protected_gates_separate_by_detector_role_and_morphology": true,
+      "routing_rule": "call_exact_if_student_score_gte_threshold_or_audit_selected",
+      "score": "student_prediction_standardized_with_frozen_training_fit_statistics",
+      "ties": "lowest_numeric_threshold_then_lexicographic_identity"
+    }
+  },
+  "audit_seed_uint64": 4959280729208813634,
+  "bootstrap_seed_uint64": 11343894472345246308,
+  "code_references": {
+    "development_cli": {
+      "path": "scripts/run_dante_light_prefilter_v5_development.py",
+      "sha256": "6667f99e4a93d5646a3322d6a844dc887374148ac12b7d18045f743eef50e17f"
+    },
+    "development_contract": {
+      "path": "src/dante_light/prefilter_v5_development_contract.py",
+      "sha256": "dbe4ded9fede7943a6ee58d6e9c45414a079632cb1c757a57abe7d6135b1f1f3"
+    },
+    "development_evaluator": {
+      "path": "src/dante_light/prefilter_v5_development.py",
+      "sha256": "6589f9df987f7ac75ecfa99cb2ecff187afc709dacdbf415c61cbe892d2bcae3"
+    },
+    "development_screening": {
+      "path": "src/dante_light/prefilter_v5_screening.py",
+      "sha256": "f2b26c769742b5ddf016efff9fbb343a975aa876ffee14c97f4df14d307ea641"
+    },
+    "development_verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v5_development.py",
+      "sha256": "02481193a0c8e4b0c29efae5bd95dbedd9eebfd56aa2740eae98b4f916effc6b"
+    },
+    "development_waveforms": {
+      "path": "src/dante_light/prefilter_v5_waveforms.py",
+      "sha256": "204ded5e2f234f51eb767559fd1e60e2eae4f11d8663f81f12747cf7adefb120"
+    },
+    "injection_reconstruction": {
+      "path": "src/dante_light/prefilter_v5_injections.py",
+      "sha256": "461509dc859b4cfea45408ab3e53ff7e48baaa868092b29bd9109735fed6bc65"
+    },
+    "student_architectures": {
+      "path": "src/dante_light/prefilter_v4_student.py",
+      "sha256": "b6be0b5a6dae256fcbeff8cba66703ba8c5efc62c4f1f8960e222712d1f74019"
+    },
+    "student_training": {
+      "path": "src/dante_light/prefilter_v5_training.py",
+      "sha256": "52637b5ae04e12fec79f8257abea75952306325f8a9bb1c9e04a31e092fe8e18"
+    },
+    "teacher": {
+      "path": "src/dante_light/prefilter_v5_teacher.py",
+      "sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3"
+    }
+  },
+  "confirmation_access_at_freeze": [],
+  "development_access_at_freeze": [],
+  "development_contract_digest": "003e83ead7d416f2fd6f6bfa010f65ddf4f180c6f0ba98b8f46a1e13062e5b48",
+  "o4b_access_at_freeze": [],
+  "parent_digests": [
+    "30710d617c5c5ae25b243d406704cced2860dd36d2f262d6fef42b914cca81cd",
+    "a0ac022d021bf543f18ead901b9cde97bf9e21e461624eb6d0d0e7e6ccd359ce",
+    "b30a60b06c3c7b7efd3a08a8fd738b3459e64ba7d39cda46a686e8486a8af47f",
+    "bd3f5acec8d992e878581928aabf51df2303dc2c476fb330d6606d33969cfd85",
+    "d5072841bc043bf0e3e50b8497ae7122493aa7a64e5cbe38d83e818ea306dc41"
+  ],
+  "protocol_id": "dante-light-l4-prefilter-v5-learned-surrogate",
+  "schema_version": 1,
+  "source_references": {
+    "confirmation_seal": {
+      "path": "config/dante_light_prefilter_v5_confirmation_seal.json",
+      "sha256": "57c14b7f0b59cb3e94693af61072aa0d4a23ad9febfa7c05caf6c544c370d0a1"
+    },
+    "design": {
+      "path": "config/dante_light_prefilter_v5_development_design.json",
+      "sha256": "d5072841bc043bf0e3e50b8497ae7122493aa7a64e5cbe38d83e818ea306dc41"
+    },
+    "injection_trials": {
+      "path": "config/dante_light_prefilter_v5_injection_trials.jsonl",
+      "sha256": "8ca3e73e9a5c5a747342db8c937f335dc10eb48f2bcf81e2b2875ce1a60d52ce"
+    },
+    "protocol": {
+      "path": "config/dante_light_prefilter_protocol_v5.json",
+      "sha256": "9eef90c51fde30c539fff770ab9970d9666e47b4fa49314c815f6d0a7d4486fd"
+    },
+    "reference_manifest": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+    },
+    "split_entries": {
+      "path": "config/dante_light_prefilter_splits_v5.jsonl",
+      "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+    },
+    "split_header": {
+      "path": "config/dante_light_prefilter_splits_v5.json",
+      "sha256": "72590d1d01cf0c8cd3f197f95966c734152fc483302b3b2311ca2070bd69607b"
+    },
+    "teacher_contract": {
+      "path": "config/dante_light_prefilter_v5_teacher_contract.json",
+      "sha256": "5772f4f0ff2f622ab2ab7cc8680c07b1ff26c8a846b4a26deeb3a1d4a210771b"
+    },
+    "training_contract": {
+      "path": "config/dante_light_prefilter_v5_training_contract.json",
+      "sha256": "3190f293378182a6a4f586f438a273033aefea2dbcdbd26d4df9b98d3b83b3fb"
+    },
+    "training_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/student_training_summary_v5.json",
+      "sha256": "5f38b10c634c589a9fdc33cd0c0c991329a97cd0c91176334aa2ecc6c34b78e8"
+    }
+  },
+  "status": "FROZEN_BEFORE_DEVELOPMENT_ACCESS",
+  "training_artifact_digest": "a0ac022d021bf543f18ead901b9cde97bf9e21e461624eb6d0d0e7e6ccd359ce",
+  "training_replicate_count": 10,
+  "training_run_key": "c52be2a80b5b37e50a48e88a7be998acd01c775c9987a9b87dbcb9891ce69963"
+}

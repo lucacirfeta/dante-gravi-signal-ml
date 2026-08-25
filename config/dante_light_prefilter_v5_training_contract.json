@@ -1,0 +1,210 @@
+{
+  "compact_teacher_targets": {
+    "reference": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/teacher_targets_compact_v5.jsonl",
+      "sha256": "4c4a37f253bde9dc38ec27e390adeb18c326348f25eefd68f783018d8d07358e"
+    },
+    "row_count": 19200,
+    "rows_digest": "caf52f40b7cd7498dcea3a284ebbeb9b8f3d3dccd21fc77bb9af66eef42bce76"
+  },
+  "confirmation_rows_accessed": [],
+  "design": {
+    "checkpoint_boundary": {
+      "confirmation_unlock_authorized": false,
+      "development_threshold_selection_authorized": false,
+      "o4b_access_authorized": false,
+      "student_outputs_are_training_only": true,
+      "student_training_authorized_after_teacher_ledger_PASS_COMPLETE": true
+    },
+    "decision_date": "2026-08-24",
+    "design_id": "dante-light-l4-prefilter-v5-training",
+    "internal_split": {
+      "block_overlap_allowed": false,
+      "fit_fraction": 0.9,
+      "seed_method": "sha256_canonical_json_first_64_bits_big_endian",
+      "seed_purpose": "training_fit_validation_split",
+      "stratify_by": "detector",
+      "unit": "detector_gps_4096s_block",
+      "validation_fraction": 0.1
+    },
+    "numerical_failure": {
+      "failed_replicate_blocks_candidate_promotion": true,
+      "infrastructure_interruption": "INCOMPLETE_RERUN_SAME_SEED_ALLOWED",
+      "nonfinite_input_activation_prediction_loss_gradient_or_parameter": "FAILED",
+      "optimizer_exception_caused_by_nonfinite_state": "FAILED"
+    },
+    "optimization": {
+      "batch": {
+        "H1_size": 32,
+        "L1_size": 32,
+        "detector_balanced": true,
+        "drop_last": false,
+        "total_size": 64
+      },
+      "checkpoint_selection": {
+        "direction": "minimum",
+        "metric": "equal_detector_mean_validation_SmoothL1",
+        "tie_break": "earliest_epoch"
+      },
+      "early_stopping": false,
+      "gradient_clipping": false,
+      "loss": {
+        "beta": 1.0,
+        "name": "SmoothL1Loss",
+        "reduction": "mean"
+      },
+      "maximum_epochs": 100,
+      "optimizer": {
+        "amsgrad": false,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "epsilon": 1e-08,
+        "learning_rate": 0.001,
+        "name": "AdamW",
+        "weight_decay": 0.0001
+      },
+      "precision": {
+        "automatic_mixed_precision": false,
+        "model_and_inputs": "float32"
+      },
+      "scheduler": {
+        "intentional": true,
+        "name": "none",
+        "reason": "simplicity_comparability_and_reduced_post_hoc_flexibility"
+      }
+    },
+    "replicates": {
+      "count": 5,
+      "favorable_seed_selection_allowed": false,
+      "promotion_basis": "worst_replicate_all_gates",
+      "seeds_from_frozen_protocol": true
+    },
+    "schema_version": 1,
+    "scope": {
+      "allowed_partition": "training",
+      "allowed_role": "background",
+      "confirmation_access_allowed": false,
+      "development_access_allowed": false,
+      "morphology_labels_allowed": false,
+      "o4b_access_allowed": false,
+      "routing_enabled": false
+    },
+    "status": "APPROVED_TRAINING_ONLY_FREEZE_INPUT",
+    "target": {
+      "clipping": false,
+      "name": "native_o4a_novelty_score",
+      "physical_truth_label": false,
+      "serialization": "float32_hex",
+      "standard_deviation_ddof": 0,
+      "standardization": "per_detector_population_mean_std_fit_subset_only"
+    }
+  },
+  "development_rows_accessed": [],
+  "internal_split": {
+    "assignment_digest": "3428272a277b03a181a6c125c3410c2e37e1250978ac6bd9c88131f226472e5c",
+    "assignment_reference": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/training_internal_split_v5.jsonl",
+      "sha256": "3b320bd6e65193c5fa4eac6ed73f6fbbed98b1d4cf900906651f1b82b18f670b"
+    },
+    "block_counts": {
+      "H1": {
+        "fit": 1080,
+        "validation": 120
+      },
+      "L1": {
+        "fit": 1080,
+        "validation": 120
+      }
+    },
+    "row_counts": {
+      "H1": {
+        "fit": 8640,
+        "validation": 960
+      },
+      "L1": {
+        "fit": 8640,
+        "validation": 960
+      }
+    },
+    "seed_parent_digests": [
+      "0b7abca302097714410282df7dfaa79722e8069f29a81f93158ad81feb1f24b1",
+      "8280f0e8a9e68ed12816a2778ac3ee93d71d3aaa28ac0cc6ecf35c442ed139e7",
+      "b30a60b06c3c7b7efd3a08a8fd738b3459e64ba7d39cda46a686e8486a8af47f",
+      "f0ea214a62cae7e8d5749486b712e7c5353fb8ee63e47309d60c173212d7674a"
+    ],
+    "seeds_by_detector": {
+      "H1": 4396268674125739289,
+      "L1": 14377401870075514670
+    }
+  },
+  "o4b_rows_accessed": [],
+  "parent_digests": {
+    "protocol_digest": "b30a60b06c3c7b7efd3a08a8fd738b3459e64ba7d39cda46a686e8486a8af47f",
+    "teacher_contract_digest": "0b7abca302097714410282df7dfaa79722e8069f29a81f93158ad81feb1f24b1",
+    "teacher_ledger_artifact_digest": "8280f0e8a9e68ed12816a2778ac3ee93d71d3aaa28ac0cc6ecf35c442ed139e7",
+    "teacher_run_key": "159f978ea08234aa454e0abe526312bf779908f35d59660fd95fca73807cdba6"
+  },
+  "schema_version": 1,
+  "source_references": {
+    "design": {
+      "path": "config/dante_light_prefilter_v5_training_design.json",
+      "sha256": "f0ea214a62cae7e8d5749486b712e7c5353fb8ee63e47309d60c173212d7674a"
+    },
+    "freeze_builder": {
+      "path": "scripts/freeze_dante_light_prefilter_v5_training.py",
+      "sha256": "667d8c83d3c3ab1d3fb2aa12652b64a08044b9c92ff3d967f93235983d829e2f"
+    },
+    "freeze_implementation": {
+      "path": "src/dante_light/prefilter_v5_training_contract.py",
+      "sha256": "c87b8cd7c877766df83b364561744cde7cc6f2e92aefadf0618eb3d4b8019fb8"
+    },
+    "freeze_verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v5_training_freeze.py",
+      "sha256": "c8c1f044607d4601e6899be879cdf74d2e1d73d4ead59397ba3be5763429a49b"
+    },
+    "protocol": {
+      "path": "config/dante_light_prefilter_protocol_v5.json",
+      "sha256": "9eef90c51fde30c539fff770ab9970d9666e47b4fa49314c815f6d0a7d4486fd"
+    },
+    "student_architectures": {
+      "path": "src/dante_light/prefilter_v4_student.py",
+      "sha256": "b6be0b5a6dae256fcbeff8cba66703ba8c5efc62c4f1f8960e222712d1f74019"
+    },
+    "teacher_contract": {
+      "path": "config/dante_light_prefilter_v5_teacher_contract.json",
+      "sha256": "5772f4f0ff2f622ab2ab7cc8680c07b1ff26c8a846b4a26deeb3a1d4a210771b"
+    },
+    "teacher_ledger_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/teacher_ledger_summary_v5.json",
+      "sha256": "a12598dba0bfdc07c0faece03a7af9ea5b354b2e8d2dfc5d4518193fd42bbba8"
+    }
+  },
+  "status": "FROZEN_TRAINING_ONLY_BEFORE_STUDENT_FIT",
+  "student_architectures": {
+    "complex_stft_2d_trainable_parameters": 1369,
+    "raw_1d_depthwise_trainable_parameters": 3665
+  },
+  "student_training_executed": false,
+  "target_standardization": {
+    "H1": {
+      "fit_count": 8640,
+      "mean_float64": 0.07234671520138228,
+      "standard_deviation_float64_ddof0": 0.03878881579375258
+    },
+    "L1": {
+      "fit_count": 8640,
+      "mean_float64": 0.07293721426761261,
+      "standard_deviation_float64_ddof0": 0.047578581611466074
+    }
+  },
+  "training_contract_digest": "e2d21a930d71fe8ff276c0b3814ccaf73603fdaba02bd27cce2f400bd38a3e25",
+  "training_replicate_seeds": [
+    12628846398094953608,
+    6621278754304302109,
+    8490294577501640525,
+    1414247504949575829,
+    15204721530264670208
+  ]
+}

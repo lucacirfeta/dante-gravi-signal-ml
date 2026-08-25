@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "status": "MINIMUM_MATCH_CRITERION_FROZEN_FOR_FUTURE_MINI_BANK_EVALUATIONS",
+  "criterion_frozen": true,
+  "v4_protocol_frozen": false,
+  "routing_enabled": false,
+  "candidate_selected": false,
+  "scientific_decision": {
+    "confirmed_by_author": true,
+    "confirmed_date": "2026-08-23",
+    "role": "optional_mini_bank_safety_arm",
+    "rationale": "A safety arm should not use a weaker discreteness-loss standard than established compact-binary searches."
+  },
+  "future_preregistered_gate": {
+    "status": "DEFINED_NOT_EVALUATED",
+    "metric": "minimum_time_and_phase_maximized_noise_weighted_match_over_locked_grid",
+    "comparison": "greater_than_or_equal",
+    "threshold": 0.97,
+    "applies_only_to": "a future mini-bank evaluated on a new grid whose parameter scope, waveform models, PSD, frequency bounds, and manifest hash are frozen before match computation",
+    "pre_registered_for_future_evaluations": true,
+    "required_failure_action": "exclude the evaluated mini-bank as a DANTE-Light safety arm",
+    "physical_interpretation": {
+      "minimum_recovered_snr_fraction_from_bank_discreteness": 0.97,
+      "maximum_snr_loss_fraction_from_bank_discreteness": 0.03,
+      "minimum_euclidean_sensitive_volume_fraction_if_all_other_factors_are_fixed": 0.912673,
+      "maximum_euclidean_sensitive_volume_loss_fraction_if_all_other_factors_are_fixed": 0.087327
+    },
+    "does_not_establish": [
+      "coverage outside the future locked parameter scope",
+      "robustness to waveform-systematic error unless separately frozen",
+      "retention of detector glitches or non-CBC morphologies",
+      "operational routing readiness"
+    ]
+  },
+  "already_observed_feasibility_artifact": {
+    "path": "artifacts/dante_light/prefilter_l4_v4_feasibility/mini_bank_coverage_v4.json",
+    "sha256": "b301711873b42c06a2745df5600c99fafed8fa4f6a698a9230d0c4178db34455",
+    "observed_before_threshold_was_defined": true,
+    "pre_registered_for_this_artifact": false,
+    "classification": "RETROSPECTIVE_EXTERNAL_BENCHMARK_FAIL",
+    "largest_evaluated_bank_size": 32,
+    "best_observed_minimum_match": 0.4125120309624104,
+    "gap_to_external_benchmark": 0.5574879690375896,
+    "interpretation": "The practical conclusion is unchanged, but this is not a preregistered failure."
+  },
+  "references": [
+    {
+      "citation": "Capano et al., Implementing a search for gravitational waves from non-precessing, spinning binary black holes, Phys. Rev. D 93, 124007 (2016)",
+      "arxiv": "1602.03509",
+      "doi": "10.1103/PhysRevD.93.124007",
+      "relevance": "Direct precedent for the traditional 0.97 minimal-match choice and less than 3 percent SNR loss from bank discreteness."
+    },
+    {
+      "citation": "GstLAL offline compact-binary analysis documentation",
+      "url": "https://lscsoft.docs.ligo.org/gstlal/tutorials/offline_analysis.html",
+      "relevance": "Official implementation documentation defining minimal match as retained SNR and showing a 0.975 bank setting."
+    }
+  ]
+}

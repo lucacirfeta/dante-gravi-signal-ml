@@ -2,17 +2,51 @@
 
 L4 is a research-only cheap prefilter evaluated in front of the unchanged
 DANTE-Light exact path. It is not active routing: every generated contract and
-result records `routing_enabled: false`. Both completed development protocols
-are negative: v1 reached 6.70% effective reduction and v2 reached at most
-8.70%, below the frozen 50% gate. Neither protocol opened its held-out O4b
-outcomes. The exact DANTE-Light path remains the supported path.
+result records `routing_enabled: false`. All five completed development
+protocols are negative: v1 reached 6.70% effective reduction, v2 reached at
+most 8.70%, the predeclared v3 A+B primary reached 3.08%, and the v4
+analytic-phase primary reached 0.67%, all below the frozen 50% gate. V5 tested
+two learned surrogates of the exact native score. All ten architecture/seed
+candidates failed detector-wise teacher fidelity, while their
+retention-compatible operating points reduced background calls by only
+1.83--10.83%. No protocol opened its held-out confirmation or O4b outcomes.
+The exact DANTE-Light path remains the supported path.
 
-The scientific criteria live only in the versioned v1 and v2 protocol JSON
-files under `config/`. The protocol, split, screening result, evaluation
-contract and feature ledgers are linked by SHA256 and canonical JSON digests.
-Changing a criterion without freezing a new protocol fails closed.
+The scientific criteria live only in the versioned v1--v5 protocol and
+contract JSON files under `config/`. The protocol, split, screening result,
+evaluation contract and feature ledgers are linked by SHA256 and canonical
+JSON digests. Changing a criterion without freezing a new protocol fails
+closed.
 The compact robust-candidate manifest allows split regeneration without the
 312 MB P5 token cache while preserving its source SHA256 and candidate order.
+
+V4 progressed from a label-blind feasibility probe to a frozen development
+protocol on a fresh O4a cohort. Its primary returned `V4_NOT_READY`: overall
+OOF AUC 0.634 and 0.67% constrained effective reduction. The synthetic
+phase-ordering response did not translate into useful real-strain routing
+separation; confirmation and O4b remain sealed. The frozen result and its
+post-hoc, non-gating diagnostic are documented in
+`docs/DANTE_LIGHT_L4_PREFILTER_V4_DEVELOPMENT_RESULT_2026-08-23.md` and
+`artifacts/dante_light/prefilter_l4_v4_development/diagnostics_v4.json`.
+
+The cross-version AUC values must be read carefully: v2 spectral evolution is
+0.805, the v3 A+B primary is 0.718, and v4 is 0.634. The 0.805 value reproduced
+inside the v3 dossier is the v2 control, not the v3 primary. V4 uses a fresh
+1,010-window cohort rather than the shared 962-window v2/v3 cohort, so its
+cross-version differences are descriptive rather than a controlled ablation.
+
+V5 used fresh, disjoint train, development, and sealed confirmation identities
+to test a raw-strain depthwise CNN and a complex-STFT CNN, each with five
+frozen replicates. Its one-shot 1,800-window development run returned
+`V5_NOT_READY`. Every protected detector/morphology retention gate passed at
+the selected thresholds, but no replicate met the detector-wise Spearman
+fidelity requirement: raw 1-D correlations ranged from 0.617 to 0.718 and
+complex-STFT correlations from 0.326 to 0.594, against a frozen lower-bound
+gate of 0.90. This is a fidelity and useful-reduction failure, not a
+morphology-specific retention failure. It falsifies the two frozen surrogate
+designs under their training contract; it does not falsify distillation in
+general. The complete interpretation and reproduction commands are in
+`docs/DANTE_LIGHT_L4_PREFILTER_V5_DEVELOPMENT_RESULT_2026-08-25.md`.
 
 ## Output location
 
@@ -30,6 +64,42 @@ the copied protocol and the copied tuning artefact. The final evaluator writes
 one machine-readable JSON report containing coverage, per-detector and
 per-morphology retention intervals, compute reduction, exact-escalate coverage
 and every PASS/FAIL gate.
+
+## V3 A+B development commands and final status
+
+V3 reuses the frozen v2 split but extracts only `development` rows. Its A/B
+ablation on that cohort is hypothesis-generating because the v2 diagnostic
+motivated the features. The untouched, disjoint `evaluation` rows were
+reserved for confirmation and may be opened only after
+`READY_FOR_CONFIRMATION`. The completed v3 run returned `NOT_READY`, so they
+were not opened. See
+`docs/DANTE_LIGHT_L4_PREFILTER_V3_NOT_READY_2026-08-22.md`.
+
+Create the Linux/WSL LALSuite environment once for CBC reconstruction:
+
+```bash
+conda env create -f environment-dante-light-v3.yml
+```
+
+Then run from the repository root, replacing `<L4_V3>` with an external output
+directory. The first three builders can use the regular Python environment;
+the injection builder must use the pinned LALSuite environment.
+
+```powershell
+python scripts/build_dante_light_prefilter_v3_cohort_features.py --role background --output-dir <L4_V3>/background --strain-source auto --workers 4
+python scripts/build_dante_light_prefilter_v3_cohort_features.py --role robust_candidate --output-dir <L4_V3>/robust --strain-source auto --workers 4
+python scripts/build_dante_light_prefilter_v3_cohort_features.py --role known_glitch --output-dir <L4_V3>/known --strain-source auto --workers 4
+
+conda run -n dante-light-v3 python scripts/build_dante_light_prefilter_v3_injection_features.py --output-dir <L4_V3>/injection --workers 4
+
+python scripts/screen_dante_light_prefilter_v3.py --background <L4_V3>/background/background_feature_ledger_v3_development.json --robust <L4_V3>/robust/robust_candidate_feature_ledger_v3_development.json --known <L4_V3>/known/known_glitch_feature_ledger_v3_development.json --injection <L4_V3>/injection/injection_feature_ledger_v3_development.json --output <L4_V3>/final/screening_result_v3.json
+
+python scripts/verify_dante_light_prefilter_v3_artifacts.py --background <L4_V3>/background/background_feature_ledger_v3_development.json --robust <L4_V3>/robust/robust_candidate_feature_ledger_v3_development.json --known <L4_V3>/known/known_glitch_feature_ledger_v3_development.json --injection <L4_V3>/injection/injection_feature_ledger_v3_development.json --screening <L4_V3>/final/screening_result_v3.json
+```
+
+The screening command intentionally exits 1 for a valid `NOT_READY` result;
+the verifier exits 0 when that negative artifact is internally consistent and
+exactly reproducible. Do not reinterpret verifier PASS as scientific PASS.
 
 ## V2 commands and mandatory stop gate
 

@@ -1,0 +1,49 @@
+{
+  "analysis_id": "dante-light-l4-prefilter-v4-confirmation-power-proposal",
+  "background_precision": {
+    "maximum_wilson_half_width_per_detector": 0.06,
+    "recommended_rounded_n_per_detector": 300,
+    "worst_case_reduction_fraction": 0.5
+  },
+  "candidate_sample_sizes": [
+    18,
+    20,
+    25,
+    35,
+    40,
+    43,
+    45,
+    47,
+    50,
+    60,
+    90
+  ],
+  "contract_digest": "65c9810358242c5fc67c5964d381bfe9c39ae2224b936b9f18208856b94e186b",
+  "gate": {
+    "minimum_retention": 0.9,
+    "minimum_wilson_lower": 0.8,
+    "wilson_confidence": 0.95
+  },
+  "interpretation": {
+    "auc_can_override_retention_gate": false,
+    "confirmation_endpoint": "fixed_operating_point_retention",
+    "does_not_freeze_confirmation_counts": true,
+    "does_not_open_protected_outcomes": true,
+    "true_retention_alternative_is_design_assumption": true
+  },
+  "power_target": {
+    "minimum_pass_probability": 0.9,
+    "true_retention_alternative": 0.95
+  },
+  "recommended_for_author_review": {
+    "injection_per_detector_system": 90,
+    "known_glitch_per_detector_morphology": 60,
+    "robust_candidate_per_detector": 60
+  },
+  "schema_version": 1,
+  "source_v3_protocol": {
+    "path": "config/dante_light_prefilter_protocol_v3.json",
+    "sha256": "819e3e34c21354c664856fc623213a2d5a087cc7bdede395e04a832ed0c32d28"
+  },
+  "status": "ANALYSIS_ONLY_NOT_FROZEN"
+}

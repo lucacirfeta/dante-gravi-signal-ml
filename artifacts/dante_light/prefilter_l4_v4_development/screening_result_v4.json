@@ -1,0 +1,558 @@
+{
+  "artifact_digest": "b6c0e75d61ed3d84475d511ff915057de3c4ff2a08e3c1010a1f208b43c65058",
+  "can_authorize_operational_pass": false,
+  "confirmation_values_used": [],
+  "development_interpretation": "development_only_not_confirmatory",
+  "feature_contract_sha256": "07d9d5b1357959d252cb156c0f383f967e1ab30e4844a9ec328486933abca62f",
+  "feature_cost": {
+    "development_n": 1010,
+    "excludes_data_read_and_whitening": true,
+    "feature_extraction_max_s": 0.0418561609999983,
+    "feature_extraction_mean_s": 0.0158714081732673,
+    "feature_extraction_median_s": 0.0158313499978249,
+    "feature_extraction_p95_s": 0.0256495499997982
+  },
+  "manifest_digest": "9b0cafdb49d954c0399a4f45a47b785b1f59e10b6e4ce390c40c6a9ce1478363",
+  "next_stage": "stop_without_opening_confirmation_or_o4b_and_do_not_retune_on_same_cohort",
+  "o4b_outcomes_used": [],
+  "portable_float_serialization": {
+    "applied_after_unrounded_gate_evaluation": true,
+    "significant_digits": 15
+  },
+  "protocol": {
+    "path": "config/dante_light_prefilter_protocol_v4.json",
+    "sha256": "9e6b89146e63cd7717e1fcd56c6bddb6f5337ca739863f5b3bfae9e5a8ae7f42"
+  },
+  "routing_enabled": false,
+  "schema_version": 4,
+  "scientific_boundary": {
+    "does_not_establish": [
+      "sensitivity_to_physical_NSBH_waveforms_with_tidal_effects",
+      "sensitivity_to_precessing_or_higher_mode_CBC_waveforms",
+      "astrophysical_sensitivity_or_operational_routing_readiness"
+    ],
+    "nsbh_injection_limitation": "IMRPhenomD treats the NSBH benchmark as point-particle aligned-spin inspiral-merger-ringdown and omits neutron-star tidal effects"
+  },
+  "scientific_mode": "frozen_v4_development_only_before_one_shot_confirmation",
+  "screening": {
+    "candidate": {
+      "auc_diagnostics": {
+        "by_protected_stratum": [
+          {
+            "auc": 0.58,
+            "background_n": 300,
+            "block_n": 335,
+            "confidence_interval": [
+              0.468186906390463,
+              0.689375412485878
+            ],
+            "detector": "H1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "BBH_10_10",
+            "positive_n": 35,
+            "requested_resamples": 2000,
+            "role": "injection",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.709238095238095,
+            "background_n": 300,
+            "block_n": 335,
+            "confidence_interval": [
+              0.59767790238746,
+              0.815247151811335
+            ],
+            "detector": "H1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "BBH_30_30",
+            "positive_n": 35,
+            "requested_resamples": 2000,
+            "role": "injection",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.530285714285714,
+            "background_n": 300,
+            "block_n": 335,
+            "confidence_interval": [
+              0.419668027104035,
+              0.636409993943437
+            ],
+            "detector": "H1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "NSBH_10_1.4",
+            "positive_n": 35,
+            "requested_resamples": 2000,
+            "role": "injection",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.630285714285714,
+            "background_n": 300,
+            "block_n": 335,
+            "confidence_interval": [
+              0.524406692341475,
+              0.731909477794838
+            ],
+            "detector": "L1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "BBH_10_10",
+            "positive_n": 35,
+            "requested_resamples": 2000,
+            "role": "injection",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.677047619047619,
+            "background_n": 300,
+            "block_n": 335,
+            "confidence_interval": [
+              0.568822930591129,
+              0.781456946987319
+            ],
+            "detector": "L1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "BBH_30_30",
+            "positive_n": 35,
+            "requested_resamples": 2000,
+            "role": "injection",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.506857142857143,
+            "background_n": 300,
+            "block_n": 335,
+            "confidence_interval": [
+              0.417498618158883,
+              0.606536539393512
+            ],
+            "detector": "L1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "NSBH_10_1.4",
+            "positive_n": 35,
+            "requested_resamples": 2000,
+            "role": "injection",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.5204,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.403839161970768,
+              0.651972344745213
+            ],
+            "detector": "H1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "Blip",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "known_glitch",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.820533333333333,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.72917364033192,
+              0.900543041474654
+            ],
+            "detector": "H1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "KoiFish",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "known_glitch",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.659466666666667,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.518351528602291,
+              0.795341871737509
+            ],
+            "detector": "H1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "ScatteredLight",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "known_glitch",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.488933333333333,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.375460588577502,
+              0.603690515243823
+            ],
+            "detector": "L1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "Blip",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "known_glitch",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.859333333333333,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.781989096560663,
+              0.92691860963505
+            ],
+            "detector": "L1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "KoiFish",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "known_glitch",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.6436,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.523926461405558,
+              0.771085984231389
+            ],
+            "detector": "L1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "ScatteredLight",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "known_glitch",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.579866666666667,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.42150864068965,
+              0.734346979419522
+            ],
+            "detector": "H1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "unknown",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "robust_candidate",
+            "successful_resamples": 2000
+          },
+          {
+            "auc": 0.767066666666667,
+            "background_n": 300,
+            "block_n": 325,
+            "confidence_interval": [
+              0.621953216993526,
+              0.894046933486899
+            ],
+            "detector": "L1",
+            "eligible_for_gate": false,
+            "method": "detector_gps_block_bootstrap",
+            "morphology": "unknown",
+            "positive_n": 25,
+            "requested_resamples": 2000,
+            "role": "robust_candidate",
+            "successful_resamples": 2000
+          }
+        ],
+        "gps_block_duration_s": 4096,
+        "interpretation": "exploratory_hypothesis_generating_not_confirmatory",
+        "overall": {
+          "auc": 0.634113821138211,
+          "block_n": 1010,
+          "confidence_interval": [
+            0.595079621314792,
+            0.670472921668414
+          ],
+          "eligible_for_gate": false,
+          "method": "detector_gps_block_bootstrap",
+          "requested_resamples": 2000,
+          "successful_resamples": 2000
+        }
+      },
+      "detectors": {
+        "H1": {
+          "background_n": 300,
+          "detector": "H1",
+          "development_background_call_reduction": 0.0,
+          "groups": {
+            "injection/H1/BBH_10_10": {
+              "n": 35,
+              "rate": 1.0,
+              "retained": 35,
+              "status": "PASS",
+              "wilson_interval": [
+                0.901099007675596,
+                1.0
+              ]
+            },
+            "injection/H1/BBH_30_30": {
+              "n": 35,
+              "rate": 1.0,
+              "retained": 35,
+              "status": "PASS",
+              "wilson_interval": [
+                0.901099007675596,
+                1.0
+              ]
+            },
+            "injection/H1/NSBH_10_1.4": {
+              "n": 35,
+              "rate": 1.0,
+              "retained": 35,
+              "status": "PASS",
+              "wilson_interval": [
+                0.901099007675596,
+                1.0
+              ]
+            },
+            "known_glitch/H1/Blip": {
+              "n": 25,
+              "rate": 1.0,
+              "retained": 25,
+              "status": "PASS",
+              "wilson_interval": [
+                0.866807749060952,
+                1.0
+              ]
+            },
+            "known_glitch/H1/KoiFish": {
+              "n": 25,
+              "rate": 1.0,
+              "retained": 25,
+              "status": "PASS",
+              "wilson_interval": [
+                0.866807749060952,
+                1.0
+              ]
+            },
+            "known_glitch/H1/ScatteredLight": {
+              "n": 25,
+              "rate": 1.0,
+              "retained": 25,
+              "status": "PASS",
+              "wilson_interval": [
+                0.866807749060952,
+                1.0
+              ]
+            },
+            "robust_candidate/H1/unknown": {
+              "n": 25,
+              "rate": 0.96,
+              "retained": 24,
+              "status": "PASS",
+              "wilson_interval": [
+                0.804559362638063,
+                0.992903766498013
+              ]
+            }
+          },
+          "threshold": 0.13839879570152,
+          "would_call_exact": 300
+        },
+        "L1": {
+          "background_n": 300,
+          "detector": "L1",
+          "development_background_call_reduction": 0.0133333333333333,
+          "groups": {
+            "injection/L1/BBH_10_10": {
+              "n": 35,
+              "rate": 1.0,
+              "retained": 35,
+              "status": "PASS",
+              "wilson_interval": [
+                0.901099007675596,
+                1.0
+              ]
+            },
+            "injection/L1/BBH_30_30": {
+              "n": 35,
+              "rate": 1.0,
+              "retained": 35,
+              "status": "PASS",
+              "wilson_interval": [
+                0.901099007675596,
+                1.0
+              ]
+            },
+            "injection/L1/NSBH_10_1.4": {
+              "n": 35,
+              "rate": 1.0,
+              "retained": 35,
+              "status": "PASS",
+              "wilson_interval": [
+                0.901099007675596,
+                1.0
+              ]
+            },
+            "known_glitch/L1/Blip": {
+              "n": 25,
+              "rate": 1.0,
+              "retained": 25,
+              "status": "PASS",
+              "wilson_interval": [
+                0.866807749060952,
+                1.0
+              ]
+            },
+            "known_glitch/L1/KoiFish": {
+              "n": 25,
+              "rate": 1.0,
+              "retained": 25,
+              "status": "PASS",
+              "wilson_interval": [
+                0.866807749060952,
+                1.0
+              ]
+            },
+            "known_glitch/L1/ScatteredLight": {
+              "n": 25,
+              "rate": 1.0,
+              "retained": 25,
+              "status": "PASS",
+              "wilson_interval": [
+                0.866807749060952,
+                1.0
+              ]
+            },
+            "robust_candidate/L1/unknown": {
+              "n": 25,
+              "rate": 0.96,
+              "retained": 24,
+              "status": "PASS",
+              "wilson_interval": [
+                0.804559362638063,
+                0.992903766498013
+              ]
+            }
+          },
+          "threshold": 0.228727875101887,
+          "would_call_exact": 296
+        }
+      },
+      "development_criteria": "NOT_MET",
+      "eligible_for_selection": true,
+      "feature_names": [
+        "phase_frequency_time_spearman",
+        "phase_frequency_positive_step_fraction",
+        "phase_inspiral_coordinate_residual",
+        "phase_cubic_circular_residual",
+        "phase_valid_frame_fraction",
+        "phase_accumulation_cycles"
+      ],
+      "feature_set": "phase_primary",
+      "folds": [
+        {
+          "fold": 1,
+          "train_n": 808,
+          "validation_block_n": 202,
+          "validation_n": 202
+        },
+        {
+          "fold": 2,
+          "train_n": 808,
+          "validation_block_n": 202,
+          "validation_n": 202
+        },
+        {
+          "fold": 3,
+          "train_n": 808,
+          "validation_block_n": 202,
+          "validation_n": 202
+        },
+        {
+          "fold": 4,
+          "train_n": 808,
+          "validation_block_n": 202,
+          "validation_n": 202
+        },
+        {
+          "fold": 5,
+          "train_n": 808,
+          "validation_block_n": 202,
+          "validation_n": 202
+        }
+      ],
+      "is_predeclared_primary": true,
+      "oof_development_background_call_reduction": 0.00666666666666671
+    },
+    "class_weighting": "equal_background_and_positive_strata",
+    "cross_validation_method": "shuffled_group_k_fold_detector_4096s_block",
+    "development_call_reduction_target": 0.5,
+    "feature_subset_selection_allowed": false,
+    "folds": 5,
+    "frozen_seed_uint64": 15621696242067692811,
+    "gps_block_duration_s": 4096,
+    "model": "l2_logistic_regression",
+    "primary_feature_set": "phase_primary",
+    "sklearn_random_state_seed_uint32": 25156875,
+    "sklearn_seed_mapping": "uint64_modulo_2_pow_32"
+  },
+  "selected_operating_point": null,
+  "source_ledgers": [
+    {
+      "file_name": "background_feature_ledger_v4_development.json",
+      "role": "background",
+      "row_count": 600,
+      "rows_sha256": "b3f377e9f7ecd91541220890e8cd6c7b1235a8133ba58816c89c739546859af2",
+      "selection_partitions": [
+        "development"
+      ],
+      "sha256": "ce6fcfa3e9672a01680eed156f652e1dff0d51cdaa30bbd8fd300a1c5500d90f"
+    },
+    {
+      "file_name": "injection_feature_ledger_v4_development.json",
+      "role": "injection",
+      "row_count": 210,
+      "rows_sha256": "6ac6bae4e2c1a4f667c852c1aca3ceb6b15d70bc49bcef81751cac5b5b7ff46c",
+      "selection_partitions": [
+        "development"
+      ],
+      "sha256": "8779ba5aaa5c079ad43e35e95fa2c8e2802e090ad095bf3eb7cb4917a434b93c"
+    },
+    {
+      "file_name": "known_glitch_feature_ledger_v4_development.json",
+      "role": "known_glitch",
+      "row_count": 150,
+      "rows_sha256": "f53270ee0f501d8b60a7f2308c46d662dbbf27224fac93b33707147fa5390e25",
+      "selection_partitions": [
+        "development"
+      ],
+      "sha256": "4c08ceb6624695f71efedbfea857adb50e9d161f275e45f2d744de779d6a7ab0"
+    },
+    {
+      "file_name": "robust_candidate_feature_ledger_v4_development.json",
+      "role": "robust_candidate",
+      "row_count": 50,
+      "rows_sha256": "0f4bd62ca34cfc9f12a63b25da8e31b89467e92c8d7709145e05c783d6a4b706",
+      "selection_partitions": [
+        "development"
+      ],
+      "sha256": "16e625500833f9f8ef202f25f93942a9cd3326adb4793f986a5aa678c5f1effc"
+    }
+  ],
+  "status": "V4_NOT_READY",
+  "unlock_authorization_material": null
+}

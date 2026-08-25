@@ -1,0 +1,34 @@
+{
+  "confirmation_rows_accessed": [],
+  "expected_full_row_count": 50,
+  "extraction_workers": 4,
+  "feature_contract_sha256": "07d9d5b1357959d252cb156c0f383f967e1ab30e4844a9ec328486933abca62f",
+  "ledger_digest": "747ecf7768203f9ec61bcde6cff8b36ededa230b676dafce295b2fc90f85b247",
+  "manifest_digest": "9b0cafdb49d954c0399a4f45a47b785b1f59e10b6e4ce390c40c6a9ce1478363",
+  "o4b_rows_accessed": [],
+  "outcome_fields_used_for_feature_extraction": [],
+  "protocol": {
+    "path": "config/dante_light_prefilter_protocol_v4.json",
+    "sha256": "9e6b89146e63cd7717e1fcd56c6bddb6f5337ca739863f5b3bfae9e5a8ae7f42"
+  },
+  "public_split_header_digest": "ea6b750d32e3239eae216908b93dd5e029ca816b70de8dd27aa4be48ffd444bf",
+  "role": "robust_candidate",
+  "row_count": 50,
+  "rows_path": "robust_candidate_features_v4_development.jsonl",
+  "rows_sha256": "0f4bd62ca34cfc9f12a63b25da8e31b89467e92c8d7709145e05c783d6a4b706",
+  "schema_version": 4,
+  "scientific_mode": "v4_frozen_development_only_feature_extraction",
+  "selection_limit": null,
+  "selection_partitions": [
+    "development"
+  ],
+  "source_split_entries": {
+    "path": "config/dante_light_prefilter_splits_v4.jsonl",
+    "sha256": "a6bfc44dc1005953758e492d023acf03e17627bd93da550443851e9dca74e848"
+  },
+  "source_split_header": {
+    "path": "config/dante_light_prefilter_splits_v4.json",
+    "sha256": "72a76adcaf02d8042c2c479d48236710a6aa8a090adc77f16238b088adf08fba"
+  },
+  "status": "complete"
+}

@@ -263,6 +263,12 @@ docs/*
 !docs/DANTE_LIGHT_L4_PREFILTER.md
 !docs/DANTE_LIGHT_L4_PREFILTER_NOT_READY_2026-08-22.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V2_NOT_READY_2026-08-22.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V4_FEASIBILITY_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V4_PHASE_FREEZE_PROPOSAL_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V4_DEVELOPMENT_RESULT_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V5_DESIGN_PROPOSAL_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V5_DEVELOPMENT_RESULT_2026-08-25.md
+!docs/DANTE_LIGHT_L4_V5_BRANCH_REVIEW_2026-08-25.md
 runs/
 
 # Raw HDF5 strain data downloads
@@ -348,6 +354,29 @@ scripts/*
 !scripts/build_dante_light_manifest.py
 !scripts/verify_dante_light_run_config.py
 !scripts/build_dsd_representation_transition.py
+!scripts/run_dante_light_prefilter_v4_feasibility.py
+!scripts/run_dante_light_prefilter_v4_bank_coverage.py
+!scripts/audit_dante_light_prefilter_v3_cost.py
+!scripts/verify_dante_light_prefilter_v4_feasibility.py
+!scripts/analyze_dante_light_prefilter_v4_power.py
+!scripts/build_dante_light_prefilter_v4_freeze.py
+!scripts/verify_dante_light_prefilter_v4_freeze.py
+!scripts/build_dante_light_prefilter_v4_development.py
+!scripts/screen_dante_light_prefilter_v4.py
+!scripts/verify_dante_light_prefilter_v4_development.py
+!scripts/analyze_dante_light_prefilter_v4_diagnostics.py
+!scripts/audit_dante_light_prefilter_v5_identities.py
+!scripts/run_dante_light_prefilter_v5_scattering_feasibility.py
+!scripts/analyze_dante_light_prefilter_v5_power.py
+!scripts/build_dante_light_prefilter_v5_freeze.py
+!scripts/verify_dante_light_prefilter_v5_freeze.py
+!scripts/freeze_dante_light_prefilter_v5_development.py
+!scripts/build_dante_light_prefilter_v5_waveforms.py
+!scripts/run_dante_light_prefilter_v5_development.py
+!scripts/verify_dante_light_prefilter_v5_development.py
+!docs/DANTE_LIGHT_L4_PREFILTER_V5_IDENTITY_AUDIT_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V5_SCATTERING_FEASIBILITY_2026-08-23.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V5_FREEZE_2026-08-24.md
 
 tmp
 archive/

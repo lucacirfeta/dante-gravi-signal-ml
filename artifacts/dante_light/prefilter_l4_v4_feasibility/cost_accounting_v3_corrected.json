@@ -1,0 +1,70 @@
+{
+  "accounting": {
+    "assumes_rejection_independent_of_avoidable_cost": true,
+    "break_even_reduction_fraction": 0.018843939739186306,
+    "expected_gross_saving_s": 0.010547521806918253,
+    "expected_net_saving_s": 0.004093769473937011,
+    "mean_avoidable_exact_cost_s": 0.3424842374952277,
+    "mean_prefilter_cost_s": 0.0064537523329812425,
+    "reduction_fraction": 0.030797101449275388,
+    "tail_latency_identified": false,
+    "tail_note": "Paired per-window prefilter cost, routing decision, and exact-path cost are required; marginal p95 values cannot identify net p95."
+  },
+  "avoidable_exact_cost_mean_s_by_stage": {
+    "q_transform_s": 0.2387421187486325,
+    "rendering_s": 0.0009516437476122519,
+    "score_total_s": 0.10279047499898297
+  },
+  "marginal_tail_diagnostic_only": {
+    "prefilter_p95_s": 0.013343649997841562,
+    "sum_of_component_p95_s": 0.36093244999210583,
+    "warning": "These marginal quantiles are not paired and must not be combined into a net-p95 claim."
+  },
+  "prefilter_cost_distribution_s": {
+    "count": 962,
+    "maximum": 0.029157267000016418,
+    "mean": 0.0064537523329812425,
+    "median": 0.005384949967265129,
+    "p95": 0.013343649997841562
+  },
+  "provenance": {
+    "benchmark": {
+      "path": "benchmarks/dante_light_l1_score_only_shared.json",
+      "sha256": "57c029a49ab5694c5068702b8b2ceec39fde683d339975ffd89d06e39b7c8ebd"
+    },
+    "cost_module_sha256": "e516f62f11551964c133e55006f2c588fd94137c437d65970a3b79521eb0770e",
+    "ledger_count_by_role": {
+      "background": 552,
+      "injection": 210,
+      "known_glitch": 150,
+      "robust_candidate": 50
+    },
+    "ledger_root": "E:\\dante_cache\\dante_light_prefilter_l4_v3_development",
+    "ledger_sha256_by_role": {
+      "background": "63629aadda4a03c75807119401cc4d4a4182cd8699329b0d78cb48dcb50c8cf7",
+      "injection": "bafa30bfa25dff44073d4f5c8927b5acbfe62bb55bb4a123205e03c6ec556b56",
+      "known_glitch": "35bc6be5bd25f2e869f8a166f1145322f889ec4c50cdd0bd72cfe4ac4085bc21",
+      "robust_candidate": "3510462bc27f3a489179ff191f969288615279467b4b6091ff1214cadf14666d"
+    },
+    "row_ledger_sha256_by_role": {
+      "background": "a4f686f4d27ddb546f3a6c0684c2c0e90243c73ebcf4dd9f0d12aad9bfeb885e",
+      "injection": "b77fc93b5cf12d51cbf3c1cb31b219209a403ae7f69d06aa681c6726377f331c",
+      "known_glitch": "665a0fe8953fda51c35c448710927cd3183dbc9e66878f65cf31139b5684af92",
+      "robust_candidate": "43fe66c8917b6fa31b3c6f08e7997a88152d0903b42ff6f2bf2c0a99b14aaf5f"
+    },
+    "runner_sha256": "b4b239339123bda425fc5a97ab6d830f1bcd12ad3d4614b3d1a9344c6f6e1b92",
+    "screening": {
+      "path": "artifacts/dante_light/prefilter_l4_v3/screening_summary_v3.json",
+      "sha256": "2e06b2d24b22609797a30d70e7bfc076435433384c27958dd5940a4bd8774ce3"
+    }
+  },
+  "routing_changed": false,
+  "schema_version": 1,
+  "scientific_boundary": {
+    "non_timing_fields_used": false,
+    "o4b_accessed": false,
+    "reserved_confirmation_accessed": false,
+    "source_partition": "already-open frozen v3 development only"
+  },
+  "status": "COMPLETE_COST_AUDIT_ONLY"
+}
