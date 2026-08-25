@@ -2,10 +2,17 @@
 
 Date: 2026-08-23
 
-Status: **DESIGN ONLY; SCIENTIFIC CHECKPOINT REQUIRED**
+Status at proposal: **DESIGN ONLY; SCIENTIFIC CHECKPOINT REQUIRED**
 
-Boundary: **no v5 protocol is frozen; no protected outcome has been opened;
-routing remains disabled**
+Execution update (2026-08-25): Plans 1--3 and the one-shot Plan 4 development
+decision were completed under frozen contracts. Plan 4 returned
+`V5_NOT_READY`; therefore the conditional Plan 5 confirmation and O4b stages
+were not opened. The terminal evidence and its bounded interpretation are in
+`docs/DANTE_LIGHT_L4_PREFILTER_V5_DEVELOPMENT_RESULT_2026-08-25.md`. This
+status note does not revise the predeclared design below.
+
+Boundary at proposal: **no v5 protocol is frozen; no protected outcome has
+been opened; routing remains disabled**
 
 ## Executive decision proposal
 

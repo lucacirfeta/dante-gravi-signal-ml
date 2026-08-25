@@ -2,17 +2,21 @@
 
 L4 is a research-only cheap prefilter evaluated in front of the unchanged
 DANTE-Light exact path. It is not active routing: every generated contract and
-result records `routing_enabled: false`. All four completed development
+result records `routing_enabled: false`. All five completed development
 protocols are negative: v1 reached 6.70% effective reduction, v2 reached at
 most 8.70%, the predeclared v3 A+B primary reached 3.08%, and the v4
-analytic-phase primary reached 0.67%, all below the frozen 50% gate. No
-protocol opened its held-out confirmation or O4b outcomes. The exact
-DANTE-Light path remains the supported path.
+analytic-phase primary reached 0.67%, all below the frozen 50% gate. V5 tested
+two learned surrogates of the exact native score. All ten architecture/seed
+candidates failed detector-wise teacher fidelity, while their
+retention-compatible operating points reduced background calls by only
+1.83--10.83%. No protocol opened its held-out confirmation or O4b outcomes.
+The exact DANTE-Light path remains the supported path.
 
-The scientific criteria live only in the versioned v1, v2, and v3 protocol JSON
-files under `config/`. The protocol, split, screening result, evaluation
-contract and feature ledgers are linked by SHA256 and canonical JSON digests.
-Changing a criterion without freezing a new protocol fails closed.
+The scientific criteria live only in the versioned v1--v5 protocol and
+contract JSON files under `config/`. The protocol, split, screening result,
+evaluation contract and feature ledgers are linked by SHA256 and canonical
+JSON digests. Changing a criterion without freezing a new protocol fails
+closed.
 The compact robust-candidate manifest allows split regeneration without the
 312 MB P5 token cache while preserving its source SHA256 and candidate order.
 
@@ -30,6 +34,19 @@ The cross-version AUC values must be read carefully: v2 spectral evolution is
 inside the v3 dossier is the v2 control, not the v3 primary. V4 uses a fresh
 1,010-window cohort rather than the shared 962-window v2/v3 cohort, so its
 cross-version differences are descriptive rather than a controlled ablation.
+
+V5 used fresh, disjoint train, development, and sealed confirmation identities
+to test a raw-strain depthwise CNN and a complex-STFT CNN, each with five
+frozen replicates. Its one-shot 1,800-window development run returned
+`V5_NOT_READY`. Every protected detector/morphology retention gate passed at
+the selected thresholds, but no replicate met the detector-wise Spearman
+fidelity requirement: raw 1-D correlations ranged from 0.617 to 0.718 and
+complex-STFT correlations from 0.326 to 0.594, against a frozen lower-bound
+gate of 0.90. This is a fidelity and useful-reduction failure, not a
+morphology-specific retention failure. It falsifies the two frozen surrogate
+designs under their training contract; it does not falsify distillation in
+general. The complete interpretation and reproduction commands are in
+`docs/DANTE_LIGHT_L4_PREFILTER_V5_DEVELOPMENT_RESULT_2026-08-25.md`.
 
 ## Output location
 
