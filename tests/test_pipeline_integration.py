@@ -18,6 +18,12 @@ def test_pipeline_end_to_end(temp_workspace, obs_run, monkeypatch):
     # fetch full-run data from an integration fixture.
     monkeypatch.setenv("DANTE_EPS_COH_TRIALS", "0")
     monkeypatch.setenv("DANTE_COHESION_SEGMENTS", "0")
+    # This test exercises orchestration with a synthetic O3b fixture; it does
+    # not calibrate a scientific cross-detector threshold.  Production remains
+    # fail-closed, while the explicit opt-in lets the legacy fixture reach the
+    # downstream aggregation assertions.  The fail-closed contract itself is
+    # covered separately by test_regression_hard_constraints.py.
+    monkeypatch.setenv("DANTE_ALLOW_HEURISTIC_TAU", "1")
     
     # 1. Run Patch Analysis (Phase 4 & 5)
     class Args:
