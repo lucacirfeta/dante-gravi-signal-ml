@@ -332,6 +332,7 @@ def run_training_diagnostics(
         "routing_enabled": False,
         "pass_fail_gate_evaluated": False,
         "results": results,
+        "result_matrix_digest": canonical_json_sha256(results),
         "elapsed_s": time.perf_counter() - started,
     }
     result = {**body, "artifact_digest": canonical_json_sha256(body)}
@@ -378,6 +379,8 @@ def verify_diagnostic_result(
             ):
                 raise ContractError("v5 training diagnostic row count mismatch")
     results = payload.get("results", {})
+    if payload.get("result_matrix_digest") != canonical_json_sha256(results):
+        raise ContractError("v5 training diagnostic result matrix digest mismatch")
     if set(results) != set(ARMS):
         raise ContractError("v5 training diagnostic architecture matrix mismatch")
     metric_count = 0

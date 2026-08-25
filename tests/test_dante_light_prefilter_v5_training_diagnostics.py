@@ -109,6 +109,7 @@ def _synthetic_result() -> dict:
         "routing_enabled": False,
         "pass_fail_gate_evaluated": False,
         "results": results,
+        "result_matrix_digest": canonical_json_sha256(results),
         "elapsed_s": 1.0,
     }
     return {**body, "artifact_digest": canonical_json_sha256(body)}
