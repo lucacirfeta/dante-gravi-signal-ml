@@ -11,6 +11,11 @@ artifacts/dante_light/**/*.json text eol=lf
 artifacts/dante_light/**/*.jsonl text eol=lf
 artifacts/dante_light/*.generated.md text eol=lf
 docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md text eol=lf
+# Source and design files are also bound by SHA256 provenance contracts.
+# Keep their checkout bytes stable when global core.autocrlf=true.
+scripts/*.py text eol=lf
+src/**/*.py text eol=lf
+docs/DANTE_LIGHT*.md text eol=lf
 data/production/aggregated/*.json binary
 data/production/aggregated/*.csv binary
 data/production/aggregated/*.npy binary
