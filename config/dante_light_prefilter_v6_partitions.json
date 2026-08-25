@@ -1,0 +1,129 @@
+{
+  "contract_digest": "b7dc762509309efcff3b7ad196965fea9abd8408df38409e01a77b62e65e5e3b",
+  "download_reference": {
+    "path": "config/dante_light_prefilter_v6_download_manifest.jsonl",
+    "sha256": "491e2206ec9e3c72593488b9d2fbe829285a0cf951671ce81204d03ba085aa82"
+  },
+  "download_summary": {
+    "H1": {
+      "blocks": 228,
+      "padded_seconds": 27240.0,
+      "padded_windows": 681
+    },
+    "L1": {
+      "blocks": 212,
+      "padded_seconds": 23520.0,
+      "padded_windows": 588
+    }
+  },
+  "eligible_pool_digest": {
+    "H1": "2920ab25b9be9ef508011d342fd281bd6a77a392b88a5f9742e3b7fd5bf10ef2",
+    "L1": "1a8cbb14b382938e5b03ee6eeee19b11b9a224f8b06bf1e889447b17ed4d86a0"
+  },
+  "entries_reference": {
+    "path": "config/dante_light_prefilter_v6_partitions.jsonl",
+    "sha256": "4be7725b4d3a6376132fa14ef2ccc3881f262baa818a3ef59bd9eea25491b27e"
+  },
+  "manifest_digest": "0fd88e515aba719ceee286461cc51c61d687a48f388e3e153f98eb19d1268384",
+  "outcomes_accessed": [],
+  "schema_version": 1,
+  "scientific_boundary": {
+    "o4b_access_authorized": false,
+    "operational_routing_authorized": false,
+    "phase_b_identities_frozen": true,
+    "phase_b_training_authorized": false,
+    "phase_c_access_authorized": false,
+    "phase_c_identities_frozen": true,
+    "phase_d_access_authorized": false,
+    "phase_d_identities_reserved": true,
+    "raw_fetch_authorized_only_from_committed_download_manifest": true,
+    "teacher_target_access_authorized": false
+  },
+  "status": "FROZEN_OUTCOME_BLIND_PARTITIONS",
+  "summary": {
+    "H1": {
+      "phase_b": {
+        "blocks": 180,
+        "span_strata": {
+          "0": 36,
+          "1": 36,
+          "2": 36,
+          "3": 36,
+          "4": 36
+        }
+      },
+      "phase_c": {
+        "blocks": 60,
+        "span_strata": {
+          "0": 12,
+          "1": 12,
+          "2": 12,
+          "3": 12,
+          "4": 12
+        }
+      },
+      "phase_d_confirmation": {
+        "blocks": 150,
+        "span_strata": {
+          "0": 30,
+          "1": 30,
+          "2": 30,
+          "3": 30,
+          "4": 30
+        }
+      },
+      "phase_d_development": {
+        "blocks": 150,
+        "span_strata": {
+          "0": 30,
+          "1": 30,
+          "2": 30,
+          "3": 30,
+          "4": 30
+        }
+      }
+    },
+    "L1": {
+      "phase_b": {
+        "blocks": 180,
+        "span_strata": {
+          "0": 36,
+          "1": 36,
+          "2": 36,
+          "3": 36,
+          "4": 36
+        }
+      },
+      "phase_c": {
+        "blocks": 60,
+        "span_strata": {
+          "0": 12,
+          "1": 12,
+          "2": 12,
+          "3": 12,
+          "4": 12
+        }
+      },
+      "phase_d_confirmation": {
+        "blocks": 150,
+        "span_strata": {
+          "0": 30,
+          "1": 30,
+          "2": 30,
+          "3": 30,
+          "4": 30
+        }
+      },
+      "phase_d_development": {
+        "blocks": 150,
+        "span_strata": {
+          "0": 30,
+          "1": 30,
+          "2": 30,
+          "3": 30,
+          "4": 30
+        }
+      }
+    }
+  }
+}

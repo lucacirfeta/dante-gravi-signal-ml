@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_OUTCOME_BLIND_PARTITION_CONTRACT",
+  "freeze_id": "dante-light-l4-prefilter-v6-partitions",
+  "decision_date": "2026-08-25",
+  "outcome_access": {
+    "teacher_scores": false,
+    "student_outputs": false,
+    "morphology_labels": false,
+    "development": false,
+    "confirmation": false,
+    "o4b": false
+  },
+  "signal": {
+    "run": "O4A",
+    "detectors": ["H1", "L1"],
+    "block_duration_s": 4096,
+    "window_duration_s": 32,
+    "whitening_pad_each_side_s": 4,
+    "candidate_start_step_s": 4
+  },
+  "partition_contract": {
+    "blocks_per_detector": {
+      "phase_b": 180,
+      "phase_c": 60,
+      "phase_d_development": 150,
+      "phase_d_confirmation": 150
+    },
+    "windows_per_block": {
+      "phase_b": 8,
+      "phase_c": 1,
+      "phase_d_development": 1,
+      "phase_d_confirmation": 1
+    },
+    "phase_b_internal_split": {
+      "fit": 144,
+      "internal_validation": 36
+    }
+  },
+  "selection_contract": {
+    "eligibility": [
+      "official_GWOSC_CBC_CAT1",
+      "no_HW_INJ_overlap",
+      "no_CBC_INJ_overlap",
+      "no_BURST_INJ_overlap",
+      "at_least_eight_disjoint_32s_windows_with_4s_pad",
+      "not_used_by_prior_protocols",
+      "not_assigned_to_v5"
+    ],
+    "span_strata": 5,
+    "span_stratum_assignment": "rank_by_available_valid_start_span_then_block_index_equal_count_quintiles",
+    "partition_assignment_order": [
+      "phase_b",
+      "phase_c",
+      "phase_d_development",
+      "phase_d_confirmation"
+    ],
+    "within_stratum_order": "sha256_contract_digest_purpose_detector_block",
+    "stratum_interleave": "round_robin_strata_0_through_4",
+    "phase_b_window_selection": "eight_evenly_index_spaced_maximum_disjoint_official_starts",
+    "single_window_selection": "minimum_sha256_priority_over_maximum_disjoint_official_starts",
+    "local_availability_used_for_selection": false,
+    "local_availability_recorded_after_selection": true,
+    "seed_method": "contract_digest_as_sha256_parent_no_integer_seed"
+  },
+  "download_contract": {
+    "selection": "only_frozen_selected_padded_windows_absent_from_the_pre_freeze_raw_manifest",
+    "fetch_interval": "each_missing_selected_window_with_4s_pad_on_both_sides",
+    "destination_environment_alias": "DANTE_V6_RAW_CACHE_ROOT",
+    "default_destination": "E:/dante_cache/dante_light/prefilter_l4_v6_raw",
+    "download_before_manifest_commit_allowed": false,
+    "download_after_manifest_verification_allowed": true,
+    "download_success_is_not_scientific_eligibility": true
+  },
+  "scientific_boundary": {
+    "phase_b_identities_frozen": true,
+    "phase_c_identities_frozen": true,
+    "phase_d_identities_reserved": true,
+    "phase_b_training_authorized": false,
+    "phase_c_access_authorized": false,
+    "phase_d_access_authorized": false,
+    "o4b_access_authorized": false,
+    "teacher_target_access_authorized": false,
+    "raw_fetch_authorized_only_from_committed_download_manifest": true,
+    "operational_routing_authorized": false
+  },
+  "source_references": {
+    "phase_b_planning_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_design/phase_b_planning_audit_v6.json",
+      "sha256": "30ff691a458a7c7dbdd0793d164ca3f549f6655ff5938891a7b5b03f40455a0c"
+    },
+    "phase_c_power_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_c_power.json",
+      "sha256": "6c5b933f6eb4ad99a18c25c475071713ce65500eef0bbc115af67c9a019f77c2"
+    },
+    "phase_c_power_artifact": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_design/phase_c_fidelity_power_v6.json",
+      "sha256": "cc350b8f344a1c650f4cb1b746ea509b7d8a6ed6ee35cdb3fd6c9dd2126da5c3"
+    },
+    "gwosc_segment_snapshot": {
+      "path": "config/dante_light_prefilter_v4_segments.json",
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
+    },
+    "v5_identity_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
+      "sha256": "23ea8ef97b77201e06297d98b5c6dfb24b284420875913f03b5456d36a0403a6"
+    },
+    "v5_split_entries": {
+      "path": "config/dante_light_prefilter_splits_v5.jsonl",
+      "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "implementation": {
+      "path": "src/dante_light/prefilter_v6_partitions.py",
+      "sha256": "427cf4840f193d13f55270c593c7c1bf57a667e113ec143aa32012ff985a131f"
+    },
+    "runner": {
+      "path": "scripts/freeze_dante_light_prefilter_v6_partitions.py",
+      "sha256": "be5d773353a73b57cc93a7d49a7f518ee5fdd1ab128c546819b00bcc5d4a4f3c"
+    },
+    "verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v6_partitions.py",
+      "sha256": "b8d85ff265cca1d5de27ac1b26b8cadd260908a98835ad629cb19621e48aaa80"
+    }
+  },
+  "contract_digest": "b7dc762509309efcff3b7ad196965fea9abd8408df38409e01a77b62e65e5e3b"
+}
