@@ -1,0 +1,333 @@
+{
+  "all_five_members_complete": true,
+  "artifact_digest": "827260ea03c16ea13771deb8f0c55f1654d88260c6709bfcbfc693458de5b402",
+  "authorization_digest": "dd8429c03ab6ed810d7c3da568ce2f875c4693fb2a2f9171c281e432f37c1a63",
+  "cache_location": {
+    "environment_alias": "DANTE_V7_TRAINING_CACHE_ROOT",
+    "run_subdirectory": "student_dc1858b9c6dc8902b56c5af4d07dd37ffb2098e7f61bca6613880ee6973b0365"
+  },
+  "candidate_promoted": false,
+  "code_references": {
+    "core_preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "data_loader": {
+      "path": "src/core/data_loader.py",
+      "sha256": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636"
+    },
+    "exact_teacher": {
+      "path": "src/dante_light/prefilter_v5_teacher.py",
+      "sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3"
+    },
+    "historical_thresholds": {
+      "path": "config/dante_light_epochs_v1.json",
+      "sha256": "3b245dbda9b35affa5e22a0ea4bde9717ba3ea554de79529b7e92a9733ae318e"
+    },
+    "identity_manifest": {
+      "path": "config/dante_light_prefilter_v7_identities.jsonl",
+      "sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f"
+    },
+    "patch_scorer": {
+      "path": "src/core/patch_scorer.py",
+      "sha256": "6367d7dfff43d2225d41ea9723b18fd8dbab3e4bce4dfefc1d52f902e9ef6363"
+    },
+    "reference_artifacts": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "dbf5fc8d4ebc68a6363ddc6009d36b5f3dcef5927555bc58fb3887adde514953"
+    },
+    "student_architecture": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    },
+    "training_contract": {
+      "path": "config/dante_light_prefilter_v7_training_contract.json",
+      "sha256": "8df867190c7fd10010f3a4ad253ad1c9fe7254774baf1adfe9b02a91b38c3421"
+    },
+    "training_implementation": {
+      "path": "src/dante_light/prefilter_v7_training.py",
+      "sha256": "a70641100f8dad0030a7978a45ae048efd1b2e42e29f42967bbf92d0d91003e6"
+    },
+    "training_runner": {
+      "path": "scripts/run_dante_light_prefilter_v7_training.py",
+      "sha256": "bb60e31668c043478719936498c9e27c7fdcc8a79b5c655b06ef1a044057557a"
+    },
+    "training_split": {
+      "path": "config/dante_light_prefilter_v7_training_split.jsonl",
+      "sha256": "29560cbd73161a6f723bf5d2fe706927d46ac728f379db084210bf6ef40277bb"
+    }
+  },
+  "confirmation": [],
+  "ensemble_validation_diagnostic_only": {
+    "member_equal_detector_bce": [
+      0.10638130454805818,
+      0.10757243275769462,
+      0.12144802394979232,
+      0.1031280204396568,
+      0.10268734122813197
+    ],
+    "selection_or_promotion_role": false
+  },
+  "environment": {
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 5070",
+    "cuda_runtime": "12.8",
+    "deterministic_algorithms": true,
+    "device": "cuda",
+    "dtype": "float32",
+    "numpy": "2.4.5",
+    "python": "3.11.5",
+    "torch": "2.12.0.dev20260408+cu128"
+  },
+  "member_count": 5,
+  "members": [
+    {
+      "best_epoch": 77,
+      "best_model": {
+        "path": "member_0/best_model.pt",
+        "sha256": "8e7c24b1cd0a96028c2161e2c245d049d0c75a4fad3adf2c5d61aa4c1b04a60c"
+      },
+      "best_validation": {
+        "by_detector": {
+          "H1": {
+            "auroc_diagnostic_only": 1.0,
+            "average_precision_diagnostic_only": 1.0,
+            "bce": 0.05300434434014275,
+            "n": 60,
+            "positive": 30,
+            "score_mean": 0.540082914646094,
+            "score_std_population": 0.47066996438172415
+          },
+          "L1": {
+            "auroc_diagnostic_only": 0.9944196428571429,
+            "average_precision_diagnostic_only": 0.9953368015552995,
+            "bce": 0.1597582647559736,
+            "n": 60,
+            "positive": 32,
+            "score_mean": 0.49721687633233763,
+            "score_std_population": 0.4734634526995193
+          }
+        },
+        "equal_detector_mean_bce": 0.10638130454805818
+      },
+      "candidate_promotion_allowed": false,
+      "completed_epochs": 100,
+      "confirmation": [],
+      "elapsed_this_invocation_s": 21.17578990000038,
+      "member_digest": "ccf5e6b773ec6b2ddb70e79869e997089ce82841019547a4fcae33828b75b82a",
+      "member_index": 0,
+      "metrics": {
+        "path": "member_0/metrics.json",
+        "sha256": "adc5c58f47165de3fd9ad737f3ee2a3e287c82bc7afac60fdbedf7cfc9f2eb8f"
+      },
+      "o4b": [],
+      "risk_calibration": [],
+      "run_key": "dc1858b9c6dc8902b56c5af4d07dd37ffb2098e7f61bca6613880ee6973b0365",
+      "schema_version": 1,
+      "seed": 60647654006011518,
+      "status": "TRAINING_COMPLETE_NON_PROMOTABLE",
+      "threshold_search": []
+    },
+    {
+      "best_epoch": 74,
+      "best_model": {
+        "path": "member_1/best_model.pt",
+        "sha256": "d912515240fa907298b491535db42e5dbf2bd63ea538397d7e8e89f764d119df"
+      },
+      "best_validation": {
+        "by_detector": {
+          "H1": {
+            "auroc_diagnostic_only": 1.0,
+            "average_precision_diagnostic_only": 1.0,
+            "bce": 0.033879730644045244,
+            "n": 60,
+            "positive": 30,
+            "score_mean": 0.5302502014053364,
+            "score_std_population": 0.4734947503657819
+          },
+          "L1": {
+            "auroc_diagnostic_only": 0.9698660714285714,
+            "average_precision_diagnostic_only": 0.9831664007245127,
+            "bce": 0.181265134871344,
+            "n": 60,
+            "positive": 32,
+            "score_mean": 0.49428753172978757,
+            "score_std_population": 0.471226135082136
+          }
+        },
+        "equal_detector_mean_bce": 0.10757243275769462
+      },
+      "candidate_promotion_allowed": false,
+      "completed_epochs": 100,
+      "confirmation": [],
+      "elapsed_this_invocation_s": 20.031347000003734,
+      "member_digest": "385c65282d1b1ff9229ce508625223d768a57a9bb929d30425aaee2e9bae8d8c",
+      "member_index": 1,
+      "metrics": {
+        "path": "member_1/metrics.json",
+        "sha256": "de7be937fc8cb8370241af016bfb7ecd92c3d0c337e2a707bdc64899ef4a6908"
+      },
+      "o4b": [],
+      "risk_calibration": [],
+      "run_key": "dc1858b9c6dc8902b56c5af4d07dd37ffb2098e7f61bca6613880ee6973b0365",
+      "schema_version": 1,
+      "seed": 432170873019253513,
+      "status": "TRAINING_COMPLETE_NON_PROMOTABLE",
+      "threshold_search": []
+    },
+    {
+      "best_epoch": 40,
+      "best_model": {
+        "path": "member_2/best_model.pt",
+        "sha256": "fb6233bf1cbd4ab16fea433ecfc241753be2bee3cba7c4f5a3fc675343f6eff3"
+      },
+      "best_validation": {
+        "by_detector": {
+          "H1": {
+            "auroc_diagnostic_only": 1.0,
+            "average_precision_diagnostic_only": 1.0,
+            "bce": 0.042330452583252305,
+            "n": 60,
+            "positive": 30,
+            "score_mean": 0.5360537025146186,
+            "score_std_population": 0.46960941227803327
+          },
+          "L1": {
+            "auroc_diagnostic_only": 0.9743303571428572,
+            "average_precision_diagnostic_only": 0.9849544755479736,
+            "bce": 0.20056559531633233,
+            "n": 60,
+            "positive": 32,
+            "score_mean": 0.4789245125837624,
+            "score_std_population": 0.46526559358163216
+          }
+        },
+        "equal_detector_mean_bce": 0.12144802394979232
+      },
+      "candidate_promotion_allowed": false,
+      "completed_epochs": 100,
+      "confirmation": [],
+      "elapsed_this_invocation_s": 20.004411800000526,
+      "member_digest": "665e14e94e86c836c0b7ab102f625eb409943cc81a661d26a4c8e91fd3c21d87",
+      "member_index": 2,
+      "metrics": {
+        "path": "member_2/metrics.json",
+        "sha256": "3501c29dcecd66fb28bdaced9f76960de7a9fe44ec270e5334f5b3602e419ab0"
+      },
+      "o4b": [],
+      "risk_calibration": [],
+      "run_key": "dc1858b9c6dc8902b56c5af4d07dd37ffb2098e7f61bca6613880ee6973b0365",
+      "schema_version": 1,
+      "seed": 3237144634297552960,
+      "status": "TRAINING_COMPLETE_NON_PROMOTABLE",
+      "threshold_search": []
+    },
+    {
+      "best_epoch": 82,
+      "best_model": {
+        "path": "member_3/best_model.pt",
+        "sha256": "fd1fd6d4bef108c6835bec6a2e4e1c179917e02e7047bb0cc530b178b2c48f1e"
+      },
+      "best_validation": {
+        "by_detector": {
+          "H1": {
+            "auroc_diagnostic_only": 1.0,
+            "average_precision_diagnostic_only": 1.0,
+            "bce": 0.04052078554681785,
+            "n": 60,
+            "positive": 30,
+            "score_mean": 0.5323856826444777,
+            "score_std_population": 0.476927123526749
+          },
+          "L1": {
+            "auroc_diagnostic_only": 0.9866071428571429,
+            "average_precision_diagnostic_only": 0.9903828909612625,
+            "bce": 0.16573525533249575,
+            "n": 60,
+            "positive": 32,
+            "score_mean": 0.4911116525103959,
+            "score_std_population": 0.4852694004735886
+          }
+        },
+        "equal_detector_mean_bce": 0.1031280204396568
+      },
+      "candidate_promotion_allowed": false,
+      "completed_epochs": 100,
+      "confirmation": [],
+      "elapsed_this_invocation_s": 20.02497669999866,
+      "member_digest": "4e58e25a705cc5196e490db0cce22e33f2b49d5912850ff13434873f042428c9",
+      "member_index": 3,
+      "metrics": {
+        "path": "member_3/metrics.json",
+        "sha256": "6f89182d34a11ac92dcf8484b2744ee7312225ac26731c92ce105ec0dc389349"
+      },
+      "o4b": [],
+      "risk_calibration": [],
+      "run_key": "dc1858b9c6dc8902b56c5af4d07dd37ffb2098e7f61bca6613880ee6973b0365",
+      "schema_version": 1,
+      "seed": 5640515401574403673,
+      "status": "TRAINING_COMPLETE_NON_PROMOTABLE",
+      "threshold_search": []
+    },
+    {
+      "best_epoch": 79,
+      "best_model": {
+        "path": "member_4/best_model.pt",
+        "sha256": "819b3d60fc83696b8c369018544ffa2a2a9f83d5b2f278ccf115938a205f202d"
+      },
+      "best_validation": {
+        "by_detector": {
+          "H1": {
+            "auroc_diagnostic_only": 1.0,
+            "average_precision_diagnostic_only": 1.0,
+            "bce": 0.036803992360700685,
+            "n": 60,
+            "positive": 30,
+            "score_mean": 0.5287788346875459,
+            "score_std_population": 0.47866221945778153
+          },
+          "L1": {
+            "auroc_diagnostic_only": 0.9921875,
+            "average_precision_diagnostic_only": 0.993792400010898,
+            "bce": 0.16857069009556327,
+            "n": 60,
+            "positive": 32,
+            "score_mean": 0.4942716610307495,
+            "score_std_population": 0.4755687906500485
+          }
+        },
+        "equal_detector_mean_bce": 0.10268734122813197
+      },
+      "candidate_promotion_allowed": false,
+      "completed_epochs": 100,
+      "confirmation": [],
+      "elapsed_this_invocation_s": 19.805181400006404,
+      "member_digest": "4ed33bc578e5e3ad9bc8f7b8856f2f7451d25e778ac98c80d8b38a17b551a66e",
+      "member_index": 4,
+      "metrics": {
+        "path": "member_4/metrics.json",
+        "sha256": "6acf41240e1233f556b903ad59286fe7cede17317849243513e4cf36a810d2c8"
+      },
+      "o4b": [],
+      "risk_calibration": [],
+      "run_key": "dc1858b9c6dc8902b56c5af4d07dd37ffb2098e7f61bca6613880ee6973b0365",
+      "schema_version": 1,
+      "seed": 8488811708372497577,
+      "status": "TRAINING_COMPLETE_NON_PROMOTABLE",
+      "threshold_search": []
+    }
+  ],
+  "o4b": [],
+  "risk_calibration": [],
+  "routing_enabled": false,
+  "run_key": "dc1858b9c6dc8902b56c5af4d07dd37ffb2098e7f61bca6613880ee6973b0365",
+  "schema_version": 1,
+  "status": "TRAINING_COMPLETE_NON_PROMOTABLE",
+  "teacher_ledger_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v7_training/teacher_ledger_summary_v7.json",
+    "sha256": "5e294147238e8e72a0e1c2bccefdb431ce62398dfc1f16e65280fa17b9e3eb6c"
+  },
+  "threshold_search": [],
+  "threshold_search_automatic_access": false,
+  "training_contract_digest": "03c75c99fc2c3a930601727d49e7dee29284782e3edc263384ad6ee064c9d8f1"
+}
