@@ -49,10 +49,18 @@ Artifact digest:
 
 - v7 freeze and training verifier: PASS;
 - targeted v7 tests: 19 passed;
+- independent clean-checkout v7 verifiers and targeted tests: PASS;
 - complete repository suite: 570 passed, 1 skipped;
 - training strain and teacher labels accessed: none;
 - `threshold_search`, `risk_calibration`, confirmation and O4b accessed: none;
 - candidate promoted or routing enabled: no.
+
+The clean-checkout audit initially exposed one pre-existing Windows line-ending
+provenance defect in the v7 identity header. Repository references now use the
+canonical Git blob for tracked clean files, while accepting equivalent working
+tree bytes during verification. The 4,380 frozen identities did not change;
+only portable provenance hashes, the dependent header/seal digests, and the
+still-outcome-blind training split were regenerated.
 
 The next permitted action requires a separate scientific checkpoint to open
 the training partition. `threshold_search` remains forbidden even after that
