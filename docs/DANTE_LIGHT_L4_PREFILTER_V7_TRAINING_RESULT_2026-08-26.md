@@ -128,6 +128,23 @@ The execution verifier reports `PASS` for authorization and the teacher ledger,
 and `PASS_NON_PROMOTABLE` for training. The latter status is intentional and
 must not be shortened to an operational PASS.
 
+### Independent checkout audit
+
+The first clean-clone audit exposed that the immutable authorization had been
+created from Windows checkout-byte hashes, including mixed LF/CRLF files. This
+did not change the executed content or results, but made direct verification
+fail on an LF checkout. A retrospective, verification-only bridge now binds
+each legacy checkout hash to the corresponding blob in evidence commit
+`2cd8bc91c1d4960762ea69098700f93490a8d782` and to its normalized-LF digest.
+It does not rewrite the authorization, run keys, or result artifacts, and it
+rejects semantic working-tree changes.
+
+At commit `f408f0a`, a fresh GitHub clone with different checkout line endings
+passed the full v7 execution verifier and all seven v7 execution regression
+tests. The bridge is
+`config/dante_light_prefilter_v7_reference_bridge.json`, digest
+`6b8f7db6d9b18dad7c202b0fb844cb9af5843548b20cd4599f427ebb9b0a360b`.
+
 ## Next checkpoint
 
 Opening `threshold_search` requires an explicit scientific decision. If
