@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
+import subprocess
 
 import numpy as np
 import pytest
@@ -18,15 +20,44 @@ from src.dante_light.prefilter_v7_training import (
     strict_defer_label,
     training_rows,
 )
+from src.dante_light.prefilter_v7_verification import (
+    _portable_reference_matches,
+    load_training_authorization_for_verification,
+)
 
 
 def test_v7_authorization_is_training_only_and_digest_closed() -> None:
-    receipt = load_training_authorization()
+    receipt = load_training_authorization_for_verification(
+        DEFAULT_AUTHORIZATION, root=Path(__file__).resolve().parents[1]
+    )
     assert receipt["allowed"]["partition"] == "training"
     assert receipt["forbidden"] == {
         "threshold_search": [], "risk_calibration": [], "confirmation": [], "o4b": [],
         "routing": False, "member_selection": False, "second_stage_distillation": False,
     }
+
+
+def test_v7_verification_accepts_only_line_ending_equivalence(tmp_path: Path) -> None:
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.invalid"],
+        cwd=tmp_path,
+        check=True,
+    )
+    path = tmp_path / "sample.py"
+    path.write_bytes(b"a=1\nb=2\n")
+    subprocess.run(["git", "add", "sample.py"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "fixture"], cwd=tmp_path, check=True)
+    crlf_reference = {
+        "path": "sample.py",
+        "sha256": hashlib.sha256(b"a=1\r\nb=2\r\n").hexdigest(),
+    }
+    assert _portable_reference_matches(tmp_path, crlf_reference, "fixture") == path
+
+    path.write_bytes(b"a=1\nb=3\n")
+    with pytest.raises(ContractError, match="hash mismatch"):
+        _portable_reference_matches(tmp_path, crlf_reference, "fixture")
 
 
 def test_v7_authorization_rejects_widened_scope(tmp_path: Path) -> None:

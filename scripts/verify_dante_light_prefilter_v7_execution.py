@@ -16,12 +16,17 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.prefilter_v7_training import (
     DEFAULT_AUTHORIZATION, DEFAULT_CACHE, DEFAULT_LEDGER_SUMMARY,
     DEFAULT_TARGETS, DEFAULT_TRAINING_SUMMARY, file_sha256,
-    load_training_authorization, training_rows,
+    training_rows,
+)
+from src.dante_light.prefilter_v7_verification import (
+    load_training_authorization_for_verification,
 )
 
 
 def verify(cache_root: Path, *, require_training: bool) -> dict:
-    authorization = load_training_authorization(root=ROOT)
+    authorization = load_training_authorization_for_verification(
+        DEFAULT_AUTHORIZATION, root=ROOT
+    )
     rows = training_rows(root=ROOT)
     ledger = json.loads(DEFAULT_LEDGER_SUMMARY.read_text(encoding="utf-8"))
     ledger_body = dict(ledger); ledger_digest = ledger_body.pop("artifact_digest", None)
