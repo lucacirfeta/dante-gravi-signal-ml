@@ -1,0 +1,79 @@
+{
+  "allowed": {
+    "ensemble_members": 5,
+    "partition": "training",
+    "student_fit": true,
+    "teacher_scoring": true
+  },
+  "authorization_digest": "dd8429c03ab6ed810d7c3da568ce2f875c4693fb2a2f9171c281e432f37c1a63",
+  "authorization_id": "dante-light-l4-prefilter-v7-training-only-2026-08-26",
+  "authorization_source": {
+    "actor": "Luca Cirfeta",
+    "date": "2026-08-26",
+    "instruction": "procedi",
+    "interpreted_scope": "open only v7 training; stop before threshold_search"
+  },
+  "forbidden": {
+    "confirmation": [],
+    "member_selection": false,
+    "o4b": [],
+    "risk_calibration": [],
+    "routing": false,
+    "second_stage_distillation": false,
+    "threshold_search": []
+  },
+  "identity_assignment_digest": "e1af11cbffa26a1ebffec832ded38dca8c1c3154a663a4454b744588e0a409dd",
+  "schema_version": 1,
+  "source_references": {
+    "core_preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "data_loader": {
+      "path": "src/core/data_loader.py",
+      "sha256": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636"
+    },
+    "exact_teacher": {
+      "path": "src/dante_light/prefilter_v5_teacher.py",
+      "sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3"
+    },
+    "historical_thresholds": {
+      "path": "config/dante_light_epochs_v1.json",
+      "sha256": "3b245dbda9b35affa5e22a0ea4bde9717ba3ea554de79529b7e92a9733ae318e"
+    },
+    "identity_manifest": {
+      "path": "config/dante_light_prefilter_v7_identities.jsonl",
+      "sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f"
+    },
+    "patch_scorer": {
+      "path": "src/core/patch_scorer.py",
+      "sha256": "6367d7dfff43d2225d41ea9723b18fd8dbab3e4bce4dfefc1d52f902e9ef6363"
+    },
+    "reference_artifacts": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "dbf5fc8d4ebc68a6363ddc6009d36b5f3dcef5927555bc58fb3887adde514953"
+    },
+    "student_architecture": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    },
+    "training_contract": {
+      "path": "config/dante_light_prefilter_v7_training_contract.json",
+      "sha256": "8df867190c7fd10010f3a4ad253ad1c9fe7254774baf1adfe9b02a91b38c3421"
+    },
+    "training_implementation": {
+      "path": "src/dante_light/prefilter_v7_training.py",
+      "sha256": "a70641100f8dad0030a7978a45ae048efd1b2e42e29f42967bbf92d0d91003e6"
+    },
+    "training_runner": {
+      "path": "scripts/run_dante_light_prefilter_v7_training.py",
+      "sha256": "bb60e31668c043478719936498c9e27c7fdcc8a79b5c655b06ef1a044057557a"
+    },
+    "training_split": {
+      "path": "config/dante_light_prefilter_v7_training_split.jsonl",
+      "sha256": "29560cbd73161a6f723bf5d2fe706927d46ac728f379db084210bf6ef40277bb"
+    }
+  },
+  "status": "AUTHORIZED_TRAINING_ONLY",
+  "training_contract_digest": "03c75c99fc2c3a930601727d49e7dee29284782e3edc263384ad6ee064c9d8f1"
+}
