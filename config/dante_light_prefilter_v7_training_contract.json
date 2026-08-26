@@ -49,11 +49,11 @@
     "member_architecture": "Raw1DTeacherAlignedStudent",
     "member_count": 5,
     "member_seeds": [
-      5744926920946080634,
-      7346134278344290659,
-      266320219681031187,
-      4472323255175088058,
-      7085918270450271059
+      60647654006011518,
+      432170873019253513,
+      3237144634297552960,
+      5640515401574403673,
+      8488811708372497577
     ],
     "member_selection_allowed": false,
     "second_stage_distillation_allowed": false,
@@ -66,10 +66,10 @@
   },
   "freeze_basis_commit": "8b563eb",
   "internal_split": {
-    "assignment_digest": "88c75dd1825d934e378951ff2f92801ea1ab2444c3f155e22a345d06dec21df7",
+    "assignment_digest": "e1af11cbffa26a1ebffec832ded38dca8c1c3154a663a4454b744588e0a409dd",
     "assignment_reference": {
       "path": "config/dante_light_prefilter_v7_training_split.jsonl",
-      "sha256": "f804cbb0775f8a3b5ab80f91ae48858d2fbc16485af6c3b5fcb4621aa457e27d"
+      "sha256": "29560cbd73161a6f723bf5d2fe706927d46ac728f379db084210bf6ef40277bb"
     },
     "counts": {
       "H1": {
@@ -88,10 +88,10 @@
     "fit_fraction": 0.8,
     "internal_validation_fraction": 0.2,
     "seeds_by_cell": {
-      "H1/background": 6613634961364082965,
-      "H1/teacher_positive": 7462491959416736301,
-      "L1/background": 6647051681152676623,
-      "L1/teacher_positive": 8246264656023592601
+      "H1/background": 339443971077246121,
+      "H1/teacher_positive": 3206628284412504856,
+      "L1/background": 3592339976859879058,
+      "L1/teacher_positive": 1264179885914582646
     },
     "stratify_by": [
       "detector",
@@ -139,8 +139,8 @@
     "scheduler": "none_intentional"
   },
   "parent_digests": {
-    "confirmation_seal_digest": "b95c2079fb0bd83b9150425c83c89ced6165add6c76f57079bb1824b439529da",
-    "identity_header_digest": "319154f3622ae5cbdd84d467d57f480a58aabe1baa312e580f52431c6e37a8f3",
+    "confirmation_seal_digest": "c840ff1e952cfd0e11cd95cc024a74a0c3ebf376572f2188425502e7685be4af",
+    "identity_header_digest": "8085cffbe5eaed0cff1fca1bd2909d717360f90c4cf579ba81a14645864641c1",
     "identity_manifest_sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f",
     "outcome_blind_contract_digest": "3ace13984dee36fee6c896c5d51d0f23b8f7d0f0cf9fb1ca7bc913254f804e2c"
   },
@@ -173,11 +173,11 @@
     },
     "freeze_implementation": {
       "path": "src/dante_light/prefilter_v7_training_freeze.py",
-      "sha256": "f4b46e482e8ea27ad56d6cc7bfca1f87413f12b48ed9f89882aff9e05345bf13"
+      "sha256": "18ae88637646899404c1dc83d051729e6822b8ecdf7963049bf0ea618a8cbd0c"
     },
     "identity_header": {
       "path": "config/dante_light_prefilter_v7_identities.json",
-      "sha256": "a17a7564b2261df9dca6fdd4d72216b5799ac9b3f2f45c2b74d1791315c7366e"
+      "sha256": "7154e6bce082c286425c254cbe483a2ba470c57fcc23093041f5e911137e3a3c"
     },
     "identity_manifest": {
       "path": "config/dante_light_prefilter_v7_identities.jsonl",
@@ -205,6 +205,6 @@
     }
   },
   "status": "FROZEN_OUTCOME_BLIND_BEFORE_TRAINING",
-  "training_contract_digest": "8c44916302511fab6de079521f5eaed0e4ad873ec9bbe7841d358da0df92a27c",
+  "training_contract_digest": "03c75c99fc2c3a930601727d49e7dee29284782e3edc263384ad6ee064c9d8f1",
   "training_id": "dante-light-l4-prefilter-v7-selective-deferral-training"
 }

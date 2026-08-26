@@ -13,6 +13,7 @@ import json
 import math
 import os
 from pathlib import Path
+import subprocess
 from typing import Any, Iterable, Mapping, Sequence
 
 import torch
@@ -22,7 +23,6 @@ from src.dante_light.prefilter_v4_student import trainable_parameter_count
 from src.dante_light.prefilter_v6_phase_a import (
     Raw1DTeacherAlignedStudent,
     aggregation_contract,
-    load_phase_a_contract,
 )
 from src.dante_light.prefilter_v7_freeze import verify_freeze
 
@@ -101,7 +101,20 @@ def _resolve_reference(root: Path, value: Mapping[str, Any], label: str) -> Path
     path = (root / relative).resolve()
     if not path.is_relative_to(root.resolve()) or not path.is_file():
         raise ContractError(f"v7 training reference is absent: {label}")
-    if file_sha256(path) != str(value["sha256"]):
+    candidates = {file_sha256(path)}
+    try:
+        candidates.add(
+            hashlib.sha256(
+                subprocess.check_output(
+                    ["git", "show", f"HEAD:{value['path']}"],
+                    cwd=root,
+                    stderr=subprocess.DEVNULL,
+                )
+            ).hexdigest()
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
+    if str(value["sha256"]) not in candidates:
         raise ContractError(f"v7 training reference hash mismatch: {label}")
     return path
 
@@ -175,9 +188,17 @@ def assign_internal_split(
 
 def _aggregation(root: Path):
     phase_path = root / "config/dante_light_prefilter_v6_phase_a.json"
-    phase = load_phase_a_contract(phase_path, root=root)
+    phase = _read_json(phase_path)
+    body = dict(phase)
+    declared = body.pop("contract_digest", None)
+    if (
+        phase.get("status") != "FROZEN_OUTCOME_BLIND_COMPUTE_FEASIBILITY"
+        or declared != canonical_json_sha256(body)
+    ):
+        raise ContractError("v6 Phase-A aggregation parent is not frozen")
     teacher_ref = phase["parent_references"]["teacher_contract"]
-    teacher = _read_json(root / teacher_ref["path"])
+    teacher_path = _resolve_reference(root, teacher_ref, "v6_phase_a/teacher_contract")
+    teacher = _read_json(teacher_path)
     return aggregation_contract(phase, teacher)
 
 

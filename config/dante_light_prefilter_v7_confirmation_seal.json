@@ -22,7 +22,7 @@
   "freeze_basis_commit": "85de5b9ee31d787eea511177aa82a8b67e2ecdff",
   "identity_header_reference": {
     "path": "config/dante_light_prefilter_v7_identities.json",
-    "sha256": "a17a7564b2261df9dca6fdd4d72216b5799ac9b3f2f45c2b74d1791315c7366e"
+    "sha256": "7154e6bce082c286425c254cbe483a2ba470c57fcc23093041f5e911137e3a3c"
   },
   "identity_manifest_reference": {
     "path": "config/dante_light_prefilter_v7_identities.jsonl",
@@ -42,7 +42,7 @@
     "sha256": "57ea8a6d8c6d779dda85821d54f977261c4665f9748cc280e258b687012f696f"
   },
   "schema_version": 1,
-  "seal_digest": "b95c2079fb0bd83b9150425c83c89ced6165add6c76f57079bb1824b439529da",
+  "seal_digest": "c840ff1e952cfd0e11cd95cc024a74a0c3ebf376572f2188425502e7685be4af",
   "status": "SEALED_NOT_OPENED",
   "threshold_binding_required_before_unlock": [
     "model_digest",

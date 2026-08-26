@@ -1,5 +1,5 @@
 {
-  "artifact_digest": "b02b7f3c2288a6780fb29c464976e5704fc795d6b20992fb77eb6b06a6281846",
+  "artifact_digest": "d8b157789bd9c0c1ce8f3d69cc4eb0ff7706adcdfd3cb45db5513aee2076af2e",
   "counts": {
     "H1": {
       "exact_dante_retained": 23,
@@ -37,6 +37,6 @@
   "status": "RETROSPECTIVE_DESIGN_EVIDENCE_VERIFIED",
   "threshold_reference": {
     "path": "config/dante_light_epochs_v1.json",
-    "sha256": "3b245dbda9b35affa5e22a0ea4bde9717ba3ea554de79529b7e92a9733ae318e"
+    "sha256": "1f4bfa593ee2fe1902b390417b495cba83eab3d7447065801f6a301d34335ca6"
   }
 }

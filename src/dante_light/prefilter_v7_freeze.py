@@ -16,6 +16,7 @@ import json
 import math
 import os
 from pathlib import Path
+import subprocess
 from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
@@ -81,7 +82,45 @@ def _write_jsonl(path: Path, rows: Iterable[Mapping[str, Any]]) -> None:
 def repository_reference(root: Path, path: Path) -> dict[str, str]:
     resolved = path.resolve()
     relative = resolved.relative_to(root.resolve()).as_posix()
-    return {"path": relative, "sha256": file_sha256(resolved)}
+    digest = file_sha256(resolved)
+    try:
+        unchanged = subprocess.run(
+            ["git", "diff", "--quiet", "HEAD", "--", relative],
+            cwd=root,
+            check=False,
+        ).returncode == 0
+        tracked = subprocess.run(
+            ["git", "cat-file", "-e", f"HEAD:{relative}"],
+            cwd=root,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode == 0
+        if unchanged and tracked:
+            digest = hashlib.sha256(
+                subprocess.check_output(["git", "show", f"HEAD:{relative}"], cwd=root)
+            ).hexdigest()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return {"path": relative, "sha256": digest}
+
+
+def _reference_matches(root: Path, reference: Mapping[str, Any]) -> bool:
+    path = root / str(reference["path"])
+    candidates = {file_sha256(path)} if path.is_file() else set()
+    try:
+        candidates.add(
+            hashlib.sha256(
+                subprocess.check_output(
+                    ["git", "show", f"HEAD:{reference['path']}"],
+                    cwd=root,
+                    stderr=subprocess.DEVNULL,
+                )
+            ).hexdigest()
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return str(reference["sha256"]) in candidates
 
 
 def _priority(seed: str, purpose: str, *identity: object) -> str:
@@ -1105,7 +1144,7 @@ def verify_freeze(root: Path = ROOT) -> dict[str, Any]:
         *header["source_references"].values(),
     ]:
         path = root / reference["path"]
-        if not path.is_file() or file_sha256(path) != reference["sha256"]:
+        if not path.is_file() or not _reference_matches(root, reference):
             raise ContractError(f"v7 reference mismatch: {reference['path']}")
     if any(header["outcome_access_at_freeze"].values()):
         raise ContractError("v7 outcome boundary violated")
@@ -1119,7 +1158,7 @@ def verify_freeze(root: Path = ROOT) -> dict[str, Any]:
     prevalence_rows_path = root / prevalence_rows_reference["path"]
     if (
         not prevalence_rows_path.is_file()
-        or file_sha256(prevalence_rows_path) != prevalence_rows_reference["sha256"]
+        or not _reference_matches(root, prevalence_rows_reference)
     ):
         raise ContractError("v7 prevalence row-ledger reference mismatch")
     prevalence_rows = _read_jsonl(prevalence_rows_path)

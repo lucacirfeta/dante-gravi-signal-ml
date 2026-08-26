@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from collections import Counter
+import hashlib
 import json
+import subprocess
 
 import pytest
 
 from src.dante_light.prefilter_v5_power import gate_pass_probability
-from src.dante_light.prefilter_v7_freeze import ROOT, verify_freeze
+from src.dante_light.prefilter_v7_freeze import ROOT, repository_reference, verify_freeze
 
 
 def _jsonl(path):
@@ -100,3 +102,23 @@ def test_v7_background_prevalence_is_rare_but_not_empty() -> None:
     assert audit["counts"]["L1"]["exact_dante_retained"] == 49
     assert audit["decision_rule"] == "native_o4a_novelty_score_strictly_greater_than_historical_detector_threshold"
     assert audit["interpretation"]["zero_of_1440_claim_rejected"] is True
+
+
+def test_v7_repository_reference_is_portable_across_checkout_line_endings(
+    tmp_path,
+) -> None:
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=tmp_path, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.invalid"],
+        cwd=tmp_path,
+        check=True,
+    )
+    subprocess.run(["git", "config", "core.autocrlf", "true"], cwd=tmp_path, check=True)
+    path = tmp_path / "sample.py"
+    path.write_bytes(b"a=1\nb=2\n")
+    subprocess.run(["git", "add", "sample.py"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "fixture"], cwd=tmp_path, check=True)
+    path.write_bytes(b"a=1\r\nb=2\r\n")
+    reference = repository_reference(tmp_path, path)
+    assert reference["sha256"] == hashlib.sha256(b"a=1\nb=2\n").hexdigest()
