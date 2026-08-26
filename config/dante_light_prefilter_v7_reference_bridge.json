@@ -1,0 +1,106 @@
+{
+  "authorization_digest": "dd8429c03ab6ed810d7c3da568ce2f875c4693fb2a2f9171c281e432f37c1a63",
+  "basis_commit": "2cd8bc91c1d4960762ea69098700f93490a8d782",
+  "bridge_digest": "6b8f7db6d9b18dad7c202b0fb844cb9af5843548b20cd4599f427ebb9b0a360b",
+  "entries": {
+    "core_preprocessor": {
+      "basis_blob_sha256": "3883cf80ab64f723faa3f97e23263323aa0d773dd33e13cb0164ead247d7ff2d",
+      "legacy_checkout_sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2",
+      "legacy_crlf_count": 389,
+      "legacy_lf_count": 389,
+      "normalized_lf_sha256": "3883cf80ab64f723faa3f97e23263323aa0d773dd33e13cb0164ead247d7ff2d",
+      "path": "src/core/preprocessor.py"
+    },
+    "data_loader": {
+      "basis_blob_sha256": "95058078a9155a3cc66866a42523cafe57f48b257d7efae5ec022f67f878026e",
+      "legacy_checkout_sha256": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636",
+      "legacy_crlf_count": 550,
+      "legacy_lf_count": 560,
+      "normalized_lf_sha256": "95058078a9155a3cc66866a42523cafe57f48b257d7efae5ec022f67f878026e",
+      "path": "src/core/data_loader.py"
+    },
+    "exact_teacher": {
+      "basis_blob_sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3",
+      "legacy_checkout_sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3",
+      "legacy_crlf_count": 0,
+      "legacy_lf_count": 940,
+      "normalized_lf_sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3",
+      "path": "src/dante_light/prefilter_v5_teacher.py"
+    },
+    "historical_thresholds": {
+      "basis_blob_sha256": "1f4bfa593ee2fe1902b390417b495cba83eab3d7447065801f6a301d34335ca6",
+      "legacy_checkout_sha256": "3b245dbda9b35affa5e22a0ea4bde9717ba3ea554de79529b7e92a9733ae318e",
+      "legacy_crlf_count": 34,
+      "legacy_lf_count": 34,
+      "normalized_lf_sha256": "1f4bfa593ee2fe1902b390417b495cba83eab3d7447065801f6a301d34335ca6",
+      "path": "config/dante_light_epochs_v1.json"
+    },
+    "identity_manifest": {
+      "basis_blob_sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f",
+      "legacy_checkout_sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f",
+      "legacy_crlf_count": 0,
+      "legacy_lf_count": 4380,
+      "normalized_lf_sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f",
+      "path": "config/dante_light_prefilter_v7_identities.jsonl"
+    },
+    "patch_scorer": {
+      "basis_blob_sha256": "30ab4b53058572c445427b24d92e23c58a4208c4bfb396ba3efe6cf4c891f1df",
+      "legacy_checkout_sha256": "6367d7dfff43d2225d41ea9723b18fd8dbab3e4bce4dfefc1d52f902e9ef6363",
+      "legacy_crlf_count": 434,
+      "legacy_lf_count": 434,
+      "normalized_lf_sha256": "30ab4b53058572c445427b24d92e23c58a4208c4bfb396ba3efe6cf4c891f1df",
+      "path": "src/core/patch_scorer.py"
+    },
+    "reference_artifacts": {
+      "basis_blob_sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe",
+      "legacy_checkout_sha256": "dbf5fc8d4ebc68a6363ddc6009d36b5f3dcef5927555bc58fb3887adde514953",
+      "legacy_crlf_count": 44,
+      "legacy_lf_count": 44,
+      "normalized_lf_sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe",
+      "path": "config/reference_artifacts.json"
+    },
+    "student_architecture": {
+      "basis_blob_sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8",
+      "legacy_checkout_sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8",
+      "legacy_crlf_count": 0,
+      "legacy_lf_count": 199,
+      "normalized_lf_sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8",
+      "path": "src/dante_light/prefilter_v6_phase_a.py"
+    },
+    "training_contract": {
+      "basis_blob_sha256": "8df867190c7fd10010f3a4ad253ad1c9fe7254774baf1adfe9b02a91b38c3421",
+      "legacy_checkout_sha256": "8df867190c7fd10010f3a4ad253ad1c9fe7254774baf1adfe9b02a91b38c3421",
+      "legacy_crlf_count": 0,
+      "legacy_lf_count": 210,
+      "normalized_lf_sha256": "8df867190c7fd10010f3a4ad253ad1c9fe7254774baf1adfe9b02a91b38c3421",
+      "path": "config/dante_light_prefilter_v7_training_contract.json"
+    },
+    "training_implementation": {
+      "basis_blob_sha256": "a70641100f8dad0030a7978a45ae048efd1b2e42e29f42967bbf92d0d91003e6",
+      "legacy_checkout_sha256": "a70641100f8dad0030a7978a45ae048efd1b2e42e29f42967bbf92d0d91003e6",
+      "legacy_crlf_count": 0,
+      "legacy_lf_count": 956,
+      "normalized_lf_sha256": "a70641100f8dad0030a7978a45ae048efd1b2e42e29f42967bbf92d0d91003e6",
+      "path": "src/dante_light/prefilter_v7_training.py"
+    },
+    "training_runner": {
+      "basis_blob_sha256": "bb60e31668c043478719936498c9e27c7fdcc8a79b5c655b06ef1a044057557a",
+      "legacy_checkout_sha256": "bb60e31668c043478719936498c9e27c7fdcc8a79b5c655b06ef1a044057557a",
+      "legacy_crlf_count": 0,
+      "legacy_lf_count": 55,
+      "normalized_lf_sha256": "bb60e31668c043478719936498c9e27c7fdcc8a79b5c655b06ef1a044057557a",
+      "path": "scripts/run_dante_light_prefilter_v7_training.py"
+    },
+    "training_split": {
+      "basis_blob_sha256": "29560cbd73161a6f723bf5d2fe706927d46ac728f379db084210bf6ef40277bb",
+      "legacy_checkout_sha256": "29560cbd73161a6f723bf5d2fe706927d46ac728f379db084210bf6ef40277bb",
+      "legacy_crlf_count": 0,
+      "legacy_lf_count": 600,
+      "normalized_lf_sha256": "29560cbd73161a6f723bf5d2fe706927d46ac728f379db084210bf6ef40277bb",
+      "path": "config/dante_light_prefilter_v7_training_split.jsonl"
+    }
+  },
+  "schema_version": 1,
+  "scope": "verification_only_no_execution_or_artifact_mutation",
+  "status": "RETROSPECTIVE_LINE_ENDING_EQUIVALENCE_BRIDGE"
+}

@@ -53,11 +53,32 @@ def test_v7_verification_accepts_only_line_ending_equivalence(tmp_path: Path) ->
         "path": "sample.py",
         "sha256": hashlib.sha256(b"a=1\r\nb=2\r\n").hexdigest(),
     }
-    assert _portable_reference_matches(tmp_path, crlf_reference, "fixture") == path
+    basis = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=tmp_path, text=True
+    ).strip()
+    bridge_entry = {
+        "path": "sample.py",
+        "legacy_checkout_sha256": crlf_reference["sha256"],
+        "basis_blob_sha256": hashlib.sha256(b"a=1\nb=2\n").hexdigest(),
+        "normalized_lf_sha256": hashlib.sha256(b"a=1\nb=2\n").hexdigest(),
+    }
+    assert _portable_reference_matches(
+        tmp_path,
+        crlf_reference,
+        "fixture",
+        bridge_entry=bridge_entry,
+        basis_commit=basis,
+    ) == path
 
     path.write_bytes(b"a=1\nb=3\n")
     with pytest.raises(ContractError, match="hash mismatch"):
-        _portable_reference_matches(tmp_path, crlf_reference, "fixture")
+        _portable_reference_matches(
+            tmp_path,
+            crlf_reference,
+            "fixture",
+            bridge_entry=bridge_entry,
+            basis_commit=basis,
+        )
 
 
 def test_v7_authorization_rejects_widened_scope(tmp_path: Path) -> None:

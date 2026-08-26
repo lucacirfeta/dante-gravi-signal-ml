@@ -18,8 +18,19 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.prefilter_v7_training_freeze import load_training_freeze
 
 
+DEFAULT_REFERENCE_BRIDGE = (
+    Path(__file__).resolve().parents[2]
+    / "config/dante_light_prefilter_v7_reference_bridge.json"
+)
+
+
 def _portable_reference_matches(
-    root: Path, reference: Mapping[str, Any], label: str
+    root: Path,
+    reference: Mapping[str, Any],
+    label: str,
+    *,
+    bridge_entry: Mapping[str, Any],
+    basis_commit: str,
 ) -> Path:
     if set(reference) != {"path", "sha256"}:
         raise ContractError(f"v7 verification reference is malformed: {label}")
@@ -31,31 +42,38 @@ def _portable_reference_matches(
     if not path.is_relative_to(root.resolve()) or not path.is_file():
         raise ContractError(f"v7 verification reference is absent: {label}")
 
+    if (
+        bridge_entry.get("path") != relative.as_posix()
+        or bridge_entry.get("legacy_checkout_sha256") != reference["sha256"]
+    ):
+        raise ContractError(f"v7 verification bridge/reference mismatch: {label}")
     working = path.read_bytes()
-    candidates = {hashlib.sha256(working).hexdigest()}
     try:
         blob = subprocess.check_output(
-            ["git", "show", f"HEAD:{relative.as_posix()}"],
+            ["git", "show", f"{basis_commit}:{relative.as_posix()}"],
             cwd=root,
             stderr=subprocess.DEVNULL,
         )
-    except (OSError, subprocess.SubprocessError):
-        blob = None
-    if blob is not None:
-        normalized_working = working.replace(b"\r\n", b"\n")
-        normalized_blob = blob.replace(b"\r\n", b"\n")
-        if normalized_working == normalized_blob:
-            candidates.add(hashlib.sha256(blob).hexdigest())
-            if b"\x00" not in blob:
-                crlf = normalized_blob.replace(b"\n", b"\r\n")
-                candidates.add(hashlib.sha256(crlf).hexdigest())
-    if str(reference["sha256"]) not in candidates:
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ContractError(f"v7 verification basis blob is absent: {label}") from exc
+    normalized_working = working.replace(b"\r\n", b"\n")
+    normalized_blob = blob.replace(b"\r\n", b"\n")
+    if (
+        hashlib.sha256(blob).hexdigest() != bridge_entry.get("basis_blob_sha256")
+        or hashlib.sha256(normalized_blob).hexdigest()
+        != bridge_entry.get("normalized_lf_sha256")
+        or hashlib.sha256(normalized_working).hexdigest()
+        != bridge_entry.get("normalized_lf_sha256")
+    ):
         raise ContractError(f"v7 verification reference hash mismatch: {label}")
     return path
 
 
 def load_training_authorization_for_verification(
-    path: Path, *, root: Path
+    path: Path,
+    *,
+    root: Path,
+    bridge_path: Path | None = None,
 ) -> dict[str, Any]:
     """Validate the frozen receipt without altering its execution semantics."""
 
@@ -66,6 +84,21 @@ def load_training_authorization_for_verification(
         raise ContractError("v7 training authorization digest mismatch")
     if payload.get("status") != "AUTHORIZED_TRAINING_ONLY":
         raise ContractError("v7 training is not explicitly authorized")
+
+    resolved_bridge = bridge_path or (
+        root / "config/dante_light_prefilter_v7_reference_bridge.json"
+    )
+    bridge = json.loads(resolved_bridge.read_text(encoding="utf-8"))
+    bridge_body = dict(bridge)
+    bridge_digest = bridge_body.pop("bridge_digest", None)
+    if bridge_digest != canonical_json_sha256(bridge_body):
+        raise ContractError("v7 verification bridge digest mismatch")
+    if (
+        bridge.get("status") != "RETROSPECTIVE_LINE_ENDING_EQUIVALENCE_BRIDGE"
+        or bridge.get("scope") != "verification_only_no_execution_or_artifact_mutation"
+        or bridge.get("authorization_digest") != payload["authorization_digest"]
+    ):
+        raise ContractError("v7 verification bridge scope mismatch")
 
     contract = load_training_freeze(root=root)
     if payload.get("training_contract_digest") != contract["training_contract_digest"]:
@@ -92,7 +125,15 @@ def load_training_authorization_for_verification(
         "second_stage_distillation": False,
     }:
         raise ContractError("v7 protected-partition boundary widened")
-    for name, reference in payload.get("source_references", {}).items():
-        _portable_reference_matches(root, reference, name)
+    references = payload.get("source_references", {})
+    if set(bridge.get("entries", {})) != set(references):
+        raise ContractError("v7 verification bridge entry set mismatch")
+    for name, reference in references.items():
+        _portable_reference_matches(
+            root,
+            reference,
+            name,
+            bridge_entry=bridge["entries"][name],
+            basis_commit=str(bridge["basis_commit"]),
+        )
     return payload
-
