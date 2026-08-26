@@ -1,0 +1,210 @@
+{
+  "access_boundary": {
+    "confirmation": [],
+    "o4b": [],
+    "risk_calibration": [],
+    "routing_enabled": false,
+    "threshold_search": [],
+    "training_execution_authorized": false,
+    "training_strain_or_teacher_labels": []
+  },
+  "audit": {
+    "final_seed_frozen_only_with_threshold_contract": true,
+    "finite_cohort_realized_fraction_must_be_reported": true,
+    "nominal_fraction": 0.05,
+    "operational_gate_uses_realized_post_audit_exact_calls": true,
+    "safety_gates_use_pre_audit_predictions": true,
+    "selection": "sha256_seed_colon_window_id_first_u64_uniform_lt_fraction"
+  },
+  "benchmark": {
+    "authoritative_latency": "complete_five_member_path",
+    "batch_size": 1,
+    "compute_pass_threshold": null,
+    "deterministic_algorithms": true,
+    "device": "cpu",
+    "input": "deterministic_standard_normal_float32_whitened_subwindow_proxy",
+    "mechanical_routing_threshold": 0.5,
+    "mechanical_threshold_has_scientific_role": false,
+    "single_member_timing_role": "diagnostic_only",
+    "startup_reported_separately": true,
+    "timed_repetitions": 300,
+    "timing_boundary": [
+      "numpy_float32_to_tensor_view",
+      "five_member_forwards",
+      "sigmoid_mean_aggregation",
+      "routing_comparison",
+      "deterministic_audit_hash_decision"
+    ],
+    "torch_num_threads": 1,
+    "warmup_repetitions": 50
+  },
+  "candidate": {
+    "all_members_execute_per_window": true,
+    "architecture": "V7SelectiveDeferralEnsemble",
+    "detector_as_model_input": false,
+    "detector_specific_thresholds_downstream": true,
+    "ensemble_operator": "arithmetic_mean_of_member_sigmoid_outputs",
+    "failed_member_action": "FAILED_NUMERICAL_NO_REPLACEMENT",
+    "id": "raw_teacher_top_fraction_five_member_mean_sigmoid",
+    "member_architecture": "Raw1DTeacherAlignedStudent",
+    "member_count": 5,
+    "member_seeds": [
+      5744926920946080634,
+      7346134278344290659,
+      266320219681031187,
+      4472323255175088058,
+      7085918270450271059
+    ],
+    "member_selection_allowed": false,
+    "second_stage_distillation_allowed": false,
+    "student_instance_count": 256,
+    "student_top_k": 13,
+    "teacher_instance_count": 1369,
+    "teacher_top_k": 68,
+    "trainable_parameters_per_member": 3665,
+    "trainable_parameters_total": 18325
+  },
+  "freeze_basis_commit": "8b563eb",
+  "internal_split": {
+    "assignment_digest": "88c75dd1825d934e378951ff2f92801ea1ab2444c3f155e22a345d06dec21df7",
+    "assignment_reference": {
+      "path": "config/dante_light_prefilter_v7_training_split.jsonl",
+      "sha256": "f804cbb0775f8a3b5ab80f91ae48858d2fbc16485af6c3b5fcb4621aa457e27d"
+    },
+    "counts": {
+      "H1": {
+        "background/fit": 120,
+        "background/internal_validation": 30,
+        "teacher_positive/fit": 120,
+        "teacher_positive/internal_validation": 30
+      },
+      "L1": {
+        "background/fit": 120,
+        "background/internal_validation": 30,
+        "teacher_positive/fit": 120,
+        "teacher_positive/internal_validation": 30
+      }
+    },
+    "fit_fraction": 0.8,
+    "internal_validation_fraction": 0.2,
+    "seeds_by_cell": {
+      "H1/background": 6613634961364082965,
+      "H1/teacher_positive": 7462491959416736301,
+      "L1/background": 6647051681152676623,
+      "L1/teacher_positive": 8246264656023592601
+    },
+    "stratify_by": [
+      "detector",
+      "sampling_role"
+    ],
+    "teacher_labels_used_for_assignment": false,
+    "unit": "detector_gps_4096s_block"
+  },
+  "labels": {
+    "background_is_sampling_role_not_assumed_negative": true,
+    "morphology_labels_in_loss": false,
+    "name": "historical_exact_DANTE_defer_label",
+    "physical_truth_label": false,
+    "rule": "native_exact_DANTE_score_strictly_greater_than_historical_detector_threshold"
+  },
+  "optimization": {
+    "augmentation": "none_beyond_canonical_whitening_and_clean_crop",
+    "automatic_mixed_precision": false,
+    "batch": {
+      "final_partial_batch_retained": true,
+      "full_batch_per_detector_sampling_role": 16,
+      "size": 64,
+      "synthetic_oversampling": false,
+      "without_replacement": true
+    },
+    "checkpoint": "minimum_equal_detector_internal_validation_BCE_then_earliest_epoch",
+    "dtype": "float32",
+    "gradient_clipping": false,
+    "loss": {
+      "name": "BCEWithLogitsLoss",
+      "reduction": "mean",
+      "weighting": "none"
+    },
+    "maximum_epochs": 100,
+    "optimizer": {
+      "betas": [
+        0.9,
+        0.999
+      ],
+      "epsilon": 1e-08,
+      "learning_rate": 0.001,
+      "name": "AdamW",
+      "weight_decay": 0.0001
+    },
+    "scheduler": "none_intentional"
+  },
+  "parent_digests": {
+    "confirmation_seal_digest": "b95c2079fb0bd83b9150425c83c89ced6165add6c76f57079bb1824b439529da",
+    "identity_header_digest": "319154f3622ae5cbdd84d467d57f480a58aabe1baa312e580f52431c6e37a8f3",
+    "identity_manifest_sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f",
+    "outcome_blind_contract_digest": "3ace13984dee36fee6c896c5d51d0f23b8f7d0f0cf9fb1ca7bc913254f804e2c"
+  },
+  "schema_version": 1,
+  "semantic_amendment": {
+    "identity_or_gate_change": false,
+    "interpretation": "bounded_uncalibrated_ranking_score_not_population_probability",
+    "parent_field": "task.student_score",
+    "parent_value": "estimated_probability_of_defer_label",
+    "probability_calibration_allowed": false,
+    "range": [
+      0.0,
+      1.0
+    ],
+    "reason": "case_control_sampling_does_not_identify_natural_population_posterior",
+    "replacement_name": "defer_score"
+  },
+  "source_references": {
+    "audit_fraction_source": {
+      "path": "config/dante_light_prefilter_v5_development_design.json",
+      "sha256": "d5072841bc043bf0e3e50b8497ae7122493aa7a64e5cbe38d83e818ea306dc41"
+    },
+    "benchmark_runner": {
+      "path": "scripts/run_dante_light_prefilter_v7_compute_benchmark.py",
+      "sha256": "e8726fb136cdf1738db1cb7585382f5d87287a10839a9d199a60252b14b99297"
+    },
+    "freeze_builder": {
+      "path": "scripts/freeze_dante_light_prefilter_v7_training.py",
+      "sha256": "f28e4b30f29240098dd395c600c1de7ed782c8308e780125828fa42ceee8887a"
+    },
+    "freeze_implementation": {
+      "path": "src/dante_light/prefilter_v7_training_freeze.py",
+      "sha256": "f4b46e482e8ea27ad56d6cc7bfca1f87413f12b48ed9f89882aff9e05345bf13"
+    },
+    "identity_header": {
+      "path": "config/dante_light_prefilter_v7_identities.json",
+      "sha256": "a17a7564b2261df9dca6fdd4d72216b5799ac9b3f2f45c2b74d1791315c7366e"
+    },
+    "identity_manifest": {
+      "path": "config/dante_light_prefilter_v7_identities.jsonl",
+      "sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f"
+    },
+    "outcome_blind_contract": {
+      "path": "config/dante_light_prefilter_v7_outcome_blind_contract.json",
+      "sha256": "57ea8a6d8c6d779dda85821d54f977261c4665f9748cc280e258b687012f696f"
+    },
+    "proposal": {
+      "path": "docs/DANTE_LIGHT_L4_PREFILTER_V7_TRAINING_FREEZE_PROPOSAL_2026-08-26.md",
+      "sha256": "8a4cfbf02a85169a467a1191bddeeabceaa651f5632111b5509e9ab7c342c369"
+    },
+    "v6_member_architecture": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    },
+    "v6_phase_a_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_a.json",
+      "sha256": "1833524ef4a9b355e8f0f9ce5481be36044f5a514a1276ba8b4bef80a0d218c6"
+    },
+    "verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v7_training.py",
+      "sha256": "e2019a18ac8c5378345b966be53f4823526922376ccbdf364fd8c2b3ffbc9a25"
+    }
+  },
+  "status": "FROZEN_OUTCOME_BLIND_BEFORE_TRAINING",
+  "training_contract_digest": "8c44916302511fab6de079521f5eaed0e4ad873ec9bbe7841d358da0df92a27c",
+  "training_id": "dante-light-l4-prefilter-v7-selective-deferral-training"
+}

@@ -70,6 +70,9 @@ Use one fixed five-member ensemble of the v6
   instances this remains Top-13;
 - binary head: one logit per member;
 - ensemble score: arithmetic mean of the five sigmoid outputs;
+- deployment semantics: every routed window executes all five member forwards;
+  the five predictions are not used to select one member and are not distilled
+  into a sixth single model;
 - detector identity is not provided as a model input;
 - detector-specific routing thresholds remain downstream;
 - no STFT, morphology input, score-regression target or rank loss.
@@ -80,6 +83,10 @@ mean inference time of 1.1645 ms per member. Five sequential forwards would be
 approximately 5.8 ms before a fresh full-path benchmark, still far below the
 historical paired avoidable exact-path mean of 481.6 ms. The actual ensemble
 cost must nevertheless be measured outcome-blind; this estimate is not a PASS.
+The next benchmark's authoritative latency is the complete five-member path,
+including score aggregation, routing comparison and deterministic audit
+decision. A single-member timing may be retained only as a diagnostic and
+cannot establish compute feasibility for the deployable candidate.
 
 The ensemble is one candidate, not five candidates. Every member and its seed
 are frozen before training. A nonfinite or irrecoverably divergent member
