@@ -1,0 +1,42 @@
+{
+  "artifact_digest": "b02b7f3c2288a6780fb29c464976e5704fc795d6b20992fb77eb6b06a6281846",
+  "counts": {
+    "H1": {
+      "exact_dante_retained": 23,
+      "fraction": 0.01597222222222222,
+      "n": 1440,
+      "threshold": 0.16157861188054093
+    },
+    "L1": {
+      "exact_dante_retained": 49,
+      "fraction": 0.034027777777777775,
+      "n": 1440,
+      "threshold": 0.1760626833140853
+    }
+  },
+  "decision_rule": "native_o4a_novelty_score_strictly_greater_than_historical_detector_threshold",
+  "interpretation": {
+    "calibration_expected_positive_count_is_too_small_for_primary_safety_inference": true,
+    "rare_not_empty": true,
+    "supports_case_control_teacher_positive_retention_endpoint": true,
+    "zero_of_1440_claim_rejected": true
+  },
+  "o4b_accessed": [],
+  "protected_v6_phase_c_or_phase_d_accessed": [],
+  "rows_digest": "9d1f1236025f5d6cca509d03e19069bda5ff014ca960b5219ed2995cf1f33509",
+  "rows_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v7_design/background_teacher_prevalence_rows_v7.jsonl",
+    "sha256": "fb6ae5815bc42e27b48f7384f7f3b9e1559e2f1c80e45264a42274155632d2a3"
+  },
+  "schema_version": 1,
+  "source_block_reference_count": 360,
+  "source_teacher_ledger_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v6_training/teacher_ledger_summary_v6.json",
+    "sha256": "8bea69b516e8265ef453a80d0f453f1275975d0bbaf3d32ab65d82ab26537fe8"
+  },
+  "status": "RETROSPECTIVE_DESIGN_EVIDENCE_VERIFIED",
+  "threshold_reference": {
+    "path": "config/dante_light_epochs_v1.json",
+    "sha256": "3b245dbda9b35affa5e22a0ea4bde9717ba3ea554de79529b7e92a9733ae318e"
+  }
+}

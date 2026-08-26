@@ -1,0 +1,111 @@
+{
+  "artifact_digest": "f61fef8aeca9a32fec703a7d30cf2032f4d2b836f09f24f2738e1039ba18aff4",
+  "background_precision": {
+    "confirmation": {
+      "n_per_detector": 300,
+      "worst_case_wilson_half_width": 0.05622048386608308
+    },
+    "risk_calibration": {
+      "n_per_detector": 150,
+      "worst_case_wilson_half_width": 0.07900987971145856
+    },
+    "threshold_search": {
+      "n_per_detector": 60,
+      "worst_case_wilson_half_width": 0.1226497575844423
+    },
+    "training": {
+      "n_per_detector": 150,
+      "worst_case_wilson_half_width": 0.07900987971145856
+    }
+  },
+  "block_independence": "one_case_per_detector_4096s_block_within_each_gated_stratum",
+  "candidate_results": [
+    {
+      "minimum_observed_retention": 1.0,
+      "minimum_retained": 18,
+      "n": 18,
+      "pass_probability_at_true_retention": 0.3972143184582182
+    },
+    {
+      "minimum_observed_retention": 1.0,
+      "minimum_retained": 20,
+      "n": 20,
+      "pass_probability_at_true_retention": 0.3584859224085419
+    },
+    {
+      "minimum_observed_retention": 0.96,
+      "minimum_retained": 24,
+      "n": 25,
+      "pass_probability_at_true_retention": 0.6423758535452996
+    },
+    {
+      "minimum_observed_retention": 0.9487179487179487,
+      "minimum_retained": 37,
+      "n": 39,
+      "pass_probability_at_true_retention": 0.6906193455299178
+    },
+    {
+      "minimum_observed_retention": 0.9333333333333333,
+      "minimum_retained": 42,
+      "n": 45,
+      "pass_probability_at_true_retention": 0.8133833179769402
+    },
+    {
+      "minimum_observed_retention": 0.9166666666666666,
+      "minimum_retained": 55,
+      "n": 60,
+      "pass_probability_at_true_retention": 0.9212807354233151
+    },
+    {
+      "minimum_observed_retention": 0.9,
+      "minimum_retained": 81,
+      "n": 90,
+      "pass_probability_at_true_retention": 0.985480633688403
+    },
+    {
+      "minimum_observed_retention": 0.9,
+      "minimum_retained": 135,
+      "n": 150,
+      "pass_probability_at_true_retention": 0.9963968559718144
+    },
+    {
+      "minimum_observed_retention": 0.9,
+      "minimum_retained": 270,
+      "n": 300,
+      "pass_probability_at_true_retention": 0.9998741628196279
+    }
+  ],
+  "frozen_primary_n_per_detector": {
+    "confirmation": 60,
+    "risk_calibration": 60,
+    "threshold_search": 60
+  },
+  "minimum_pass_probability": 0.9,
+  "net_saving_power_claimed": false,
+  "outcomes_accessed": [],
+  "primary_endpoint": "P(Light_defers|exact_DANTE_retains)",
+  "protected_n_per_detector_morphology": {
+    "injection": 90,
+    "known_glitch": 60,
+    "robust_candidate": 60
+  },
+  "retention_gate": {
+    "minimum_point_retention": 0.9,
+    "minimum_wilson_lower": 0.8,
+    "operator": "AND",
+    "separate_by_detector_and_morphology": true,
+    "wilson_confidence": 0.95
+  },
+  "schema_version": 1,
+  "selection_adjustment": {
+    "confirmation_opened_only_after_all_calibration_gates_pass": true,
+    "method": "independent_fixed_holdout",
+    "retuning_after_calibration_allowed": false,
+    "risk_bound_evaluated_once_on": "risk_calibration",
+    "same_sample_SGR_or_pointwise_post_selection_interval_used": false,
+    "threshold_frozen_before": "risk_calibration",
+    "threshold_selected_once_on": "threshold_search"
+  },
+  "status": "FROZEN_POWER_ANALYSIS",
+  "true_retention_alternative": 0.95
+}
