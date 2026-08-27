@@ -73,9 +73,16 @@ For all four cases, the original 4096-second local O4a block is absent from
 `E:/o4a`; the v7 run therefore materialized the public strain into its
 hash-bound local cache. Sequential rescoring of the cached windows reproduced
 the same current image hashes and scores, excluding thread scheduling or a
-transient scorer failure as the cause. The historical raw/Q-transform input is
-not retained, so the root cause of the historical-to-current score drift cannot
-be established from the available provenance.
+transient scorer failure as the cause. The native O4a reference-index SHA256 is
+also identical between the historical transition record and the current exact
+teacher, excluding index drift. The historical raw/Q-transform input and a
+complete teacher/runtime fingerprint were not retained, so one exact cause
+cannot be proved from the available provenance. The historical candidate path
+did permit incomplete whitening context within its configured edge tolerance,
+whereas the current exact path fails closed on incomplete context. Together with
+the earlier 58/60 transition reproduction (the other two were refetched or
+incomplete local blocks), this supports a raw/context and fail-closed-path
+explanation without establishing it for these four identities.
 
 No identity was dropped, replaced, or relabelled from its historical score.
 This is a 4/300 (1.33%) drift in the historical sampling stratum, not four
@@ -147,8 +154,11 @@ tests. The bridge is
 
 ## Next checkpoint
 
-Opening `threshold_search` requires an explicit scientific decision. If
-authorized, it must be opened once for the unchanged five-member ensemble and
-the frozen risk score; the resulting threshold must then be frozen before the
-independent `risk_calibration` partition is accessed. Confirmation and O4b stay
-sealed throughout those steps.
+The exact-teacher stability amendment is frozen and its eight-window
+training-only GPU canary is an exact PASS with all protected access lists empty;
+see `DANTE_LIGHT_L4_PREFILTER_V7_TEACHER_STABILITY_AMENDMENT_2026-08-27.md`.
+This does not authorize `threshold_search`. Before any future first read of
+`threshold_search`, and again before `risk_calibration` and `confirmation`, the
+same fingerprint and canary must pass and produce a stage-specific receipt. A
+mismatch is `STOP_NO_ACCESS_NO_RETUNE`. Opening `threshold_search` still
+requires an explicit scientific decision; confirmation and O4b remain sealed.
