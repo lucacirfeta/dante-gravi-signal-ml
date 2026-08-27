@@ -392,7 +392,9 @@ def _light_sequential(
             audit_seed=audit_seed,
             window_id=row["window_id"],
         )
-        if audited != bool(row["student"]["audit_selected"]):
+        pre_audit_defer = bool(score >= thresholds[row["detector"]])
+        realized_audit = bool((not pre_audit_defer) and audited)
+        if realized_audit != bool(row["student"]["audit_selected"]):
             raise ContractError("v7 cost re-audit audit decision changed")
         expected_score = float(row["student"]["cpu_ensemble_score_diagnostic"])
         if abs(score - expected_score) > 2e-5:

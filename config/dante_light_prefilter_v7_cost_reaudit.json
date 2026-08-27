@@ -18,7 +18,7 @@
     },
     "cost_implementation": {
       "path": "src/dante_light/prefilter_v7_cost_reaudit.py",
-      "sha256": "52043ebdc86ae37caf1f83dae4f49410cfa647a264ce88e377ecffea0100eaa1"
+      "sha256": "3e19a7e3e6c7a1b8db315a24f8b04387d6c7e0fd02050942595012e22ed11f50"
     },
     "cost_runner": {
       "path": "scripts/run_dante_light_prefilter_v7_cost_reaudit.py",
@@ -45,7 +45,7 @@
       "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
     }
   },
-  "contract_digest": "f1afb4d1773cd930c4cb99c6662d7873297aa4cc7236ce9467ded2f32596fbcb",
+  "contract_digest": "6fe64f7a0398d6590f5f427ed2fb8de168ba96d4cdf88bf2cd2dfebeb63ee77a",
   "contract_id": "dante-light-l4-prefilter-v7-cost-reaudit-2026-08-27",
   "decision": {
     "batch_gate": "combined_measured_net_throughput_s_per_window_gt_0",
