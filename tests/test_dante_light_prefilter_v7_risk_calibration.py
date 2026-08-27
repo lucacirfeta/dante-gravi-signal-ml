@@ -53,3 +53,70 @@ def test_v7_risk_execute_rejects_wrong_receipt_before_rows(monkeypatch) -> None:
     monkeypatch.setattr(risk, "risk_calibration_rows", lambda **_: (_ for _ in ()).throw(AssertionError("rows accessed")))
     with pytest.raises(ContractError, match="invalid risk-calibration stability receipt"):
         risk.run_risk_calibration()
+
+
+def test_v7_saved_risk_calibration_result_replays_fail_closed() -> None:
+    verified = risk.verify_result(root=ROOT)
+    assert verified["status"] == "PASS_VERIFIED_RISK_CALIBRATION"
+    assert verified["scientific_status"] == "V7_NOT_READY_RISK_CALIBRATION"
+    assert verified["risk_calibration_result_digest"] == (
+        "96ee7626f3c6ee57333110eda4c776f490e0ddd87a7240fde766b6446fcafd43"
+    )
+    assert verified["gate_summary"] == {
+        "all_pass": False,
+        "primary_pass": False,
+        "protected_pass": False,
+        "operational_pass": True,
+    }
+    assert verified["confirmation"] == []
+    assert verified["o4b"] == []
+    assert verified["routing_enabled"] is False
+
+
+def test_v7_saved_risk_calibration_preserves_separate_safety_cells() -> None:
+    path = (
+        ROOT
+        / "artifacts/dante_light/prefilter_l4_v7_risk_calibration"
+        / "risk_calibration_summary_v7.json"
+    )
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    evaluation = payload["evaluation"]
+    primary = evaluation["primary_teacher_positive"]
+    assert primary["H1"]["retained"] == 53
+    assert primary["H1"]["total"] == 58
+    assert primary["H1"]["pass"] is True
+    assert primary["L1"]["retained"] == 51
+    assert primary["L1"]["total"] == 60
+    assert primary["L1"]["pass"] is False
+
+    protected = evaluation["protected_morphology"]
+    assert len(protected) == 16
+    assert {key for key, cell in protected.items() if cell["pass"]} == {
+        "H1|robust_candidate|DANTE_ROBUST"
+    }
+    assert protected["H1|injection|NSBH_10_1.4_LEGACY"]["retained"] == 0
+    assert protected["L1|injection|NSBH_10_1.4_LEGACY"]["retained"] == 2
+    assert protected["H1|injection|NSBH_ALIGNED_TIDAL_STRESS"]["retained"] == 2
+    assert protected["L1|injection|NSBH_ALIGNED_TIDAL_STRESS"]["retained"] == 2
+
+
+def test_v7_saved_risk_calibration_operational_pass_cannot_promote_failure() -> None:
+    path = (
+        ROOT
+        / "artifacts/dante_light/prefilter_l4_v7_risk_calibration"
+        / "risk_calibration_summary_v7.json"
+    )
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    operational = payload["evaluation"]["operational"]
+    assert operational["background_by_detector"]["H1"]["realized_post_audit_reduction"] == pytest.approx(
+        0.9333333333333333
+    )
+    assert operational["background_by_detector"]["L1"]["realized_post_audit_reduction"] == pytest.approx(
+        0.9333333333333333
+    )
+    assert operational["combined_net_saving"]["lower95"] == pytest.approx(
+        0.6999854297081078
+    )
+    assert operational["combined_net_saving"]["pass"] is True
+    assert payload["candidate_promoted"] is False
+    assert payload["routing_enabled"] is False

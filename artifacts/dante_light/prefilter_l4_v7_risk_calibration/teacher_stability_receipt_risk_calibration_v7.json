@@ -1,0 +1,84 @@
+{
+  "accessed": {
+    "confirmation": [],
+    "o4b": [],
+    "risk_calibration": [],
+    "threshold_search": []
+  },
+  "canary_count": 8,
+  "failure_action": "STOP_NO_ACCESS_NO_RETUNE",
+  "observations": [
+    {
+      "clean_strain_sha256": "b9c345228d232045c9b3908ff37e5dffa3a869725f04aab30549f4c8f0aa519a",
+      "identity_id": "dlv7-8d3ce2d5a4a7b1a7e4496cb9",
+      "image_sha256": "3209595176d5d9a23aa483205184aa5b030a8772643c5553b83922f3a1ea4de9",
+      "raw_strain_sha256": "9bd17b885954f7f5ddebef01ab4f940a15a23ff502887f8123fc034a364747cf",
+      "teacher_score": 0.06354684382677078,
+      "teacher_score_float32_hex": "d924823d"
+    },
+    {
+      "clean_strain_sha256": "8bd0d8b97c5a11cfea672ac0f6597ded94acf0e1a6542d0f41004ba0eb77b397",
+      "identity_id": "dlv7-5a8bb51dd1d4b4c6c2491e6d",
+      "image_sha256": "982cc045adc2610456f85247b38e5154dec2f0c7c1b753c6b7fb5246b0213156",
+      "raw_strain_sha256": "d6c5e3c6d41f7ebd55c149fde52e13326c23bf53de81351945662e465d05509e",
+      "teacher_score": 0.055407244712114334,
+      "teacher_score_float32_hex": "b5f2623d"
+    },
+    {
+      "clean_strain_sha256": "8948e7eb826e5962430b5a538ad99e1396d73734bc7b54ee8325a16f1f99f808",
+      "identity_id": "dlv7-bb4aa59f0f2765ccc0f4303c",
+      "image_sha256": "0cf84f0bc3add6497c8545dc934946eb7b2634ba0c9d6f0d63853f68ea9d123c",
+      "raw_strain_sha256": "9563058abf9a211ebc8772130b4494502d93c9aef45f3c4b76c63ce611eab071",
+      "teacher_score": 0.4321576654911041,
+      "teacher_score_float32_hex": "c543dd3e"
+    },
+    {
+      "clean_strain_sha256": "e89778b7071344e6b17f60a600e3d5fbcb83991e938ce89e92b150ecf0174716",
+      "identity_id": "dlv7-14aad426d4df3703e8faba30",
+      "image_sha256": "1cf536acf7b1d4ae4c7fe88eb6efbc1a1df7846df11f413aa3887c7e04437b86",
+      "raw_strain_sha256": "41bc0d92e6470555bdd7c415246387980502c730e5e878b7d5fa7ba9dbaf34f1",
+      "teacher_score": 0.4974561631679535,
+      "teacher_score_float32_hex": "93b2fe3e"
+    },
+    {
+      "clean_strain_sha256": "40a002298d890817dd4eea63d31a87b69831e270a4912d5d8c184dac4c896d7a",
+      "identity_id": "dlv7-77076e8cc498e8b95716aef7",
+      "image_sha256": "4232f222c3654bdcf0b5c43057ca99d168d22b93e2ce220efda0877b328f0d5b",
+      "raw_strain_sha256": "354d1e21904dc9aeb0e64fefca67b57b3744033744660ab87113a828ddab5dee",
+      "teacher_score": 0.05359181389212608,
+      "teacher_score_float32_hex": "17835b3d"
+    },
+    {
+      "clean_strain_sha256": "12d6c79463cc22737b2bba21226aacb1fe7211c2e4e22b483df788733043c89f",
+      "identity_id": "dlv7-6657ed95abe8ecdee8ded68d",
+      "image_sha256": "3a8596dcf7544343308edf883105286bf0c7dc50da22adbfcf734971e61aa15b",
+      "raw_strain_sha256": "5898cae31b087218c1042d9462d6ef293b44bace653463151f99bb77a84101b5",
+      "teacher_score": 0.06361951678991318,
+      "teacher_score_float32_hex": "f34a823d"
+    },
+    {
+      "clean_strain_sha256": "14f6b1ea32e19ea57e71fc9d79e112dd932145d99d780bf71157c42e752569e3",
+      "identity_id": "dlv7-628d69148f570f1b25f7f7dc",
+      "image_sha256": "ff80427be61d3a82e5284b7492f038c2f072c34be68600a41a5b66a65864c325",
+      "raw_strain_sha256": "51c939a19b0ac0153f235bf15f85773c55a8736183af86c2db4b1bc759477794",
+      "teacher_score": 0.21709677577018738,
+      "teacher_score_float32_hex": "9e4e5e3e"
+    },
+    {
+      "clean_strain_sha256": "d50b19ec1a4a7929fbaab435c520f44aa0193f6dbd697cae4039a03be740d2d9",
+      "identity_id": "dlv7-086ac19bff9285c0c6575278",
+      "image_sha256": "b97a6b234b48e0261f5e937c3fc0f7b9bb211c9339b02e0753cd436fddec39c9",
+      "raw_strain_sha256": "ceb49c82cfb2d48e59cc4d0734695dc399ce04c89d59456e0ea64e79623ee93d",
+      "teacher_score": 0.44082608819007874,
+      "teacher_score_float32_hex": "f5b3e13e"
+    }
+  ],
+  "partition_rows_accessed_before_check": 0,
+  "requested_partition": "risk_calibration",
+  "schema_version": 1,
+  "stability_contract_digest": "52adb081e73c384e831c7988513b900da3e934189553402e8fdcc871d96c6934",
+  "stability_receipt_digest": "58f2fc04280dfa1216f483ea0d536bbd04f2ffd2e75b130bcd88ced352814ce5",
+  "status": "PASS_TRAINING_CANARY_NO_PROTECTED_ACCESS",
+  "teacher_fingerprint_digest": "bf1426fcba39672de67ef9c2b2f85fdb21aa4b64d4715ed893e44ce933682deb",
+  "verified_at_utc": "2026-08-27T08:08:57.384146+00:00"
+}
