@@ -308,7 +308,17 @@ def _clean_inputs(
         values = np.ascontiguousarray(clean.value, dtype=np.float32)
         if _digest_array(values) != row["clean_strain_sha256"]:
             raise ContractError("v7 cost re-audit clean strain digest mismatch")
-        cleaned.append({"row": row, "window": window, "clean": values})
+        cleaned.append(
+            {
+                "row": row,
+                "window": window,
+                "clean": values,
+                # Q-transform provenance is bound to the original whitened
+                # TimeSeries precision.  The float32 copy is only the frozen
+                # student input and must not be used to reconstruct the image.
+                "clean_series": clean,
+            }
+        )
     return cleaned
 
 
@@ -316,14 +326,9 @@ def _q_render(
     item: Mapping[str, Any], representation: RepresentationContract
 ) -> tuple[np.ndarray, dict[str, float]]:
     import matplotlib.pyplot as plt
-    from gwpy.timeseries import TimeSeries
     from src.core.preprocessor import generate_qtransform
 
-    clean = TimeSeries(
-        item["clean"],
-        sample_rate=representation.sample_rate_hz,
-        t0=item["window"].gps_start,
-    )
+    clean = item["clean_series"]
     began = time.perf_counter()
     spectrogram = generate_qtransform(
         clean,
