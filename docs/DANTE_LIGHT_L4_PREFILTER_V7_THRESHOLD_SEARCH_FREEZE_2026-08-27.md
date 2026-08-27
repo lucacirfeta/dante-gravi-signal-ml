@@ -1,6 +1,7 @@
 # DANTE-Light L4 prefilter v7: threshold-search execution freeze
 
-Status: authorized and frozen before outcome access; execution not yet started.
+Status: frozen before outcome access; one-shot execution completed without
+opening risk calibration, confirmation, or O4b.
 
 The user instruction `procedi` authorizes one opening of `threshold_search` for
 the unchanged five-member ensemble. It does not authorize `risk_calibration`,

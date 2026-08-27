@@ -118,3 +118,40 @@ def test_v7_redigested_authorization_cannot_open_calibration() -> None:
             search.load_threshold_search_authorization(temporary, root=ROOT)
         finally:
             temporary.unlink(missing_ok=True)
+
+
+def test_v7_saved_threshold_search_result_replays_fail_closed() -> None:
+    verified = search.verify_threshold_search_result(root=ROOT)
+    assert verified["status"] == "PASS_THRESHOLDS_FROZEN_PRE_RISK_CALIBRATION"
+    assert verified["threshold_search_result_digest"] == (
+        "2116ec0462d4d518b45c321e349dfa2a3fa17fd7b9485f3c34f506de19d9485c"
+    )
+    assert verified["threshold_contract_digest"] == (
+        "4d7a3449daff3f80eef51df286a10636de904354b8d6ae340371085d2a093c57"
+    )
+    assert verified["accessed"] == {
+        "risk_calibration": [],
+        "confirmation": [],
+        "o4b": [],
+    }
+
+
+def test_v7_frozen_thresholds_match_the_replayed_search_evidence() -> None:
+    verified = search.verify_threshold_search_result(root=ROOT)
+    selected = verified["selected"]
+    assert selected["H1"]["threshold"] == 0.9937049746513367
+    assert selected["H1"]["teacher_positive_retention"]["retained"] == 53
+    assert selected["H1"]["teacher_positive_retention"]["total"] == 58
+    assert selected["H1"]["teacher_positive_retention"]["wilson95"][0] == pytest.approx(
+        0.8135637093712648
+    )
+    assert selected["L1"]["threshold"] == 1.0
+    assert selected["L1"]["teacher_positive_retention"]["retained"] == 55
+    assert selected["L1"]["teacher_positive_retention"]["total"] == 60
+    assert selected["L1"]["teacher_positive_retention"]["wilson95"][0] == pytest.approx(
+        0.8193105798166558
+    )
+    assert all(
+        selected[detector]["natural_background_discarded"] == 60
+        for detector in ("H1", "L1")
+    )

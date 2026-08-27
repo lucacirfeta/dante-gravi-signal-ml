@@ -1,0 +1,44 @@
+{
+  "accessed": {
+    "confirmation": [],
+    "o4b": [],
+    "risk_calibration": []
+  },
+  "audit_stream": {
+    "decision": "sha256(seed_uint64:window_id)_uniform_below_0.05",
+    "nominal_fraction": 0.05,
+    "operational_cost_role": true,
+    "safety_gate_role": false,
+    "seed_uint64": 7681813476242713618
+  },
+  "candidate_promoted": false,
+  "compact_rows_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v7_threshold_search/threshold_search_scores_compact_v7.jsonl",
+    "sha256": "584f2f9d43b058b004373a02595a557e9af436d8c5b606ee0a432acd71cc650d"
+  },
+  "detector_thresholds": {
+    "H1": {
+      "defer_score_threshold": 0.9937049746513367,
+      "threshold_float64_hex": "000000606eccef3f"
+    },
+    "L1": {
+      "defer_score_threshold": 1.0,
+      "threshold_float64_hex": "000000000000f03f"
+    }
+  },
+  "failure_rule": "STOP_NO_RETUNE_NO_FALLBACK",
+  "routing_enabled": false,
+  "schema_version": 1,
+  "status": "FROZEN_PRE_RISK_CALIBRATION",
+  "teacher_stability_receipt_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v7_threshold_search/teacher_stability_receipt_threshold_search_v7.json",
+    "sha256": "f7b78e6bc1d4349f3e95319f5d9581b9b34ba9fe38a7d9161aa438b87a607839"
+  },
+  "threshold_contract_digest": "4d7a3449daff3f80eef51df286a10636de904354b8d6ae340371085d2a093c57",
+  "threshold_search_result_digest": "2116ec0462d4d518b45c321e349dfa2a3fa17fd7b9485f3c34f506de19d9485c",
+  "threshold_search_result_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v7_threshold_search/threshold_search_summary_v7.json",
+    "sha256": "4e71321368933633d56b8752cc7cb8c7764d53d23844695c903dc381364fbc6f"
+  },
+  "training_contract_digest": "03c75c99fc2c3a930601727d49e7dee29284782e3edc263384ad6ee064c9d8f1"
+}
