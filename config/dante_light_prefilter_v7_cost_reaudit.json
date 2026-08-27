@@ -1,0 +1,99 @@
+{
+  "authorization": {
+    "actor": "Luca Cirfeta",
+    "date": "2026-08-27",
+    "scope": "cost-only re-audit on the 300 already-open risk-calibration background blocks"
+  },
+  "bootstrap": {
+    "confidence": 0.95,
+    "quantile_method": "linear",
+    "resamples": 2000,
+    "seed_uint64": 15164584356210187496,
+    "unit": "detector_gps_4096s_block"
+  },
+  "code_references": {
+    "cost_freezer": {
+      "path": "scripts/freeze_dante_light_prefilter_v7_cost_reaudit.py",
+      "sha256": "4136d6e813985a971db06a051c5af7a9684f7ba971730787261ab7cdeab02e37"
+    },
+    "cost_implementation": {
+      "path": "src/dante_light/prefilter_v7_cost_reaudit.py",
+      "sha256": "82b266c074a76793b1c8a35b6d8be55efc618bf37025d589635ddf5d5ef1369a"
+    },
+    "cost_runner": {
+      "path": "scripts/run_dante_light_prefilter_v7_cost_reaudit.py",
+      "sha256": "1d5597264877cc9d9f5098e45eb11fdaef3381a34990c8343188953ba491333c"
+    },
+    "cost_verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v7_cost_reaudit.py",
+      "sha256": "00fbe52247c78c4190242b604b953eff0c49c08d9cc53557cf5d6689a13c58c6"
+    },
+    "exact_teacher": {
+      "path": "src/dante_light/prefilter_v5_teacher.py",
+      "sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "risk_implementation": {
+      "path": "src/dante_light/prefilter_v7_risk_calibration.py",
+      "sha256": "408183e53fece2bd26545c1d07825e160047195f18d3b023c1b065d8abeee114"
+    },
+    "student_architecture": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    }
+  },
+  "contract_digest": "c0eb4590f8a794130499d08d09fbff16c030b6eeeb3fcf9f2ab74ad335c9110b",
+  "contract_id": "dante-light-l4-prefilter-v7-cost-reaudit-2026-08-27",
+  "decision": {
+    "batch_gate": "combined_measured_net_throughput_s_per_window_gt_0",
+    "confirmation_access_allowed": false,
+    "o4b_access_allowed": false,
+    "positive_saving_supported": "both_sequential_and_batch_gates_pass",
+    "promotion_allowed": false,
+    "sequential_gate": "detector_gps_block_bootstrap_95pct_lower_gt_0",
+    "threshold_or_model_change_allowed": false
+  },
+  "erratum": {
+    "cause": "per-window q-transform and rendering wall times were measured inside a four-worker thread pool and then added to serial teacher latency",
+    "original_numbers_preserved": true,
+    "original_operational_cost_interpretation": "INDETERMINATE_COST_ACCOUNTING",
+    "routing_or_promotion_change": false,
+    "safety_results_unchanged": true
+  },
+  "measurement": {
+    "background_count": 300,
+    "batch_size": 8,
+    "batch_statistical_role": "point_and_batch_distribution_diagnostic_no_iid_bootstrap",
+    "batch_throughput": "baseline exact makespan minus Light makespan minus residual exact makespan, divided by batch size; q-transform/rendering use four workers and teacher scoring remains serial at batch size one",
+    "data_read_excluded": true,
+    "exact_device": "cuda",
+    "exact_warmup_iterations": 2,
+    "light_device": "cpu",
+    "light_warmup_iterations": 50,
+    "model_load_excluded": true,
+    "row_order": "identity_id_ascending",
+    "sequential_isolated": "paired per-window q-transform plus rendering plus serial exact-teacher latency versus single-window five-member CPU Light latency",
+    "teacher_score_batch_size": 1,
+    "torch_cpu_threads": 1,
+    "whitening_excluded": true,
+    "workers": 4
+  },
+  "schema_version": 1,
+  "source_result": {
+    "immutable": true,
+    "path": "artifacts/dante_light/prefilter_l4_v7_risk_calibration/risk_calibration_summary_v7.json",
+    "result_digest": "96ee7626f3c6ee57333110eda4c776f490e0ddd87a7240fde766b6446fcafd43",
+    "scientific_status": "V7_NOT_READY_RISK_CALIBRATION",
+    "sha256": "53106739577dca81005466d92c835bb52200267108e710768e0d748e79eaccd9"
+  },
+  "source_rows": {
+    "background_count": 300,
+    "background_identity_and_route_digest": "b459de95dd45a86abda2089e6cb02314074ec417cbd4e9972860b9c3ef7077e0",
+    "path": "artifacts/dante_light/prefilter_l4_v7_risk_calibration/risk_calibration_scores_compact_v7.jsonl",
+    "sha256": "eb5dc946d2acea9d396dd8d2730ffba85e42047e95fd32524c95321a7b25b42d"
+  },
+  "status": "FROZEN_COST_ONLY_REAUDIT"
+}
