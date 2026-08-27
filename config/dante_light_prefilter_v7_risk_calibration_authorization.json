@@ -1,0 +1,124 @@
+{
+  "allowed": {
+    "exact_teacher_on_background_and_teacher_positive": true,
+    "fixed_threshold_evaluation_once": true,
+    "paired_cost_measurement": true,
+    "partition": "risk_calibration",
+    "protected_control_retention": true
+  },
+  "authorization_digest": "0795eae5ee1c89b4a27f6b3a84de421f942ef72ef6bc5d307413746717d67433",
+  "authorization_id": "dante-light-l4-prefilter-v7-risk-calibration-2026-08-27",
+  "authorization_source": {
+    "actor": "Luca Cirfeta",
+    "date": "2026-08-27",
+    "instruction": "procedi"
+  },
+  "code_references": {
+    "data_loader": {
+      "path": "src/core/data_loader.py",
+      "sha256": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636"
+    },
+    "exact_teacher": {
+      "path": "src/dante_light/prefilter_v5_teacher.py",
+      "sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "risk_freezer": {
+      "path": "scripts/freeze_dante_light_prefilter_v7_risk_calibration.py",
+      "sha256": "3f000cbb4717327c56f8659509d186b0d9b577faf7db75f623e21c399aa0fc28"
+    },
+    "risk_implementation": {
+      "path": "src/dante_light/prefilter_v7_risk_calibration.py",
+      "sha256": "408183e53fece2bd26545c1d07825e160047195f18d3b023c1b065d8abeee114"
+    },
+    "risk_runner": {
+      "path": "scripts/run_dante_light_prefilter_v7_risk_calibration.py",
+      "sha256": "467927aa13c8536929cff147f3544fa547d3a88c6eaf5fdf90dff10a96cf382e"
+    },
+    "risk_verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v7_risk_calibration.py",
+      "sha256": "84491e655cceebe05a121ae17b43927bf935c6e98183c3ff4722dcb30daffe12"
+    },
+    "student_architecture": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    },
+    "waveform_cache": {
+      "path": "src/dante_light/prefilter_v7_waveforms.py",
+      "sha256": "658a903d6d7da87fda716c21d274ab467963616bcecc9bc8cdac0f855246e96c"
+    },
+    "waveform_reconstruction": {
+      "path": "src/dante_light/prefilter_v5_injections.py",
+      "sha256": "461509dc859b4cfea45408ab3e53ff7e48baaa868092b29bd9109735fed6bc65"
+    }
+  },
+  "forbidden": {
+    "confirmation": [],
+    "fallback_threshold": false,
+    "member_selection": false,
+    "o4b": [],
+    "retuning": false,
+    "routing": false
+  },
+  "gate_interpretation": {
+    "background_reduction": "realized_post_audit_separate_by_detector_gte_0.50",
+    "bootstrap_confidence": 0.95,
+    "bootstrap_quantile_method": "linear",
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed_uint64": 13317784664095674177,
+    "net_saving": "combined_detector_gps_4096s_block_bootstrap_lower_gt_0",
+    "net_saving_per_detector": "diagnostic_only",
+    "protected": "separate_detector_role_and_morphology_no_pooling",
+    "safety": "pre_audit_light_defer_only",
+    "teacher_positive": "separate_detector_current_exact_teacher_positives_within_frozen_catalog",
+    "threshold_adjustment_allowed": false
+  },
+  "outcome_contract_digest": "3ace13984dee36fee6c896c5d51d0f23b8f7d0f0cf9fb1ca7bc913254f804e2c",
+  "schema_version": 1,
+  "source_references": {
+    "confirmation_seal": {
+      "path": "config/dante_light_prefilter_v7_confirmation_seal.json",
+      "sha256": "5a24ec8db2d01c0cb2cf5355dfad4ef68db97df09adc46def28c238579ae37f4"
+    },
+    "identity_header": {
+      "path": "config/dante_light_prefilter_v7_identities.json",
+      "sha256": "7154e6bce082c286425c254cbe483a2ba470c57fcc23093041f5e911137e3a3c"
+    },
+    "identity_manifest": {
+      "path": "config/dante_light_prefilter_v7_identities.jsonl",
+      "sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f"
+    },
+    "outcome_contract": {
+      "path": "config/dante_light_prefilter_v7_outcome_blind_contract.json",
+      "sha256": "57ea8a6d8c6d779dda85821d54f977261c4665f9748cc280e258b687012f696f"
+    },
+    "teacher_stability_contract": {
+      "path": "config/dante_light_prefilter_v7_teacher_stability.json",
+      "sha256": "a6499d68eccbfc95f617aba3da6c72b6b0dec00fd54fb5282541d84f2d935c2c"
+    },
+    "threshold_contract": {
+      "path": "config/dante_light_prefilter_v7_threshold_contract.json",
+      "sha256": "2ba07da54068abc8b994b75ad2bdf8d766fa5d0ec2326b83faef85c0484fdaac"
+    },
+    "threshold_result": {
+      "path": "artifacts/dante_light/prefilter_l4_v7_threshold_search/threshold_search_summary_v7.json",
+      "sha256": "4e71321368933633d56b8752cc7cb8c7764d53d23844695c903dc381364fbc6f"
+    },
+    "training_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v7_training/student_training_summary_v7.json",
+      "sha256": "38f89b1a243299d6e16d621358153e92285821ea41004bbf55e631489c81f681"
+    },
+    "waveform_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v7_risk_calibration/risk_calibration_waveforms_v7.json",
+      "sha256": "01838b88d4077dab31526bed97442945a7403089d12fbd6d43ede3bf2f5b30f0"
+    }
+  },
+  "status": "AUTHORIZED_RISK_CALIBRATION_ONLY",
+  "teacher_stability_contract_digest": "52adb081e73c384e831c7988513b900da3e934189553402e8fdcc871d96c6934",
+  "threshold_contract_digest": "4d7a3449daff3f80eef51df286a10636de904354b8d6ae340371085d2a093c57",
+  "threshold_search_result_digest": "2116ec0462d4d518b45c321e349dfa2a3fa17fd7b9485f3c34f506de19d9485c",
+  "waveform_artifact_digest": "1a7a8a0aa631f4ee78b6b83421fa64f616e348fb5811bbdd04547ccdde5f8e90"
+}

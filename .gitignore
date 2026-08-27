@@ -384,12 +384,17 @@ scripts/*
 !scripts/freeze_dante_light_prefilter_v7_threshold_search.py
 !scripts/run_dante_light_prefilter_v7_threshold_search.py
 !scripts/verify_dante_light_prefilter_v7_threshold_search.py
+!scripts/build_dante_light_prefilter_v7_risk_waveforms.py
+!scripts/freeze_dante_light_prefilter_v7_risk_calibration.py
+!scripts/run_dante_light_prefilter_v7_risk_calibration.py
+!scripts/verify_dante_light_prefilter_v7_risk_calibration.py
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_IDENTITY_AUDIT_2026-08-23.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_SCATTERING_FEASIBILITY_2026-08-23.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_FREEZE_2026-08-24.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V7_TEACHER_STABILITY_AMENDMENT_2026-08-27.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V7_THRESHOLD_SEARCH_FREEZE_2026-08-27.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V7_THRESHOLD_SEARCH_RESULT_2026-08-27.md
+!docs/DANTE_LIGHT_L4_PREFILTER_V7_RISK_CALIBRATION_FREEZE_2026-08-27.md
 
 tmp
 archive/
