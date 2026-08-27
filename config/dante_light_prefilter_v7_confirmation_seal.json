@@ -1,0 +1,56 @@
+{
+  "access_entries_at_freeze": 0,
+  "confirmation_identity_digest": "376c5832485324c621678d9ee966bd6b9ccedb8809b24d8fa6de61273bd3ac24",
+  "confirmation_student_outputs_accessed": [],
+  "declared_storage_roots": [
+    {
+      "kind": "repository_relative",
+      "location": ".",
+      "root_id": "repository"
+    },
+    {
+      "kind": "environment_alias",
+      "location": "DANTE_RAW_STRAIN_ROOT",
+      "root_id": "raw_strain"
+    },
+    {
+      "kind": "environment_alias",
+      "location": "DANTE_V7_CACHE_ROOT",
+      "root_id": "v7_cache"
+    }
+  ],
+  "freeze_basis_commit": "85de5b9ee31d787eea511177aa82a8b67e2ecdff",
+  "identity_header_reference": {
+    "path": "config/dante_light_prefilter_v7_identities.json",
+    "sha256": "7154e6bce082c286425c254cbe483a2ba470c57fcc23093041f5e911137e3a3c"
+  },
+  "identity_manifest_reference": {
+    "path": "config/dante_light_prefilter_v7_identities.jsonl",
+    "sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f"
+  },
+  "initial_access_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "o4b_accessed": [],
+  "protected_endpoints": [
+    "teacher_positive_retention_by_detector",
+    "protected_retention_by_detector_and_morphology",
+    "natural_background_discard_fraction_by_detector",
+    "paired_block_bootstrap_mean_net_saving",
+    "paired_prefilter_and_exact_path_costs"
+  ],
+  "protocol_reference": {
+    "path": "config/dante_light_prefilter_v7_outcome_blind_contract.json",
+    "sha256": "57ea8a6d8c6d779dda85821d54f977261c4665f9748cc280e258b687012f696f"
+  },
+  "schema_version": 1,
+  "seal_digest": "c840ff1e952cfd0e11cd95cc024a74a0c3ebf376572f2188425502e7685be4af",
+  "status": "SEALED_NOT_OPENED",
+  "threshold_binding_required_before_unlock": [
+    "model_digest",
+    "training_digest",
+    "threshold_search_result_digest",
+    "frozen_threshold_digest",
+    "risk_calibration_result_digest",
+    "verifier_digest"
+  ],
+  "unlock_rule": "all_risk_calibration_gates_pass_once_no_retune"
+}

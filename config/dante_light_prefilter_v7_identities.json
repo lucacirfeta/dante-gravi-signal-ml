@@ -1,0 +1,156 @@
+{
+  "counts": {
+    "confirmation/background/H1/o4a_shadow_traffic": 300,
+    "confirmation/background/L1/o4a_shadow_traffic": 300,
+    "confirmation/injection/H1/BBH_10_10": 90,
+    "confirmation/injection/H1/BBH_30_30": 90,
+    "confirmation/injection/H1/NSBH_10_1.4_LEGACY": 90,
+    "confirmation/injection/H1/NSBH_ALIGNED_TIDAL_STRESS": 90,
+    "confirmation/injection/L1/BBH_10_10": 90,
+    "confirmation/injection/L1/BBH_30_30": 90,
+    "confirmation/injection/L1/NSBH_10_1.4_LEGACY": 90,
+    "confirmation/injection/L1/NSBH_ALIGNED_TIDAL_STRESS": 90,
+    "confirmation/known_glitch/H1/Blip": 60,
+    "confirmation/known_glitch/H1/KoiFish": 60,
+    "confirmation/known_glitch/H1/ScatteredLight": 60,
+    "confirmation/known_glitch/L1/Blip": 60,
+    "confirmation/known_glitch/L1/KoiFish": 60,
+    "confirmation/known_glitch/L1/ScatteredLight": 60,
+    "confirmation/robust_candidate/H1/DANTE_ROBUST": 60,
+    "confirmation/robust_candidate/L1/DANTE_ROBUST": 60,
+    "confirmation/teacher_positive/H1/exact_DANTE_positive": 60,
+    "confirmation/teacher_positive/L1/exact_DANTE_positive": 60,
+    "risk_calibration/background/H1/o4a_shadow_traffic": 150,
+    "risk_calibration/background/L1/o4a_shadow_traffic": 150,
+    "risk_calibration/injection/H1/BBH_10_10": 90,
+    "risk_calibration/injection/H1/BBH_30_30": 90,
+    "risk_calibration/injection/H1/NSBH_10_1.4_LEGACY": 90,
+    "risk_calibration/injection/H1/NSBH_ALIGNED_TIDAL_STRESS": 90,
+    "risk_calibration/injection/L1/BBH_10_10": 90,
+    "risk_calibration/injection/L1/BBH_30_30": 90,
+    "risk_calibration/injection/L1/NSBH_10_1.4_LEGACY": 90,
+    "risk_calibration/injection/L1/NSBH_ALIGNED_TIDAL_STRESS": 90,
+    "risk_calibration/known_glitch/H1/Blip": 60,
+    "risk_calibration/known_glitch/H1/KoiFish": 60,
+    "risk_calibration/known_glitch/H1/ScatteredLight": 60,
+    "risk_calibration/known_glitch/L1/Blip": 60,
+    "risk_calibration/known_glitch/L1/KoiFish": 60,
+    "risk_calibration/known_glitch/L1/ScatteredLight": 60,
+    "risk_calibration/robust_candidate/H1/DANTE_ROBUST": 60,
+    "risk_calibration/robust_candidate/L1/DANTE_ROBUST": 60,
+    "risk_calibration/teacher_positive/H1/exact_DANTE_positive": 60,
+    "risk_calibration/teacher_positive/L1/exact_DANTE_positive": 60,
+    "threshold_search/background/H1/o4a_shadow_traffic": 60,
+    "threshold_search/background/L1/o4a_shadow_traffic": 60,
+    "threshold_search/teacher_positive/H1/exact_DANTE_positive": 60,
+    "threshold_search/teacher_positive/L1/exact_DANTE_positive": 60,
+    "training/background/H1/o4a_shadow_traffic": 150,
+    "training/background/L1/o4a_shadow_traffic": 150,
+    "training/teacher_positive/H1/exact_DANTE_positive": 150,
+    "training/teacher_positive/L1/exact_DANTE_positive": 150
+  },
+  "freeze_basis_commit": "85de5b9ee31d787eea511177aa82a8b67e2ecdff",
+  "historical_design_evidence_used": {
+    "role": "design_diagnosis_and_case_control_identity_selection_only",
+    "teacher_threshold_and_taxonomy_labels": true,
+    "v6_background_prevalence_audit": {
+      "H1": {
+        "exact_dante_retained": 23,
+        "fraction": 0.01597222222222222,
+        "n": 1440,
+        "threshold": 0.16157861188054093
+      },
+      "L1": {
+        "exact_dante_retained": 49,
+        "fraction": 0.034027777777777775,
+        "n": 1440,
+        "threshold": 0.1760626833140853
+      }
+    }
+  },
+  "injection_trials_reference": {
+    "path": "config/dante_light_prefilter_v7_injection_trials.jsonl",
+    "sha256": "f0739b9eeff46c6f17d4d196071953fe44b551b18fad2d6444412c8499a6b7d5"
+  },
+  "manifest_digest": "8085cffbe5eaed0cff1fca1bd2909d717360f90c4cf579ba81a14645864641c1",
+  "manifest_reference": {
+    "path": "config/dante_light_prefilter_v7_identities.jsonl",
+    "sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f"
+  },
+  "outcome_access_at_freeze": {
+    "confirmation_student_outputs": [],
+    "o4b": [],
+    "risk_calibration_student_outputs": [],
+    "threshold_search_student_outputs": [],
+    "v7_student_outputs": []
+  },
+  "power_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v7_design/selective_deferral_power_v7.json",
+    "sha256": "aab235d1d01d378bde3a87d92bdd12b851aab7806a904a66e35200a11019d538"
+  },
+  "protocol_reference": {
+    "path": "config/dante_light_prefilter_v7_outcome_blind_contract.json",
+    "sha256": "57ea8a6d8c6d779dda85821d54f977261c4665f9748cc280e258b687012f696f"
+  },
+  "schema_version": 1,
+  "source_references": {
+    "background_teacher_prevalence_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v7_design/background_teacher_prevalence_audit_v7.json",
+      "sha256": "bd9eddd2463eabe01578573759e1ead1282298c8aa1a1789a6159d111d3ecf47"
+    },
+    "exact_dante_runner": {
+      "path": "src/dante_light/runner.py",
+      "sha256": "5b68dd7976ae6623e30ef02226c1c90e540c3326c21aaed55987e648d1148570"
+    },
+    "historical_thresholds": {
+      "path": "config/dante_light_epochs_v1.json",
+      "sha256": "1f4bfa593ee2fe1902b390417b495cba83eab3d7447065801f6a301d34335ca6"
+    },
+    "known_glitch_snapshot": {
+      "path": "config/dante_light_prefilter_v4_known_source_snapshot.jsonl",
+      "sha256": "9015d041d4308d50c8fbeb846ae744b303790dd34c58b072aa383aa8cb07a811"
+    },
+    "selection_code": {
+      "path": "src/dante_light/prefilter_v7_freeze.py",
+      "sha256": "44d10d0a58a91dc10b8999176d30b65a01ffd987ca6c03e57567a5e575489ee0"
+    },
+    "taxonomy": {
+      "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    }
+  },
+  "status": "FROZEN_IDENTITY_ONLY_NOT_OPENED",
+  "teacher_positive_diagnostics": {
+    "H1": {
+      "class_counts_selected": {
+        "AMBIGUOUS": 23,
+        "ROBUST": 307
+      },
+      "exact_threshold": 0.16157861188054093,
+      "family_counts_selected": {
+        "Family_01": 329,
+        "Singleton_1369305276": 1
+      },
+      "fresh_unique_positive_blocks": 696,
+      "remaining_after_primary": 366,
+      "selected_primary_blocks": 330
+    },
+    "L1": {
+      "class_counts_selected": {
+        "AMBIGUOUS": 17,
+        "ROBUST": 313
+      },
+      "exact_threshold": 0.1760626833140853,
+      "family_counts_selected": {
+        "Family_01": 330
+      },
+      "fresh_unique_positive_blocks": 805,
+      "remaining_after_primary": 475,
+      "selected_primary_blocks": 330
+    }
+  },
+  "transfer_reference": {
+    "path": "config/dante_light_prefilter_v7_identity_transfer.json",
+    "sha256": "8fa6cc569f557ea3b2a91240f698aaddf9f48955da75df5b87fa04898b2535b3"
+  }
+}

@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_PHASE_B_SCREENING_CONTRACT",
+  "phase_id": "dante-light-l4-prefilter-v6-phase-b",
+  "decision_date": "2026-08-25",
+  "scope": {
+    "allowed_partition": "phase_b",
+    "allowed_role": "background",
+    "phase_b_training_allowed": true,
+    "phase_c_access_allowed": false,
+    "phase_d_access_allowed": false,
+    "o4b_access_allowed": false,
+    "morphology_labels_allowed": false,
+    "routing_enabled": false,
+    "scientific_role": "configuration_screening_not_confirmation"
+  },
+  "data_contract": {
+    "run": "O4A",
+    "detectors": ["H1", "L1"],
+    "independence_unit": "detector_gps_4096s_block",
+    "fit_blocks_per_detector": 144,
+    "internal_validation_blocks_per_detector": 36,
+    "windows_per_block": 8,
+    "teacher_target": "native_o4a_novelty_score",
+    "teacher_target_serialization": "float32_hex",
+    "target_standardization": "per_detector_fit_subset_mean_std_ddof0",
+    "target_clipping": false,
+    "block_overlap_allowed": false
+  },
+  "arms": [
+    {
+      "id": "global_average_smooth_l1",
+      "architecture_id": "raw_v5_global_average",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "id": "teacher_top_fraction_smooth_l1",
+      "architecture_id": "raw_teacher_top_fraction",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "id": "attention_mil_smooth_l1",
+      "architecture_id": "raw_attention_mil",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "id": "teacher_top_fraction_x2_smooth_l1",
+      "architecture_id": "raw_teacher_top_fraction_x2",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "id": "teacher_top_fraction_equal_gradient_ranknet",
+      "architecture_id": "raw_teacher_top_fraction",
+      "objective_id": "equal_gradient_smooth_l1_ranknet"
+    }
+  ],
+  "optimization": {
+    "optimizer": {
+      "name": "AdamW",
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "betas": [0.9, 0.999],
+      "epsilon": 1e-08,
+      "amsgrad": false
+    },
+    "scheduler": {
+      "name": "none",
+      "intentional": true
+    },
+    "batch": {
+      "total_windows": 64,
+      "blocks_per_detector": 4,
+      "windows_per_block": 8,
+      "H1_windows": 32,
+      "L1_windows": 32,
+      "detector_balanced": true,
+      "whole_blocks_only": true
+    },
+    "maximum_epochs": 100,
+    "early_stopping": false,
+    "gradient_clipping": false,
+    "automatic_mixed_precision": false,
+    "dtype": "float32",
+    "checkpoint_selection": {
+      "primary_metric": "minimum_detector_internal_validation_spearman",
+      "primary_direction": "maximum",
+      "first_tie_break": "equal_detector_mean_internal_validation_smooth_l1_minimum",
+      "second_tie_break": "earliest_epoch",
+      "nonfinite_primary_metric_epoch": "INELIGIBLE_FOR_CHECKPOINT",
+      "no_eligible_checkpoint_after_100_epochs": "FAILED_DEGENERATE_REPLICATE"
+    }
+  },
+  "objective": {
+    "value": {
+      "name": "SmoothL1Loss",
+      "beta": 1.0,
+      "reduction": "window_mean_then_detector_mean"
+    },
+    "rank": {
+      "name": "RankNet_pairwise_logistic",
+      "pairs": "all_28_unordered_pairs_within_each_detector_GPS_block",
+      "cross_block_pairs": false,
+      "cross_detector_pairs": false,
+      "exact_target_ties_excluded": true,
+      "margin": null,
+      "reduction": "pair_mean_then_block_mean_then_detector_mean"
+    },
+    "equal_gradient": {
+      "algorithm": "normalized_component_direction_sum_rescaled_to_value_gradient_norm",
+      "formula": "g_final=norm(g_value)*(g_value/norm(g_value)+g_rank/norm(g_rank))/norm(g_value/norm(g_value)+g_rank/norm(g_rank))",
+      "gradient_scope": "all_trainable_parameters_none_as_zero",
+      "component_weight_learning_rate": null,
+      "ema_or_smoothing": null,
+      "warmup_epochs": 0,
+      "clipping_or_bounds": null,
+      "post_hoc_sweep_allowed": false,
+      "fail_on_zero_nonfinite_component_or_combined_norm": true,
+      "log_each_step": [
+        "value_gradient_l2",
+        "rank_gradient_l2",
+        "detached_lambda_equivalent",
+        "component_cosine",
+        "unscaled_direction_l2",
+        "final_gradient_l2"
+      ]
+    }
+  },
+  "replicates": {
+    "count": 5,
+    "seed_method": "sha256_contract_digest_purpose_replicate_first_64_bits_big_endian",
+    "same_replicate_seed_across_arms": true,
+    "favorable_seed_selection_allowed": false,
+    "numerical_failure_blocks_arm": true,
+    "infrastructure_interruption": "INCOMPLETE_RERUN_SAME_SEED_AND_RUN_KEY_ALLOWED"
+  },
+  "selection_rule": {
+    "stage_role": "screening_only_best_of_five_not_confirmatory_evidence",
+    "exclude_any_arm_with_failed_replicate": true,
+    "primary": "maximum_of_minimum_internal_validation_spearman_over_detector_and_replicate",
+    "first_tie_break": "minimum_worst_detector_replicate_smooth_l1",
+    "second_tie_break": "minimum_phase_a_cpu_mean_batch1_inference_seconds",
+    "third_tie_break": "minimum_trainable_parameter_count",
+    "final_tie_break": "lexicographic_arm_id",
+    "minimum_worst_cell_spearman_for_phase_c_unlock": 0.9,
+    "multiplicity_interpretation": "Phase_B_selects_one_configuration_from_five_and_makes_no_confirmatory_claim; only_the_independent_sealed_Phase_C_can_confirm_fidelity",
+    "phase_c_automatic_access": false
+  },
+  "scientific_boundary": {
+    "does_not_establish": [
+      "confirmed teacher fidelity",
+      "protected-morphology retention",
+      "background call reduction",
+      "positive net compute saving",
+      "operational routing readiness",
+      "O4b generalization",
+      "physical discovery sensitivity"
+    ]
+  },
+  "source_references": {
+    "phase_a_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_a.json",
+      "sha256": "1833524ef4a9b355e8f0f9ce5481be36044f5a514a1276ba8b4bef80a0d218c6"
+    },
+    "phase_a_compute_artifact": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_design/phase_a_compute_feasibility_v6.json",
+      "sha256": "84c6a41fc8de6cd39ca37509cb531053cbc64e468f6e68799508bb2d9b00c174"
+    },
+    "pre_phase_b_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_design/pre_phase_b_audit_v6.json",
+      "sha256": "9fac8f02fae2849d57795d91e587939f92aea3b26b8da459bbf657272e45e20c"
+    },
+    "partition_contract": {
+      "path": "config/dante_light_prefilter_v6_partition_freeze.json",
+      "sha256": "623581a41080e949b8c0c7acd313093049af042f9e6e5eee1781feab884eb37d"
+    },
+    "partition_header": {
+      "path": "config/dante_light_prefilter_v6_partitions.json",
+      "sha256": "e27c9c5bffac9f36d03bc4f7b6b8bb9374b37a65c98e8d56a8ab3cfefd2eb164"
+    },
+    "partition_entries": {
+      "path": "config/dante_light_prefilter_v6_partitions.jsonl",
+      "sha256": "4be7725b4d3a6376132fa14ef2ccc3881f262baa818a3ef59bd9eea25491b27e"
+    },
+    "phase_c_power_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_c_power.json",
+      "sha256": "6c5b933f6eb4ad99a18c25c475071713ce65500eef0bbc115af67c9a019f77c2"
+    },
+    "teacher_contract": {
+      "path": "config/dante_light_prefilter_v5_teacher_contract.json",
+      "sha256": "5772f4f0ff2f622ab2ab7cc8680c07b1ff26c8a846b4a26deeb3a1d4a210771b"
+    },
+    "v5_training_design": {
+      "path": "config/dante_light_prefilter_v5_training_design.json",
+      "sha256": "f0ea214a62cae7e8d5749486b712e7c5353fb8ee63e47309d60c173212d7674a"
+    },
+    "implementation": {
+      "path": "src/dante_light/prefilter_v6_phase_b.py",
+      "sha256": "65d425627c5ddc373cb892d39d64a000f8e099d2cca37d5ee8e772dd87e24b8c"
+    },
+    "runner": {
+      "path": "scripts/freeze_dante_light_prefilter_v6_phase_b.py",
+      "sha256": "6c1b3479e674f892891f0dc9340f1a0b9ca7c38bd19b99f04831a3357b29ef16"
+    },
+    "verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v6_phase_b.py",
+      "sha256": "941acc031db5c2e6966822c38640440a938cd13c62523c2f4392de41c3bb17a1"
+    }
+  },
+  "contract_digest": "ec139bfb525993e45616fcb07f6fd485d622b408441094b0292848407ca52af7"
+}

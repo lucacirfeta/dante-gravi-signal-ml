@@ -1,0 +1,163 @@
+{
+  "artifact_digest": "ae952993311059f0d96a2212f7e8d5f2548869847991c2061cecee202835a6fe",
+  "audit_id": "dante-light-l4-prefilter-v6-phase-b-planning",
+  "capacity": {
+    "H1": {
+      "additional_not_currently_local_count": 131,
+      "available_start_span_s": {
+        "maximum": 4056.0,
+        "median": 3012.0,
+        "minimum": 284.0,
+        "p05": 513.0,
+        "p25": 1713.0,
+        "p75": 4056.0,
+        "p95": 4056.0
+      },
+      "count_by_minimum_available_start_span_s": {
+        "1024": 528,
+        "1600": 468,
+        "2048": 411,
+        "2400": 368,
+        "2800": 323,
+        "3000": 304,
+        "3200": 281
+      },
+      "currently_local_eligible_block_count": 475,
+      "official_eligible_block_count": 606,
+      "official_eligible_block_keys_digest": "2920ab25b9be9ef508011d342fd281bd6a77a392b88a5f9742e3b7fd5bf10ef2"
+    },
+    "L1": {
+      "additional_not_currently_local_count": 154,
+      "available_start_span_s": {
+        "maximum": 4056.0,
+        "median": 3598.0,
+        "minimum": 292.0,
+        "p05": 728.0,
+        "p25": 1948.0,
+        "p75": 4056.0,
+        "p95": 4056.0
+      },
+      "count_by_minimum_available_start_span_s": {
+        "1024": 518,
+        "1600": 467,
+        "2048": 425,
+        "2400": 399,
+        "2800": 358,
+        "3000": 342,
+        "3200": 332
+      },
+      "currently_local_eligible_block_count": 422,
+      "official_eligible_block_count": 576,
+      "official_eligible_block_keys_digest": "1a8cbb14b382938e5b03ee6eeee19b11b9a224f8b06bf1e889447b17ed4d86a0"
+    },
+    "allocation_scenarios": [
+      {
+        "available_blocks": {
+          "H1": 606,
+          "L1": 576
+        },
+        "blocks_per_detector": {
+          "phase_b_training_selection": 180,
+          "phase_c_training_confirmation": 60,
+          "phase_d_confirmation": 150,
+          "phase_d_development": 150
+        },
+        "id": "balanced_training_and_later_gates",
+        "mechanically_feasible": true,
+        "minimum_available_start_span_s": 0,
+        "remaining_buffer_blocks": {
+          "H1": 66,
+          "L1": 36
+        },
+        "selected": false,
+        "total_required_blocks_per_detector": 540
+      },
+      {
+        "available_blocks": {
+          "H1": 468,
+          "L1": 467
+        },
+        "blocks_per_detector": {
+          "phase_b_training_selection": 160,
+          "phase_c_training_confirmation": 60,
+          "phase_d_confirmation": 110,
+          "phase_d_development": 110
+        },
+        "id": "span_stratified_conservative",
+        "mechanically_feasible": true,
+        "minimum_available_start_span_s": 1600,
+        "remaining_buffer_blocks": {
+          "H1": 28,
+          "L1": 27
+        },
+        "selected": false,
+        "total_required_blocks_per_detector": 440
+      }
+    ],
+    "interpretation_boundary": {
+      "allocation_selected": false,
+      "identity_only_capacity_not_download_success": true,
+      "raw_fetch_performed": false,
+      "whole_block_resampling_required": true,
+      "window_level_independence_established": false
+    }
+  },
+  "contract_digest": "57778e8bcd4b03899c962fa44ef410526b29789fdb50eb6116d357c612ba6288",
+  "decision": {
+    "allocation_selected": false,
+    "objective_selected": false,
+    "phase_b_frozen": false,
+    "training_authorized": false
+  },
+  "outcome_access": {
+    "confirmation": [],
+    "development": [],
+    "morphology_labels": [],
+    "o4b": [],
+    "teacher_targets": []
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "allocation_selected": false,
+    "confirmation_access_allowed": false,
+    "development_access_allowed": false,
+    "morphology_labels_allowed": false,
+    "o4b_access_allowed": false,
+    "objective_selected": false,
+    "phase_b_frozen": false,
+    "raw_fetch_allowed": false,
+    "teacher_targets_allowed": false,
+    "training_allowed": false
+  },
+  "source_references": {
+    "gwosc_segment_snapshot": {
+      "path": "config/dante_light_prefilter_v4_segments.json",
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
+    },
+    "implementation": {
+      "path": "src/dante_light/prefilter_v6_phase_b_planning.py",
+      "sha256": "07bfd369efc25c17f3411e270a9949a14724c7d57625a398f65167f431c9239a"
+    },
+    "pre_phase_b_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_design/pre_phase_b_audit_v6.json",
+      "sha256": "9fac8f02fae2849d57795d91e587939f92aea3b26b8da459bbf657272e45e20c"
+    },
+    "runner": {
+      "path": "scripts/run_dante_light_prefilter_v6_phase_b_planning_audit.py",
+      "sha256": "21b05d15a8bbf11ff6352f4527efa776559241b84302b33a11541cf48e90f61a"
+    },
+    "v5_identity_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
+      "sha256": "23ea8ef97b77201e06297d98b5c6dfb24b284420875913f03b5456d36a0403a6"
+    },
+    "v5_split_entries": {
+      "path": "config/dante_light_prefilter_splits_v5.jsonl",
+      "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+    },
+    "verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v6_phase_b_planning_audit.py",
+      "sha256": "a5546e08a976f8b323d02bb135958004f4ef58b9310c0398fdd08e93a35d5d32"
+    }
+  },
+  "status": "PHASE_B_PLANNING_AUDIT_COMPLETE_AWAITING_DECISION"
+}

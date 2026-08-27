@@ -1,0 +1,183 @@
+{
+  "contract_digest": "3ace13984dee36fee6c896c5d51d0f23b8f7d0f0cf9fb1ca7bc913254f804e2c",
+  "gates": {
+    "operational": {
+      "background_call_reduction_role": "product_requirement_not_significance",
+      "deterministic_audit_stream_cost_included": true,
+      "mean_net_saving_lower_operator": ">",
+      "minimum_background_call_reduction": 0.5,
+      "minimum_mean_net_saving_s": 0.0,
+      "paired_per_window_costs_required": true
+    },
+    "primary_teacher_positive": {
+      "endpoint": "P(Light_defers|exact_DANTE_retains, frozen_O4a_candidate_catalog)",
+      "same_numeric_rule_as_protected_retention": true,
+      "separate_by_detector": true
+    },
+    "protected_morphology": {
+      "aggregation_across_morphologies_allowed": false,
+      "same_numeric_rule_as_protected_retention": true,
+      "separate_by_detector_and_morphology": true
+    },
+    "retention": {
+      "minimum_point_retention": 0.9,
+      "minimum_wilson_lower": 0.8,
+      "operator": "AND",
+      "separate_by_detector_and_morphology": true,
+      "wilson_confidence": 0.95
+    },
+    "uncertainty": {
+      "confidence": 0.95,
+      "iid_bootstrap_allowed": false,
+      "method": "detector_gps_4096s_block_bootstrap",
+      "n_resamples": 2000
+    }
+  },
+  "identity_counts": {
+    "background_per_detector": {
+      "confirmation": 300,
+      "risk_calibration": 150,
+      "threshold_search": 60,
+      "training": 150
+    },
+    "protected_per_detector_morphology": {
+      "confirmation": {
+        "injection": 90,
+        "known_glitch": 60,
+        "robust_candidate": 60
+      },
+      "risk_calibration": {
+        "injection": 90,
+        "known_glitch": 60,
+        "robust_candidate": 60
+      }
+    },
+    "teacher_positive_per_detector": {
+      "confirmation": 60,
+      "risk_calibration": 60,
+      "threshold_search": 60,
+      "training": 150
+    }
+  },
+  "power": {
+    "background_maximum_wilson_half_width": 0.06,
+    "background_precision_reference_probability": 0.5,
+    "minimum_pass_probability": 0.9,
+    "true_retention_alternative": 0.95
+  },
+  "protocol_id": "dante-light-l4-prefilter-v7-selective-deferral",
+  "retrospective_prevalence_evidence": {
+    "H1": {
+      "exact_dante_retained": 23,
+      "fraction": 0.01597222222222222,
+      "n": 1440,
+      "threshold": 0.16157861188054093
+    },
+    "L1": {
+      "exact_dante_retained": 49,
+      "fraction": 0.034027777777777775,
+      "n": 1440,
+      "threshold": 0.1760626833140853
+    },
+    "role": "design_diagnosis_only_not_v7_confirmation",
+    "zero_of_1440_claim_rejected": true
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "does_not_establish": [
+      "independent_physical_or_astrophysical_classification",
+      "global_exact_DANTE_score_fidelity",
+      "unseen_morphology_safety",
+      "O4b_or_operational_routing_readiness"
+    ],
+    "false_omission_risk_on_natural_background": "secondary_only_if_enough_teacher_positives_exist",
+    "historical_exact_DANTE_positive_is_teacher_behavior_not_physical_truth": true,
+    "o4b_access_allowed": false,
+    "observed_o4a_teacher_positive_population_is_overwhelmingly_Family_01": true,
+    "primary_gate_does_not_establish_broad_unseen_morphology_coverage": true,
+    "primary_gate_kept_because_it_covers_teacher_positive_cases_outside_enumerated_protected_roles": true,
+    "primary_teacher_positive_population_is_catalog_conditioned_not_continuous_traffic": true,
+    "routing_enabled": false
+  },
+  "status": "APPROVED_OUTCOME_BLIND_FREEZE_INPUT",
+  "task": {
+    "defer_label": "historical_exact_DANTE_strictly_above_detector_threshold",
+    "physical_truth_label": false,
+    "population_scope": "frozen_retrospective_O4a_candidate_catalog_plus_natural_shadow_traffic",
+    "routing_rule": "defer_if_score_greater_than_or_equal_to_detector_threshold_else_discard",
+    "safe_discard_label": "historical_exact_DANTE_at_or_below_detector_threshold",
+    "spearman_role": "diagnostic_only_not_a_gate",
+    "student_score": "estimated_probability_of_defer_label",
+    "type": "selective_deferral_binary_safety_triage"
+  },
+  "threshold_selection": {
+    "calibration_failure_action": "STOP_NO_RETUNE_NO_FALLBACK",
+    "constraint": "teacher_positive_retention_gate_passes_separately_for_H1_and_L1",
+    "freeze_before_risk_calibration": true,
+    "objective": "maximum_natural_background_discard_fraction",
+    "selection_partition": "threshold_search",
+    "tie_interpretation": "lower_defer_probability_threshold_is_the_more_conservative_rule",
+    "ties": "lowest_numeric_discard_threshold_then_lexicographic_model_identity"
+  },
+  "waveforms": {
+    "aligned_tidal_nsbh_stress": {
+      "approximant": "IMRPhenomNSBH",
+      "black_hole_aligned_spin": [
+        -0.5,
+        0.75
+      ],
+      "black_hole_mass_msun": [
+        5.0,
+        20.0
+      ],
+      "f_low_hz": 30.0,
+      "neutron_star_aligned_spin": 0.0,
+      "neutron_star_mass_msun": [
+        1.2,
+        2.0
+      ],
+      "neutron_star_tidal_lambda": [
+        100.0,
+        1000.0
+      ],
+      "precession": "OUT_OF_SCOPE",
+      "sampling": "seeded_stratified_LatinHypercube_no_optimization",
+      "separate_gate_from_legacy_NS_BH": true,
+      "system": "NSBH_ALIGNED_TIDAL_STRESS"
+    },
+    "distance_mpc": [
+      100.0,
+      200.0,
+      400.0,
+      800.0,
+      1600.0
+    ],
+    "legacy_comparability": {
+      "approximant": "IMRPhenomD",
+      "systems": {
+        "BBH_10_10": {
+          "f_low_hz": 25.0,
+          "mass_1_msun": 10.0,
+          "mass_2_msun": 10.0
+        },
+        "BBH_30_30": {
+          "f_low_hz": 20.0,
+          "mass_1_msun": 30.0,
+          "mass_2_msun": 30.0
+        },
+        "NSBH_10_1.4_LEGACY": {
+          "f_low_hz": 30.0,
+          "mass_1_msun": 10.0,
+          "mass_2_msun": 1.4,
+          "physical_scope": "point_particle_comparability_control_only",
+          "tidal_effects_included": false
+        }
+      }
+    },
+    "placement": "geocentric_merger_at_window_midpoint_plus_detector_delay",
+    "sample_rate_hz": 4096,
+    "snr_role": "diagnostic_only_never_selection_or_gate",
+    "trials_per_distance_detector_partition": 18,
+    "window_duration_s": 32.0
+  }
+}

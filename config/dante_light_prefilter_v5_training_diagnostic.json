@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "diagnostic_id": "dante-light-l4-prefilter-v5-retrospective-training-diagnostic",
+  "status": "FROZEN_RETROSPECTIVE_TRAINING_ONLY_BEFORE_PREDICTION_ACCESS",
+  "parent_references": {
+    "training_contract": {
+      "path": "config/dante_light_prefilter_v5_training_contract.json",
+      "sha256": "3190f293378182a6a4f586f438a273033aefea2dbcdbd26d4df9b98d3b83b3fb"
+    },
+    "training_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/student_training_summary_v5.json",
+      "sha256": "5f38b10c634c589a9fdc33cd0c0c991329a97cd0c91176334aa2ecc6c34b78e8"
+    },
+    "internal_split": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/training_internal_split_v5.jsonl",
+      "sha256": "3b320bd6e65193c5fa4eac6ed73f6fbbed98b1d4cf900906651f1b82b18f670b"
+    },
+    "teacher_targets": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/teacher_targets_compact_v5.jsonl",
+      "sha256": "4c4a37f253bde9dc38ec27e390adeb18c326348f25eefd68f783018d8d07358e"
+    },
+    "student_architectures": {
+      "path": "src/dante_light/prefilter_v4_student.py",
+      "sha256": "b6be0b5a6dae256fcbeff8cba66703ba8c5efc62c4f1f8960e222712d1f74019"
+    }
+  },
+  "scope": {
+    "allowed_partition": "training",
+    "allowed_internal_subsets": [
+      "fit",
+      "validation"
+    ],
+    "allowed_roles": [
+      "background"
+    ],
+    "morphology_labels_allowed": false,
+    "development_access_allowed": false,
+    "confirmation_access_allowed": false,
+    "o4b_access_allowed": false,
+    "routing_enabled": false
+  },
+  "matrix": {
+    "architectures": [
+      "raw_1d_depthwise",
+      "complex_stft_2d"
+    ],
+    "replicate_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "internal_subsets": [
+      "fit",
+      "validation"
+    ]
+  },
+  "metrics": {
+    "teacher_student_rank": "spearman_point",
+    "teacher_student_linear": "pearson_point",
+    "teacher_student_value": "SmoothL1_beta_from_parent_contract",
+    "scale_diagnostic": [
+      "prediction_standard_deviation_ddof0",
+      "target_standard_deviation_ddof0"
+    ],
+    "aggregation": "reported_separately_by_architecture_replicate_subset_and_detector",
+    "uncertainty_interval": null,
+    "pass_fail_threshold": null
+  },
+  "execution": {
+    "model_checkpoint": "frozen_best_validation_SmoothL1_checkpoint",
+    "precision": "float32",
+    "automatic_mixed_precision": false,
+    "shuffle": false,
+    "write_per_window_predictions": false
+  },
+  "interpretation_boundary": {
+    "retrospective_exploratory_only": true,
+    "candidate_promotion_allowed": false,
+    "may_change_v5_status": false,
+    "may_authorize_confirmation": false,
+    "may_authorize_o4b": false,
+    "low_fit_rank_supports": "capacity_optimization_or_objective_mismatch_hypothesis_not_causal_proof",
+    "high_fit_low_validation_rank_supports": "generalization_or_support_shift_hypothesis_not_causal_proof",
+    "does_not_establish": [
+      "causal_failure_mechanism",
+      "physical_detection_sensitivity",
+      "safe_operational_routing",
+      "successor_architecture_or_objective"
+    ]
+  }
+}

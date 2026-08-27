@@ -1,0 +1,89 @@
+{
+  "arms": [
+    {
+      "architecture_id": "raw_v5_global_average",
+      "id": "global_average_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_teacher_top_fraction",
+      "id": "teacher_top_fraction_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_attention_mil",
+      "id": "attention_mil_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_teacher_top_fraction_x2",
+      "id": "teacher_top_fraction_x2_smooth_l1",
+      "objective_id": "smooth_l1"
+    },
+    {
+      "architecture_id": "raw_teacher_top_fraction",
+      "id": "teacher_top_fraction_equal_gradient_ranknet",
+      "objective_id": "equal_gradient_smooth_l1_ranknet"
+    }
+  ],
+  "artifact_digest": "e3995f7fc4c60d73d4bd090f179c1ad04a6c664372c81c71b0b9b141e7fbb56a",
+  "authorized_next_action": "download_frozen_missing_windows_then_build_phase_b_teacher_ledger",
+  "contract_digest": "ec139bfb525993e45616fcb07f6fd485d622b408441094b0292848407ca52af7",
+  "objective": {
+    "equal_gradient": {
+      "algorithm": "normalized_component_direction_sum_rescaled_to_value_gradient_norm",
+      "clipping_or_bounds": null,
+      "component_weight_learning_rate": null,
+      "ema_or_smoothing": null,
+      "fail_on_zero_nonfinite_component_or_combined_norm": true,
+      "formula": "g_final=norm(g_value)*(g_value/norm(g_value)+g_rank/norm(g_rank))/norm(g_value/norm(g_value)+g_rank/norm(g_rank))",
+      "gradient_scope": "all_trainable_parameters_none_as_zero",
+      "log_each_step": [
+        "value_gradient_l2",
+        "rank_gradient_l2",
+        "detached_lambda_equivalent",
+        "component_cosine",
+        "unscaled_direction_l2",
+        "final_gradient_l2"
+      ],
+      "post_hoc_sweep_allowed": false,
+      "warmup_epochs": 0
+    },
+    "rank": {
+      "cross_block_pairs": false,
+      "cross_detector_pairs": false,
+      "exact_target_ties_excluded": true,
+      "margin": null,
+      "name": "RankNet_pairwise_logistic",
+      "pairs": "all_28_unordered_pairs_within_each_detector_GPS_block",
+      "reduction": "pair_mean_then_block_mean_then_detector_mean"
+    },
+    "value": {
+      "beta": 1.0,
+      "name": "SmoothL1Loss",
+      "reduction": "window_mean_then_detector_mean"
+    }
+  },
+  "outcomes_accessed": [],
+  "replicate_seeds": [
+    5359009231665134759,
+    2788609450320313238,
+    4104643669570138138,
+    1759656817788901178,
+    4332968240179740383
+  ],
+  "schema_version": 1,
+  "selection_rule": {
+    "exclude_any_arm_with_failed_replicate": true,
+    "final_tie_break": "lexicographic_arm_id",
+    "first_tie_break": "minimum_worst_detector_replicate_smooth_l1",
+    "minimum_worst_cell_spearman_for_phase_c_unlock": 0.9,
+    "multiplicity_interpretation": "Phase_B_selects_one_configuration_from_five_and_makes_no_confirmatory_claim; only_the_independent_sealed_Phase_C_can_confirm_fidelity",
+    "phase_c_automatic_access": false,
+    "primary": "maximum_of_minimum_internal_validation_spearman_over_detector_and_replicate",
+    "second_tie_break": "minimum_phase_a_cpu_mean_batch1_inference_seconds",
+    "stage_role": "screening_only_best_of_five_not_confirmatory_evidence",
+    "third_tie_break": "minimum_trainable_parameter_count"
+  },
+  "status": "FROZEN_PHASE_B_SCREENING_CONTRACT_VERIFIED"
+}

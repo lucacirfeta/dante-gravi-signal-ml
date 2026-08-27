@@ -1,0 +1,104 @@
+{
+  "access_boundary": {
+    "confirmation": [],
+    "o4b": [],
+    "risk_calibration": [],
+    "threshold_search": [],
+    "training_strain_or_teacher_labels": []
+  },
+  "artifact_digest": "448bdba6cbd257a823538757617774cb7734a301e97edf8174efa5914c625f9f",
+  "audit_probe": {
+    "finite_cohort_fraction_claimed": false,
+    "nominal_fraction": 0.05,
+    "seed": 3039306248954819832,
+    "window_id": "dlv7-outcome-blind-compute-proxy"
+  },
+  "candidate_id": "raw_teacher_top_fraction_five_member_mean_sigmoid",
+  "decision": {
+    "artifact_integrity_can_pass": true,
+    "candidate_promoted": false,
+    "compute_feasibility_gate_frozen": false,
+    "routing_enabled": false,
+    "training_authorized": false
+  },
+  "diagnostic_single_member": {
+    "cpu_batch1": {
+      "count": 300,
+      "maximum_s": 0.0017727999984344933,
+      "mean_s": 0.0012115306666116035,
+      "median_s": 0.0011648000017885352,
+      "p95_s": 0.001485655000760744,
+      "standard_deviation_s": 0.0001133469966125302
+    },
+    "observed_defer_score": 0.509627103805542,
+    "promotion_or_compute_gate_role": false
+  },
+  "environment": {
+    "automatic_mixed_precision": false,
+    "deterministic_algorithms": true,
+    "device": "cpu",
+    "numpy": "2.4.5",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.5",
+    "torch": "2.12.0.dev20260408+cu128",
+    "torch_num_threads": 1
+  },
+  "historical_cost_context": {
+    "five_member_mean_to_historical_exact_cost_ratio": 0.012598791045745954,
+    "mean_avoidable_exact_path_cost_s": 0.48160943733368183,
+    "role": "descriptive_only_not_a_compute_pass_gate"
+  },
+  "production_candidate": {
+    "all_members_executed_per_window": true,
+    "complete_five_member_path_cpu_batch1": {
+      "count": 300,
+      "maximum_s": 0.008052700002735946,
+      "mean_s": 0.0060676966666263375,
+      "median_s": 0.005991599999106256,
+      "p95_s": 0.006510265001816152,
+      "standard_deviation_s": 0.00030397828034962345
+    },
+    "mechanical_audit_result": false,
+    "mechanical_route_result": false,
+    "member_count": 5,
+    "observed_defer_score": 0.48233118653297424,
+    "parameter_bytes_total": 73300,
+    "second_stage_distillation_executed": false,
+    "trainable_parameters_per_member": 3665,
+    "trainable_parameters_total": 18325
+  },
+  "schema_version": 1,
+  "signal": {
+    "batch_size": 1,
+    "dtype": "float32",
+    "duration_s": 32.0,
+    "input_length": 131072,
+    "sample_rate_hz": 4096,
+    "seed": 6343050896476702490,
+    "source": "deterministic_standard_normal_float32_whitened_subwindow_proxy"
+  },
+  "source_references": {
+    "benchmark_runner": {
+      "path": "scripts/run_dante_light_prefilter_v7_compute_benchmark.py",
+      "sha256": "e8726fb136cdf1738db1cb7585382f5d87287a10839a9d199a60252b14b99297"
+    },
+    "ensemble_implementation": {
+      "path": "src/dante_light/prefilter_v7_training_freeze.py",
+      "sha256": "18ae88637646899404c1dc83d051729e6822b8ecdf7963049bf0ea618a8cbd0c"
+    },
+    "historical_exact_cost": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_development/screening_summary_v5.json",
+      "sha256": "bf2f82b4b2db775be11bbd21ba30005a105980095d566e9ad04987869497512c"
+    },
+    "training_contract": {
+      "path": "config/dante_light_prefilter_v7_training_contract.json",
+      "sha256": "8df867190c7fd10010f3a4ad253ad1c9fe7254774baf1adfe9b02a91b38c3421"
+    }
+  },
+  "startup": {
+    "five_member_graph_construction_s": 0.03393610000057379,
+    "included_in_steady_state_latency": false
+  },
+  "status": "OUTCOME_BLIND_FIVE_MEMBER_COMPUTE_BENCHMARK_COMPLETE",
+  "training_contract_digest": "03c75c99fc2c3a930601727d49e7dee29284782e3edc263384ad6ee064c9d8f1"
+}

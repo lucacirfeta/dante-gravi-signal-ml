@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_PHASE_B_PLANNING_AUDIT_ONLY",
+  "audit_id": "dante-light-l4-prefilter-v6-phase-b-planning",
+  "decision_date": "2026-08-25",
+  "scientific_boundary": {
+    "phase_b_frozen": false,
+    "allocation_selected": false,
+    "objective_selected": false,
+    "training_allowed": false,
+    "development_access_allowed": false,
+    "confirmation_access_allowed": false,
+    "o4b_access_allowed": false,
+    "teacher_targets_allowed": false,
+    "morphology_labels_allowed": false,
+    "raw_fetch_allowed": false
+  },
+  "source_references": {
+    "gwosc_segment_snapshot": {
+      "path": "config/dante_light_prefilter_v4_segments.json",
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
+    },
+    "v5_identity_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
+      "sha256": "23ea8ef97b77201e06297d98b5c6dfb24b284420875913f03b5456d36a0403a6"
+    },
+    "v5_split_entries": {
+      "path": "config/dante_light_prefilter_splits_v5.jsonl",
+      "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+    },
+    "pre_phase_b_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_design/pre_phase_b_audit_v6.json",
+      "sha256": "9fac8f02fae2849d57795d91e587939f92aea3b26b8da459bbf657272e45e20c"
+    },
+    "implementation": {
+      "path": "src/dante_light/prefilter_v6_phase_b_planning.py",
+      "sha256": "07bfd369efc25c17f3411e270a9949a14724c7d57625a398f65167f431c9239a"
+    },
+    "runner": {
+      "path": "scripts/run_dante_light_prefilter_v6_phase_b_planning_audit.py",
+      "sha256": "21b05d15a8bbf11ff6352f4527efa776559241b84302b33a11541cf48e90f61a"
+    },
+    "verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v6_phase_b_planning_audit.py",
+      "sha256": "a5546e08a976f8b323d02bb135958004f4ef58b9310c0398fdd08e93a35d5d32"
+    }
+  },
+  "capacity_contract": {
+    "detectors": ["H1", "L1"],
+    "block_duration_s": 4096,
+    "window_duration_s": 32,
+    "whitening_pad_each_side_s": 4,
+    "candidate_start_step_s": 4,
+    "training_windows_per_block": 8,
+    "eligibility": [
+      "official_GWOSC_CBC_CAT1",
+      "no_HW_INJ_overlap",
+      "no_CBC_INJ_overlap",
+      "no_BURST_INJ_overlap",
+      "not_used_by_prior_protocols",
+      "not_assigned_to_v5"
+    ],
+    "local_raw_required_for_identity_only_capacity": false,
+    "raw_fetch_permitted_by_this_audit": false,
+    "reported_minimum_available_start_spans_s": [
+      1024,
+      1600,
+      2048,
+      2400,
+      2800,
+      3000,
+      3200
+    ]
+  },
+  "allocation_scenarios": [
+    {
+      "id": "balanced_training_and_later_gates",
+      "minimum_available_start_span_s": 0,
+      "blocks_per_detector": {
+        "phase_b_training_selection": 180,
+        "phase_c_training_confirmation": 60,
+        "phase_d_development": 150,
+        "phase_d_confirmation": 150
+      }
+    },
+    {
+      "id": "span_stratified_conservative",
+      "minimum_available_start_span_s": 1600,
+      "blocks_per_detector": {
+        "phase_b_training_selection": 160,
+        "phase_c_training_confirmation": 60,
+        "phase_d_development": 110,
+        "phase_d_confirmation": 110
+      }
+    }
+  ],
+  "allocation_selection_allowed": false,
+  "contract_digest": "57778e8bcd4b03899c962fa44ef410526b29789fdb50eb6116d357c612ba6288"
+}

@@ -1,0 +1,37 @@
+{
+  "artifact_digest": "ebf5ac5838a3abf4c97e41d4bf759a3d1f14bb4b93abf8341a19a1866c52b710",
+  "cache_location": {
+    "environment_alias": "DANTE_V6_RAW_CACHE_ROOT",
+    "run_subdirectory": "raw_4ab4fb551738663af4c0df7cd85142616a9bebcc6a7f159fde64cb63ded968c5"
+  },
+  "cache_manifest": {
+    "path": "cache_manifest_v6.jsonl",
+    "records_digest": "829a0fb46f1ba6dd1a6d6601b442e8365ccf8feeb4f2848feb0b19b36ddb0f26",
+    "sha256": "7eb6b17ba791faa8f9b9f618e2db30235e577ba1c741e3fdbab06a59a3078fd9"
+  },
+  "cached_interval_count": 1023,
+  "download_manifest_sha256": "491e2206ec9e3c72593488b9d2fbe829285a0cf951671ce81204d03ba085aa82",
+  "expected_interval_count": 1023,
+  "failure_count": 0,
+  "failures": [],
+  "implementation_references": {
+    "cache_implementation": {
+      "path": "src/dante_light/prefilter_v6_cache.py",
+      "sha256": "34ad2b099efb32772652eca6d6018afd3bd358306ac578805462e350fe338559"
+    },
+    "cache_runner": {
+      "path": "scripts/cache_dante_light_prefilter_v6_phase_b.py",
+      "sha256": "a4538aa5b0be9666aef801568d0be07269f7cd7b1eaec4ab0d3baecc97957697"
+    }
+  },
+  "o4b_rows_accessed": [],
+  "partition_manifest_digest": "0fd88e515aba719ceee286461cc51c61d687a48f388e3e153f98eb19d1268384",
+  "phase_b_contract_digest": "ec139bfb525993e45616fcb07f6fd485d622b408441094b0292848407ca52af7",
+  "phase_c_rows_accessed": [],
+  "phase_d_rows_accessed": [],
+  "processed_interval_count": 1023,
+  "run_key": "4ab4fb551738663af4c0df7cd85142616a9bebcc6a7f159fde64cb63ded968c5",
+  "schema_version": 1,
+  "status": "COMPLETE",
+  "teacher_scores_accessed": []
+}

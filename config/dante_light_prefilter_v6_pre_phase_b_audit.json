@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_PRE_PHASE_B_DIAGNOSTIC_ONLY",
+  "audit_id": "dante-light-l4-prefilter-v6-pre-phase-b",
+  "decision_date": "2026-08-25",
+  "scientific_boundary": {
+    "phase_b_frozen": false,
+    "lambda_frozen": false,
+    "partial_blocks_admitted": false,
+    "population_changed": false,
+    "training_allowed": false,
+    "candidate_promotion_allowed": false,
+    "development_access_allowed": false,
+    "confirmation_access_allowed": false,
+    "o4b_access_allowed": false,
+    "teacher_targets_used_by_gradient_diagnostic": false,
+    "morphology_labels_used": false
+  },
+  "source_references": {
+    "phase_a_contract": {
+      "path": "config/dante_light_prefilter_v6_phase_a.json",
+      "sha256": "1833524ef4a9b355e8f0f9ce5481be36044f5a514a1276ba8b4bef80a0d218c6"
+    },
+    "phase_a_architectures": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "v5_identity_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
+      "sha256": "23ea8ef97b77201e06297d98b5c6dfb24b284420875913f03b5456d36a0403a6"
+    },
+    "v5_split_entries": {
+      "path": "config/dante_light_prefilter_splits_v5.jsonl",
+      "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+    },
+    "gwosc_segment_snapshot": {
+      "path": "config/dante_light_prefilter_v4_segments.json",
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
+    },
+    "v5_training_internal_split": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/training_internal_split_v5.jsonl",
+      "sha256": "3b320bd6e65193c5fa4eac6ed73f6fbbed98b1d4cf900906651f1b82b18f670b"
+    },
+    "v5_teacher_ledger_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_training/teacher_ledger_summary_v5.json",
+      "sha256": "a12598dba0bfdc07c0faece03a7af9ea5b354b2e8d2dfc5d4518193fd42bbba8"
+    }
+  },
+  "capacity_audit": {
+    "block_duration_s": 4096,
+    "window_duration_s": 32,
+    "whitening_pad_each_side_s": 4,
+    "windows_per_block": 8,
+    "candidate_start_step_s": 4,
+    "required_disjoint_padded_span_per_window_s": 40,
+    "raw_coverage_alone_is_eligibility_evidence": false,
+    "required_intersection": [
+      "local_raw_coverage",
+      "GWOSC_CBC_CAT1",
+      "no_HW_INJ_CBC_INJ_BURST_INJ_overlap"
+    ],
+    "report_only_no_admission_rule": true,
+    "spacing_diagnostic_selection": "minimum_sha256_priority_over_maximum_disjoint_valid_starts",
+    "spacing_diagnostic_purpose": "v6_partial_block_spacing_only",
+    "partial_cause_classes": [
+      "official_CAT1_partial",
+      "official_CAT1_full_local_mirror_gap"
+    ],
+    "spacing_comparison_reference": "v5_training_background_windows"
+  },
+  "gradient_diagnostic": {
+    "architecture_id": "raw_teacher_top_fraction",
+    "input_source": "already_open_v5_fit_clean_strain_only",
+    "input_teacher_targets_read": false,
+    "blocks_per_detector": 4,
+    "windows_per_block": 8,
+    "block_selection": "minimum_sha256_priority_from_v5_fit_identity_only_manifest",
+    "block_selection_purpose": "v6_pre_phase_b_gradient_input",
+    "synthetic_targets": {
+      "distribution": "standard_normal",
+      "standardization": "exact_per_detector_mean_zero_ddof0_std_one",
+      "seed_method": "sha256_canonical_json_first_64_bits_big_endian"
+    },
+    "replicates": 5,
+    "model_seed_method": "sha256_canonical_json_first_64_bits_big_endian",
+    "value_loss": {
+      "name": "SmoothL1Loss",
+      "beta": 1.0,
+      "reduction": "equal_detector_mean"
+    },
+    "rank_loss": {
+      "name": "RankNet_pairwise_logistic",
+      "pairs": "all_28_unordered_pairs_within_each_detector_GPS_block",
+      "cross_block_pairs": false,
+      "cross_detector_pairs": false,
+      "exact_target_ties_excluded": true,
+      "margin": null,
+      "reduction": "pair_mean_then_block_mean_then_detector_mean"
+    },
+    "reported_gradient_spaces": [
+      "prediction_vector_l2",
+      "all_trainable_parameters_l2"
+    ],
+    "lambda_value_evaluated": 1.0,
+    "lambda_selection_allowed": false,
+    "pass_fail_gate": null
+  },
+  "contract_digest": "72c89600248066daadd2aa396b901d3f3896ce4d41b0e69df2e4a5d014723165"
+}

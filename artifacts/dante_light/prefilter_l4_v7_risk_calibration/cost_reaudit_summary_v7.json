@@ -1,0 +1,524 @@
+{
+  "batch_throughput": {
+    "baseline_exact_total_makespan_s": 106.35536719998345,
+    "batch_count": 38,
+    "batch_size": 8,
+    "batches": [
+      {
+        "baseline_exact_makespan_s": 2.796909199998481,
+        "batch_index": 0,
+        "identity_ids_digest": "68e59b33a916faeaee8bd748dc7c89844122f5d48f6309372840e95edf823009",
+        "light_makespan_s": 0.04116890000295825,
+        "net_saving_s": 2.386169699995662,
+        "net_saving_s_per_window": 0.29827121249945776,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.36957059999986086,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.9497397000013734,
+        "batch_index": 1,
+        "identity_ids_digest": "f67824691acc7765a8e8f0feac7f2cefc07b31dc00016eaa395a6a2289991a73",
+        "light_makespan_s": 0.03873290000046836,
+        "net_saving_s": 2.911006800000905,
+        "net_saving_s_per_window": 0.36387585000011313,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.7043228999973508,
+        "batch_index": 2,
+        "identity_ids_digest": "99551453c895395bf49a20b01dd43005a57e5ad8b153b4cd74cc8c997a777efe",
+        "light_makespan_s": 0.03874390000055428,
+        "net_saving_s": 2.6655789999967965,
+        "net_saving_s_per_window": 0.33319737499959956,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.643149799998355,
+        "batch_index": 3,
+        "identity_ids_digest": "69f27b39eedb4b7bd05b5a587fcb755d89a8c17a05a8a11ec4a1cc5799b68735",
+        "light_makespan_s": 0.03807099999903585,
+        "net_saving_s": 2.605078799999319,
+        "net_saving_s_per_window": 0.3256348499999149,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.852298300000257,
+        "batch_index": 4,
+        "identity_ids_digest": "09390ef5d879fcc973dbf01c1b89a42a4b6b0509514a260b950a7e30c022baa2",
+        "light_makespan_s": 0.03853520000120625,
+        "net_saving_s": 2.4149794000004476,
+        "net_saving_s_per_window": 0.30187242500005596,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.39878369999860297,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.7110193999978947,
+        "batch_index": 5,
+        "identity_ids_digest": "cc6aae2002793bc019bcfaf4c1ab70c0d1250b25b613415b534beda21d394d8e",
+        "light_makespan_s": 0.03782349999892176,
+        "net_saving_s": 2.673195899998973,
+        "net_saving_s_per_window": 0.3341494874998716,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.6493948999996064,
+        "batch_index": 6,
+        "identity_ids_digest": "9cc23c898d6a3fd6e4e3b799523e85c13b913ba885b01a3224a09c57a03c5e1a",
+        "light_makespan_s": 0.03824549999990268,
+        "net_saving_s": 2.2202647999984038,
+        "net_saving_s_per_window": 0.27753309999980047,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.3908846000013,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.75053239999761,
+        "batch_index": 7,
+        "identity_ids_digest": "8089a98753d5c8fd611b5b64a3af3c7c36fbd1ab2b5a49ea33fda4048ddf8172",
+        "light_makespan_s": 0.04046320000270498,
+        "net_saving_s": 2.306878899995354,
+        "net_saving_s_per_window": 0.28835986249941925,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.4031902999995509,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.6606776999979047,
+        "batch_index": 8,
+        "identity_ids_digest": "1ba45592bf91c500a5472c25d8a50c57974d413ce7c7752a94231a52fecb09d2",
+        "light_makespan_s": 0.05056460000196239,
+        "net_saving_s": 1.8063689999944472,
+        "net_saving_s_per_window": 0.2257961249993059,
+        "residual_exact_count": 2,
+        "residual_exact_makespan_s": 0.8037441000014951,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.8336334000014176,
+        "batch_index": 9,
+        "identity_ids_digest": "42271cb50ed59b7ca764f3dd12ce7371b53b912b20024794e84c576ee3fee807",
+        "light_makespan_s": 0.03956639999887557,
+        "net_saving_s": 2.3905416000015975,
+        "net_saving_s_per_window": 0.2988177000001997,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.4035254000009445,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.8395554999988235,
+        "batch_index": 10,
+        "identity_ids_digest": "9cf0fa3f035ac730fc7dbb6027737f155b4b6971ba7a3af1cd70fb99c5515d04",
+        "light_makespan_s": 0.0377903000007791,
+        "net_saving_s": 2.8017651999980444,
+        "net_saving_s_per_window": 0.35022064999975555,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.7054706000017177,
+        "batch_index": 11,
+        "identity_ids_digest": "6b39ab1412701fb75867c5ccf527db1ad7f9b25e80aa4cb18341dfd1297fb796",
+        "light_makespan_s": 0.0399003000020457,
+        "net_saving_s": 2.665570299999672,
+        "net_saving_s_per_window": 0.333196287499959,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.8104658000011113,
+        "batch_index": 12,
+        "identity_ids_digest": "552c3d6b6df7b21b73c84d73207ce686ef29bf29323e5d4fce975ac5f4880c5d",
+        "light_makespan_s": 0.042412799997691764,
+        "net_saving_s": 2.7680530000034196,
+        "net_saving_s_per_window": 0.34600662500042745,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.776538599999185,
+        "batch_index": 13,
+        "identity_ids_digest": "c13704f870f0d26a056d5fa9ab06d1962e5610348615a457cdfc89ea1ac1a162",
+        "light_makespan_s": 0.04215199999816832,
+        "net_saving_s": 1.9338925000010931,
+        "net_saving_s_per_window": 0.24173656250013664,
+        "residual_exact_count": 2,
+        "residual_exact_makespan_s": 0.8004940999999235,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.874408700001368,
+        "batch_index": 14,
+        "identity_ids_digest": "27cb96a5c2c65b7eb4ff8912c2f3f6c084a019282812a1e04a18327eba2f235e",
+        "light_makespan_s": 0.03955569999743602,
+        "net_saving_s": 2.011783400004788,
+        "net_saving_s_per_window": 0.2514729250005985,
+        "residual_exact_count": 2,
+        "residual_exact_makespan_s": 0.823069599999144,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.8924489000019094,
+        "batch_index": 15,
+        "identity_ids_digest": "064ffc96670de73d6f121613f7fbfdf249a900b967c643ecf8862c6b2e9ccbca",
+        "light_makespan_s": 0.03924910000205273,
+        "net_saving_s": 2.8531997999998566,
+        "net_saving_s_per_window": 0.3566499749999821,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.888857799996913,
+        "batch_index": 16,
+        "identity_ids_digest": "2c6b756ba853ce08f82d5ece3a2556a18d3c30f7dffefee90804034cf9c11ab0",
+        "light_makespan_s": 0.038189999999303836,
+        "net_saving_s": 2.850667799997609,
+        "net_saving_s_per_window": 0.35633347499970114,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.7341530000012426,
+        "batch_index": 17,
+        "identity_ids_digest": "2872ef4bbc879bbad9d4812bb68886124058e6b6cd61983a04f3d2d7739d3056",
+        "light_makespan_s": 0.04074630000104662,
+        "net_saving_s": 2.693406700000196,
+        "net_saving_s_per_window": 0.3366758375000245,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.8917795999986993,
+        "batch_index": 18,
+        "identity_ids_digest": "65bfc3904cd09129a366cad5c5928f238d4987335ad9c987e2bf627d01e5b5e2",
+        "light_makespan_s": 0.04426230000171927,
+        "net_saving_s": 2.84751729999698,
+        "net_saving_s_per_window": 0.3559396624996225,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 3.1358192000006966,
+        "batch_index": 19,
+        "identity_ids_digest": "e783a57782314d841482b51b907d85004c06b39cdcea3602401e7bea98c63e11",
+        "light_makespan_s": 0.0431776000004902,
+        "net_saving_s": 3.0926416000002064,
+        "net_saving_s_per_window": 0.3865802000000258,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 3.144676399999298,
+        "batch_index": 20,
+        "identity_ids_digest": "5dbca9c029a51cb4ef2596fce3df38900194906453efd26fabe9e24fad644334",
+        "light_makespan_s": 0.04673019999972894,
+        "net_saving_s": 3.097946199999569,
+        "net_saving_s_per_window": 0.38724327499994615,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.8280592000010074,
+        "batch_index": 21,
+        "identity_ids_digest": "e45d5cd7060f8eed868deae1db01ae9a50f23b9059274ef1c05109516b800484",
+        "light_makespan_s": 0.0412668000026315,
+        "net_saving_s": 2.786792399998376,
+        "net_saving_s_per_window": 0.348349049999797,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.958591399998113,
+        "batch_index": 22,
+        "identity_ids_digest": "ac61c0dca5e25227ee63d839792492ca0ab331b221e0deec0a8da676eb2b9a36",
+        "light_makespan_s": 0.04174609999972745,
+        "net_saving_s": 1.7626755999990564,
+        "net_saving_s_per_window": 0.22033444999988205,
+        "residual_exact_count": 3,
+        "residual_exact_makespan_s": 1.1541696999993292,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.762272199997824,
+        "batch_index": 23,
+        "identity_ids_digest": "2051ec1bd0405b26ff97c6a9fdb30dbfac700cab61da2641174e3a16ec3507f1",
+        "light_makespan_s": 0.03954449999946519,
+        "net_saving_s": 2.7227276999983587,
+        "net_saving_s_per_window": 0.34034096249979484,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.9708310999994865,
+        "batch_index": 24,
+        "identity_ids_digest": "b39d844e7b515ff3722acd51ecb0f41fae3e9a144e6b5e696a97dbd25195f70a",
+        "light_makespan_s": 0.04097209999963525,
+        "net_saving_s": 2.4883697999975993,
+        "net_saving_s_per_window": 0.3110462249996999,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.4414892000022519,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.6900037999985216,
+        "batch_index": 25,
+        "identity_ids_digest": "d3200844dbab164c4249c6b45ef1073f76d671dfa1d6e80a154bbb96658f3fd0",
+        "light_makespan_s": 0.038514799998665694,
+        "net_saving_s": 2.651488999999856,
+        "net_saving_s_per_window": 0.331436124999982,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.8314656000002287,
+        "batch_index": 26,
+        "identity_ids_digest": "2bef0379865f097cc6f0ba69f68a5f5b92a775bc4b7bde72255aaaa4ecfaedad",
+        "light_makespan_s": 0.03833640000084415,
+        "net_saving_s": 2.7931291999993846,
+        "net_saving_s_per_window": 0.3491411499999231,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.72013109999898,
+        "batch_index": 27,
+        "identity_ids_digest": "adffe3ac7b1a8d351611f9a818bedf65363ea0db6f745eb1a620a442a5569945",
+        "light_makespan_s": 0.04026990000056685,
+        "net_saving_s": 2.679861199998413,
+        "net_saving_s_per_window": 0.33498264999980165,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.719071999999869,
+        "batch_index": 28,
+        "identity_ids_digest": "76f90ae444f15e30903202c8aea578937a42db07ee677e48e462f43435d1a68c",
+        "light_makespan_s": 0.040641499999765074,
+        "net_saving_s": 2.678430500000104,
+        "net_saving_s_per_window": 0.334803812500013,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.722159899996768,
+        "batch_index": 29,
+        "identity_ids_digest": "43b3b7d47665fd96d694154f8779a4717ce380b55c86d10827eccbcd6c4e5c82",
+        "light_makespan_s": 0.03686720000041532,
+        "net_saving_s": 2.685292699996353,
+        "net_saving_s_per_window": 0.3356615874995441,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.6498361000012665,
+        "batch_index": 30,
+        "identity_ids_digest": "584a20746b84a5855a7060b019888cc8f604826176522cfb88394bd3b7652863",
+        "light_makespan_s": 0.03850030000103288,
+        "net_saving_s": 2.6113358000002336,
+        "net_saving_s_per_window": 0.3264169750000292,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.9309381999992183,
+        "batch_index": 31,
+        "identity_ids_digest": "0a429052e07d23cb178dd1b56fb2654cd6932f9658a61554fd390732a145e707",
+        "light_makespan_s": 0.03813570000056643,
+        "net_saving_s": 2.502002799996262,
+        "net_saving_s_per_window": 0.3127503499995328,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.3907997000023897,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 3.0040174999994633,
+        "batch_index": 32,
+        "identity_ids_digest": "dd1c6ff9d77fbb1aac6a7d3086c1e6f4ed2dec412cbb1ed3ff9a1384a0524014",
+        "light_makespan_s": 0.04032260000167298,
+        "net_saving_s": 2.56260139999722,
+        "net_saving_s_per_window": 0.3203251749996525,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.4010935000005702,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 3.0956310000001395,
+        "batch_index": 33,
+        "identity_ids_digest": "966ed688e93b52cd66ef84a8e25bfdaa2b68215fa18bc0f1a78b613985ba0749",
+        "light_makespan_s": 0.04046260000177426,
+        "net_saving_s": 3.055168399998365,
+        "net_saving_s_per_window": 0.38189604999979565,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.9876872999993793,
+        "batch_index": 34,
+        "identity_ids_digest": "112111932db158a25b0c0fc17c30f54bed9fbe0dca2e6edb88e2b0293d5ea36e",
+        "light_makespan_s": 0.042654300003050594,
+        "net_saving_s": 2.1608263999951305,
+        "net_saving_s_per_window": 0.2701032999993913,
+        "residual_exact_count": 2,
+        "residual_exact_makespan_s": 0.7842066000011982,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.796978800000943,
+        "batch_index": 35,
+        "identity_ids_digest": "11b016b2e88cd605557945da2cf5562d6b25b7d7f92b36d059b461ed8398759a",
+        "light_makespan_s": 0.03766639999957988,
+        "net_saving_s": 2.759312400001363,
+        "net_saving_s_per_window": 0.3449140500001704,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 2.7988628999992216,
+        "batch_index": 36,
+        "identity_ids_digest": "73cbe7f2041cb5bcb9da9c295205f50d9abd9015160f6b1c3953e3d4876373fa",
+        "light_makespan_s": 0.04244689999904949,
+        "net_saving_s": 2.756416000000172,
+        "net_saving_s_per_window": 0.3445520000000215,
+        "residual_exact_count": 0,
+        "residual_exact_makespan_s": 0.0,
+        "row_count": 8
+      },
+      {
+        "baseline_exact_makespan_s": 1.642977300001803,
+        "batch_index": 37,
+        "identity_ids_digest": "9c4c3371e1b47939cd05fbc0a6cd984376d26eb52c81ee067458c69897be5944",
+        "light_makespan_s": 0.022737499999493593,
+        "net_saving_s": 1.2017053000017768,
+        "net_saving_s_per_window": 0.3004263250004442,
+        "residual_exact_count": 1,
+        "residual_exact_makespan_s": 0.4185345000005327,
+        "row_count": 4
+      }
+    ],
+    "light_total_makespan_s": 1.5171673000149895,
+    "net_saving_s_per_window": 0.32284881433320456,
+    "net_saving_total_s": 96.85464429996136,
+    "pass": true,
+    "residual_exact_total_makespan_s": 7.983555600007094,
+    "workers": 4
+  },
+  "checkpoint_contract": [
+    {
+      "best_epoch": 77,
+      "member_index": 0,
+      "path": "member_0/best_model.pt",
+      "seed": 60647654006011518,
+      "sha256": "8e7c24b1cd0a96028c2161e2c245d049d0c75a4fad3adf2c5d61aa4c1b04a60c"
+    },
+    {
+      "best_epoch": 74,
+      "member_index": 1,
+      "path": "member_1/best_model.pt",
+      "seed": 432170873019253513,
+      "sha256": "d912515240fa907298b491535db42e5dbf2bd63ea538397d7e8e89f764d119df"
+    },
+    {
+      "best_epoch": 40,
+      "member_index": 2,
+      "path": "member_2/best_model.pt",
+      "seed": 3237144634297552960,
+      "sha256": "fb6233bf1cbd4ab16fea433ecfc241753be2bee3cba7c4f5a3fc675343f6eff3"
+    },
+    {
+      "best_epoch": 82,
+      "member_index": 3,
+      "path": "member_3/best_model.pt",
+      "seed": 5640515401574403673,
+      "sha256": "fd1fd6d4bef108c6835bec6a2e4e1c179917e02e7047bb0cc530b178b2c48f1e"
+    },
+    {
+      "best_epoch": 79,
+      "member_index": 4,
+      "path": "member_4/best_model.pt",
+      "seed": 8488811708372497577,
+      "sha256": "819b3d60fc83696b8c369018544ffa2a2a9f83d5b2f278ccf115938a205f202d"
+    }
+  ],
+  "completed_at_utc": "2026-08-27T12:03:31.636546+00:00",
+  "contract_digest": "6fe64f7a0398d6590f5f427ed2fb8de168ba96d4cdf88bf2cd2dfebeb63ee77a",
+  "cost_reaudit_result_digest": "e623d5ae81641bc42e6e483e5af93d30f2ad80371c93708a3b737fdb1546bcfd",
+  "decision": {
+    "batch_gate_pass": true,
+    "candidate_promoted": false,
+    "confirmation": [],
+    "o4b": [],
+    "original_cost_gate_superseded": true,
+    "positive_saving_supported": true,
+    "routing_enabled": false,
+    "sequential_gate_pass": true
+  },
+  "environment": {
+    "exact_device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 5070",
+    "logical_cpu_count": 16,
+    "numpy": "2.4.5",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]",
+    "torch": "2.12.0.dev20260408+cu128",
+    "torch_cpu_threads": 1
+  },
+  "erratum": {
+    "cause": "per-window q-transform and rendering wall times were measured inside a four-worker thread pool and then added to serial teacher latency",
+    "original_numbers_preserved": true,
+    "original_operational_cost_interpretation": "INDETERMINATE_COST_ACCOUNTING",
+    "routing_or_promotion_change": false,
+    "safety_results_unchanged": true
+  },
+  "ledger": {
+    "path": "artifacts/dante_light/prefilter_l4_v7_risk_calibration/cost_reaudit_timings_v7.jsonl",
+    "record_count": 300,
+    "records_digest": "8d7f5e89d481bd8521db34372dba7b0563ee5e6e58ce8d101f9732884419fb7d",
+    "sha256": "7b327498de34841835427d34f6413901a4c0685b3ba11946b353bb95928857a6"
+  },
+  "schema_version": 1,
+  "sequential_isolated": {
+    "mean_avoidable_exact_path_s": 0.40115286099976705,
+    "mean_light_path_s": 0.00689742233325281,
+    "paired_block_bootstrap": {
+      "block_count": 300,
+      "interval95": [
+        0.355203029866441,
+        0.3818536020331761
+      ],
+      "lower95": 0.355203029866441,
+      "mean_net_saving_s": 0.3685996856665224,
+      "n_resamples": 2000,
+      "pass": true
+    }
+  },
+  "source_result_digest": "96ee7626f3c6ee57333110eda4c776f490e0ddd87a7240fde766b6446fcafd43",
+  "status": "COMPLETE_COST_REAUDIT_POSITIVE_SAVING_SUPPORTED"
+}

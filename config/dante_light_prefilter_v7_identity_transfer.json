@@ -1,0 +1,40 @@
+{
+  "future_use_under_prior_protocols": "RETIRED",
+  "mapping": {
+    "v5.confirmation": "v7.confirmation.background_and_protected",
+    "v6.phase_c": "v7.threshold_search.background",
+    "v6.phase_d_confirmation": "v7.risk_calibration.background",
+    "v6.phase_d_development": "v7.training.background"
+  },
+  "schema_version": 1,
+  "source_outcomes_accessed_for_transferred_rows": [],
+  "source_references": {
+    "v5_confirmation_seal": {
+      "path": "config/dante_light_prefilter_v5_confirmation_seal.json",
+      "sha256": "57c14b7f0b59cb3e94693af61072aa0d4a23ad9febfa7c05caf6c544c370d0a1"
+    },
+    "v5_identities": {
+      "path": "config/dante_light_prefilter_splits_v5.jsonl",
+      "sha256": "f589d058b524791cf40dd5ed30b77fb4fea8677b70056ea3ac0e05424d4a7c8c"
+    },
+    "v6_partitions": {
+      "path": "config/dante_light_prefilter_v6_partitions.jsonl",
+      "sha256": "4be7725b4d3a6376132fa14ef2ccc3881f262baa818a3ef59bd9eea25491b27e"
+    },
+    "v6_phase_b_result": {
+      "path": "artifacts/dante_light/prefilter_l4_v6_training/phase_b_screening_summary_v6.json",
+      "sha256": "8d074c8a979edc733b4bd3c57158b30ab98feb9b62ed8443e20b77e6a04effad"
+    }
+  },
+  "status": "TRANSFERRED_IDENTITIES_RETIRED_FROM_PRIOR_RESERVED_USE",
+  "transfer_digest": "a35f42d7773b909d171ec288a745df64dc1a91abb938d25b497b6d07d1472e94",
+  "upstream_boundary": {
+    "o4b_rows_accessed": [],
+    "v5_confirmation_seal_digest": "30710d617c5c5ae25b243d406704cced2860dd36d2f262d6fef42b914cca81cd",
+    "v6_phase_b_status": "PHASE_B_SCREENING_COMPLETE",
+    "v6_phase_c_rows_accessed": [],
+    "v6_phase_c_unlock_allowed": false,
+    "v6_phase_d_rows_accessed": [],
+    "v6_selected_worst_cell_spearman": 0.383779623757681
+  }
+}

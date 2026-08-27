@@ -1,0 +1,104 @@
+{
+  "allowed": {
+    "detector_threshold_selection_once": true,
+    "exact_teacher_scoring": true,
+    "frozen_ensemble_inference": true,
+    "partition": "threshold_search"
+  },
+  "authorization_digest": "8d4f2b5c8503eff3a316f33592fd29e3db32f47d6487368f8011db373db3a226",
+  "authorization_id": "dante-light-l4-prefilter-v7-threshold-search-2026-08-27",
+  "authorization_source": {
+    "actor": "Luca Cirfeta",
+    "date": "2026-08-27",
+    "instruction": "procedi",
+    "interpreted_scope": "open threshold_search once; keep risk_calibration, confirmation and O4b sealed"
+  },
+  "code_references": {
+    "data_loader": {
+      "path": "src/core/data_loader.py",
+      "sha256": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636"
+    },
+    "exact_teacher": {
+      "path": "src/dante_light/prefilter_v5_teacher.py",
+      "sha256": "e70314d81b251b22dbde8dacdf92aaf4678cb91af916116c8e56c66e2d4e57a3"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "student_architecture": {
+      "path": "src/dante_light/prefilter_v6_phase_a.py",
+      "sha256": "83a1776fbaef43da3342478fb88e96d5813681e73d6df954e4f8b4014fe9b0e8"
+    },
+    "threshold_freezer": {
+      "path": "scripts/freeze_dante_light_prefilter_v7_threshold_search.py",
+      "sha256": "8ed7d7c72fa7af23a9d7116f669f623fa94dbe2c43c3fc4ee163de4a8be94293"
+    },
+    "threshold_implementation": {
+      "path": "src/dante_light/prefilter_v7_threshold_search.py",
+      "sha256": "9d48036a13f4477810661ff62192f856db48dc916e1bbc97ca9f5331d8d47a35"
+    },
+    "threshold_runner": {
+      "path": "scripts/run_dante_light_prefilter_v7_threshold_search.py",
+      "sha256": "662ab0fc8059ac9d5467748e77826da2461669168063d1866120c8709f100cd8"
+    },
+    "threshold_verifier": {
+      "path": "scripts/verify_dante_light_prefilter_v7_threshold_search.py",
+      "sha256": "afb4d4453228578d7d9982c20c30aedd051c4649ebd824cf9778ab33b2b6b06f"
+    }
+  },
+  "forbidden": {
+    "confirmation": [],
+    "fallback_threshold": false,
+    "member_selection": false,
+    "o4b": [],
+    "retuning": false,
+    "risk_calibration": [],
+    "routing": false
+  },
+  "outcome_contract_digest": "3ace13984dee36fee6c896c5d51d0f23b8f7d0f0cf9fb1ca7bc913254f804e2c",
+  "schema_version": 1,
+  "selection_rule": {
+    "candidate_thresholds": "unique_detector_search_scores_plus_always_discard_endpoint",
+    "constraint": "current_exact_teacher_positive_retention_point_gte_0.90_AND_Wilson95_lower_gte_0.80",
+    "constraint_scope": "separate_detector_catalog_conditioned_current_exact_teacher_positives",
+    "objective": "maximum_natural_background_discard_fraction",
+    "routing": "defer_if_score_greater_than_or_equal_to_threshold",
+    "safety_endpoint": "pre_audit_model_retention",
+    "score": "five_member_mean_sigmoid_defer_score",
+    "tie_break": "lower_numeric_threshold"
+  },
+  "source_references": {
+    "confirmation_seal": {
+      "path": "config/dante_light_prefilter_v7_confirmation_seal.json",
+      "sha256": "5a24ec8db2d01c0cb2cf5355dfad4ef68db97df09adc46def28c238579ae37f4"
+    },
+    "identity_header": {
+      "path": "config/dante_light_prefilter_v7_identities.json",
+      "sha256": "7154e6bce082c286425c254cbe483a2ba470c57fcc23093041f5e911137e3a3c"
+    },
+    "identity_manifest": {
+      "path": "config/dante_light_prefilter_v7_identities.jsonl",
+      "sha256": "7deda107b1fcfb52982ed28deb2079567215665340e2edd9094b2a046eebf71f"
+    },
+    "outcome_contract": {
+      "path": "config/dante_light_prefilter_v7_outcome_blind_contract.json",
+      "sha256": "57ea8a6d8c6d779dda85821d54f977261c4665f9748cc280e258b687012f696f"
+    },
+    "teacher_stability_contract": {
+      "path": "config/dante_light_prefilter_v7_teacher_stability.json",
+      "sha256": "a6499d68eccbfc95f617aba3da6c72b6b0dec00fd54fb5282541d84f2d935c2c"
+    },
+    "training_contract": {
+      "path": "config/dante_light_prefilter_v7_training_contract.json",
+      "sha256": "8df867190c7fd10010f3a4ad253ad1c9fe7254774baf1adfe9b02a91b38c3421"
+    },
+    "training_summary": {
+      "path": "artifacts/dante_light/prefilter_l4_v7_training/student_training_summary_v7.json",
+      "sha256": "38f89b1a243299d6e16d621358153e92285821ea41004bbf55e631489c81f681"
+    }
+  },
+  "status": "AUTHORIZED_THRESHOLD_SEARCH_ONLY",
+  "teacher_stability_contract_digest": "52adb081e73c384e831c7988513b900da3e934189553402e8fdcc871d96c6934",
+  "training_artifact_digest": "827260ea03c16ea13771deb8f0c55f1654d88260c6709bfcbfc693458de5b402"
+}
