@@ -8,6 +8,7 @@ import json
 import math
 import os
 from pathlib import Path
+import subprocess
 import time
 from typing import Any, Callable, Mapping, Sequence
 
@@ -21,6 +22,32 @@ from src.dante_light.prefilter_v6_phase_b import load_phase_b_contract
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DOWNLOADS = ROOT / "config" / "dante_light_prefilter_v6_download_manifest.jsonl"
 DEFAULT_PARTITION_HEADER = ROOT / "config" / "dante_light_prefilter_v6_partitions.json"
+
+
+def _repository_reference_matches(
+    root: Path, path: Path, expected_sha256: str
+) -> bool:
+    """Accept the worktree bytes or the canonical tracked Git blob.
+
+    ``repository_reference`` deliberately records the canonical blob for an
+    unchanged tracked file so references remain portable across checkout line
+    endings.  Requiring only the worktree-byte digest here would reject that
+    valid reference on Windows.
+    """
+    if not path.is_file():
+        return False
+    candidates = {file_sha256(path)}
+    try:
+        relative = path.resolve().relative_to(root.resolve()).as_posix()
+        blob = subprocess.check_output(
+            ["git", "show", f"HEAD:{relative}"],
+            cwd=root,
+            stderr=subprocess.DEVNULL,
+        )
+        candidates.add(hashlib.sha256(blob).hexdigest())
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+    return expected_sha256 in candidates
 
 
 def load_phase_b_downloads(
@@ -245,7 +272,7 @@ def build_phase_b_cache(
         identities = identities[:limit]
     for name, reference in implementation_references.items():
         path = root / reference["path"]
-        if not path.is_file() or file_sha256(path) != reference["sha256"]:
+        if not _repository_reference_matches(root, path, str(reference["sha256"])):
             raise ContractError(f"v6 cache implementation reference mismatch: {name}")
     header = json.loads(DEFAULT_PARTITION_HEADER.read_text(encoding="utf-8"))
     run_key = canonical_json_sha256(
