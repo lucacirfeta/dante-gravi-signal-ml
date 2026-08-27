@@ -1,0 +1,122 @@
+{
+  "access_boundary": {
+    "allowed_evidence": [
+      "already_open_o4a_replay",
+      "already_open_o4b_shadow_v2_as_retrospective_engineering_regression",
+      "v7_training_only_teacher_canaries",
+      "synthetic_and_unit_test_inputs"
+    ],
+    "forbidden_until_separate_freeze": [
+      "new_protected_confirmation_outcomes",
+      "new_later_epoch_holdout_outcomes",
+      "post_hoc_threshold_or_budget_selection"
+    ]
+  },
+  "exact_path_workstream": {
+    "acceptance_order": [
+      "identity_and_provenance",
+      "numerical_equivalence",
+      "decision_and_evidence_equivalence",
+      "performance"
+    ],
+    "cache_policy": {
+      "default_root": "E:/dante_cache/dante_light/v8_1_exact_path",
+      "failure_action": "MISS_OR_TAMPER_RECOMPUTE_OR_DEFER_NEVER_TRUST",
+      "key_must_bind": [
+        "window_identity",
+        "raw_strain_sha256",
+        "clean_strain_sha256_when_applicable",
+        "rendered_image_sha256_when_applicable",
+        "representation_contract_sha256",
+        "teacher_fingerprint_digest",
+        "artifact_type_schema",
+        "dtype_and_shape"
+      ],
+      "warm_cache_claim_must_not_be_reported_as_cold_path_speedup": true
+    },
+    "candidate_order": [
+      "replace_runner_literal_top_k_with_representation_contract_value_under_equivalence_test",
+      "promote_existing_shared_encoder_score_only_after_full_equivalence_audit",
+      "remove_unconsumed_result_materialization_without_changing_saved_evidence",
+      "benchmark_frozen_batch_sizes",
+      "add_prepared_image_cache_for_replay_and_resume",
+      "add_patch_token_cache_for_replay_and_resume"
+    ],
+    "equivalence": {
+      "bitwise_target_same_frozen_environment": [
+        "raw_strain_sha256",
+        "clean_strain_sha256",
+        "image_sha256",
+        "native_score_float32_bytes",
+        "primary_score_float32_bytes",
+        "primary_top_k_indices",
+        "primary_mil_vector_float32_bytes",
+        "disposition",
+        "defer_reason"
+      ],
+      "cross_engine_existing_score_tolerance_reference": "src/dante_light/evidence.py::SCORE_ATOL",
+      "decision_mismatches_allowed": 0,
+      "failure_action": "NOT_PROMOTED",
+      "tolerance_may_not_be_relaxed_after_results": true
+    },
+    "reference_engine": "canonical",
+    "source_of_truth_issue": {
+      "current_location": "src/dante_light/runner.py::run_replay",
+      "current_literal": "k=68",
+      "required_resolution": "read representation.top_k without changing the frozen value or outputs"
+    },
+    "status": "PROPOSED_NOT_AUTHORIZED_FOR_IMPLEMENTATION"
+  },
+  "prioritization_workstream": {
+    "aggregate_metrics": {
+      "spearman": "DESCRIPTIVE_ONLY_NOT_A_GATE"
+    },
+    "candidate_scope": {
+      "pre_exact_priority": "RESEARCH_ONLY_UNTIL_SEPARATELY_JUSTIFIED",
+      "recommended_primary": "post_exact_human_review_priority"
+    },
+    "mandatory_safety_properties": [
+      "no_window_discard",
+      "exact_path_eventual_service_for_every_valid_window",
+      "zero_silent_drops",
+      "age_based_starvation_prevention",
+      "protected_morphology_gate_separate_by_detector_and_morphology",
+      "teacher_positive_gate_separate_from_named_protected_morphologies"
+    ],
+    "primary_gate_family": {
+      "budget_or_deadline": "UNRESOLVED_REQUIRES_CAPACITY_AND_WORKLOAD_AUDIT",
+      "confidence_method": "DETECTOR_GPS_BLOCK_BOOTSTRAP",
+      "minimum_effective_blocks": "UNRESOLVED_REQUIRES_POWER_ANALYSIS",
+      "metric": "protected_recall_within_frozen_review_budget_or_deadline",
+      "multiplicity_policy": "ONE_PRIMARY_BUDGET_OR_SIMULTANEOUS_BAND_MUST_BE_FROZEN",
+      "required_cells": "DETECTOR_X_MORPHOLOGY_NO_POOLING",
+      "success_bound": "UNRESOLVED_REQUIRES_SCIENTIFIC_CONFIRMATION"
+    },
+    "queue_baselines": [
+      "fifo",
+      "exact_native_score_with_age_override",
+      "candidate_priority_with_age_override"
+    ],
+    "status": "PROPOSED_NOT_AUTHORIZED_FOR_IMPLEMENTATION"
+  },
+  "proposal_id": "dante-light-v8.1-safe-exact-and-priority-design-v1",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "does_not_establish": [
+      "a safe prefilter",
+      "a useful prioritizer",
+      "a review budget",
+      "a protected-morphology success threshold",
+      "a speedup",
+      "permission to change the exact scientific score"
+    ],
+    "establishes": [
+      "two independent workstreams",
+      "equivalence before performance for exact-path optimization",
+      "per-morphology top-of-queue safety before aggregate ranking claims",
+      "an explicit stop before freezing new scientific gates"
+    ]
+  },
+  "status": "PROPOSED_NOT_FROZEN",
+  "version": "8.1"
+}

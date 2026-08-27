@@ -13,15 +13,15 @@ the repository history even when a later version changes the hypothesis.
 | v6 | pooling/loss/capacity screening | `V6_NOT_READY`; fidelity failed before Phase C | `ad5d6e9` |
 | v7 | selective-deferral risk calibration | `V7_NOT_READY_RISK_CALIBRATION`; safety failed, corrected cost-only evidence positive | `491ee04` plus the v7 cost erratum |
 
-Repository ancestry was checked on 2026-08-27:
+Repository ancestry was checked again on 2026-08-27 after PR #4:
 
-- `main` at merge commit `9568430` contains the complete v3, v4 and v5
-  history;
+- `main` at merge commit `43cc015` contains the complete v3, v4, v5, v6 and
+  v7 history;
 - v6 result commit `ad5d6e9` is an ancestor of the v7 branch;
-- the v7 branch descends from `main` without dropped or rewritten experiment
-  commits;
-- merging the v7 branch therefore carries v6 and v7 forward together rather
-  than replacing either one.
+- v7 result and cost-erratum commit `0e0a093` is a parent of merge commit
+  `43cc015`;
+- the proposed v8.1 design starts from `43cc015` on a separate branch and does
+  not rewrite or replace any earlier experiment result.
 
 The scientific synthesis is deliberately bounded. Across v2--v7, no evaluated
 low-cost path satisfied the joint fidelity, morphology-safety and operational
@@ -30,3 +30,9 @@ mini-bank coverage was inadequate, scattering was excluded on feasibility
 grounds, and v5--v6 stopped at upstream teacher-fidelity gates. These are not
 six interchangeable NSBH retention experiments and must not be reported as
 such.
+
+v8.1 is intentionally outside the lossy-prefilter sequence: it proposes exact
+path optimization under an equivalence gate and non-destructive review
+prioritization under per-morphology top-of-queue gates. Its design proposal is
+`docs/DANTE_LIGHT_V8_1_DESIGN_PROPOSAL_2026-08-27.md`; no v8.1 scientific gate
+or production promotion is frozen by this lineage update.
