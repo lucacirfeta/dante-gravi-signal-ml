@@ -263,6 +263,27 @@ def validate_cache(
         raise ContractError("parity cache is not complete")
     if summary["contract_digest"] != contract["contract_digest"] or summary["manifest_digest"] != header["manifest_digest"]:
         raise ContractError("parity cache belongs to another freeze")
+    if (
+        int(summary["expected_missing_count"]) != len(missing)
+        or int(summary["completed_count"]) != len(missing)
+        or int(summary["failure_count"]) != 0
+        or len(summary["records"]) != len(missing)
+    ):
+        raise ContractError("parity cache completion counts are inconsistent")
+    expected_references = {
+        "cache": repository_reference(root, root / "src/dante_light/o4a_v1_parity_cache.py"),
+        "freeze": repository_reference(root, root / "src/dante_light/o4a_v1_parity.py"),
+    }
+    if summary["implementation_references"] != expected_references:
+        raise ContractError("parity cache implementation provenance mismatch")
+    expected_run_key = canonical_json_sha256({
+        "contract_digest": contract["contract_digest"],
+        "manifest_digest": header["manifest_digest"],
+        "missing_file_sha256": header["missing_file_sha256"],
+        "cache_code": expected_references["cache"],
+    })
+    if summary["run_key"] != expected_run_key:
+        raise ContractError("parity cache run key mismatch")
     records = []
     for row in missing:
         record = _validate_series(
@@ -300,4 +321,3 @@ def compact_cache_artifact(summary: Mapping[str, Any]) -> dict[str, Any]:
         "implementation_references": summary["implementation_references"],
     }
     return {**body, "artifact_digest": canonical_json_sha256(body)}
-
