@@ -141,5 +141,12 @@ def test_user_docs_do_not_restore_superseded_setup_claims() -> None:
     assert "3,593 ROBUST / 2,109 AMBIGUOUS / 4,670 BACKGROUND" not in readme
     assert "zero I/O overhead" not in cli
     assert "theoretical GEV thresholding" not in cli
+    assert "patch-analysis --detector H1 --run O4a" not in cli
+    assert "python -m src.pipeline_v2_production.astrophysical_injection --run O4a" in cli
+    assert "manage_dante_light_v8_1_review_telemetry.py export-all" in readme
+    assert "manage_dante_light_v8_1_review_telemetry.py export-all" in cli
+    assert "shared/canonical throughput ratio 0.9815" in readme
+    assert "10.5281/zenodo.21957984" in readme
+    assert "10.5281/zenodo.21957984" in citation
     assert 'version: "3.7.0"' in citation
     assert 'doi: "10.5281/zenodo.21912589"' in citation

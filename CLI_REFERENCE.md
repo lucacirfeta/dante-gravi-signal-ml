@@ -2,6 +2,15 @@
 
 This guide provides a complete and updated list of all available commands in the CLI (`main.py`), complete with descriptions and options for each subcommand.
 
+> **Documentation status (2026-08-28).** The released scientific software
+> baseline is `3.7.0` (2026-08-13; DOI `10.5281/zenodo.21912589`). Reference
+> artifacts v1 were released on 2026-08-15 (DOI
+> `10.5281/zenodo.21957984`). The v6 evidence bundle is dated 2026-08-13
+> (DOI `10.5281/zenodo.21925453`), and the associated arXiv record is public
+> version v3, revised 2026-07-23 (`arXiv:2607.18136`). Sections explicitly
+> labelled v8.1 describe an additive, unreleased engineering workflow and do
+> not change the 3.7.0 scientific analysis.
+
 > **💡 Graphical Interface:** A graphical user interface (Gooey) is available. You can launch it by running `python gui.py`. All CLI options listed below will also be visually configurable through the GUI.
 
 > **🪄 Interactive Wizard:** A step-by-step text wizard is available in the CLI. To launch it, simply run `python main.py` without any parameters. The wizard automatically detects all commands (including any future ones) and guides you through parameter input with smart suggestions (Smart Defaults).
@@ -99,7 +108,7 @@ The pipeline supports the analysis of different LIGO/Virgo observational runs. C
     - [`dsd-index-stability`](#30-dsd-index-stability) — Are the DSD survivors an artifact of the background draw? (P5)
     - [`dsd-k-sensitivity`](#31-dsd-k-sensitivity) — Are the survivors an artifact of the dictionary size K? (P4)
     - [`pca-baseline`](#32-pca-baseline) — What the frozen encoder buys over a classical baseline (P10)
-    - [`catalog-cross-match`](#33-catalog-cross-match) — DANTE's recall of the real GWTC-4 O4a catalogue (P11)
+    - [`catalog-cross-match`](#33-catalog-cross-match) — Catalogue overlap against a circular-shift null; not recall (P11)
     - [`blind-spot-map`](#34-blind-spot-map) — Empirical time-frequency blind-spot map vs T=Q_max/f
     - [`whitening-context-sensitivity`](#35-whitening-context-sensitivity) — DSD verdict flips vs whitening context
     - [`characterize-candidate`](#36-characterize-candidate) — Independent per-candidate descriptors (on-demand, not part of the Tier-2 sequence)
@@ -201,6 +210,51 @@ cohort. See `docs/DANTE_LIGHT.md` for the staged commands. The catalog stage
 remains O4b/GWTC-5.0-specific and fails closed for later runs; future catalog
 schemas are not silently accepted.
 
+### DANTE-Light v8.1 review telemetry (unreleased)
+
+This post-exact workflow measures operator review latency and completion
+capacity for already computed `ESCALATE` records. It does not rescore strain,
+change the exact DANTE-Light decision, or reproduce the offline V1/V3 discovery
+report. The default append-only ledger lives under
+`E:/dante_cache/dante_light/v8_1_review_telemetry`.
+
+Initialize once from the locked historical O4b escalation source. The operator
+identifier is hashed before storage:
+
+```bash
+python scripts/manage_dante_light_v8_1_review_telemetry.py init \
+  --operator-id <private-operator-id> --require-historical-anchor
+```
+
+For a single static directory containing the queue index and every standardized
+HTML/JSON review packet, no per-item state transition is required:
+
+```bash
+python scripts/manage_dante_light_v8_1_review_telemetry.py export-all \
+  --output-dir E:/dante_cache/dante_light/v8_1_review_export
+```
+
+Open `index.html` in that output directory. This is the inspection-only route;
+`export-all` does not start or complete any review. To collect real human-review
+telemetry, use the explicit state machine:
+
+```bash
+python scripts/manage_dante_light_v8_1_review_telemetry.py next
+python scripts/manage_dante_light_v8_1_review_telemetry.py start --record-id <dlr1-id> --open
+python scripts/manage_dante_light_v8_1_review_telemetry.py complete \
+  --record-id <dlr1-id> --confirm-checklist
+python scripts/manage_dante_light_v8_1_review_telemetry.py status
+python scripts/manage_dante_light_v8_1_review_telemetry.py verify
+```
+
+`<dlr1-id>` is the `source_record_id` printed by `next`, for example
+`dlr1-...`; it is not a value the operator invents.
+`show --record-id <id> --open` builds or opens a packet without starting the
+review clock. `sync`
+idempotently enrolls later exact escalations, while `sufficiency-scenarios`
+reports non-gating iid mathematical floors only. Human-capacity parameters
+remain unfrozen until the minimum real-event telemetry requirement is met.
+
 ---
 
 ## Execution Order
@@ -214,8 +268,8 @@ the core chain produces.
 ```
 # Tier 1 — core discovery chain (orchestrated)
 fetch-raw                                  # raw strain -> data/raw/<run>/
-patch-analysis --detector H1 --run O4a     # per-session novelties + native scores
-patch-analysis --detector L1 --run O4a
+patch-analysis --detector H1 --data-dir data/raw/o4a  # per-session novelties + native scores
+patch-analysis --detector L1 --data-dir data/raw/o4a
 aggregate-report --run O4a                 # -> Master_Taxonomy_<run>.csv,
                                            #    background_scores_native_<det>_<run>.npy,
                                            #    and auto-runs (in order):
@@ -231,7 +285,8 @@ pca-baseline --run O4a                     # P10
 whitening-context-sensitivity --run O4a    # coherent taxonomy + DSD thresholds + Q64 native index
 catalog-cross-match --run O4a              # P11 circular-shift overlap null
 blind-spot-map --run O4a                   # frozen O3b + coherent Q64 native diagnostic
-astrophysical-injection --run O4a          # P9: coherent DSD thresholds (WSL/lalsuite)
+python -m src.pipeline_v2_production.astrophysical_injection --run O4a
+                                           # P9: coherent DSD thresholds (WSL/lalsuite)
 
 # On demand, any time — not part of the sequence above
 characterize-candidate --detector L1 --gps <gps> --feature-gps <t>  # independent per-candidate descriptors
@@ -1025,8 +1080,11 @@ normally AMBIGUOUS, not BACKGROUND. Output:
 `dsd_index_stability_{run}_{representation}.json` plus a
 representation-versioned candidate/background token cache.
 
-> **Status:** the historical rank-correlation result used the legacy classes and
-> is superseded until the coherent rerun finishes.
+> **Final detector-aware result:** on 80 ROBUST and 80 AMBIGUOUS near-boundary
+> candidates across four independent 1,300-segment background draws, the
+> mean/minimum pairwise Spearman correlation is 0.673702/0.514687 and the
+> median per-candidate score standard deviation is 0.007567. This is moderate
+> near-boundary stability, not verdict invariance.
 
 ### 31. dsd-k-sensitivity
 **(P4)** Are the survivors an artifact of the dictionary size K=1216? Rebuilds
@@ -1036,8 +1094,9 @@ re-scores. `--run`, `--n-candidates`, `--k-values` (default `512 1024 1216
 Requires the P5 token cache — run `dsd-index-stability` first. Historical
 unversioned caches are rejected.
 
-> **Status:** the historical result used the legacy P5 cache and is superseded
-> until the coherent rerun finishes.
+> **Final detector-aware result:** Spearman correlation relative to K=1216 is
+> 0.752514, 0.768045 and 0.942790 for K=512, 1024 and 2048. The all-pairs
+> mean/minimum is 0.792286/0.645169; the ranking is K-sensitive, not invariant.
 
 ### 32. pca-baseline
 **(P10)** What does the frozen DINOv2 encoder buy over a representation-free
@@ -1046,8 +1105,10 @@ detector and raw spectral energy, measured against DANTE's stored native score.
 `--run`, `--n-candidates`, `--n-background`, `--seed`.
 Output: `pca_baseline_{run}_{representation}.json`.
 
-> **Status:** AUC 0.87/0.52 belongs to the legacy class/sample and must not be
-> quoted for Q64/Q64 until the coherent rerun finishes.
+> **Final detector-aware result:** PCA-residual AUC/rho is
+> 0.43625/-0.15787; spectral-energy AUC/rho is 0.54375/0.03006 (H1/L1 AUC
+> 0.598125/0.4900). These baselines do not explain the full DANTE ranking and
+> do not establish causal morphology use or backbone optimality.
 
 ### 33. catalog-cross-match
 **(P11)** Tests whether confirmed GWTC-4.0/4.1 event windows overlap DANTE
@@ -1056,10 +1117,10 @@ complete catalogue. Coverage, observed overlap and the null are separate.
 `--run`, `--refresh`, `--n-shifts`, `--coverage-source`.
 Output filenames include the analysis and taxonomy representation.
 
-> **Coherent result:** 2 observed any-detector overlaps versus null
-> 2.068 +/- 1.428, p=0.6148; no excess is resolved. This is not recall,
-> efficiency, or causal attribution. The second event is coherent AMBIGUOUS,
-> not legacy ROBUST.
+> **Final detector-aware result:** 2 observed any-detector overlaps versus
+> null mean 2.1899 (std 1.4665), empirical p=0.6508; no excess is resolved.
+> This is a coverage-proxy overlap null, not recall, efficiency, or causal
+> attribution.
 
 ### 34. blind-spot-map
 Injects sine-Gaussian bursts on a `(f0, Q)` grid at fixed matched-filter SNR and
@@ -1067,9 +1128,10 @@ maps DANTE's flag rate against the analytic `T = Q_max/f` boundary. `--run`,
 `--n-realizations`, `--seed`. Output:
 `blind_spot_map_centered_q64_v3_{run}.json`.
 
-> **Status:** the pre-centering result is invalid. The centred-v2 primary O3b
-> result exists, but v3 also removes the ancillary native-Q32 mismatch and is
-> the artifact required for the paper.
+> **Final centred-v3 result:** at target SNR 20, the mean flag fraction is
+> 0.2625 for Q<=64 and 0.4875 for Q>64; Q=2 and Q=4 have zero flags at every
+> tested frequency. This is a conditional morphology grid, not a universal
+> efficiency surface or a Q=64 frontier.
 
 ### 35. whitening-context-sensitivity
 Re-scores near-threshold candidates against the native index at several whitening
@@ -1077,9 +1139,11 @@ pad lengths and counts DSD verdict flips vs the production `pad=4` context.
 `--run`, `--n-candidates`, `--seed`.
 Output filenames include the coherent taxonomy representation.
 
-> **Status:** the old ~5% flip claim failed its pad=4 reproduction anchor and is
-> withdrawn. The replacement run hard-gates that anchor and recalibrates the
-> background threshold separately for every detector and pad.
+> **Final detector-aware result:** 60/66 selected candidates pass the pad=4
+> reproduction anchor. Median/maximum score swing is 0.010880/0.073835 and
+> 16/60 exceed 0.02. Pad-specific recalibrated verdict flips are 38/60, 42/60
+> and 39/60 at 16, 64 and 128 s. This is a boundary-conditioned stress test,
+> not a survey-wide flip prevalence.
 
 ### 36. characterize-candidate
 Independent, single-candidate descriptors: in-band peak frequency (raw-strain
