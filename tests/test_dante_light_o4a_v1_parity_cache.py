@@ -86,3 +86,19 @@ def test_cache_path_rejects_escape(tmp_path: Path) -> None:
     row["cache_target"]["relative_path"] = "../escape.hdf5"
     with pytest.raises(ContractError, match="invalid parity cache"):
         _cache_path(tmp_path, row)
+
+
+def test_committed_compact_raw_cache_result_is_self_consistent() -> None:
+    path = ROOT / "artifacts/dante_light/o4a_v1_parity/raw_cache_summary.json"
+    value = json.loads(path.read_text(encoding="utf-8"))
+    body = dict(value); digest = body.pop("artifact_digest")
+    assert digest == canonical_json_sha256(body)
+    contract, header, _missing = load_frozen_missing(ROOT)
+    assert value["status"] == "COMPLETE_RAW_INPUT_CACHE"
+    assert value["completed_count"] == value["expected_missing_count"] == 169
+    assert value["failure_count"] == 0
+    assert value["contract_digest"] == contract["contract_digest"]
+    assert value["manifest_digest"] == header["manifest_digest"]
+    assert len(value["external_summary_sha256"]) == 64
+    encoded = json.dumps(value, sort_keys=True)
+    assert "E:\\" not in encoded and "/mnt/e/" not in encoded
