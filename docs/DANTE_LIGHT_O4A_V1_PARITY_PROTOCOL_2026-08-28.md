@@ -39,6 +39,10 @@ fetched fail-closed into the separate logical cache
 `E:/dante_cache/dante_light/o4a_v1_comparison`, with CAT1 status and content
 hashes recorded before scoring.
 
+CAT1 coverage and the absence of hardware/CBC/burst injection overlap are
+verified for every padded interval against the frozen O4a DQ snapshot before
+any download or score is admitted.
+
 ## Primary gates
 
 1. all 10,429 detector+GPS identities are present exactly once;

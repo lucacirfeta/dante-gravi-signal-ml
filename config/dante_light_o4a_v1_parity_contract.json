@@ -7,7 +7,7 @@
     "score_tolerance_source": "src/dante_light/evidence.py::SCORE_ATOL",
     "thresholds_loaded_from": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
   },
-  "contract_digest": "a4ffe6faa597ce9a033effef98b133ecc58f9aa7ccefd948a2a502f0375ba911",
+  "contract_digest": "c29f2fb13b729020250c5cf130683227fa9029ff9eb8767e058d6edd4c91fc1f",
   "protocol_id": "dante-light-o4a-v1-retrospective-parity",
   "published_baseline": {
     "evidence_doi": "10.5281/zenodo.21925453",
@@ -63,6 +63,10 @@
       "path": "config/dante_light_epochs_v1.json",
       "sha256": "1f4bfa593ee2fe1902b390417b495cba83eab3d7447065801f6a301d34335ca6"
     },
+    "o4a_dq_snapshot": {
+      "path": "config/dante_light_prefilter_v4_segments.json",
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
+    },
     "raw_identity_audit": {
       "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
       "sha256": "23ea8ef97b77201e06297d98b5c6dfb24b284420875913f03b5456d36a0403a6"
@@ -77,7 +81,7 @@
     },
     "selection_code": {
       "path": "src/dante_light/o4a_v1_parity.py",
-      "sha256": "50de79cd595cf90ce67e835ea2befa06ad6af3f6994fb7df8b874e93c0fa6f58"
+      "sha256": "6e4dfb512ddc65c2f79778025c82db8f20dfb7f8f4cfd22a69168232adf3bf25"
     },
     "taxonomy": {
       "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",

@@ -34,6 +34,7 @@ RAW_MANIFEST_REL = "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manife
 RAW_AUDIT_REL = "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json"
 REFERENCE_REL = "config/reference_artifacts.json"
 EPOCHS_REL = "config/dante_light_epochs_v1.json"
+SEGMENTS_REL = "config/dante_light_prefilter_v4_segments.json"
 SELECTION_CODE_REL = "src/dante_light/o4a_v1_parity.py"
 ENTRIES_REL = "config/dante_light_o4a_v1_parity_manifest.jsonl"
 MISSING_REL = "config/dante_light_o4a_v1_parity_missing.jsonl"
@@ -95,6 +96,7 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
         "raw_identity_audit": _reference(root, RAW_AUDIT_REL),
         "reference_artifacts": _reference(root, REFERENCE_REL),
         "historical_epochs": _reference(root, EPOCHS_REL),
+        "o4a_dq_snapshot": _reference(root, SEGMENTS_REL),
         "selection_code": _reference(root, SELECTION_CODE_REL),
     }
     if _git_tag_commit(root, BASELINE_TAG) != BASELINE_COMMIT:
@@ -111,6 +113,7 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
         raise ContractError("existing exact-replay score tolerance changed")
 
     raw_rows = _read_jsonl(root / RAW_MANIFEST_REL)
+    dq_flags = _read_json(root / SEGMENTS_REL)["flags"]
     raw_by_detector = {
         detector: sorted(
             (row for row in raw_rows if row["detector"] == detector),
@@ -132,6 +135,17 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
         analysis_gps = catalog_gps + offset
         required_start = analysis_gps - representation.whitening_pad_s
         required_end = analysis_gps + representation.analysis_duration_s + representation.whitening_pad_s
+        cat1 = any(
+            float(left) <= required_start and required_end <= float(right)
+            for left, right in dq_flags[f"{detector}_O4A_CBC_CAT1"]["segments"]
+        )
+        injection_overlap = any(
+            float(left) < required_end and required_start < float(right)
+            for suffix in ("HW_INJ", "CBC_INJ", "BURST_INJ")
+            for left, right in dq_flags[f"{detector}_O4A_{suffix}"]["segments"]
+        )
+        if not cat1 or injection_overlap:
+            raise ContractError(f"published parity identity violates frozen O4a DQ at {detector} {catalog_gps}")
         hits = [
             row for row in raw_by_detector[detector]
             if float(row["gps_start"]) <= required_start
@@ -166,6 +180,11 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
             "catalog_identity": {"detector": detector, "gps_start": catalog_gps},
             "source": source,
             "required_padded_interval_gps": [required_start, required_end],
+            "data_quality": {
+                "frozen_cbc_cat1": True,
+                "hardware_injection_overlap": False,
+                "snapshot_path": SEGMENTS_REL,
+            },
             "expected": {
                 "published_native_score": score,
                 "offline_class": published_class,
@@ -187,6 +206,7 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
                 "window": entry["window"],
                 "catalog_identity": entry["catalog_identity"],
                 "required_padded_interval_gps": entry["required_padded_interval_gps"],
+                "data_quality": entry["data_quality"],
                 "published_offline_class": published_class,
                 "cache_target": {
                     "logical_root": "o4a_v1_comparison_cache",
