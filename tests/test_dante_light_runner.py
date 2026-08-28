@@ -18,7 +18,7 @@ from src.dante_light.executor import WindowTask
 from src.dante_light.epoch import REQUIRED_GATES
 from src.dante_light.preprocessing import PreparedWindow
 from src.dante_light.review_queue import ReviewQueue
-from src.dante_light.runner import (
+from src.dante_light.runner_v8_1 import (
     DEFAULT_EPOCHS,
     DanteLightRunner,
     load_epochs,
@@ -417,7 +417,9 @@ def test_light_cli_exposes_explicit_gwosc_only_source() -> None:
 
 
 def test_replay_scorers_take_top_k_from_representation_contract() -> None:
-    source = (Path(__file__).resolve().parents[1] / "src/dante_light/runner.py").read_text(
+    source = (
+        Path(__file__).resolve().parents[1] / "src/dante_light/runner_v8_1.py"
+    ).read_text(
         encoding="utf-8"
     )
     constructor_region = source[source.index("primary = PatchScorer") :]

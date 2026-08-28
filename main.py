@@ -2819,7 +2819,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
 
 def _cmd_dante_light(args: argparse.Namespace, *, prospective: bool) -> None:
     import json
-    from src.dante_light.runner import run_replay
+    from src.dante_light.runner_v8_1 import run_replay
 
     args.prospective = prospective
     if args.limit is None and args.limit_per_detector is None:

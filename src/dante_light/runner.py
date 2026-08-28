@@ -502,15 +502,11 @@ def run_replay(args) -> dict[str, Any]:
         cat1_active = gwosc_cat1_provider(tasks)
         cat1_provenance = "GWOSC CBC_CAT1 whole-window containment"
 
-    primary = PatchScorer(
-        PRIMARY_INDEX,
-        device=args.device,
-        k=representation.top_k,
-    )
+    primary = PatchScorer(PRIMARY_INDEX, device=args.device, k=68)
     native = PatchScorer(
         NATIVE_INDEX,
         device=args.device,
-        k=representation.top_k,
+        k=68,
         model=(primary.model if args.engine == "shared_encoder_score_only" else None),
     )
     run_manifest = {
