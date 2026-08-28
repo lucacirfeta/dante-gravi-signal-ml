@@ -345,7 +345,9 @@ def test_public_cli_keeps_light_opt_in_and_output_separate() -> None:
         ["dante-light-replay", "--output-dir", "runs/dante_light/test"]
     )
     assert replay.func is main.cmd_dante_light_replay
-    assert replay.limit == 8
+    assert replay.limit is None
+    assert replay.limit_per_detector is None
+    assert replay.dante_light_default_limit == 8
     assert replay.engine == "canonical"
     assert replay.cat1_mode == "gwosc"
     assert replay.strain_source == "auto"
@@ -354,6 +356,37 @@ def test_public_cli_keeps_light_opt_in_and_output_separate() -> None:
         ["dante-light-shadow", "--output-dir", "runs/dante_light/shadow"]
     )
     assert shadow.func is main.cmd_dante_light_shadow
+    assert shadow.dante_light_default_limit is None
+
+
+def test_light_cli_accepts_balanced_limit_and_rejects_two_limits() -> None:
+    import main
+
+    parser = main.build_parser()
+    balanced = parser.parse_args(
+        [
+            "dante-light-replay",
+            "--output-dir",
+            "runs/dante_light/test",
+            "--limit-per-detector",
+            "1",
+        ]
+    )
+    assert balanced.limit is None
+    assert balanced.limit_per_detector == 1
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(
+            [
+                "dante-light-replay",
+                "--output-dir",
+                "runs/dante_light/test",
+                "--limit",
+                "2",
+                "--limit-per-detector",
+                "1",
+            ]
+        )
 
 
 def test_runtime_provenance_records_reproducible_latency_environment() -> None:
