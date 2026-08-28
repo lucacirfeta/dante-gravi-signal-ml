@@ -18,6 +18,7 @@ from src.dante_light.prefilter_v5_protocol import repository_reference, sha256_p
 
 
 DEFAULT_CACHE_ROOT = Path("E:/dante_cache/dante_light/o4a_v1_comparison")
+DEFAULT_RAW_ROOT = Path("E:/o4a")
 CONTRACT_PATH = ROOT / "config/dante_light_o4a_v1_parity_contract.json"
 HEADER_PATH = ROOT / "config/dante_light_o4a_v1_parity_manifest.json"
 COMPACT_ARTIFACT = ROOT / "artifacts/dante_light/o4a_v1_parity/raw_cache_summary.json"
@@ -110,9 +111,38 @@ def default_fetch(detector: str, start: float, end: float, sample_rate_hz: int) 
     )
 
 
+def _stitch_local(
+    row: Mapping[str, Any], *, raw_root: Path, sample_rate_hz: int,
+) -> object | None:
+    stitch = row["local_stitch"]
+    if not stitch["complete_padded_coverage"]:
+        return None
+    from gwpy.timeseries import TimeSeries, TimeSeriesList
+
+    paths = []
+    for component in stitch["components"]:
+        relative = Path(str(component["relative_path"]))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise ContractError("invalid local-stitch component path")
+        path = (raw_root / relative).resolve()
+        if raw_root.resolve() not in path.parents:
+            raise ContractError("local-stitch component escapes raw root")
+        if not path.is_file():
+            return None
+        if sha256_path(path) != component["file_sha256"]:
+            raise ContractError(f"local-stitch source hash mismatch: {relative.as_posix()}")
+        paths.append(path)
+    series = TimeSeriesList([TimeSeries.read(path) for path in paths]).join(gap="raise")
+    start, end = map(float, row["required_padded_interval_gps"])
+    cropped = series.crop(start, end)
+    if int(round(float(cropped.sample_rate.value))) != sample_rate_hz:
+        cropped = cropped.resample(sample_rate_hz)
+    return cropped
+
+
 def ensure_cached(
     row: Mapping[str, Any], *, cache_root: Path, sample_rate_hz: int,
-    fetch: Callable[[str, float, float, int], object], retries: int,
+    raw_root: Path, fetch: Callable[[str, float, float, int], object], retries: int,
 ) -> dict[str, Any]:
     path = _cache_path(cache_root, row)
     if path.is_file():
@@ -127,14 +157,18 @@ def ensure_cached(
     for attempt in range(retries):
         temporary = path.with_suffix(".tmp.hdf5")
         try:
-            series = fetch(str(row["window"]["detector"]), start, end, sample_rate_hz)
+            series = _stitch_local(row, raw_root=raw_root, sample_rate_hz=sample_rate_hz)
+            source = "verified_local_raw_stitch"
+            if series is None:
+                series = fetch(str(row["window"]["detector"]), start, end, sample_rate_hz)
+                source = "gwosc_open_data"
             if int(round(float(series.sample_rate.value))) != sample_rate_hz:
                 series = series.resample(sample_rate_hz)
             path.parent.mkdir(parents=True, exist_ok=True)
             series.write(temporary, format="hdf5", path="strain")
             os.replace(temporary, path)
             record = _validate_series(path, row, sample_rate_hz)
-            body = {**record, "source": "gwosc_open_data"}
+            body = {**record, "source": source}
             return {**body, "record_digest": canonical_json_sha256(body)}
         except Exception as exc:
             last_error = exc
@@ -157,7 +191,7 @@ def _write_record(path: Path, record: Mapping[str, Any]) -> None:
 
 def _cache_detector(
     rows: Sequence[Mapping[str, Any]], *, cache_root: Path, sample_rate_hz: int,
-    fetch: Callable[[str, float, float, int], object], retries: int,
+    raw_root: Path, fetch: Callable[[str, float, float, int], object], retries: int,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     records: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
@@ -165,7 +199,7 @@ def _cache_detector(
         try:
             record = ensure_cached(
                 row, cache_root=cache_root, sample_rate_hz=sample_rate_hz,
-                fetch=fetch, retries=retries,
+                raw_root=raw_root, fetch=fetch, retries=retries,
             )
             _write_record(cache_root / "records" / f"{row['case_id']}.json", record)
             records.append(record)
@@ -181,6 +215,7 @@ def _cache_detector(
 
 def build_cache(
     *, root: Path = ROOT, cache_root: Path = DEFAULT_CACHE_ROOT, workers: int = 2,
+    raw_root: Path = DEFAULT_RAW_ROOT,
     retries: int = 3, fetch: Callable[[str, float, float, int], object] = default_fetch,
     limit: int | None = None,
 ) -> dict[str, Any]:
@@ -209,7 +244,7 @@ def build_cache(
             pool.submit(
                 _cache_detector, rows, cache_root=cache_root,
                 sample_rate_hz=int(contract["representation"]["sample_rate_hz"]),
-                fetch=fetch, retries=retries,
+                raw_root=raw_root, fetch=fetch, retries=retries,
             )
             for rows in selected_groups
         ]

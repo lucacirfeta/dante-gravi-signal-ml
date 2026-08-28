@@ -76,6 +76,34 @@ def _offline_class(score: float, limits: Mapping[str, Any]) -> str:
     return "AMBIGUOUS"
 
 
+def _covering_components(
+    rows: list[dict[str, Any]], start: float, end: float,
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Return a deterministic greedy cover from individually verified files."""
+    candidates = [
+        row for row in rows
+        if float(row["gps_start"]) < end and start < float(row["gps_end"])
+    ]
+    selected: list[dict[str, Any]] = []
+    current = start
+    while current < end:
+        eligible = [row for row in candidates if float(row["gps_start"]) <= current < float(row["gps_end"])]
+        if not eligible:
+            break
+        chosen = max(eligible, key=lambda row: (float(row["gps_end"]), -float(row["gps_start"]), str(row["sha256"])))
+        selected.append(chosen)
+        current = float(chosen["gps_end"])
+    components = [
+        {
+            "relative_path": row["physical_copies"][0]["relative_path"],
+            "file_sha256": row["sha256"],
+            "file_interval_gps": [float(row["gps_start"]), float(row["gps_end"])],
+        }
+        for row in selected
+    ]
+    return current >= end, components
+
+
 def _git_tag_commit(root: Path, tag: str) -> str:
     try:
         return subprocess.check_output(
@@ -167,6 +195,9 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
                 "file_sha256": hit["sha256"],
                 "file_interval_gps": [float(hit["gps_start"]), float(hit["gps_end"])],
             }
+        stitch_complete, stitch_components = _covering_components(
+            raw_by_detector[detector], required_start, required_end
+        )
         published_class = str(raw[class_column])
         score = float(raw[score_column])
         limits = thresholds["thresholds"][detector]
@@ -207,6 +238,10 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
                 "catalog_identity": entry["catalog_identity"],
                 "required_padded_interval_gps": entry["required_padded_interval_gps"],
                 "data_quality": entry["data_quality"],
+                "local_stitch": {
+                    "complete_padded_coverage": stitch_complete,
+                    "components": stitch_components,
+                },
                 "published_offline_class": published_class,
                 "cache_target": {
                     "logical_root": "o4a_v1_comparison_cache",
@@ -225,6 +260,9 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
         raise ContractError("historical Light dispositions changed")
     if escalation_classes != {"ROBUST": 6365, "AMBIGUOUS": 619}:
         raise ContractError("historical Light escalation classes changed")
+    stitch_count = sum(bool(row["local_stitch"]["complete_padded_coverage"]) for row in missing)
+    if stitch_count != 162:
+        raise ContractError("local stitch capacity changed")
 
     contract_body = {
         "schema_version": 1,
@@ -276,6 +314,8 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
             "entries": len(entries),
             "covered_by_raw_mirror": len(entries) - len(missing),
             "missing_from_raw_mirror": len(missing),
+            "recoverable_by_verified_local_stitch": stitch_count,
+            "requires_gwosc_fetch": len(missing) - stitch_count,
             "by_detector_and_class": {f"{k[0]}/{k[1]}": v for k, v in sorted(class_counts.items())},
             "missing_by_detector_and_class": {f"{k[0]}/{k[1]}": v for k, v in sorted(missing_counts.items())},
             "light_disposition": dict(sorted(disposition_counts.items())),

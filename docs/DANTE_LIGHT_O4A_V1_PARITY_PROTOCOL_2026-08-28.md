@@ -43,6 +43,12 @@ CAT1 coverage and the absence of hardware/CBC/burst injection overlap are
 verified for every padded interval against the frozen O4a DQ snapshot before
 any download or score is admitted.
 
+Of the 169 intervals not covered by one local file, 162 are covered exactly by
+two adjacent, content-hashed files in the immutable mirror. They are stitched
+locally and cached as one 40 s input. Only the remaining seven intervals require
+a GWOSC fetch; this distinction changes data acquisition only, not preprocessing
+or scoring.
+
 ## Primary gates
 
 1. all 10,429 detector+GPS identities are present exactly once;

@@ -7,7 +7,7 @@
     "score_tolerance_source": "src/dante_light/evidence.py::SCORE_ATOL",
     "thresholds_loaded_from": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
   },
-  "contract_digest": "a4ae3b378d9e3421cbc09cbbb19010f35edac4a41be05e259ab803f2419b14d2",
+  "contract_digest": "f47d114a4571fb158c06c18406549eb4a3468ea47b1c1af046ec91687c82fd1e",
   "protocol_id": "dante-light-o4a-v1-retrospective-parity",
   "published_baseline": {
     "evidence_doi": "10.5281/zenodo.21925453",
@@ -81,7 +81,7 @@
     },
     "selection_code": {
       "path": "src/dante_light/o4a_v1_parity.py",
-      "sha256": "54861d7ddfe3e114a7ae78ab58604143b4f43b83595ad2ff586eec8557b27903"
+      "sha256": "a79989b4b9b850cda5e4e1b9cffc329ed01fe92da3af084033f64b4112ab2fef"
     },
     "taxonomy": {
       "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",

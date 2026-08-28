@@ -30,6 +30,8 @@ def test_frozen_o4a_v1_parity_corpus_is_current_and_complete() -> None:
     assert header["counts"]["entries"] == 10_429
     assert header["counts"]["covered_by_raw_mirror"] == 10_260
     assert header["counts"]["missing_from_raw_mirror"] == 169
+    assert header["counts"]["recoverable_by_verified_local_stitch"] == 162
+    assert header["counts"]["requires_gwosc_fetch"] == 7
     assert header["counts"]["missing_by_detector_and_class"] == {
         "H1/AMBIGUOUS": 18, "H1/ROBUST": 60,
         "L1/AMBIGUOUS": 43, "L1/ROBUST": 48,

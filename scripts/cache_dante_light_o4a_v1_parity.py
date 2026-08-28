@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
 
 from src.dante_light.contracts import canonical_json_sha256  # noqa: E402
 from src.dante_light.o4a_v1_parity_cache import (  # noqa: E402
-    COMPACT_ARTIFACT, DEFAULT_CACHE_ROOT, build_cache, compact_cache_artifact,
+    COMPACT_ARTIFACT, DEFAULT_CACHE_ROOT, DEFAULT_RAW_ROOT, build_cache, compact_cache_artifact,
     validate_cache,
 )
 
@@ -24,6 +24,7 @@ from src.dante_light.o4a_v1_parity_cache import (  # noqa: E402
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cache-root", type=Path, default=DEFAULT_CACHE_ROOT)
+    parser.add_argument("--raw-root", type=Path, default=DEFAULT_RAW_ROOT)
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--retries", type=int, default=3)
     parser.add_argument("--limit", type=int)
@@ -34,7 +35,7 @@ def main() -> int:
         summary = validate_cache(root=ROOT, cache_root=cache_root)
     else:
         summary = build_cache(
-            root=ROOT, cache_root=cache_root, workers=args.workers,
+            root=ROOT, cache_root=cache_root, raw_root=args.raw_root.resolve(), workers=args.workers,
             retries=args.retries, limit=args.limit,
         )
         if args.limit is None:
