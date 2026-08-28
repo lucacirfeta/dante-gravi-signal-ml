@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -106,6 +108,58 @@ def test_state_machine_and_descriptive_timings(tmp_path: Path) -> None:
     assert status["inference_status"] == "DESCRIPTIVE_ONLY_SUFFICIENCY_THRESHOLD_UNFROZEN"
 
 
+def test_review_packet_is_provenance_bound_and_standardized(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path)
+    ledger.sync_source(
+        SOURCE,
+        source_semantics="historical_backlog_enrollment",
+        require_historical_anchor=True,
+        now=_time(1),
+    )
+    record_id = ledger.pending()[0]["source_record_id"]
+    result = ledger.build_review_packet(record_id)
+    packet = result["packet"]
+    assert packet["procedure_revision"] == 2
+    assert packet["source_record_id"] == "dlr1-54bcc67eb4c3e2f1e6c70267"
+    assert packet["gallery_position"] == {
+        "one_based_index": 1,
+        "row": 1,
+        "column": 1,
+    }
+    assert packet["exact_decision"]["score"] == pytest.approx(0.38023295998573303)
+    assert packet["cross_detector"]["measurement_status"] == "MEASURED"
+    assert packet["catalog_crossmatch"]["match_count"] == 0
+    assert len(packet["checklist"]) == 6
+    assert "review_outcome" not in json.dumps(packet).lower()
+    assert Path(result["candidate_image"]).is_file()
+    assert Path(result["packet_html"]).is_file()
+    assert Path(result["packet_json"]).is_file()
+    from PIL import Image
+
+    with Image.open(result["candidate_image"]) as image:
+        assert image.size == (530, 515)
+
+
+def test_review_packet_rejects_non_cohort_identity(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path)
+    ledger.sync_source(
+        SOURCE,
+        source_semantics="historical_backlog_enrollment",
+        require_historical_anchor=True,
+        now=_time(1),
+    )
+    state = ledger._state()
+    record_id = next(iter(state))
+    state[record_id]["identity"]["window_id"] = "dlw1-not-in-frozen-manifest"
+    original = ledger._state
+    ledger._state = lambda: state  # type: ignore[method-assign]
+    try:
+        with pytest.raises(ContractError, match="not unique"):
+            ledger.build_review_packet(record_id)
+    finally:
+        ledger._state = original  # type: ignore[method-assign]
+
+
 def test_invalid_transitions_fail_closed(tmp_path: Path) -> None:
     ledger = _ledger(tmp_path)
     ledger.sync_source(
@@ -159,3 +213,52 @@ def test_contract_digest_tampering_fails_closed(tmp_path: Path) -> None:
     path.write_text(json.dumps(changed), encoding="utf-8")
     with pytest.raises(ContractError, match="digest mismatch"):
         load_contract(path)
+
+
+def test_cli_review_flow_requires_checklist_confirmation(tmp_path: Path) -> None:
+    script = ROOT / "scripts/manage_dante_light_v8_1_review_telemetry.py"
+    telemetry = tmp_path / "cli-telemetry"
+    base = [sys.executable, str(script), "--telemetry-dir", str(telemetry)]
+    subprocess.run(
+        base
+        + [
+            "init",
+            "--operator-id",
+            "cli-test",
+            "--require-historical-anchor",
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    start = subprocess.run(
+        base + ["start"], cwd=ROOT, check=True, capture_output=True, text=True
+    )
+    started = json.loads(start.stdout)
+    record_id = started["event"]["source_record_id"]
+    refused = subprocess.run(
+        base + ["complete", "--record-id", record_id],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert refused.returncode != 0
+    subprocess.run(
+        base
+        + [
+            "complete",
+            "--record-id",
+            record_id,
+            "--confirm-checklist",
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    status = subprocess.run(
+        base + ["status"], cwd=ROOT, check=True, capture_output=True, text=True
+    )
+    assert json.loads(status.stdout)["completed"] == 1

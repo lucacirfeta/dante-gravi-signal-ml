@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import datetime, timezone
+from html import escape
 import hashlib
 import json
 import math
@@ -97,6 +98,11 @@ def load_contract(path: str | Path = DEFAULT_CONTRACT) -> dict[str, Any]:
         "top_x_budget": None,
     }:
         raise ContractError("telemetry contract must not contain operational parameters")
+    procedure = contract.get("review_procedure", {})
+    if procedure.get("procedure_revision") != 2:
+        raise ContractError("review telemetry requires frozen procedure revision 2")
+    if len(procedure.get("frozen_checklist", [])) != 6:
+        raise ContractError("review telemetry checklist must contain six frozen items")
     return contract
 
 
@@ -188,10 +194,17 @@ def verify_contract_provenance(
     _verify_anchor(contract, source)
     if member(anchor["records_path"]) != source_dir / "records.jsonl":
         raise ContractError("historical records path does not match anchor source")
+    packet_artifacts: dict[str, str] = {}
+    for item in contract["review_procedure"]["packet_artifacts"]:
+        path = member(item["path"])
+        if sha256_file(path) != item["sha256"]:
+            raise ContractError(f"review packet provenance mismatch: {item['role']}")
+        packet_artifacts[item["role"]] = "PASS"
     return {
         "phase0_result": "PASS",
         "historical_scale_anchor": "PASS",
         "historical_escalations": len(source["escalations"]),
+        "review_packet_artifacts": dict(sorted(packet_artifacts.items())),
     }
 
 
@@ -481,6 +494,200 @@ class ReviewTelemetryLedger:
             for row in state.values()
             if row["state"] == "ENROLLED"
         ]
+
+    def build_review_packet(
+        self,
+        source_record_id: str,
+        *,
+        packet_dir: str | Path | None = None,
+        root: str | Path = ROOT,
+    ) -> dict[str, Any]:
+        """Build a provenance-bound packet without recording a review outcome."""
+
+        root = Path(root).resolve()
+        state = self._state()
+        if source_record_id not in state:
+            raise ContractError(f"unknown telemetry record: {source_record_id}")
+        identity = state[source_record_id]["identity"]
+        procedure = self.contract["review_procedure"]
+
+        artifacts: dict[str, Path] = {}
+        for item in procedure["packet_artifacts"]:
+            path = (root / item["path"]).resolve()
+            if path != root and root not in path.parents:
+                raise ContractError(f"review packet path escapes repository: {item['path']}")
+            if sha256_file(path) != item["sha256"]:
+                raise ContractError(f"review packet provenance mismatch: {item['role']}")
+            artifacts[item["role"]] = path
+
+        manifest = _read_json(artifacts["candidate_manifest"])
+        manifest_body = dict(manifest)
+        manifest_digest = manifest_body.pop("manifest_sha256", None)
+        if manifest_digest != canonical_json_sha256(manifest_body):
+            raise ContractError("review packet candidate manifest digest mismatch")
+        candidates = list(manifest.get("candidates", []))
+        candidate_matches = [
+            (index, row)
+            for index, row in enumerate(candidates)
+            if row.get("window_id") == identity["window_id"]
+        ]
+        if len(candidate_matches) != 1:
+            raise ContractError("telemetry identity is not unique in review packet manifest")
+        candidate_index, candidate = candidate_matches[0]
+        for key in ("detector", "gps_start", "duration_s"):
+            if candidate.get(key) != identity[key]:
+                raise ContractError(f"review packet identity mismatch: {key}")
+
+        physical = _read_json(artifacts["cross_detector_physical"])
+        catalog = _read_json(artifacts["catalog_crossmatch"])
+        gallery = _read_json(artifacts["gallery_evidence"])
+        for name, payload in (
+            ("physical", physical),
+            ("catalog", catalog),
+            ("gallery", gallery),
+        ):
+            if payload.get("manifest_sha256") != manifest["manifest_sha256"]:
+                raise ContractError(f"review packet {name} belongs to another manifest")
+        if gallery.get("gallery_sha256") != sha256_file(artifacts["canonical_gallery"]):
+            raise ContractError("review packet gallery image digest mismatch")
+        if gallery.get("physical_artifact_sha256") != sha256_file(
+            artifacts["cross_detector_physical"]
+        ):
+            raise ContractError("review packet physical/gallery binding mismatch")
+
+        physical_matches = [
+            row for row in physical.get("events", []) if row.get("window_id") == identity["window_id"]
+        ]
+        catalog_matches = [
+            row for row in catalog.get("crossmatches", []) if row.get("window_id") == identity["window_id"]
+        ]
+        gallery_checks = [
+            row for row in gallery.get("checks", []) if row.get("window_id") == identity["window_id"]
+        ]
+        if len(physical_matches) != 1 or len(catalog_matches) != 1 or len(gallery_checks) != 1:
+            raise ContractError("review packet follow-up coverage is incomplete")
+        if not gallery_checks[0].get("strain_hash_match") or not gallery_checks[0].get(
+            "image_hash_match"
+        ):
+            raise ContractError("review packet canonical gallery check failed")
+
+        grid = procedure["visual_crop_contract"]
+        rows, columns = int(grid["rows"]), int(grid["columns"])
+        if len(candidates) != rows * columns:
+            raise ContractError("review packet gallery population/grid mismatch")
+        row_index, column_index = divmod(candidate_index, columns)
+        destination = Path(packet_dir or self.telemetry_dir / "packets").resolve()
+        destination.mkdir(parents=True, exist_ok=True)
+        crop_path = destination / f"{source_record_id}.png"
+
+        try:
+            from PIL import Image
+        except ImportError as exc:  # pragma: no cover - repository dependency
+            raise ContractError("Pillow is required to render review packets") from exc
+        with Image.open(artifacts["canonical_gallery"]) as image:
+            expected_size = (
+                int(grid["expected_image_width_px"]),
+                int(grid["expected_image_height_px"]),
+            )
+            if image.size != expected_size:
+                raise ContractError("review packet gallery dimensions changed")
+            centers = [int(value) for value in grid["column_centers_px"]]
+            if len(centers) != columns:
+                raise ContractError("review packet column-center contract mismatch")
+            left_width = int(grid["crop_left_width_px"])
+            right_width = int(grid["crop_right_width_px"])
+            x0 = max(0, centers[column_index] - left_width)
+            x1 = min(image.width, centers[column_index] + right_width)
+            boundaries = [int(value) for value in grid["row_boundaries_px"]]
+            y0, y1 = boundaries[row_index], boundaries[row_index + 1]
+            crop = image.crop((x0, y0, x1, y1))
+            crop.save(crop_path)
+
+        physical_row = physical_matches[0]
+        catalog_row = catalog_matches[0]
+        body = {
+            "schema_version": SCHEMA_VERSION,
+            "procedure_revision": procedure["procedure_revision"],
+            "telemetry_id": self.manifest["telemetry_id"],
+            "source_record_id": source_record_id,
+            "window": dict(identity),
+            "gallery_position": {
+                "one_based_index": candidate_index + 1,
+                "row": row_index + 1,
+                "column": column_index + 1,
+            },
+            "visual": {
+                "candidate_crop_sha256": sha256_file(crop_path),
+                "legend": dict(gallery["axis_contract"]),
+            },
+            "exact_decision": {
+                "score_name": candidate["decision_score_name"],
+                "score": candidate["decision_score"],
+                "threshold": candidate["decision_threshold"],
+                "frozen_dsd_class": candidate["frozen_dsd_class"],
+            },
+            "localization": dict(candidate["localization"]),
+            "cross_detector": {
+                key: physical_row.get(key)
+                for key in (
+                    "measurement_status",
+                    "partner",
+                    "cc_onsource",
+                    "cc_null_mean",
+                    "cc_null_max",
+                    "n_null",
+                    "patch_iou",
+                    "per_event_null_exceeded",
+                )
+            },
+            "catalog_crossmatch": {
+                "matched_catalog_events": list(catalog_row["matched_catalog_events"]),
+                "match_count": len(catalog_row["matched_catalog_events"]),
+                "rule": catalog["window_match_rule"],
+            },
+            "checklist": list(procedure["frozen_checklist"]),
+            "completion_definition": procedure["completion_definition"],
+            "scientific_boundary": (
+                "packet content is displayed for a standardized human task; no review outcome "
+                "is written to the telemetry ledger and no ranking is active"
+            ),
+        }
+        packet = {**body, "packet_digest": canonical_json_sha256(body)}
+        json_path = destination / f"{source_record_id}.json"
+        html_path = destination / f"{source_record_id}.html"
+        _atomic_json(json_path, packet)
+
+        checklist_html = "".join(
+            f"<li>{escape(item)}</li>" for item in packet["checklist"]
+        )
+        matched = packet["catalog_crossmatch"]["matched_catalog_events"]
+        matched_text = "none" if not matched else json.dumps(matched, sort_keys=True)
+        html = f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>DANTE-Light review {escape(source_record_id)}</title>
+<style>body{{font:16px system-ui;max-width:980px;margin:2rem auto;padding:0 1rem}}img{{max-width:100%;border:1px solid #999}}table{{border-collapse:collapse}}td,th{{padding:.35rem .6rem;border:1px solid #ccc;text-align:left}}code{{background:#eee;padding:.1rem .25rem}}</style></head>
+<body><h1>DANTE-Light standardized review packet</h1>
+<p><code>{escape(source_record_id)}</code> — {escape(identity['detector'])}, GPS {identity['gps_start']:.3f}</p>
+<img src="{escape(crop_path.name)}" alt="canonical Q-transform candidate crop">
+<table><tr><th>Exact score</th><td>{candidate['decision_score']:.6f}</td><th>Threshold</th><td>{candidate['decision_threshold']:.6f}</td></tr>
+<tr><th>DSD class</th><td>{escape(str(candidate['frozen_dsd_class']))}</td><th>Gallery cell</th><td>row {row_index + 1}, column {column_index + 1}</td></tr>
+<tr><th>Physical status</th><td>{escape(str(physical_row.get('measurement_status')))}</td><th>Partner</th><td>{escape(str(physical_row.get('partner')))}</td></tr>
+<tr><th>cc on-source</th><td>{escape(str(physical_row.get('cc_onsource')))}</td><th>null max</th><td>{escape(str(physical_row.get('cc_null_max')))}</td></tr>
+<tr><th>Catalog matches</th><td colspan="3">{escape(matched_text)}</td></tr></table>
+<h2>Frozen checklist</h2><ol>{checklist_html}</ol>
+<p><strong>Completion:</strong> {escape(procedure['completion_definition'])}</p>
+<p>No review outcome is stored in telemetry.</p></body></html>"""
+        temporary = html_path.with_suffix(".html.tmp")
+        with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+            handle.write(html)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, html_path)
+        return {
+            "packet": packet,
+            "packet_json": str(json_path),
+            "packet_html": str(html_path),
+            "candidate_image": str(crop_path),
+        }
 
     def status(self) -> dict[str, Any]:
         state = self._state()

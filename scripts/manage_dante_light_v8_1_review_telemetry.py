@@ -5,6 +5,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import webbrowser
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +31,23 @@ def _ledger(args: argparse.Namespace) -> ReviewTelemetryLedger:
         args.telemetry_dir,
         contract=load_contract(args.contract),
     )
+
+
+def _record_id_or_next(
+    ledger: ReviewTelemetryLedger, requested: str | None
+) -> str:
+    if requested:
+        return requested
+    pending = ledger.pending()
+    if not pending:
+        raise SystemExit("no FIFO review item is currently pending")
+    return pending[0]["source_record_id"]
+
+
+def _open_packet(packet: dict[str, object]) -> None:
+    uri = Path(str(packet["packet_html"])).resolve().as_uri()
+    if not webbrowser.open(uri):
+        raise SystemExit(f"could not open review packet; open manually: {uri}")
 
 
 def main() -> None:
@@ -61,9 +79,21 @@ def main() -> None:
     next_parser = subparsers.add_parser("next", help="show the next FIFO item without outcomes or scores")
     next_parser.add_argument("--limit", type=int, default=1)
 
-    for name in ("start", "complete"):
-        action = subparsers.add_parser(name)
-        action.add_argument("--record-id", required=True)
+    show = subparsers.add_parser("show", help="build the standardized packet for a review item")
+    show.add_argument("--record-id", help="defaults to the next FIFO item")
+    show.add_argument("--open", action="store_true", help="open the packet in the default browser")
+
+    start = subparsers.add_parser("start", help="prepare the packet and start measured review")
+    start.add_argument("--record-id", help="defaults to the next FIFO item")
+    start.add_argument("--open", action="store_true", help="open the packet after the durable STARTED event")
+
+    complete = subparsers.add_parser("complete", help="complete a review after the frozen checklist")
+    complete.add_argument("--record-id", required=True)
+    complete.add_argument(
+        "--confirm-checklist",
+        action="store_true",
+        help="confirm all six frozen checklist items were inspected",
+    )
 
     subparsers.add_parser("status", help="report descriptive timing only")
     subparsers.add_parser("verify", help="verify contract, manifest, chain and transitions")
@@ -95,10 +125,24 @@ def main() -> None:
             if args.limit < 1:
                 parser.error("--limit must be positive")
             output = {"pending": ledger.pending()[: args.limit]}
+        elif args.command == "show":
+            record_id = _record_id_or_next(ledger, args.record_id)
+            output = ledger.build_review_packet(record_id)
+            if args.open:
+                _open_packet(output)
         elif args.command == "start":
-            output = ledger.transition(args.record_id, "STARTED")
+            record_id = _record_id_or_next(ledger, args.record_id)
+            packet = ledger.build_review_packet(record_id)
+            event = ledger.transition(record_id, "STARTED")
+            output = {"event": event, "review_packet": packet}
+            if args.open:
+                _open_packet(packet)
         elif args.command == "complete":
-            output = ledger.transition(args.record_id, "COMPLETED")
+            if not args.confirm_checklist:
+                parser.error("complete requires --confirm-checklist")
+            packet = ledger.build_review_packet(args.record_id)
+            event = ledger.transition(args.record_id, "COMPLETED")
+            output = {"event": event, "review_packet_digest": packet["packet"]["packet_digest"]}
         elif args.command == "status":
             output = ledger.status()
         elif args.command == "verify":
