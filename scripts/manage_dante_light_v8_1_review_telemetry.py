@@ -24,6 +24,7 @@ from src.dante_light.review_telemetry_v8_1 import (
 
 DEFAULT_SOURCE = ROOT / "runs/dante_light/o4b_v2/shared"
 DEFAULT_TELEMETRY_ROOT = Path("E:/dante_cache/dante_light/v8_1_review_telemetry")
+DEFAULT_EXPORT_ROOT = Path("E:/dante_cache/dante_light/v8_1_review_export")
 
 
 def _ledger(args: argparse.Namespace) -> ReviewTelemetryLedger:
@@ -95,6 +96,11 @@ def main() -> None:
         help="confirm all six frozen checklist items were inspected",
     )
 
+    export_all = subparsers.add_parser(
+        "export-all", help="write one static folder containing every review output"
+    )
+    export_all.add_argument("--output-dir", type=Path, default=DEFAULT_EXPORT_ROOT)
+
     subparsers.add_parser("status", help="report descriptive timing only")
     subparsers.add_parser("verify", help="verify contract, manifest, chain and transitions")
     subparsers.add_parser("sufficiency-scenarios", help="show non-gating iid mathematical floors")
@@ -143,6 +149,8 @@ def main() -> None:
             packet = ledger.build_review_packet(args.record_id)
             event = ledger.transition(args.record_id, "COMPLETED")
             output = {"event": event, "review_packet_digest": packet["packet"]["packet_digest"]}
+        elif args.command == "export-all":
+            output = ledger.export_review_batch(args.output_dir)
         elif args.command == "status":
             output = ledger.status()
         elif args.command == "verify":

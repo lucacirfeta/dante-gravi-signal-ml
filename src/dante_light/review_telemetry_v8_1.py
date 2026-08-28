@@ -8,6 +8,7 @@ or a readiness gate.  Those are separate scientific decisions.
 from __future__ import annotations
 
 from collections import Counter
+import csv
 from datetime import datetime, timezone
 from html import escape
 import hashlib
@@ -48,6 +49,16 @@ def _atomic_json(path: Path, value: Mapping[str, Any]) -> None:
     with temporary.open("w", encoding="utf-8", newline="\n") as handle:
         json.dump(dict(value), handle, indent=2, sort_keys=True, allow_nan=False)
         handle.write("\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(temporary, path)
+
+
+def _atomic_text(path: Path, value: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(value)
         handle.flush()
         os.fsync(handle.fileno())
     os.replace(temporary, path)
@@ -687,6 +698,143 @@ class ReviewTelemetryLedger:
             "packet_json": str(json_path),
             "packet_html": str(html_path),
             "candidate_image": str(crop_path),
+        }
+
+    def export_review_batch(
+        self,
+        output_dir: str | Path,
+        *,
+        root: str | Path = ROOT,
+    ) -> dict[str, Any]:
+        """Export every enrolled candidate without changing telemetry state."""
+
+        output = Path(output_dir).resolve()
+        packet_dir = output / "candidates"
+        state = self._state()
+        identities = [row["identity"] for row in state.values()]
+        if not identities:
+            raise ContractError("cannot export an empty review cohort")
+
+        rendered = [
+            self.build_review_packet(
+                identity["source_record_id"], packet_dir=packet_dir, root=root
+            )
+            for identity in identities
+        ]
+        packets = [item["packet"] for item in rendered]
+
+        csv_path = output / "candidate_summary.csv"
+        csv_temporary = csv_path.with_suffix(".csv.tmp")
+        output.mkdir(parents=True, exist_ok=True)
+        columns = (
+            "index",
+            "source_record_id",
+            "window_id",
+            "detector",
+            "gps_start",
+            "exact_score",
+            "exact_threshold",
+            "frozen_dsd_class",
+            "physical_status",
+            "partner",
+            "cc_onsource",
+            "cc_null_max",
+            "catalog_match_count",
+            "candidate_html",
+        )
+        with csv_temporary.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=columns)
+            writer.writeheader()
+            for index, packet in enumerate(packets, 1):
+                writer.writerow(
+                    {
+                        "index": index,
+                        "source_record_id": packet["source_record_id"],
+                        "window_id": packet["window"]["window_id"],
+                        "detector": packet["window"]["detector"],
+                        "gps_start": packet["window"]["gps_start"],
+                        "exact_score": packet["exact_decision"]["score"],
+                        "exact_threshold": packet["exact_decision"]["threshold"],
+                        "frozen_dsd_class": packet["exact_decision"]["frozen_dsd_class"],
+                        "physical_status": packet["cross_detector"]["measurement_status"],
+                        "partner": packet["cross_detector"]["partner"],
+                        "cc_onsource": packet["cross_detector"]["cc_onsource"],
+                        "cc_null_max": packet["cross_detector"]["cc_null_max"],
+                        "catalog_match_count": packet["catalog_crossmatch"]["match_count"],
+                        "candidate_html": f"candidates/{packet['source_record_id']}.html",
+                    }
+                )
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(csv_temporary, csv_path)
+
+        cards = []
+        for index, packet in enumerate(packets, 1):
+            record_id = packet["source_record_id"]
+            decision = packet["exact_decision"]
+            physical = packet["cross_detector"]
+            cards.append(
+                f"""<article><h2>{index}. {escape(packet['window']['detector'])} GPS {packet['window']['gps_start']:.3f}</h2>
+<a href="candidates/{escape(record_id)}.html"><img src="candidates/{escape(record_id)}.png" alt="candidate {index}"></a>
+<p><code>{escape(record_id)}</code></p>
+<p>Exact score {decision['score']:.6f}; threshold {decision['threshold']:.6f}; DSD {escape(str(decision['frozen_dsd_class']))}.</p>
+<p>Physical {escape(str(physical['measurement_status']))}; cc={escape(str(physical['cc_onsource']))}; null max={escape(str(physical['cc_null_max']))}; catalog matches={packet['catalog_crossmatch']['match_count']}.</p></article>"""
+            )
+        index_html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>DANTE-Light O4b review batch</title>
+<style>body{{font:16px system-ui;margin:2rem}}main{{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:1.5rem}}article{{border:1px solid #bbb;padding:1rem;border-radius:.4rem}}img{{width:100%;height:auto}}code{{font-size:.85rem}}</style></head>
+<body><h1>DANTE-Light O4b frozen escalation review batch</h1>
+<p>All 18 already-computed exact escalation follow-ups. This export does not start telemetry, request a human outcome, or gate pipeline execution. Click a panel for the full standardized checklist packet.</p>
+<main>{''.join(cards)}</main></body></html>"""
+        index_path = output / "index.html"
+        _atomic_text(index_path, index_html)
+
+        readme_path = output / "README.md"
+        _atomic_text(
+            readme_path,
+            "# DANTE-Light O4b review export\n\n"
+            "Open `index.html` to inspect all 18 frozen escalation follow-ups.\n\n"
+            "This directory repackages already-computed DANTE-Light final follow-up evidence. "
+            "No manual response is required by the program, no score is recomputed, and no "
+            "pipeline stage waits for a human decision. `candidate_summary.csv` provides the "
+            "same cohort as a compact table.\n",
+        )
+
+        artifact_paths = [index_path, csv_path, readme_path]
+        artifact_paths.extend(Path(item["packet_json"]) for item in rendered)
+        artifact_paths.extend(Path(item["packet_html"]) for item in rendered)
+        artifact_paths.extend(Path(item["candidate_image"]) for item in rendered)
+        manifest_body = {
+            "schema_version": SCHEMA_VERSION,
+            "status": "COMPLETE_STATIC_REVIEW_EXPORT",
+            "telemetry_state_changed": False,
+            "program_waits_for_manual_response": False,
+            "source_telemetry_id": self.manifest["telemetry_id"],
+            "contract_digest": self.contract["contract_digest"],
+            "candidates": len(packets),
+            "artifacts": [
+                {
+                    "path": str(path.relative_to(output)).replace("\\", "/"),
+                    "sha256": sha256_file(path),
+                }
+                for path in sorted(artifact_paths)
+            ],
+        }
+        export_manifest = {
+            **manifest_body,
+            "export_digest": canonical_json_sha256(manifest_body),
+        }
+        manifest_path = output / "export_manifest.json"
+        _atomic_json(manifest_path, export_manifest)
+        return {
+            "status": export_manifest["status"],
+            "candidates": len(packets),
+            "output_dir": str(output),
+            "index_html": str(index_path),
+            "summary_csv": str(csv_path),
+            "manifest": str(manifest_path),
+            "export_digest": export_manifest["export_digest"],
+            "telemetry_state_changed": False,
+            "program_waits_for_manual_response": False,
         }
 
     def status(self) -> dict[str, Any]:

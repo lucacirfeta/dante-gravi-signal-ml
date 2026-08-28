@@ -119,6 +119,23 @@ python scripts/manage_dante_light_v8_1_review_telemetry.py init `
   --require-historical-anchor
 ```
 
+For ordinary manual inspection, the recommended interface is a single static
+export. It writes one folder with an HTML index, 18 individual images/packets,
+a CSV summary and a provenance manifest:
+
+```powershell
+python scripts/manage_dante_light_v8_1_review_telemetry.py export-all
+```
+
+Open `E:/dante_cache/dante_light/v8_1_review_export/index.html`. This command
+does not change telemetry state and the program does not wait for a human
+answer. It repackages the final follow-up evidence already computed for the O4b
+run; it does not rerun DANTE or create a new scientific validation result.
+
+The `start`/`complete` interface below is optional and has only one purpose:
+measuring real operator service time for a future post-exact prioritizer. It is
+not a prerequisite for the pipeline or report to finish.
+
 Inspect the next FIFO identity without starting the timer:
 
 ```powershell

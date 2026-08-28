@@ -1,5 +1,5 @@
 {
-  "contract_digest": "6349a6779a1bf77127bccc9723de6a18ddbe108a3203af32bbf7d6e3d7041d00",
+  "contract_digest": "f541848159b9608a284841abe11d62b6a6f8a65644e4d8d59e67d912425a64e2",
   "historical_scale_anchor": {
     "interpretation": "real escalation-count anchor and optional backlog enrollment; no historical review timing is recoverable",
     "observed_escalations": 18,
@@ -93,8 +93,8 @@
         2375,
         2879
       ],
-      "crop_left_width_px": 275,
-      "crop_right_width_px": 255,
+      "crop_left_width_px": 265,
+      "crop_right_width_px": 245,
       "expected_image_height_px": 1584,
       "expected_image_width_px": 3139,
       "row_boundaries_px": [

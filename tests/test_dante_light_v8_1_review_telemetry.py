@@ -137,7 +137,7 @@ def test_review_packet_is_provenance_bound_and_standardized(tmp_path: Path) -> N
     from PIL import Image
 
     with Image.open(result["candidate_image"]) as image:
-        assert image.size == (530, 515)
+        assert image.size == (510, 515)
 
 
 def test_review_packet_rejects_non_cohort_identity(tmp_path: Path) -> None:
@@ -158,6 +158,31 @@ def test_review_packet_rejects_non_cohort_identity(tmp_path: Path) -> None:
             ledger.build_review_packet(record_id)
     finally:
         ledger._state = original  # type: ignore[method-assign]
+
+
+def test_static_batch_export_contains_all_candidates_without_state_change(
+    tmp_path: Path,
+) -> None:
+    ledger = _ledger(tmp_path)
+    ledger.sync_source(
+        SOURCE,
+        source_semantics="historical_backlog_enrollment",
+        require_historical_anchor=True,
+        now=_time(1),
+    )
+    before = ledger.status()
+    result = ledger.export_review_batch(tmp_path / "export")
+    after = ledger.status()
+    assert result["status"] == "COMPLETE_STATIC_REVIEW_EXPORT"
+    assert result["candidates"] == 18
+    assert result["telemetry_state_changed"] is False
+    assert result["program_waits_for_manual_response"] is False
+    assert before == after
+    assert Path(result["index_html"]).is_file()
+    assert Path(result["summary_csv"]).read_text(encoding="utf-8").count("\n") == 19
+    manifest = json.loads(Path(result["manifest"]).read_text(encoding="utf-8"))
+    assert manifest["candidates"] == 18
+    assert len(manifest["artifacts"]) == 57
 
 
 def test_invalid_transitions_fail_closed(tmp_path: Path) -> None:
