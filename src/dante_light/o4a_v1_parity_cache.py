@@ -148,8 +148,20 @@ def ensure_cached(
     if path.is_file():
         try:
             record = _validate_series(path, row, sample_rate_hz)
-            body = {**record, "source": "existing_parity_cache"}
-            return {**body, "record_digest": canonical_json_sha256(body)}
+            record_path = cache_root / "records" / f"{row['case_id']}.json"
+            if record_path.is_file():
+                stored = _read_json(record_path)
+                stored_body = dict(stored)
+                stored_digest = stored_body.pop("record_digest", None)
+                if stored_digest != canonical_json_sha256(stored_body):
+                    raise ContractError("existing parity cache record digest mismatch")
+                for key, value in record.items():
+                    if stored.get(key) != value:
+                        raise ContractError(f"existing parity cache record drift: {key}")
+                if stored.get("source") not in {"verified_local_raw_stitch", "gwosc_open_data"}:
+                    raise ContractError("existing parity cache record has unknown origin")
+                return stored
+            raise ContractError("existing parity cache file lacks an origin record")
         except Exception:
             _archive_invalid(path, cache_root)
     last_error: Exception | None = None

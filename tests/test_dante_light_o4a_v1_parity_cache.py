@@ -8,7 +8,7 @@ import pytest
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.o4a_v1_parity_cache import (
-    _cache_path, ensure_cached, load_frozen_missing,
+    _cache_path, _write_record, ensure_cached, load_frozen_missing,
 )
 from src.dante_light.prefilter_v5_protocol import sha256_path
 
@@ -43,12 +43,13 @@ def test_cache_fetch_writes_and_revalidates_exact_padded_strain(tmp_path: Path) 
         return TimeSeries(np.zeros(int((end - start) * rate)), sample_rate=rate, t0=start)
 
     first = ensure_cached(row, cache_root=tmp_path, raw_root=tmp_path / "absent", sample_rate_hz=4096, fetch=fetch, retries=1)
+    _write_record(tmp_path / "records" / f"{row['case_id']}.json", first)
     second = ensure_cached(
         row, cache_root=tmp_path, raw_root=tmp_path / "absent", sample_rate_hz=4096,
         fetch=lambda *_args: (_ for _ in ()).throw(AssertionError("unexpected fetch")), retries=1,
     )
     assert first["source"] == "gwosc_open_data"
-    assert second["source"] == "existing_parity_cache"
+    assert second["source"] == "gwosc_open_data"
     assert first["file_sha256"] == second["file_sha256"]
     assert first["strain_values_sha256"] == second["strain_values_sha256"]
     body = dict(second); digest = body.pop("record_digest")
