@@ -1,5 +1,5 @@
 {
-  "contract_digest": "c29f2fb13b729020250c5cf130683227fa9029ff9eb8767e058d6edd4c91fc1f",
+  "contract_digest": "a4ae3b378d9e3421cbc09cbbb19010f35edac4a41be05e259ab803f2419b14d2",
   "counts": {
     "by_detector_and_class": {
       "H1/AMBIGUOUS": 562,
@@ -30,8 +30,8 @@
   "entries_digest": "44482b8b3d5c603e07ac5117a1db3467c23266744877925cc17f72b5f6da1642",
   "entries_file_sha256": "d67cec47ecfc4ebb51fb4eaa6423240254d9ed985b9b456ed411564f5d3c31b6",
   "entries_path": "config/dante_light_o4a_v1_parity_manifest.jsonl",
-  "manifest_digest": "e3c707c876e63c3c828748ca4bbed9ded81b4b5eb3aeb1973554a84468c41399",
-  "missing_file_sha256": "9ed9967175f018d2b9dade95f974cdc63e693651e4b455cd0771eb3c3d701d94",
+  "manifest_digest": "4d76de352ec29af50bf6df4330d0f5532d902badd095e29ba97dbfa1cb29d49c",
+  "missing_file_sha256": "fceaab45bffcdea928297977feae54688398066371252d3b849f156550d87d26",
   "missing_path": "config/dante_light_o4a_v1_parity_missing.jsonl",
   "schema_version": 1,
   "status": "FROZEN_BEFORE_RESCORING"

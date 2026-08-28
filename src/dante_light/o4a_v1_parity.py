@@ -210,7 +210,10 @@ def build_parity_freeze(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, An
                 "published_offline_class": published_class,
                 "cache_target": {
                     "logical_root": "o4a_v1_comparison_cache",
-                    "relative_path": f"raw/{detector}/{entry['case_id']}.hdf5",
+                    "relative_path": (
+                        f"raw/{detector}/{detector}_{int(required_start)}_"
+                        f"{int(required_end)}.hdf5"
+                    ),
                 },
             })
 
