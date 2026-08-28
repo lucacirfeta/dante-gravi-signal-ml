@@ -43,12 +43,11 @@ pipeline:
   rendered inputs plus the float32 teacher-score bytes.
 - `src/dante_light/evidence.py` already freezes the maximum admissible score
   tolerance as `SCORE_ATOL`; v8.1 must reference it, not invent a new value.
-- `src/dante_light/runner.py::run_replay` still passes the literal `k=68`
-  when it constructs both scorers even though `representation.top_k` is the
-  versioned source of truth. The values currently agree, so this is not an
-  observed result error, but it violates the repository contract against
-  hardcoded scientific constants. Replacing the literal under the equivalence
-  harness is a prerequisite, not a new tuning choice.
+- The active `src/dante_light/runner_v8_1.py::run_replay` reads
+  `representation.top_k`. The frozen v5--v7 `runner.py` stays byte-stable for
+  historical provenance verification. The frozen value remains unchanged and
+  the v8.1 Phase-0 detector-balanced equivalence profile found zero score,
+  evidence or disposition mismatches.
 - `docs/DANTE_LIGHT_L4_PREFILTER_V7_COST_REAUDIT_2026-08-27.md` separates
   isolated service time from batch throughput. v8.1 must preserve that
   separation and must also report cold and warm-cache measurements separately.
@@ -195,3 +194,13 @@ freeze before implementation that observes outcomes:
 4. define the promotion boundary from experimental engine to default engine.
 
 Until these are frozen, both workstreams remain non-production proposals.
+
+## Phase-0 result
+
+The Phase-0 audit is recorded in
+`docs/DANTE_LIGHT_V8_1_PHASE0_RESULT_2026-08-28.md`. Q-transform accounts for
+70.91% of the measured isolated avoidable exact path. Exact compute capacity is
+observed above nominal window cadence, but operator review capacity is
+unmeasured; therefore no review budget/deadline or ranking gate is frozen. The
+shared engine remains opt-in because the full 768-window cached O4b executor did
+not demonstrate an end-to-end speedup despite exact numerical equivalence.

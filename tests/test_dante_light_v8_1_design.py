@@ -16,12 +16,12 @@ def test_v8_1_design_authorizes_only_phase0_and_remains_non_destructive() -> Non
     proposal = _proposal()
     priority = proposal["prioritization_workstream"]
 
-    assert proposal["status"] == "PHASE0_AUTHORIZED_GATES_NOT_FROZEN"
+    assert proposal["status"] == "PHASE0_COMPLETE_GATES_NOT_FROZEN"
     assert (
         proposal["decision_record"]["confirmed_primary_placement"]
         == "post_exact_human_review_priority"
     )
-    assert priority["status"] == "PROPOSED_NOT_AUTHORIZED_FOR_IMPLEMENTATION"
+    assert priority["status"] == "POST_EXACT_CONFIRMED_BUDGET_NOT_FROZEN"
     assert "no_window_discard" in priority["mandatory_safety_properties"]
     assert (
         "exact_path_eventual_service_for_every_valid_window"
@@ -51,8 +51,9 @@ def test_v8_1_exact_optimization_requires_equivalence_before_speed() -> None:
         exact["equivalence"]["cross_engine_existing_score_tolerance_reference"]
         == "src/dante_light/evidence.py::SCORE_ATOL"
     )
-    assert exact["source_of_truth_issue"]["current_literal"] == "k=68"
-    assert "representation.top_k" in exact["source_of_truth_issue"]["required_resolution"]
+    assert exact["source_of_truth_issue"]["current_literal"] is None
+    assert "representation.top_k" in exact["source_of_truth_issue"]["resolution"]
+    assert exact["status"] == "PHASE0_EQUIVALENCE_PROFILED_NOT_PROMOTED"
 
 
 def test_v8_1_design_references_exist_and_no_new_holdout_is_opened() -> None:

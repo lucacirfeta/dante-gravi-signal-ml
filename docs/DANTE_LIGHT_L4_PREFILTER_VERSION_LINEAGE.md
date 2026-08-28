@@ -36,3 +36,10 @@ path optimization under an equivalence gate and non-destructive review
 prioritization under per-morphology top-of-queue gates. Its design proposal is
 `docs/DANTE_LIGHT_V8_1_DESIGN_PROPOSAL_2026-08-27.md`; no v8.1 scientific gate
 or production promotion is frozen by this lineage update.
+
+The first v8.1 engineering checkpoint is
+`docs/DANTE_LIGHT_V8_1_PHASE0_RESULT_2026-08-28.md`. It resolves the Top-k
+source-of-truth defect without changing outputs, identifies Q-transform as the
+dominant measured exact-path stage, and records that operator review capacity
+is still unmeasured. It does not promote the shared engine or freeze a ranking
+budget.

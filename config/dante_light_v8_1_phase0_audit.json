@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "audit_id": "dante-light-v8.1-phase0-exact-and-capacity-v1",
+  "status": "FROZEN_ENGINEERING_AUDIT_NO_SCIENTIFIC_GATES",
+  "access_boundary": {
+    "allowed": [
+      "already_open_o4a_threshold_boundary_replay",
+      "already_open_o4b_shadow_v2",
+      "published_v7_cost_reaudit"
+    ],
+    "forbidden": [
+      "new_confirmation_outcomes",
+      "new_later_epoch_holdout_outcomes",
+      "review_budget_selection",
+      "age_override_selection",
+      "default_engine_promotion"
+    ]
+  },
+  "bound_repository_inputs": [
+    {
+      "path": "config/dante_light_v8_1_design_proposal.json",
+      "sha256": "9c597502917c66f426829d841ea1d60b6cea852cf829037e0a70b944e329e582"
+    },
+    {
+      "path": "config/dante_light_replay_v1.json",
+      "sha256": "877c696c05bacdb0f71ebf34d7c690c47a405df2963e2e218c9c86afe4894c08"
+    },
+    {
+      "path": "config/dante_light_prefilter_v7_teacher_stability.json",
+      "sha256": "a6499d68eccbfc95f617aba3da6c72b6b0dec00fd54fb5282541d84f2d935c2c"
+    },
+    {
+      "path": "artifacts/dante_light/prefilter_l4_v7_risk_calibration/cost_reaudit_summary_v7.json",
+      "sha256": "c9af2ce5079de2511f4816c0dae74c5b98f4b314f75b144623ca4a454468db05"
+    },
+    {
+      "path": "artifacts/dante_light/prospective_validation_v1.json",
+      "sha256": "3be2b77f3254afacb896901d6a009354af9e6deaf8bd031972d720ce10046a83"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/shared/summary.json",
+      "sha256": "0b0501cb17a8f4c93e328b69d3d488de4d3fb19706d9cac14274c1f8e41452e6"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/canonical/summary.json",
+      "sha256": "c0ecdc0df2b720b9d5658e247eabf2e9828cec6e4e6e371a004688643158da68"
+    },
+    {
+      "path": "runs/dante_light/o4b_v2/shared/records.jsonl",
+      "sha256": "130343ff17060eddb0f0dde8e8e0678e6a20df1e71bf251124707afa3f815a91"
+    }
+  ],
+  "exact_profile": {
+    "source_cache_root": "E:/dante_cache/dante_light/v8_1_exact_path",
+    "source_run": "profile_4851200",
+    "canonical_snapshot": "artifacts/dante_light/v8_1_phase0/profile/canonical",
+    "shared_snapshot": "artifacts/dante_light/v8_1_phase0/profile/shared",
+    "code_commit": "485120077802bf5f87f9941d00a75ded8397663e",
+    "role": "threshold_boundary",
+    "limit_per_detector": 4,
+    "required_detectors": [
+      "H1",
+      "L1"
+    ],
+    "required_equivalence": {
+      "score_float32_bytes": true,
+      "disposition": true,
+      "defer_reason": true,
+      "strain_sha256": true,
+      "image_sha256": true,
+      "primary_top_k_sha256": true,
+      "primary_mil_vector_sha256": true
+    },
+    "interpretation": "small_balanced_engineering_profile_not_default_engine_promotion"
+  },
+  "capacity_estimands": {
+    "nominal_window_duration_s": 32.0,
+    "detectors": 2,
+    "exact_compute_only_source": "v7_sequential_isolated_mean_avoidable_exact_path_s",
+    "staged_o4b_source": "o4b_v2_shared_executor_elapsed_s",
+    "operator_review_source": "none_available",
+    "no_new_uncertainty_claim": true
+  },
+  "decision_boundary": {
+    "phase0_can_establish": [
+      "top_k_contract_resolution_preserves_outputs_on_the_profile_corpus",
+      "canonical_shared_equivalence_on_the_profile_corpus",
+      "compute_only_and_staged_service_point_estimates",
+      "whether_operator_review_capacity_is_measured"
+    ],
+    "phase0_cannot_establish": [
+      "a_useful_prioritizer",
+      "a_review_budget_or_deadline",
+      "an_age_override",
+      "a_protected_morphology_success_bound",
+      "a_default_engine_promotion",
+      "a_general_speedup_claim"
+    ]
+  }
+}

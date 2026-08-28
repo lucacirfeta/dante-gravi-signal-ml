@@ -272,6 +272,7 @@ docs/*
 !docs/DANTE_LIGHT_L4_PREFILTER_V6_DIAGNOSTIC_PLAN_2026-08-25.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_TRAINING_DIAGNOSTIC_RESULT_2026-08-25.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V6_DESIGN_OPTIONS_2026-08-25.md
+!docs/DANTE_LIGHT_V8_1_PHASE0_RESULT_2026-08-28.md
 runs/
 
 # Raw HDF5 strain data downloads
@@ -314,6 +315,7 @@ reports/
 # clone cannot regenerate the paper artifacts, which is the same
 # reproducibility gap as the unpinned dependencies (CORRECTIONS_2026-07-21, C4).
 scripts/*
+!scripts/audit_dante_light_v8_1_phase0.py
 !scripts/cross_session_unification.py
 !scripts/gen_domain_shift_plot.py
 !scripts/generate_gallery.py

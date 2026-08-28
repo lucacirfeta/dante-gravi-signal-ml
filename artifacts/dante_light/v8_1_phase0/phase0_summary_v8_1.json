@@ -1,0 +1,188 @@
+{
+  "access_boundary": {
+    "confirmation": [],
+    "new_later_epoch_holdout": [],
+    "opened": [
+      "already_open_o4a_threshold_boundary_replay",
+      "already_open_o4b_shadow_v2"
+    ]
+  },
+  "audit_id": "dante-light-v8.1-phase0-exact-and-capacity-v1",
+  "capacity_audit": {
+    "compute_only": {
+      "excludes": [
+        "data_read",
+        "whitening",
+        "model_load"
+      ],
+      "interpretation": "point_estimate_not_an_end_to_end_capacity_guarantee",
+      "mean_exact_path_s_per_window": 0.40115286099976705,
+      "point_estimate_headroom_over_nominal": 39.88504521723775,
+      "service_rate_windows_per_s": 2.4928153260773596
+    },
+    "human_review": {
+      "observed_escalation_fraction": 0.0234375,
+      "observed_exact_escalations": 18,
+      "observed_windows": 768,
+      "operator_capacity_status": "UNMEASURED",
+      "operator_service_time_available": false,
+      "review_completion_timestamps_available": false
+    },
+    "nominal_input": {
+      "detectors": 2,
+      "nonoverlapping_window_duration_s": 32.0,
+      "windows_per_s": 0.0625
+    },
+    "prioritizer_budget_freeze_allowed": false,
+    "staged_o4b_executor": {
+      "canonical_elapsed_s": 1111.5070231000427,
+      "deferred": 0,
+      "drops": 0,
+      "elapsed_s": 1132.5029206000036,
+      "interpretation": "already_open_cached_shadow_executor_point_estimate; acquisition was separate and this is not an arrival-process stress test",
+      "point_estimate_headroom_over_nominal": 10.850303144021721,
+      "shared_end_to_end_speedup_demonstrated": false,
+      "shared_to_canonical_throughput_ratio": 0.9814606239701023,
+      "throughput_windows_per_s": 0.6781439465013576,
+      "windows": 768
+    },
+    "verdict": "EXACT_COMPUTE_CAPACITY_OBSERVED_OPERATOR_REVIEW_CAPACITY_UNMEASURED"
+  },
+  "contract": {
+    "path": "config/dante_light_v8_1_phase0_audit.json",
+    "sha256": "6a4f9ca61e5e4696bff1eb780c905f609ed7fb8ed98ef40c4fe70f01c691e20b"
+  },
+  "decision": {
+    "default_engine_promoted": false,
+    "next_checkpoint": "MEASURE_OR_JUSTIFY_HUMAN_REVIEW_CAPACITY_BEFORE_GATE_FREEZE",
+    "prioritizer_implemented": false,
+    "review_budget_frozen": false
+  },
+  "exact_profile": {
+    "canonical": {
+      "artifacts": {
+        "records.jsonl": {
+          "path": "artifacts/dante_light/v8_1_phase0/profile/canonical/records.jsonl",
+          "sha256": "08e68a5ac9f60651169e3a9beb98b14cea2fcdb89e4765c39d98908985710bba"
+        },
+        "run_manifest.json": {
+          "path": "artifacts/dante_light/v8_1_phase0/profile/canonical/run_manifest.json",
+          "sha256": "fb563f899a12f23db346c2bb18d7e924cc4740499e6bc7f6cbe65eefdf924170"
+        },
+        "summary.json": {
+          "path": "artifacts/dante_light/v8_1_phase0/profile/canonical/summary.json",
+          "sha256": "364725afe68025ed9436695992168f9c38de8a9b828e6a7f89b8589ca0fb6a32"
+        }
+      },
+      "performance": {
+        "elapsed_s": 6.055117200000041,
+        "latency_max_s": 3.3051572999997916,
+        "latency_p50_s": 2.871636800000033,
+        "latency_p95_s": 3.305152644999839,
+        "throughput_windows_per_s": 1.3211965575166649
+      }
+    },
+    "equivalence": {
+      "detectors": {
+        "H1": 4,
+        "L1": 4
+      },
+      "max_abs_score_delta": {
+        "native": 0.0,
+        "primary": 0.0
+      },
+      "mismatches": {},
+      "pass": true,
+      "windows": 8
+    },
+    "isolated_bottleneck_profile": {
+      "dominant_measured_stage": "q_transform_s",
+      "mean_fraction_of_avoidable_exact_path": {
+        "q_transform_s": 0.7090503163584752,
+        "rendering_s": 0.003034772489179719,
+        "score_total_s": 0.2879149111523452
+      },
+      "not_separately_measured": [
+        "dino_forward_within_score_total_s",
+        "index_scoring_within_score_total_s",
+        "result_materialization_within_score_total_s",
+        "cold_model_start",
+        "peak_cpu_memory",
+        "peak_gpu_memory",
+        "disk_io_for_cache_candidates"
+      ],
+      "statistics": {
+        "avoidable_exact_path_s": {
+          "mean_s": 0.40115286099976705,
+          "median_s": 0.39705490000051213,
+          "p95_s": 0.46532817499992235
+        },
+        "q_transform_s": {
+          "mean_s": 0.28443756299999223,
+          "median_s": 0.27811300000030315,
+          "p95_s": 0.3361866350020137
+        },
+        "rendering_s": {
+          "mean_s": 0.001217407666517829,
+          "median_s": 0.0011368999985279515,
+          "p95_s": 0.0015415999987453688
+        },
+        "score_total_s": {
+          "mean_s": 0.115497890333257,
+          "median_s": 0.11385140000129468,
+          "p95_s": 0.13843140000208223
+        }
+      },
+      "windows": 300
+    },
+    "scope": "small_balanced_engineering_profile_not_default_engine_promotion",
+    "shared_encoder_score_only": {
+      "artifacts": {
+        "records.jsonl": {
+          "path": "artifacts/dante_light/v8_1_phase0/profile/shared/records.jsonl",
+          "sha256": "5dc12aaf50585da9119f852214772fe3714658a1097f11f2b1e8bd9e49e7abff"
+        },
+        "run_manifest.json": {
+          "path": "artifacts/dante_light/v8_1_phase0/profile/shared/run_manifest.json",
+          "sha256": "81791856a0ffd24079909823ceee0d7407fbaddafd24ee7330f79c7c4a1cea89"
+        },
+        "summary.json": {
+          "path": "artifacts/dante_light/v8_1_phase0/profile/shared/summary.json",
+          "sha256": "cf8dec6e70eb24921fe9bcb3c563e76badbfad2bc8422c422037d14de5a2172b"
+        }
+      },
+      "performance": {
+        "elapsed_s": 5.640584100000069,
+        "latency_max_s": 2.9388174999999137,
+        "latency_p50_s": 2.791986249999809,
+        "latency_p95_s": 2.938812179999991,
+        "throughput_windows_per_s": 1.4182928324745485
+      }
+    }
+  },
+  "phase0_result_digest": "53eb6125983b272f87d738ac0681f3ed968102e44a9fa9d37926a859e0b5f644",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "phase0_can_establish": [
+      "top_k_contract_resolution_preserves_outputs_on_the_profile_corpus",
+      "canonical_shared_equivalence_on_the_profile_corpus",
+      "compute_only_and_staged_service_point_estimates",
+      "whether_operator_review_capacity_is_measured"
+    ],
+    "phase0_cannot_establish": [
+      "a_useful_prioritizer",
+      "a_review_budget_or_deadline",
+      "an_age_override",
+      "a_protected_morphology_success_bound",
+      "a_default_engine_promotion",
+      "a_general_speedup_claim"
+    ]
+  },
+  "status": "PASS_PHASE0_ENGINEERING_AUDIT",
+  "top_k_source_of_truth": {
+    "output_equivalence_on_profile_corpus": true,
+    "profile_code_commit": "485120077802bf5f87f9941d00a75ded8397663e",
+    "source": "versioned_representation_contract",
+    "value": 68
+  }
+}

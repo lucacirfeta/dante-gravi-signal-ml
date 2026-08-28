@@ -1,6 +1,7 @@
 # DANTE-Light v8.1 implementation plan
 
-Status: **draft plan; execution stops at each scientific/structural checkpoint**
+Status: **Phase 0 complete with operator capacity unmeasured; stopped before
+the Phase 3 scientific gate freeze**
 
 Parent design:
 `docs/DANTE_LIGHT_V8_1_DESIGN_PROPOSAL_2026-08-27.md`.
@@ -21,6 +22,9 @@ Neither result is required to promote the other.
 
 ### 0A. Repository and evidence baseline
 
+Result: **complete** in
+`artifacts/dante_light/v8_1_phase0/phase0_summary_v8_1.json`.
+
 - Bind the v8.1 work to the merged v7 main ancestry and current reference
   artifacts.
 - Re-run the existing teacher-stability verifier and release/evidence verifiers.
@@ -30,6 +34,12 @@ Neither result is required to promote the other.
 Exit: a compact baseline manifest reproduces with no protected access.
 
 ### 0B. Exact-path profile
+
+Result: **bounded profile complete**. The 300-window isolated ledger identifies
+Q-transform as 70.91% of measured avoidable exact cost. The eight-window
+balanced replay establishes exact equivalence but is not a performance claim.
+Fine-grained DINO/index/materialization and memory profiling remains an
+engineering follow-up before any new optimization is promoted.
 
 - Profile canonical and shared engines on the same deterministic, already-open
   corpus.
@@ -42,6 +52,12 @@ Exit: one bottleneck table justifies the first optimization increment. No code
 optimization begins from intuition alone.
 
 ### 0C. Queue-capacity audit
+
+Result: **capacity boundary established, operational review capacity
+unmeasured**. Exact compute exceeds nominal two-detector window cadence in both
+the isolated and cached staged point estimates, but no operator service-time or
+review-completion trace exists. Verdict:
+`EXACT_COMPUTE_CAPACITY_OBSERVED_OPERATOR_REVIEW_CAPACITY_UNMEASURED`.
 
 - Specify whether the use case is exact-processing order, human-review order or
   both.
@@ -99,7 +115,8 @@ is a separate structural checkpoint requiring human review.
 
 ## Phase 3 — ranking protocol freeze
 
-Only after Phase 0C:
+Only after Phase 0C and a separate decision on real telemetry versus a frozen
+simulation contract:
 
 - freeze the queue placement and its feature source;
 - freeze one primary review budget or deadline;

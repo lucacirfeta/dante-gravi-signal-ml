@@ -77,11 +77,12 @@
     },
     "reference_engine": "canonical",
     "source_of_truth_issue": {
-      "current_location": "src/dante_light/runner.py::run_replay",
-      "current_literal": "k=68",
-      "required_resolution": "read representation.top_k without changing the frozen value or outputs"
+      "current_location": "src/dante_light/runner_v8_1.py::run_replay",
+      "current_literal": null,
+      "resolution": "the versioned v8.1 runner reads representation.top_k; frozen historical runner remains byte-stable and profile outputs are unchanged",
+      "resolution_commit": "4851200"
     },
-    "status": "PROPOSED_NOT_AUTHORIZED_FOR_IMPLEMENTATION"
+    "status": "PHASE0_EQUIVALENCE_PROFILED_NOT_PROMOTED"
   },
   "prioritization_workstream": {
     "aggregate_metrics": {
@@ -113,7 +114,7 @@
       "exact_native_score_with_age_override",
       "candidate_priority_with_age_override"
     ],
-    "status": "PROPOSED_NOT_AUTHORIZED_FOR_IMPLEMENTATION"
+    "status": "POST_EXACT_CONFIRMED_BUDGET_NOT_FROZEN"
   },
   "proposal_id": "dante-light-v8.1-safe-exact-and-priority-design-v1",
   "schema_version": 1,
@@ -133,6 +134,6 @@
       "an explicit stop before freezing new scientific gates"
     ]
   },
-  "status": "PHASE0_AUTHORIZED_GATES_NOT_FROZEN",
+  "status": "PHASE0_COMPLETE_GATES_NOT_FROZEN",
   "version": "8.1"
 }
