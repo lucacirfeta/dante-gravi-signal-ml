@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -380,3 +381,13 @@ def test_light_cli_exposes_explicit_gwosc_only_source() -> None:
     )
     assert args.strain_source == "gwosc-only"
     assert args.local_only is False
+
+
+def test_replay_scorers_take_top_k_from_representation_contract() -> None:
+    source = (Path(__file__).resolve().parents[1] / "src/dante_light/runner.py").read_text(
+        encoding="utf-8"
+    )
+    constructor_region = source[source.index("primary = PatchScorer") :]
+
+    assert constructor_region.count("k=representation.top_k") == 2
+    assert "k=68" not in constructor_region
