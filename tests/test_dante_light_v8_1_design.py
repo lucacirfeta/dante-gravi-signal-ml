@@ -12,11 +12,15 @@ def _proposal() -> dict:
     return json.loads(PROPOSAL.read_text(encoding="utf-8"))
 
 
-def test_v8_1_design_is_explicitly_unfrozen_and_non_destructive() -> None:
+def test_v8_1_design_authorizes_only_phase0_and_remains_non_destructive() -> None:
     proposal = _proposal()
     priority = proposal["prioritization_workstream"]
 
-    assert proposal["status"] == "PROPOSED_NOT_FROZEN"
+    assert proposal["status"] == "PHASE0_AUTHORIZED_GATES_NOT_FROZEN"
+    assert (
+        proposal["decision_record"]["confirmed_primary_placement"]
+        == "post_exact_human_review_priority"
+    )
     assert priority["status"] == "PROPOSED_NOT_AUTHORIZED_FOR_IMPLEMENTATION"
     assert "no_window_discard" in priority["mandatory_safety_properties"]
     assert (

@@ -2,7 +2,8 @@
 
 Date: 2026-08-27
 
-Status: **proposal only; not frozen; no implementation or protected-data access authorized**
+Status: **post-exact primary confirmed; Phase 0 audit authorized; scientific
+gates and production promotion not frozen**
 
 Machine-readable companion:
 `config/dante_light_v8_1_design_proposal.json`.
@@ -18,8 +19,8 @@ new workstreams are therefore independent:
 2. prioritize work without deleting it or allowing rare protected
    morphologies to disappear in an aggregate ranking metric.
 
-The first workstream is recommended for immediate engineering audit. For the
-second, the safest primary scope is **post-exact human-review prioritization**.
+The first workstream is authorized for immediate engineering audit. For the
+second, the confirmed primary scope is **post-exact human-review prioritization**.
 A pre-exact queue ranker remains research-only until a workload audit proves a
 real backlog and an independent safety protocol shows that it does not create
 practical starvation.
@@ -185,13 +186,12 @@ are methodological analogies, not evidence about LIGO data: see
 The following are scientific or structural choices and require a separate
 freeze before implementation that observes outcomes:
 
-1. confirm post-exact human-review priority as the v8.1 primary placement;
-2. define the operational review budget or maximum delay from a capacity audit;
-3. define the per-cell success bound and minimum effective block count through
+1. define the operational review budget or maximum delay from a capacity audit;
+2. define the per-cell success bound and minimum effective block count through
    a power analysis;
-4. decide whether bitwise equality is mandatory across every supported runtime
+3. decide whether bitwise equality is mandatory across every supported runtime
    or only inside the frozen acceptance environment, while retaining the
    existing cross-engine `SCORE_ATOL` ceiling;
-5. define the promotion boundary from experimental engine to default engine.
+4. define the promotion boundary from experimental engine to default engine.
 
 Until these are frozen, both workstreams remain non-production proposals.

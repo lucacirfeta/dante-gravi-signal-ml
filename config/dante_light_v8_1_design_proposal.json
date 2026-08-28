@@ -12,6 +12,22 @@
       "post_hoc_threshold_or_budget_selection"
     ]
   },
+  "decision_record": {
+    "authorized_next_steps": [
+      "replace_runner_literal_top_k_under_equivalence_test",
+      "exact_path_profiling_on_already_open_evidence",
+      "capacity_audit_without_freezing_a_review_budget"
+    ],
+    "confirmed_date": "2026-08-28",
+    "confirmed_primary_placement": "post_exact_human_review_priority",
+    "still_requires_separate_freeze": [
+      "review_budget_or_deadline",
+      "age_override_value",
+      "per_cell_success_bound",
+      "minimum_effective_blocks",
+      "default_engine_promotion"
+    ]
+  },
   "exact_path_workstream": {
     "acceptance_order": [
       "identity_and_provenance",
@@ -73,7 +89,7 @@
     },
     "candidate_scope": {
       "pre_exact_priority": "RESEARCH_ONLY_UNTIL_SEPARATELY_JUSTIFIED",
-      "recommended_primary": "post_exact_human_review_priority"
+      "confirmed_primary": "post_exact_human_review_priority"
     },
     "mandatory_safety_properties": [
       "no_window_discard",
@@ -117,6 +133,6 @@
       "an explicit stop before freezing new scientific gates"
     ]
   },
-  "status": "PROPOSED_NOT_FROZEN",
+  "status": "PHASE0_AUTHORIZED_GATES_NOT_FROZEN",
   "version": "8.1"
 }
