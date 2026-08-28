@@ -1,0 +1,38 @@
+{
+  "acquisition": {
+    "duration_s": [],
+    "elapsed_s": 0.0,
+    "failures": [],
+    "mode": "none",
+    "windows": 0
+  },
+  "dispositions": {
+    "ESCALATE": 2,
+    "NOT_ESCALATED": 6
+  },
+  "executor": {
+    "batches_scored": 4,
+    "batches_written": 4,
+    "deferred": 0,
+    "drops": 0,
+    "elapsed_s": 5.640584100000069,
+    "failures": [],
+    "latency_s": [
+      1.7552708000002895,
+      1.7542336000001342,
+      2.9388174999999137,
+      2.938802300000134,
+      2.91603060000034,
+      2.547697900000003,
+      2.8831947999997283,
+      2.7007776999998896
+    ],
+    "max_pending_writes": 1,
+    "max_preprocess_in_flight": 4,
+    "submitted": 8,
+    "written": 8
+  },
+  "records_total": 8,
+  "schema_version": 1,
+  "status": "complete"
+}

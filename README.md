@@ -6,6 +6,15 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
+> **Documentation status (2026-08-28).** The released scientific software
+> baseline is `3.7.0` (2026-08-13; DOI `10.5281/zenodo.21912589`). The latest
+> auxiliary release is `dante-reference-artifacts-v1` (2026-08-15; DOI
+> `10.5281/zenodo.21957984`). The v6 evidence bundle is dated 2026-08-13
+> (DOI `10.5281/zenodo.21925453`), and the associated arXiv record is currently
+> public version v3, revised 2026-07-23 (`arXiv:2607.18136`). This branch also
+> documents the additive, unreleased DANTE-Light v8.1 engineering workflow; it
+> does not replace or relabel the validated 3.7.0 analysis.
+
 ```mermaid
 graph TD
     A[Raw Strain Data] -->|Q-Transform| B[256x256 Spectrogram]
@@ -171,6 +180,9 @@ the separate
 [`dante_reference_artifacts_v1.zip`](https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/download/dante-reference-artifacts-v1/dante_reference_artifacts_v1.zip),
 published with SHA-256
 `651a70dbf3798de8caba91f1117879cf1798581f1fd949cabf12e260d100fa63`.
+The associated Zenodo DOI (`10.5281/zenodo.21957984`) archives the GitHub release
+source snapshot; it does not replace the separately verified GitHub `.npz`
+asset.
 An independent clean HTTPS clone at commit `9669fab` self-downloaded and
 verified this asset, fetched GWOSC-only strain, and reproduced exact paired
 canonical/shared scores for the public replay gate.
@@ -202,9 +214,12 @@ python main.py dante-light-replay \
   --strain-source gwosc-only
 ```
 
-On the clean paired RTX 5070 benchmark it increased throughput by about 12.9%
-while preserving primary/native scores; this is a host-specific engineering
-measurement, not a universal speed claim. Every run writes a separate
+An early clean paired RTX 5070 microbenchmark reported about 12.9% higher
+throughput while preserving primary/native scores. The later 768-window O4b
+executor comparison measured 1132.503 s for the shared path versus 1111.507 s
+for canonical (shared/canonical throughput ratio 0.9815). Therefore no
+end-to-end shared-engine speedup is demonstrated and the shared engine remains
+opt-in. Every run writes a separate
 `run_manifest.json`, append-only `records.jsonl`, `attempts.jsonl`, and
 `summary.json`. Repeating the same command resumes without duplicate window
 identities; changing code, representation, epochs, selection, or CAT1 mode
@@ -216,12 +231,33 @@ checked with `scripts/verify_dante_light_report.py`. This derived report does
 not replace the full offline `Final_Discovery_Report.md`; see
 [`docs/DANTE_LIGHT.md`](docs/DANTE_LIGHT.md) for the complete command.
 
-The shipped O4a BGV3 epoch is explicitly historical and non-causal. Therefore
-`dante-light-shadow` produces `DEFER/NON_CAUSAL_EPOCH` until a detector-specific
-past-only epoch is independently promoted. `NOT_ESCALATED` is a triage outcome,
-never a physical background classification. See
+The shipped O4a BGV3 epoch remains explicitly historical and non-causal. The
+locked O4b validation instead uses the detector-specific, past-only
+`config/dante_light_o4b_epochs_v2.json`; applying the shadow workflow to any
+other run requires a separately promoted causal epoch. A non-causal epoch
+produces `DEFER/NON_CAUSAL_EPOCH`. `NOT_ESCALATED` is a triage outcome, never a
+physical background classification. See
 [`docs/DANTE_LIGHT.md`](docs/DANTE_LIGHT.md) for installation, CPU/GPU replay,
 failure meanings, resume, artifacts, and escalation to the full pipeline.
+
+### DANTE-Light v8.1 review telemetry (unreleased)
+
+The post-exact v8.1 workflow measures human-review capacity; it does not rescore
+windows and is not the offline V1/V3 discovery report. Initialize the
+append-only ledger once, then export every standardized review packet to one
+static folder:
+
+```bash
+python scripts/manage_dante_light_v8_1_review_telemetry.py init \
+  --operator-id <private-operator-id> --require-historical-anchor
+python scripts/manage_dante_light_v8_1_review_telemetry.py export-all \
+  --output-dir E:/dante_cache/dante_light/v8_1_review_export
+```
+
+`export-all` is inspection-only: it does not mark reviews as started or
+completed. Measured review telemetry deliberately requires explicit `start`
+and `complete --confirm-checklist` transitions. The full sequence and output
+layout are documented in [`CLI_REFERENCE.md`](CLI_REFERENCE.md#dante-light-v81-review-telemetry-unreleased).
 
 ## 📊 Key Results
 *Note: All empirical claims are strictly bounded by the conditions under which they were measured.*

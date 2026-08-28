@@ -101,17 +101,72 @@ references:
 
   - type: software
     title: "gwpy: A Python package for gravitational-wave astrophysics"
+    authors:
+      - name: "GWpy developers"
     url: "https://gwpy.github.io"
 
-  - type: dataset
+  - type: data
     title: "Gravity Spy ML Classifications O3b"
+    authors:
+      - family-names: "Glanzer"
+        given-names: "Jane"
+      - family-names: "Banagari"
+        given-names: "Sharan"
+      - family-names: "Coughlin"
+        given-names: "Scott"
+      - family-names: "Zevin"
+        given-names: "Michael"
+      - family-names: "Bahaadini"
+        given-names: "Sara"
+      - family-names: "Rohani"
+        given-names: "Neda"
+      - family-names: "Allen"
+        given-names: "Sara"
+      - family-names: "Berry"
+        given-names: "Christopher"
+      - family-names: "Crowston"
+        given-names: "Kevin"
+      - family-names: "Harandi"
+        given-names: "Mabi"
+      - family-names: "Jackson"
+        given-names: "Corey"
+      - family-names: "Kalogera"
+        given-names: "Vicky"
+      - family-names: "Katsaggelos"
+        given-names: "Aggelos"
+      - family-names: "Noroozi"
+        given-names: "Vahid"
+      - family-names: "Osterlund"
+        given-names: "Carsten"
+      - family-names: "Patane"
+        given-names: "Oli"
+      - family-names: "Smith"
+        given-names: "Joshua"
+      - family-names: "Soni"
+        given-names: "Siddharth"
+      - family-names: "Trouille"
+        given-names: "Laura"
     url: "https://zenodo.org/records/5649212"
     doi: "10.5281/zenodo.5649212"
 
-  - type: dataset
+  - type: data
     title: "DANTE v6: Reproducibility and Validation Evidence Bundle"
+    authors:
+      - family-names: "Cirfeta"
+        given-names: "Luca"
+        orcid: "https://orcid.org/0009-0000-1235-3186"
     url: "https://zenodo.org/records/21925453"
     doi: "10.5281/zenodo.21925453"
+
+  - type: software
+    title: "DANTE Reference Artifacts v1"
+    authors:
+      - family-names: "Cirfeta"
+        given-names: "Luca"
+        orcid: "https://orcid.org/0009-0000-1235-3186"
+    url: "https://zenodo.org/records/21957984"
+    doi: "10.5281/zenodo.21957984"
+    version: "dante-reference-artifacts-v1"
 
   - type: article
     title: >

@@ -2819,9 +2819,11 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
 
 def _cmd_dante_light(args: argparse.Namespace, *, prospective: bool) -> None:
     import json
-    from src.dante_light.runner import run_replay
+    from src.dante_light.runner_v8_1 import run_replay
 
     args.prospective = prospective
+    if args.limit is None and args.limit_per_detector is None:
+        args.limit = args.dante_light_default_limit
     if not args.role:
         args.role = [] if prospective else ["background_stratified"]
     result = run_replay(args)
@@ -3571,8 +3573,9 @@ def build_parser() -> argparse.ArgumentParser:
         )
         command.add_argument("--output-dir", type=Path, required=True)
         command.add_argument("--role", action="append", default=None)
-        command.add_argument("--limit", type=int, default=default_limit)
-        command.add_argument(
+        limits = command.add_mutually_exclusive_group()
+        limits.add_argument("--limit", type=int, default=None)
+        limits.add_argument(
             "--limit-per-detector",
             type=int,
             default=None,
@@ -3581,6 +3584,7 @@ def build_parser() -> argparse.ArgumentParser:
                 "with --limit. Useful only for preflight runs."
             ),
         )
+        command.set_defaults(dante_light_default_limit=default_limit)
         command.add_argument("--device", default=None)
         command.add_argument(
             "--engine",
