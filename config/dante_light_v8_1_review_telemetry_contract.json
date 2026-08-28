@@ -1,0 +1,98 @@
+{
+  "contract_digest": "92f62fb81cf963dc5217efc3fac67716e7398be9d83f645bee9d667a1996b3e8",
+  "historical_scale_anchor": {
+    "interpretation": "real escalation-count anchor and optional backlog enrollment; no historical review timing is recoverable",
+    "observed_escalations": 18,
+    "observed_windows": 768,
+    "records_path": "runs/dante_light/o4b_v2/shared/records.jsonl",
+    "records_sha256": "130343ff17060eddb0f0dde8e8e0678e6a20df1e71bf251124707afa3f815a91",
+    "run_manifest_path": "runs/dante_light/o4b_v2/shared/run_manifest.json",
+    "run_manifest_sha256": "39e44977678ed2b5b601ce0244b2a62301cf61bd715fb496737dd01b0247e985",
+    "timing_semantics": "historical_backlog_enrollment timestamps begin when telemetry is initialized, not when DANTE originally produced the records"
+  },
+  "measurement": {
+    "allowed_event_types": [
+      "ENROLLED",
+      "STARTED",
+      "COMPLETED"
+    ],
+    "descriptive_estimands": [
+      "enrollment_to_start_wait_s",
+      "start_to_completion_service_s",
+      "enrollment_to_completion_cycle_s",
+      "backlog_count_by_event_sequence"
+    ],
+    "forbidden_fields": [
+      "review_outcome",
+      "class_label",
+      "morphology",
+      "scientific_note",
+      "teacher_score",
+      "priority_score"
+    ],
+    "inference_unit": "UTC review-day or versioned review-session blocks; never iid escalation events",
+    "queue_order_during_measurement": "FIFO by enrollment event sequence; no learned or exact-score prioritization"
+  },
+  "operational_parameters": {
+    "age_override": null,
+    "deadline": null,
+    "top_x_budget": null
+  },
+  "protocol_id": "dante-light-v8.1-human-review-telemetry-v1",
+  "provenance": {
+    "phase0_result_path": "artifacts/dante_light/v8_1_phase0/phase0_summary_v8_1.json",
+    "phase0_result_sha256": "c3f10eee2176c740bf1cb33e743bcd6602fc280e1fda1e5c4faafa1e8060d90b",
+    "storage_default": "E:/dante_cache/dante_light/v8_1_review_telemetry"
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "does_not_establish": [
+      "human-review capacity",
+      "a top-X review budget",
+      "a review deadline",
+      "an age override",
+      "ranking quality",
+      "per-morphology ranking safety",
+      "permission to implement or promote a prioritizer"
+    ],
+    "establishes": [
+      "outcome-blind event collection",
+      "durable timing provenance",
+      "descriptive queue-wait and service-time summaries"
+    ],
+    "simulated_workflow_policy": "feasibility-only and never promotable as evidence for a real operational budget or deadline"
+  },
+  "status": "FROZEN_TELEMETRY_ONLY_NO_OPERATIONAL_GATE",
+  "sufficiency": {
+    "illustrative_iid_order_statistic_scenarios": [
+      {
+        "confidence": 0.9,
+        "population_quantile": 0.9
+      },
+      {
+        "confidence": 0.95,
+        "population_quantile": 0.9
+      },
+      {
+        "confidence": 0.9,
+        "population_quantile": 0.95
+      },
+      {
+        "confidence": 0.95,
+        "population_quantile": 0.95
+      },
+      {
+        "confidence": 0.95,
+        "population_quantile": 0.99
+      }
+    ],
+    "status": "UNFROZEN_NOT_A_READINESS_GATE",
+    "unfrozen_decisions": [
+      "target population quantile or other capacity estimand",
+      "confidence level",
+      "acceptable interval width",
+      "minimum number of independent review-day or review-session blocks",
+      "stationarity regime and batch-versus-continuous stratification"
+    ]
+  }
+}

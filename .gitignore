@@ -316,6 +316,7 @@ reports/
 # reproducibility gap as the unpinned dependencies (CORRECTIONS_2026-07-21, C4).
 scripts/*
 !scripts/audit_dante_light_v8_1_phase0.py
+!scripts/manage_dante_light_v8_1_review_telemetry.py
 !scripts/cross_session_unification.py
 !scripts/gen_domain_shift_plot.py
 !scripts/generate_gallery.py
@@ -398,6 +399,7 @@ scripts/*
 !docs/DANTE_LIGHT_L4_PREFILTER_V7_THRESHOLD_SEARCH_RESULT_2026-08-27.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V7_RISK_CALIBRATION_FREEZE_2026-08-27.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V7_RISK_CALIBRATION_RESULT_2026-08-27.md
+!docs/DANTE_LIGHT_V8_1_REVIEW_TELEMETRY_PROTOCOL_2026-08-28.md
 
 tmp
 archive/
