@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -98,3 +99,24 @@ def test_performance_matrix_preserves_scientific_tolerance() -> None:
         "v1_8x32_ephemeral_stage",
     ]
     assert performance.DB_COMMIT_ROWS == (32, 256, 1024)
+
+
+def test_frozen_performance_contract_is_current_and_outcome_blind() -> None:
+    path = performance.ROOT / performance.CONTRACT_REL
+    contract = performance.validate_performance_contract(
+        json.loads(path.read_text(encoding="utf-8")), performance.ROOT
+    )
+    assert contract["status"] == "FROZEN_OUTCOME_BLIND_PERFORMANCE_CONTRACT"
+    assert len(contract["canary"]["spans"]) == 4
+    assert sum(
+        len(row["expected_gps_starts"]) for row in contract["canary"]["spans"]
+    ) == 384
+    assert contract["outcome_boundary"] == {
+        "candidate_dispositions_inspected": False,
+        "candidate_scores_inspected": False,
+        "scientific_protocol_change_allowed": False,
+        "score_tolerance_change_allowed": False,
+        "score_values_used_only_for_cross_configuration_equivalence": True,
+        "taxonomy_or_scientific_labels_loaded": False,
+        "thresholds_loaded_or_compared": False,
+    }
