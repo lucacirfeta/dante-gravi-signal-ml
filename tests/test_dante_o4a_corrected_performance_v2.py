@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from src.dante_light.evidence import SCORE_ATOL
 from src.dante_light import o4a_corrected_performance_v2 as performance
 
@@ -50,3 +52,20 @@ def test_persistent_pool_decision_requires_prefrozen_speedup() -> None:
     assert speedups["parallel_4x16"] == 2.2
     assert selected["id"] == "parallel_4x16"
     assert status == "PASS_EQUIVALENCE_AND_PERSISTENT_SELECTION"
+
+
+def test_frozen_persistent_pool_contract_is_current() -> None:
+    path = performance.ROOT / performance.CONTRACT_REL
+    contract = performance.validate_performance_contract_v2(
+        json.loads(path.read_text(encoding="utf-8")), performance.ROOT
+    )
+    assert contract["status"] == "FROZEN_OUTCOME_BLIND_PERSISTENT_POOL_CONTRACT"
+    assert contract["canary"]["window_count"] == 1536
+    assert contract["executor_candidate"]["database_commit_rows"] == 1024
+    assert contract["executor_candidate"]["ephemeral_staging_not_promoted"] is True
+    assert not any(contract["outcome_boundary"][key] for key in (
+        "candidate_scores_inspected",
+        "candidate_dispositions_inspected",
+        "thresholds_loaded_or_compared",
+        "taxonomy_or_scientific_labels_loaded",
+    ))
