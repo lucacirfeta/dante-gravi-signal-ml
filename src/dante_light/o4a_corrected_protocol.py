@@ -8,7 +8,7 @@ outputs remain immutable and are inputs only to the impact comparison.
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 import heapq
 import hashlib
 import json
@@ -233,12 +233,108 @@ def _calibration_files(root: Path) -> list[Path]:
     return files
 
 
+def _historical_calibration_spans(
+    root: Path,
+) -> dict[tuple[str, int], tuple[tuple[float, float], ...]]:
+    """Recover the exact per-session raw-file geometry seen by v1.
+
+    The legacy :class:`PatchProducer` enumerated files inside a session
+    directory independently.  The same physical interval can also exist in a
+    different session directory, so using the detector-wide union here would
+    make some historical edge identities ambiguous.  Physical-copy membership
+    in the frozen raw manifest resolves that ambiguity without consulting any
+    score or downstream outcome.
+    """
+
+    grouped: dict[tuple[str, int], set[tuple[float, float]]] = defaultdict(set)
+    for row in _raw_rows(root):
+        detector = str(row["detector"])
+        interval = (float(row["gps_start"]), float(row["gps_end"]))
+        for copy in row["physical_copies"]:
+            parts = Path(str(copy["relative_path"])).parts
+            if not parts or not parts[0].isdigit():
+                raise ContractError("raw physical copy lacks a session directory")
+            grouped[(detector, int(parts[0]))].add(interval)
+    return {
+        key: tuple(sorted(intervals))
+        for key, intervals in grouped.items()
+    }
+
+
+def _historical_calibration_geometry(
+    *,
+    session_id: int,
+    detector: str,
+    catalog_gps_start: float,
+    session_spans: Mapping[
+        tuple[str, int], tuple[tuple[float, float], ...]
+    ],
+) -> dict[str, Any]:
+    """Decode the overloaded GPS written by the legacy edge-bugged producer.
+
+    v1 stored ``t0`` of the *cropped context*, not the analysis-window start.
+    For an interior or right-edge window this is ``analysis_start - 4 s``;
+    for the first window of a file the missing left pad makes it equal to the
+    analysis start itself.  The frozen per-session file geometry makes the
+    mapping unique and outcome-blind.
+    """
+
+    candidates: list[tuple[str, float, float]] = []
+    current_start = catalog_gps_start + 4.0
+    for span_start, span_end in session_spans.get((detector, session_id), ()):
+        if catalog_gps_start == span_start and catalog_gps_start + 32.0 <= span_end:
+            candidates.append(("HISTORICAL_LEFT_TRUNCATED_4S", span_start, span_end))
+        step = (current_start - span_start) / 32.0
+        if (
+            step >= 1.0
+            and abs(step - round(step)) < 1.0e-9
+            and current_start + 32.0 <= span_end
+        ):
+            disposition = (
+                "HISTORICAL_RIGHT_TRUNCATED_4S"
+                if current_start + 32.0 == span_end
+                else "HISTORICAL_FULL_SYMMETRIC_4S"
+            )
+            candidates.append((disposition, span_start, span_end))
+    candidates = sorted(set(candidates))
+    if len(candidates) != 1:
+        raise ContractError(
+            "historical calibration GPS does not resolve uniquely from its "
+            f"session file geometry: {session_id} {detector} "
+            f"{catalog_gps_start} -> {candidates}"
+        )
+    disposition, source_start, source_end = candidates[0]
+    analysis_start = (
+        catalog_gps_start
+        if disposition == "HISTORICAL_LEFT_TRUNCATED_4S"
+        else catalog_gps_start + 4.0
+    )
+    historical_context = (
+        [catalog_gps_start, catalog_gps_start + 40.0]
+        if disposition == "HISTORICAL_FULL_SYMMETRIC_4S"
+        else [catalog_gps_start, catalog_gps_start + 36.0]
+    )
+    return {
+        "analysis_gps_start": analysis_start,
+        "required_padded_interval": [analysis_start - 4.0, analysis_start + 36.0],
+        "historical_context_disposition": disposition,
+        "historical_context_interval": historical_context,
+        "historical_source_span": [source_start, source_end],
+        "replay_disposition": (
+            "REQUIRE_EXACT_REPLAY"
+            if disposition == "HISTORICAL_FULL_SYMMETRIC_4S"
+            else "CORRECTED_CONTEXT_NO_REPLAY"
+        ),
+    }
+
+
 def iter_calibration_identities(root: Path = ROOT) -> Iterator[dict[str, Any]]:
     """Yield every historical per-session p99 identity, without reusing scores."""
 
     from src.dante_light.o4a_dependency_audit import _coverage_kind, _manifest_spans
 
     spans = _manifest_spans(root / RAW_MANIFEST_REL)
+    session_spans = _historical_calibration_spans(root)
     for path in _calibration_files(root):
         detector = "H1" if path.stem.endswith("_H1") else "L1"
         session_id = int(path.parent.name)
@@ -249,14 +345,20 @@ def iter_calibration_identities(root: Path = ROOT) -> Iterator[dict[str, Any]]:
                 raise ContractError(f"calibration identity/score length mismatch: {path}")
             for value, historical_score in zip(gps, scores, strict=True):
                 start = float(value)
+                geometry = _historical_calibration_geometry(
+                    session_id=session_id,
+                    detector=detector,
+                    catalog_gps_start=start,
+                    session_spans=session_spans,
+                )
+                required_start, required_end = geometry["required_padded_interval"]
                 yield {
                     "session_id": session_id,
                     "detector": detector,
                     "catalog_gps_start": start,
-                    "analysis_gps_start": start + 4.0,
-                    "required_padded_interval": [start, start + 40.0],
+                    **geometry,
                     "coverage_in_frozen_raw_manifest": _coverage_kind(
-                        spans[detector], start, start + 40.0
+                        spans[detector], required_start, required_end
                     ),
                     "historical_score_float32_hex": np.float32(historical_score).tobytes().hex(),
                     "historical_hdf5": path.relative_to(root).as_posix(),
@@ -339,6 +441,10 @@ def _calibration_population(root: Path) -> dict[str, Any]:
     coverage = Counter(
         (row["detector"], row["coverage_in_frozen_raw_manifest"]) for row in rows
     )
+    historical_context = Counter(
+        (row["detector"], row["historical_context_disposition"]) for row in rows
+    )
+    replay = Counter((row["detector"], row["replay_disposition"]) for row in rows)
     sessions = Counter(row["detector"] for row in {  # type: ignore[arg-type]
         (row["session_id"], row["detector"]): row for row in rows
     }.values())
@@ -359,6 +465,14 @@ def _calibration_population(root: Path) -> dict[str, Any]:
             f"{detector}/{kind}": int(value)
             for (detector, kind), value in sorted(coverage.items())
         },
+        "historical_context_counts": {
+            f"{detector}/{kind}": int(value)
+            for (detector, kind), value in sorted(historical_context.items())
+        },
+        "replay_disposition_counts": {
+            f"{detector}/{kind}": int(value)
+            for (detector, kind), value in sorted(replay.items())
+        },
         "source_hdf5_count": len(references),
         "source_hdf5_reference_digest": canonical_json_sha256(references),
         "source_hdf5_references": references,
@@ -366,11 +480,19 @@ def _calibration_population(root: Path) -> dict[str, Any]:
         "recalibration": {
             "estimator": "numpy.percentile(scores, 99.0)",
             "identities": "exact historical background_sample/gps_times",
+            "identity_interpretation": (
+                "decode legacy context-t0 with frozen per-session file geometry; "
+                "left-edge analysis=t0, otherwise analysis=t0+4s"
+            ),
+            "corrected_context": "always [analysis_start-4s, analysis_start+36s]",
+            "historical_exact_replay_scope": (
+                "only identities whose v1 source already supplied symmetric 4s context"
+            ),
             "comparison": "candidate primary score > session p99",
             "post_hoc_retuning_allowed": False,
         },
         "missing_local_policy": (
-            "fetch the exact frozen 40s detector interval from GWOSC into a "
+            "fetch the exact corrected 40s detector interval from GWOSC into a "
             "content-addressed E: cache; bind hashes before scoring"
         ),
     }
@@ -417,6 +539,9 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
         },
         "scientific_change": {
             "only_intended_change": "complete symmetric whitening context at raw-file boundaries",
+            "legacy_calibration_gps_decoding": (
+                "edge-aware from frozen per-session source-file geometry"
+            ),
             "whitening_before_crop": True,
             "left_context_s": representation.whitening_pad_s,
             "right_context_s": representation.whitening_pad_s,

@@ -20,12 +20,26 @@ def test_corrected_protocol_population_and_scientific_boundaries() -> None:
     assert calibration["session_detector_counts"] == {"H1": 42, "L1": 42}
     assert calibration["score_reuse_allowed"] is False
     assert calibration["coverage_counts"] == {
-        "H1/complete_only_by_stitch": 117,
-        "H1/complete_single_file": 19_587,
-        "H1/not_complete_in_frozen_local_manifest": 11,
-        "L1/complete_only_by_stitch": 129,
-        "L1/complete_single_file": 20_123,
-        "L1/not_complete_in_frozen_local_manifest": 4,
+        "H1/complete_only_by_stitch": 272,
+        "H1/complete_single_file": 19_425,
+        "H1/not_complete_in_frozen_local_manifest": 18,
+        "L1/complete_only_by_stitch": 291,
+        "L1/complete_single_file": 19_955,
+        "L1/not_complete_in_frozen_local_manifest": 10,
+    }
+    assert calibration["historical_context_counts"] == {
+        "H1/HISTORICAL_FULL_SYMMETRIC_4S": 19_425,
+        "H1/HISTORICAL_LEFT_TRUNCATED_4S": 162,
+        "H1/HISTORICAL_RIGHT_TRUNCATED_4S": 128,
+        "L1/HISTORICAL_FULL_SYMMETRIC_4S": 19_954,
+        "L1/HISTORICAL_LEFT_TRUNCATED_4S": 169,
+        "L1/HISTORICAL_RIGHT_TRUNCATED_4S": 133,
+    }
+    assert calibration["replay_disposition_counts"] == {
+        "H1/CORRECTED_CONTEXT_NO_REPLAY": 290,
+        "H1/REQUIRE_EXACT_REPLAY": 19_425,
+        "L1/CORRECTED_CONTEXT_NO_REPLAY": 302,
+        "L1/REQUIRE_EXACT_REPLAY": 19_954,
     }
     scan = value["scan_population"]
     assert scan["eligible_total"] == 811_251
@@ -50,6 +64,21 @@ def test_corrected_protocol_iterators_are_deterministic() -> None:
     calibration = list(iter_calibration_identities(ROOT))
     assert len(calibration) == 39_971
     assert calibration[0]["session_id"] <= calibration[-1]["session_id"]
+    by_identity = {
+        (row["session_id"], row["detector"], row["catalog_gps_start"]): row
+        for row in calibration
+    }
+    left = by_identity[(1368973312, "H1", 1369227264.0)]
+    assert left["analysis_gps_start"] == 1369227264.0
+    assert left["required_padded_interval"] == [1369227260.0, 1369227300.0]
+    assert left["replay_disposition"] == "CORRECTED_CONTEXT_NO_REPLAY"
+    right = by_identity[(1368973312, "H1", 1369280476.0)]
+    assert right["analysis_gps_start"] == 1369280480.0
+    assert right["required_padded_interval"] == [1369280476.0, 1369280516.0]
+    assert right["replay_disposition"] == "CORRECTED_CONTEXT_NO_REPLAY"
+    full = by_identity[(1368973312, "H1", 1369206812.0)]
+    assert full["analysis_gps_start"] == 1369206816.0
+    assert full["replay_disposition"] == "REQUIRE_EXACT_REPLAY"
     count = 0
     previous = {"H1": None, "L1": None}
     for row in iter_scan_identities(ROOT):

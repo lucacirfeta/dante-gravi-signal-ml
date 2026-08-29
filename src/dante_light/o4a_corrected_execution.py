@@ -101,7 +101,7 @@ def _missing_intervals(root: Path) -> list[dict[str, Any]]:
             }
         )
     result.sort(key=lambda row: (row["detector"], row["gps_start"]))
-    if len(result) != 15:
+    if len(result) != 28:
         raise ContractError("corrected O4a missing calibration interval count changed")
     return result
 
@@ -296,7 +296,7 @@ def validate_acquisition_manifest(
     if (
         payload.get("status") != "COMPLETE_CONTENT_ADDRESSED_INPUTS"
         or payload.get("protocol_digest") != protocol["protocol_digest"]
-        or payload.get("record_count") != 15
+        or payload.get("record_count") != 28
         or payload.get("record_digest") != canonical_json_sha256(payload["records"])
     ):
         raise ContractError("corrected O4a acquisition manifest contract mismatch")
@@ -622,14 +622,21 @@ def _validate_calibration_shard(
     digest = payload.pop("shard_digest", None)
     if digest != canonical_json_sha256(payload):
         raise ContractError("corrected O4a calibration shard self-digest mismatch")
-    expected_ids = [
-        (int(row["session_id"]), str(row["detector"]), float(row["catalog_gps_start"]))
-        for row in expected_rows
-    ]
-    actual_ids = [
-        (int(row["session_id"]), str(row["detector"]), float(row["catalog_gps_start"]))
-        for row in payload.get("rows", [])
-    ]
+    def identity(row: Mapping[str, Any]) -> tuple[Any, ...]:
+        return (
+            int(row["session_id"]),
+            str(row["detector"]),
+            float(row["catalog_gps_start"]),
+            float(row["analysis_gps_start"]),
+            tuple(float(value) for value in row["required_padded_interval"]),
+            str(row["historical_context_disposition"]),
+            tuple(float(value) for value in row["historical_context_interval"]),
+            tuple(float(value) for value in row["historical_source_span"]),
+            str(row["replay_disposition"]),
+        )
+
+    expected_ids = [identity(row) for row in expected_rows]
+    actual_ids = [identity(row) for row in payload.get("rows", [])]
     if (
         payload.get("status") != "COMPLETE"
         or payload.get("run_key") != run_key
@@ -781,6 +788,17 @@ def run_primary_calibration(
                             "detector": detector,
                             "catalog_gps_start": float(row["catalog_gps_start"]),
                             "analysis_gps_start": float(row["analysis_gps_start"]),
+                            "required_padded_interval": row[
+                                "required_padded_interval"
+                            ],
+                            "historical_context_disposition": row[
+                                "historical_context_disposition"
+                            ],
+                            "historical_context_interval": row[
+                                "historical_context_interval"
+                            ],
+                            "historical_source_span": row["historical_source_span"],
+                            "replay_disposition": row["replay_disposition"],
                             "coverage_in_frozen_raw_manifest": row[
                                 "coverage_in_frozen_raw_manifest"
                             ],
@@ -798,27 +816,28 @@ def run_primary_calibration(
         scores = np.asarray(
             [row["corrected_primary_score"] for row in output_rows], dtype=np.float64
         )
-        single_deltas = [
+        replay_deltas = [
             float(row["absolute_historical_delta"])
             for row in output_rows
-            if row["coverage_in_frozen_raw_manifest"] == "complete_single_file"
+            if row["replay_disposition"] == "REQUIRE_EXACT_REPLAY"
         ]
-        if single_deltas and max(single_deltas) > SCORE_ATOL:
+        if replay_deltas and max(replay_deltas) > SCORE_ATOL:
             failure = {
                 "schema_version": SCHEMA_VERSION,
-                "status": "FAILED_COMPLETE_SINGLE_REPLAY",
+                "status": "FAILED_HISTORICAL_FULL_CONTEXT_REPLAY",
                 "run_key": run_key,
                 "session_id": session_id,
                 "detector": detector,
                 "score_atol": SCORE_ATOL,
-                "max_abs_delta": max(single_deltas),
+                "max_abs_delta": max(replay_deltas),
+                "replay_rows": len(replay_deltas),
                 "rows_scored": len(output_rows),
             }
             _atomic_json(run_dir / "failure.json", failure)
             raise ContractError(
-                "corrected O4a complete-single calibration scores do not "
+                "corrected O4a historical full-context calibration scores do not "
                 f"reproduce in {session_id}_{detector}: "
-                f"{max(single_deltas)} > {SCORE_ATOL}"
+                f"{max(replay_deltas)} > {SCORE_ATOL}"
             )
         shard_body = {
             "schema_version": SCHEMA_VERSION,
@@ -859,16 +878,16 @@ def _calibration_summary(
     shards: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
     rows = [row for shard in shards for row in shard["rows"]]
-    complete_single = [
+    historical_full_context = [
         float(row["absolute_historical_delta"])
         for row in rows
-        if row["coverage_in_frozen_raw_manifest"] == "complete_single_file"
+        if row["replay_disposition"] == "REQUIRE_EXACT_REPLAY"
     ]
-    max_single_delta = max(complete_single)
-    if max_single_delta > SCORE_ATOL:
+    max_replay_delta = max(historical_full_context)
+    if max_replay_delta > SCORE_ATOL:
         raise ContractError(
-            "corrected O4a complete-single calibration scores do not reproduce "
-            f"historical values: {max_single_delta} > {SCORE_ATOL}"
+            "corrected O4a historical full-context calibration scores do not reproduce "
+            f"historical values: {max_replay_delta} > {SCORE_ATOL}"
         )
     threshold_rows = [
         {
@@ -891,11 +910,34 @@ def _calibration_summary(
         "session_detector_count": len(shards),
         "thresholds": threshold_rows,
         "threshold_digest": canonical_json_sha256(threshold_rows),
-        "complete_single_replay": {
-            "n": len(complete_single),
+        "historical_full_context_replay": {
+            "n": len(historical_full_context),
             "score_atol": SCORE_ATOL,
-            "max_abs_delta": max_single_delta,
+            "max_abs_delta": max_replay_delta,
             "pass": True,
+        },
+        "corrected_context_no_replay": {
+            "n": sum(
+                row["replay_disposition"] == "CORRECTED_CONTEXT_NO_REPLAY"
+                for row in rows
+            ),
+            "reason": (
+                "v1 supplied truncated whitening context at the historical "
+                "source-file edge, so corrected scores must not be required "
+                "to reproduce the defective input"
+            ),
+            "by_detector_and_edge": {
+                f"{detector}/{kind}": sum(
+                    row["detector"] == detector
+                    and row["historical_context_disposition"] == kind
+                    for row in rows
+                )
+                for detector in ("H1", "L1")
+                for kind in (
+                    "HISTORICAL_LEFT_TRUNCATED_4S",
+                    "HISTORICAL_RIGHT_TRUNCATED_4S",
+                )
+            },
         },
         "changed_context_counts": {
             kind: sum(row["coverage_in_frozen_raw_manifest"] == kind for row in rows)

@@ -20,10 +20,10 @@ from src.dante_light.o4a_corrected_protocol import OUTPUT_REL, ROOT, validate_co
 
 def test_corrected_missing_calibration_identities_are_frozen() -> None:
     rows = _missing_intervals(ROOT)
-    assert len(rows) == 15
-    assert sum(row["detector"] == "H1" for row in rows) == 11
-    assert sum(row["detector"] == "L1" for row in rows) == 4
-    assert len({(row["detector"], row["gps_start"], row["gps_end"]) for row in rows}) == 15
+    assert len(rows) == 28
+    assert sum(row["detector"] == "H1" for row in rows) == 18
+    assert sum(row["detector"] == "L1" for row in rows) == 10
+    assert len({(row["detector"], row["gps_start"], row["gps_end"]) for row in rows}) == 28
 
 
 def test_prior_acquisition_reuse_is_content_verified(tmp_path: Path) -> None:
@@ -153,8 +153,8 @@ def test_corrected_acquisition_is_content_addressed_and_reusable(tmp_path: Path)
         fetcher=fetcher,
         compact_path=tmp_path / "compact.json",
     )
-    assert len(calls) == 15
-    assert manifest["record_count"] == 15
+    assert len(calls) == 28
+    assert manifest["record_count"] == 28
     protocol = validate_corrected_protocol(
         json.loads((ROOT / OUTPUT_REL).read_text(encoding="utf-8")), ROOT
     )
@@ -172,7 +172,17 @@ def test_corrected_acquisition_is_content_addressed_and_reusable(tmp_path: Path)
 
 def test_corrected_calibration_shard_uses_exact_empirical_p99() -> None:
     expected = [
-        {"session_id": 1, "detector": "H1", "catalog_gps_start": float(index)}
+        {
+            "session_id": 1,
+            "detector": "H1",
+            "catalog_gps_start": float(index),
+            "analysis_gps_start": float(index) + 4.0,
+            "required_padded_interval": [float(index), float(index) + 40.0],
+            "historical_context_disposition": "HISTORICAL_FULL_SYMMETRIC_4S",
+            "historical_context_interval": [float(index), float(index) + 40.0],
+            "historical_source_span": [0.0, 100.0],
+            "replay_disposition": "REQUIRE_EXACT_REPLAY",
+        }
         for index in range(4)
     ]
     rows = [
