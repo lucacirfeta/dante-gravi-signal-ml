@@ -7,6 +7,8 @@ import numpy as np
 from gwpy.timeseries import TimeSeries
 
 from src.dante_light.o4a_corrected_execution import (
+    _CorrectedContextReader,
+    _find_reusable_acquired_input,
     _missing_intervals,
     _ScanIdentityLookup,
     _validate_calibration_shard,
@@ -22,6 +24,118 @@ def test_corrected_missing_calibration_identities_are_frozen() -> None:
     assert sum(row["detector"] == "H1" for row in rows) == 11
     assert sum(row["detector"] == "L1" for row in rows) == 4
     assert len({(row["detector"], row["gps_start"], row["gps_end"]) for row in rows}) == 15
+
+
+def test_prior_acquisition_reuse_is_content_verified(tmp_path: Path) -> None:
+    from src.dante_light.contracts import canonical_json_sha256
+    from src.dante_light.o4a_corrected_execution import _strain_record
+
+    old_run = tmp_path / "inputs_old"
+    data_dir = old_run / "missing_calibration"
+    data_dir.mkdir(parents=True)
+    path = data_dir / "H1_100_140_pending.hdf5"
+    TimeSeries(
+        np.arange(40 * 4096, dtype=np.float64),
+        t0=100,
+        sample_rate=4096,
+        name="H1:STRAIN",
+    ).write(path, format="hdf5")
+    record = {
+        **_strain_record(path, detector="H1", start=100, end=140),
+        "relative_path": path.relative_to(old_run).as_posix(),
+        "source": "GWOSC_OPEN_DATA_VIA_GWPY_FETCH_OPEN_DATA",
+    }
+    body = {
+        "schema_version": 1,
+        "status": "COMPLETE_CONTENT_ADDRESSED_INPUTS",
+        "protocol_digest": "old",
+        "protocol_reference": {"path": "old", "sha256": "0" * 64},
+        "record_count": 1,
+        "records": [record],
+        "record_digest": canonical_json_sha256([record]),
+        "network_fetch_was_outcome_blind": True,
+        "scores_or_labels_accessed_during_fetch": [],
+    }
+    manifest = {**body, "manifest_digest": canonical_json_sha256(body)}
+    (old_run / "acquisition_manifest.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+    reusable = _find_reusable_acquired_input(
+        external_root=tmp_path,
+        current_run_dir=tmp_path / "inputs_new",
+        detector="H1",
+        start=100,
+        end=140,
+    )
+    assert reusable is not None
+    assert reusable[0] == path
+    assert reusable[1]["origin_manifest_digest"] == manifest["manifest_digest"]
+
+
+def test_calibration_slice_reader_matches_canonical_stitch(tmp_path: Path) -> None:
+    import hashlib
+    import h5py
+
+    from src.core.patch_producer import load_frozen_raw_manifest, read_complete_context
+
+    raw_root = tmp_path / "raw"
+    session = raw_root / "session"
+    session.mkdir(parents=True)
+    entries = []
+    for start, offset in ((1000, 0.0), (1064, 1.0)):
+        path = session / f"H1_{start}_{start + 64}.hdf5"
+        values = np.arange(64 * 4096, dtype=np.float64) + offset
+        with h5py.File(path, "w") as handle:
+            dataset = handle.create_dataset("Strain", data=values)
+            dataset.attrs.update(
+                {
+                    "dx": 1.0 / 4096.0,
+                    "name": "Strain",
+                    "unit": "",
+                    "x0": start,
+                    "xunit": "s",
+                }
+            )
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        entries.append(
+            {
+                "copy_count": 1,
+                "detector": "H1",
+                "duration_s": 64,
+                "gps_end": start + 64,
+                "gps_start": start,
+                "physical_copies": [
+                    {
+                        "relative_path": f"session/{path.name}",
+                        "sha256": digest,
+                        "size_bytes": path.stat().st_size,
+                    }
+                ],
+                "sha256": digest,
+            }
+        )
+    manifest_path = tmp_path / "manifest.jsonl"
+    manifest_path.write_text(
+        "".join(json.dumps(row) + "\n" for row in entries), encoding="utf-8"
+    )
+    frozen = load_frozen_raw_manifest(
+        manifest_path, raw_root=raw_root, detector="H1"
+    )
+    reader = object.__new__(_CorrectedContextReader)
+    reader.base = {"H1": frozen}
+    sliced = reader._read_manifest_slice(detector="H1", start=1060, end=1100)
+    canonical = read_complete_context(
+        frozen.entries,
+        gps_start=1060,
+        gps_end=1100,
+        sample_rate_hz=4096,
+        expected_sha256=frozen.expected_sha256,
+    )
+    np.testing.assert_array_equal(sliced.series.value, canonical.series.value)
+    assert [(row.used_start, row.used_end) for row in sliced.sources] == [
+        (1060.0, 1064.0),
+        (1064.0, 1100.0),
+    ]
 
 
 def test_corrected_acquisition_is_content_addressed_and_reusable(tmp_path: Path) -> None:
@@ -90,9 +204,18 @@ def test_corrected_calibration_shard_uses_exact_empirical_p99() -> None:
 
 def test_scan_lookup_preserves_overlapping_session_memberships() -> None:
     lookup = _ScanIdentityLookup(root=ROOT)
-    row = lookup.lookup("H1", 1369489440.0)
+    row = lookup.lookup("L1", 1369489440.0)
     assert row["overlapping_source_count"] == 2
     assert len(row["historical_session_ids"]) >= 1
-    assert row["context_disposition"] == "COMPLETE_SYMMETRIC_4S"
-    edge = lookup.lookup("H1", 1368977408.0)
+    assert row["context_disposition"] == "COMPLETE_SYMMETRIC_4S_VALID_RAW"
+    assert row["exclusion_reasons"] == []
+    edge = lookup.lookup("H1", 1369569504.0)
     assert edge["context_disposition"] == "EXCLUDED_COMPONENT_EDGE"
+    assert edge["exclusion_reasons"] == ["INCOMPLETE_SYMMETRIC_4S_CONTEXT"]
+    invalid_edge = lookup.lookup("H1", 1368977408.0)
+    assert (
+        invalid_edge["context_disposition"]
+        == "EXCLUDED_INVALID_RAW_OR_WHITENING_CONTEXT"
+    )
+    assert "INCOMPLETE_SYMMETRIC_4S_CONTEXT" in invalid_edge["exclusion_reasons"]
+    assert "TARGET_NONFINITE" in invalid_edge["exclusion_reasons"]

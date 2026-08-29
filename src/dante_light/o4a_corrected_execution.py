@@ -11,6 +11,7 @@ import concurrent.futures
 import multiprocessing as mp
 import sqlite3
 import subprocess
+import shutil
 from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
@@ -19,6 +20,7 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.o4a_corrected_protocol import (
     OUTPUT_REL as PROTOCOL_REL,
     ROOT,
+    _raw_invalid_windows,
     iter_calibration_identities,
     iter_scan_identities,
     validate_corrected_protocol,
@@ -118,6 +120,72 @@ def _default_fetcher(detector: str, start: int, end: int):
     )
 
 
+def _find_reusable_acquired_input(
+    *,
+    external_root: Path,
+    current_run_dir: Path,
+    detector: str,
+    start: float,
+    end: float,
+) -> tuple[Path, dict[str, Any]] | None:
+    """Find one byte-verified prior content-addressed acquisition record."""
+
+    candidates: list[tuple[Path, dict[str, Any]]] = []
+    for manifest_path in sorted(external_root.glob("inputs_*/acquisition_manifest.json")):
+        run_dir = manifest_path.parent.resolve()
+        if run_dir == current_run_dir.resolve():
+            continue
+        value = json.loads(manifest_path.read_text(encoding="utf-8"))
+        payload = dict(value)
+        manifest_digest = payload.pop("manifest_digest", None)
+        matching = [
+            row
+            for row in value.get("records", [])
+            if str(row.get("detector")) == detector
+            and float(row.get("gps_start")) == float(start)
+            and float(row.get("gps_end")) == float(end)
+        ]
+        if not matching:
+            continue
+        if (
+            manifest_digest != canonical_json_sha256(payload)
+            or value.get("status") != "COMPLETE_CONTENT_ADDRESSED_INPUTS"
+            or value.get("record_digest")
+            != canonical_json_sha256(value.get("records", []))
+            or len(matching) != 1
+        ):
+            raise ContractError(
+                f"matching prior acquisition manifest is invalid: {manifest_path}"
+            )
+        row = matching[0]
+        relative = Path(str(row["relative_path"]))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise ContractError("prior corrected O4a acquired path is not portable")
+        path = run_dir / relative
+        measured = _strain_record(path, detector=detector, start=start, end=end)
+        for key, measured_value in measured.items():
+            if row.get(key) != measured_value:
+                raise ContractError(f"prior corrected O4a acquired input mismatch: {path}")
+        candidates.append(
+            (
+                path,
+                {
+                    "origin_run_directory": run_dir.name,
+                    "origin_manifest_digest": manifest_digest,
+                    "origin_file_sha256": measured["file_sha256"],
+                },
+            )
+        )
+    if not candidates:
+        return None
+    hashes = {metadata["origin_file_sha256"] for _path, metadata in candidates}
+    if len(hashes) != 1:
+        raise ContractError(
+            f"conflicting reusable corrected inputs for {detector} [{start}, {end}]"
+        )
+    return candidates[0]
+
+
 def acquire_missing_calibration_inputs(
     *,
     root: Path = ROOT,
@@ -158,25 +226,48 @@ def acquire_missing_calibration_inputs(
             record = _strain_record(path, detector=detector, start=start, end=end)
             if path.stem != prefix + record["file_sha256"]:
                 raise ContractError(f"acquired input filename/hash mismatch: {path}")
+            source = "CURRENT_CONTENT_ADDRESSED_CACHE"
+            reuse_provenance = None
         else:
-            series = fetcher(detector, start, end)
-            temporary = data_dir / f".{detector}_{start}_{end}.tmp.hdf5"
-            if temporary.exists():
-                temporary.unlink()
-            series.write(temporary, format="hdf5")
-            record = _strain_record(
-                temporary, detector=detector, start=start, end=end
+            reusable = _find_reusable_acquired_input(
+                external_root=external_root,
+                current_run_dir=run_dir,
+                detector=detector,
+                start=start,
+                end=end,
             )
-            path = data_dir / f"{prefix}{record['file_sha256']}.hdf5"
-            temporary.replace(path)
-        records.append(
-            {
-                **identity,
-                **record,
-                "relative_path": path.relative_to(run_dir).as_posix(),
-                "source": "GWOSC_OPEN_DATA_VIA_GWPY_FETCH_OPEN_DATA",
-            }
-        )
+            if reusable is not None:
+                prior_path, reuse_provenance = reusable
+                record = _strain_record(
+                    prior_path, detector=detector, start=start, end=end
+                )
+                path = data_dir / f"{prefix}{record['file_sha256']}.hdf5"
+                shutil.copy2(prior_path, path)
+                if sha256_path(path) != record["file_sha256"]:
+                    raise ContractError("copied corrected O4a input hash mismatch")
+                source = "REUSED_VERIFIED_CONTENT_ADDRESSED_INPUT"
+            else:
+                series = fetcher(detector, start, end)
+                temporary = data_dir / f".{detector}_{start}_{end}.tmp.hdf5"
+                if temporary.exists():
+                    temporary.unlink()
+                series.write(temporary, format="hdf5")
+                record = _strain_record(
+                    temporary, detector=detector, start=start, end=end
+                )
+                path = data_dir / f"{prefix}{record['file_sha256']}.hdf5"
+                temporary.replace(path)
+                source = "GWOSC_OPEN_DATA_VIA_GWPY_FETCH_OPEN_DATA"
+                reuse_provenance = None
+        output_record = {
+            **identity,
+            **record,
+            "relative_path": path.relative_to(run_dir).as_posix(),
+            "source": source,
+        }
+        if reuse_provenance is not None:
+            output_record["reuse_provenance"] = reuse_provenance
+        records.append(output_record)
     body = {
         "schema_version": SCHEMA_VERSION,
         "status": "COMPLETE_CONTENT_ADDRESSED_INPUTS",
@@ -266,6 +357,10 @@ def compact_acquisition_summary(
             for detector in ("H1", "L1")
         },
         "total_samples": sum(int(row["sample_count"]) for row in manifest["records"]),
+        "source_counts": {
+            source: sum(row["source"] == source for row in manifest["records"])
+            for source in sorted({str(row["source"]) for row in manifest["records"]})
+        },
         "acquisition_execution_snapshot": {
             "commit": ACQUISITION_IMPLEMENTATION_COMMIT,
             "path": IMPLEMENTATION_REL,
@@ -359,16 +454,14 @@ class _CorrectedContextReader:
 
     def read(self, *, detector: str, start: float, end: float):
         from gwpy.timeseries import TimeSeries
-        from src.core.patch_producer import IncompleteContextError, read_complete_context
+        from src.core.patch_producer import IncompleteContextError
 
         manifest = self.base[detector]
         try:
-            return read_complete_context(
-                manifest.entries,
-                gps_start=start,
-                gps_end=end,
-                sample_rate_hz=4096,
-                expected_sha256=manifest.expected_sha256,
+            return self._read_manifest_slice(
+                detector=detector,
+                start=start,
+                end=end,
             )
         except IncompleteContextError:
             key = (detector, start, end)
@@ -379,6 +472,99 @@ class _CorrectedContextReader:
                 raise ContractError(f"corrected O4a gap input hash changed: {path}")
             series = TimeSeries.read(path)
             return type("AcquiredContext", (), {"series": series, "sources": ()})()
+
+    def _read_manifest_slice(self, *, detector: str, start: float, end: float):
+        """Read only the required HDF5 samples while preserving manifest semantics."""
+
+        import h5py
+        from gwpy.timeseries import TimeSeries
+        from src.core.patch_producer import (
+            CompleteContext,
+            ContextSource,
+            IncompleteContextError,
+            RawBlockConflictError,
+            _verified_sha256,
+        )
+
+        manifest = self.base[detector]
+        grouped: dict[tuple[float, float], list[Path]] = defaultdict(list)
+        for block_start, block_end, path in manifest.entries:
+            if block_end <= start or block_start >= end:
+                continue
+            grouped[(float(block_start), float(block_end))].append(Path(path).resolve())
+        if not grouped:
+            raise IncompleteContextError(f"no frozen raw source overlaps [{start}, {end}]")
+        blocks: list[tuple[float, float, Path, str]] = []
+        for (block_start, block_end), paths in grouped.items():
+            verified = [
+                (
+                    path,
+                    _verified_sha256(path, manifest.expected_sha256.get(path)),
+                )
+                for path in sorted(set(paths), key=str)
+            ]
+            if len({digest for _path, digest in verified}) != 1:
+                raise RawBlockConflictError(
+                    f"conflicting frozen copies for [{block_start}, {block_end}]"
+                )
+            path, digest = verified[0]
+            blocks.append((block_start, block_end, path, digest))
+        blocks.sort(key=lambda item: (item[0], item[1], str(item[2])))
+        tolerance = 1.0 / 4096.0
+        cursor = float(start)
+        selected: list[tuple[float, float, Path, str]] = []
+        while cursor < end - tolerance:
+            candidates = [
+                item
+                for item in blocks
+                if item[0] <= cursor + tolerance and item[1] > cursor + tolerance
+            ]
+            if not candidates:
+                raise IncompleteContextError(
+                    f"gap in frozen raw coverage at GPS {cursor} for [{start}, {end}]"
+                )
+            chosen = sorted(
+                candidates, key=lambda item: (-item[1], item[0], str(item[2]))
+            )[0]
+            selected.append(chosen)
+            cursor = min(float(end), chosen[1])
+        pieces = []
+        sources = []
+        cursor = float(start)
+        for block_start, block_end, path, digest in selected:
+            used_start = cursor
+            used_end = min(float(end), block_end)
+            first = int(round((used_start - block_start) * 4096))
+            last = int(round((used_end - block_start) * 4096))
+            expected_shape = (int(round((block_end - block_start) * 4096)),)
+            with h5py.File(path, "r") as handle:
+                if "Strain" not in handle or handle["Strain"].shape != expected_shape:
+                    raise ContractError(f"frozen raw HDF5 shape mismatch: {path}")
+                values = np.asarray(handle["Strain"][first:last])
+            if values.shape != (last - first,):
+                raise ContractError(f"frozen raw HDF5 slice is short: {path}")
+            pieces.append(values)
+            sources.append(
+                ContextSource(
+                    path=path,
+                    block_start=block_start,
+                    block_end=block_end,
+                    used_start=used_start,
+                    used_end=used_end,
+                    sha256=digest,
+                )
+            )
+            cursor = used_end
+        values = np.ascontiguousarray(np.concatenate(pieces))
+        if values.shape != (int(round((end - start) * 4096)),):
+            raise IncompleteContextError("frozen raw slice does not cover exact interval")
+        series = TimeSeries(
+            values,
+            t0=start,
+            sample_rate=4096,
+            name=f"{detector}:GWOSC-16KHZ_R1_STRAIN",
+        )
+        return CompleteContext(series=series, sources=tuple(sources))
 
 
 def _context_provenance(context: Any, *, acquired_record: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -782,6 +968,7 @@ class _ScanIdentityLookup:
         from src.dante_light.o4a_corrected_protocol import _components, _raw_rows, _session_ids
 
         self._session_ids = _session_ids
+        self.invalid_windows = _raw_invalid_windows(root)
         rows = _raw_rows(root)
         self.rows = {
             detector: [row for row in rows if row["detector"] == detector]
@@ -819,6 +1006,11 @@ class _ScanIdentityLookup:
         component_start, component_end = self.components[detector][component_index]
         required = (gps - 4.0, gps + 36.0)
         complete = component_start <= required[0] and required[1] <= component_end
+        invalid_reasons = list(self.invalid_windows.get((detector, gps), ()))
+        exclusion_reasons = list(invalid_reasons)
+        if not complete:
+            exclusion_reasons.append("INCOMPLETE_SYMMETRIC_4S_CONTEXT")
+        eligible = complete and not invalid_reasons
         sessions = sorted(
             {session for row in sources for session in self._session_ids(row)}
         )
@@ -850,8 +1042,20 @@ class _ScanIdentityLookup:
             ),
             "required_padded_interval": list(required),
             "context_disposition": (
-                "COMPLETE_SYMMETRIC_4S" if complete else "EXCLUDED_COMPONENT_EDGE"
+                "COMPLETE_SYMMETRIC_4S_VALID_RAW"
+                if eligible
+                else (
+                    "EXCLUDED_INVALID_RAW_OR_WHITENING_CONTEXT"
+                    if invalid_reasons
+                    else "EXCLUDED_COMPONENT_EDGE"
+                )
             ),
+            "exclusion_reasons": exclusion_reasons,
+        }
+
+    def invalid_gps_starts(self, detector: str) -> set[float]:
+        return {
+            gps for (row_detector, gps) in self.invalid_windows if row_detector == detector
         }
 
 
@@ -862,6 +1066,9 @@ def _scan_references(root: Path) -> dict[str, dict[str, Any]]:
     )
     references["overlapping_raw_span_audit"] = repository_reference(
         root, root / "artifacts/dante_light/o4a_v1_parity/overlapping_raw_span_audit.json"
+    )
+    references["raw_window_validity_audit"] = repository_reference(
+        root, root / "artifacts/dante_light/o4a_v1_parity/raw_window_validity_audit.json"
     )
     return references
 
@@ -900,6 +1107,18 @@ def _open_scan_database(path: Path, *, identity: Mapping[str, Any]) -> sqlite3.C
           mil_vector BLOB,
           top_k_indices BLOB,
           patch_anomaly_scores BLOB,
+          PRIMARY KEY(detector, gps_start)
+        ) WITHOUT ROWID
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS exclusions (
+          detector TEXT NOT NULL,
+          gps_start REAL NOT NULL,
+          context_disposition TEXT NOT NULL,
+          exclusion_reasons_json TEXT NOT NULL,
+          identity_digest TEXT NOT NULL,
           PRIMARY KEY(detector, gps_start)
         ) WITHOUT ROWID
         """
@@ -972,6 +1191,30 @@ def run_primary_scan(
     connection = _open_scan_database(database_path, identity=identity)
     thresholds = _threshold_map(calibration)
     lookup = _ScanIdentityLookup(root=root)
+    frozen_exclusions = [
+        row
+        for row in iter_scan_identities(root, include_excluded=True)
+        if row["context_disposition"] != "COMPLETE_SYMMETRIC_4S_VALID_RAW"
+    ]
+    with connection:
+        connection.executemany(
+            "INSERT OR IGNORE INTO exclusions VALUES(?,?,?,?,?)",
+            [
+                (
+                    row["detector"],
+                    float(row["analysis_gps_start"]),
+                    row["context_disposition"],
+                    json.dumps(row["exclusion_reasons"], separators=(",", ":")),
+                    canonical_json_sha256(row),
+                )
+                for row in frozen_exclusions
+            ],
+        )
+    if int(connection.execute("SELECT COUNT(*) FROM exclusions").fetchone()[0]) != len(
+        frozen_exclusions
+    ):
+        connection.close()
+        raise ContractError("corrected O4a exclusion ledger cardinality mismatch")
     scorer = _primary_scorer(root=root, protocol=protocol, device=device)
     for detector in ("H1", "L1"):
         seen = {
@@ -990,6 +1233,8 @@ def run_primary_scan(
             raw_root=raw_root,
             manifest_targets=True,
             incomplete_context_policy="record_and_skip",
+            excluded_gps_starts=lookup.invalid_gps_starts(detector),
+            worker_failure_policy="raise",
         )
         if seen:
             producer.resume_gps = max(seen)
@@ -1000,8 +1245,11 @@ def run_primary_scan(
             fresh_gps = [float(gps_batch[index]) for index in fresh]
             fresh_images = [images[index] for index in fresh]
             identities = [lookup.lookup(detector, gps) for gps in fresh_gps]
-            if any(row["context_disposition"] != "COMPLETE_SYMMETRIC_4S" for row in identities):
-                raise ContractError("producer emitted a frozen component-edge exclusion")
+            if any(
+                row["context_disposition"] != "COMPLETE_SYMMETRIC_4S_VALID_RAW"
+                for row in identities
+            ):
+                raise ContractError("producer emitted a frozen O4a exclusion")
             tokens = scorer.encode_patch_tokens(fresh_images)
             score_rows = scorer.score_patch_tokens(tokens, 1.0, output_mode="score_only")
             scores = [float(row["novelty_score"]) for row in score_rows]
@@ -1131,6 +1379,32 @@ def verify_primary_scan(
         "passing_session,is_candidate,identity_digest,mil_vector,top_k_indices,"
         "patch_anomaly_scores FROM windows ORDER BY detector,gps_start"
     )
+    exclusion_cursor = iter(
+        connection.execute(
+            "SELECT detector,gps_start,context_disposition,exclusion_reasons_json,"
+            "identity_digest FROM exclusions ORDER BY detector,gps_start"
+        )
+    )
+    for expected in iter_scan_identities(root, include_excluded=True):
+        if expected["context_disposition"] == "COMPLETE_SYMMETRIC_4S_VALID_RAW":
+            continue
+        actual = next(exclusion_cursor, None)
+        if actual is None:
+            connection.close()
+            raise ContractError("corrected O4a exclusion ledger is truncated")
+        detector, gps, disposition, reasons_json, identity_digest = actual
+        if (
+            (str(detector), float(gps))
+            != (expected["detector"], float(expected["analysis_gps_start"]))
+            or disposition != expected["context_disposition"]
+            or json.loads(reasons_json) != expected["exclusion_reasons"]
+            or identity_digest != canonical_json_sha256(expected)
+        ):
+            connection.close()
+            raise ContractError("corrected O4a exclusion ledger row mismatch")
+    if next(exclusion_cursor, None) is not None:
+        connection.close()
+        raise ContractError("corrected O4a exclusion ledger has extra rows")
     threshold = _threshold_map(calibration)
     candidate_counts = Counter()
     counts = Counter()
@@ -1202,9 +1476,13 @@ def verify_primary_scan(
         "excluded_component_edge_total": protocol["scan_population"][
             "excluded_component_edge_total"
         ],
-        "excluded_component_edge_digest": protocol["scan_population"][
+        "excluded_identity_digest": protocol["scan_population"][
             "excluded_identity_jsonl_sha256"
         ],
+        "excluded_invalid_raw_or_context_total": protocol["scan_population"][
+            "excluded_invalid_raw_or_context_total"
+        ],
+        "excluded_unique_total": protocol["scan_population"]["excluded_unique_total"],
         "invalid_or_silent_drop_count": 0,
         "references": references,
         "scientific_boundary": {

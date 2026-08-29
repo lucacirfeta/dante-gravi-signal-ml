@@ -28,8 +28,16 @@ def test_corrected_protocol_population_and_scientific_boundaries() -> None:
         "L1/not_complete_in_frozen_local_manifest": 4,
     }
     scan = value["scan_population"]
-    assert scan["eligible_total"] == 882_286
-    assert scan["eligible_counts"] == {"H1": 441_300, "L1": 440_986}
+    assert scan["eligible_total"] == 811_251
+    assert scan["eligible_counts"] == {"H1": 401_442, "L1": 409_809}
+    assert scan["excluded_unique_total"] == 72_053
+    assert scan["excluded_unique_counts"] == {"H1": 40_470, "L1": 31_583}
+    assert scan["excluded_invalid_raw_or_context_total"] == 71_553
+    assert scan["excluded_invalid_raw_or_context_counts"] == {
+        "H1": 40_163,
+        "L1": 31_390,
+    }
+    assert scan["eligible_total"] + scan["excluded_unique_total"] == 883_304
     assert scan["excluded_component_edge_total"] == 1_018
     assert scan["overlapping_span_duplicate_window_memberships"] == {
         "H1": 72,
@@ -49,9 +57,10 @@ def test_corrected_protocol_iterators_are_deterministic() -> None:
         if previous[detector] is not None:
             assert row["analysis_gps_start"] > previous[detector]
         previous[detector] = row["analysis_gps_start"]
-        assert row["context_disposition"] == "COMPLETE_SYMMETRIC_4S"
+        assert row["context_disposition"] == "COMPLETE_SYMMETRIC_4S_VALID_RAW"
+        assert row["exclusion_reasons"] == []
         count += 1
-    assert count == 882_286
+    assert count == build_corrected_protocol(ROOT)["scan_population"]["eligible_total"]
 
 
 def test_saved_corrected_protocol_is_current_when_present() -> None:

@@ -26,6 +26,8 @@ ROOT = Path(__file__).resolve().parents[2]
 RAW_MANIFEST_REL = "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl"
 RAW_AUDIT_REL = "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json"
 DEPENDENCY_AUDIT_REL = "artifacts/dante_light/o4a_v1_parity/dependency_impact_audit.json"
+RAW_VALIDITY_REL = "artifacts/dante_light/o4a_v1_parity/raw_window_validity_audit.json"
+OVERLAP_AUDIT_REL = "artifacts/dante_light/o4a_v1_parity/overlapping_raw_span_audit.json"
 REFERENCE_REL = "config/reference_artifacts.json"
 RUNTIME_CONFIG_REL = "config.yaml"
 DQ_SNAPSHOT_REL = "config/dante_light_prefilter_v4_segments.json"
@@ -35,7 +37,7 @@ PREPROCESSOR_REL = "src/core/preprocessor.py"
 SCORER_REL = "src/core/patch_scorer.py"
 OUTPUT_REL = "config/dante_o4a_corrected_protocol_v2.json"
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 PROTOCOL_ID = "dante-o4a-corrected-edge-context-v2"
 BASELINE_TAG = "3.7.0"
 BASELINE_COMMIT = "67fc8b610277bea79f02757277d19696eee94b62"
@@ -102,12 +104,44 @@ def _components(rows: list[dict[str, Any]]) -> dict[str, list[tuple[float, float
     return result
 
 
+def _raw_invalid_windows(root: Path) -> dict[tuple[str, float], tuple[str, ...]]:
+    """Load the frozen sample-level target and whitening-context exclusions."""
+
+    path = root / RAW_VALIDITY_REL
+    value = json.loads(path.read_text(encoding="utf-8"))
+    payload = dict(value)
+    digest = payload.pop("artifact_digest", None)
+    if (
+        digest != canonical_json_sha256(payload)
+        or payload.get("schema_version") != 2
+        or payload.get("status") != "PASS_COMPLETE_SAMPLE_LEVEL_VALIDITY_AUDIT"
+        or payload.get("invalid_unique_window_count")
+        != len(payload.get("invalid_windows", []))
+        or payload.get("invalid_window_digest")
+        != canonical_json_sha256(payload.get("invalid_windows", []))
+        or payload.get("references", {}).get("raw_manifest")
+        != repository_reference(root, root / RAW_MANIFEST_REL)
+        or payload.get("references", {}).get("overlapping_raw_span_audit")
+        != repository_reference(root, root / OVERLAP_AUDIT_REL)
+    ):
+        raise ContractError("corrected O4a raw-window validity artifact is invalid")
+    result: dict[tuple[str, float], tuple[str, ...]] = {}
+    for row in payload["invalid_windows"]:
+        key = (str(row["detector"]), float(row["gps_start"]))
+        reasons = tuple(sorted(str(reason) for reason in row["reasons"]))
+        if key in result or not reasons:
+            raise ContractError("duplicate or empty raw-window validity identity")
+        result[key] = reasons
+    return result
+
+
 def iter_scan_identities(
     root: Path = ROOT, *, include_excluded: bool = False
 ) -> Iterator[dict[str, Any]]:
     """Yield the unique detector-window population in deterministic order."""
 
     rows = _raw_rows(root)
+    invalid_windows = _raw_invalid_windows(root)
     components = _components(rows)
     for detector in ("H1", "L1"):
         subset = [row for row in rows if row["detector"] == detector]
@@ -149,7 +183,12 @@ def iter_scan_identities(
             chosen = source_rows[0]
             required = (current - 4.0, current + 36.0)
             complete = component_start <= required[0] and required[1] <= component_end
-            if complete or include_excluded:
+            invalid_reasons = list(invalid_windows.get((detector, current), ()))
+            exclusion_reasons = list(invalid_reasons)
+            if not complete:
+                exclusion_reasons.append("INCOMPLETE_SYMMETRIC_4S_CONTEXT")
+            eligible = complete and not invalid_reasons
+            if eligible or include_excluded:
                 yield {
                     "detector": detector,
                     "analysis_gps_start": current,
@@ -175,8 +214,15 @@ def iter_scan_identities(
                     ),
                     "required_padded_interval": list(required),
                     "context_disposition": (
-                        "COMPLETE_SYMMETRIC_4S" if complete else "EXCLUDED_COMPONENT_EDGE"
+                        "COMPLETE_SYMMETRIC_4S_VALID_RAW"
+                        if eligible
+                        else (
+                            "EXCLUDED_INVALID_RAW_OR_WHITENING_CONTEXT"
+                            if invalid_reasons
+                            else "EXCLUDED_COMPONENT_EDGE"
+                        )
                     ),
+                    "exclusion_reasons": exclusion_reasons,
                 }
 
 
@@ -226,22 +272,31 @@ def _scan_population(root: Path) -> dict[str, Any]:
     memberships = Counter()
     unique = Counter()
     duplicate_memberships = Counter()
+    excluded_unique = Counter()
+    excluded_reasons = Counter()
+    matched_raw_invalid = Counter()
     for row in all_rows:
         detector = row["detector"]
         unique[detector] += 1
         duplicate_memberships[detector] += int(row["overlapping_source_count"]) - 1
         memberships[detector] += len(row["historical_session_ids"])
-        if row["context_disposition"] == "COMPLETE_SYMMETRIC_4S":
+        if row["context_disposition"] == "COMPLETE_SYMMETRIC_4S_VALID_RAW":
             eligible_digest.update(_json_line(row))
             eligible[detector] += 1
         else:
             excluded_digest.update(_json_line(row))
             excluded[detector] += 1
+            excluded_unique[detector] += 1
+            for reason in row["exclusion_reasons"]:
+                excluded_reasons[(detector, reason)] += 1
+            if any(reason != "INCOMPLETE_SYMMETRIC_4S_CONTEXT" for reason in row["exclusion_reasons"]):
+                matched_raw_invalid[detector] += 1
+    frozen_invalid = Counter(detector for detector, _gps in _raw_invalid_windows(root))
     if (
-        eligible != {"H1": 441_300, "L1": 440_986}
-        or excluded != {"H1": 612, "L1": 406}
-        or unique != {"H1": 441_912, "L1": 441_392}
+        unique != {"H1": 441_912, "L1": 441_392}
         or duplicate_memberships != {"H1": 72, "L1": 328}
+        or matched_raw_invalid != frozen_invalid
+        or eligible + excluded != unique
     ):
         raise ContractError("corrected O4a scan population counts changed")
     return {
@@ -251,8 +306,23 @@ def _scan_population(root: Path) -> dict[str, Any]:
         "eligible_identity_jsonl_sha256": eligible_digest.hexdigest(),
         "unique_window_counts_before_context_exclusion": dict(unique),
         "overlapping_span_duplicate_window_memberships": dict(duplicate_memberships),
-        "excluded_component_edge_counts": dict(excluded),
-        "excluded_component_edge_total": sum(excluded.values()),
+        "excluded_component_edge_counts": {
+            detector: int(excluded_reasons[(detector, "INCOMPLETE_SYMMETRIC_4S_CONTEXT")])
+            for detector in ("H1", "L1")
+        },
+        "excluded_component_edge_total": sum(
+            value
+            for (detector, reason), value in excluded_reasons.items()
+            if reason == "INCOMPLETE_SYMMETRIC_4S_CONTEXT"
+        ),
+        "excluded_invalid_raw_or_context_counts": dict(frozen_invalid),
+        "excluded_invalid_raw_or_context_total": sum(frozen_invalid.values()),
+        "excluded_unique_counts": dict(excluded_unique),
+        "excluded_unique_total": sum(excluded_unique.values()),
+        "excluded_reason_counts": {
+            f"{detector}/{reason}": int(value)
+            for (detector, reason), value in sorted(excluded_reasons.items())
+        },
         "excluded_identity_jsonl_sha256": excluded_digest.hexdigest(),
         "historical_session_membership_counts": dict(memberships),
         "duplicate_span_policy": (
@@ -314,6 +384,8 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "raw_manifest": RAW_MANIFEST_REL,
             "raw_identity_audit": RAW_AUDIT_REL,
             "dependency_impact_audit": DEPENDENCY_AUDIT_REL,
+            "raw_window_validity_audit": RAW_VALIDITY_REL,
+            "overlapping_raw_span_audit": OVERLAP_AUDIT_REL,
             "reference_artifacts": REFERENCE_REL,
             "runtime_config": RUNTIME_CONFIG_REL,
             "dq_snapshot": DQ_SNAPSHOT_REL,
@@ -349,6 +421,7 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "left_context_s": representation.whitening_pad_s,
             "right_context_s": representation.whitening_pad_s,
             "incomplete_context": "record_and_skip_fail_closed",
+            "invalid_raw_or_whitening_context": "record_and_skip_fail_closed",
             "threshold_or_score_tolerance_change": False,
         },
         "representation": representation.to_dict(),
@@ -358,7 +431,7 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "acquire_and_hash_missing_frozen_calibration_intervals",
             "rescore_all_39971_historical_primary_calibration_identities",
             "freeze_all_84_session_detector_empirical_p99_thresholds",
-            "score_882286_unique_complete_context_primary_windows",
+            "score_all_unique_complete_context_and_sample_valid_primary_windows",
             "materialize_primary_candidates_with_any_session_threshold_semantics",
             "rebuild_detector_aware_O4a_native_index_excluding_corrected_primary_candidates",
             "rescore_frozen_native_calibration_ledgers_and_freeze_detector_thresholds",
