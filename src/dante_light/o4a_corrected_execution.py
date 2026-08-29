@@ -860,6 +860,9 @@ def _scan_references(root: Path) -> dict[str, dict[str, Any]]:
     references["primary_calibration_summary"] = repository_reference(
         root, root / COMPACT_CALIBRATION_REL
     )
+    references["overlapping_raw_span_audit"] = repository_reference(
+        root, root / "artifacts/dante_light/o4a_v1_parity/overlapping_raw_span_audit.json"
+    )
     return references
 
 
