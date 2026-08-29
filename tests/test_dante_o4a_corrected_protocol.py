@@ -22,9 +22,19 @@ def test_corrected_protocol_population_and_scientific_boundaries() -> None:
     assert value["scientific_change"]["threshold_or_score_tolerance_change"] is False
     assert value["scientific_change"]["cross_environment_shard_reuse_allowed"] is False
     assert value["execution_parameters"] == {
-        "primary_calibration": {"device": "cuda", "workers": 2, "batch_size": 8},
-        "primary_scan": {"device": "cuda", "workers": 2, "batch_size": 8},
+        "primary_calibration": {"device": "cuda", "workers": 8, "batch_size": 32},
+        "primary_scan": {
+            "device": "cuda",
+            "workers": 8,
+            "batch_size": 32,
+            "detector_mode": "parallel_shared_scorer",
+            "queue_depth_batches": 2,
+            "queue_topology": "single_combined_bounded_queue",
+            "database_commit_rows": 1024,
+        },
     }
+    assert value["scientific_change"]["performance_only_refreeze"] is True
+    assert value["scientific_change"]["scoring_function_or_population_changed"] is False
     assert value["canonical_runtime"]["required_for"] == [
         "primary_calibration",
         "primary_scan",

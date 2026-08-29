@@ -12,6 +12,7 @@ from src.dante_light.o4a_corrected_execution import (
     _CorrectedContextReader,
     _find_reusable_acquired_input,
     _missing_intervals,
+    _parallel_detector_batches,
     _ScanIdentityLookup,
     _scoring_runtime_identity,
     _validate_calibration_shard,
@@ -40,11 +41,11 @@ def test_corrected_scoring_identity_is_environment_and_batch_bound() -> None:
         runtime_contract=runtime,
         stage="primary_calibration",
         device="cuda",
-        workers=2,
-        batch_size=8,
+        workers=8,
+        batch_size=32,
     )
     assert identity["runtime_environment"] == runtime["runtime_environment"]
-    assert identity["execution_parameters"]["batch_size"] == 8
+    assert identity["execution_parameters"]["batch_size"] == 32
     with pytest.raises(ContractError, match="execution parameters differ"):
         _scoring_runtime_identity(
             protocol=protocol,
@@ -54,6 +55,44 @@ def test_corrected_scoring_identity_is_environment_and_batch_bound() -> None:
             workers=2,
             batch_size=16,
         )
+    scan_identity = _scoring_runtime_identity(
+        protocol=protocol,
+        runtime_contract=runtime,
+        stage="primary_scan",
+        device="cuda",
+        workers=8,
+        batch_size=32,
+        detector_mode="parallel_shared_scorer",
+        queue_depth_batches=2,
+        queue_topology="single_combined_bounded_queue",
+        database_commit_rows=1024,
+    )
+    assert scan_identity["execution_parameters"] == protocol["execution_parameters"][
+        "primary_scan"
+    ]
+
+
+def test_parallel_detector_batches_delivers_both_streams() -> None:
+    producers = {
+        "H1": iter([([1.0], ["h1-a"]), ([2.0], ["h1-b"])]),
+        "L1": iter([([3.0], ["l1-a"])]),
+    }
+    observed = list(_parallel_detector_batches(producers, queue_depth_batches=1))
+    assert sorted((detector, gps[0], images[0]) for detector, gps, images in observed) == [
+        ("H1", 1.0, "h1-a"),
+        ("H1", 2.0, "h1-b"),
+        ("L1", 3.0, "l1-a"),
+    ]
+
+
+def test_parallel_detector_batches_propagates_worker_failure() -> None:
+    def failed():
+        yield [1.0], ["ok"]
+        raise ValueError("boom")
+
+    producers = {"H1": failed(), "L1": iter([([2.0], ["l1"])])}
+    with pytest.raises(RuntimeError, match="H1 producer failed"):
+        list(_parallel_detector_batches(producers, queue_depth_batches=1))
 
 
 def test_prior_acquisition_reuse_is_content_verified(tmp_path: Path) -> None:

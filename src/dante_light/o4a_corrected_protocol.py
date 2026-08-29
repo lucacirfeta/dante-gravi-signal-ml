@@ -39,10 +39,15 @@ PROTOCOL_CODE_REL = "src/dante_light/o4a_corrected_protocol.py"
 PATCH_PRODUCER_REL = "src/core/patch_producer.py"
 PREPROCESSOR_REL = "src/core/preprocessor.py"
 SCORER_REL = "src/core/patch_scorer.py"
-OUTPUT_REL = "config/dante_o4a_corrected_protocol_v2.json"
+EXECUTION_REL = "src/dante_light/o4a_corrected_execution.py"
+PERFORMANCE_CONTRACT_REL = "config/dante_o4a_corrected_performance_v2.json"
+PERFORMANCE_RESULT_REL = (
+    "artifacts/dante_light/o4a_v1_parity/corrected_performance_benchmark_v2.json"
+)
+OUTPUT_REL = "config/dante_o4a_corrected_protocol_v3.json"
 
-SCHEMA_VERSION = 2
-PROTOCOL_ID = "dante-o4a-corrected-edge-context-v2"
+SCHEMA_VERSION = 3
+PROTOCOL_ID = "dante-o4a-corrected-edge-context-performance-v3"
 BASELINE_TAG = "3.7.0"
 BASELINE_COMMIT = "67fc8b610277bea79f02757277d19696eee94b62"
 DEFAULT_EXTERNAL_ROOT = "E:/dante_cache/dante_light/o4a_corrected_v2"
@@ -520,6 +525,9 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "patch_producer": PATCH_PRODUCER_REL,
             "preprocessor": PREPROCESSOR_REL,
             "patch_scorer": SCORER_REL,
+            "execution_implementation": EXECUTION_REL,
+            "performance_contract": PERFORMANCE_CONTRACT_REL,
+            "performance_result": PERFORMANCE_RESULT_REL,
         }.items()
     }
     representation = RepresentationContract.from_reference_manifest(root / REFERENCE_REL)
@@ -545,6 +553,13 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "commit": BASELINE_COMMIT,
             "outputs_immutable": True,
         },
+        "supersedes": {
+            "protocol_id": "dante-o4a-corrected-edge-context-v2",
+            "protocol_digest": (
+                "a69708d26166f73cd66f2318bbfbb513fb9f4f12e79dd0e4d9dcd207af8b60ab"
+            ),
+            "reason": "performance-only refreeze after outcome-blind exact-equivalence audit",
+        },
         "scientific_change": {
             "only_intended_change": "complete symmetric whitening context at raw-file boundaries",
             "legacy_calibration_gps_decoding": (
@@ -558,6 +573,8 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "threshold_or_score_tolerance_change": False,
             "canonical_scoring_environment": "frozen WSL/CUDA runtime",
             "cross_environment_shard_reuse_allowed": False,
+            "performance_only_refreeze": True,
+            "scoring_function_or_population_changed": False,
         },
         "representation": representation.to_dict(),
         "canonical_runtime": {
@@ -573,13 +590,17 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
         "execution_parameters": {
             "primary_calibration": {
                 "device": "cuda",
-                "workers": 2,
-                "batch_size": 8,
+                "workers": 8,
+                "batch_size": 32,
             },
             "primary_scan": {
                 "device": "cuda",
-                "workers": 2,
-                "batch_size": 8,
+                "workers": 8,
+                "batch_size": 32,
+                "detector_mode": "parallel_shared_scorer",
+                "queue_depth_batches": 2,
+                "queue_topology": "single_combined_bounded_queue",
+                "database_commit_rows": 1024,
             },
         },
         "calibration_population": _calibration_population(root),

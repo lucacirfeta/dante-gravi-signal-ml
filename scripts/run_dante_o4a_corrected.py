@@ -49,8 +49,12 @@ def main() -> int:
     parser.add_argument("--external-root", type=Path, default=DEFAULT_EXTERNAL_ROOT)
     parser.add_argument("--raw-root", type=Path, default=Path("E:/o4a"))
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--workers", type=int, default=2)
-    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--detector-mode", default="parallel_shared_scorer")
+    parser.add_argument("--queue-depth-batches", type=int, default=2)
+    parser.add_argument("--queue-topology", default="single_combined_bounded_queue")
+    parser.add_argument("--database-commit-rows", type=int, default=1024)
     args = parser.parse_args()
     if args.stage == "freeze-runtime":
         contract = write_canonical_runtime_contract(root=ROOT, device=args.device)
@@ -87,6 +91,10 @@ def main() -> int:
             device=args.device,
             workers=args.workers,
             batch_size=args.batch_size,
+            detector_mode=args.detector_mode,
+            queue_depth_batches=args.queue_depth_batches,
+            queue_topology=args.queue_topology,
+            database_commit_rows=args.database_commit_rows,
         )
         print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
         return 0

@@ -9,9 +9,11 @@ from collections import Counter, defaultdict
 import bisect
 import concurrent.futures
 import multiprocessing as mp
+import queue
 import sqlite3
 import subprocess
 import shutil
+import threading
 from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
@@ -412,6 +414,11 @@ def _execution_references(root: Path) -> dict[str, dict[str, Any]]:
         "patch_scorer": "src/core/patch_scorer.py",
         "model_loader": "src/core/model_loader.py",
         "encoder": "src/core/encoder.py",
+        "performance_contract_v2": "config/dante_o4a_corrected_performance_v2.json",
+        "performance_result_v2": (
+            "artifacts/dante_light/o4a_v1_parity/"
+            "corrected_performance_benchmark_v2.json"
+        ),
     }
     return {
         name: repository_reference(root, root / relative)
@@ -440,9 +447,22 @@ def _scoring_runtime_identity(
     device: str,
     workers: int,
     batch_size: int,
+    detector_mode: str | None = None,
+    queue_depth_batches: int | None = None,
+    queue_topology: str | None = None,
+    database_commit_rows: int | None = None,
 ) -> dict[str, Any]:
     expected = dict(protocol["execution_parameters"][stage])
     actual = {"device": device, "workers": workers, "batch_size": batch_size}
+    if stage == "primary_scan":
+        actual.update(
+            {
+                "detector_mode": detector_mode,
+                "queue_depth_batches": queue_depth_batches,
+                "queue_topology": queue_topology,
+                "database_commit_rows": database_commit_rows,
+            }
+        )
     if actual != expected:
         raise ContractError(
             f"corrected O4a {stage} execution parameters differ from the frozen protocol"
@@ -697,8 +717,8 @@ def run_primary_calibration(
     raw_root: Path = Path("E:/o4a"),
     external_root: Path = DEFAULT_EXTERNAL_ROOT,
     device: str = "cuda",
-    workers: int = 2,
-    batch_size: int = 8,
+    workers: int = 8,
+    batch_size: int = 32,
 ) -> tuple[dict[str, Any], Path]:
     """Fully rescore all 39,971 frozen primary calibration identities."""
 
@@ -1256,14 +1276,82 @@ def _threshold_map(calibration: Mapping[str, Any]) -> dict[tuple[int, str], floa
     return result
 
 
+def _parallel_detector_batches(
+    producers: Mapping[str, Any], *, queue_depth_batches: int
+):
+    """Yield H1/L1 batches from bounded producer threads to one scorer."""
+
+    if set(producers) != {"H1", "L1"} or queue_depth_batches < 1:
+        raise ValueError("parallel detector producers or queue depth are invalid")
+    batch_queue: queue.Queue[tuple[str, str, Any, Any]] = queue.Queue(
+        maxsize=2 * queue_depth_batches
+    )
+    stop = threading.Event()
+
+    def put(item: tuple[str, str, Any, Any], *, force: bool = False) -> bool:
+        while force or not stop.is_set():
+            try:
+                batch_queue.put(item, timeout=0.25)
+                return True
+            except queue.Full:
+                if force and stop.is_set():
+                    try:
+                        batch_queue.get_nowait()
+                    except queue.Empty:
+                        pass
+                continue
+        return False
+
+    def produce(detector: str) -> None:
+        try:
+            for gps_batch, images in producers[detector]:
+                if stop.is_set() or not put(("batch", detector, gps_batch, images)):
+                    break
+        except BaseException as exc:
+            put(("error", detector, exc, None))
+        finally:
+            put(("done", detector, None, None), force=True)
+
+    threads = [
+        threading.Thread(target=produce, args=(detector,), daemon=True)
+        for detector in ("H1", "L1")
+    ]
+    for thread in threads:
+        thread.start()
+    remaining = 2
+    first_error: tuple[str, BaseException] | None = None
+    try:
+        while remaining:
+            kind, detector, payload, images = batch_queue.get()
+            if kind == "done":
+                remaining -= 1
+            elif kind == "error":
+                if first_error is None:
+                    first_error = (detector, payload)
+                    stop.set()
+            elif first_error is None:
+                yield detector, payload, images
+        if first_error is not None:
+            detector, error = first_error
+            raise RuntimeError(f"corrected O4a {detector} producer failed") from error
+    finally:
+        stop.set()
+        for thread in threads:
+            thread.join()
+
+
 def run_primary_scan(
     *,
     root: Path = ROOT,
     raw_root: Path = Path("E:/o4a"),
     external_root: Path = DEFAULT_EXTERNAL_ROOT,
     device: str = "cuda",
-    workers: int = 2,
-    batch_size: int = 8,
+    workers: int = 8,
+    batch_size: int = 32,
+    detector_mode: str = "parallel_shared_scorer",
+    queue_depth_batches: int = 2,
+    queue_topology: str = "single_combined_bounded_queue",
+    database_commit_rows: int = 1024,
 ) -> tuple[dict[str, Any], Path]:
     """Run the frozen unique-window primary scan with transactional output."""
 
@@ -1283,6 +1371,10 @@ def run_primary_scan(
         device=device,
         workers=workers,
         batch_size=batch_size,
+        detector_mode=detector_mode,
+        queue_depth_batches=queue_depth_batches,
+        queue_topology=queue_topology,
+        database_commit_rows=database_commit_rows,
     )
     calibration, _ = verify_primary_calibration(root=root, external_root=external_root)
     references = _scan_references(root)
@@ -1337,13 +1429,17 @@ def run_primary_scan(
         connection.close()
         raise ContractError("corrected O4a exclusion ledger cardinality mismatch")
     scorer = _primary_scorer(root=root, protocol=protocol, device=device)
-    for detector in ("H1", "L1"):
-        seen = {
+    seen_by_detector = {
+        detector: {
             float(row[0])
             for row in connection.execute(
                 "SELECT gps_start FROM windows WHERE detector=?", (detector,)
             )
         }
+        for detector in ("H1", "L1")
+    }
+    producers = {}
+    for detector in ("H1", "L1"):
         producer = PatchProducer(
             raw_root,
             detector,
@@ -1357,9 +1453,36 @@ def run_primary_scan(
             excluded_gps_starts=lookup.invalid_gps_starts(detector),
             worker_failure_policy="raise",
         )
-        if seen:
-            producer.resume_gps = max(seen)
-        for gps_batch, images in producer:
+        if seen_by_detector[detector]:
+            producer.resume_gps = max(seen_by_detector[detector])
+        producers[detector] = producer
+
+    insert_sql = """
+        INSERT INTO windows(
+          detector,gps_start,primary_score,score_float32_hex,
+          session_ids_json,passing_session,is_candidate,identity_digest,
+          image_sha256,mil_vector,top_k_indices,patch_anomaly_scores
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+    """
+    pending_records = []
+
+    def flush_records() -> None:
+        nonlocal pending_records
+        if pending_records:
+            with connection:
+                connection.executemany(insert_sql, pending_records)
+            pending_records = []
+
+    try:
+        if (
+            detector_mode != "parallel_shared_scorer"
+            or queue_topology != "single_combined_bounded_queue"
+        ):
+            raise ContractError("corrected O4a primary scan detector mode is unsupported")
+        for detector, gps_batch, images in _parallel_detector_batches(
+            producers, queue_depth_batches=queue_depth_batches
+        ):
+            seen = seen_by_detector[detector]
             fresh = [index for index, gps in enumerate(gps_batch) if float(gps) not in seen]
             if not fresh:
                 continue
@@ -1396,13 +1519,12 @@ def run_primary_scan(
                     if abs(float(full["novelty_score"]) - scores[index]) > SCORE_ATOL:
                         raise ContractError("candidate full/score-only paths diverged")
                     full_by_index[index] = full
-            records = []
             for index, (gps, image, row, score) in enumerate(
                 zip(fresh_gps, fresh_images, identities, scores, strict=True)
             ):
                 full = full_by_index.get(index)
                 passing = passing_sessions_by_index.get(index, [])
-                records.append(
+                pending_records.append(
                     (
                         detector,
                         gps,
@@ -1424,18 +1546,22 @@ def run_primary_scan(
                         else np.ascontiguousarray(full["patch_anomaly_scores"], dtype=np.float32).tobytes(),
                     )
                 )
-            with connection:
-                connection.executemany(
-                    """
-                    INSERT INTO windows(
-                      detector,gps_start,primary_score,score_float32_hex,
-                      session_ids_json,passing_session,is_candidate,identity_digest,
-                      image_sha256,mil_vector,top_k_indices,patch_anomaly_scores
-                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
-                    """,
-                    records,
-                )
             seen.update(fresh_gps)
+            if len(pending_records) >= database_commit_rows:
+                flush_records()
+        flush_records()
+    except BaseException as exc:
+        failure = {
+            "schema_version": SCHEMA_VERSION,
+            "status": "FAILED_RUNTIME",
+            "run_key": run_key,
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+            "uncommitted_row_count": len(pending_records),
+        }
+        _atomic_json(failure_path, failure)
+        connection.close()
+        raise
     counts = {
         detector: int(
             connection.execute(
