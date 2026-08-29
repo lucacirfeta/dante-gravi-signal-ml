@@ -1,18 +1,18 @@
 {
   "acquisition_execution_snapshot": {
-    "commit": "f9c5faaec7cf13b759e45ba2e31ce7ff47aad5d1",
+    "commit": "e68f206cc1a02d2b5de737316c864ad6778b0d56",
     "path": "src/dante_light/o4a_corrected_execution.py",
-    "sha256": "4f6aa6447289dad42f9618f1fba930959e876099557bef8a680427d2a967a15d"
+    "sha256": "3762bf2cca40c59eb67ef4625d67c755261b8e9a5a3e1bcd9b7f91ccb48c8ad0"
   },
-  "artifact_digest": "a6f34f922e3c2825bb64e7c0cd3ba2f0c25dfeff750951f3fc72220e25c99c8c",
+  "artifact_digest": "d9707228789b4ceb2fd7c4144140e2b11d3357b721066c0ddb1bffac048289b4",
   "detector_counts": {
-    "H1": 11,
-    "L1": 4
+    "H1": 18,
+    "L1": 10
   },
-  "external_manifest_digest": "35b254645f74475911e66945454c5cd73c3bd235c8ae2b4f4e42d43318502594",
-  "protocol_digest": "f54bd13d87044d14bd109971d74902ce3cb5a2873814d745ca0148a32c4c3b23",
-  "record_count": 15,
-  "record_digest": "ee177e7dd53096f0593fabfb69a0b54ee4db4b608bdf2370ae82227f8434d70d",
+  "external_manifest_digest": "748bf300ef2d68e4ec263798ba4fcef6d2729dfa16be95f06b7d1044c7ad44f4",
+  "protocol_digest": "1e5dd8f2f2f5f76bbdedc41fcfebeca922e7a48fa1a2ad9ee0126f457bd46ecd",
+  "record_count": 28,
+  "record_digest": "5aa9c7009161417111363cfc052b3f487f847680e51161da7aae55e19888959c",
   "schema_version": 1,
   "scientific_boundary": {
     "input_acquisition_only": true,
@@ -21,12 +21,13 @@
     "thresholds_changed": false
   },
   "source_counts": {
+    "GWOSC_OPEN_DATA_VIA_GWPY_FETCH_OPEN_DATA": 13,
     "REUSED_VERIFIED_CONTENT_ADDRESSED_INPUT": 15
   },
   "status": "COMPLETE_CONTENT_ADDRESSED_INPUTS",
-  "total_samples": 2457600,
+  "total_samples": 4587520,
   "verification_implementation_reference": {
     "path": "src/dante_light/o4a_corrected_execution.py",
-    "sha256": "31c001c17fd6d48f806c89d27b98bf1eb221dbd6b7462f9cc5acebe725afed3c"
+    "sha256": "ae65818153dd081092292f2e75c5c3d1dea0a97b292898b2c42db52016cfb6f3"
   }
 }
