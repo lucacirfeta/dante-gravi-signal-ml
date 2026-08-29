@@ -10,6 +10,7 @@ import bisect
 import concurrent.futures
 import multiprocessing as mp
 import sqlite3
+import subprocess
 from typing import Any, Callable, Mapping, Sequence
 
 import numpy as np
@@ -30,6 +31,8 @@ SCHEMA_VERSION = 1
 DEFAULT_EXTERNAL_ROOT = Path("E:/dante_cache/dante_light/o4a_corrected_v2")
 COMPACT_ACQUISITION_REL = "artifacts/dante_light/o4a_v1_parity/corrected_input_acquisition.json"
 IMPLEMENTATION_REL = "src/dante_light/o4a_corrected_execution.py"
+ACQUISITION_IMPLEMENTATION_COMMIT = "9bc42ed8165adb34e4c26355b975310cab766aa9"
+ACQUISITION_IMPLEMENTATION_SHA256 = "e0aeb817c043f8db135406befdd2b91b63179f80cc15310341be48de6961bf28"
 COMPACT_CALIBRATION_REL = "artifacts/dante_light/o4a_v1_parity/corrected_primary_calibration.json"
 COMPACT_SCAN_REL = "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json"
 
@@ -237,6 +240,20 @@ def validate_acquisition_manifest(
 def compact_acquisition_summary(
     manifest: Mapping[str, Any], *, root: Path = ROOT
 ) -> dict[str, Any]:
+    try:
+        acquisition_blob = subprocess.check_output(
+            [
+                "git",
+                "show",
+                f"{ACQUISITION_IMPLEMENTATION_COMMIT}:{IMPLEMENTATION_REL}",
+            ],
+            cwd=root,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ContractError("cannot resolve corrected O4a acquisition code snapshot") from exc
+    if hashlib.sha256(acquisition_blob).hexdigest() != ACQUISITION_IMPLEMENTATION_SHA256:
+        raise ContractError("corrected O4a acquisition code snapshot hash mismatch")
     body = {
         "schema_version": SCHEMA_VERSION,
         "status": manifest["status"],
@@ -249,7 +266,12 @@ def compact_acquisition_summary(
             for detector in ("H1", "L1")
         },
         "total_samples": sum(int(row["sample_count"]) for row in manifest["records"]),
-        "implementation_reference": repository_reference(
+        "acquisition_execution_snapshot": {
+            "commit": ACQUISITION_IMPLEMENTATION_COMMIT,
+            "path": IMPLEMENTATION_REL,
+            "sha256": ACQUISITION_IMPLEMENTATION_SHA256,
+        },
+        "verification_implementation_reference": repository_reference(
             root, root / IMPLEMENTATION_REL
         ),
         "scientific_boundary": {
