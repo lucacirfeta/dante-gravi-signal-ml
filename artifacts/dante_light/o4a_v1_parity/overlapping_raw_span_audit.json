@@ -1,0 +1,199 @@
+{
+  "artifact_digest": "1d3b64d7becdda8d9ca32c4e75dd9cb05466608ab18a5d0f7d464256e19bcc68",
+  "duplicate_window_memberships": {
+    "H1": 72,
+    "L1": 328
+  },
+  "implementation_reference": {
+    "path": "src/dante_light/o4a_overlap_audit.py",
+    "sha256": "b2ee99b29d281401cb0502788864c80752b5e545844bf502e3fd74237b67a6a4"
+  },
+  "pair_count": 6,
+  "pair_counts": {
+    "H1": 1,
+    "L1": 5
+  },
+  "raw_manifest_reference": {
+    "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+    "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+  },
+  "records": [
+    {
+      "all_finite": false,
+      "detector": "H1",
+      "left": {
+        "file_sha256": "a222d5ddc6358535dd68fc0f3d0f6421af501e894ee43d907d4fd378a18489e4",
+        "interval": [
+          1369489408.0,
+          1369491712.0
+        ],
+        "strain_overlap_sha256": "5d135323528c45fcc56b51790872ce1dffe33dc1f4c86b3c0e56b6ed7a4b56f2"
+      },
+      "max_abs_sample_delta": null,
+      "overlap_32s_window_memberships": 72,
+      "overlap_duration_s": 2304.0,
+      "overlap_interval": [
+        1369489408.0,
+        1369491712.0
+      ],
+      "right": {
+        "file_sha256": "80dcf7fd49066e0ec2ae85b5ee26ed01150a6a2139ac0547dbb766f7eadeb488",
+        "interval": [
+          1369489408.0,
+          1369493504.0
+        ],
+        "strain_overlap_sha256": "5d135323528c45fcc56b51790872ce1dffe33dc1f4c86b3c0e56b6ed7a4b56f2"
+      },
+      "sample_count": 9437184,
+      "sample_exact_equal": true
+    },
+    {
+      "all_finite": false,
+      "detector": "L1",
+      "left": {
+        "file_sha256": "3f515ad07f8e2a8eae4f9a437c710331bc50422a0652fb7f3a33a78f9339cbf1",
+        "interval": [
+          1369489408.0,
+          1369491712.0
+        ],
+        "strain_overlap_sha256": "2d2ab784bf9b5437272c6411ede3abee09662e11a7f78939a4f571f913afb870"
+      },
+      "max_abs_sample_delta": null,
+      "overlap_32s_window_memberships": 72,
+      "overlap_duration_s": 2304.0,
+      "overlap_interval": [
+        1369489408.0,
+        1369491712.0
+      ],
+      "right": {
+        "file_sha256": "72df4aa64fc02acfe2233898f28c3cdcbf3f1a2f5a2ba4209fb86fc27ea3dbd1",
+        "interval": [
+          1369489408.0,
+          1369493504.0
+        ],
+        "strain_overlap_sha256": "2d2ab784bf9b5437272c6411ede3abee09662e11a7f78939a4f571f913afb870"
+      },
+      "sample_count": 9437184,
+      "sample_exact_equal": true
+    },
+    {
+      "all_finite": true,
+      "detector": "L1",
+      "left": {
+        "file_sha256": "4b0abf548f978050952e64f1675d9b9d106d7e9ed96cce44b0db6bb73298a5d4",
+        "interval": [
+          1369509888.0,
+          1369513984.0
+        ],
+        "strain_overlap_sha256": "71ce56d01f817119957ecb285ac25b554592efe027d44b6eeedf4738416d8278"
+      },
+      "max_abs_sample_delta": 0.0,
+      "overlap_32s_window_memberships": 56,
+      "overlap_duration_s": 1792.0,
+      "overlap_interval": [
+        1369512192.0,
+        1369513984.0
+      ],
+      "right": {
+        "file_sha256": "ca9d905c659976734373d63fac8943d437ae669c45dfe49976f57322f58d0b02",
+        "interval": [
+          1369512192.0,
+          1369516288.0
+        ],
+        "strain_overlap_sha256": "71ce56d01f817119957ecb285ac25b554592efe027d44b6eeedf4738416d8278"
+      },
+      "sample_count": 7340032,
+      "sample_exact_equal": true
+    },
+    {
+      "all_finite": true,
+      "detector": "L1",
+      "left": {
+        "file_sha256": "ca9d905c659976734373d63fac8943d437ae669c45dfe49976f57322f58d0b02",
+        "interval": [
+          1369512192.0,
+          1369516288.0
+        ],
+        "strain_overlap_sha256": "1cf070328bb46355a4cda5a61dd840917594cc48e670d00996fae172c939fea3"
+      },
+      "max_abs_sample_delta": 0.0,
+      "overlap_32s_window_memberships": 72,
+      "overlap_duration_s": 2304.0,
+      "overlap_interval": [
+        1369513984.0,
+        1369516288.0
+      ],
+      "right": {
+        "file_sha256": "65de51a2bfcb03d6132bf4fc24126b7beb1016930caa05b371bb2ea9ed58b4a0",
+        "interval": [
+          1369513984.0,
+          1369518080.0
+        ],
+        "strain_overlap_sha256": "1cf070328bb46355a4cda5a61dd840917594cc48e670d00996fae172c939fea3"
+      },
+      "sample_count": 9437184,
+      "sample_exact_equal": true
+    },
+    {
+      "all_finite": true,
+      "detector": "L1",
+      "left": {
+        "file_sha256": "65de51a2bfcb03d6132bf4fc24126b7beb1016930caa05b371bb2ea9ed58b4a0",
+        "interval": [
+          1369513984.0,
+          1369518080.0
+        ],
+        "strain_overlap_sha256": "cfe517f2a9195c1f826db0f892341c52af0b5806e95b31afc165591466068ffe"
+      },
+      "max_abs_sample_delta": 0.0,
+      "overlap_32s_window_memberships": 56,
+      "overlap_duration_s": 1792.0,
+      "overlap_interval": [
+        1369516288.0,
+        1369518080.0
+      ],
+      "right": {
+        "file_sha256": "1e1d0a11a5f52297c12f0128b7a7332db443d2c989c06993c87d399f6d5d6ab0",
+        "interval": [
+          1369516288.0,
+          1369520384.0
+        ],
+        "strain_overlap_sha256": "cfe517f2a9195c1f826db0f892341c52af0b5806e95b31afc165591466068ffe"
+      },
+      "sample_count": 7340032,
+      "sample_exact_equal": true
+    },
+    {
+      "all_finite": true,
+      "detector": "L1",
+      "left": {
+        "file_sha256": "1e1d0a11a5f52297c12f0128b7a7332db443d2c989c06993c87d399f6d5d6ab0",
+        "interval": [
+          1369516288.0,
+          1369520384.0
+        ],
+        "strain_overlap_sha256": "1139744b06938c26823d9c0b767cffcbbfbba1ea9530eab17a54a770e3e2b66e"
+      },
+      "max_abs_sample_delta": 0.0,
+      "overlap_32s_window_memberships": 72,
+      "overlap_duration_s": 2304.0,
+      "overlap_interval": [
+        1369518080.0,
+        1369520384.0
+      ],
+      "right": {
+        "file_sha256": "e607bab4d8bba9aaf2ad860eb92e5470b4f3e10628bfb317ba725306fc159b21",
+        "interval": [
+          1369518080.0,
+          1369520384.0
+        ],
+        "strain_overlap_sha256": "1139744b06938c26823d9c0b767cffcbbfbba1ea9530eab17a54a770e3e2b66e"
+      },
+      "sample_count": 9437184,
+      "sample_exact_equal": true
+    }
+  ],
+  "schema_version": 1,
+  "scientific_conclusion": "Non-identical logical spans that overlap contain bit-identical strain over every shared sample; detector+GPS deduplication does not select between conflicting measurements. Non-finite shared samples are not valid scan inputs and are delegated to the frozen sample-level window-validity exclusion audit.",
+  "status": "PASS_SAMPLE_EXACT_OVERLAPS_INVALID_DATA_EXPLICIT"
+}
