@@ -1,0 +1,102 @@
+{
+  "contract_digest": "d2406e13ecff1018b8f012a386ede17340c1db5531755e599fc0f28a118f3bd2",
+  "runtime_environment": {
+    "cuda_device": {
+      "capability": [
+        12,
+        0
+      ],
+      "device_count": 1,
+      "driver_version": "610.74",
+      "name": "NVIDIA GeForce RTX 5070",
+      "request": "cuda"
+    },
+    "environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+    "numpy_version": "2.4.6",
+    "operating_system": {
+      "machine": "x86_64",
+      "release": "6.6.114.1-microsoft-standard-WSL2",
+      "system": "Linux",
+      "version": "#1 SMP PREEMPT_DYNAMIC Mon Dec  1 20:46:23 UTC 2025",
+      "wsl": true
+    },
+    "packages": {
+      "astropy": "8.0.0",
+      "gwpy": "4.0.1",
+      "h5py": "3.16.0",
+      "matplotlib": "3.11.0",
+      "numpy": "2.4.6",
+      "pillow": "12.2.0",
+      "scipy": "1.17.1",
+      "torch": "2.12.1",
+      "torchvision": "0.27.1"
+    },
+    "python": {
+      "compiler": "GCC 14.3.0",
+      "executable_sha256": "5d7b7a65098e76647c9763a281d6088a29a863bca34e4056117f597bd0b47856",
+      "implementation": "CPython",
+      "version": "3.11.15"
+    },
+    "torch": {
+      "cuda_matmul_allow_tf32": false,
+      "cuda_runtime": "13.0",
+      "cudnn_allow_tf32": true,
+      "cudnn_benchmark": false,
+      "cudnn_deterministic": false,
+      "cudnn_version": 92000,
+      "default_dtype": "torch.float32",
+      "deterministic_algorithms_enabled": false,
+      "float32_matmul_precision": "highest",
+      "git_version": "7269437d655783a26cba32aa88195b741ff496aa",
+      "version": "2.12.1+cu130"
+    }
+  },
+  "runtime_id": "dante-o4a-corrected-wsl-cuda-runtime-v1",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "calibration_population_changed": false,
+    "cross_environment_shard_reuse_allowed": false,
+    "numerical_toolchain_only": true,
+    "score_tolerance_changed": false,
+    "thresholds_changed": false,
+    "windows_scoring_allowed": false
+  },
+  "scorer_fingerprint": {
+    "fingerprint_digest": "0a40c12ac01d87bf336701aecb8a196c1e3912838c7a2904599f8d5eb1629ef9",
+    "representation": {
+      "analysis_duration_s": 32.0,
+      "colormap": "cividis",
+      "contract_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+      "encoder_input_size": [
+        518,
+        518
+      ],
+      "frequency_range_hz": [
+        20,
+        2048
+      ],
+      "image_shape": [
+        256,
+        256,
+        3
+      ],
+      "model_artifact_id": "dinov2_vits14_reg",
+      "model_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+      "model_source_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+      "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+      "primary_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+      "query_qrange": [
+        4,
+        64
+      ],
+      "sample_rate_hz": 4096,
+      "schema_version": 1,
+      "top_k": 68,
+      "variant": "idxq4-64_queryq4-64",
+      "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+      "whitening_pad_s": 4.0
+    },
+    "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a"
+  },
+  "status": "FROZEN_CANONICAL_WSL_CUDA_RUNTIME"
+}

@@ -19,6 +19,16 @@ def test_corrected_protocol_population_and_scientific_boundaries() -> None:
     assert calibration["identity_count"] == 39_971
     assert calibration["session_detector_counts"] == {"H1": 42, "L1": 42}
     assert calibration["score_reuse_allowed"] is False
+    assert value["scientific_change"]["threshold_or_score_tolerance_change"] is False
+    assert value["scientific_change"]["cross_environment_shard_reuse_allowed"] is False
+    assert value["execution_parameters"] == {
+        "primary_calibration": {"device": "cuda", "workers": 2, "batch_size": 8},
+        "primary_scan": {"device": "cuda", "workers": 2, "batch_size": 8},
+    }
+    assert value["canonical_runtime"]["required_for"] == [
+        "primary_calibration",
+        "primary_scan",
+    ]
     assert calibration["coverage_counts"] == {
         "H1/complete_only_by_stitch": 272,
         "H1/complete_single_file": 19_425,

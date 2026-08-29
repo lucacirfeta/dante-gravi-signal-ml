@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from collections import defaultdict
+from collections import Counter, defaultdict
 import bisect
 import concurrent.futures
 import multiprocessing as mp
@@ -24,6 +24,10 @@ from src.dante_light.o4a_corrected_protocol import (
     iter_calibration_identities,
     iter_scan_identities,
     validate_corrected_protocol,
+)
+from src.dante_light.o4a_corrected_runtime import (
+    OUTPUT_REL as CANONICAL_RUNTIME_REL,
+    load_canonical_runtime_contract,
 )
 from src.dante_light.prefilter_v5_protocol import repository_reference, sha256_path
 from src.dante_light.evidence import SCORE_ATOL
@@ -45,6 +49,7 @@ def _atomic_json(path: Path, value: Mapping[str, Any]) -> None:
     temporary.write_text(
         json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     temporary.replace(path)
 
@@ -401,6 +406,7 @@ def _execution_references(root: Path) -> dict[str, dict[str, Any]]:
         "execution_implementation": IMPLEMENTATION_REL,
         "raw_manifest": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
         "reference_artifacts": "config/reference_artifacts.json",
+        "canonical_runtime": CANONICAL_RUNTIME_REL,
         "patch_producer": "src/core/patch_producer.py",
         "preprocessor": "src/core/preprocessor.py",
         "patch_scorer": "src/core/patch_scorer.py",
@@ -424,6 +430,38 @@ def _calibration_run_key(
             "stage": "primary_session_calibration_full_rescore",
         }
     )
+
+
+def _scoring_runtime_identity(
+    *,
+    protocol: Mapping[str, Any],
+    runtime_contract: Mapping[str, Any],
+    stage: str,
+    device: str,
+    workers: int,
+    batch_size: int,
+) -> dict[str, Any]:
+    expected = dict(protocol["execution_parameters"][stage])
+    actual = {"device": device, "workers": workers, "batch_size": batch_size}
+    if actual != expected:
+        raise ContractError(
+            f"corrected O4a {stage} execution parameters differ from the frozen protocol"
+        )
+    if (
+        runtime_contract["contract_digest"]
+        != protocol["canonical_runtime"]["contract_digest"]
+        or runtime_contract["runtime_environment"]["environment_digest"]
+        != protocol["canonical_runtime"]["environment_digest"]
+        or runtime_contract["scorer_fingerprint"]["fingerprint_digest"]
+        != protocol["canonical_runtime"]["scorer_fingerprint_digest"]
+    ):
+        raise ContractError("corrected O4a canonical runtime is not bound to the protocol")
+    return {
+        "canonical_runtime_contract_digest": runtime_contract["contract_digest"],
+        "runtime_environment": runtime_contract["runtime_environment"],
+        "scorer_fingerprint": runtime_contract["scorer_fingerprint"],
+        "execution_parameters": actual,
+    }
 
 
 class _CorrectedContextReader:
@@ -456,7 +494,6 @@ class _CorrectedContextReader:
         from gwpy.timeseries import TimeSeries
         from src.core.patch_producer import IncompleteContextError
 
-        manifest = self.base[detector]
         try:
             return self._read_manifest_slice(
                 detector=detector,
@@ -670,6 +707,17 @@ def run_primary_calibration(
     root = root.resolve()
     external_root = external_root.resolve()
     protocol = _load_protocol(root)
+    runtime_contract = load_canonical_runtime_contract(
+        root=root, require_current=True, device=device
+    )
+    runtime_identity = _scoring_runtime_identity(
+        protocol=protocol,
+        runtime_contract=runtime_contract,
+        stage="primary_calibration",
+        device=device,
+        workers=workers,
+        batch_size=batch_size,
+    )
     acquisition, acquisition_run_dir = _load_acquisition(
         root=root, external_root=external_root, protocol=protocol
     )
@@ -687,9 +735,7 @@ def run_primary_calibration(
         "protocol_digest": protocol["protocol_digest"],
         "acquisition_manifest_digest": acquisition["manifest_digest"],
         "references": references,
-        "device_request": device,
-        "workers": workers,
-        "batch_size": batch_size,
+        **runtime_identity,
     }
     identity_path = run_dir / "run_identity.json"
     if identity_path.is_file():
@@ -967,6 +1013,7 @@ def verify_primary_calibration(
     root = root.resolve()
     external_root = external_root.resolve()
     protocol = _load_protocol(root)
+    runtime_contract = load_canonical_runtime_contract(root=root)
     acquisition, _ = _load_acquisition(
         root=root, external_root=external_root, protocol=protocol
     )
@@ -975,6 +1022,29 @@ def verify_primary_calibration(
         protocol=protocol, acquisition=acquisition, references=references
     )
     run_dir = external_root / f"calibration_{run_key}"
+    parameters = protocol["execution_parameters"]["primary_calibration"]
+    expected_identity = {
+        "schema_version": SCHEMA_VERSION,
+        "status": "RUN_IDENTITY",
+        "run_key": run_key,
+        "protocol_digest": protocol["protocol_digest"],
+        "acquisition_manifest_digest": acquisition["manifest_digest"],
+        "references": references,
+        **_scoring_runtime_identity(
+            protocol=protocol,
+            runtime_contract=runtime_contract,
+            stage="primary_calibration",
+            device=str(parameters["device"]),
+            workers=int(parameters["workers"]),
+            batch_size=int(parameters["batch_size"]),
+        ),
+    }
+    identity_path = run_dir / "run_identity.json"
+    if (
+        not identity_path.is_file()
+        or json.loads(identity_path.read_text(encoding="utf-8")) != expected_identity
+    ):
+        raise ContractError("corrected O4a calibration run identity mismatch")
     grouped: dict[tuple[int, str], list[dict[str, Any]]] = defaultdict(list)
     for row in iter_calibration_identities(root):
         grouped[(int(row["session_id"]), str(row["detector"]))].append(row)
@@ -1193,7 +1263,7 @@ def run_primary_scan(
     external_root: Path = DEFAULT_EXTERNAL_ROOT,
     device: str = "cuda",
     workers: int = 2,
-    batch_size: int = 16,
+    batch_size: int = 8,
 ) -> tuple[dict[str, Any], Path]:
     """Run the frozen unique-window primary scan with transactional output."""
 
@@ -1203,6 +1273,17 @@ def run_primary_scan(
     raw_root = raw_root.resolve()
     external_root = external_root.resolve()
     protocol = _load_protocol(root)
+    runtime_contract = load_canonical_runtime_contract(
+        root=root, require_current=True, device=device
+    )
+    runtime_identity = _scoring_runtime_identity(
+        protocol=protocol,
+        runtime_contract=runtime_contract,
+        stage="primary_scan",
+        device=device,
+        workers=workers,
+        batch_size=batch_size,
+    )
     calibration, _ = verify_primary_calibration(root=root, external_root=external_root)
     references = _scan_references(root)
     run_key = _scan_run_key(
@@ -1216,9 +1297,7 @@ def run_primary_scan(
         "protocol_digest": protocol["protocol_digest"],
         "calibration_artifact_digest": calibration["artifact_digest"],
         "references": references,
-        "device_request": device,
-        "workers": workers,
-        "batch_size": batch_size,
+        **runtime_identity,
     }
     identity_path = run_dir / "run_identity.json"
     if identity_path.is_file():
@@ -1402,6 +1481,7 @@ def verify_primary_scan(
     root = root.resolve()
     external_root = external_root.resolve()
     protocol = _load_protocol(root)
+    runtime_contract = load_canonical_runtime_contract(root=root)
     calibration, _ = verify_primary_calibration(root=root, external_root=external_root)
     references = _scan_references(root)
     run_key = _scan_run_key(
@@ -1413,7 +1493,24 @@ def verify_primary_scan(
     path = database_path or (run_dir / "primary_scan.sqlite")
     connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
     meta = connection.execute("SELECT value FROM metadata WHERE key='run_identity'").fetchone()
-    if meta is None or json.loads(meta[0])["run_key"] != run_key:
+    parameters = protocol["execution_parameters"]["primary_scan"]
+    expected_identity = {
+        "schema_version": SCHEMA_VERSION,
+        "status": "RUN_IDENTITY",
+        "run_key": run_key,
+        "protocol_digest": protocol["protocol_digest"],
+        "calibration_artifact_digest": calibration["artifact_digest"],
+        "references": references,
+        **_scoring_runtime_identity(
+            protocol=protocol,
+            runtime_contract=runtime_contract,
+            stage="primary_scan",
+            device=str(parameters["device"]),
+            workers=int(parameters["workers"]),
+            batch_size=int(parameters["batch_size"]),
+        ),
+    }
+    if meta is None or json.loads(meta[0]) != expected_identity:
         connection.close()
         raise ContractError("corrected O4a primary scan database identity mismatch")
     cursor = connection.execute(

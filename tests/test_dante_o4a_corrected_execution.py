@@ -4,18 +4,22 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 from gwpy.timeseries import TimeSeries
 
+from src.dante_light.contracts import ContractError
 from src.dante_light.o4a_corrected_execution import (
     _CorrectedContextReader,
     _find_reusable_acquired_input,
     _missing_intervals,
     _ScanIdentityLookup,
+    _scoring_runtime_identity,
     _validate_calibration_shard,
     acquire_missing_calibration_inputs,
     validate_acquisition_manifest,
 )
 from src.dante_light.o4a_corrected_protocol import OUTPUT_REL, ROOT, validate_corrected_protocol
+from src.dante_light.o4a_corrected_runtime import load_canonical_runtime_contract
 
 
 def test_corrected_missing_calibration_identities_are_frozen() -> None:
@@ -24,6 +28,32 @@ def test_corrected_missing_calibration_identities_are_frozen() -> None:
     assert sum(row["detector"] == "H1" for row in rows) == 18
     assert sum(row["detector"] == "L1" for row in rows) == 10
     assert len({(row["detector"], row["gps_start"], row["gps_end"]) for row in rows}) == 28
+
+
+def test_corrected_scoring_identity_is_environment_and_batch_bound() -> None:
+    protocol = validate_corrected_protocol(
+        json.loads((ROOT / OUTPUT_REL).read_text(encoding="utf-8")), ROOT
+    )
+    runtime = load_canonical_runtime_contract(root=ROOT)
+    identity = _scoring_runtime_identity(
+        protocol=protocol,
+        runtime_contract=runtime,
+        stage="primary_calibration",
+        device="cuda",
+        workers=2,
+        batch_size=8,
+    )
+    assert identity["runtime_environment"] == runtime["runtime_environment"]
+    assert identity["execution_parameters"]["batch_size"] == 8
+    with pytest.raises(ContractError, match="execution parameters differ"):
+        _scoring_runtime_identity(
+            protocol=protocol,
+            runtime_contract=runtime,
+            stage="primary_calibration",
+            device="cuda",
+            workers=2,
+            batch_size=16,
+        )
 
 
 def test_prior_acquisition_reuse_is_content_verified(tmp_path: Path) -> None:

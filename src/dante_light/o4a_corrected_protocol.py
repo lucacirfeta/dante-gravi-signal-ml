@@ -19,6 +19,10 @@ import h5py
 import numpy as np
 
 from src.dante_light.contracts import ContractError, RepresentationContract, canonical_json_sha256
+from src.dante_light.o4a_corrected_runtime import (
+    OUTPUT_REL as CANONICAL_RUNTIME_REL,
+    load_canonical_runtime_contract,
+)
 from src.dante_light.prefilter_v5_protocol import repository_reference, sha256_path
 
 
@@ -510,6 +514,7 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "overlapping_raw_span_audit": OVERLAP_AUDIT_REL,
             "reference_artifacts": REFERENCE_REL,
             "runtime_config": RUNTIME_CONFIG_REL,
+            "canonical_runtime": CANONICAL_RUNTIME_REL,
             "dq_snapshot": DQ_SNAPSHOT_REL,
             "protocol_implementation": PROTOCOL_CODE_REL,
             "patch_producer": PATCH_PRODUCER_REL,
@@ -518,6 +523,9 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
         }.items()
     }
     representation = RepresentationContract.from_reference_manifest(root / REFERENCE_REL)
+    canonical_runtime = load_canonical_runtime_contract(root=root)
+    if canonical_runtime["scorer_fingerprint"]["representation"] != representation.to_dict():
+        raise ContractError("canonical WSL runtime representation changed")
     if (
         representation.primary_index_sha256
         != "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c"
@@ -548,11 +556,36 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "incomplete_context": "record_and_skip_fail_closed",
             "invalid_raw_or_whitening_context": "record_and_skip_fail_closed",
             "threshold_or_score_tolerance_change": False,
+            "canonical_scoring_environment": "frozen WSL/CUDA runtime",
+            "cross_environment_shard_reuse_allowed": False,
         },
         "representation": representation.to_dict(),
+        "canonical_runtime": {
+            "contract_digest": canonical_runtime["contract_digest"],
+            "environment_digest": canonical_runtime["runtime_environment"][
+                "environment_digest"
+            ],
+            "scorer_fingerprint_digest": canonical_runtime["scorer_fingerprint"][
+                "fingerprint_digest"
+            ],
+            "required_for": ["primary_calibration", "primary_scan"],
+        },
+        "execution_parameters": {
+            "primary_calibration": {
+                "device": "cuda",
+                "workers": 2,
+                "batch_size": 8,
+            },
+            "primary_scan": {
+                "device": "cuda",
+                "workers": 2,
+                "batch_size": 8,
+            },
+        },
         "calibration_population": _calibration_population(root),
         "scan_population": _scan_population(root),
         "execution_order": [
+            "verify_frozen_WSL_CUDA_runtime_fingerprint",
             "acquire_and_hash_missing_frozen_calibration_intervals",
             "rescore_all_39971_historical_primary_calibration_identities",
             "freeze_all_84_session_detector_empirical_p99_thresholds",
@@ -601,6 +634,10 @@ def write_corrected_protocol(
     value = build_corrected_protocol(root)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    temporary.write_text(
+        json.dumps(value, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     temporary.replace(path)
     return value

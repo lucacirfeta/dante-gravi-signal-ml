@@ -26,6 +26,9 @@ from src.dante_light.o4a_corrected_protocol import (  # noqa: E402
     OUTPUT_REL,
     validate_corrected_protocol,
 )
+from src.dante_light.o4a_corrected_runtime import (  # noqa: E402
+    write_canonical_runtime_contract,
+)
 
 
 def main() -> int:
@@ -33,6 +36,7 @@ def main() -> int:
     parser.add_argument(
         "--stage",
         choices=(
+            "freeze-runtime",
             "acquire",
             "verify-inputs",
             "calibrate-primary",
@@ -48,6 +52,10 @@ def main() -> int:
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--batch-size", type=int, default=8)
     args = parser.parse_args()
+    if args.stage == "freeze-runtime":
+        contract = write_canonical_runtime_contract(root=ROOT, device=args.device)
+        print(json.dumps(contract, indent=2, sort_keys=True))
+        return 0
     if args.stage == "acquire":
         manifest, run_dir = acquire_missing_calibration_inputs(
             root=ROOT, external_root=args.external_root

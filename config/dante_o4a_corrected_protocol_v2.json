@@ -380,7 +380,17 @@
       }
     ]
   },
+  "canonical_runtime": {
+    "contract_digest": "d2406e13ecff1018b8f012a386ede17340c1db5531755e599fc0f28a118f3bd2",
+    "environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+    "required_for": [
+      "primary_calibration",
+      "primary_scan"
+    ],
+    "scorer_fingerprint_digest": "0a40c12ac01d87bf336701aecb8a196c1e3912838c7a2904599f8d5eb1629ef9"
+  },
   "execution_order": [
+    "verify_frozen_WSL_CUDA_runtime_fingerprint",
     "acquire_and_hash_missing_frozen_calibration_intervals",
     "rescore_all_39971_historical_primary_calibration_identities",
     "freeze_all_84_session_detector_empirical_p99_thresholds",
@@ -392,6 +402,18 @@
     "taxonomy_coincidence_PEM_and_report_reconstruction",
     "v1_vs_corrected_claim_audit"
   ],
+  "execution_parameters": {
+    "primary_calibration": {
+      "batch_size": 8,
+      "device": "cuda",
+      "workers": 2
+    },
+    "primary_scan": {
+      "batch_size": 8,
+      "device": "cuda",
+      "workers": 2
+    }
+  },
   "external_output": {
     "atomic_shards_and_resume_required": true,
     "compact_hash_bound_summaries_committed": true,
@@ -404,7 +426,7 @@
     "outputs_immutable": true,
     "tag": "3.7.0"
   },
-  "protocol_digest": "1e5dd8f2f2f5f76bbdedc41fcfebeca922e7a48fa1a2ad9ee0126f457bd46ecd",
+  "protocol_digest": "a69708d26166f73cd66f2318bbfbb513fb9f4f12e79dd0e4d9dcd207af8b60ab",
   "protocol_id": "dante-o4a-corrected-edge-context-v2",
   "representation": {
     "analysis_duration_s": 32.0,
@@ -497,6 +519,8 @@
     "retrospective_corrective_reconstruction": true
   },
   "scientific_change": {
+    "canonical_scoring_environment": "frozen WSL/CUDA runtime",
+    "cross_environment_shard_reuse_allowed": false,
     "incomplete_context": "record_and_skip_fail_closed",
     "invalid_raw_or_whitening_context": "record_and_skip_fail_closed",
     "left_context_s": 4.0,
@@ -507,6 +531,10 @@
     "whitening_before_crop": true
   },
   "source_references": {
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
     "dependency_impact_audit": {
       "path": "artifacts/dante_light/o4a_v1_parity/dependency_impact_audit.json",
       "sha256": "c2824ada99bd059e28ff85a3281c92db20ab719a2a776586bd47771976cd6a7e"
@@ -533,7 +561,7 @@
     },
     "protocol_implementation": {
       "path": "src/dante_light/o4a_corrected_protocol.py",
-      "sha256": "bd212d4630b0dfaa896611bb67ace4a0da9de309c8f3ee5d1a8884b5cedaef5f"
+      "sha256": "83c215686a80a229d4fda7490c796f7d975dfb2abe28705f131db90d1c92ff47"
     },
     "raw_identity_audit": {
       "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
