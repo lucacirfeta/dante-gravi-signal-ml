@@ -112,3 +112,21 @@ The next performance increment must freeze a persistent-pool canary, test
 8/12/16 workers without reading scientific outcomes, preserve exact image hashes
 and `SCORE_ATOL=2e-7`, and retain `STOP_NO_REFREEZE` unless its independently
 frozen operational gate passes.
+
+That persistent-pool increment is now complete under contract digest
+`9a1cf242bbf126131753db70bf267cc639d1f7747d7fe84d4d507b0c31dacd09`.
+It used 1,536 frozen outcome-blind windows and one long-lived producer pool per
+detector.  Every arm was detector+GPS exact, image-hash exact and float32-score
+bit exact.  Median rates were 7.866 windows/s for serial 2x8, 19.488 windows/s
+for serial 8x32, 21.830 windows/s for detector-parallel 4x16 and 23.872
+windows/s for detector-parallel 8x32.  The selected arm is detector-parallel
+8x32 at 3.035x the frozen baseline, above the 2x gate.  At the frozen eligible
+population size this corresponds to about 9.44 hours of benchmark-projected
+end-to-end scan time, close to the historical wall-clock scale; it is a
+projection, not a completed-run timing claim.
+
+Promotion still requires an executor implementation with one shared CUDA
+scorer, bounded H1/L1 producer queues, `FULL`/WAL SQLite transactions grouped at
+1,024 rows, deterministic detector+GPS materialization, regression tests and a
+new protocol/run identity.  No shard or database from the superseded 2x8 scan
+may be reused.
