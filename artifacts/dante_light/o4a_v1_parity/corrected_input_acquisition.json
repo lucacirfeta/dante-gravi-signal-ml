@@ -1,0 +1,32 @@
+{
+  "acquisition_execution_snapshot": {
+    "commit": "f9c5faaec7cf13b759e45ba2e31ce7ff47aad5d1",
+    "path": "src/dante_light/o4a_corrected_execution.py",
+    "sha256": "4f6aa6447289dad42f9618f1fba930959e876099557bef8a680427d2a967a15d"
+  },
+  "artifact_digest": "a6f34f922e3c2825bb64e7c0cd3ba2f0c25dfeff750951f3fc72220e25c99c8c",
+  "detector_counts": {
+    "H1": 11,
+    "L1": 4
+  },
+  "external_manifest_digest": "35b254645f74475911e66945454c5cd73c3bd235c8ae2b4f4e42d43318502594",
+  "protocol_digest": "f54bd13d87044d14bd109971d74902ce3cb5a2873814d745ca0148a32c4c3b23",
+  "record_count": 15,
+  "record_digest": "ee177e7dd53096f0593fabfb69a0b54ee4db4b608bdf2370ae82227f8434d70d",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "input_acquisition_only": true,
+    "publication_authorized": false,
+    "scoring_executed": false,
+    "thresholds_changed": false
+  },
+  "source_counts": {
+    "REUSED_VERIFIED_CONTENT_ADDRESSED_INPUT": 15
+  },
+  "status": "COMPLETE_CONTENT_ADDRESSED_INPUTS",
+  "total_samples": 2457600,
+  "verification_implementation_reference": {
+    "path": "src/dante_light/o4a_corrected_execution.py",
+    "sha256": "31c001c17fd6d48f806c89d27b98bf1eb221dbd6b7462f9cc5acebe725afed3c"
+  }
+}
