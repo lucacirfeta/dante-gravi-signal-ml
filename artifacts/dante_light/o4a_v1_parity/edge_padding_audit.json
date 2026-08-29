@@ -1,0 +1,126 @@
+{
+  "artifact_digest": "2d058717880226094a8af9d2e41797177e333302b956f354e6f0d42556c75321",
+  "candidate_conditioned_corrected_class_counts": {
+    "H1/AMBIGUOUS": 549,
+    "H1/BACKGROUND": 1675,
+    "H1/ROBUST": 2187,
+    "L1/AMBIGUOUS": 675,
+    "L1/BACKGROUND": 1226,
+    "L1/ROBUST": 4117
+  },
+  "candidate_conditioned_corrected_route_counts": {
+    "H1/ESCALATE": 2389,
+    "H1/ROUTINE": 2022,
+    "L1/ESCALATE": 4498,
+    "L1/ROUTINE": 1520
+  },
+  "changed_class_count": 120,
+  "changed_route_count": 97,
+  "class_transitions": {
+    "H1/AMBIGUOUS->BACKGROUND": 18,
+    "H1/ROBUST->AMBIGUOUS": 5,
+    "H1/ROBUST->BACKGROUND": 35,
+    "L1/AMBIGUOUS->BACKGROUND": 41,
+    "L1/ROBUST->AMBIGUOUS": 3,
+    "L1/ROBUST->BACKGROUND": 18
+  },
+  "clipped_context_reproduction": {
+    "absolute_native_score_delta": 1.7881393427066072e-07,
+    "analysis_gps_start": 1369198560.0,
+    "case_id": "o4a-v1-7b1c5d02ee369ff572bf10ea",
+    "catalog_gps_start": 1369198556.0,
+    "context_interval_gps": [
+      1369198556.0,
+      1369198592.0
+    ],
+    "detector": "H1",
+    "device": "cuda",
+    "effective_left_padding_s": 4.0,
+    "effective_right_padding_s": 0.0,
+    "image_sha256": "615a1a7a111ba8e5f9277eeeee25ee1a1cbec06ea1e1e4ba19564fef4320fcb5",
+    "published_native_score": 0.174470767378807,
+    "reproduced_clipped_native_score": 0.17447058856487274,
+    "reproduced_clipped_primary_score": 0.3789370357990265,
+    "source_relative_path": "1368973312/H1_1369194496_1369198592.hdf5",
+    "source_sha256": "046749454eea00f609f51f64fdeba5726e824711261021693ff341c290f0e421"
+  },
+  "completed_records": 10429,
+  "contract_digest": "f47d114a4571fb158c06c18406549eb4a3468ea47b1c1af046ec91687c82fd1e",
+  "edge_family_counts": {
+    "Family_01": 169
+  },
+  "edge_geometry": {
+    "analysis_window_s": 32.0,
+    "expected_complete_context_s": 40.0,
+    "historical_edge_context_s": 36.0,
+    "historical_effective_right_padding_s": 0.0,
+    "historical_file_boundary_offset_from_padded_start": {
+      "36.0": 169
+    },
+    "required_left_padding_s": 4.0,
+    "required_right_padding_s": 4.0
+  },
+  "execution_digest": "7a8c716c0a288fddc3e140140673b82f8c00bc64187c0cc908d92b3c6923af86",
+  "external_run_artifacts": {
+    "records.jsonl": {
+      "logical_path": "records.jsonl",
+      "sha256": "34111a18d0b61a6375daea2d1c5c982b05f0be531ecdc2edfce58d9d142eed30"
+    },
+    "run_manifest.json": {
+      "logical_path": "run_manifest.json",
+      "sha256": "21bb469d614cabf0320ad147126f4b5156366cffffb2b05a153d23bec1aa3329"
+    },
+    "summary.json": {
+      "logical_path": "summary.json",
+      "sha256": "59c0263c3d7046fbf19175fb54865466ae40efa75e25d0924690b8443bc08e87"
+    }
+  },
+  "manifest_digest": "abe45567769de440b2ff21c17a30c1b84f6f2e93ac22db41295429f65932b9f5",
+  "max_abs_score_delta_by_source": {
+    "existing_raw_mirror": 5.960464483090178e-08,
+    "gwosc_open_data": 0.16892819106578824,
+    "verified_local_raw_stitch": 0.16735766083002085
+  },
+  "not_a_pass": true,
+  "published_class_counts": {
+    "H1/AMBIGUOUS": 562,
+    "H1/BACKGROUND": 1622,
+    "H1/ROBUST": 2227,
+    "L1/AMBIGUOUS": 713,
+    "L1/BACKGROUND": 1167,
+    "L1/ROBUST": 4138
+  },
+  "published_route_counts": {
+    "H1/ESCALATE": 2445,
+    "H1/ROUTINE": 1966,
+    "L1/ESCALATE": 4539,
+    "L1/ROUTINE": 1479
+  },
+  "route_transitions": {
+    "H1/ESCALATE->ROUTINE": 56,
+    "L1/ESCALATE->ROUTINE": 41
+  },
+  "run_key": "da26be89a9c9100e4c756b288160b4aa78076fad788a86985499377e8daf648b",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "all_edge_windows_historical_score_parity_established": false,
+    "candidate_conditioned_reclassification_only": true,
+    "establishes_corrected_discovery_catalogue": false,
+    "historical_artifacts_must_remain_immutable": true,
+    "historical_edge_window_score_parity_established": false,
+    "ordinary_window_score_parity_established": true,
+    "requires_complete_o4a_rescan": true,
+    "single_case_clipped_context_causality_established": true
+  },
+  "score_absolute_tolerance": 2e-07,
+  "source_counts": {
+    "existing_raw_mirror": 10260,
+    "gwosc_open_data": 7,
+    "verified_local_raw_stitch": 162
+  },
+  "source_score_mismatch_counts": {
+    "gwosc_open_data": 7,
+    "verified_local_raw_stitch": 162
+  },
+  "status": "CONFIRMED_HISTORICAL_EDGE_PADDING_DEFECT"
+}
