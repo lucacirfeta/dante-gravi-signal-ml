@@ -8,6 +8,7 @@ from gwpy.timeseries import TimeSeries
 
 from src.dante_light.o4a_corrected_execution import (
     _missing_intervals,
+    _validate_calibration_shard,
     acquire_missing_calibration_inputs,
     validate_acquisition_manifest,
 )
@@ -52,3 +53,35 @@ def test_corrected_acquisition_is_content_addressed_and_reusable(tmp_path: Path)
     assert repeated_dir == run_dir
     assert repeated == manifest
     assert (tmp_path / "compact.json").is_file()
+
+
+def test_corrected_calibration_shard_uses_exact_empirical_p99() -> None:
+    expected = [
+        {"session_id": 1, "detector": "H1", "catalog_gps_start": float(index)}
+        for index in range(4)
+    ]
+    rows = [
+        {
+            **identity,
+            "corrected_primary_score": float(index) / 10.0,
+            "corrected_score_float32_hex": np.float32(float(index) / 10.0).tobytes().hex(),
+        }
+        for index, identity in enumerate(expected)
+    ]
+    body = {
+        "schema_version": 1,
+        "status": "COMPLETE",
+        "run_key": "frozen",
+        "session_id": 1,
+        "detector": "H1",
+        "row_count": 4,
+        "empirical_p99": float(np.percentile([0.0, 0.1, 0.2, 0.3], 99.0)),
+        "threshold_rule": "numpy.percentile(scores, 99.0)",
+        "rows": rows,
+    }
+    from src.dante_light.contracts import canonical_json_sha256
+
+    shard = {**body, "shard_digest": canonical_json_sha256(body)}
+    assert _validate_calibration_shard(
+        shard, expected_rows=expected, run_key="frozen"
+    ) == shard
