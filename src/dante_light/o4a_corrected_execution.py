@@ -33,8 +33,8 @@ SCHEMA_VERSION = 1
 DEFAULT_EXTERNAL_ROOT = Path("E:/dante_cache/dante_light/o4a_corrected_v2")
 COMPACT_ACQUISITION_REL = "artifacts/dante_light/o4a_v1_parity/corrected_input_acquisition.json"
 IMPLEMENTATION_REL = "src/dante_light/o4a_corrected_execution.py"
-ACQUISITION_IMPLEMENTATION_COMMIT = "9bc42ed8165adb34e4c26355b975310cab766aa9"
-ACQUISITION_IMPLEMENTATION_SHA256 = "e0aeb817c043f8db135406befdd2b91b63179f80cc15310341be48de6961bf28"
+ACQUISITION_IMPLEMENTATION_COMMIT = "f9c5faaec7cf13b759e45ba2e31ce7ff47aad5d1"
+ACQUISITION_IMPLEMENTATION_SHA256 = "4f6aa6447289dad42f9618f1fba930959e876099557bef8a680427d2a967a15d"
 COMPACT_CALIBRATION_REL = "artifacts/dante_light/o4a_v1_parity/corrected_primary_calibration.json"
 COMPACT_SCAN_REL = "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json"
 
