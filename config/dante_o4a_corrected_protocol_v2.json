@@ -367,7 +367,7 @@
     "acquire_and_hash_missing_frozen_calibration_intervals",
     "rescore_all_39971_historical_primary_calibration_identities",
     "freeze_all_84_session_detector_empirical_p99_thresholds",
-    "score_882286_unique_complete_context_primary_windows",
+    "score_all_unique_complete_context_and_sample_valid_primary_windows",
     "materialize_primary_candidates_with_any_session_threshold_semantics",
     "rebuild_detector_aware_O4a_native_index_excluding_corrected_primary_candidates",
     "rescore_frozen_native_calibration_ledgers_and_freeze_detector_thresholds",
@@ -387,7 +387,7 @@
     "outputs_immutable": true,
     "tag": "3.7.0"
   },
-  "protocol_digest": "3fd3a9ff3b8a8a68ac7b543860c11844bd0a18b53eefd5fe07b2aadf8576ac70",
+  "protocol_digest": "f54bd13d87044d14bd109971d74902ce3cb5a2873814d745ca0148a32c4c3b23",
   "protocol_id": "dante-o4a-corrected-edge-context-v2",
   "representation": {
     "analysis_duration_s": 32.0,
@@ -425,17 +425,37 @@
   "scan_population": {
     "duplicate_span_policy": "score each detector+GPS once; compare against every historical session membership; if more than one threshold is exceeded, retain the earliest passing session, matching historical candidate-first deduplication",
     "eligible_counts": {
-      "H1": 441300,
-      "L1": 440986
+      "H1": 401442,
+      "L1": 409809
     },
-    "eligible_identity_jsonl_sha256": "a7ec54d15fe4ee6eebd594620b6abae9d9260bcfbbdf2d2380850e766b7c0f50",
-    "eligible_total": 882286,
+    "eligible_identity_jsonl_sha256": "24d6a3f628f2ab9192e5a17f013ca6b20d6d8e7c47257027323520f7a101e20e",
+    "eligible_total": 811251,
     "excluded_component_edge_counts": {
       "H1": 612,
       "L1": 406
     },
     "excluded_component_edge_total": 1018,
-    "excluded_identity_jsonl_sha256": "ebe07fc5083d6307f9d9ab6870f954bbb01267df91194c175eaccb4cdb9583ae",
+    "excluded_identity_jsonl_sha256": "5a6c0f52ac59964f5338230ddb2d57ffa6d77e9df004b556954d1a157fd04fdf",
+    "excluded_invalid_raw_or_context_counts": {
+      "H1": 40163,
+      "L1": 31390
+    },
+    "excluded_invalid_raw_or_context_total": 71553,
+    "excluded_reason_counts": {
+      "H1/INCOMPLETE_SYMMETRIC_4S_CONTEXT": 612,
+      "H1/LEFT_CONTEXT_NONFINITE": 39437,
+      "H1/RIGHT_CONTEXT_NONFINITE": 39414,
+      "H1/TARGET_NONFINITE": 40042,
+      "L1/INCOMPLETE_SYMMETRIC_4S_CONTEXT": 406,
+      "L1/LEFT_CONTEXT_NONFINITE": 30870,
+      "L1/RIGHT_CONTEXT_NONFINITE": 30881,
+      "L1/TARGET_NONFINITE": 31315
+    },
+    "excluded_unique_counts": {
+      "H1": 40470,
+      "L1": 31583
+    },
+    "excluded_unique_total": 72053,
     "historical_session_membership_counts": {
       "H1": 452480,
       "L1": 462712
@@ -450,7 +470,7 @@
       "L1": 441392
     }
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "scientific_boundary": {
     "complete_O4a_livetime_claim": false,
     "historical_paper_claims_remain_unqualified_until_reconstruction_finishes": true,
@@ -461,6 +481,7 @@
   },
   "scientific_change": {
     "incomplete_context": "record_and_skip_fail_closed",
+    "invalid_raw_or_whitening_context": "record_and_skip_fail_closed",
     "left_context_s": 4.0,
     "only_intended_change": "complete symmetric whitening context at raw-file boundaries",
     "right_context_s": 4.0,
@@ -476,9 +497,13 @@
       "path": "config/dante_light_prefilter_v4_segments.json",
       "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
     },
+    "overlapping_raw_span_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/overlapping_raw_span_audit.json",
+      "sha256": "92371e831538af8a7041bc8da9b0a0813248a93446eae8408c540d809501f278"
+    },
     "patch_producer": {
       "path": "src/core/patch_producer.py",
-      "sha256": "6491d6c2728315cf0e8fed2428c7c324d292102c5e78eef3854ef47683424740"
+      "sha256": "8278d314f60b925b0732f8b01e70b112d713b8a30a0b0d3b27df5e830d2b6195"
     },
     "patch_scorer": {
       "path": "src/core/patch_scorer.py",
@@ -490,7 +515,7 @@
     },
     "protocol_implementation": {
       "path": "src/dante_light/o4a_corrected_protocol.py",
-      "sha256": "66b4f18b356c73e5bc7fe7e6eea86044f4ff2a837ad07a2b8b8b6bdf6a11dc49"
+      "sha256": "55b5d2675bb8a8e0813835f0fd0e4432ca3749fa73985e7a7bfd02fffe4d973b"
     },
     "raw_identity_audit": {
       "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
@@ -499,6 +524,10 @@
     "raw_manifest": {
       "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
       "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "raw_window_validity_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/raw_window_validity_audit.json",
+      "sha256": "1a02bf67ad47c0ae1b44eaaee59bc02e4e8e8a550c2f505cdcc7c47063a9191f"
     },
     "reference_artifacts": {
       "path": "config/reference_artifacts.json",
