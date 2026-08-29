@@ -26,10 +26,8 @@ from src.dante_light.o4a_corrected_execution import (
     _score_only,
 )
 from src.dante_light.o4a_corrected_protocol import (
-    OUTPUT_REL as PROTOCOL_REL,
     ROOT,
     iter_scan_identities,
-    validate_corrected_protocol,
 )
 from src.dante_light.o4a_corrected_runtime import (
     OUTPUT_REL as RUNTIME_REL,
@@ -40,6 +38,7 @@ from src.dante_light.prefilter_v5_protocol import repository_reference
 
 SCHEMA_VERSION = 1
 CONTRACT_ID = "dante-o4a-corrected-outcome-blind-performance-v1"
+PROTOCOL_REL = "config/dante_o4a_corrected_protocol_v2.json"
 CONTRACT_REL = "config/dante_o4a_corrected_performance_v1.json"
 COMPACT_RESULT_REL = (
     "artifacts/dante_light/o4a_v1_parity/corrected_performance_benchmark.json"
@@ -75,6 +74,20 @@ def _atomic_json(path: Path, value: Mapping[str, Any]) -> None:
         newline="\n",
     )
     os.replace(temporary, path)
+
+
+def _load_parent_protocol_v2(root: Path) -> dict[str, Any]:
+    value = _load_json(root / PROTOCOL_REL)
+    payload = dict(value)
+    digest = payload.pop("protocol_digest", None)
+    if (
+        digest
+        != "a69708d26166f73cd66f2318bbfbb513fb9f4f12e79dd0e4d9dcd207af8b60ab"
+        or digest != canonical_json_sha256(payload)
+        or value.get("protocol_id") != "dante-o4a-corrected-edge-context-v2"
+    ):
+        raise ContractError("performance audit parent protocol v2 changed")
+    return value
 
 
 @contextmanager
@@ -212,7 +225,7 @@ def _canary_spans(
 
 def build_performance_contract(root: Path = ROOT) -> dict[str, Any]:
     root = root.resolve()
-    protocol = validate_corrected_protocol(_load_json(root / PROTOCOL_REL), root)
+    protocol = _load_parent_protocol_v2(root)
     runtime = load_canonical_runtime_contract(root=root, require_current=False)
     canary = _canary_spans(root, protocol_digest=protocol["protocol_digest"])
     references = {
@@ -314,7 +327,7 @@ def validate_performance_contract(
         or value["database_probe"]["commit_row_candidates"] != list(DB_COMMIT_ROWS)
     ):
         raise ContractError("corrected O4a performance contract changed")
-    protocol = validate_corrected_protocol(_load_json(root / PROTOCOL_REL), root)
+    protocol = _load_parent_protocol_v2(root)
     runtime = load_canonical_runtime_contract(root=root, require_current=False)
     if (
         value["protocol_digest"] != protocol["protocol_digest"]
@@ -578,7 +591,7 @@ def run_performance_benchmark(
     root = root.resolve()
     raw_root = raw_root.resolve()
     contract = load_performance_contract(root)
-    protocol = validate_corrected_protocol(_load_json(root / PROTOCOL_REL), root)
+    protocol = _load_parent_protocol_v2(root)
     runtime = load_canonical_runtime_contract(root=root, require_current=True, device=device)
     if runtime["contract_digest"] != contract["runtime_contract_digest"]:
         raise ContractError("performance benchmark runtime changed")

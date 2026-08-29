@@ -20,13 +20,13 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.evidence import SCORE_ATOL
 from src.dante_light.o4a_corrected_execution import _primary_scorer, _score_only
 from src.dante_light.o4a_corrected_performance import (
+    PROTOCOL_REL,
     RAW_MANIFEST_REL,
     _canary_spans,
+    _load_parent_protocol_v2,
 )
 from src.dante_light.o4a_corrected_protocol import (
-    OUTPUT_REL as PROTOCOL_REL,
     ROOT,
-    validate_corrected_protocol,
 )
 from src.dante_light.o4a_corrected_runtime import (
     OUTPUT_REL as RUNTIME_REL,
@@ -112,7 +112,7 @@ def _reference_is_available(root: Path, reference: Mapping[str, Any]) -> bool:
 
 def build_performance_contract_v2(root: Path = ROOT) -> dict[str, Any]:
     root = root.resolve()
-    protocol = validate_corrected_protocol(_load_json(root / PROTOCOL_REL), root)
+    protocol = _load_parent_protocol_v2(root)
     runtime = load_canonical_runtime_contract(root=root, require_current=False)
     v1 = _load_json(root / V1_RESULT_REL)
     if (
@@ -222,7 +222,7 @@ def validate_performance_contract_v2(
         or int(value["executor_candidate"]["database_commit_rows"]) != 1024
     ):
         raise ContractError("persistent-pool contract changed")
-    protocol = validate_corrected_protocol(_load_json(root / PROTOCOL_REL), root)
+    protocol = _load_parent_protocol_v2(root)
     runtime = load_canonical_runtime_contract(root=root, require_current=False)
     if (
         value["protocol_digest"] != protocol["protocol_digest"]
@@ -534,7 +534,7 @@ def run_performance_benchmark_v2(
 ) -> tuple[dict[str, Any], Path]:
     root = root.resolve()
     contract = load_performance_contract_v2(root)
-    protocol = validate_corrected_protocol(_load_json(root / PROTOCOL_REL), root)
+    protocol = _load_parent_protocol_v2(root)
     runtime = load_canonical_runtime_contract(root=root, require_current=True, device=device)
     run_key = canonical_json_sha256(
         {
