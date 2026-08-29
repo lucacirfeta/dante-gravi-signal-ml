@@ -17,8 +17,10 @@ from src.dante_light.o4a_corrected_execution import (  # noqa: E402
     DEFAULT_EXTERNAL_ROOT,
     acquire_missing_calibration_inputs,
     run_primary_calibration,
+    run_primary_scan,
     validate_acquisition_manifest,
     verify_primary_calibration,
+    verify_primary_scan,
 )
 from src.dante_light.o4a_corrected_protocol import (  # noqa: E402
     OUTPUT_REL,
@@ -30,7 +32,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--stage",
-        choices=("acquire", "verify-inputs", "calibrate-primary", "verify-calibration"),
+        choices=(
+            "acquire",
+            "verify-inputs",
+            "calibrate-primary",
+            "verify-calibration",
+            "scan-primary",
+            "verify-scan",
+        ),
         required=True,
     )
     parser.add_argument("--external-root", type=Path, default=DEFAULT_EXTERNAL_ROOT)
@@ -58,6 +67,23 @@ def main() -> int:
         return 0
     if args.stage == "verify-calibration":
         summary, run_dir = verify_primary_calibration(
+            root=ROOT, external_root=args.external_root.resolve()
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "scan-primary":
+        summary, run_dir = run_primary_scan(
+            root=ROOT,
+            raw_root=args.raw_root.resolve(),
+            external_root=args.external_root.resolve(),
+            device=args.device,
+            workers=args.workers,
+            batch_size=args.batch_size,
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "verify-scan":
+        summary, run_dir = verify_primary_scan(
             root=ROOT, external_root=args.external_root.resolve()
         )
         print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))

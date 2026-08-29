@@ -8,6 +8,7 @@ from gwpy.timeseries import TimeSeries
 
 from src.dante_light.o4a_corrected_execution import (
     _missing_intervals,
+    _ScanIdentityLookup,
     _validate_calibration_shard,
     acquire_missing_calibration_inputs,
     validate_acquisition_manifest,
@@ -85,3 +86,13 @@ def test_corrected_calibration_shard_uses_exact_empirical_p99() -> None:
     assert _validate_calibration_shard(
         shard, expected_rows=expected, run_key="frozen"
     ) == shard
+
+
+def test_scan_lookup_preserves_overlapping_session_memberships() -> None:
+    lookup = _ScanIdentityLookup(root=ROOT)
+    row = lookup.lookup("H1", 1369489440.0)
+    assert row["overlapping_source_count"] == 2
+    assert len(row["historical_session_ids"]) >= 1
+    assert row["context_disposition"] == "COMPLETE_SYMMETRIC_4S"
+    edge = lookup.lookup("H1", 1368977408.0)
+    assert edge["context_disposition"] == "EXCLUDED_COMPONENT_EDGE"
