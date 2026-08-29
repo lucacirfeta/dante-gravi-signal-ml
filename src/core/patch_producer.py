@@ -1,5 +1,10 @@
+from dataclasses import dataclass
+from functools import lru_cache
+import hashlib
+import json
 import logging
 from pathlib import Path
+from typing import Mapping, Sequence
 
 import numpy as np
 from gwpy.timeseries import TimeSeries
@@ -10,7 +15,261 @@ from src.core.utils import setup_logger
 
 logger = setup_logger(__name__)
 
-def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str, seg_start: float, seg_end: float) -> tuple[int, np.ndarray]:
+
+class IncompleteContextError(RuntimeError):
+    """Raised when a requested whitening span is not fully available."""
+
+
+class RawBlockConflictError(RuntimeError):
+    """Raised when duplicate raw spans do not have identical content."""
+
+
+@dataclass(frozen=True, slots=True)
+class ContextSource:
+    path: Path
+    block_start: float
+    block_end: float
+    used_start: float
+    used_end: float
+    sha256: str
+
+
+@dataclass(frozen=True, slots=True)
+class CompleteContext:
+    series: TimeSeries
+    sources: tuple[ContextSource, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class FrozenRawManifest:
+    manifest_path: Path
+    manifest_sha256: str
+    entries: tuple[tuple[float, float, Path], ...]
+    target_files: tuple[Path, ...]
+    expected_sha256: Mapping[Path, str]
+
+
+@lru_cache(maxsize=8192)
+def _sha256_path_cached(path_text: str, size: int, mtime_ns: int) -> str:
+    del size, mtime_ns
+    digest = hashlib.sha256()
+    with Path(path_text).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _verified_sha256(path: Path, expected: str | None = None) -> str:
+    stat = path.stat()
+    actual = _sha256_path_cached(str(path.resolve()), stat.st_size, stat.st_mtime_ns)
+    if expected is not None and actual != expected:
+        raise RawBlockConflictError(f"raw source SHA-256 mismatch: {path}")
+    return actual
+
+
+def load_frozen_raw_manifest(
+    manifest_path: Path,
+    *,
+    raw_root: Path,
+    detector: str,
+) -> FrozenRawManifest:
+    """Resolve one versioned detector manifest without reading strain values."""
+
+    manifest_path = Path(manifest_path).resolve()
+    raw_root = Path(raw_root).resolve()
+    if detector not in {"H1", "L1"}:
+        raise ValueError(f"unsupported detector: {detector}")
+    if not manifest_path.is_file():
+        raise FileNotFoundError(manifest_path)
+    entries: list[tuple[float, float, Path]] = []
+    targets: list[Path] = []
+    expected: dict[Path, str] = {}
+    seen_spans: set[tuple[float, float]] = set()
+    for line_number, line in enumerate(
+        manifest_path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if row.get("detector") != detector:
+            continue
+        start = float(row["gps_start"])
+        end = float(row["gps_end"])
+        span = (start, end)
+        if span in seen_spans:
+            raise RawBlockConflictError(
+                f"duplicate logical span in raw manifest at line {line_number}: {span}"
+            )
+        seen_spans.add(span)
+        logical_hash = str(row["sha256"])
+        copies = row.get("physical_copies")
+        if not isinstance(copies, list) or not copies:
+            raise RawBlockConflictError(
+                f"raw manifest span has no physical copies at line {line_number}"
+            )
+        available: list[Path] = []
+        for copy in copies:
+            relative = Path(str(copy["relative_path"]))
+            copy_hash = str(copy["sha256"])
+            if relative.is_absolute() or ".." in relative.parts or copy_hash != logical_hash:
+                raise RawBlockConflictError(
+                    f"invalid raw manifest copy at line {line_number}"
+                )
+            path = (raw_root / relative).resolve()
+            if raw_root != path and raw_root not in path.parents:
+                raise RawBlockConflictError(
+                    f"raw manifest path escapes root at line {line_number}"
+                )
+            if path.is_file():
+                available.append(path)
+                entries.append((start, end, path))
+                expected[path] = logical_hash
+        if not available:
+            raise IncompleteContextError(
+                f"no physical copy available for {detector} span [{start}, {end}]"
+            )
+        targets.append(sorted(available, key=str)[0])
+    if not targets:
+        raise IncompleteContextError(f"raw manifest contains no {detector} spans")
+    return FrozenRawManifest(
+        manifest_path=manifest_path,
+        manifest_sha256=_verified_sha256(manifest_path),
+        entries=tuple(
+            sorted(entries, key=lambda item: (item[0], item[1], str(item[2])))
+        ),
+        target_files=tuple(targets),
+        expected_sha256=expected,
+    )
+
+
+def read_complete_context(
+    entries: Sequence[tuple[float, float, Path]],
+    *,
+    gps_start: float,
+    gps_end: float,
+    sample_rate_hz: int,
+    expected_sha256: Mapping[Path, str] | None = None,
+) -> CompleteContext:
+    """Read one exact span across immutable, contiguous local raw blocks.
+
+    Duplicate physical copies are accepted only when their complete-file
+    SHA-256 digests agree. Gaps, manifest mismatches and short crops fail
+    closed; callers never receive a partially padded context.
+    """
+
+    from gwpy.timeseries import TimeSeriesList
+
+    if gps_end <= gps_start:
+        raise ValueError("context end must be greater than context start")
+    expected = {
+        Path(path).resolve(): value
+        for path, value in (expected_sha256 or {}).items()
+    }
+    grouped: dict[tuple[float, float], list[Path]] = {}
+    for raw_start, raw_end, raw_path in entries:
+        start = float(raw_start)
+        end = float(raw_end)
+        path = Path(raw_path).resolve()
+        if end <= gps_start or start >= gps_end:
+            continue
+        grouped.setdefault((start, end), []).append(path)
+    if not grouped:
+        raise IncompleteContextError(
+            f"no local raw block overlaps [{gps_start}, {gps_end}]"
+        )
+
+    blocks: list[tuple[float, float, Path, str]] = []
+    for (start, end), paths in grouped.items():
+        path_hashes = []
+        for path in sorted(set(paths), key=str):
+            if not path.is_file():
+                raise IncompleteContextError(f"raw source is missing: {path}")
+            if expected_sha256 is not None and path not in expected:
+                raise RawBlockConflictError(
+                    f"raw source is absent from manifest: {path}"
+                )
+            path_hashes.append((path, _verified_sha256(path, expected.get(path))))
+        digests = {digest for _, digest in path_hashes}
+        if len(digests) != 1:
+            raise RawBlockConflictError(
+                f"conflicting copies for raw span [{start}, {end}]"
+            )
+        path, digest = path_hashes[0]
+        blocks.append((start, end, path, digest))
+    blocks.sort(key=lambda item: (item[0], item[1], str(item[2])))
+
+    tolerance = 1.0 / float(sample_rate_hz)
+    cursor = float(gps_start)
+    selected: list[tuple[float, float, Path, str]] = []
+    while cursor < gps_end - tolerance:
+        candidates = [
+            item
+            for item in blocks
+            if item[0] <= cursor + tolerance and item[1] > cursor + tolerance
+        ]
+        if not candidates:
+            raise IncompleteContextError(
+                f"gap in local raw coverage at GPS {cursor} for [{gps_start}, {gps_end}]"
+            )
+        chosen = sorted(
+            candidates, key=lambda item: (-item[1], item[0], str(item[2]))
+        )[0]
+        selected.append(chosen)
+        cursor = min(float(gps_end), chosen[1])
+
+    pieces = TimeSeriesList()
+    sources: list[ContextSource] = []
+    cursor = float(gps_start)
+    for block_start, block_end, path, digest in selected:
+        used_start = cursor
+        used_end = min(float(gps_end), block_end)
+        series = TimeSeries.read(path)
+        if int(round(float(series.sample_rate.value))) != int(sample_rate_hz):
+            series = series.resample(sample_rate_hz)
+        actual_start = float(series.t0.value)
+        actual_end = actual_start + float(series.duration.value)
+        if actual_start > used_start + tolerance or actual_end < used_end - tolerance:
+            raise IncompleteContextError(
+                f"raw metadata does not cover declared span for {path}"
+            )
+        pieces.append(series.crop(used_start, used_end))
+        sources.append(
+            ContextSource(
+                path=path,
+                block_start=block_start,
+                block_end=block_end,
+                used_start=used_start,
+                used_end=used_end,
+                sha256=digest,
+            )
+        )
+        cursor = used_end
+    try:
+        joined = pieces[0] if len(pieces) == 1 else pieces.join(gap="raise")
+        joined = joined.crop(gps_start, gps_end)
+    except (ValueError, RuntimeError) as exc:
+        raise IncompleteContextError("local raw blocks do not join exactly") from exc
+    expected_samples = int(round((gps_end - gps_start) * sample_rate_hz))
+    if len(joined) != expected_samples:
+        raise IncompleteContextError(
+            f"complete context has {len(joined)} samples, expected {expected_samples}"
+        )
+    actual_start = float(joined.t0.value)
+    actual_end = actual_start + float(joined.duration.value)
+    if abs(actual_start - gps_start) > tolerance or abs(actual_end - gps_end) > tolerance:
+        raise IncompleteContextError("complete context interval is not exact")
+    return CompleteContext(series=joined, sources=tuple(sources))
+
+
+def _worker_preprocess(
+    ts_value: np.ndarray,
+    t0: float,
+    dt: float,
+    name: str,
+    seg_start: float,
+    seg_end: float,
+    require_complete_padding: bool = True,
+) -> tuple[int, np.ndarray | None]:
     """Module-level function for multiprocessing. 
     Applies Whiten Context -> Q-Transform -> Image conversion.
     """
@@ -25,7 +284,20 @@ def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str, se
             
             from src.core.preprocessor import whiten_context, extract_clean_subwindow
             # 1. Whitening & Bandpass with context
-            ts_w_context, _ = whiten_context(ts_context, seg_start, seg_end, pad=4.0)
+            pad = 4.0
+            ts_w_context, pad_info = whiten_context(
+                ts_context, seg_start, seg_end, pad=pad
+            )
+            tolerance = max(float(dt), np.finfo(np.float64).eps)
+            if require_complete_padding and (
+                float(pad_info["effective_left"]) < pad - tolerance
+                or float(pad_info["effective_right"]) < pad - tolerance
+            ):
+                raise IncompleteContextError(
+                    "whitening context is incomplete: "
+                    f"left={pad_info['effective_left']}, "
+                    f"right={pad_info['effective_right']}, required={pad}"
+                )
             
             # 2. Extract strictly the target segment
             ts_clean = extract_clean_subwindow(ts_w_context, seg_start, seg_end)
@@ -45,7 +317,22 @@ def _worker_preprocess(ts_value: np.ndarray, t0: float, dt: float, name: str, se
             # by 4 s. Scored with [gps+4, gps+36] the stored values reproduce
             # exactly (verified to four decimals across 10 candidates).
             return int(seg_start), rgb_spectrogram_uint8
+    except IncompleteContextError:
+        logger.error(
+            "Patch preprocessing refused incomplete context for [%s, %s]",
+            seg_start,
+            seg_end,
+            exc_info=True,
+        )
+        raise
     except Exception as e:
+        logger.error(
+            "Patch preprocessing failed for analysis window [%s, %s]: %s",
+            seg_start,
+            seg_end,
+            e,
+            exc_info=True,
+        )
         return int(seg_start), None
 
 class PatchProducer:
@@ -62,7 +349,10 @@ class PatchProducer:
         segment_duration: float = 32.0,
         sample_rate: int = 4096,
         workers: int = 8,
-        batch_size: int = 32
+        batch_size: int = 32,
+        raw_manifest: str | Path | None = None,
+        raw_root: str | Path | None = None,
+        manifest_targets: bool = False,
     ):
         self.data_dir = Path(data_dir)
         self.detector = detector
@@ -71,6 +361,7 @@ class PatchProducer:
         self.workers = workers
         self.batch_size = batch_size
         self.resume_gps = None
+        self.raw_manifest = None
         
         from src.core.data_loader import _DATA_DIRECTORIES
         
@@ -175,6 +466,49 @@ class PatchProducer:
                 error_msg = f"No HDF5 files found for detector {self.detector} in {self.data_dir} or configured external drives."
                 logger.warning(error_msg)
                 raise FileNotFoundError(error_msg)
+
+        # The target files may live in one session directory, but whitening
+        # context is allowed to cross only into verified contiguous local
+        # blocks from the surrounding immutable raw mirror. The per-process
+        # data-loader index avoids an rglob for every 32-second window.
+        self.expected_context_sha256: Mapping[Path, str] | None = None
+        if raw_manifest is not None:
+            manifest_root = Path(raw_root) if raw_root is not None else self.data_dir
+            self.raw_manifest = load_frozen_raw_manifest(
+                Path(raw_manifest), raw_root=manifest_root, detector=self.detector
+            )
+            self.context_entries = list(self.raw_manifest.entries)
+            self.expected_context_sha256 = self.raw_manifest.expected_sha256
+            if manifest_targets:
+                self.hdf5_files = list(self.raw_manifest.target_files)
+        else:
+            context_roots: list[Path] = []
+            if self.data_dir.exists():
+                context_roots.append(
+                    self.data_dir.parent
+                    if self.data_dir.name.isdigit()
+                    else self.data_dir
+                )
+            for directory in _DATA_DIRECTORIES:
+                if directory.exists() and directory not in context_roots:
+                    context_roots.append(directory)
+            from src.core.data_loader import _local_block_index
+
+            context_entries: dict[
+                tuple[float, float, str], tuple[float, float, Path]
+            ] = {}
+            for root in context_roots:
+                for start, end, path in _local_block_index(root, self.detector):
+                    resolved = Path(path).resolve()
+                    context_entries[(float(start), float(end), str(resolved))] = (
+                        float(start),
+                        float(end),
+                        resolved,
+                    )
+            self.context_entries = sorted(
+                context_entries.values(),
+                key=lambda item: (item[0], item[1], str(item[2])),
+            )
             
     def _read_channel_name(self, ts_dict) -> str:
         """Finds the correct strain channel name dynamically."""
@@ -216,6 +550,16 @@ class PatchProducer:
                 
                 logger.debug(f"Reading file: {file_path}")
                 try:
+                    resolved_file = Path(file_path).resolve()
+                    if self.expected_context_sha256 is not None:
+                        if resolved_file not in self.expected_context_sha256:
+                            raise RawBlockConflictError(
+                                f"target raw source is absent from manifest: {resolved_file}"
+                            )
+                        _verified_sha256(
+                            resolved_file,
+                            self.expected_context_sha256[resolved_file],
+                        )
                     channel_name = f"{self.detector}:GWOSC-16KHZ_R1_STRAIN"
                     try:
                         ts_full = TimeSeries.read(file_path, name=channel_name)
@@ -240,9 +584,21 @@ class PatchProducer:
                         current_end = current_start + self.segment_duration
                         
                         pad = 4.0
-                        crop_start = max(start_time, current_start - pad)
-                        crop_end = min(end_time, current_end + pad)
-                        ts_context = ts_full.crop(crop_start, crop_end)
+                        requested_start = current_start - pad
+                        requested_end = current_end + pad
+                        if (
+                            start_time <= requested_start
+                            and end_time >= requested_end
+                        ):
+                            ts_context = ts_full.crop(requested_start, requested_end)
+                        else:
+                            ts_context = read_complete_context(
+                                self.context_entries,
+                                gps_start=requested_start,
+                                gps_end=requested_end,
+                                sample_rate_hz=self.sample_rate,
+                                expected_sha256=self.expected_context_sha256,
+                            ).series
                         
                         ts_target = ts_full.crop(current_start, current_end)
                         if not np.isfinite(ts_target.value).all() or np.all(ts_target.value == 0):
@@ -279,6 +635,8 @@ class PatchProducer:
                                 
                         current_start += self.segment_duration
                         
+                except (IncompleteContextError, RawBlockConflictError):
+                    raise
                 except Exception as e:
                     logger.error(f"Failed to read or process file {file_path}: {e}")
                     

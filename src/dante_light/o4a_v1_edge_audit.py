@@ -299,6 +299,7 @@ def reproduce_clipped_example(
         str(context.name),
         start,
         end,
+        require_complete_padding=False,
     )
     if image is None:
         raise ContractError("edge audit: clipped historical preprocessing failed")

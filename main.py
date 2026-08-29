@@ -2526,6 +2526,7 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
     workers = getattr(args, "workers", 8)
     batch_size = getattr(args, "batch_size", 32)
     engine = getattr(args, "engine", "canonical")
+    raw_manifest = getattr(args, "raw_manifest", None)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -2667,7 +2668,14 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
         warnings.filterwarnings("ignore", module="gwpy.signal.qtransform")
         
         session_data_dir = data_dir / session if session != "ALL" else data_dir
-        producer = PatchProducer(session_data_dir, detector, workers=workers, batch_size=batch_size)
+        producer = PatchProducer(
+            session_data_dir,
+            detector,
+            workers=workers,
+            batch_size=batch_size,
+            raw_manifest=raw_manifest,
+            raw_root=data_dir,
+        )
         
         # Calibrate Threshold
         logger.info("Calibrating threshold...")
@@ -2693,7 +2701,14 @@ def cmd_patch_production(args: argparse.Namespace) -> None:
             shuffled_files = list(producer.hdf5_files)
             rng.shuffle(shuffled_files)
             
-            calib_producer = PatchProducer(session_data_dir, detector, workers=workers, batch_size=batch_size)
+            calib_producer = PatchProducer(
+                session_data_dir,
+                detector,
+                workers=workers,
+                batch_size=batch_size,
+                raw_manifest=raw_manifest,
+                raw_root=data_dir,
+            )
             calib_producer.hdf5_files = shuffled_files
             
             from tqdm import tqdm
@@ -3550,6 +3565,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_patch_production.add_argument("--seed", type=int, default=42)
     p_patch_production.add_argument("--workers", type=int, default=8, help="Number of CPU workers for Q-Transform")
     p_patch_production.add_argument("--batch-size", type=int, default=32, help="Batch size for DINOv2 GPU inference")
+    p_patch_production.add_argument(
+        "--raw-manifest",
+        type=Path,
+        default=None,
+        help=(
+            "Versioned JSONL raw-file manifest. When supplied, every local "
+            "context source is bound to its declared SHA-256."
+        ),
+    )
     p_patch_production.add_argument("--run", type=str, default="O4a", help="Observing run name (e.g., O4a, O4b, O5)")
     p_patch_production.add_argument("--reference-run", type=str, default="O3b", help="Observing run to use as the primary memory index")
     p_patch_production.add_argument(

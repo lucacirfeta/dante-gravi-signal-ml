@@ -1,0 +1,71 @@
+{
+  "analysis_gps_start": 1369198560.0,
+  "artifact_digest": "0ca42d5fe554b3590fa74cb6c2220e7836b225687f09a34bcd796a2fb0ae3695",
+  "case_id": "o4a-v1-7b1c5d02ee369ff572bf10ea",
+  "context_interval_gps": [
+    1369198556.0,
+    1369198596.0
+  ],
+  "detector": "H1",
+  "external_storage": {
+    "large_strain_files_committed": false,
+    "parity_cache_root_alias": "DANTE_O4A_V1_PARITY_CACHE_ROOT",
+    "raw_root_alias": "DANTE_O4A_RAW_ROOT"
+  },
+  "maximum_absolute_sample_difference": 0.0,
+  "parity_cache_strain_sha256": "18557f3af24e396a2113d0039b44e7d34ae9f27825b16d5f0d7c87024f5be02f",
+  "references": {
+    "implementation": {
+      "path": "src/core/patch_producer.py",
+      "sha256": "5a9b2cf95ca12e01ac97fb269f5483a9ef41d9702de177414e0ac4bdf790c375"
+    },
+    "parity_contract": {
+      "path": "config/dante_light_o4a_v1_parity_contract.json",
+      "sha256": "f86835afccc310dedbe5e782240753705ee3cbe2deea6b59ba51962eaae0184c"
+    },
+    "parity_manifest": {
+      "path": "config/dante_light_o4a_v1_parity_manifest.json",
+      "sha256": "8ddb53897aeb7aeffb92be22a24924e437cecaef955e9833b6776e904644507b"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    }
+  },
+  "sample_count": 163840,
+  "sample_rate_hz": 4096,
+  "schema_version": 1,
+  "scientific_boundary": {
+    "changes_historical_artifacts": false,
+    "establishes_full_corrected_o4a_run": false,
+    "establishes_real_file_boundary_sample_equivalence": true
+  },
+  "sources": [
+    {
+      "declared_interval_gps": [
+        1369194496.0,
+        1369198592.0
+      ],
+      "path": "1368973312/H1_1369194496_1369198592.hdf5",
+      "sha256": "046749454eea00f609f51f64fdeba5726e824711261021693ff341c290f0e421",
+      "used_interval_gps": [
+        1369198556.0,
+        1369198592.0
+      ]
+    },
+    {
+      "declared_interval_gps": [
+        1369198592.0,
+        1369202688.0
+      ],
+      "path": "1368973312/H1_1369198592_1369202688.hdf5",
+      "sha256": "13815f88674a095f379aa53544f333d99b486fbc4251a4053b3bf9eba3980dfe",
+      "used_interval_gps": [
+        1369198592.0,
+        1369198596.0
+      ]
+    }
+  ],
+  "status": "PASS_SAMPLE_EXACT",
+  "stitched_strain_sha256": "18557f3af24e396a2113d0039b44e7d34ae9f27825b16d5f0d7c87024f5be02f"
+}
