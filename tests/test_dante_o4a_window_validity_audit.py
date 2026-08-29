@@ -5,8 +5,31 @@ import json
 from src.dante_light.o4a_window_validity_audit import (
     OUTPUT_REL,
     ROOT,
+    _derive_invalid_rows,
     validate_window_validity_summary,
 )
+
+
+def test_context_nonfinite_is_mapped_to_adjacent_targets() -> None:
+    windows = {("H1", 100.0), ("H1", 132.0), ("H1", 164.0)}
+    rows = _derive_invalid_rows(
+        all_windows=windows,
+        target_nonfinite={("H1", 132.0)},
+        target_allzero=set(),
+        first_pad_nonfinite={("H1", 164.0)},
+        last_pad_nonfinite={("H1", 100.0)},
+    )
+    assert rows == [
+        {
+            "detector": "H1",
+            "gps_start": 132.0,
+            "reasons": [
+                "LEFT_CONTEXT_NONFINITE",
+                "RIGHT_CONTEXT_NONFINITE",
+                "TARGET_NONFINITE",
+            ],
+        }
+    ]
 
 
 def test_saved_raw_window_validity_audit_is_fail_closed_when_present() -> None:
