@@ -174,19 +174,25 @@ def _o4a_index_audit(spans: Mapping[str, list[tuple[float, float]]]) -> dict[str
 def _primary_calibration_audit(
     spans: Mapping[str, list[tuple[float, float]]]
 ) -> dict[str, Any]:
-    required_pairs = set()
+    earliest_copy_pairs = set()
+    all_membership_pairs = set()
     for line in RAW_MANIFEST.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         row = json.loads(line)
-        relative = Path(
-            sorted(
-                row["physical_copies"], key=lambda item: item["relative_path"]
-            )[0]["relative_path"]
+        copies = sorted(
+            row["physical_copies"], key=lambda item: item["relative_path"]
         )
-        required_pairs.add((relative.parts[0], row["detector"]))
+        earliest_copy_pairs.add(
+            (Path(copies[0]["relative_path"]).parts[0], row["detector"])
+        )
+        all_membership_pairs.update(
+            (Path(copy["relative_path"]).parts[0], row["detector"])
+            for copy in copies
+        )
     counts = Counter()
-    required_counts = Counter()
+    earliest_copy_counts = Counter()
+    all_membership_counts = Counter()
     identities = []
     files = sorted((ROOT / "data/production").rglob("novelties_*.h5"))
     for path in files:
@@ -205,8 +211,11 @@ def _primary_calibration_audit(
                 identities.append(
                     (path.relative_to(ROOT).as_posix(), detector, float(catalog_gps), kind)
                 )
-                if (path.parent.name, detector) in required_pairs:
-                    required_counts[(detector, kind)] += 1
+                pair = (path.parent.name, detector)
+                if pair in earliest_copy_pairs:
+                    earliest_copy_counts[(detector, kind)] += 1
+                if pair in all_membership_pairs:
+                    all_membership_counts[(detector, kind)] += 1
     cross = sum(
         counts[(detector, "complete_only_by_stitch")] for detector in ("H1", "L1")
     )
@@ -220,14 +229,21 @@ def _primary_calibration_audit(
         "disposition": "RECOMPUTE_SAME_FROZEN_IDENTITIES",
         "hdf5_session_files": len(files),
         "background_identity_count": len(identities),
-        "canonical_session_detector_count": len(required_pairs),
-        "canonical_calibration_identity_count": sum(required_counts.values()),
-        "canonical_counts": {
+        "earliest_copy_session_detector_count": len(earliest_copy_pairs),
+        "earliest_copy_calibration_identity_count": sum(earliest_copy_counts.values()),
+        "earliest_copy_counts": {
             f"{detector}/{kind}": int(value)
-            for (detector, kind), value in sorted(required_counts.items())
+            for (detector, kind), value in sorted(earliest_copy_counts.items())
         },
-        "historical_unused_calibration_identity_count": len(identities)
-        - sum(required_counts.values()),
+        "required_session_detector_count": len(all_membership_pairs),
+        "required_calibration_identity_count": sum(all_membership_counts.values()),
+        "required_counts": {
+            f"{detector}/{kind}": int(value)
+            for (detector, kind), value in sorted(all_membership_counts.items())
+        },
+        "non_earliest_session_identity_count": len(identities)
+        - sum(earliest_copy_counts.values()),
+        "non_earliest_sessions_are_required": True,
         "counts": {
             f"{detector}/{kind}": int(value)
             for (detector, kind), value in sorted(counts.items())
@@ -237,7 +253,10 @@ def _primary_calibration_audit(
         "identity_audit_digest": canonical_json_sha256(identities),
         "reason": (
             "The historical per-session primary thresholds contain 246 "
-            "calibration windows scored with incomplete file-edge context."
+            "calibration windows scored with incomplete file-edge context. "
+            "All 84 session-detector calibrations remain necessary because a "
+            "duplicated raw span can fail the earliest session threshold but "
+            "pass a later session threshold before candidate-level deduplication."
         ),
     }
 

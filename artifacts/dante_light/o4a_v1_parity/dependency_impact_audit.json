@@ -1,18 +1,8 @@
 {
-  "artifact_digest": "55d730aef5cd9274ee866bf3cbecdab038aeb8a3f209d232bbd8603b5e0dcc87",
+  "artifact_digest": "aff4547408775caa80fa1b0a0ccb0cb411838f63e335800390d985e9e39c0dfb",
   "dependencies": {
     "historical_primary_session_calibrations": {
       "background_identity_count": 39971,
-      "canonical_calibration_identity_count": 38971,
-      "canonical_counts": {
-        "H1/complete_only_by_stitch": 116,
-        "H1/complete_single_file": 19090,
-        "H1/not_complete_in_frozen_local_manifest": 9,
-        "L1/complete_only_by_stitch": 126,
-        "L1/complete_single_file": 19626,
-        "L1/not_complete_in_frozen_local_manifest": 4
-      },
-      "canonical_session_detector_count": 82,
       "counts": {
         "H1/complete_only_by_stitch": 117,
         "H1/complete_single_file": 19587,
@@ -23,11 +13,32 @@
       },
       "cross_boundary_count": 246,
       "disposition": "RECOMPUTE_SAME_FROZEN_IDENTITIES",
+      "earliest_copy_calibration_identity_count": 38971,
+      "earliest_copy_counts": {
+        "H1/complete_only_by_stitch": 116,
+        "H1/complete_single_file": 19090,
+        "H1/not_complete_in_frozen_local_manifest": 9,
+        "L1/complete_only_by_stitch": 126,
+        "L1/complete_single_file": 19626,
+        "L1/not_complete_in_frozen_local_manifest": 4
+      },
+      "earliest_copy_session_detector_count": 82,
       "hdf5_session_files": 84,
-      "historical_unused_calibration_identity_count": 1000,
       "identity_audit_digest": "84c51fa6af04e835ed2134fbb96c87dc75a9cd3e36e1eae332fafd6bdfc3a2a6",
+      "non_earliest_session_identity_count": 1000,
+      "non_earliest_sessions_are_required": true,
       "not_complete_in_local_manifest_count": 15,
-      "reason": "The historical per-session primary thresholds contain 246 calibration windows scored with incomplete file-edge context."
+      "reason": "The historical per-session primary thresholds contain 246 calibration windows scored with incomplete file-edge context. All 84 session-detector calibrations remain necessary because a duplicated raw span can fail the earliest session threshold but pass a later session threshold before candidate-level deduplication.",
+      "required_calibration_identity_count": 39971,
+      "required_counts": {
+        "H1/complete_only_by_stitch": 117,
+        "H1/complete_single_file": 19587,
+        "H1/not_complete_in_frozen_local_manifest": 11,
+        "L1/complete_only_by_stitch": 129,
+        "L1/complete_single_file": 20123,
+        "L1/not_complete_in_frozen_local_manifest": 4
+      },
+      "required_session_detector_count": 84
     },
     "historical_taxonomy_and_downstream": {
       "disposition": "REBUILD_AFTER_CORRECTED_PRIMARY_SCAN",
