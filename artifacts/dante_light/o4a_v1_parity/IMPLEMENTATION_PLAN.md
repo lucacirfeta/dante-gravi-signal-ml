@@ -83,3 +83,32 @@ artifact is silently rejoined to a changed taxonomy.
 Acceptance: complete pertinent and full test suites pass, both paper builds pass,
 and a final fail-closed grep finds no superseded counts or claims.
 
+## Performance corrective checkpoint (2026-08-30)
+
+The initial corrected scan used the frozen `workers=2`, `batch_size=8`
+execution contract.  Its partial database was stopped without inspecting scores,
+candidate dispositions or thresholds and is permanently marked
+`SUPERSEDED_PERFORMANCE_ONLY`; it is not promotable evidence.
+
+The first outcome-blind benchmark is frozen by
+`config/dante_o4a_corrected_performance_v1.json` and recorded in
+`corrected_performance_benchmark.json`.  All alternative configurations produced
+identical rendered-image hashes and bit-identical float32 scores.  Median
+end-to-end rates were 6.108 windows/s (2x8 direct), 8.831 windows/s (4x16
+direct), 10.061 windows/s (8x32 direct), and 10.646 windows/s (8x32 with a
+bounded verified one-file staging copy).  The best speed-up was 1.743x, below
+the pre-frozen 2x promotion gate, so the result is `STOP_NO_REFREEZE` and none of
+these configurations may replace the canonical execution contract from this
+checkpoint alone.  SQLite `FULL`/WAL transaction grouping improved from a
+median 6,588 rows/s at 32 rows/commit to 33,109 rows/s at 1,024 rows/commit;
+this is diagnostic only until incorporated into a separately frozen executor.
+
+The benchmark deliberately instantiated one producer pool per canary span,
+whereas the full scan keeps one pool alive per detector.  Pool start-up was
+therefore included repeatedly in the authoritative metric.  This does not
+invalidate the negative result under the frozen v1 performance contract, but it
+prevents using it to reject higher parallelism for the persistent-pool scan.
+The next performance increment must freeze a persistent-pool canary, test
+8/12/16 workers without reading scientific outcomes, preserve exact image hashes
+and `SCORE_ATOL=2e-7`, and retain `STOP_NO_REFREEZE` unless its independently
+frozen operational gate passes.

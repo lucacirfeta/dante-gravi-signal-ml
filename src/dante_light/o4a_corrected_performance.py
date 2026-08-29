@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import sqlite3
 import statistics
+import subprocess
 import tempfile
 import time
 from typing import Any, Mapping
@@ -115,6 +116,28 @@ def _raw_manifest_rows(root: Path) -> list[dict[str, Any]]:
         for line in (root / RAW_MANIFEST_REL).read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+
+
+def _reference_is_available(root: Path, reference: Mapping[str, Any]) -> bool:
+    """Accept the current file or the exact frozen blob from repository history."""
+
+    path = str(reference["path"])
+    expected = str(reference["sha256"])
+    if repository_reference(root, root / path) == dict(reference):
+        return True
+    try:
+        commits = subprocess.check_output(
+            ["git", "log", "--format=%H", "--all", "--", path],
+            cwd=root,
+            text=True,
+        ).splitlines()
+        for commit in commits:
+            blob = subprocess.check_output(["git", "show", f"{commit}:{path}"], cwd=root)
+            if hashlib.sha256(blob).hexdigest() == expected:
+                return True
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return False
 
 
 def _canary_spans(
@@ -305,8 +328,7 @@ def validate_performance_contract(
     ):
         raise ContractError("corrected O4a performance canary changed")
     for name, reference in value["references"].items():
-        current = repository_reference(root, root / str(reference["path"]))
-        if current != reference:
+        if not _reference_is_available(root, reference):
             raise ContractError(f"corrected O4a performance reference changed: {name}")
     return dict(value)
 
@@ -762,8 +784,58 @@ def verify_performance_result(
                 or delta > SCORE_ATOL
             ):
                 raise ContractError("performance benchmark contains failed equivalence")
-    if result["selected_configuration"] is None:
-        raise ContractError("performance benchmark did not promote a configuration")
+    measured = [row for row in result["records"] if row["phase"] == "measured"]
+    medians = {
+        configuration_id: statistics.median(
+            row["timing"]["end_to_end_windows_per_s"]
+            for row in measured
+            if row["configuration"]["id"] == configuration_id
+        )
+        for configuration_id in configs
+    }
+    if medians != result["median_end_to_end_windows_per_s"]:
+        raise ContractError("performance benchmark medians changed")
+    baseline_rate = medians["baseline_2x8_direct"]
+    speedups = {key: value / baseline_rate for key, value in medians.items()}
+    if speedups != result["speedup_over_baseline"]:
+        raise ContractError("performance benchmark speedups changed")
+    minimum_speedup = float(
+        contract["benchmark"]["promotion"]["minimum_speedup_over_baseline"]
+    )
+    eligible = [
+        configuration
+        for configuration in contract["benchmark"]["configurations"]
+        if configuration["id"] != "baseline_2x8_direct"
+        and speedups[str(configuration["id"])] >= minimum_speedup
+    ]
+    expected_selected = None
+    if eligible:
+        expected_selected = min(
+            eligible,
+            key=lambda configuration: (
+                -medians[str(configuration["id"])],
+                int(configuration["workers"]),
+                int(configuration["batch_size"]),
+                str(configuration["staging"]) != "direct",
+            ),
+        )
+    expected_status = (
+        "PASS_EQUIVALENCE_AND_PERFORMANCE_SELECTION"
+        if expected_selected is not None
+        else "STOP_NO_REFREEZE"
+    )
+    if (
+        result["selected_configuration"] != expected_selected
+        or result["status"] != expected_status
+    ):
+        raise ContractError("performance benchmark promotion decision changed")
+    database = result["database_probe"]
+    expected_db_selection = min(
+        (int(value) for value in database["median_rows_per_s"]),
+        key=lambda value: (-database["median_rows_per_s"][str(value)], value),
+    )
+    if int(database["selected_commit_rows"]) != expected_db_selection:
+        raise ContractError("performance database selection changed")
     if result["outcome_access"] != contract["outcome_boundary"]:
         raise ContractError("performance benchmark outcome boundary changed")
     compact = _load_json(root / COMPACT_RESULT_REL)
