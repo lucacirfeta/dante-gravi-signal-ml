@@ -174,7 +174,19 @@ def _o4a_index_audit(spans: Mapping[str, list[tuple[float, float]]]) -> dict[str
 def _primary_calibration_audit(
     spans: Mapping[str, list[tuple[float, float]]]
 ) -> dict[str, Any]:
+    required_pairs = set()
+    for line in RAW_MANIFEST.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        relative = Path(
+            sorted(
+                row["physical_copies"], key=lambda item: item["relative_path"]
+            )[0]["relative_path"]
+        )
+        required_pairs.add((relative.parts[0], row["detector"]))
     counts = Counter()
+    required_counts = Counter()
     identities = []
     files = sorted((ROOT / "data/production").rglob("novelties_*.h5"))
     for path in files:
@@ -193,6 +205,8 @@ def _primary_calibration_audit(
                 identities.append(
                     (path.relative_to(ROOT).as_posix(), detector, float(catalog_gps), kind)
                 )
+                if (path.parent.name, detector) in required_pairs:
+                    required_counts[(detector, kind)] += 1
     cross = sum(
         counts[(detector, "complete_only_by_stitch")] for detector in ("H1", "L1")
     )
@@ -206,6 +220,14 @@ def _primary_calibration_audit(
         "disposition": "RECOMPUTE_SAME_FROZEN_IDENTITIES",
         "hdf5_session_files": len(files),
         "background_identity_count": len(identities),
+        "canonical_session_detector_count": len(required_pairs),
+        "canonical_calibration_identity_count": sum(required_counts.values()),
+        "canonical_counts": {
+            f"{detector}/{kind}": int(value)
+            for (detector, kind), value in sorted(required_counts.items())
+        },
+        "historical_unused_calibration_identity_count": len(identities)
+        - sum(required_counts.values()),
         "counts": {
             f"{detector}/{kind}": int(value)
             for (detector, kind), value in sorted(counts.items())

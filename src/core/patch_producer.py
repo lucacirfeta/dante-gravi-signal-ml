@@ -353,6 +353,7 @@ class PatchProducer:
         raw_manifest: str | Path | None = None,
         raw_root: str | Path | None = None,
         manifest_targets: bool = False,
+        incomplete_context_policy: str = "raise",
     ):
         self.data_dir = Path(data_dir)
         self.detector = detector
@@ -362,6 +363,12 @@ class PatchProducer:
         self.batch_size = batch_size
         self.resume_gps = None
         self.raw_manifest = None
+        if incomplete_context_policy not in {"raise", "record_and_skip"}:
+            raise ValueError(
+                "incomplete_context_policy must be 'raise' or 'record_and_skip'"
+            )
+        self.incomplete_context_policy = incomplete_context_policy
+        self.excluded_incomplete_context: list[dict[str, object]] = []
         
         from src.core.data_loader import _DATA_DIRECTORIES
         
@@ -592,13 +599,28 @@ class PatchProducer:
                         ):
                             ts_context = ts_full.crop(requested_start, requested_end)
                         else:
-                            ts_context = read_complete_context(
-                                self.context_entries,
-                                gps_start=requested_start,
-                                gps_end=requested_end,
-                                sample_rate_hz=self.sample_rate,
-                                expected_sha256=self.expected_context_sha256,
-                            ).series
+                            try:
+                                ts_context = read_complete_context(
+                                    self.context_entries,
+                                    gps_start=requested_start,
+                                    gps_end=requested_end,
+                                    sample_rate_hz=self.sample_rate,
+                                    expected_sha256=self.expected_context_sha256,
+                                ).series
+                            except IncompleteContextError as exc:
+                                if self.incomplete_context_policy == "raise":
+                                    raise
+                                self.excluded_incomplete_context.append(
+                                    {
+                                        "detector": self.detector,
+                                        "gps_start": float(current_start),
+                                        "duration_s": float(self.segment_duration),
+                                        "target_source": str(resolved_file),
+                                        "reason": str(exc),
+                                    }
+                                )
+                                current_start += self.segment_duration
+                                continue
                         
                         ts_target = ts_full.crop(current_start, current_end)
                         if not np.isfinite(ts_target.value).all() or np.all(ts_target.value == 0):

@@ -20,6 +20,17 @@ def test_dependency_audit_requires_the_complete_rebuild_chain() -> None:
     assert dependencies["primary_o3b_index"]["complete_pad_sidecars"] == 1017
     primary = dependencies["historical_primary_session_calibrations"]
     assert primary["background_identity_count"] == 39_971
+    assert primary["canonical_session_detector_count"] == 82
+    assert primary["canonical_calibration_identity_count"] == 38_971
+    assert primary["historical_unused_calibration_identity_count"] == 1_000
+    assert primary["canonical_counts"] == {
+        "H1/complete_only_by_stitch": 116,
+        "H1/complete_single_file": 19_090,
+        "H1/not_complete_in_frozen_local_manifest": 9,
+        "L1/complete_only_by_stitch": 126,
+        "L1/complete_single_file": 19_626,
+        "L1/not_complete_in_frozen_local_manifest": 4,
+    }
     assert primary["cross_boundary_count"] == 246
     assert primary["not_complete_in_local_manifest_count"] == 15
     native = dependencies["native_o4a_index"]
