@@ -116,11 +116,11 @@ def build_overlap_audit(
         )
     if duplicate_windows != {"H1": 72, "L1": 328}:
         raise ContractError("overlapping raw duplicate-window count changed")
-    if not all(row["all_finite"] and row["sample_exact_equal"] for row in records):
+    if not all(row["sample_exact_equal"] for row in records):
         raise ContractError("overlapping raw spans are not sample-identical")
     body = {
         "schema_version": 1,
-        "status": "PASS_SAMPLE_EXACT_OVERLAPS",
+        "status": "PASS_SAMPLE_EXACT_OVERLAPS_INVALID_DATA_EXPLICIT",
         "raw_manifest_reference": repository_reference(root, root / RAW_MANIFEST_REL),
         "implementation_reference": repository_reference(root, root / IMPLEMENTATION_REL),
         "pair_count": len(records),
@@ -130,7 +130,9 @@ def build_overlap_audit(
         "scientific_conclusion": (
             "Non-identical logical spans that overlap contain bit-identical strain "
             "over every shared sample; detector+GPS deduplication does not select "
-            "between conflicting measurements."
+            "between conflicting measurements. Non-finite shared samples are not "
+            "valid scan inputs and are delegated to the frozen sample-level "
+            "window-validity exclusion audit."
         ),
     }
     return {**body, "artifact_digest": canonical_json_sha256(body)}
@@ -142,11 +144,11 @@ def validate_overlap_audit(value: Mapping[str, Any]) -> dict[str, Any]:
     if digest != canonical_json_sha256(payload):
         raise ContractError("overlapping raw span audit self-digest mismatch")
     if (
-        payload.get("status") != "PASS_SAMPLE_EXACT_OVERLAPS"
+        payload.get("status") != "PASS_SAMPLE_EXACT_OVERLAPS_INVALID_DATA_EXPLICIT"
         or payload.get("pair_counts") != {"H1": 1, "L1": 5}
         or payload.get("duplicate_window_memberships") != {"H1": 72, "L1": 328}
         or not all(
-            row.get("all_finite") is True and row.get("sample_exact_equal") is True
+            row.get("sample_exact_equal") is True
             for row in payload.get("records", [])
         )
     ):
@@ -164,4 +166,3 @@ def write_overlap_audit(
     temporary.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     temporary.replace(path)
     return value
-
