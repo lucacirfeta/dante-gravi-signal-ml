@@ -354,6 +354,8 @@ class PatchProducer:
         raw_root: str | Path | None = None,
         manifest_targets: bool = False,
         incomplete_context_policy: str = "raise",
+        excluded_gps_starts: Sequence[float] | None = None,
+        worker_failure_policy: str = "record_and_skip",
     ):
         self.data_dir = Path(data_dir)
         self.detector = detector
@@ -368,7 +370,16 @@ class PatchProducer:
                 "incomplete_context_policy must be 'raise' or 'record_and_skip'"
             )
         self.incomplete_context_policy = incomplete_context_policy
+        if worker_failure_policy not in {"raise", "record_and_skip"}:
+            raise ValueError(
+                "worker_failure_policy must be 'raise' or 'record_and_skip'"
+            )
+        self.worker_failure_policy = worker_failure_policy
         self.excluded_incomplete_context: list[dict[str, object]] = []
+        self.excluded_gps_starts = frozenset(
+            float(value) for value in (excluded_gps_starts or ())
+        )
+        self.excluded_explicit: list[dict[str, object]] = []
         
         from src.core.data_loader import _DATA_DIRECTORIES
         
@@ -589,6 +600,19 @@ class PatchProducer:
                             continue
                             
                         current_end = current_start + self.segment_duration
+
+                        if float(current_start) in self.excluded_gps_starts:
+                            self.excluded_explicit.append(
+                                {
+                                    "detector": self.detector,
+                                    "gps_start": float(current_start),
+                                    "duration_s": float(self.segment_duration),
+                                    "target_source": str(resolved_file),
+                                    "reason": "frozen_explicit_exclusion",
+                                }
+                            )
+                            current_start += self.segment_duration
+                            continue
                         
                         pad = 4.0
                         requested_start = current_start - pad
@@ -653,6 +677,10 @@ class PatchProducer:
                                     gps_batch = []
                                     img_batch = []
                             else:
+                                if self.worker_failure_policy == "raise":
+                                    raise RuntimeError(
+                                        f"preprocessing failed for {self.detector} GPS {gps}"
+                                    )
                                 skipped_short += 1
                                 
                         current_start += self.segment_duration
@@ -660,6 +688,10 @@ class PatchProducer:
                 except (IncompleteContextError, RawBlockConflictError):
                     raise
                 except Exception as e:
+                    if self.raw_manifest is not None:
+                        raise RuntimeError(
+                            f"manifest-bound preprocessing failed for {file_path}"
+                        ) from e
                     logger.error(f"Failed to read or process file {file_path}: {e}")
                     
                     # Auto-heal: sposta il file corrotto per escluderlo dai futuri run
@@ -697,6 +729,10 @@ class PatchProducer:
                         gps_batch = []
                         img_batch = []
                 else:
+                    if self.worker_failure_policy == "raise":
+                        raise RuntimeError(
+                            f"preprocessing failed for {self.detector} GPS {gps}"
+                        )
                     skipped_short += 1
                     
             # Resa della batch finale incompleta (se presente)
