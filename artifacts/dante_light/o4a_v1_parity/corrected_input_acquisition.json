@@ -4,15 +4,15 @@
     "path": "src/dante_light/o4a_corrected_execution.py",
     "sha256": "3762bf2cca40c59eb67ef4625d67c755261b8e9a5a3e1bcd9b7f91ccb48c8ad0"
   },
-  "artifact_digest": "d9707228789b4ceb2fd7c4144140e2b11d3357b721066c0ddb1bffac048289b4",
+  "artifact_digest": "04a3a771359a2b8c4bd6e7bb7376f1d0d07c1a27f0afe7594727a223eae1cf0f",
   "detector_counts": {
     "H1": 18,
     "L1": 10
   },
-  "external_manifest_digest": "748bf300ef2d68e4ec263798ba4fcef6d2729dfa16be95f06b7d1044c7ad44f4",
-  "protocol_digest": "1e5dd8f2f2f5f76bbdedc41fcfebeca922e7a48fa1a2ad9ee0126f457bd46ecd",
+  "external_manifest_digest": "1de71b03c9830bcb98f481b085fc57fd01f5de25f3377e2edbad8ee675a84bf3",
+  "protocol_digest": "a69708d26166f73cd66f2318bbfbb513fb9f4f12e79dd0e4d9dcd207af8b60ab",
   "record_count": 28,
-  "record_digest": "5aa9c7009161417111363cfc052b3f487f847680e51161da7aae55e19888959c",
+  "record_digest": "6af634ee43b81168d75f5541c433b177c8664821434c5aa386f027ab246757fa",
   "schema_version": 1,
   "scientific_boundary": {
     "input_acquisition_only": true,
@@ -21,13 +21,12 @@
     "thresholds_changed": false
   },
   "source_counts": {
-    "GWOSC_OPEN_DATA_VIA_GWPY_FETCH_OPEN_DATA": 13,
-    "REUSED_VERIFIED_CONTENT_ADDRESSED_INPUT": 15
+    "REUSED_VERIFIED_CONTENT_ADDRESSED_INPUT": 28
   },
   "status": "COMPLETE_CONTENT_ADDRESSED_INPUTS",
   "total_samples": 4587520,
   "verification_implementation_reference": {
     "path": "src/dante_light/o4a_corrected_execution.py",
-    "sha256": "ae65818153dd081092292f2e75c5c3d1dea0a97b292898b2c42db52016cfb6f3"
+    "sha256": "aa47c957803e76ff09c2be5986a6dbb55436d0bc91b50a47d97962fc60933279"
   }
 }
