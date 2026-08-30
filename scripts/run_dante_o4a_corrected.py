@@ -23,7 +23,7 @@ from src.dante_light.o4a_corrected_execution import (  # noqa: E402
     verify_primary_scan,
 )
 from src.dante_light.o4a_corrected_protocol import (  # noqa: E402
-    OUTPUT_REL,
+    CURRENT_OUTPUT_REL as OUTPUT_REL,
     validate_corrected_protocol,
 )
 from src.dante_light.o4a_corrected_runtime import (  # noqa: E402

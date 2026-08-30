@@ -20,7 +20,7 @@ import numpy as np
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.o4a_corrected_protocol import (
-    OUTPUT_REL as PROTOCOL_REL,
+    CURRENT_OUTPUT_REL as PROTOCOL_REL,
     ROOT,
     _raw_invalid_windows,
     iter_calibration_identities,
@@ -451,6 +451,8 @@ def _scoring_runtime_identity(
     queue_depth_batches: int | None = None,
     queue_topology: str | None = None,
     database_commit_rows: int | None = None,
+    patch_executor_backend: str | None = None,
+    raw_series_cache_files: int | None = None,
 ) -> dict[str, Any]:
     expected = dict(protocol["execution_parameters"][stage])
     actual = {"device": device, "workers": workers, "batch_size": batch_size}
@@ -461,6 +463,8 @@ def _scoring_runtime_identity(
                 "queue_depth_batches": queue_depth_batches,
                 "queue_topology": queue_topology,
                 "database_commit_rows": database_commit_rows,
+                "patch_executor_backend": patch_executor_backend,
+                "raw_series_cache_files": raw_series_cache_files,
             }
         )
     if actual != expected:
@@ -1361,6 +1365,7 @@ def run_primary_scan(
     raw_root = raw_root.resolve()
     external_root = external_root.resolve()
     protocol = _load_protocol(root)
+    scan_parameters = protocol["execution_parameters"]["primary_scan"]
     runtime_contract = load_canonical_runtime_contract(
         root=root, require_current=True, device=device
     )
@@ -1375,6 +1380,8 @@ def run_primary_scan(
         queue_depth_batches=queue_depth_batches,
         queue_topology=queue_topology,
         database_commit_rows=database_commit_rows,
+        patch_executor_backend=str(scan_parameters["patch_executor_backend"]),
+        raw_series_cache_files=int(scan_parameters["raw_series_cache_files"]),
     )
     calibration, _ = verify_primary_calibration(root=root, external_root=external_root)
     references = _scan_references(root)
@@ -1452,6 +1459,12 @@ def run_primary_scan(
             incomplete_context_policy="record_and_skip",
             excluded_gps_starts=lookup.invalid_gps_starts(detector),
             worker_failure_policy="raise",
+            executor_backend=str(
+                scan_parameters["patch_executor_backend"]
+            ),
+            raw_series_cache_files=int(
+                scan_parameters["raw_series_cache_files"]
+            ),
         )
         if seen_by_detector[detector]:
             producer.resume_gps = max(seen_by_detector[detector])
@@ -1634,6 +1647,12 @@ def verify_primary_scan(
             device=str(parameters["device"]),
             workers=int(parameters["workers"]),
             batch_size=int(parameters["batch_size"]),
+            detector_mode=str(parameters["detector_mode"]),
+            queue_depth_batches=int(parameters["queue_depth_batches"]),
+            queue_topology=str(parameters["queue_topology"]),
+            database_commit_rows=int(parameters["database_commit_rows"]),
+            patch_executor_backend=str(parameters["patch_executor_backend"]),
+            raw_series_cache_files=int(parameters["raw_series_cache_files"]),
         ),
     }
     if meta is None or json.loads(meta[0]) != expected_identity:

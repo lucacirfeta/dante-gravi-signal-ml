@@ -44,10 +44,27 @@ PERFORMANCE_CONTRACT_REL = "config/dante_o4a_corrected_performance_v2.json"
 PERFORMANCE_RESULT_REL = (
     "artifacts/dante_light/o4a_v1_parity/corrected_performance_benchmark_v2.json"
 )
+# Keep OUTPUT_REL pinned for the immutable v3 performance-audit builders that
+# imported it before v4 existed. Active reconstruction code uses
+# CURRENT_OUTPUT_REL explicitly.
 OUTPUT_REL = "config/dante_o4a_corrected_protocol_v3.json"
+V3_PROTOCOL_REL = OUTPUT_REL
+COLD_PATH_RESULT_REL = (
+    "artifacts/dante_light/o4a_v1_parity/corrected_cold_path_benchmark.json"
+)
+EDGE_CACHE_RESULT_REL = (
+    "artifacts/dante_light/o4a_v1_parity/corrected_cold_path_benchmark_v3.json"
+)
+ATTRIBUTION_RESULT_REL = (
+    "artifacts/dante_light/o4a_v1_parity/corrected_cold_path_attribution.json"
+)
+SUSTAINED_RESULT_REL = (
+    "artifacts/dante_light/o4a_v1_parity/corrected_sustained_manifest_audit.json"
+)
+CURRENT_OUTPUT_REL = "config/dante_o4a_corrected_protocol_v4.json"
 
-SCHEMA_VERSION = 3
-PROTOCOL_ID = "dante-o4a-corrected-edge-context-performance-v3"
+SCHEMA_VERSION = 4
+PROTOCOL_ID = "dante-o4a-corrected-edge-context-administrative-v4"
 BASELINE_TAG = "3.7.0"
 BASELINE_COMMIT = "67fc8b610277bea79f02757277d19696eee94b62"
 DEFAULT_EXTERNAL_ROOT = "E:/dante_cache/dante_light/o4a_corrected_v2"
@@ -528,6 +545,11 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "execution_implementation": EXECUTION_REL,
             "performance_contract": PERFORMANCE_CONTRACT_REL,
             "performance_result": PERFORMANCE_RESULT_REL,
+            "superseded_protocol_v3": V3_PROTOCOL_REL,
+            "cold_path_result": COLD_PATH_RESULT_REL,
+            "edge_cache_result": EDGE_CACHE_RESULT_REL,
+            "stage_attribution_result": ATTRIBUTION_RESULT_REL,
+            "sustained_manifest_result": SUSTAINED_RESULT_REL,
         }.items()
     }
     representation = RepresentationContract.from_reference_manifest(root / REFERENCE_REL)
@@ -544,6 +566,25 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
     dependency = json.loads((root / DEPENDENCY_AUDIT_REL).read_text(encoding="utf-8"))
     if dependency["dependencies"]["primary_o3b_index"]["disposition"] != "UNAFFECTED_BY_O4A_PATCHPRODUCER_EDGE_DEFECT":
         raise ContractError("O3b primary-index dependency is not cleared")
+    cold_path = json.loads((root / COLD_PATH_RESULT_REL).read_text(encoding="utf-8"))
+    edge_cache = json.loads((root / EDGE_CACHE_RESULT_REL).read_text(encoding="utf-8"))
+    attribution = json.loads((root / ATTRIBUTION_RESULT_REL).read_text(encoding="utf-8"))
+    sustained = json.loads((root / SUSTAINED_RESULT_REL).read_text(encoding="utf-8"))
+    if (
+        cold_path.get("status") != "STOP_NO_REFREEZE"
+        or float(cold_path.get("thread_speedup_over_process", 0.0)) >= 1.0
+        or edge_cache.get("status") != "STOP_NO_REFREEZE"
+        or float(edge_cache.get("cache3_speedup_over_uncached", 0.0)) >= 2.0
+    ):
+        raise ContractError("non-promoted performance-candidate evidence changed")
+    if (
+        attribution.get("status") != "PASS_OUTCOME_BLIND_STAGE_ATTRIBUTION"
+        or attribution.get("promotion_allowed") is not False
+        or sustained.get("status")
+        != "PASS_OUTCOME_BLIND_SUSTAINED_MANIFEST_AUDIT"
+        or sustained.get("promotion_allowed") is not False
+    ):
+        raise ContractError("diagnostic-only performance evidence changed")
     body = {
         "schema_version": SCHEMA_VERSION,
         "status": "FROZEN_BEFORE_INPUT_ACQUISITION_OR_SCORING",
@@ -554,11 +595,14 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "outputs_immutable": True,
         },
         "supersedes": {
-            "protocol_id": "dante-o4a-corrected-edge-context-v2",
+            "protocol_id": "dante-o4a-corrected-edge-context-performance-v3",
             "protocol_digest": (
-                "a69708d26166f73cd66f2318bbfbb513fb9f4f12e79dd0e4d9dcd207af8b60ab"
+                "ea154b1f56966d4629277978c0f856d9e901902e4a578c2bfa254f2c940febfc"
             ),
-            "reason": "performance-only refreeze after outcome-blind exact-equivalence audit",
+            "reason": (
+                "administrative refreeze after outcome-blind performance audits added "
+                "disabled PatchProducer capabilities and made the v3 source hash stale"
+            ),
         },
         "scientific_change": {
             "only_intended_change": "complete symmetric whitening context at raw-file boundaries",
@@ -575,6 +619,39 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
             "cross_environment_shard_reuse_allowed": False,
             "performance_only_refreeze": True,
             "scoring_function_or_population_changed": False,
+            "thresholds_or_validation_rules_changed": False,
+            "prior_scan_outcomes_inspected": False,
+        },
+        "administrative_refreeze": {
+            "prior_protocol_preserved": V3_PROTOCOL_REL,
+            "recalibration_and_clean_scan_required": True,
+            "prior_calibration_or_scan_shard_reuse_allowed": False,
+            "active_patch_producer": {
+                "executor_backend": "process",
+                "raw_series_cache_files": 0,
+            },
+            "non_promoted_candidates": {
+                "thread_backend": {
+                    "status": "STOP_NO_REFREEZE",
+                    "reason": "slower than the process backend",
+                },
+                "raw_series_cache_lru3": {
+                    "status": "STOP_NO_REFREEZE",
+                    "observed_speedup": float(
+                        edge_cache["cache3_speedup_over_uncached"]
+                    ),
+                    "required_speedup": 2.0,
+                    "reason": "observed speedup did not meet the frozen gate",
+                },
+            },
+            "diagnostic_only_evidence": {
+                "stage_attribution": "PASS_OUTCOME_BLIND_STAGE_ATTRIBUTION",
+                "sustained_manifest": "PASS_OUTCOME_BLIND_SUSTAINED_MANIFEST_AUDIT",
+                "sustained_unique_identities_per_s": float(
+                    sustained["unique_identities_per_s"]
+                ),
+                "promotion_allowed": False,
+            },
         },
         "representation": representation.to_dict(),
         "canonical_runtime": {
@@ -601,6 +678,8 @@ def build_corrected_protocol(root: Path = ROOT) -> dict[str, Any]:
                 "queue_depth_batches": 2,
                 "queue_topology": "single_combined_bounded_queue",
                 "database_commit_rows": 1024,
+                "patch_executor_backend": "process",
+                "raw_series_cache_files": 0,
             },
         },
         "calibration_population": _calibration_population(root),
@@ -650,7 +729,7 @@ def validate_corrected_protocol(value: Mapping[str, Any], root: Path = ROOT) -> 
 
 
 def write_corrected_protocol(
-    path: Path = ROOT / OUTPUT_REL, root: Path = ROOT
+    path: Path = ROOT / CURRENT_OUTPUT_REL, root: Path = ROOT
 ) -> dict[str, Any]:
     value = build_corrected_protocol(root)
     path.parent.mkdir(parents=True, exist_ok=True)

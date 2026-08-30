@@ -19,7 +19,11 @@ from src.dante_light.o4a_corrected_execution import (
     acquire_missing_calibration_inputs,
     validate_acquisition_manifest,
 )
-from src.dante_light.o4a_corrected_protocol import OUTPUT_REL, ROOT, validate_corrected_protocol
+from src.dante_light.o4a_corrected_protocol import (
+    CURRENT_OUTPUT_REL as OUTPUT_REL,
+    ROOT,
+    validate_corrected_protocol,
+)
 from src.dante_light.o4a_corrected_runtime import load_canonical_runtime_contract
 
 
@@ -66,6 +70,8 @@ def test_corrected_scoring_identity_is_environment_and_batch_bound() -> None:
         queue_depth_batches=2,
         queue_topology="single_combined_bounded_queue",
         database_commit_rows=1024,
+        patch_executor_backend="process",
+        raw_series_cache_files=0,
     )
     assert scan_identity["execution_parameters"] == protocol["execution_parameters"][
         "primary_scan"

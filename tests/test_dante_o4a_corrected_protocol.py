@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from src.dante_light.o4a_corrected_protocol import (
-    OUTPUT_REL,
+    CURRENT_OUTPUT_REL as OUTPUT_REL,
     ROOT,
     build_corrected_protocol,
     iter_calibration_identities,
@@ -31,10 +32,19 @@ def test_corrected_protocol_population_and_scientific_boundaries() -> None:
             "queue_depth_batches": 2,
             "queue_topology": "single_combined_bounded_queue",
             "database_commit_rows": 1024,
+            "patch_executor_backend": "process",
+            "raw_series_cache_files": 0,
         },
     }
     assert value["scientific_change"]["performance_only_refreeze"] is True
     assert value["scientific_change"]["scoring_function_or_population_changed"] is False
+    assert value["scientific_change"]["thresholds_or_validation_rules_changed"] is False
+    assert value["scientific_change"]["prior_scan_outcomes_inspected"] is False
+    assert value["administrative_refreeze"]["active_patch_producer"] == {
+        "executor_backend": "process",
+        "raw_series_cache_files": 0,
+    }
+    assert value["administrative_refreeze"]["prior_calibration_or_scan_shard_reuse_allowed"] is False
     assert value["canonical_runtime"]["required_for"] == [
         "primary_calibration",
         "primary_scan",
@@ -78,6 +88,29 @@ def test_corrected_protocol_population_and_scientific_boundaries() -> None:
         "L1": 328,
     }
     assert value["scientific_boundary"]["publication_or_submission_authorized"] is False
+
+
+def test_v4_refreeze_preserves_v3_scientific_contract() -> None:
+    current = build_corrected_protocol(ROOT)
+    previous = json.loads(
+        (ROOT / Path("config/dante_o4a_corrected_protocol_v3.json")).read_text(
+            encoding="utf-8"
+        )
+    )
+    for key in (
+        "representation",
+        "canonical_runtime",
+        "calibration_population",
+        "scan_population",
+        "execution_order",
+        "scientific_boundary",
+    ):
+        assert current[key] == previous[key]
+    assert current["execution_parameters"]["primary_calibration"] == previous[
+        "execution_parameters"
+    ]["primary_calibration"]
+    for key, value in previous["execution_parameters"]["primary_scan"].items():
+        assert current["execution_parameters"]["primary_scan"][key] == value
 
 
 def test_corrected_protocol_iterators_are_deterministic() -> None:

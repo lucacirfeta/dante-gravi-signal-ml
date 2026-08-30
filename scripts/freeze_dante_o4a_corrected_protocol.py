@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.dante_light.o4a_corrected_protocol import (  # noqa: E402
-    OUTPUT_REL,
+    CURRENT_OUTPUT_REL as OUTPUT_REL,
     build_corrected_protocol,
     validate_corrected_protocol,
     write_corrected_protocol,
@@ -41,4 +41,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
