@@ -22,6 +22,11 @@ def test_patch_producer_rejects_unknown_executor_backend(tmp_path: Path) -> None
         PatchProducer(tmp_path, "H1", executor_backend="subprocess")
 
 
+def test_patch_producer_rejects_negative_raw_series_cache(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="raw_series_cache_files"):
+        PatchProducer(tmp_path, "H1", raw_series_cache_files=-1)
+
+
 def _write(path: Path, *, start: float, duration: float, value: float) -> str:
     TimeSeries(
         np.full(int(duration * 16), value, dtype=np.float64),
@@ -50,6 +55,38 @@ def test_complete_context_stitches_adjacent_files(tmp_path: Path) -> None:
     assert np.all(result.series.value[: 36 * 16] == 1.0)
     assert np.all(result.series.value[36 * 16 :] == 2.0)
     assert [item.path for item in result.sources] == [first, second]
+
+
+def test_complete_context_accepts_exact_cached_series_loader(tmp_path: Path) -> None:
+    first = tmp_path / "H1_1000_1064.hdf5"
+    second = tmp_path / "H1_1064_1128.hdf5"
+    first_hash = _write(first, start=1000, duration=64, value=1.0)
+    second_hash = _write(second, start=1064, duration=64, value=2.0)
+    loaded = {
+        first.resolve(): TimeSeries.read(first),
+        second.resolve(): TimeSeries.read(second),
+    }
+    calls: list[Path] = []
+
+    def loader(path: Path) -> TimeSeries:
+        resolved = path.resolve()
+        calls.append(resolved)
+        return loaded[resolved]
+
+    result = read_complete_context(
+        [(1000.0, 1064.0, first), (1064.0, 1128.0, second)],
+        gps_start=1028.0,
+        gps_end=1068.0,
+        sample_rate_hz=16,
+        expected_sha256={first: first_hash, second: second_hash},
+        series_loader=loader,
+    )
+
+    assert calls == [first.resolve(), second.resolve()]
+    assert np.array_equal(
+        result.series.value,
+        np.concatenate((np.ones(36 * 16), np.full(4 * 16, 2.0))),
+    )
 
 
 def test_complete_context_fails_closed_on_gap(tmp_path: Path) -> None:

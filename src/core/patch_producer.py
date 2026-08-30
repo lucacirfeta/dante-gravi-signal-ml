@@ -4,7 +4,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 import numpy as np
 from gwpy.timeseries import TimeSeries
@@ -149,6 +149,7 @@ def read_complete_context(
     gps_end: float,
     sample_rate_hz: int,
     expected_sha256: Mapping[Path, str] | None = None,
+    series_loader: Callable[[Path], TimeSeries] | None = None,
 ) -> CompleteContext:
     """Read one exact span across immutable, contiguous local raw blocks.
 
@@ -223,7 +224,11 @@ def read_complete_context(
     for block_start, block_end, path, digest in selected:
         used_start = cursor
         used_end = min(float(gps_end), block_end)
-        series = TimeSeries.read(path)
+        series = (
+            series_loader(path)
+            if series_loader is not None
+            else TimeSeries.read(path)
+        )
         if int(round(float(series.sample_rate.value))) != int(sample_rate_hz):
             series = series.resample(sample_rate_hz)
         actual_start = float(series.t0.value)
@@ -357,6 +362,7 @@ class PatchProducer:
         excluded_gps_starts: Sequence[float] | None = None,
         worker_failure_policy: str = "record_and_skip",
         executor_backend: str = "process",
+        raw_series_cache_files: int = 0,
     ):
         self.data_dir = Path(data_dir)
         self.detector = detector
@@ -379,6 +385,9 @@ class PatchProducer:
         if executor_backend not in {"process", "thread"}:
             raise ValueError("executor_backend must be 'process' or 'thread'")
         self.executor_backend = executor_backend
+        if raw_series_cache_files < 0:
+            raise ValueError("raw_series_cache_files must be non-negative")
+        self.raw_series_cache_files = int(raw_series_cache_files)
         self.excluded_incomplete_context: list[dict[str, object]] = []
         self.excluded_gps_starts = frozenset(
             float(value) for value in (excluded_gps_starts or ())
@@ -547,6 +556,40 @@ class PatchProducer:
         
         import concurrent.futures
         import multiprocessing as mp
+        from collections import OrderedDict
+
+        series_cache: OrderedDict[Path, TimeSeries] = OrderedDict()
+
+        def load_series(path: Path) -> TimeSeries:
+            resolved = Path(path).resolve()
+            cached = series_cache.get(resolved)
+            if cached is not None:
+                series_cache.move_to_end(resolved)
+                return cached
+            if self.expected_context_sha256 is not None:
+                if resolved not in self.expected_context_sha256:
+                    raise RawBlockConflictError(
+                        f"raw source is absent from manifest: {resolved}"
+                    )
+                _verified_sha256(
+                    resolved, self.expected_context_sha256[resolved]
+                )
+            channel_name = f"{self.detector}:GWOSC-16KHZ_R1_STRAIN"
+            try:
+                series = TimeSeries.read(resolved, name=channel_name)
+            except Exception:
+                from gwpy.timeseries import TimeSeriesDict
+
+                series_dict = TimeSeriesDict.read(resolved)
+                series = series_dict[self._read_channel_name(series_dict)]
+            if series.sample_rate.value != self.sample_rate:
+                series = series.resample(self.sample_rate)
+            if self.raw_series_cache_files:
+                series_cache[resolved] = series
+                series_cache.move_to_end(resolved)
+                while len(series_cache) > self.raw_series_cache_files:
+                    series_cache.popitem(last=False)
+            return series
         
         if self.executor_backend == "process":
             ctx = mp.get_context('spawn')
@@ -581,26 +624,7 @@ class PatchProducer:
                 logger.debug(f"Reading file: {file_path}")
                 try:
                     resolved_file = Path(file_path).resolve()
-                    if self.expected_context_sha256 is not None:
-                        if resolved_file not in self.expected_context_sha256:
-                            raise RawBlockConflictError(
-                                f"target raw source is absent from manifest: {resolved_file}"
-                            )
-                        _verified_sha256(
-                            resolved_file,
-                            self.expected_context_sha256[resolved_file],
-                        )
-                    channel_name = f"{self.detector}:GWOSC-16KHZ_R1_STRAIN"
-                    try:
-                        ts_full = TimeSeries.read(file_path, name=channel_name)
-                    except Exception:
-                        from gwpy.timeseries import TimeSeriesDict
-                        ts_dict = TimeSeriesDict.read(file_path)
-                        ch = self._read_channel_name(ts_dict)
-                        ts_full = ts_dict[ch]
-                    
-                    if ts_full.sample_rate.value != self.sample_rate:
-                        ts_full = ts_full.resample(self.sample_rate)
+                    ts_full = load_series(resolved_file)
                         
                     start_time = ts_full.t0.value
                     end_time = ts_full.t0.value + ts_full.duration.value
@@ -642,6 +666,7 @@ class PatchProducer:
                                     gps_end=requested_end,
                                     sample_rate_hz=self.sample_rate,
                                     expected_sha256=self.expected_context_sha256,
+                                    series_loader=load_series,
                                 ).series
                             except IncompleteContextError as exc:
                                 if self.incomplete_context_policy == "raise":
