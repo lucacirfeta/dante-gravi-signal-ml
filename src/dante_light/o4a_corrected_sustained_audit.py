@@ -50,7 +50,7 @@ TARGET_SPANS_PER_DETECTOR = 32
 ROLLING_OUTPUT_ROWS = 512
 
 
-def _coverage_components(rows: list[Mapping[str, Any]]) -> list[tuple[float, float]]:
+def _coverage_components(rows: list[Mapping[str, Any]]) -> list[list[float]]:
     merged: list[list[float]] = []
     for row in sorted(rows, key=lambda item: float(item["gps_start"])):
         start, end = float(row["gps_start"]), float(row["gps_end"])
@@ -58,11 +58,11 @@ def _coverage_components(rows: list[Mapping[str, Any]]) -> list[tuple[float, flo
             merged.append([start, end])
         else:
             merged[-1][1] = max(merged[-1][1], end)
-    return [(start, end) for start, end in merged]
+    return [[start, end] for start, end in merged]
 
 
 def _window_is_covered(
-    components: list[tuple[float, float]], gps: float
+    components: list[list[float]], gps: float
 ) -> bool:
     required_start, required_end = gps - 4.0, gps + 36.0
     return any(
