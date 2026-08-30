@@ -356,6 +356,7 @@ class PatchProducer:
         incomplete_context_policy: str = "raise",
         excluded_gps_starts: Sequence[float] | None = None,
         worker_failure_policy: str = "record_and_skip",
+        executor_backend: str = "process",
     ):
         self.data_dir = Path(data_dir)
         self.detector = detector
@@ -375,6 +376,9 @@ class PatchProducer:
                 "worker_failure_policy must be 'raise' or 'record_and_skip'"
             )
         self.worker_failure_policy = worker_failure_policy
+        if executor_backend not in {"process", "thread"}:
+            raise ValueError("executor_backend must be 'process' or 'thread'")
+        self.executor_backend = executor_backend
         self.excluded_incomplete_context: list[dict[str, object]] = []
         self.excluded_gps_starts = frozenset(
             float(value) for value in (excluded_gps_starts or ())
@@ -544,8 +548,16 @@ class PatchProducer:
         import concurrent.futures
         import multiprocessing as mp
         
-        ctx = mp.get_context('spawn')
-        with concurrent.futures.ProcessPoolExecutor(max_workers=self.workers, mp_context=ctx) as executor:
+        if self.executor_backend == "process":
+            ctx = mp.get_context('spawn')
+            executor_context = concurrent.futures.ProcessPoolExecutor(
+                max_workers=self.workers, mp_context=ctx
+            )
+        else:
+            executor_context = concurrent.futures.ThreadPoolExecutor(
+                max_workers=self.workers
+            )
+        with executor_context as executor:
             futures = []
             
             gps_batch = []

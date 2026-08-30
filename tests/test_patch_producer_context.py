@@ -17,6 +17,11 @@ from src.core.patch_producer import (
 )
 
 
+def test_patch_producer_rejects_unknown_executor_backend(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="executor_backend"):
+        PatchProducer(tmp_path, "H1", executor_backend="subprocess")
+
+
 def _write(path: Path, *, start: float, duration: float, value: float) -> str:
     TimeSeries(
         np.full(int(duration * 16), value, dtype=np.float64),
