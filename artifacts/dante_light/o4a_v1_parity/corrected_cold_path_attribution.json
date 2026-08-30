@@ -1,0 +1,201 @@
+{
+  "artifact_digest": "d36b453baabe48f3928c95d0371110948f33ef659951020bd80af4d4d0c0ba86",
+  "contract_digest": "787494b25b450ec486ac545c2977bcd74b4c945cbe6ffb00fa69c08d14d1a003",
+  "first_position_windows_per_s": {
+    "full_all": 12.683039013068433,
+    "full_all_identity_db": 12.03197223721871,
+    "score_only": 12.4369298067471
+  },
+  "outcome_access": {
+    "dispositions": false,
+    "taxonomy": false,
+    "thresholds": false
+  },
+  "promotion_allowed": false,
+  "records": [
+    {
+      "elapsed_s": 15.437893674999998,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 0,
+      "mode": "score_only",
+      "position": 0,
+      "timings_s": {
+        "image_hash_s": 0.018179779999989876,
+        "queue_wait_s": 9.370476830999987,
+        "scoring_s": 6.048073418999998
+      },
+      "window_count": 192,
+      "windows_per_s": 12.4369298067471
+    },
+    {
+      "elapsed_s": 15.016194406000004,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 0,
+      "mode": "full_all",
+      "position": 1,
+      "timings_s": {
+        "image_hash_s": 0.018497451999998304,
+        "queue_wait_s": 9.100674531999992,
+        "scoring_s": 5.895912287000009
+      },
+      "window_count": 192,
+      "windows_per_s": 12.786195677067338
+    },
+    {
+      "elapsed_s": 15.377251486000006,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 0,
+      "mode": "full_all_identity_db",
+      "position": 2,
+      "timings_s": {
+        "identity_lookup_s": 0.0033861940000008417,
+        "image_hash_s": 0.018681913000008876,
+        "queue_wait_s": 9.384382198000011,
+        "scoring_s": 5.751887035999971,
+        "serialization_s": 0.0005431320000184314,
+        "sqlite_commit_s": 0.10596723099999394
+      },
+      "window_count": 192,
+      "windows_per_s": 12.48597645520746
+    },
+    {
+      "elapsed_s": 15.138327636,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 1,
+      "mode": "full_all",
+      "position": 0,
+      "timings_s": {
+        "image_hash_s": 0.022899981000023217,
+        "queue_wait_s": 9.77505195000002,
+        "scoring_s": 5.3391307829999874
+      },
+      "window_count": 192,
+      "windows_per_s": 12.683039013068433
+    },
+    {
+      "elapsed_s": 15.292915346000001,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 1,
+      "mode": "full_all_identity_db",
+      "position": 1,
+      "timings_s": {
+        "identity_lookup_s": 0.0031860379999955057,
+        "image_hash_s": 0.01844757200002789,
+        "queue_wait_s": 9.218149562999997,
+        "scoring_s": 5.839409813999993,
+        "serialization_s": 0.0005093620001304089,
+        "sqlite_commit_s": 0.10367002599998898
+      },
+      "window_count": 192,
+      "windows_per_s": 12.554833114290359
+    },
+    {
+      "elapsed_s": 15.24041883400001,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 1,
+      "mode": "score_only",
+      "position": 2,
+      "timings_s": {
+        "image_hash_s": 0.018591350000022544,
+        "queue_wait_s": 9.337753124999992,
+        "scoring_s": 5.882911775000011
+      },
+      "window_count": 192,
+      "windows_per_s": 12.598078969566451
+    },
+    {
+      "elapsed_s": 15.957483628999995,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 2,
+      "mode": "full_all_identity_db",
+      "position": 0,
+      "timings_s": {
+        "identity_lookup_s": 0.0035421429999189513,
+        "image_hash_s": 0.018550639000011415,
+        "queue_wait_s": 9.779641884000029,
+        "scoring_s": 5.937569997999972,
+        "serialization_s": 0.0005494470000257934,
+        "sqlite_commit_s": 0.1068348960000094
+      },
+      "window_count": 192,
+      "windows_per_s": 12.03197223721871
+    },
+    {
+      "elapsed_s": 15.104924540000013,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 2,
+      "mode": "score_only",
+      "position": 1,
+      "timings_s": {
+        "image_hash_s": 0.018885599000014963,
+        "queue_wait_s": 9.470102370999996,
+        "scoring_s": 5.61485448199997
+      },
+      "window_count": 192,
+      "windows_per_s": 12.711086340852374
+    },
+    {
+      "elapsed_s": 14.799916666000001,
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true
+      },
+      "group": 2,
+      "mode": "full_all",
+      "position": 2,
+      "timings_s": {
+        "image_hash_s": 0.01937836199996923,
+        "queue_wait_s": 8.96927040700001,
+        "scoring_s": 5.81007104300005
+      },
+      "window_count": 192,
+      "windows_per_s": 12.973046019987637
+    }
+  ],
+  "run_key": "286fe6767434611530a395819795721d8b0a33629d7a0c08f120f133cf590857",
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "status": "PASS_OUTCOME_BLIND_STAGE_ATTRIBUTION"
+}
