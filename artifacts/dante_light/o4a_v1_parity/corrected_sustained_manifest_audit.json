@@ -1,0 +1,94 @@
+{
+  "artifact_digest": "ba107d5d546691545835d65f8f537cdd088e468c5a011f112b25d3fd68ba990e",
+  "contract_digest": "8c5313d8bf188089d376578125296ccec4c541ab3c3e833dc265c1f45b44d66f",
+  "detector_output_counts": {
+    "H1": 3096,
+    "L1": 3476
+  },
+  "duplicate_output_count": 291,
+  "duplication_factor": 1.0463302021971024,
+  "elapsed_s": 361.765821265,
+  "equivalence": {
+    "duplicate_images_exact": true,
+    "identity_multiset_exact": true,
+    "max_duplicate_score_delta": 0.0,
+    "pass": true
+  },
+  "outcome_access": {
+    "dispositions": false,
+    "taxonomy": false,
+    "thresholds": false
+  },
+  "output_count": 6572,
+  "output_digest": "e81e140f494701a5d1329e46dd5a0ce44130ae6a7de8beb4aed869c6705e9618",
+  "promotion_allowed": false,
+  "rolling": [
+    {
+      "cumulative_windows_per_s": 11.06149858799031,
+      "elapsed_s": 46.28667588999999,
+      "output_count": 512
+    },
+    {
+      "cumulative_windows_per_s": 13.47265862105234,
+      "elapsed_s": 76.005785406,
+      "output_count": 1024
+    },
+    {
+      "cumulative_windows_per_s": 15.279004771096186,
+      "elapsed_s": 100.530108015,
+      "output_count": 1536
+    },
+    {
+      "cumulative_windows_per_s": 16.61176584514527,
+      "elapsed_s": 123.286110525,
+      "output_count": 2048
+    },
+    {
+      "cumulative_windows_per_s": 16.70282662178351,
+      "elapsed_s": 153.267471307,
+      "output_count": 2560
+    },
+    {
+      "cumulative_windows_per_s": 17.463005082605363,
+      "elapsed_s": 175.914740073,
+      "output_count": 3072
+    },
+    {
+      "cumulative_windows_per_s": 17.868957621858204,
+      "elapsed_s": 200.57129665,
+      "output_count": 3584
+    },
+    {
+      "cumulative_windows_per_s": 18.042005734329216,
+      "elapsed_s": 227.02575646600002,
+      "output_count": 4096
+    },
+    {
+      "cumulative_windows_per_s": 18.194228633514538,
+      "elapsed_s": 253.26712623099996,
+      "output_count": 4608
+    },
+    {
+      "cumulative_windows_per_s": 18.475716868851134,
+      "elapsed_s": 277.120505599,
+      "output_count": 5120
+    },
+    {
+      "cumulative_windows_per_s": 18.24553741588878,
+      "elapsed_s": 308.67821931599997,
+      "output_count": 5632
+    },
+    {
+      "cumulative_windows_per_s": 18.15761821775843,
+      "elapsed_s": 338.370370294,
+      "output_count": 6144
+    }
+  ],
+  "run_key": "a654d04e396f25bfe51672b640242a7631e28aef1a043bc12a2200ad548478e8",
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "status": "PASS_OUTCOME_BLIND_SUSTAINED_MANIFEST_AUDIT",
+  "unique_identities_per_s": 17.362060290927964,
+  "unique_identity_count": 6281,
+  "windows_per_s": 18.16644805476494
+}
