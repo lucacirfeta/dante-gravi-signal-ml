@@ -4,13 +4,13 @@
     "path": "src/dante_light/o4a_corrected_execution.py",
     "sha256": "3762bf2cca40c59eb67ef4625d67c755261b8e9a5a3e1bcd9b7f91ccb48c8ad0"
   },
-  "artifact_digest": "2a3a4987b584c8bd8f31ef70e09130ad84dd25a62c6446192cc6d8f102ec7f04",
+  "artifact_digest": "b373273dcbbe61abaeb9823a8138e8557623f1389ebc9c08c7f36b12866fcae6",
   "detector_counts": {
     "H1": 18,
     "L1": 10
   },
-  "external_manifest_digest": "0b8280e15f6a07247fc51e99292eda779923d45398e660d870de17462c4c3393",
-  "protocol_digest": "ea154b1f56966d4629277978c0f856d9e901902e4a578c2bfa254f2c940febfc",
+  "external_manifest_digest": "15ba4fc44374112f3e09ae9573d93d12d5907cee3a60ea04d83f573606fcb855",
+  "protocol_digest": "326495389f511b378c52b2a99f7771bd13d87d6852d4191a4f0fb61d6842d4fa",
   "record_count": 28,
   "record_digest": "6af634ee43b81168d75f5541c433b177c8664821434c5aa386f027ab246757fa",
   "schema_version": 1,
@@ -27,6 +27,6 @@
   "total_samples": 4587520,
   "verification_implementation_reference": {
     "path": "src/dante_light/o4a_corrected_execution.py",
-    "sha256": "4c2b289089b84b8ad1410eb0574d7940302ed482baf31bca864d9bba251cbb4a"
+    "sha256": "368ba6b0ad1f78b162fe4556541dcc7157fbd77d04b4b53f5ac5e3de47687a65"
   }
 }
