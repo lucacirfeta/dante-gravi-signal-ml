@@ -1,0 +1,100 @@
+{
+  "artifact_digest": "2cca3c8fcdf00f2d7fb490c54d78e6403f0128f2f5a4f7bafdf8fe5ef2974edd",
+  "calibration_artifact_digest": "a27ff9befdf4aae01672bd202db82f54d2e61a241f8f4b88945ca954368bb779",
+  "candidate_counts": {
+    "H1": 4720,
+    "L1": 6222
+  },
+  "candidate_total": 10942,
+  "database": {
+    "filename": "primary_scan.sqlite",
+    "sha256": "4b37a6a100b423e5b5a14f326d491ae311242cfa0914cee5c244415d42c5932c",
+    "size_bytes": 276041728
+  },
+  "excluded_component_edge_total": 1018,
+  "excluded_identity_digest": "5a6c0f52ac59964f5338230ddb2d57ffa6d77e9df004b556954d1a157fd04fdf",
+  "excluded_invalid_raw_or_context_total": 71553,
+  "excluded_unique_total": 72053,
+  "invalid_or_silent_drop_count": 0,
+  "protocol_digest": "326495389f511b378c52b2a99f7771bd13d87d6852d4191a4f0fb61d6842d4fa",
+  "references": {
+    "acquisition_summary": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_input_acquisition.json",
+      "sha256": "adfe29a5d0e17ab2030a6fa83d3003271190d65121092074ba2ade820db77e84"
+    },
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "encoder": {
+      "path": "src/core/encoder.py",
+      "sha256": "40898b0fa18d6d59e1b72eb126be0ff01a83892504d8b8c6c316f1eb656ed72a"
+    },
+    "execution_implementation": {
+      "path": "src/dante_light/o4a_corrected_execution.py",
+      "sha256": "368ba6b0ad1f78b162fe4556541dcc7157fbd77d04b4b53f5ac5e3de47687a65"
+    },
+    "model_loader": {
+      "path": "src/core/model_loader.py",
+      "sha256": "831d871fc14bd71462e36024e7a21b89bb050861e2edc9a83f105243731f1ec9"
+    },
+    "overlapping_raw_span_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/overlapping_raw_span_audit.json",
+      "sha256": "92371e831538af8a7041bc8da9b0a0813248a93446eae8408c540d809501f278"
+    },
+    "patch_producer": {
+      "path": "src/core/patch_producer.py",
+      "sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef"
+    },
+    "patch_scorer": {
+      "path": "src/core/patch_scorer.py",
+      "sha256": "30ab4b53058572c445427b24d92e23c58a4208c4bfb396ba3efe6cf4c891f1df"
+    },
+    "performance_contract_v2": {
+      "path": "config/dante_o4a_corrected_performance_v2.json",
+      "sha256": "43051157263ac491b191f35dfb0b13821ce71754c0dc77910727f7dbc3e954cc"
+    },
+    "performance_result_v2": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_performance_benchmark_v2.json",
+      "sha256": "74653b234ec25d21aae6ed669f416ac61e5da3d5a9112080d8c75a8f75f6cdcb"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "3883cf80ab64f723faa3f97e23263323aa0d773dd33e13cb0164ead247d7ff2d"
+    },
+    "primary_calibration_summary": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_calibration.json",
+      "sha256": "0e9e02e4ea404a557ce6f850b4029c0d24c3520f11570932455d791e586ced51"
+    },
+    "protocol": {
+      "path": "config/dante_o4a_corrected_protocol_v4.json",
+      "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "raw_window_validity_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/raw_window_validity_audit.json",
+      "sha256": "1a02bf67ad47c0ae1b44eaaee59bc02e4e8e8a550c2f505cdcc7c47063a9191f"
+    },
+    "reference_artifacts": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+    }
+  },
+  "run_key": "5c19c3141fdc79bed75434362ffbbeb31fe36a99a4e64554482cb0023f0631bb",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "native_classification_executed": false,
+    "primary_discovery_only": true,
+    "publication_authorized": false,
+    "taxonomy_coincidence_PEM_executed": false
+  },
+  "status": "PASS_COMPLETE_PRIMARY_SCAN",
+  "window_counts": {
+    "H1": 401442,
+    "L1": 409809
+  },
+  "window_total": 811251
+}
