@@ -1,0 +1,94 @@
+{
+  "artifact_digest": "2d65c8bebc5867dec72426c7e12d70236c42dc910a7e8480529a2bbe8701d464",
+  "contract_digest": "b551361990aede88077034b6245e02d5afbd832293506b967b72ddf902c0e91a",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_rescore_v1/native_rescore_ae1aa6b7c619ab28e148683573d44686ec87090a470f63f45ef3d812aef14b66",
+    "summary_filename": "native_rescore_summary.json"
+  },
+  "gates": {
+    "candidate_image_hash_mismatches": 0,
+    "context_failures": 0,
+    "nonfinite_scores": 0,
+    "old_native_scores_read": false,
+    "old_native_thresholds_read": false,
+    "zero_duplicate_detector_gps": true
+  },
+  "index_artifact_digest": "de7c79b1fb3dc7eab2662b728f70b1f51694e33958e2a8460fac04d2b4081274",
+  "input_counts": {
+    "native_calibration": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "primary_candidate": {
+      "H1": 4720,
+      "L1": 6222
+    }
+  },
+  "outputs": {
+    "native_calibration_H1": {
+      "filename": "native_calibration_H1.jsonl",
+      "row_digest": "3814819569206a8f1e482f931b80a281d708c3e93bb7f2d6776cd790f0b1f838",
+      "row_total": 5000,
+      "sha256": "5141233d15bb0f2f7f63a5c77dd7f11a1f706370630c19211a10e12b67cc3aa1",
+      "size_bytes": 5351336
+    },
+    "native_calibration_L1": {
+      "filename": "native_calibration_L1.jsonl",
+      "row_digest": "9c1fc8e94e86851d12a6e3c33d3be892eede8b64e955a002038ea8ec73a7c9f5",
+      "row_total": 5000,
+      "sha256": "d0055276ea0931f755b1530746d78c5bb39f96cf1b3e3b41410035b7fb42dc1b",
+      "size_bytes": 5352445
+    },
+    "primary_candidate": {
+      "filename": "native_candidates.jsonl",
+      "row_digest": "25749fc22101cf2dd9cf0548175cdec4e42c238aa9a20768e7164f4a26e7f405",
+      "row_total": 10942,
+      "sha256": "d3ab8cd737c4b96570f7e1ac280fe808303f8d985e5c27923775ea6709c1de76",
+      "size_bytes": 9931989
+    }
+  },
+  "primary_scan_artifact_digest": "2cca3c8fcdf00f2d7fb490c54d78e6403f0128f2f5a4f7bafdf8fe5ef2974edd",
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_corrected.py",
+      "sha256": "fe8334c34c82bae9baff70da6c302d633e249de6aeac2bcf740b763797d58a98"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_rescore_v1.json",
+      "sha256": "31c666788bbd2bbf8cbcaf68a5f2318f00945ebf1631cb1bc7fa3b0bec24fc1e"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_rescore.py",
+      "sha256": "50a60ede6ac956916925902656b583f0e68c1cdfa933d7c649ebcd0cfe31fdb1"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_rescore.py",
+      "sha256": "0f6bc4831fd19b57828fdacf0c1c48bd472d2083ebb172ff908d3a170c314fcd"
+    }
+  },
+  "row_total": 20942,
+  "run_key": "ae1aa6b7c619ab28e148683573d44686ec87090a470f63f45ef3d812aef14b66",
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "historical_artifacts_immutable": true,
+    "native_calibration_identities_changed": false,
+    "preprocessing_changed": false,
+    "primary_candidate_identities_changed": false,
+    "thresholds_or_classes_computed_in_this_stage": false,
+    "top_k_changed": false
+  },
+  "status": "PASS_VERIFIED_NATIVE_RESCORE",
+  "summary": {
+    "sha256": "c66b76188f8e74261c5a820dffb5dcb5772f9e303c4000ed806f02813e90f5ad",
+    "size_bytes": 1919
+  },
+  "verification": {
+    "native_rescore_verifier": "PASS",
+    "pytest": {
+      "passed": 33,
+      "warnings": 11,
+      "wall_time_seconds": 264.33
+    }
+  }
+}
