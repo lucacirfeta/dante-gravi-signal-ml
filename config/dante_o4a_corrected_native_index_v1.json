@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o4a-corrected-native-index-v1",
+  "contract_digest": "a34cea01026355219d7d55750b16a1cf1c5c832f49de6c77f24caa0c57741a90",
+  "parent_native_contract_digest": "66f5796aecdea5a1009257a96a351e960c0801eadb60dc40bbf01bdfa74378c2",
+  "scientific_boundary": {
+    "cohort_changed": false,
+    "preprocessing_changed": false,
+    "representation_changed": false,
+    "clustering_hyperparameters_changed": false,
+    "historical_artifacts_immutable": true,
+    "detector_identity_inferred": false
+  },
+  "preprocessing": {
+    "sample_rate_hz": 4096,
+    "analysis_duration_s": 32.0,
+    "whitening_pad_s": 4.0,
+    "require_exact_clean_window_hash_replay": true,
+    "require_complete_raw_file_sha256_replay": true,
+    "require_same_excess_power_disposition": true
+  },
+  "representation": {
+    "embedding_dimension": 384,
+    "patch_tokens_per_image": 1369,
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "qrange": [
+      4,
+      64
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "colormap": "cividis"
+  },
+  "clustering": {
+    "centroid_count": 1216,
+    "random_seed": 42,
+    "raw_embedding_sample_size": 50000,
+    "minibatch_kmeans_batch_size": 4096,
+    "minibatch_kmeans_n_init": "auto",
+    "algorithm": "sklearn.cluster.MiniBatchKMeans.fit",
+    "compute_labels": false,
+    "centroid_l2_normalization": true,
+    "raw_sample_l2_normalization": true,
+    "raw_sample_algorithm": "numpy.default_rng(seed).choice(total_tokens,size,replace=False)"
+  },
+  "token_order": {
+    "window_order": "ascending frozen cohort_index",
+    "patch_order": "DINOv2 x_norm_patchtokens row-major",
+    "temporary_storage": "float32 numpy memmap on the canonical WSL filesystem",
+    "temporary_tokens_are_artifacts": false
+  },
+  "runtime": {
+    "canonical_runtime_contract_digest": "d2406e13ecff1018b8f012a386ede17340c1db5531755e599fc0f28a118f3bd2",
+    "sklearn_version": "1.9.0",
+    "device": "cuda",
+    "cross_environment_reuse_allowed": false
+  },
+  "output": {
+    "index_filename": "patch_compressed_index_o4a_q4-64_detector_aware_v1.npz",
+    "replay_ledger_filename": "native_index_replay.jsonl",
+    "summary_filename": "native_index_summary.json",
+    "historical_index_overwritten": false,
+    "large_artifacts_committed_to_git": false,
+    "compact_summary_committed_to_git": true
+  },
+  "references": {
+    "native_contract": {
+      "path": "config/dante_o4a_corrected_native_v1.json",
+      "sha256": "c601205d5ceabe9aaca7f15a03afb91467eb23e45cd89d0d1add02397a83850b"
+    },
+    "frozen_native_cohort": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_cohort.json",
+      "sha256": "4c0908a8c967c56e0e07f17b1db837819e144bd2c4e8415697545c3997e13b59"
+    },
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_index.py",
+      "sha256": "6875065fde8ee219f43d822ccf432ad8138243a45994666b0662e175a6214d33"
+    },
+    "model_loader": {
+      "path": "src/core/model_loader.py",
+      "sha256": "16cc4dd386412aac0d2c87ddec4332d607d73542f8d9ce9f5c9c83fa52da9c40"
+    },
+    "encoder": {
+      "path": "src/core/encoder.py",
+      "sha256": "db579c866c2aa351ca6495c6717c2d775dac6a00aa1729c1e18db12ed8e9115f"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "patch_producer": {
+      "path": "src/core/patch_producer.py",
+      "sha256": "2c20d4e89b48060986770127bf41c2d860d22efc4f98f430cb152cfb71f39dcf"
+    }
+  },
+  "gates": {
+    "exact_cohort_rows": 1294,
+    "exact_counts_by_detector": {
+      "H1": 647,
+      "L1": 647
+    },
+    "exact_patch_token_total": 1771486,
+    "exact_centroid_shape": [
+      1216,
+      384
+    ],
+    "exact_raw_sample_shape": [
+      50000,
+      384
+    ],
+    "maximum_l2_norm_error": 0.000002,
+    "zero_hash_or_context_failures": true,
+    "fail_closed": true
+  }
+}

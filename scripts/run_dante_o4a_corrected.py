@@ -34,6 +34,11 @@ from src.dante_light.o4a_corrected_native import (  # noqa: E402
     freeze_native_cohort,
     verify_native_cohort,
 )
+from src.dante_light.o4a_corrected_native_index import (  # noqa: E402
+    DEFAULT_EXTERNAL_ROOT as DEFAULT_NATIVE_INDEX_EXTERNAL_ROOT,
+    build_native_index,
+    verify_native_index,
+)
 
 
 def main() -> int:
@@ -50,12 +55,19 @@ def main() -> int:
             "verify-scan",
             "freeze-native-cohort",
             "verify-native-cohort",
+            "build-native-index",
+            "verify-native-index",
         ),
         required=True,
     )
     parser.add_argument("--external-root", type=Path, default=DEFAULT_EXTERNAL_ROOT)
     parser.add_argument(
         "--native-external-root", type=Path, default=DEFAULT_NATIVE_EXTERNAL_ROOT
+    )
+    parser.add_argument(
+        "--native-index-external-root",
+        type=Path,
+        default=DEFAULT_NATIVE_INDEX_EXTERNAL_ROOT,
     )
     parser.add_argument("--raw-root", type=Path, default=Path("E:/o4a"))
     parser.add_argument("--device", default="cuda")
@@ -66,6 +78,7 @@ def main() -> int:
     parser.add_argument("--queue-topology", default="single_combined_bounded_queue")
     parser.add_argument("--database-commit-rows", type=int, default=1024)
     parser.add_argument("--quality-batch-size", type=int, default=128)
+    parser.add_argument("--native-encoder-batch-size", type=int, default=8)
     args = parser.parse_args()
     if args.stage == "freeze-runtime":
         contract = write_canonical_runtime_contract(root=ROOT, device=args.device)
@@ -131,6 +144,29 @@ def main() -> int:
             root=ROOT,
             primary_external_root=args.external_root.resolve(),
             external_root=args.native_external_root.resolve(),
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "build-native-index":
+        summary, run_dir = build_native_index(
+            root=ROOT,
+            raw_root=args.raw_root.resolve(),
+            primary_external_root=args.external_root.resolve(),
+            cohort_external_root=args.native_external_root.resolve(),
+            external_root=args.native_index_external_root.resolve(),
+            device=args.device,
+            workers=args.workers,
+            encoder_batch_size=args.native_encoder_batch_size,
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "verify-native-index":
+        summary, run_dir = verify_native_index(
+            root=ROOT,
+            primary_external_root=args.external_root.resolve(),
+            cohort_external_root=args.native_external_root.resolve(),
+            external_root=args.native_index_external_root.resolve(),
+            device=args.device,
         )
         print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
         return 0
