@@ -1,3 +1,4 @@
+.gitattributes text eol=lf
 # Machine-hashed replay artifacts must have identical bytes on Windows/Linux.
 config/dante_light_replay_v1.json text eol=lf
 config/dante_light_replay_v1.jsonl text eol=lf
@@ -23,6 +24,7 @@ docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md text eol=lf
 # Keep their checkout bytes stable when global core.autocrlf=true.
 scripts/*.py text eol=lf
 src/**/*.py text eol=lf
+tests/test_dante_o4a_corrected_*.py text eol=lf
 docs/DANTE_LIGHT*.md text eol=lf
 data/production/aggregated/*.json binary
 data/production/aggregated/*.csv binary
