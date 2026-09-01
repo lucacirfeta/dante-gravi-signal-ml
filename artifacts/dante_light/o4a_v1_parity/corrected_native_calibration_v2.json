@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_NATIVE_CALIBRATION_V2",
+  "artifact_digest": "21b4aa55e7b6ddd42af902d4235b33769d22c17b26de6c7fc062b75708fa3464",
+  "contract_digest": "b64e44e666a1bd11454db063666b3275d8c0892832d0ec3647ea9733b7f6bf4b",
+  "external_artifact_digest": "88f1083c50c7ff9ad864869c08d3185eadd7cac99872351eb86da225b40252b4",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_calibration_v2/native_calibration_4682531b3a231f3956ac53d531925525a31b6b556a5cd07b17574b854c21811c",
+    "run_key": "4682531b3a231f3956ac53d531925525a31b6b556a5cd07b17574b854c21811c",
+    "summary_filename": "native_calibration_summary.json",
+    "summary_sha256": "8a82800752a64c85c522d8f49d8567f521ef287996faa89870eacb4f03ff05d6",
+    "ledger_filename": "native_calibration_cohort.jsonl"
+  },
+  "counts_by_detector": {
+    "H1": 5000,
+    "L1": 5000
+  },
+  "row_total": 10000,
+  "ledger": {
+    "sha256": "31438cd2d2df2014732467b99cf15dbcffd5f38cddf4784f1dc74fbe5ab47c00",
+    "row_digest": "f2b4f089a91f58cbad615a465e413d7ed70f4352cc721e3b524e19d942e0bfea",
+    "size_bytes": 6005430
+  },
+  "bootstrap_geometry": {
+    "block_length": 17,
+    "complete_blocks_per_detector": 294,
+    "rows_used_per_bootstrap_draw": 4998,
+    "tail_rows_excluded_from_bootstrap_draw": 2,
+    "point_percentile_uses_all_rows": true,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42
+  },
+  "guard_populations": {
+    "corrected_primary_candidates": 10942,
+    "corrected_native_index_training_windows": 1294,
+    "candidate_guard_is_cross_detector": true,
+    "native_index_guard_is_cross_detector": true,
+    "equivalent_start_delta_s": 128.0
+  },
+  "selection_audit": {
+    "H1": {
+      "eligible_scan_windows": 338474,
+      "plan_blocks_available": 6656,
+      "accepted_complete_blocks": 295,
+      "rejected_candidate_guard": 50701,
+      "rejected_index_guard": 7547,
+      "rejected_incomplete_context_blocks": 0
+    },
+    "L1": {
+      "eligible_scan_windows": 344401,
+      "plan_blocks_available": 6843,
+      "accepted_complete_blocks": 295,
+      "rejected_candidate_guard": 51486,
+      "rejected_index_guard": 7700,
+      "rejected_incomplete_context_blocks": 0
+    }
+  },
+  "scientific_boundary": {
+    "historical_calibration_population_reused": false,
+    "primary_or_native_scores_read": false,
+    "thresholds_or_classes_computed": false,
+    "cohort_frozen_before_native_rescore": true
+  },
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "historical_runs_preserved": [
+    {
+      "run_key": "ba03fdfd6994490d4c530bbb6dd47afdd4cfdb4fffc581c3a29cb85a6515aeb9",
+      "status": "FAILED_GEOMETRY_MISMATCH"
+    },
+    {
+      "run_key": "02815309e3bb8d06c0a36407cbc330aa88b1364d2347ff4f536fe51bfe5659be",
+      "status": "PASS_SUPERSEDED_CLI_PROVENANCE"
+    }
+  ],
+  "references": {
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_calibration_v2.json",
+      "sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_calibration.py",
+      "sha256": "1c75eeaadd637c9caa04d945b18580d102de2b75be2a7ac4c1ce62c6c15e5f17"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_calibration.py",
+      "sha256": "c72b9db9309948e261c6a3c6fad5d62720bef40ccdee981f207bf25f18d0a0e8"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_calibration.py",
+      "sha256": "61d24338ce1156e82c5de8cd80fb732fdd82ffe1f9a6c88d4622b4747901ca5a"
+    }
+  },
+  "verification": {
+    "native_calibration_verifier": "PASS",
+    "pytest": {
+      "passed": 25,
+      "failed": 0,
+      "warnings": 11,
+      "wall_time_seconds": 15.85
+    }
+  }
+}

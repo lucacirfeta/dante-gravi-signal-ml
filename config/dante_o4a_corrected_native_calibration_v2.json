@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o4a-corrected-native-calibration-v2",
+  "contract_digest": "b64e44e666a1bd11454db063666b3275d8c0892832d0ec3647ea9733b7f6bf4b",
+  "authorization": {
+    "authorized_on": "2026-09-01",
+    "decision": "replace the historically contaminated native-threshold calibration population with a fresh outcome-blind detector-aware cohort",
+    "historical_outputs_immutable": true
+  },
+  "population": {
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "target_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "run_bounds_gps": [
+      1368975618.0,
+      1389456018.0
+    ],
+    "identity_unit": "detector_plus_32s_analysis_window_start",
+    "source_population": "verified_corrected_primary_scan_geometry",
+    "selection_algorithm": "verified_scan_grid_full_run_stratified_nonoverlapping_blocks",
+    "window_duration_s": 32.0,
+    "window_stride_s": 64.0,
+    "whitening_pad_s": 4.0,
+    "temporal_block_length": 17,
+    "forbidden_guard_s": 96.0,
+    "equivalent_start_delta_s": 128.0,
+    "guard_populations": [
+      "all_corrected_primary_candidates_cross_detector",
+      "all_corrected_native_index_training_windows_cross_detector"
+    ]
+  },
+  "scientific_boundary": {
+    "selection_reads_identity_and_candidate_firewall_only": true,
+    "candidate_guard_is_cross_detector": true,
+    "native_index_guard_is_cross_detector": true,
+    "complete_temporal_blocks_required": true,
+    "historical_calibration_population_reused": false,
+    "context_provenance_from_frozen_raw_manifest": true,
+    "thresholds_computed_during_freeze": false,
+    "forbidden_fields": [
+      "primary_score",
+      "native_score",
+      "score",
+      "score_hex",
+      "threshold",
+      "threshold_lower",
+      "threshold_upper",
+      "class",
+      "robustness_class",
+      "taxonomy",
+      "taxonomy_family",
+      "disposition"
+    ]
+  },
+  "future_threshold_contract": {
+    "method": "non_overlapping_block_bootstrap_p99",
+    "detector_specific": true,
+    "point_percentile_uses_all_5000_rows": true,
+    "bootstrap_uses_first_4998_rows_as_294_complete_blocks": true,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_chunk_size": 500,
+    "percentile": 99,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "classification_rule": "BACKGROUND if score < ci_lower; ROBUST if score > ci_upper; AMBIGUOUS otherwise"
+  },
+  "execution": {
+    "freeze_environment": "canonical WSL runtime",
+    "raw_root_by_environment": {
+      "windows": "E:/o4a",
+      "wsl": "/mnt/e/o4a"
+    },
+    "atomic_outputs_only": true,
+    "resume_partial_output": false,
+    "raw_strain_or_model_opened_during_freeze": false
+  },
+  "references": {
+    "corrected_primary_scan": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json",
+      "sha256": "6660911a1082fa651a1143aaf8307f1f8942cbebc0b229fa702efa7686b9246f"
+    },
+    "corrected_native_cohort": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_cohort.json",
+      "sha256": "4c0908a8c967c56e0e07f17b1db837819e144bd2c4e8415697545c3997e13b59"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "block_bootstrap_implementation": {
+      "path": "src/pipeline_v2_production/background_calibration.py",
+      "sha256": "832e141e78a6c084fe7bdc5d444853657799b31890871ac533463370e34e1d24"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_calibration.py",
+      "sha256": "1c75eeaadd637c9caa04d945b18580d102de2b75be2a7ac4c1ce62c6c15e5f17"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_calibration.py",
+      "sha256": "c72b9db9309948e261c6a3c6fad5d62720bef40ccdee981f207bf25f18d0a0e8"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_calibration.py",
+      "sha256": "61d24338ce1156e82c5de8cd80fb732fdd82ffe1f9a6c88d4622b4747901ca5a"
+    }
+  },
+  "gates": {
+    "exact_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "zero_duplicate_detector_gps": true,
+    "zero_candidate_guard_violation": true,
+    "zero_native_index_guard_violation": true,
+    "zero_outcome_field_in_ledger": true,
+    "exact_primary_image_and_identity_replay": true,
+    "exact_raw_manifest_provenance": true,
+    "fail_closed": true
+  },
+  "output": {
+    "root": "E:/dante_cache/dante_light/o4a_corrected_native_calibration_v2",
+    "ledger_filename": "native_calibration_cohort.jsonl",
+    "summary_filename": "native_calibration_summary.json",
+    "historical_artifacts_overwritten": false,
+    "large_ledgers_committed_to_git": false
+  }
+}
