@@ -1,5 +1,5 @@
 {
-  "contract_digest": "4006057a4ef8409db9b0480da1ec59e56ec3a30d7f42b9c048cef30996d01667",
+  "contract_digest": "eb704f3a55e5d2c07f925233e79b4d129e8372f3a8f76bae9beb0c0217d49c73",
   "contract_id": "dante-o4a-corrected-native-thresholds-v1",
   "execution": {
     "atomic_outputs_only": true,
@@ -38,8 +38,10 @@
     "summary_filename": "native_thresholds_summary.json"
   },
   "parent_native_rescore": {
-    "artifact_digest": "64c693adf9eb23d02bfad7fca99e91211017c5659a11a9a148d5be7716dd12eb",
+    "compact_artifact_digest": "64c693adf9eb23d02bfad7fca99e91211017c5659a11a9a148d5be7716dd12eb",
     "contract_digest": "79aeb513f5c5da68a16f9441b9573bb23a40c3eaf56e3a7787eb0a4e27aa1a15",
+    "run_artifact_digest": "f842c23ed3f14e74cb45c5e0e2fc52faade3aa2084e0f0c81f4cf004aae8a361",
+    "run_summary_sha256": "6f47501e378e1f55a6be1c8a0d3052dff981703a0a90383140e25a94c2d71f6d",
     "run_key": "cff22dc5276433820227fb38c15f2a617cd4745ea07302cde87806c0e66fcb57"
   },
   "references": {
@@ -57,7 +59,7 @@
     },
     "implementation": {
       "path": "src/dante_light/o4a_corrected_native_thresholds.py",
-      "sha256": "6e03d0aa471186bb7217487672528be3c2e2eabb5303541b5c27a971b153faf3"
+      "sha256": "52da1077434e0b5d3fe5c48da5807ff867a76cd9b81f247c31397e5b176989db"
     },
     "native_calibration_v2_contract": {
       "path": "config/dante_o4a_corrected_native_calibration_v2.json",
@@ -69,7 +71,7 @@
     },
     "tests": {
       "path": "tests/test_dante_o4a_corrected_native_thresholds.py",
-      "sha256": "52573d48de1b0d8dba2ea7124ef38a3033ba1fa5932503d8a521a447cad60a01"
+      "sha256": "0d847f45edb299d145a27081ac73b1e826a22fac00cb26439e0ff14f1d508b18"
     }
   },
   "schema_version": 1,

@@ -92,15 +92,18 @@ def validate_native_threshold_contract(
         or int(method.get("bootstrap_chunk_size", -1))
         != int(future.get("bootstrap_chunk_size", -2))
         or float(method.get("percentile", -1)) != float(future.get("percentile", -2))
-        or method.get("confidence_percentiles")
-        != future.get("confidence_percentiles")
+        or method.get("confidence_percentiles") != future.get("confidence_percentiles")
     ):
         raise ContractError("corrected native-threshold method changed")
-    if value.get("parent_native_rescore") != {
-        "artifact_digest": rescore.get("artifact_digest"),
-        "contract_digest": rescore.get("contract_digest"),
-        "run_key": rescore.get("run_key"),
-    }:
+    parent = value.get("parent_native_rescore", {})
+    if (
+        parent.get("compact_artifact_digest") != rescore.get("artifact_digest")
+        or parent.get("run_summary_sha256") != rescore.get("summary", {}).get("sha256")
+        or parent.get("contract_digest") != rescore.get("contract_digest")
+        or parent.get("run_key") != rescore.get("run_key")
+        or not isinstance(parent.get("run_artifact_digest"), str)
+        or len(parent["run_artifact_digest"]) != 64
+    ):
         raise ContractError("corrected native-threshold parent changed")
     expected_counts = rescore.get("input_counts", {}).get("native_calibration", {})
     if value.get("gates", {}).get("exact_rows_by_detector") != expected_counts:
@@ -154,7 +157,9 @@ def validate_calibration_score_rows(
     return score_array, {
         "row_total": len(rows),
         "identity_score_digest": canonical_json_sha256(identity_rows),
-        "score_vector_float64_sha256": hashlib.sha256(score_array.tobytes()).hexdigest(),
+        "score_vector_float64_sha256": hashlib.sha256(
+            score_array.tobytes()
+        ).hexdigest(),
     }
 
 
@@ -239,7 +244,10 @@ def run_native_thresholds(
         rescore_external_root=rescore_external_root.resolve(),
         device=device,
     )
-    if rescore["artifact_digest"] != contract["parent_native_rescore"]["artifact_digest"]:
+    if (
+        rescore["artifact_digest"]
+        != contract["parent_native_rescore"]["run_artifact_digest"]
+    ):
         raise ContractError("corrected native-threshold rescore artifact changed")
     run_key = _run_key(contract, rescore_summary=rescore, runtime=runtime)
     run_dir = external_root.resolve() / f"native_thresholds_{run_key}"
@@ -291,8 +299,7 @@ def run_native_thresholds(
                 "bootstrap_rows_used": int(threshold["n_complete_blocks"])
                 * int(threshold["block_length"]),
                 "bootstrap_tail_rows_excluded": len(scores)
-                - int(threshold["n_complete_blocks"])
-                * int(threshold["block_length"]),
+                - int(threshold["n_complete_blocks"]) * int(threshold["block_length"]),
             }
         if counts != Counter(
             {
@@ -378,8 +385,7 @@ def verify_native_thresholds(
         or summary.get("status") != "PASS_COMPLETE_NATIVE_THRESHOLDS_V1"
         or summary.get("contract_digest") != contract["contract_digest"]
         or summary.get("run_key") != run_key
-        or summary.get("native_rescore_artifact_digest")
-        != rescore["artifact_digest"]
+        or summary.get("native_rescore_artifact_digest") != rescore["artifact_digest"]
         or summary.get("scientific_boundary") != contract["scientific_boundary"]
         or summary.get("method") != contract["method"]
     ):
@@ -400,8 +406,7 @@ def verify_native_thresholds(
         threshold = compute_detector_threshold(scores, method=contract["method"])
         expected_input = summary["inputs"][detector]
         if (
-            expected_input["identity_score_digest"]
-            != audit["identity_score_digest"]
+            expected_input["identity_score_digest"] != audit["identity_score_digest"]
             or expected_input["score_vector_float64_sha256"]
             != audit["score_vector_float64_sha256"]
             or expected_input["sha256"] != sha256_file(path)
@@ -413,8 +418,7 @@ def verify_native_thresholds(
             "bootstrap_rows_used": int(threshold["n_complete_blocks"])
             * int(threshold["block_length"]),
             "bootstrap_tail_rows_excluded": len(scores)
-            - int(threshold["n_complete_blocks"])
-            * int(threshold["block_length"]),
+            - int(threshold["n_complete_blocks"]) * int(threshold["block_length"]),
         }
     if recomputed != summary.get("thresholds"):
         raise ContractError("corrected native-threshold replay changed")

@@ -61,6 +61,13 @@ def test_native_threshold_contract_matches_frozen_future_method() -> None:
         "H1": 5000,
         "L1": 5000,
     }
+    assert contract["parent_native_rescore"] == {
+        "compact_artifact_digest": "64c693adf9eb23d02bfad7fca99e91211017c5659a11a9a148d5be7716dd12eb",
+        "run_artifact_digest": "f842c23ed3f14e74cb45c5e0e2fc52faade3aa2084e0f0c81f4cf004aae8a361",
+        "run_summary_sha256": "6f47501e378e1f55a6be1c8a0d3052dff981703a0a90383140e25a94c2d71f6d",
+        "contract_digest": "79aeb513f5c5da68a16f9441b9573bb23a40c3eaf56e3a7787eb0a4e27aa1a15",
+        "run_key": "cff22dc5276433820227fb38c15f2a617cd4745ea07302cde87806c0e66fcb57",
+    }
 
 
 def test_native_threshold_contract_rejects_method_drift() -> None:
