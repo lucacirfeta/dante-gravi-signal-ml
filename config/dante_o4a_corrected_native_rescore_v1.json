@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o4a-corrected-native-rescore-v1",
+  "contract_digest": "b551361990aede88077034b6245e02d5afbd832293506b967b72ddf902c0e91a",
+  "parent_native_index": {
+    "contract_digest": "a34cea01026355219d7d55750b16a1cf1c5c832f49de6c77f24caa0c57741a90",
+    "artifact_digest": "de7c79b1fb3dc7eab2662b728f70b1f51694e33958e2a8460fac04d2b4081274",
+    "index_sha256": "6a24ba02a6925bd5527b804c3ae8aa06b73fc36a654c8a6f789d22a1b3f2403b"
+  },
+  "scientific_boundary": {
+    "native_calibration_identities_changed": false,
+    "primary_candidate_identities_changed": false,
+    "preprocessing_changed": false,
+    "top_k_changed": false,
+    "old_native_scores_read": false,
+    "old_native_thresholds_read": false,
+    "thresholds_or_classes_computed_in_this_stage": false,
+    "historical_artifacts_immutable": true
+  },
+  "preprocessing": {
+    "sample_rate_hz": 4096,
+    "analysis_duration_s": 32.0,
+    "whitening_pad_s": 4.0,
+    "require_exact_symmetric_context": true,
+    "require_complete_raw_file_sha256": true,
+    "require_finite_clean_window": true,
+    "require_primary_candidate_image_sha256_replay": true,
+    "qrange": [
+      4,
+      64
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "colormap": "cividis",
+    "image_shape": [
+      256,
+      256,
+      3
+    ]
+  },
+  "scoring": {
+    "algorithm": "PatchScorer score_patch_tokens",
+    "top_k": 68,
+    "output_mode": "score_only",
+    "temporary_threshold": 1.0,
+    "temporary_threshold_has_scientific_role": false,
+    "device": "cuda"
+  },
+  "execution": {
+    "workers": 8,
+    "batch_size": 32,
+    "producer_backend": "process",
+    "shared_cuda_scorer": true,
+    "atomic_outputs_only": true,
+    "resume_partial_output": false
+  },
+  "references": {
+    "corrected_native_index": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_index.json",
+      "sha256": "37bef8dda37dd5a3dc80f5d4d3eae7a3dcd2829a90d73367e47a1c24dc37194a"
+    },
+    "corrected_primary_scan": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json",
+      "sha256": "6660911a1082fa651a1143aaf8307f1f8942cbebc0b229fa702efa7686b9246f"
+    },
+    "native_calibration_H1": {
+      "path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+      "sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588"
+    },
+    "native_calibration_L1": {
+      "path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+      "sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_rescore.py",
+      "sha256": "50a60ede6ac956916925902656b583f0e68c1cdfa933d7c649ebcd0cfe31fdb1"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "patch_producer": {
+      "path": "src/core/patch_producer.py",
+      "sha256": "2c20d4e89b48060986770127bf41c2d860d22efc4f98f430cb152cfb71f39dcf"
+    },
+    "patch_scorer": {
+      "path": "src/core/patch_scorer.py",
+      "sha256": "6367d7dfff43d2225d41ea9723b18fd8dbab3e4bce4dfefc1d52f902e9ef6363"
+    },
+    "model_loader": {
+      "path": "src/core/model_loader.py",
+      "sha256": "16cc4dd386412aac0d2c87ddec4332d607d73542f8d9ce9f5c9c83fa52da9c40"
+    },
+    "encoder": {
+      "path": "src/core/encoder.py",
+      "sha256": "db579c866c2aa351ca6495c6717c2d775dac6a00aa1729c1e18db12ed8e9115f"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_corrected.py",
+      "sha256": "fe8334c34c82bae9baff70da6c302d633e249de6aeac2bcf740b763797d58a98"
+    }
+  },
+  "gates": {
+    "calibration_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "candidate_rows_by_detector": {
+      "H1": 4720,
+      "L1": 6222
+    },
+    "exact_total_rows": 20942,
+    "zero_duplicate_detector_gps": true,
+    "zero_candidate_image_hash_mismatch": true,
+    "zero_context_or_nonfinite_score_failure": true,
+    "fail_closed": true
+  },
+  "output": {
+    "root": "E:/dante_cache/dante_light/o4a_corrected_native_rescore_v1",
+    "calibration_H1_filename": "native_calibration_H1.jsonl",
+    "calibration_L1_filename": "native_calibration_L1.jsonl",
+    "candidate_filename": "native_candidates.jsonl",
+    "summary_filename": "native_rescore_summary.json",
+    "historical_artifacts_overwritten": false,
+    "large_outputs_committed_to_git": false
+  }
+}

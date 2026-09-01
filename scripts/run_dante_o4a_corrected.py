@@ -39,6 +39,11 @@ from src.dante_light.o4a_corrected_native_index import (  # noqa: E402
     build_native_index,
     verify_native_index,
 )
+from src.dante_light.o4a_corrected_native_rescore import (  # noqa: E402
+    DEFAULT_EXTERNAL_ROOT as DEFAULT_NATIVE_RESCORE_EXTERNAL_ROOT,
+    run_native_rescore,
+    verify_native_rescore,
+)
 
 
 def main() -> int:
@@ -57,6 +62,8 @@ def main() -> int:
             "verify-native-cohort",
             "build-native-index",
             "verify-native-index",
+            "rescore-native",
+            "verify-native-rescore",
         ),
         required=True,
     )
@@ -68,6 +75,11 @@ def main() -> int:
         "--native-index-external-root",
         type=Path,
         default=DEFAULT_NATIVE_INDEX_EXTERNAL_ROOT,
+    )
+    parser.add_argument(
+        "--native-rescore-external-root",
+        type=Path,
+        default=DEFAULT_NATIVE_RESCORE_EXTERNAL_ROOT,
     )
     parser.add_argument("--raw-root", type=Path, default=Path("E:/o4a"))
     parser.add_argument("--device", default="cuda")
@@ -166,6 +178,31 @@ def main() -> int:
             primary_external_root=args.external_root.resolve(),
             cohort_external_root=args.native_external_root.resolve(),
             external_root=args.native_index_external_root.resolve(),
+            device=args.device,
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "rescore-native":
+        summary, run_dir = run_native_rescore(
+            root=ROOT,
+            raw_root=args.raw_root.resolve(),
+            primary_external_root=args.external_root.resolve(),
+            cohort_external_root=args.native_external_root.resolve(),
+            index_external_root=args.native_index_external_root.resolve(),
+            external_root=args.native_rescore_external_root.resolve(),
+            device=args.device,
+            workers=args.workers,
+            batch_size=args.batch_size,
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "verify-native-rescore":
+        summary, run_dir = verify_native_rescore(
+            root=ROOT,
+            primary_external_root=args.external_root.resolve(),
+            cohort_external_root=args.native_external_root.resolve(),
+            index_external_root=args.native_index_external_root.resolve(),
+            external_root=args.native_rescore_external_root.resolve(),
             device=args.device,
         )
         print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
