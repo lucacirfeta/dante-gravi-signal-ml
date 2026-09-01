@@ -1,0 +1,74 @@
+{
+  "candidate_identity_count": 10942,
+  "candidate_time_count": 10883,
+  "contract_digest": "66f5796aecdea5a1009257a96a351e960c0801eadb60dc40bbf01bdfa74378c2",
+  "counts_by_detector": {
+    "H1": 647,
+    "L1": 647
+  },
+  "external_artifact_digest": "293312180b9bfb5cb65f79227ec5598cf389b436661cba5229c6b01b4f53113f",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_v1/native_cohort_733a65f58de3143dc8ca860f4a800aba5d59d05bff6a59d92e3515e3de61f05b",
+    "ledger_filename": "native_cohort.jsonl",
+    "summary_filename": "native_cohort_summary.json"
+  },
+  "ledger": {
+    "row_digest": "1f8866097d1baca1de39ea4946415646674b865437185bf99d2addd71f2d9cac",
+    "sha256": "358138d942267b73d5bbd95a8a0204b8dd2f260f1d2797e6cde2f6bd75252b46",
+    "size_bytes": 1002152
+  },
+  "native_calibration_identity_count": 10000,
+  "primary_scan": {
+    "artifact_digest": "2cca3c8fcdf00f2d7fb490c54d78e6403f0128f2f5a4f7bafdf8fe5ef2974edd",
+    "database_sha256": "4b37a6a100b423e5b5a14f326d491ae311242cfa0914cee5c244415d42c5932c"
+  },
+  "quality_counts": {
+    "H1": {
+      "checked": 768,
+      "excess_power_veto": 39,
+      "pass_clean": 647
+    },
+    "L1": {
+      "checked": 768,
+      "excess_power_veto": 31,
+      "pass_clean": 647
+    }
+  },
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_corrected.py",
+      "sha256": "91b5072887fea078e25440a3b69e3862e6150049692b7425fc8793bfee3d202a"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_v1.json",
+      "sha256": "c601205d5ceabe9aaca7f15a03afb91467eb23e45cd89d0d1add02397a83850b"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native.py",
+      "sha256": "ddbbec903af586146d3500d013ddbc399c51cd056554ccebc0efd95caa913f73"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native.py",
+      "sha256": "71233f7c8cde3bdbc3f0d27f9d8e41e18623e54fd43c90f7c1f9c62746387693"
+    }
+  },
+  "row_total": 1294,
+  "run_key": "733a65f58de3143dc8ca860f4a800aba5d59d05bff6a59d92e3515e3de61f05b",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "cohort_frozen_before_native_representation": true,
+    "historical_detector_identity_inferred": false,
+    "native_embeddings_or_scores_computed": false,
+    "primary_scores_read_by_selector": false
+  },
+  "status": "PASS_VERIFIED_NATIVE_COHORT",
+  "verification": {
+    "native_cohort_verifier": "PASS",
+    "pytest": {
+      "passed": 27,
+      "warnings": 11,
+      "wall_time_seconds": 164.58
+    },
+    "worker_or_context_failures": 0
+  }
+}

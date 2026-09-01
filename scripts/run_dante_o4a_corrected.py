@@ -29,6 +29,11 @@ from src.dante_light.o4a_corrected_protocol import (  # noqa: E402
 from src.dante_light.o4a_corrected_runtime import (  # noqa: E402
     write_canonical_runtime_contract,
 )
+from src.dante_light.o4a_corrected_native import (  # noqa: E402
+    DEFAULT_EXTERNAL_ROOT as DEFAULT_NATIVE_EXTERNAL_ROOT,
+    freeze_native_cohort,
+    verify_native_cohort,
+)
 
 
 def main() -> int:
@@ -43,10 +48,15 @@ def main() -> int:
             "verify-calibration",
             "scan-primary",
             "verify-scan",
+            "freeze-native-cohort",
+            "verify-native-cohort",
         ),
         required=True,
     )
     parser.add_argument("--external-root", type=Path, default=DEFAULT_EXTERNAL_ROOT)
+    parser.add_argument(
+        "--native-external-root", type=Path, default=DEFAULT_NATIVE_EXTERNAL_ROOT
+    )
     parser.add_argument("--raw-root", type=Path, default=Path("E:/o4a"))
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--workers", type=int, default=8)
@@ -55,6 +65,7 @@ def main() -> int:
     parser.add_argument("--queue-depth-batches", type=int, default=2)
     parser.add_argument("--queue-topology", default="single_combined_bounded_queue")
     parser.add_argument("--database-commit-rows", type=int, default=1024)
+    parser.add_argument("--quality-batch-size", type=int, default=128)
     args = parser.parse_args()
     if args.stage == "freeze-runtime":
         contract = write_canonical_runtime_contract(root=ROOT, device=args.device)
@@ -101,6 +112,25 @@ def main() -> int:
     if args.stage == "verify-scan":
         summary, run_dir = verify_primary_scan(
             root=ROOT, external_root=args.external_root.resolve()
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "freeze-native-cohort":
+        summary, run_dir = freeze_native_cohort(
+            root=ROOT,
+            raw_root=args.raw_root.resolve(),
+            primary_external_root=args.external_root.resolve(),
+            external_root=args.native_external_root.resolve(),
+            workers=args.workers,
+            quality_batch_size=args.quality_batch_size,
+        )
+        print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
+        return 0
+    if args.stage == "verify-native-cohort":
+        summary, run_dir = verify_native_cohort(
+            root=ROOT,
+            primary_external_root=args.external_root.resolve(),
+            external_root=args.native_external_root.resolve(),
         )
         print(json.dumps({"run_dir": str(run_dir), **summary}, indent=2, sort_keys=True))
         return 0
