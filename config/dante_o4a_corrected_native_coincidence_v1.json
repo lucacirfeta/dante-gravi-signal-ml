@@ -4,7 +4,7 @@
     "approved_option": "option_1_asymmetric_robust_seed",
     "diagnostic_population_separate": true
   },
-  "contract_digest": "a0bd26cc54c2d007b821d3e07d774cdd78e71c180193eb9eb8e965a55bf84c4c",
+  "contract_digest": "2fd40a59bbfef8a33beb6858e1adf6de382508274a610f999b88aafb4aab8fe4",
   "contract_id": "dante-o4a-corrected-native-coincidence-v1",
   "execution": {
     "atomic_outputs_only": true,
@@ -115,7 +115,7 @@
     },
     "implementation": {
       "path": "src/dante_light/o4a_corrected_native_coincidence.py",
-      "sha256": "2ce6d363b3e3a90dc9af3fdb748c3aa979db242d6512521a2ba818d02a2e307a"
+      "sha256": "87ba0510f6f7a8d834756d687cc918f918419dc0c1455a882d5afc235658ee98"
     },
     "native_classification": {
       "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_classification.json",
@@ -139,7 +139,7 @@
     },
     "tests": {
       "path": "tests/test_dante_o4a_corrected_native_coincidence.py",
-      "sha256": "9aaa1d1d5da51f3e6e225d28350230f3d18becb031126377f88d8b05855ca575"
+      "sha256": "236b211f45bfa8ccb5436475d4ac1815477b17231576f698d844c8db0ebfaa3a"
     }
   },
   "schema_version": 1,

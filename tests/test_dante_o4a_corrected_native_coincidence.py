@@ -6,11 +6,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+import src.dante_light.o4a_corrected_native_coincidence as coincidence_module
 from src.dante_light.contracts import ContractError
 from src.dante_light.o4a_corrected_native_coincidence import (
     ROOT,
     _anchor_check,
     _context_plan,
+    _measure_populations,
+    _prepare_identity,
     load_native_coincidence_contract,
     measure_physical_arrays,
     primary_null_threshold,
@@ -150,6 +153,110 @@ def test_context_plan_stitches_and_partner_can_be_unavailable(tmp_path: Path) ->
         [120.0, 136.0],
     ]
     assert _context_plan(Manifest(), detector="L1", gps=200.0, pad_s=4.0) == []
+
+
+def test_nonfinite_partner_is_unavailable_but_nonfinite_seed_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    raw = np.full(40 * 4096, np.nan)
+    monkeypatch.setattr(
+        "src.dante_light.o4a_corrected_native_coincidence._read_planned_context",
+        lambda *_args, **_kwargs: (object(), raw),
+    )
+    partner = _prepare_identity(
+        {
+            "detector": "H1",
+            "gps_start": 1369001152.0,
+            "context_sources": [],
+            "required_seed_identity": False,
+        }
+    )
+    assert partner == {
+        "detector": "H1",
+        "gps_start": 1369001152.0,
+        "availability_status": "PARTNER_RAW_CONTEXT_NONFINITE",
+        "nonfinite_sample_count": 40 * 4096,
+    }
+    with pytest.raises(ContractError, match="seed raw context is non-finite"):
+        _prepare_identity(
+            {
+                "detector": "H1",
+                "gps_start": 1369001152.0,
+                "context_sources": [],
+                "required_seed_identity": True,
+            }
+        )
+
+
+def test_measurement_ledger_accounts_for_nonfinite_partner(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    class InlineExecutor:
+        def __init__(self, **_kwargs) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args) -> None:
+            pass
+
+        def map(self, function, values):
+            return map(function, values)
+
+    class Scorer:
+        def encode_patch_tokens(self, images):
+            assert len(images) == 1
+            return images
+
+        def score_patch_tokens(self, _tokens, _scale, *, output_mode):
+            assert output_mode == "full"
+            return [{"novelty_score": 0.5, "top_k_indices": np.arange(68)}]
+
+    def prepare(argument):
+        if argument["detector"] == "H1":
+            return {
+                "detector": "H1",
+                "gps_start": 100.0,
+                "availability_status": "PARTNER_RAW_CONTEXT_NONFINITE",
+                "nonfinite_sample_count": 40 * 4096,
+            }
+        return {
+            "detector": "L1",
+            "gps_start": 100.0,
+            "availability_status": "AVAILABLE",
+            "image": np.zeros((256, 256, 3), dtype=np.uint8),
+            "clean": np.zeros(32 * 4096),
+            "image_sha256": "a" * 64,
+            "clean_window_sha256": "b" * 64,
+            "raw_context_sha256": "c" * 64,
+            "context_sources": [],
+            "context_sources_digest": "d" * 64,
+        }
+
+    monkeypatch.setattr(coincidence_module, "ProcessPoolExecutor", InlineExecutor)
+    monkeypatch.setattr(coincidence_module, "_prepare_identity", prepare)
+    seed = _row("L1", 100.0, "ROBUST")
+    primary, diagnostic = _measure_populations(
+        primary=[seed],
+        diagnostic=[],
+        plans={
+            ("L1", 100.0): {"detector": "L1", "gps_start": 100.0},
+            ("H1", 100.0): {"detector": "H1", "gps_start": 100.0},
+        },
+        unavailable={},
+        receipt=[],
+        raw_root=tmp_path,
+        scorer=Scorer(),
+        contract=load_native_coincidence_contract(ROOT),
+        workers=1,
+        batch_size=32,
+    )
+    assert diagnostic == []
+    assert len(primary) == 1
+    assert primary[0]["measurement_status"] == "PARTNER_DATA_UNAVAILABLE"
+    assert primary[0]["unavailable_reason"] == "PARTNER_RAW_CONTEXT_NONFINITE"
+    assert primary[0]["partner_class_consulted"] is False
 
 
 def test_historical_anchor_uses_analysis_window_not_feature_peak() -> None:

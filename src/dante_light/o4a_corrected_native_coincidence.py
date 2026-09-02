@@ -351,8 +351,11 @@ def _read_planned_context(
             raise ContractError("corrected native-coincidence HDF5 slice is short")
         pieces.append(values)
     values = np.ascontiguousarray(np.concatenate(pieces))
-    if values.shape != (40 * 4096,) or np.any(~np.isfinite(values)):
-        raise ContractError("corrected native-coincidence raw context is invalid")
+    if values.shape != (40 * 4096,):
+        raise ContractError(
+            "corrected native-coincidence raw context shape is invalid: "
+            f"{detector} {gps:.6f} {values.shape}"
+        )
     return TimeSeries(
         values,
         t0=gps - 4.0,
@@ -369,6 +372,19 @@ def _prepare_identity(argument: Mapping[str, Any]) -> dict[str, Any]:
     gps = float(argument["gps_start"])
     sources = list(argument["context_sources"])
     context, raw = _read_planned_context(sources, detector=detector, gps=gps)
+    nonfinite_sample_count = int(np.count_nonzero(~np.isfinite(raw)))
+    if nonfinite_sample_count:
+        if bool(argument["required_seed_identity"]):
+            raise ContractError(
+                "corrected native-coincidence seed raw context is non-finite: "
+                f"{detector} {gps:.6f} ({nonfinite_sample_count} samples)"
+            )
+        return {
+            "detector": detector,
+            "gps_start": gps,
+            "availability_status": "PARTNER_RAW_CONTEXT_NONFINITE",
+            "nonfinite_sample_count": nonfinite_sample_count,
+        }
     whitened, pad_info = whiten_context(context, gps, gps + 32.0, pad=4.0)
     tolerance = 1.0 / 4096.0
     if (
@@ -402,6 +418,7 @@ def _prepare_identity(argument: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "detector": detector,
         "gps_start": gps,
+        "availability_status": "AVAILABLE",
         "image": image,
         "clean": clean_values,
         "image_sha256": image_sha256,
@@ -604,6 +621,9 @@ def _build_plans(
     }
     plans: dict[tuple[str, float], dict[str, Any]] = {}
     unavailable: dict[tuple[str, float], str] = {}
+    seed_identities = {
+        (str(seed["detector"]), float(seed["gps_start"])) for seed in seeds
+    }
     for seed in seeds:
         detector = str(seed["detector"])
         gps = float(seed["gps_start"])
@@ -625,6 +645,7 @@ def _build_plans(
             plans[identity] = {
                 "detector": current,
                 "gps_start": gps,
+                "required_seed_identity": identity in seed_identities,
                 "context_sources": sources,
                 "expected_image_sha256": (
                     None if parent is None else parent["image_sha256"]
@@ -701,12 +722,28 @@ def _measure_populations(
                 prepared_rows = list(
                     executor.map(_prepare_identity, [needed[key] for key in identities])
                 )
-                images = [row["image"] for row in prepared_rows]
+                available_rows = [
+                    row
+                    for row in prepared_rows
+                    if row["availability_status"] == "AVAILABLE"
+                ]
+                images = [row["image"] for row in available_rows]
                 tokens = scorer.encode_patch_tokens(images)
                 scored_rows = scorer.score_patch_tokens(tokens, 1.0, output_mode="full")
                 prepared: dict[tuple[str, float], dict[str, Any]] = {}
+                batch_unavailable: dict[tuple[str, float], str] = {}
+                for row in prepared_rows:
+                    if row["availability_status"] != "AVAILABLE":
+                        batch_unavailable[(str(row["detector"]), float(row["gps_start"]))] = str(
+                            row["availability_status"]
+                        )
+                available_identities = [
+                    identity
+                    for identity, row in zip(identities, prepared_rows, strict=True)
+                    if row["availability_status"] == "AVAILABLE"
+                ]
                 for identity, row, scored in zip(
-                    identities, prepared_rows, scored_rows, strict=True
+                    available_identities, available_rows, scored_rows, strict=True
                 ):
                     value = {key: item for key, item in row.items() if key not in {"image"}}
                     value["clean"] = row["clean"]
@@ -752,12 +789,15 @@ def _measure_populations(
                         ],
                         "seed_top_k_indices": candidate["top_k_indices"].tolist(),
                     }
-                    if partner_key in unavailable:
+                    unavailable_reason = unavailable.get(partner_key) or batch_unavailable.get(
+                        partner_key
+                    )
+                    if unavailable_reason is not None:
                         outputs[population_name].append(
                             {
                                 **base,
                                 "measurement_status": "PARTNER_DATA_UNAVAILABLE",
-                                "unavailable_reason": unavailable[partner_key],
+                                "unavailable_reason": unavailable_reason,
                                 "partner_class_consulted": False,
                                 "cc_onsource": None,
                                 "cc_null_values": [],
