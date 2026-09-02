@@ -86,7 +86,9 @@ def _candidate_gps(run: str, aggregated_dir: Path) -> np.ndarray:
 
 def _pick_background_span(detector: str, event_gps: float, block_s: float,
                           run: str, aggregated_dir: Path = AGGREGATED_DIR,
-                          min_clean_windows: int = 60) -> tuple[int, int, np.ndarray]:
+                          min_clean_windows: int = 60,
+                          candidate_gps: np.ndarray | None = None,
+                          ) -> tuple[int, int, np.ndarray]:
     """Nearest CAT1-clean span of block_s seconds with enough clean windows.
 
     Candidate exclusion is applied per-WINDOW (drop 32 s windows within
@@ -94,7 +96,13 @@ def _pick_background_span(detector: str, event_gps: float, block_s: float,
     ~10^4 candidates in the run, no multi-hour span is candidate-free, but
     plenty of individual windows are. Returns (start, end, window_starts).
     """
-    cands = _candidate_gps(run, Path(aggregated_dir))
+    cands = (
+        _candidate_gps(run, Path(aggregated_dir))
+        if candidate_gps is None
+        else np.asarray(candidate_gps, dtype=np.float64)
+    )
+    if cands.ndim != 1 or not np.isfinite(cands).all():
+        raise RuntimeError("PEM candidate-exclusion GPS ledger is invalid")
     search_half = 7 * 86400
     segs = get_segments(f"{detector}_BURST_CAT1",
                         int(event_gps - search_half),
@@ -211,7 +219,9 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
                     n_boot: int = 200, seed: int = 42,
                     purge_cache: bool = False,
                     pem_dir: Path | None = None,
-                    aggregated_dir: Path = AGGREGATED_DIR) -> dict:
+                    aggregated_dir: Path = AGGREGATED_DIR,
+                    candidate_gps: np.ndarray | None = None,
+                    candidate_exclusion_digest: str | None = None) -> dict:
     """Empirical family-wise null for one event. Writes and returns the JSON."""
     aggregated_dir = Path(aggregated_dir)
     pem_dir = (
@@ -221,7 +231,13 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
     )
     rng = np.random.default_rng(seed)
     bstart, bend, window_starts = _pick_background_span(
-        detector, event_gps, block_s, run, aggregated_dir)
+        detector,
+        event_gps,
+        block_s,
+        run,
+        aggregated_dir,
+        candidate_gps=candidate_gps,
+    )
     W = len(window_starts)
     logger.info(f"[{detector} {event_gps:.0f}] background span "
                 f"[{bstart}, {bend}] ({(bend-bstart)/3600:.1f} h, "
@@ -339,6 +355,10 @@ def calibrate_event(detector: str, event_gps: float, channels: list[str],
         "n_windows": W,
         "n_surrogate_pairs": n_pairs,
         "alpha_family_wise": alpha,
+        "candidate_exclusion_population": (
+            int(len(candidate_gps)) if candidate_gps is not None else None
+        ),
+        "candidate_exclusion_digest": candidate_exclusion_digest,
         "threshold_fw": threshold,
         "threshold_fw_ci95": ci,
         "per_channel_null": per_channel,
