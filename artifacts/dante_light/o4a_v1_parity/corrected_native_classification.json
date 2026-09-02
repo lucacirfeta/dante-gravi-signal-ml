@@ -1,0 +1,97 @@
+{
+  "artifact_digest": "1dfbf9f0882b7208175c8a984bb551970ef835e34264dce472978080a29d3f24",
+  "classification": {
+    "lower_boundary_class": "AMBIGUOUS",
+    "output_field": "native_class",
+    "rule": "BACKGROUND if score < ci_lower; ROBUST if score > ci_upper; AMBIGUOUS otherwise",
+    "score_field": "native_score",
+    "upper_boundary_class": "AMBIGUOUS"
+  },
+  "contract_digest": "45d3d8b1aa6ba0e030adc11c13a386ed228713343a91ea4fe093f8ed3b31b171",
+  "counts_by_detector_and_class": {
+    "H1": {
+      "AMBIGUOUS": 672,
+      "BACKGROUND": 1958,
+      "ROBUST": 2090
+    },
+    "L1": {
+      "AMBIGUOUS": 1672,
+      "BACKGROUND": 1234,
+      "ROBUST": 3316
+    }
+  },
+  "counts_by_class": {
+    "AMBIGUOUS": 2344,
+    "BACKGROUND": 3192,
+    "ROBUST": 5406
+  },
+  "external_artifact_digest": "e96e0bace601a57e453dd5b823999ca09280190c51fa598a65f9d9b11f86cf85",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_classification_v1/native_classification_248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef",
+    "run_key": "248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef",
+    "summary_filename": "native_classification_summary.json",
+    "summary_sha256": "82f5e25da836e5f75f0546d161b6e5eb95d28dc570b2e10cd9004c27b8885bbb",
+    "summary_size_bytes": 2293
+  },
+  "gates": {
+    "class_labels": [
+      "BACKGROUND",
+      "AMBIGUOUS",
+      "ROBUST"
+    ],
+    "disposition_read": false,
+    "duplicate_detector_gps": 0,
+    "historical_classes_read": false,
+    "nonfinite_scores": 0,
+    "taxonomy_read": false
+  },
+  "native_rescore_artifact_digest": "f842c23ed3f14e74cb45c5e0e2fc52faade3aa2084e0f0c81f4cf004aae8a361",
+  "native_threshold_artifact_digest": "a0f01429d14aff32b330fee8655b862af8b9f2a7fa436e7f6044b579b7a64031",
+  "output": {
+    "filename": "native_classified_candidates.jsonl",
+    "row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19aa783",
+    "row_total": 10942,
+    "sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c",
+    "size_bytes": 11713451
+  },
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_classification.py",
+      "sha256": "e3823fd20cdffc4a98d2c0e1030bdac644422558d045a5fae20ba3f6a86d7468"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_classification_v1.json",
+      "sha256": "0fc773a6be16f90fd7d943742f0b79003baaa703d176ee657e9f5124c50ecb39"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_classification.py",
+      "sha256": "0ad3ef56799038149ca70bc64ea7de33d7430ab52fd9734d3ad1e06f858225cf"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_classification.py",
+      "sha256": "6237383dc6416a589ed10a49f2f6dbd263133c1b48fa5f814b1078e9360888d7"
+    }
+  },
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_population_changed": false,
+    "coincidence_performed_in_this_stage": false,
+    "deterministic_classes_only": true,
+    "historical_artifacts_immutable": true,
+    "native_scores_changed": false,
+    "native_thresholds_changed": false,
+    "pem_performed_in_this_stage": false,
+    "taxonomy_performed_in_this_stage": false
+  },
+  "status": "PASS_VERIFIED_NATIVE_CLASSIFICATION_V1",
+  "verification": {
+    "native_classification_verifier": "PASS_EXACT_REPLAY",
+    "pytest": {
+      "passed": 72,
+      "wall_time_seconds": 370.19,
+      "warnings": 11
+    },
+    "ruff": "PASS"
+  }
+}
