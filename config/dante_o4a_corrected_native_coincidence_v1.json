@@ -1,0 +1,169 @@
+{
+  "authorization": {
+    "approved_at": "2026-09-02",
+    "approved_option": "option_1_asymmetric_robust_seed",
+    "diagnostic_population_separate": true
+  },
+  "contract_digest": "a0bd26cc54c2d007b821d3e07d774cdd78e71c180193eb9eb8e965a55bf84c4c",
+  "contract_id": "dante-o4a-corrected-native-coincidence-v1",
+  "execution": {
+    "atomic_outputs_only": true,
+    "batch_size": 32,
+    "environment": "canonical WSL runtime",
+    "producer_backend": "process",
+    "raw_source_sha256_workers": 8,
+    "resume_partial_output": false,
+    "shared_cuda_scorer": true,
+    "workers": 8
+  },
+  "gates": {
+    "all_seeds_accounted": true,
+    "exact_raw_source_sha256": true,
+    "exact_seed_detector_gps_identity": true,
+    "exact_seed_image_sha256_replay": true,
+    "exact_symmetric_whitening_context": true,
+    "fail_closed": true,
+    "full_ledger_verification": true,
+    "maximum_seed_score_delta": 2e-07,
+    "zero_background_measurements": true,
+    "zero_duplicate_seed_detector_gps": true,
+    "zero_partner_class_reads": true
+  },
+  "measurement": {
+    "algorithm": "bandpassed_light_travel_normxcorr_v1",
+    "decision_rule": "cc_onsource_strictly_greater_than_primary_null_p99",
+    "half_window_s": 0.5,
+    "lag_margin_s": 0.002,
+    "light_travel_s": 0.010002,
+    "localization": "native_detector_aware_top_k_patch_columns",
+    "null_shifts_s": [
+      1.0,
+      2.0,
+      4.0,
+      8.0,
+      -1.0,
+      -2.0,
+      -4.0,
+      -8.0
+    ],
+    "patch_iou_role": "complementary_diagnostic",
+    "sample_rate_hz": 4096,
+    "segment_duration_s": 32.0,
+    "threshold_quantile_method": "linear",
+    "threshold_quantile_percent": 99.0,
+    "threshold_source": "primary_seed_per_event_null_maxima_only",
+    "whitening_pad_s": 4.0
+  },
+  "output": {
+    "diagnostic_filename": "native_coincidence_ambiguous.jsonl",
+    "historical_artifacts_overwritten": false,
+    "large_outputs_committed_to_git": false,
+    "primary_filename": "native_coincidence_robust.jsonl",
+    "raw_receipt_filename": "raw_source_receipt.jsonl",
+    "root": "E:/dante_cache/dante_light/o4a_corrected_native_coincidence_v1",
+    "summary_filename": "native_coincidence_summary.json"
+  },
+  "parents": {
+    "native_classification_artifact_digest": "e96e0bace601a57e453dd5b823999ca09280190c51fa598a65f9d9b11f86cf85",
+    "native_classification_contract_digest": "45d3d8b1aa6ba0e030adc11c13a386ed228713343a91ea4fe093f8ed3b31b171",
+    "native_classification_row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19a783",
+    "native_classification_sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c",
+    "native_index_artifact_digest": "de7c79b1fb3dc7eab2662b728f70b1f51694e33958e2a8460fac04d2b4081274",
+    "native_index_contract_digest": "a34cea01026355219d7d55750b16a1cf1c5c832f49de6c77f24caa0c57741a90",
+    "native_index_sha256": "6a24ba02a6925bd5527b804c3ae8aa06b73fc36a654c8a6f789d22a1b3f2403b",
+    "native_taxonomy_artifact_digest": "7a63ce36b8f0edafa4e347b3b0e751a676cc497138cf5c6d971f0d0dd5a139ed",
+    "primary_scan_artifact_digest": "2cca3c8fcdf00f2d7fb490c54d78e6403f0128f2f5a4f7bafdf8fe5ef2974edd",
+    "primary_scan_database_sha256": "4b37a6a100b423e5b5a14f326d491ae311242cfa0914cee5c244415d42c5932c"
+  },
+  "population": {
+    "diagnostic_seed_class": "AMBIGUOUS",
+    "exact_counts": {
+      "diagnostic": {
+        "H1": 672,
+        "L1": 1672,
+        "total": 2344
+      },
+      "excluded": {
+        "H1": 1958,
+        "L1": 1234,
+        "total": 3192
+      },
+      "primary": {
+        "H1": 2090,
+        "L1": 3316,
+        "total": 5406
+      }
+    },
+    "excluded_class": "BACKGROUND",
+    "partner_class_read": false,
+    "partner_selection": "opposite_detector_same_window_regardless_of_class_or_catalogue_presence",
+    "primary_and_diagnostic_threshold_pools_separate": true,
+    "primary_seed_class": "ROBUST"
+  },
+  "references": {
+    "authoritative_physical_statistic": {
+      "path": "src/pipeline_v2_production/coincidence_physical.py",
+      "sha256": "823e3f20c6199b0a4910c234910d28b3f585c4f9de57861e4bbd6b004e302611"
+    },
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_coincidence.py",
+      "sha256": "21351e770a824e6617a4a48c84359408dd1b473d554050f1e5f5e5aefc771139"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_coincidence.py",
+      "sha256": "2ce6d363b3e3a90dc9af3fdb748c3aa979db242d6512521a2ba818d02a2e307a"
+    },
+    "native_classification": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_classification.json",
+      "sha256": "4e50dc9fd113aae60769caab86a5458dd7acd8d58861c870f1ddce29526665b8"
+    },
+    "native_index": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_index.json",
+      "sha256": "37bef8dda37dd5a3dc80f5d4d3eae7a3dcd2829a90d73367e47a1c24dc37194a"
+    },
+    "native_taxonomy": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_taxonomy.json",
+      "sha256": "bdd270872f081f0397d85f595b1155fe5786dc623404a87621febe38395a23ba"
+    },
+    "primary_scan": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json",
+      "sha256": "6660911a1082fa651a1143aaf8307f1f8942cbebc0b229fa702efa7686b9246f"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_coincidence.py",
+      "sha256": "9aaa1d1d5da51f3e6e225d28350230f3d18becb031126377f88d8b05855ca575"
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "ambiguous_affects_primary_threshold": false,
+    "asymmetric_seed_search": true,
+    "background_processed": false,
+    "efficiency_required_before_null_as_absence_claim": true,
+    "historical_artifacts_immutable": true,
+    "native_scores_or_classes_changed": false,
+    "partner_class_or_candidate_required": false,
+    "symmetric_robust_and_required": false,
+    "taxonomy_used_for_coincidence": false
+  },
+  "scoring": {
+    "colormap": "cividis",
+    "device": "cuda",
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "index": "corrected_detector_aware_native_v1",
+    "max_seed_score_delta": 2e-07,
+    "top_k": 68
+  }
+}
