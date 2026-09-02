@@ -1,5 +1,5 @@
 {
-  "contract_digest": "0f789526220b4c2f31e59a9dc767341482d2572629192cd53263e99f93789fa4",
+  "contract_digest": "e926ef0503681cc313dfbc0a25bc4257a8d15894fe6f065f415bceccb405734e",
   "contract_id": "dante-o4a-corrected-native-taxonomy-v1",
   "execution": {
     "atomic_outputs_only": true,
@@ -32,7 +32,7 @@
     "taxonomy_filename": "native_taxonomy.jsonl"
   },
   "parent_native_classification": {
-    "compact_artifact_digest": "1dfbf9f0882b7208175c8a984bb551970ef835e34264dce472978080a29d3f24",
+    "compact_artifact_digest": "6ff30289ab18718201126e1fbac15d4463ed90360bb87ce3096ad4c84efc5337",
     "contract_digest": "45d3d8b1aa6ba0e030adc11c13a386ed228713343a91ea4fe093f8ed3b31b171",
     "counts_by_detector_and_class": {
       "H1": {
@@ -47,7 +47,7 @@
       }
     },
     "output_filename": "native_classified_candidates.jsonl",
-    "output_row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19aa783",
+    "output_row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19a783",
     "output_sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c",
     "run_artifact_digest": "e96e0bace601a57e453dd5b823999ca09280190c51fa598a65f9d9b11f86cf85",
     "run_key": "248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef",
@@ -75,7 +75,7 @@
     },
     "native_classification": {
       "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_classification.json",
-      "sha256": "501589f2aca473bfa7c922fc1a06b7b47d5a2796ceaf318079555e3ba55d8e83"
+      "sha256": "4e50dc9fd113aae60769caab86a5458dd7acd8d58861c870f1ddce29526665b8"
     },
     "primary_scan": {
       "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json",

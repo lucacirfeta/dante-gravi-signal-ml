@@ -1,5 +1,5 @@
 {
-  "artifact_digest": "1dfbf9f0882b7208175c8a984bb551970ef835e34264dce472978080a29d3f24",
+  "artifact_digest": "6ff30289ab18718201126e1fbac15d4463ed90360bb87ce3096ad4c84efc5337",
   "classification": {
     "lower_boundary_class": "AMBIGUOUS",
     "output_field": "native_class",
@@ -49,7 +49,7 @@
   "native_threshold_artifact_digest": "a0f01429d14aff32b330fee8655b862af8b9f2a7fa436e7f6044b579b7a64031",
   "output": {
     "filename": "native_classified_candidates.jsonl",
-    "row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19aa783",
+    "row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19a783",
     "row_total": 10942,
     "sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c",
     "size_bytes": 11713451
