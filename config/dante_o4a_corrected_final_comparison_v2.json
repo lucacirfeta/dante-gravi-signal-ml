@@ -1,0 +1,195 @@
+{
+  "candidate_comparison": {
+    "class_transition": {
+      "corrected_field": "native_class",
+      "historical_field": "robustness_class_idxq4_64_queryq4_64",
+      "labels": [
+        "BACKGROUND",
+        "AMBIGUOUS",
+        "ROBUST"
+      ],
+      "population": "exact_shared_normalized_identities"
+    },
+    "corrected_expected_total": 10942,
+    "historical_expected_total": 10429,
+    "population": "exact_detector_normalized_analysis_gps_union",
+    "score_delta": {
+      "corrected_field": "native_score",
+      "descriptive_only": true,
+      "direction": "corrected_minus_historical",
+      "equivalence_claim": false,
+      "historical_field": "native_score_idxq4_64_queryq4_64",
+      "population": "exact_shared_normalized_identities"
+    }
+  },
+  "coincidence_comparison": {
+    "corrected_exceeder_field": "exceeds_primary_threshold",
+    "global_significance_claim": false,
+    "historical_exceeder_rule": "cc_onsource_strictly_greater_than_recorded_cc_null_max_p99",
+    "mode": "identity_set_accounting_only",
+    "reason": "candidate populations, localization, and pooled null thresholds differ",
+    "statistic_delta_per_event": false,
+    "threshold_equivalence_claim": false
+  },
+  "contract_digest": "554c20640d59b9f12bed01d7ac8e4fb7ca78f8a3197512f7e87bd29e7906d9d1",
+  "contract_id": "dante-o4a-corrected-final-comparison-v2",
+  "external_roots": {
+    "classification": "E:/dante_cache/dante_light/o4a_corrected_native_classification_v1",
+    "coincidence": "E:/dante_cache/dante_light/o4a_corrected_native_coincidence_v1",
+    "pem": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1",
+    "taxonomy": "E:/dante_cache/dante_light/o4a_corrected_native_taxonomy_v1"
+  },
+  "historical_singletons": [
+    {
+      "expected_analysis_identity": {
+        "detector": "H1",
+        "gps_start": 1369305280.0
+      },
+      "historical_catalog_identity": {
+        "detector": "H1",
+        "gps_start": 1369305276.0
+      },
+      "name": "historical_h1_singleton"
+    },
+    {
+      "expected_analysis_identity": {
+        "detector": "L1",
+        "gps_start": 1382955232.0
+      },
+      "historical_catalog_identity": {
+        "detector": "L1",
+        "gps_start": 1382955228.0
+      },
+      "localized_feature_gps": 1382955253.17,
+      "name": "historical_l1_forum_singleton"
+    }
+  ],
+  "identity": {
+    "comparison_fields": [
+      "detector",
+      "gps_start"
+    ],
+    "corrected_semantics": "analysis_window_start",
+    "cross_detector_matching": false,
+    "gps_equality": "exact_float_value_after_declared_normalization",
+    "historical_normalization": {
+      "calibration_identities_in_scope": false,
+      "downstream_subset_membership_required": [
+        "coincidence_events",
+        "pem_targets",
+        "pem_verdicts"
+      ],
+      "historical_expected_total": 10429,
+      "offset_s": 4.0,
+      "scope": "frozen_candidate_catalogue_and_verified_downstream_subsets",
+      "source_semantics": "padded_context_start",
+      "target_semantics": "analysis_window_start"
+    }
+  },
+  "output": {
+    "historical_artifacts_overwritten": false,
+    "large_outputs_committed_to_git": false,
+    "new_filename": "corrected_only_candidates.jsonl",
+    "removed_filename": "historical_only_candidates.jsonl",
+    "root": "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v2",
+    "shared_filename": "shared_candidate_transitions.jsonl",
+    "singletons_filename": "historical_singleton_rechecks.json",
+    "summary_filename": "final_comparison_summary.json"
+  },
+  "pem_comparison": {
+    "aggregate_verdict_rate_comparison_when_disjoint": false,
+    "astrophysical_confirmation_claim": false,
+    "mode": "exact_identity_overlap_then_fail_closed"
+  },
+  "references": {
+    "candidate_case_l1_singleton": {
+      "path": "data/production/aggregated/candidate_case_L1_1382955228_idxq4-64_queryq4-64.json",
+      "sha256": "0a84bbdad28e119d210fc4cd1b133dbef70f268bb339f258c26e3df5e1307483"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_final_comparison.py",
+      "sha256": "199e23fc3a0f93ddfe148cf5c7b99c6f50c0b11a92df3d67654f848c585a829e"
+    },
+    "corrected_classification": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_classification.json",
+      "sha256": "4e50dc9fd113aae60769caab86a5458dd7acd8d58861c870f1ddce29526665b8"
+    },
+    "corrected_coincidence": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_coincidence.json",
+      "sha256": "4cc839da8804752b83a2a4bcba919392e2a8aeb86e0c420e3838243c059d278f"
+    },
+    "corrected_pem": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_pem.json",
+      "sha256": "03a1da8e698b399b5ea1819ee8295940d78cb16bebfad1c69907ac5cc3a8f0ba"
+    },
+    "corrected_taxonomy": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_taxonomy.json",
+      "sha256": "bdd270872f081f0397d85f595b1155fe5786dc623404a87621febe38395a23ba"
+    },
+    "gps_identity_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/gps_identity_semantics_audit_v1.json",
+      "sha256": "a01c064d80ed3ecc9bee287194e13263def3a2d2044eabb7c402cc76aa503021"
+    },
+    "historical_coincidence": {
+      "path": "data/production/aggregated/coincidence_physical_o4a.json",
+      "sha256": "51c70296c55b70f5c17f4578db232d78bb37bfcdaaf2dbc6b25295c67421ff05"
+    },
+    "historical_pem_targets": {
+      "path": "data/production/aggregated/pem/idxq4-64_queryq4-64/selected_targets.csv",
+      "sha256": "096494610b8e102b583f076421347ea8f50db7675c75fb1bec413334a158cba5"
+    },
+    "historical_pem_verdicts": {
+      "path": "data/production/aggregated/pem/idxq4-64_queryq4-64/pem_family_wise_verdicts.csv",
+      "sha256": "f069a0f162e698fe7ca45507276d1f9610312a759db93be8514db437da09bce0"
+    },
+    "historical_scores": {
+      "path": "data/production/aggregated/dsd_scores_o4a_idxq4-64_queryq4-64.csv",
+      "sha256": "d9870257ae56072d3ddec59ed56cf309651600b231b264c65bb4ea0a519b7dd0"
+    },
+    "historical_taxonomy": {
+      "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_final_comparison.py",
+      "sha256": "74be1945214e40901822eb80a7175115fb4b077979728ce6dc2fbeb96043f1d1"
+    },
+    "replay_contract": {
+      "path": "config/dante_light_replay_v1.json",
+      "sha256": "877c696c05bacdb0f71ebf34d7c690c47a405df2963e2e218c9c86afe4894c08"
+    },
+    "runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_final_comparison.py",
+      "sha256": "872a916a36197d3a052523463fb60a374e406354527f3aefb85ea47dcb114fdf"
+    }
+  },
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "calibration_identities_excluded_from_gps_normalization": true,
+    "corrected_artifacts_immutable": true,
+    "future_full_pipeline_time_slide_null_required": true,
+    "historical_artifacts_immutable": true,
+    "historical_gps_normalization_predeclared": true,
+    "no_cross_null_statistic_comparison": true,
+    "no_global_significance_claim": true,
+    "no_post_hoc_candidate_pairing": true,
+    "operational_validation_claim": false,
+    "pem_is_not_astrophysical_confirmation": true
+  },
+  "status": "FROZEN_BEFORE_FINAL_COMPARISON",
+  "taxonomy_comparison": {
+    "corrected_field": "global_family_id",
+    "historical_field": "global_family_id",
+    "metric": "adjusted_rand_score",
+    "metric_source": "sklearn.metrics.adjusted_rand_score",
+    "permutation_invariant": true,
+    "physical_coincidence_interpretation": false,
+    "population": "exact_shared_normalized_identities",
+    "singletons_included": true
+  }
+}

@@ -1,4 +1,4 @@
-"""Fail-closed v1-versus-corrected comparison for the O4a reconstruction."""
+"""Fail-closed normalized v1-versus-corrected O4a comparison."""
 
 from __future__ import annotations
 
@@ -20,9 +20,9 @@ from src.dante_light.o4a_corrected_native_rescore_v2 import _load_jsonl
 from src.dante_light.prefilter_v5_protocol import sha256_path
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_REL = Path("config/dante_o4a_corrected_final_comparison_v1.json")
+CONTRACT_REL = Path("config/dante_o4a_corrected_final_comparison_v2.json")
 DEFAULT_EXTERNAL_ROOT = Path(
-    "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v1"
+    "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v2"
 )
 SCHEMA_VERSION = 1
 
@@ -72,6 +72,39 @@ def _unique_index(
     return result
 
 
+def _shift_gps_rows(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    offset_s: float,
+    gps_field: str = "gps_start",
+) -> list[dict[str, Any]]:
+    if not np.isfinite(offset_s):
+        raise ContractError("historical GPS normalization offset is invalid")
+    shifted = []
+    for row in rows:
+        identity = _identity(row, gps_field=gps_field)
+        value = dict(row)
+        value[gps_field] = identity[1] + float(offset_s)
+        shifted.append(value)
+    return shifted
+
+
+def _require_historical_candidate_subset(
+    rows: Sequence[Mapping[str, Any]],
+    candidate_identities: set[Identity],
+    *,
+    gps_field: str = "gps_start",
+    population: str,
+) -> None:
+    identities = set(_unique_index(rows, gps_field=gps_field))
+    outside = identities - candidate_identities
+    if outside:
+        raise ContractError(
+            f"historical {population} contains identities outside the frozen "
+            "candidate catalogue"
+        )
+
+
 def _repo_reference(root: Path, reference: Mapping[str, Any]) -> Path:
     path = (root / str(reference["path"])).resolve()
     if not path.is_file() or sha256_path(path) != str(reference["sha256"]):
@@ -88,21 +121,40 @@ def validate_final_comparison_contract(
         raise ContractError("final-comparison contract digest mismatch")
     if int(value.get("schema_version", -1)) != SCHEMA_VERSION:
         raise ContractError("final-comparison schema changed")
-    if value.get("identity") != {
-        "fields": ["detector", "gps_start"],
-        "gps_equality": "exact_float_value",
+    if value.get("contract_id") != "dante-o4a-corrected-final-comparison-v2":
+        raise ContractError("final-comparison contract identity changed")
+    if value.get("status") != "FROZEN_BEFORE_FINAL_COMPARISON":
+        raise ContractError("final-comparison freeze status changed")
+    identity_contract = value.get("identity")
+    if identity_contract != {
+        "comparison_fields": ["detector", "gps_start"],
+        "gps_equality": "exact_float_value_after_declared_normalization",
         "cross_detector_matching": False,
+        "corrected_semantics": "analysis_window_start",
+        "historical_normalization": {
+            "source_semantics": "padded_context_start",
+            "target_semantics": "analysis_window_start",
+            "offset_s": 4.0,
+            "scope": "frozen_candidate_catalogue_and_verified_downstream_subsets",
+            "historical_expected_total": 10429,
+            "calibration_identities_in_scope": False,
+            "downstream_subset_membership_required": [
+                "coincidence_events",
+                "pem_targets",
+                "pem_verdicts",
+            ],
+        },
     }:
         raise ContractError("final-comparison identity changed")
     if value.get("candidate_comparison") != {
-        "population": "exact_detector_gps_union",
+        "population": "exact_detector_normalized_analysis_gps_union",
         "historical_expected_total": 10429,
         "corrected_expected_total": 10942,
         "score_delta": {
             "direction": "corrected_minus_historical",
             "historical_field": "native_score_idxq4_64_queryq4_64",
             "corrected_field": "native_score",
-            "population": "exact_shared_identities",
+            "population": "exact_shared_normalized_identities",
             "descriptive_only": True,
             "equivalence_claim": False,
         },
@@ -110,7 +162,7 @@ def validate_final_comparison_contract(
             "historical_field": "robustness_class_idxq4_64_queryq4_64",
             "corrected_field": "native_class",
             "labels": ["BACKGROUND", "AMBIGUOUS", "ROBUST"],
-            "population": "exact_shared_identities",
+            "population": "exact_shared_normalized_identities",
         },
     }:
         raise ContractError("final-comparison candidate method changed")
@@ -118,7 +170,7 @@ def validate_final_comparison_contract(
         "metric": "adjusted_rand_score",
         "metric_source": "sklearn.metrics.adjusted_rand_score",
         "permutation_invariant": True,
-        "population": "exact_shared_identities",
+        "population": "exact_shared_normalized_identities",
         "historical_field": "global_family_id",
         "corrected_field": "global_family_id",
         "singletons_included": True,
@@ -144,19 +196,25 @@ def validate_final_comparison_contract(
     if value.get("historical_singletons") != [
         {
             "name": "historical_h1_singleton",
-            "historical_identity": {"detector": "H1", "gps_start": 1369305276.0},
-            "corrected_identity_aliases": [],
+            "historical_catalog_identity": {
+                "detector": "H1",
+                "gps_start": 1369305276.0,
+            },
+            "expected_analysis_identity": {
+                "detector": "H1",
+                "gps_start": 1369305280.0,
+            },
         },
         {
             "name": "historical_l1_forum_singleton",
-            "historical_identity": {"detector": "L1", "gps_start": 1382955228.0},
-            "corrected_identity_aliases": [
-                {
-                    "detector": "L1",
-                    "gps_start": 1382955232.0,
-                    "role": "frozen_analysis_window",
-                }
-            ],
+            "historical_catalog_identity": {
+                "detector": "L1",
+                "gps_start": 1382955228.0,
+            },
+            "expected_analysis_identity": {
+                "detector": "L1",
+                "gps_start": 1382955232.0,
+            },
             "localized_feature_gps": 1382955253.17,
         },
     ]:
@@ -166,6 +224,8 @@ def validate_final_comparison_contract(
         "corrected_artifacts_immutable": True,
         "no_cross_null_statistic_comparison": True,
         "no_post_hoc_candidate_pairing": True,
+        "historical_gps_normalization_predeclared": True,
+        "calibration_identities_excluded_from_gps_normalization": True,
         "no_global_significance_claim": True,
         "pem_is_not_astrophysical_confirmation": True,
         "future_full_pipeline_time_slide_null_required": True,
@@ -173,7 +233,7 @@ def validate_final_comparison_contract(
     }:
         raise ContractError("final-comparison scientific boundary changed")
     if value.get("output") != {
-        "root": "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v1",
+        "root": "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v2",
         "summary_filename": "final_comparison_summary.json",
         "shared_filename": "shared_candidate_transitions.jsonl",
         "removed_filename": "historical_only_candidates.jsonl",
@@ -185,6 +245,26 @@ def validate_final_comparison_contract(
         raise ContractError("final-comparison output changed")
     for reference in value.get("references", {}).values():
         _repo_reference(root, reference)
+    audit = _read_json(
+        _repo_reference(root, value["references"]["gps_identity_audit"])
+    )
+    if (
+        audit.get("status")
+        != "PASS_SCOPED_CANDIDATE_PLUS4_WITH_CALIBRATION_EDGE_EXCEPTION"
+        or audit.get("candidate_catalogue", {}).get("rows") != 10429
+        or audit.get("candidate_catalogue", {}).get("offset_counts_s")
+        != {"4.0": 10429}
+        or audit.get("candidate_catalogue", {}).get("edge_rows") != 169
+        or audit.get("candidate_catalogue", {}).get("edge_offset_counts_s")
+        != {"4.0": 169}
+        or audit.get("primary_calibration", {}).get("offset_counts_s")
+        != {"0.0": 331, "4.0": 39640}
+        or audit.get("scientific_boundary", {}).get(
+            "candidate_transform_may_not_be_reused_for_calibration"
+        )
+        is not True
+    ):
+        raise ContractError("GPS identity audit no longer authorizes scoped +4 s")
     return {"contract_digest": digest, **value}
 
 
@@ -199,12 +279,20 @@ def compare_candidate_catalogues(
     corrected_rows: Sequence[Mapping[str, Any]],
     historical_taxonomy_rows: Sequence[Mapping[str, Any]],
     corrected_taxonomy_rows: Sequence[Mapping[str, Any]],
+    *,
+    historical_gps_offset_s: float = 0.0,
 ) -> tuple[
     dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]
 ]:
-    historical = _unique_index(historical_rows)
+    historical_shifted = _shift_gps_rows(
+        historical_rows, offset_s=historical_gps_offset_s
+    )
+    historical_taxonomy_shifted = _shift_gps_rows(
+        historical_taxonomy_rows, offset_s=historical_gps_offset_s
+    )
+    historical = _unique_index(historical_shifted)
     corrected = _unique_index(corrected_rows)
-    historical_taxonomy = _unique_index(historical_taxonomy_rows)
+    historical_taxonomy = _unique_index(historical_taxonomy_shifted)
     corrected_taxonomy = _unique_index(corrected_taxonomy_rows)
     if set(historical) != set(historical_taxonomy):
         raise ContractError("historical score/taxonomy identities differ")
@@ -247,6 +335,8 @@ def compare_candidate_catalogues(
         shared.append(
             {
                 **_identity_object(identity),
+                "historical_catalog_gps_start": identity[1]
+                - float(historical_gps_offset_s),
                 "historical_score": old_score,
                 "corrected_score": new_score,
                 "score_delta_corrected_minus_historical": delta,
@@ -292,7 +382,7 @@ def compare_candidate_catalogues(
             if old != new
         ),
         "taxonomy": {
-            "population": "exact_shared_identities",
+            "population": "exact_shared_normalized_identities",
             "shared_total": len(shared_keys),
             "adjusted_rand_index": float(
                 adjusted_rand_score(historical_families, corrected_families)
@@ -312,16 +402,37 @@ def compare_candidate_catalogues(
             "physical_coincidence_interpretation": False,
         },
     }
-    removed = [_identity_object(identity) for identity in removed_keys]
+    removed = [
+        {
+            **_identity_object(identity),
+            "historical_catalog_gps_start": identity[1]
+            - float(historical_gps_offset_s),
+        }
+        for identity in removed_keys
+    ]
     added = [_identity_object(identity) for identity in new_keys]
     return metrics, shared, removed, added
 
 
 def compare_coincidence_sets(
-    historical: Mapping[str, Any], corrected_rows: Sequence[Mapping[str, Any]]
+    historical: Mapping[str, Any],
+    corrected_rows: Sequence[Mapping[str, Any]],
+    *,
+    historical_candidate_identities: set[Identity] | None = None,
+    historical_gps_offset_s: float = 0.0,
 ) -> dict[str, Any]:
     events = list(historical.get("events", []))
-    hist_measured = _unique_index(events, gps_field="gps")
+    if historical_candidate_identities is not None:
+        _require_historical_candidate_subset(
+            events,
+            historical_candidate_identities,
+            gps_field="gps",
+            population="coincidence events",
+        )
+    shifted_events = _shift_gps_rows(
+        events, offset_s=historical_gps_offset_s, gps_field="gps"
+    )
+    hist_measured = _unique_index(shifted_events, gps_field="gps")
     threshold = float(historical["summary"]["cc_null_max_p99"])
     hist_exceeders = {
         identity
@@ -351,6 +462,7 @@ def compare_coincidence_sets(
         },
         "measured_identity_overlap": len(set(hist_measured) & corr_measured),
         "threshold_exceeder_identity_overlap": len(hist_exceeders & corr_exceeders),
+        "historical_gps_normalization_offset_s": float(historical_gps_offset_s),
         "threshold_equivalence_claim": False,
         "global_significance_claim": False,
     }
@@ -360,9 +472,35 @@ def compare_pem_sets(
     historical_targets: Sequence[Mapping[str, Any]],
     historical_verdicts: Sequence[Mapping[str, Any]],
     corrected_targets: Sequence[Mapping[str, Any]],
+    *,
+    historical_candidate_identities: set[Identity] | None = None,
+    historical_gps_offset_s: float = 0.0,
 ) -> dict[str, Any]:
-    old_targets = set(_unique_index(historical_targets))
-    old_verdicts = set(_unique_index(historical_verdicts))
+    if historical_candidate_identities is not None:
+        _require_historical_candidate_subset(
+            historical_targets,
+            historical_candidate_identities,
+            population="PEM targets",
+        )
+        _require_historical_candidate_subset(
+            historical_verdicts,
+            historical_candidate_identities,
+            population="PEM verdicts",
+        )
+    old_targets = set(
+        _unique_index(
+            _shift_gps_rows(
+                historical_targets, offset_s=historical_gps_offset_s
+            )
+        )
+    )
+    old_verdicts = set(
+        _unique_index(
+            _shift_gps_rows(
+                historical_verdicts, offset_s=historical_gps_offset_s
+            )
+        )
+    )
     new_targets = set(_unique_index(corrected_targets))
     overlap = old_targets & new_targets
     return {
@@ -370,13 +508,14 @@ def compare_pem_sets(
         "historical_verdict_total": len(old_verdicts),
         "corrected_target_total": len(new_targets),
         "detector_gps_overlap": len(overlap),
-        "outcome_comparison_performed": bool(overlap),
+        "outcome_comparison_performed": False,
         "disposition": (
-            "IDENTITY_OVERLAP_REQUIRES_ROW_LEVEL_COMPARISON"
+            "IDENTITY_OVERLAP_PRESENT_OUTCOMES_NOT_CROSS_CONTRACT_COMPARABLE"
             if overlap
             else "NOT_COMPARABLE_DISJOINT_TARGET_POPULATIONS"
         ),
         "aggregate_verdict_rate_comparison_performed": False,
+        "historical_gps_normalization_offset_s": float(historical_gps_offset_s),
     }
 
 
@@ -388,6 +527,8 @@ def recheck_historical_singletons(
     corrected_taxonomy_rows: Sequence[Mapping[str, Any]],
     corrected_coincidence_rows: Sequence[Mapping[str, Any]],
     corrected_pem_rows: Sequence[Mapping[str, Any]],
+    *,
+    historical_gps_offset_s: float = 0.0,
 ) -> list[dict[str, Any]]:
     historical = _unique_index(historical_rows)
     corrected = _unique_index(corrected_rows)
@@ -412,23 +553,27 @@ def recheck_historical_singletons(
     pem = _unique_index(normalized_pem_rows)
     output: list[dict[str, Any]] = []
     for case in cases:
-        historical_identity = (
-            str(case["historical_identity"]["detector"]),
-            float(case["historical_identity"]["gps_start"]),
+        historical_catalog_identity = (
+            str(case["historical_catalog_identity"]["detector"]),
+            float(case["historical_catalog_identity"]["gps_start"]),
         )
-        aliases = [
-            (str(alias["detector"]), float(alias["gps_start"]))
-            for alias in case.get("corrected_identity_aliases", [])
-        ]
-        old = historical.get(historical_identity)
+        normalized_identity = (
+            historical_catalog_identity[0],
+            historical_catalog_identity[1] + float(historical_gps_offset_s),
+        )
+        expected_identity = (
+            str(case["expected_analysis_identity"]["detector"]),
+            float(case["expected_analysis_identity"]["gps_start"]),
+        )
+        if normalized_identity != expected_identity:
+            raise ContractError("historical singleton normalization mismatch")
+        old = historical.get(historical_catalog_identity)
         if old is None:
             raise ContractError("frozen historical singleton missing from v1")
-        old_taxonomy = historical_taxonomy[historical_identity]
-        corrected_matches = [
-            identity
-            for identity in [historical_identity, *aliases]
-            if identity in corrected
-        ]
+        old_taxonomy = historical_taxonomy[historical_catalog_identity]
+        corrected_matches = (
+            [normalized_identity] if normalized_identity in corrected else []
+        )
         match_rows = []
         for identity in corrected_matches:
             row = corrected[identity]
@@ -438,11 +583,7 @@ def recheck_historical_singletons(
             match_rows.append(
                 {
                     **_identity_object(identity),
-                    "match_role": (
-                        "exact_historical_identity"
-                        if identity == historical_identity
-                        else "frozen_analysis_window_alias"
-                    ),
+                    "match_role": "exact_normalized_analysis_identity",
                     "native_class": str(row["native_class"]),
                     "native_score": float(row["native_score"]),
                     "global_family_id": str(tax["global_family_id"]),
@@ -466,14 +607,19 @@ def recheck_historical_singletons(
         output.append(
             {
                 "name": str(case["name"]),
-                "historical_identity": _identity_object(historical_identity),
+                "historical_catalog_identity": _identity_object(
+                    historical_catalog_identity
+                ),
+                "normalized_analysis_identity": _identity_object(normalized_identity),
                 "localized_feature_gps": case.get("localized_feature_gps"),
                 "historical": {
                     "native_class": str(old["robustness_class_idxq4_64_queryq4_64"]),
                     "native_score": float(old["native_score_idxq4_64_queryq4_64"]),
                     "global_family_id": str(old_taxonomy["global_family_id"]),
                 },
-                "corrected_exact_identity_present": historical_identity in corrected,
+                "corrected_normalized_identity_present": (
+                    normalized_identity in corrected
+                ),
                 "corrected_matches": match_rows,
             }
         )
@@ -595,11 +741,18 @@ def _build_comparison(
     *, root: Path, contract: Mapping[str, Any]
 ) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]]], list[dict[str, Any]]]:
     data = _load_inputs(root, contract)
+    historical_gps_offset_s = float(
+        contract["identity"]["historical_normalization"]["offset_s"]
+    )
+    historical_candidate_identities = set(
+        _unique_index(data["historical_taxonomy"])
+    )
     candidate_metrics, shared, removed, added = compare_candidate_catalogues(
         data["historical_taxonomy"],
         data["corrected_classification"],
         data["historical_taxonomy"],
         data["corrected_taxonomy"],
+        historical_gps_offset_s=historical_gps_offset_s,
     )
     expected = contract["candidate_comparison"]
     if candidate_metrics["historical_total"] != expected["historical_expected_total"]:
@@ -607,12 +760,17 @@ def _build_comparison(
     if candidate_metrics["corrected_total"] != expected["corrected_expected_total"]:
         raise ContractError("corrected candidate total changed")
     coincidence = compare_coincidence_sets(
-        data["historical_coincidence"], data["corrected_coincidence"]
+        data["historical_coincidence"],
+        data["corrected_coincidence"],
+        historical_candidate_identities=historical_candidate_identities,
+        historical_gps_offset_s=historical_gps_offset_s,
     )
     pem = compare_pem_sets(
         data["historical_pem_targets"],
         data["historical_pem_verdicts"],
         data["corrected_pem_targets"],
+        historical_candidate_identities=historical_candidate_identities,
+        historical_gps_offset_s=historical_gps_offset_s,
     )
     singletons = recheck_historical_singletons(
         contract["historical_singletons"],
@@ -622,8 +780,28 @@ def _build_comparison(
         data["corrected_taxonomy"],
         data["corrected_coincidence"],
         data["corrected_pem"],
+        historical_gps_offset_s=historical_gps_offset_s,
     )
-    metrics = {"candidates": candidate_metrics, "coincidence": coincidence, "pem": pem}
+    metrics = {
+        "identity_normalization": {
+            "historical_gps_offset_s": historical_gps_offset_s,
+            "scope": "frozen_candidate_catalogue_and_verified_downstream_subsets",
+            "historical_candidate_total": len(historical_candidate_identities),
+            "historical_coincidence_event_total": len(
+                data["historical_coincidence"].get("events", [])
+            ),
+            "historical_pem_target_total": len(data["historical_pem_targets"]),
+            "historical_pem_verdict_total": len(data["historical_pem_verdicts"]),
+            "downstream_subset_membership_verified": True,
+            "calibration_identities_transformed": 0,
+            "gps_identity_audit_sha256": contract["references"][
+                "gps_identity_audit"
+            ]["sha256"],
+        },
+        "candidates": candidate_metrics,
+        "coincidence": coincidence,
+        "pem": pem,
+    }
     return metrics, {"shared": shared, "removed": removed, "new": added}, singletons
 
 
@@ -674,7 +852,7 @@ def run_final_comparison(
     }
     body = {
         "schema_version": SCHEMA_VERSION,
-        "status": "PASS_COMPLETE_O4A_FINAL_COMPARISON_V1",
+        "status": "PASS_COMPLETE_O4A_FINAL_COMPARISON_V2",
         "contract_digest": contract["contract_digest"],
         "runtime_environment_digest": contract["runtime_environment_digest"],
         "run_key": run_key,
