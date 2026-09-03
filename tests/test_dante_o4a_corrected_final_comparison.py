@@ -7,6 +7,7 @@ import pytest
 from src.dante_light.contracts import ContractError
 from src.dante_light.o4a_corrected_final_comparison import (
     ROOT,
+    _validate_historical_score_consistency,
     compare_candidate_catalogues,
     compare_coincidence_sets,
     compare_pem_sets,
@@ -94,6 +95,27 @@ def test_candidate_comparison_rejects_duplicate_identity() -> None:
     new_tax = [_tax("H1", 1.0, "B")]
     with pytest.raises(ContractError, match="duplicate"):
         compare_candidate_catalogues(old, new, old_tax, new_tax)
+
+
+def test_historical_taxonomy_and_dsd_payload_must_match() -> None:
+    taxonomy = [
+        {
+            **_old("H1", 1.0, 0.2, "BACKGROUND"),
+            "global_family_id": "Family_01",
+        }
+    ]
+    scores = [
+        {
+            "detector": "H1",
+            "gps_start": 1.0,
+            "score": 0.2,
+            "class": "BACKGROUND",
+        }
+    ]
+    _validate_historical_score_consistency(taxonomy, scores)
+    scores[0]["class"] = "ROBUST"
+    with pytest.raises(ContractError, match="payload differs"):
+        _validate_historical_score_consistency(taxonomy, scores)
 
 
 def test_coincidence_comparison_does_not_compare_statistics() -> None:

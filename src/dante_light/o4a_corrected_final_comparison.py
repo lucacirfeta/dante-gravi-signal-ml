@@ -476,6 +476,25 @@ def _load_and_verify_jsonl(path: Path, spec: Mapping[str, Any]) -> list[dict[str
     return rows
 
 
+def _validate_historical_score_consistency(
+    taxonomy_rows: Sequence[Mapping[str, Any]],
+    score_rows: Sequence[Mapping[str, Any]],
+) -> None:
+    taxonomy = _unique_index(taxonomy_rows)
+    scores = _unique_index(score_rows)
+    if set(taxonomy) != set(scores):
+        raise ContractError("historical taxonomy/DSD score identities differ")
+    for identity in taxonomy:
+        taxonomy_row = taxonomy[identity]
+        score_row = scores[identity]
+        if str(taxonomy_row["robustness_class_idxq4_64_queryq4_64"]) != str(
+            score_row["class"]
+        ) or float(taxonomy_row["native_score_idxq4_64_queryq4_64"]) != float(
+            score_row["score"]
+        ):
+            raise ContractError("historical taxonomy/DSD score payload differs")
+
+
 def _external_run_dir(root: Path, prefix: str, run_key: str) -> Path:
     return root.resolve() / f"{prefix}_{run_key}"
 
@@ -487,6 +506,7 @@ def _load_inputs(root: Path, contract: Mapping[str, Any]) -> dict[str, Any]:
     historical_coincidence = _read_json(root / refs["historical_coincidence"]["path"])
     historical_pem_targets = _read_csv(root / refs["historical_pem_targets"]["path"])
     historical_pem_verdicts = _read_csv(root / refs["historical_pem_verdicts"]["path"])
+    _validate_historical_score_consistency(historical_taxonomy, historical_scores)
 
     corrected_classification_artifact = _read_json(
         root / refs["corrected_classification"]["path"]
@@ -561,7 +581,7 @@ def _build_comparison(
 ) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]]], list[dict[str, Any]]]:
     data = _load_inputs(root, contract)
     candidate_metrics, shared, removed, added = compare_candidate_catalogues(
-        data["historical_scores"],
+        data["historical_taxonomy"],
         data["corrected_classification"],
         data["historical_taxonomy"],
         data["corrected_taxonomy"],
@@ -581,7 +601,7 @@ def _build_comparison(
     )
     singletons = recheck_historical_singletons(
         contract["historical_singletons"],
-        data["historical_scores"],
+        data["historical_taxonomy"],
         data["corrected_classification"],
         data["historical_taxonomy"],
         data["corrected_taxonomy"],
