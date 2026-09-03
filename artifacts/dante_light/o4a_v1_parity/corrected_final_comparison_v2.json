@@ -1,0 +1,166 @@
+{
+  "artifact_digest": "19ef6b4e7a7ac83355188cad573ff6abb7f09d1b060cd42382d4a5ff7185abc5",
+  "candidate_comparison": {
+    "class_changed_total": 1626,
+    "class_transitions": {
+      "AMBIGUOUS": {
+        "AMBIGUOUS": 900,
+        "BACKGROUND": 308,
+        "ROBUST": 0
+      },
+      "BACKGROUND": {
+        "AMBIGUOUS": 2,
+        "BACKGROUND": 2526,
+        "ROBUST": 0
+      },
+      "ROBUST": {
+        "AMBIGUOUS": 1295,
+        "BACKGROUND": 21,
+        "ROBUST": 4970
+      }
+    },
+    "corrected_only_total": 920,
+    "corrected_total": 10942,
+    "historical_only_total": 407,
+    "historical_total": 10429,
+    "score_delta_corrected_minus_historical": {
+      "count": 10022,
+      "descriptive_only": true,
+      "maximum": 0.0753460228443146,
+      "maximum_absolute": 0.14854425936937332,
+      "mean": -0.0017619192432236455,
+      "median": -0.00027029216289520264,
+      "minimum": -0.14854425936937332,
+      "q25": -0.003533333539962713,
+      "q75": 0.0023060571402311984
+    },
+    "shared_total": 10022,
+    "taxonomy": {
+      "adjusted_rand_index": 1.0,
+      "corrected_family_count_all": 3,
+      "corrected_largest_family_all": 10940,
+      "corrected_singleton_count_all": 2,
+      "historical_family_count_all": 3,
+      "historical_largest_family_all": 10427,
+      "historical_singleton_count_all": 2,
+      "physical_coincidence_interpretation": false,
+      "population": "exact_shared_normalized_identities"
+    },
+    "union_total": 11349
+  },
+  "coincidence_comparison": {
+    "corrected_measured_total": 5809,
+    "corrected_seed_total": 7750,
+    "corrected_threshold_exceeder_total": 65,
+    "global_significance_claim": false,
+    "historical_catalogue_total": 10429,
+    "historical_measured_total": 8806,
+    "historical_threshold_exceeder_total": 13,
+    "measured_identity_overlap": 5332,
+    "mode": "identity_set_accounting_only",
+    "threshold_equivalence_claim": false,
+    "threshold_exceeder_identity_overlap": 0
+  },
+  "contract_digest": "554c20640d59b9f12bed01d7ac8e4fb7ca78f8a3197512f7e87bd29e7906d9d1",
+  "external_artifact_digest": "f406c2ff35fe29757dc1eeefccee57174c2de730058651691b462ff51105cc2b",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v2/final_comparison_d07356990e382110c0be48ab817f44be0a34f60c47d23e9fb29248d0627bd81e",
+    "run_key": "d07356990e382110c0be48ab817f44be0a34f60c47d23e9fb29248d0627bd81e",
+    "summary_filename": "final_comparison_summary.json",
+    "summary_sha256": "f04d64bdb2681de53dd58cf0bbfe5c38f529fb414e7118b9b3be7b4e839cf667",
+    "summary_size_bytes": 7521
+  },
+  "historical_singletons": [
+    {
+      "coincidence_exceeds_primary_threshold": true,
+      "corrected_class": "ROBUST",
+      "corrected_family": "Singleton_1369305280",
+      "corrected_score": 0.43430405855178833,
+      "detector": "H1",
+      "historical_catalog_gps_start": 1369305276.0,
+      "historical_class": "ROBUST",
+      "historical_score": 0.4300166964530945,
+      "normalized_analysis_gps_start": 1369305280.0,
+      "pem_population": "primary",
+      "pem_verdict_tier": "COUPLED"
+    },
+    {
+      "coincidence_exceeds_primary_threshold": false,
+      "corrected_class": "ROBUST",
+      "corrected_family": "Singleton_1382955232",
+      "corrected_score": 0.6122661232948303,
+      "detector": "L1",
+      "historical_catalog_gps_start": 1382955228.0,
+      "historical_class": "ROBUST",
+      "historical_score": 0.5988767743110657,
+      "localized_feature_gps": 1382955253.17,
+      "normalized_analysis_gps_start": 1382955232.0,
+      "pem_population": null,
+      "pem_verdict_tier": null
+    }
+  ],
+  "identity_normalization": {
+    "calibration_identities_transformed": 0,
+    "candidate_edge_rows_verified_at_plus_4_s": 169,
+    "downstream_subset_membership_verified": true,
+    "historical_candidate_total": 10429,
+    "historical_coincidence_event_total": 8806,
+    "historical_gps_offset_s": 4.0,
+    "historical_pem_target_total": 141,
+    "historical_pem_verdict_total": 141,
+    "scope": "frozen_candidate_catalogue_and_verified_downstream_subsets"
+  },
+  "outputs": {
+    "corrected_only": {
+      "row_total": 920,
+      "sha256": "b7f4b0b7c4b4effd763eacfb0c25455fa384993798224dbaa49db2806abb9f3f"
+    },
+    "historical_only": {
+      "row_total": 407,
+      "sha256": "746d0baa3f3de7b255a6e54980265dec857fc7ee3e873b475d1c2d13634e6c8e"
+    },
+    "shared": {
+      "row_total": 10022,
+      "sha256": "d06785b2364b01fad7cf92253745c95137aa33057e5fbaec76d3dbff87b61281"
+    },
+    "singletons": {
+      "sha256": "84dc3abb78acc5125f9fd21c9f888fe878f75cabbc525e2743f58c2963eaf05f"
+    }
+  },
+  "pem_comparison": {
+    "aggregate_verdict_rate_comparison_performed": false,
+    "corrected_target_total": 65,
+    "detector_gps_overlap": 1,
+    "disposition": "IDENTITY_OVERLAP_PRESENT_OUTCOMES_NOT_CROSS_CONTRACT_COMPARABLE",
+    "historical_target_total": 141,
+    "outcome_comparison_performed": false
+  },
+  "references": {
+    "contract": {
+      "path": "config/dante_o4a_corrected_final_comparison_v2.json",
+      "sha256": "0ea4670e8eeb3bfbff2d694212290b1575891979ec18e24b31ee3108053e1532"
+    },
+    "gps_identity_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/gps_identity_semantics_audit_v1.json",
+      "sha256": "a01c064d80ed3ecc9bee287194e13263def3a2d2044eabb7c402cc76aa503021"
+    }
+  },
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "calibration_identities_excluded_from_gps_normalization": true,
+    "future_full_pipeline_time_slide_null_required": true,
+    "no_cross_null_statistic_comparison": true,
+    "no_global_significance_claim": true,
+    "operational_validation_claim": false,
+    "pem_is_not_astrophysical_confirmation": true
+  },
+  "status": "PASS_VERIFIED_O4A_FINAL_COMPARISON_V2",
+  "verification": {
+    "final_comparison_verifier": "PASS_EXACT_LEDGER_AND_DIGEST_REPLAY",
+    "pytest": {
+      "passed": 38,
+      "wall_time_seconds": 6.67
+    }
+  }
+}
