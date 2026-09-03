@@ -1,7 +1,9 @@
 # O4a edge-padding correction plan
 
-Status: **AUTHORIZED, EXECUTION IN PROGRESS**  
+Status: **COMPLETED; FINAL IMPACT VERIFIED**
+
 Scope: corrective O4a reconstruction; no arXiv/CQG/Zenodo publication in this increment.
+Completion evidence: `corrected_final_impact_attribution_v1.json`.
 
 ## Scientific objective
 
