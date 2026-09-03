@@ -1,0 +1,81 @@
+{
+  "artifact_digest": "029fadc0e921ced852803a20041fce9ef32478442b53200ea698b1b383653f1b",
+  "calibration_external_shards": {
+    "count": 84,
+    "file_sha256_digest": "f28a7960e329e2f2f5aa6d73c5765c3508e45d4bca25bd96815aac5b250d1593"
+  },
+  "candidate_catalogue": {
+    "edge_geometry_failures": 0,
+    "edge_historical_boundary_offset_counts_s": {
+      "36.0": 169
+    },
+    "edge_offset_counts_s": {
+      "4.0": 169
+    },
+    "edge_rows": 169,
+    "geometry_failures": 0,
+    "geometry_projection_digest": "fd321c9e2d189b1611543af222f78d5f8bb3ae1ae5b9fcff97ea8d4d58124d3f",
+    "offset_counts_s": {
+      "4.0": 10429
+    },
+    "rows": 10429
+  },
+  "conclusion": {
+    "calibration_transform": "geometry-dependent: +0 s at historical left-truncated edges; +4 s otherwise",
+    "candidate_catalogue_transform": "analysis_gps = catalog_gps + 4 s",
+    "candidate_catalogue_transform_scope": "all 10,429 frozen v1 candidate rows, including all 169 candidate file-edge rows",
+    "final_comparison_contract_requirement": "apply +4 s only to the frozen v1 candidate catalogue; never generalize it to calibration identities"
+  },
+  "contract_digest": "ba587f319374a118ca517e2ed2cb7ca4caff19467f44301e42d7a9d1583ad839",
+  "primary_calibration": {
+    "disposition_counts": {
+      "HISTORICAL_FULL_SYMMETRIC_4S": 39379,
+      "HISTORICAL_LEFT_TRUNCATED_4S": 331,
+      "HISTORICAL_RIGHT_TRUNCATED_4S": 261
+    },
+    "edge_counts": {
+      "H1/HISTORICAL_LEFT_TRUNCATED_4S": 162,
+      "H1/HISTORICAL_RIGHT_TRUNCATED_4S": 128,
+      "L1/HISTORICAL_LEFT_TRUNCATED_4S": 169,
+      "L1/HISTORICAL_RIGHT_TRUNCATED_4S": 133
+    },
+    "geometry_failures": 0,
+    "geometry_projection_digest": "4caa5ffb5348d813999bc9456f3d3a0f00dfd20db5635a1c9cb6e8224bb8a16c",
+    "offset_counts_s": {
+      "0.0": 331,
+      "4.0": 39640
+    },
+    "rows": 39971
+  },
+  "references": {
+    "calibration_compact": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_calibration.json",
+      "sha256": "0e9e02e4ea404a557ce6f850b4029c0d24c3520f11570932455d791e586ced51"
+    },
+    "candidate_edge_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/edge_padding_audit.json",
+      "sha256": "8fb54b897270a492f3ce4f9b33a2b22b36414289456c6dad2d94fc1e6e2976c9"
+    },
+    "candidate_entries": {
+      "path": "config/dante_light_o4a_v1_parity_manifest.jsonl",
+      "sha256": "d67cec47ecfc4ebb51fb4eaa6423240254d9ed985b9b456ed411564f5d3c31b6"
+    },
+    "candidate_header": {
+      "path": "config/dante_light_o4a_v1_parity_manifest.json",
+      "sha256": "8ddb53897aeb7aeffb92be22a24924e437cecaef955e9833b6776e904644507b"
+    },
+    "candidate_missing": {
+      "path": "config/dante_light_o4a_v1_parity_missing.jsonl",
+      "sha256": "a2737b6ae38ff5a9b31abf28e65aa66af683e860588cbf39fd260a0a9f044329"
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "authorizes_final_comparison": false,
+    "candidate_transform_may_not_be_reused_for_calibration": true,
+    "changes_any_scientific_output": false,
+    "establishes_identity_geometry_only": true,
+    "inspects_outcomes": false
+  },
+  "status": "PASS_SCOPED_CANDIDATE_PLUS4_WITH_CALIBRATION_EDGE_EXCEPTION"
+}
