@@ -1,0 +1,171 @@
+{
+  "artifact_digest": "45dc80e1e30fd4ff77c032481b1b0763f24c8b246f888babdf789047d51748c8",
+  "contract_digest": "2fd40a59bbfef8a33beb6858e1adf6de382508274a610f999b88aafb4aab8fe4",
+  "event_summary": {
+    "diagnostic": {
+      "measured": 1700,
+      "partner_data_unavailable": 644,
+      "per_event_null_exceeded": 190,
+      "primary_threshold_exceeded": 56,
+      "seed_total": 2344
+    },
+    "primary": {
+      "measured": 4109,
+      "partner_data_unavailable": 1297,
+      "per_event_null_exceeded": 525,
+      "primary_threshold_exceeded": 9,
+      "seed_total": 5406
+    },
+    "primary_null_p99": 0.1946923815330963
+  },
+  "external_artifact_digest": "da52e75a0d2cc6f2c90edd6e4bf6bef71d8465e9b1e6e8394dfde73f045a9cd1",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_coincidence_v1/native_coincidence_6d355473e642e4f8f7d5f9db045adae74aec4d4bec6e4f75208906f0a3a792b6",
+    "run_key": "6d355473e642e4f8f7d5f9db045adae74aec4d4bec6e4f75208906f0a3a792b6",
+    "summary_filename": "native_coincidence_summary.json",
+    "summary_sha256": "658c32d5a0ebd9dd315797455f865282508946c043859af318248d6692b305b8",
+    "summary_size_bytes": 4541
+  },
+  "failed_predecessor": {
+    "contract_digest": "a0bd26cc54c2d007b821d3e07d774cdd78e71c180193eb9eb8e965a55bf84c4c",
+    "failure_artifact_digest": "2a8ac212374dc2b720f48708692db36299f9894fd633dcfeb89171f6c0c52107",
+    "reason": "partner HDF5 coverage was complete but the selected raw context was entirely non-finite",
+    "run_key": "2ee8ef28d1b061fe8886ea2a0ac51617cc08225e3c4cc115be75c5c797a500cf",
+    "status": "FAILED_NATIVE_COINCIDENCE_V1"
+  },
+  "gates": {
+    "background_measurements": 0,
+    "duplicate_seed_detector_gps": 0,
+    "partner_class_reads": 0,
+    "seed_image_hash_mismatches": 0,
+    "seed_score_delta_max": 0.0,
+    "unaccounted_seeds": 0
+  },
+  "historical_anchor_check": {
+    "analysis_window_gps": 1382955232.0,
+    "catalog_gps": 1382955228.0,
+    "corrected_native_class": "ROBUST",
+    "detector": "L1",
+    "identity_digest": "8bcc20b4fe0a18c10d57a213165aa3c7eeb13f1ce2b3529f7cd26475c4b72009",
+    "included_in_primary_seed_population": true,
+    "localized_feature_gps": 1382955253.17
+  },
+  "measurement": {
+    "algorithm": "bandpassed_light_travel_normxcorr_v1",
+    "decision_rule": "cc_onsource_strictly_greater_than_primary_null_p99",
+    "half_window_s": 0.5,
+    "lag_margin_s": 0.002,
+    "light_travel_s": 0.010002,
+    "localization": "native_detector_aware_top_k_patch_columns",
+    "null_shifts_s": [
+      1.0,
+      2.0,
+      4.0,
+      8.0,
+      -1.0,
+      -2.0,
+      -4.0,
+      -8.0
+    ],
+    "patch_iou_role": "complementary_diagnostic",
+    "sample_rate_hz": 4096,
+    "segment_duration_s": 32.0,
+    "threshold_quantile_method": "linear",
+    "threshold_quantile_percent": 99.0,
+    "threshold_source": "primary_seed_per_event_null_maxima_only",
+    "whitening_pad_s": 4.0
+  },
+  "outputs": {
+    "diagnostic": {
+      "filename": "native_coincidence_ambiguous.jsonl",
+      "row_digest": "72229ea17c413838ac0cb60a12ea33f61cd77dea07918aade29b0be756091819",
+      "row_total": 2344,
+      "sha256": "00cda8de2f5389419e9ae89122ddb80a450ac9039f9ea77da60b05d175660915"
+    },
+    "primary": {
+      "filename": "native_coincidence_robust.jsonl",
+      "row_digest": "af0b4a84b93b43f955ea88c009bb4ecbe900945af6960319f70588046f67edab",
+      "row_total": 5406,
+      "sha256": "94e354069bee90b3ca468eb44506769b9aff13d9f0cf960fabb2d0bcca1a7893"
+    },
+    "raw_source_receipt": {
+      "filename": "raw_source_receipt.jsonl",
+      "row_digest": "3822106e86cc97c1c5a63543449866007d83eb2d3889b8ca4f0ee4d8aa0d7a8a",
+      "row_total": 5246,
+      "sha256": "022b867b0202c71a0d7af5d73be05e3b810b329defd5f2e99d272ade7caa0da8"
+    }
+  },
+  "population": {
+    "diagnostic_seed_class": "AMBIGUOUS",
+    "exact_counts": {
+      "diagnostic": {
+        "H1": 672,
+        "L1": 1672,
+        "total": 2344
+      },
+      "excluded": {
+        "H1": 1958,
+        "L1": 1234,
+        "total": 3192
+      },
+      "primary": {
+        "H1": 2090,
+        "L1": 3316,
+        "total": 5406
+      }
+    },
+    "excluded_class": "BACKGROUND",
+    "partner_class_read": false,
+    "partner_selection": "opposite_detector_same_window_regardless_of_class_or_catalogue_presence",
+    "primary_and_diagnostic_threshold_pools_separate": true,
+    "primary_seed_class": "ROBUST"
+  },
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_coincidence.py",
+      "sha256": "21351e770a824e6617a4a48c84359408dd1b473d554050f1e5f5e5aefc771139"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_coincidence_v1.json",
+      "sha256": "1f76e4c03d37f24cb3323db592ec7d6aae89944d17dc71c3cf661b32f70e92d5"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_coincidence.py",
+      "sha256": "87ba0510f6f7a8d834756d687cc918f918419dc0c1455a882d5afc235658ee98"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_coincidence.py",
+      "sha256": "236b211f45bfa8ccb5436475d4ac1815477b17231576f698d844c8db0ebfaa3a"
+    }
+  },
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "ambiguous_affects_primary_threshold": false,
+    "asymmetric_seed_search": true,
+    "background_processed": false,
+    "efficiency_required_before_null_as_absence_claim": true,
+    "historical_artifacts_immutable": true,
+    "native_scores_or_classes_changed": false,
+    "partner_class_or_candidate_required": false,
+    "symmetric_robust_and_required": false,
+    "taxonomy_used_for_coincidence": false
+  },
+  "sources": {
+    "classification_row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19a783",
+    "native_index_sha256": "6a24ba02a6925bd5527b804c3ae8aa06b73fc36a654c8a6f789d22a1b3f2403b",
+    "primary_database_sha256": "4b37a6a100b423e5b5a14f326d491ae311242cfa0914cee55c244415d42c5932c",
+    "raw_source_count": 5246,
+    "raw_source_receipt_digest": "3822106e86cc97c1c5a63543449866007d83eb2d3889b8ca4f0ee4d8aa0d7a8a"
+  },
+  "status": "PASS_VERIFIED_NATIVE_COINCIDENCE_V1",
+  "verification": {
+    "native_coincidence_verifier": "PASS_EXACT_LEDGER_AND_DIGEST_REPLAY",
+    "pytest": {
+      "passed": 76,
+      "wall_time_seconds": 32.18,
+      "warnings": 11
+    },
+    "ruff": "PASS"
+  }
+}

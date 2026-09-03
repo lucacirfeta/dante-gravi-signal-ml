@@ -1,0 +1,767 @@
+{
+  "acquisition_manifest_digest": "15ba4fc44374112f3e09ae9573d93d12d5907cee3a60ea04d83f573606fcb855",
+  "artifact_digest": "a27ff9befdf4aae01672bd202db82f54d2e61a241f8f4b88945ca954368bb779",
+  "changed_context_counts": {
+    "complete_only_by_stitch": 563,
+    "not_complete_in_frozen_local_manifest": 28
+  },
+  "corrected_context_no_replay": {
+    "by_detector_and_edge": {
+      "H1/HISTORICAL_LEFT_TRUNCATED_4S": 162,
+      "H1/HISTORICAL_RIGHT_TRUNCATED_4S": 128,
+      "L1/HISTORICAL_LEFT_TRUNCATED_4S": 169,
+      "L1/HISTORICAL_RIGHT_TRUNCATED_4S": 133
+    },
+    "n": 592,
+    "reason": "v1 supplied truncated whitening context at the historical source-file edge, so corrected scores must not be required to reproduce the defective input"
+  },
+  "external_run_directory": "calibration_e70050ef91ce0c04522b17f0b51fd364ade77cd9c765d19dd4ec89df3a653ff7",
+  "historical_full_context_replay": {
+    "max_abs_delta": 0.0,
+    "n": 39379,
+    "pass": true,
+    "score_atol": 2e-07
+  },
+  "protocol_digest": "326495389f511b378c52b2a99f7771bd13d87d6852d4191a4f0fb61d6842d4fa",
+  "references": {
+    "acquisition_summary": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_input_acquisition.json",
+      "sha256": "adfe29a5d0e17ab2030a6fa83d3003271190d65121092074ba2ade820db77e84"
+    },
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "encoder": {
+      "path": "src/core/encoder.py",
+      "sha256": "40898b0fa18d6d59e1b72eb126be0ff01a83892504d8b8c6c316f1eb656ed72a"
+    },
+    "execution_implementation": {
+      "path": "src/dante_light/o4a_corrected_execution.py",
+      "sha256": "368ba6b0ad1f78b162fe4556541dcc7157fbd77d04b4b53f5ac5e3de47687a65"
+    },
+    "model_loader": {
+      "path": "src/core/model_loader.py",
+      "sha256": "831d871fc14bd71462e36024e7a21b89bb050861e2edc9a83f105243731f1ec9"
+    },
+    "patch_producer": {
+      "path": "src/core/patch_producer.py",
+      "sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef"
+    },
+    "patch_scorer": {
+      "path": "src/core/patch_scorer.py",
+      "sha256": "30ab4b53058572c445427b24d92e23c58a4208c4bfb396ba3efe6cf4c891f1df"
+    },
+    "performance_contract_v2": {
+      "path": "config/dante_o4a_corrected_performance_v2.json",
+      "sha256": "43051157263ac491b191f35dfb0b13821ce71754c0dc77910727f7dbc3e954cc"
+    },
+    "performance_result_v2": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_performance_benchmark_v2.json",
+      "sha256": "74653b234ec25d21aae6ed669f416ac61e5da3d5a9112080d8c75a8f75f6cdcb"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "3883cf80ab64f723faa3f97e23263323aa0d773dd33e13cb0164ead247d7ff2d"
+    },
+    "protocol": {
+      "path": "config/dante_o4a_corrected_protocol_v4.json",
+      "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "reference_artifacts": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+    }
+  },
+  "row_count": 39971,
+  "run_key": "e70050ef91ce0c04522b17f0b51fd364ade77cd9c765d19dd4ec89df3a653ff7",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_scan_executed": false,
+    "historical_scores_reused": false,
+    "post_hoc_threshold_tuning": false,
+    "publication_authorized": false,
+    "same_frozen_identities_fully_rescored": true
+  },
+  "session_detector_count": 84,
+  "status": "PASS_COMPLETE_PRIMARY_CALIBRATION",
+  "threshold_digest": "cae0f0d8f55d62c451bd0d14aafbea3d95c61b299ef2ec40a2721ccf54ad3887",
+  "thresholds": [
+    {
+      "detector": "H1",
+      "empirical_p99": 0.3758665043115616,
+      "n": 500,
+      "session_id": 1368973312,
+      "shard": "sessions/1368973312_H1.json",
+      "shard_digest": "23fb117c570f9a20ed3e0f9c3834f83896936d03e9cfd49bebbc14a7f61ddc25"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.37832521647214884,
+      "n": 500,
+      "session_id": 1368973312,
+      "shard": "sessions/1368973312_L1.json",
+      "shard_digest": "a48facf4917df4c59e29a4e732bf7616352ed906eed5ccc0e0a149de798dd38c"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.36277963519096373,
+      "n": 49,
+      "session_id": 1368977408,
+      "shard": "sessions/1368977408_H1.json",
+      "shard_digest": "9236a1f287eea9eabadd68d9b2d3b034e1e4818ec28e883a7db51695b9cf408d"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.37420754671096806,
+      "n": 128,
+      "session_id": 1368977408,
+      "shard": "sessions/1368977408_L1.json",
+      "shard_digest": "5c0af3dce7abca71fc76c17973c2df113884f6f8a1d72251fc7781dc1be45ef0"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.40587309747934325,
+      "n": 500,
+      "session_id": 1369001984,
+      "shard": "sessions/1369001984_H1.json",
+      "shard_digest": "8dee1d253efdb232f80d46eb051a65320071be6f8b4087156802e59eda28d85f"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.38721640110015854,
+      "n": 500,
+      "session_id": 1369001984,
+      "shard": "sessions/1369001984_L1.json",
+      "shard_digest": "5dada517bcbb4214e6f466a8c4a8583cf9e687e1387b27e2a0c0f875e29c0c92"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.37898765087127684,
+      "n": 500,
+      "session_id": 1369491712,
+      "shard": "sessions/1369491712_H1.json",
+      "shard_digest": "eba2ca86655cf883b9ad27d3c9d79371ced4d6502ec0e30aea69b3b71960bfcd"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.41602625250816344,
+      "n": 500,
+      "session_id": 1369491712,
+      "shard": "sessions/1369491712_L1.json",
+      "shard_digest": "5b58ddb2c095a9646ef047ff6ac6a3b5db51171c1f4614a60b774575ea24d33b"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4046416565775871,
+      "n": 500,
+      "session_id": 1369520384,
+      "shard": "sessions/1369520384_H1.json",
+      "shard_digest": "6d12babc708b200a3f3a4f3567f14f0eff74f44cd11adba9a2ad173952c8e19e"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.3723972406983375,
+      "n": 500,
+      "session_id": 1369520384,
+      "shard": "sessions/1369520384_L1.json",
+      "shard_digest": "f6ac0e096586d108911cddaf53441b5ca55e3385ccafe089e4d621e63ce99d3f"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.40136298537254306,
+      "n": 500,
+      "session_id": 1370010112,
+      "shard": "sessions/1370010112_H1.json",
+      "shard_digest": "9f50cd05ea2294eca13e5cf6ee6ad453c882e2bb74f102435b607a610b824a07"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.3791025987267494,
+      "n": 500,
+      "session_id": 1370010112,
+      "shard": "sessions/1370010112_L1.json",
+      "shard_digest": "85c913f71531784691a7ef566cf74fe7438432bdf428f2b2928b998bb2057742"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.392716551721096,
+      "n": 500,
+      "session_id": 1370528512,
+      "shard": "sessions/1370528512_H1.json",
+      "shard_digest": "8368a1b5b05ef2f86a62e5b71962996db1e38efdeafa52f9d8c1e7746504e5f5"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.38160795152187343,
+      "n": 500,
+      "session_id": 1370528512,
+      "shard": "sessions/1370528512_L1.json",
+      "shard_digest": "78eb3e5cd68d36f9860da572a0375f1394a2c55f7da3980f3b443cab76abfbd9"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.40123306423425664,
+      "n": 500,
+      "session_id": 1371046912,
+      "shard": "sessions/1371046912_H1.json",
+      "shard_digest": "eb915f8965e24fc701249a254329496c4bbda36382e6ddc733f7076210a2cf80"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.41466063708066936,
+      "n": 500,
+      "session_id": 1371046912,
+      "shard": "sessions/1371046912_L1.json",
+      "shard_digest": "e3d0ae00bd74cf8095e20695e4c33e604873cfda67c502e9d9f379b7477fae80"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.38604462414979934,
+      "n": 128,
+      "session_id": 1371565312,
+      "shard": "sessions/1371565312_H1.json",
+      "shard_digest": "702efde5d02f259296459c78f8eead175bd2bf7adfffbdf01e142a15e3a46a7f"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4241108912229538,
+      "n": 128,
+      "session_id": 1371565312,
+      "shard": "sessions/1371565312_L1.json",
+      "shard_digest": "9c83521e8eeb20651a14778de82771020bf445ab385080dc046293c5cea83999"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.39136915028095237,
+      "n": 500,
+      "session_id": 1372083712,
+      "shard": "sessions/1372083712_H1.json",
+      "shard_digest": "4f13e1fc7a7dde39bcfa51c45e030c41b5ae078d2227d3cf608876f97d0b6455"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.37774116784334183,
+      "n": 500,
+      "session_id": 1372083712,
+      "shard": "sessions/1372083712_L1.json",
+      "shard_digest": "ff5606ae5fb9992f3b3ab37ab7184f5fc7c08fa90181a73e37e23b4615dc7eeb"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.3861551022529602,
+      "n": 500,
+      "session_id": 1372602112,
+      "shard": "sessions/1372602112_H1.json",
+      "shard_digest": "613899ce86ed2ddf5063452ef45842128c03c98aafae9973113c5019a783c3e6"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.39930002242326734,
+      "n": 500,
+      "session_id": 1372602112,
+      "shard": "sessions/1372602112_L1.json",
+      "shard_digest": "08389b4bf48d1e1770c93307f775008c9624c53e60de0b73af48f6b7c30abe7e"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4151818683743477,
+      "n": 500,
+      "session_id": 1373120512,
+      "shard": "sessions/1373120512_H1.json",
+      "shard_digest": "e0103669eddfcd5c43620ebc52cb1f71702fb38aa195ad64dc21fda87034c9ae"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4156604146957397,
+      "n": 500,
+      "session_id": 1373120512,
+      "shard": "sessions/1373120512_L1.json",
+      "shard_digest": "3b06aea3e844bc16288bd0a78fdc8e9f5f84a48e133df3e2dc17e96dc1ad750b"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.39586161375045775,
+      "n": 500,
+      "session_id": 1373638912,
+      "shard": "sessions/1373638912_H1.json",
+      "shard_digest": "d8be6d6e93f254a0ceaf008597482fd120282699bb45bbf8c9afdea7659061c2"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4139468309283256,
+      "n": 500,
+      "session_id": 1373638912,
+      "shard": "sessions/1373638912_L1.json",
+      "shard_digest": "52cc9390623e4f55ee98bbf5900ba0a1f591ce26db9e3d65d289724720b70e05"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.39686424165964124,
+      "n": 500,
+      "session_id": 1374157312,
+      "shard": "sessions/1374157312_H1.json",
+      "shard_digest": "d33efd2ba196dc61c5e68a826f07992383873fe864077fe25840446493058bb4"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.40126357316970823,
+      "n": 500,
+      "session_id": 1374157312,
+      "shard": "sessions/1374157312_L1.json",
+      "shard_digest": "14860ef91d85ed87aa95466d3e40f42eef23ceda7b9acd4c4294c04519b8042a"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.42783337593078613,
+      "n": 500,
+      "session_id": 1374675712,
+      "shard": "sessions/1374675712_H1.json",
+      "shard_digest": "56e3656ade6d6e710052ec4d9ad01c1d200e329789d30bd07c8535cc4a4b7107"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.3840989732742309,
+      "n": 500,
+      "session_id": 1374675712,
+      "shard": "sessions/1374675712_L1.json",
+      "shard_digest": "a2e51da7f8fbb8c0fca2a9d3d81ee46bd92b98f957ad490392e155890a3d92f5"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.43455574125051494,
+      "n": 500,
+      "session_id": 1375194112,
+      "shard": "sessions/1375194112_H1.json",
+      "shard_digest": "04ca4b62a0f8c7ce546062c4c52c510bd333ba26d2cbbf4db6fa0f345569b114"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.40352034360170363,
+      "n": 500,
+      "session_id": 1375194112,
+      "shard": "sessions/1375194112_L1.json",
+      "shard_digest": "bef536a3a8cd197b42753f0aa7848993dcbb66c1824590a4a74c993ebe5b2f64"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.43159891486167906,
+      "n": 500,
+      "session_id": 1375712512,
+      "shard": "sessions/1375712512_H1.json",
+      "shard_digest": "2f21267e94102220e51470f6297e9533f7c151b87e12deaf21406df46de0cc28"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4350617748498916,
+      "n": 500,
+      "session_id": 1375712512,
+      "shard": "sessions/1375712512_L1.json",
+      "shard_digest": "1196a143c4ae27c30b438e614604c89438055cb6e3820a2021a7c5becd46f9d6"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.3974564430117606,
+      "n": 500,
+      "session_id": 1376230912,
+      "shard": "sessions/1376230912_H1.json",
+      "shard_digest": "bf85e5b0a240bce8a8070d73203d3eb3026cc98aa9b09556ed29a5085f84b114"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.415701168179512,
+      "n": 500,
+      "session_id": 1376230912,
+      "shard": "sessions/1376230912_L1.json",
+      "shard_digest": "08aced18443ca7d5ea382c9df31b849b00e1765e6324ca61b3015a55d839b646"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4063679641485217,
+      "n": 38,
+      "session_id": 1376749312,
+      "shard": "sessions/1376749312_H1.json",
+      "shard_digest": "7c7fc8dd9334d378eeaf5783909e3cc22e0e3c5a0de172d4af86fbe7847c236f"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.43729133605957027,
+      "n": 500,
+      "session_id": 1376749312,
+      "shard": "sessions/1376749312_L1.json",
+      "shard_digest": "edb0bd7f1fb8cea3cfef7844a8e44f34b1343ef39dd1201a84570847dbfd1cff"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.3942102473974228,
+      "n": 500,
+      "session_id": 1377267712,
+      "shard": "sessions/1377267712_H1.json",
+      "shard_digest": "583d1e19de0e2168acb979c912bc8a699742c26785ff184697cf0c958a3ccbaf"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4086194005608558,
+      "n": 500,
+      "session_id": 1377267712,
+      "shard": "sessions/1377267712_L1.json",
+      "shard_digest": "ec45ac6c0ff8f1d7aba5a10ee47c808e4c408dd19e83b05017884cbbce8bee71"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.41181055366992947,
+      "n": 500,
+      "session_id": 1377786112,
+      "shard": "sessions/1377786112_H1.json",
+      "shard_digest": "c1e95a33fb78b9bc46260a0cfb23c713aede767e3aec76a1e468c703749736cd"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.376628371477127,
+      "n": 500,
+      "session_id": 1377786112,
+      "shard": "sessions/1377786112_L1.json",
+      "shard_digest": "6586cdf97ae4964f838df37ca18f612de40660a96c9b55f7b9b0f12347060751"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4029224774241447,
+      "n": 500,
+      "session_id": 1378304512,
+      "shard": "sessions/1378304512_H1.json",
+      "shard_digest": "c265f87f4b3e0049640629695d021e753514f1309859170127f7907ec3bf796b"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.37844844669103617,
+      "n": 500,
+      "session_id": 1378304512,
+      "shard": "sessions/1378304512_L1.json",
+      "shard_digest": "b39e0fb4ce7c7a2ea657616a436f8f468230444db62b551bced9003f7a0f579b"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.3989422434568404,
+      "n": 500,
+      "session_id": 1378822912,
+      "shard": "sessions/1378822912_H1.json",
+      "shard_digest": "cc8881de7ee44df65517fe5570ebd2ba4ad4803bda6abdba90256970c0ab5e2b"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4093420130014419,
+      "n": 500,
+      "session_id": 1378822912,
+      "shard": "sessions/1378822912_L1.json",
+      "shard_digest": "1e21cc5cfd2972719b07308235896c2e4237185b5ff0ea17ab61a0679d019b72"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4092623904347419,
+      "n": 500,
+      "session_id": 1379341312,
+      "shard": "sessions/1379341312_H1.json",
+      "shard_digest": "1c01009c3c1626b64ab3da735ca24c51337d1b8618c72f3d123ef2d938541d1d"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.41175301134586334,
+      "n": 500,
+      "session_id": 1379341312,
+      "shard": "sessions/1379341312_L1.json",
+      "shard_digest": "43d2a3f8619b7ac7ad735ad97e53fb05914a90535f3a042f185587d3d87c18b9"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.42982032746076565,
+      "n": 500,
+      "session_id": 1379859712,
+      "shard": "sessions/1379859712_H1.json",
+      "shard_digest": "f55f42e8287d6496bd0cf564789bcb2bf4a57453a21d2d623817010577780321"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.3975156766176222,
+      "n": 500,
+      "session_id": 1379859712,
+      "shard": "sessions/1379859712_L1.json",
+      "shard_digest": "2d17d8a8644f4627cb84084f1ab6b4dd113267b4ca71cb94fc75261dda10a9c5"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.41512993097305295,
+      "n": 500,
+      "session_id": 1380378112,
+      "shard": "sessions/1380378112_H1.json",
+      "shard_digest": "90b1f39e20f555e2bb34351af5d01a4bd2f1deea73d662b0d4d840506e1422ad"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4224820432066917,
+      "n": 500,
+      "session_id": 1380378112,
+      "shard": "sessions/1380378112_L1.json",
+      "shard_digest": "2088fc0eeab7f542c75cd90821e7f2dc740a653f01f605ed2ed668fe155cd304"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4155154511332511,
+      "n": 500,
+      "session_id": 1380896512,
+      "shard": "sessions/1380896512_H1.json",
+      "shard_digest": "43b2f77d672b78fc77f209d923759d22273a7098f1d1ac7a755ecdb63b3f16a9"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.5179864925146103,
+      "n": 500,
+      "session_id": 1380896512,
+      "shard": "sessions/1380896512_L1.json",
+      "shard_digest": "8efb226e233ab97f304b35803879972c7097394d8366ef2b5c3ac065f5266ba3"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.40877535700798034,
+      "n": 500,
+      "session_id": 1381414912,
+      "shard": "sessions/1381414912_H1.json",
+      "shard_digest": "08978e0a8e8e0fe52c4524cbbe65200a77d303248cdce37a963da314d82023a5"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4319703641533851,
+      "n": 500,
+      "session_id": 1381414912,
+      "shard": "sessions/1381414912_L1.json",
+      "shard_digest": "4a9bcb0d897d380184acb44efa1d761ac1dc67e614f908ad87bb111537fea833"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.42746053636074066,
+      "n": 500,
+      "session_id": 1381933312,
+      "shard": "sessions/1381933312_H1.json",
+      "shard_digest": "38465c4ccba979e7229270bd8c7ea1f7f4e5821f3e9ad6a8b1287f54d10e5255"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.42229813694953916,
+      "n": 500,
+      "session_id": 1381933312,
+      "shard": "sessions/1381933312_L1.json",
+      "shard_digest": "7700a3433ce149be3b6bde15415aad99d19ae3c3d67914d64cfb58c9550b3d1f"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.40931655853986737,
+      "n": 500,
+      "session_id": 1382451712,
+      "shard": "sessions/1382451712_H1.json",
+      "shard_digest": "d7ca5e49dc1e5bbc08bfa609feebe8b3883f2738dbbe1f710d61bca7082450e4"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.41001655012369115,
+      "n": 500,
+      "session_id": 1382451712,
+      "shard": "sessions/1382451712_L1.json",
+      "shard_digest": "499deecf5a9040145fd3468191a0bb6160fbd7dcf10527403cc9bc19509ab8c0"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.40698282778263084,
+      "n": 500,
+      "session_id": 1382970112,
+      "shard": "sessions/1382970112_H1.json",
+      "shard_digest": "1f6745624c7df85481d9dd2a6a785c2697e8771fe33b74b4cf11e8b0bb5f2246"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.39005149155855173,
+      "n": 500,
+      "session_id": 1382970112,
+      "shard": "sessions/1382970112_L1.json",
+      "shard_digest": "bb76bc9d5fd23da6ad2d3c5ca2c53bcaf7f3e83d0a3918d58d664e9a43e473af"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4060326197743416,
+      "n": 500,
+      "session_id": 1383488512,
+      "shard": "sessions/1383488512_H1.json",
+      "shard_digest": "6e33f1998260d44b6f71b9621af0e2b7145a59db8f308dfced1f6d9a81b27968"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.39161929726600647,
+      "n": 500,
+      "session_id": 1383488512,
+      "shard": "sessions/1383488512_L1.json",
+      "shard_digest": "950718da9c867adc57cef7dd7ddd7b17a5e620258eb2f7962c3be093c59936f5"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4249788144230842,
+      "n": 500,
+      "session_id": 1384006912,
+      "shard": "sessions/1384006912_H1.json",
+      "shard_digest": "13b8a634a506c8c0956fc0dd9642d0e60fb6e8bff6b42262e4cf25b565619bc4"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.40277832895517335,
+      "n": 500,
+      "session_id": 1384006912,
+      "shard": "sessions/1384006912_L1.json",
+      "shard_digest": "7befebf6b829177b6f827f8fed5224a69de05ba44406a61611a66515bf4eb679"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4244690480828285,
+      "n": 500,
+      "session_id": 1384525312,
+      "shard": "sessions/1384525312_H1.json",
+      "shard_digest": "144733d0e0ffea42027ea3bc0ef6290b528814d05541dd0d76012340f6b50ba0"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4237923541665077,
+      "n": 500,
+      "session_id": 1384525312,
+      "shard": "sessions/1384525312_L1.json",
+      "shard_digest": "20e7aacc4739b650a1b70e6e325fcf0795ad95dd9fc3534104831015e5389f1c"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.43420890003442764,
+      "n": 500,
+      "session_id": 1385043712,
+      "shard": "sessions/1385043712_H1.json",
+      "shard_digest": "c7d7be34065fcf4609a832245b4f832337d0d88a811ed62b9eb7d0356fd9fc74"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.45305949330329864,
+      "n": 500,
+      "session_id": 1385043712,
+      "shard": "sessions/1385043712_L1.json",
+      "shard_digest": "a2800589947ec5ca389ab7e55c40056c38c0b7612c619fa38550ee83bc4b3146"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4276785960793495,
+      "n": 500,
+      "session_id": 1385562112,
+      "shard": "sessions/1385562112_H1.json",
+      "shard_digest": "d7705db6c3b6a7923eb677e99aaaecc1787adb173cf042fe65643a30f95759fe"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4093231445550917,
+      "n": 500,
+      "session_id": 1385562112,
+      "shard": "sessions/1385562112_L1.json",
+      "shard_digest": "71ca60c52ea20da8ca97a7c1161d803ef460bd918353d7e13edb846c2b45c135"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.41501668363809585,
+      "n": 500,
+      "session_id": 1386080512,
+      "shard": "sessions/1386080512_H1.json",
+      "shard_digest": "4f1f8a16607e7f04f1bc9b04312754f02a2b19bade6d0dc1047b5afa674d1b50"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4437784886360168,
+      "n": 500,
+      "session_id": 1386080512,
+      "shard": "sessions/1386080512_L1.json",
+      "shard_digest": "3e05ca1ba38a3679ef706bf5baef2e4f836620c29323bc3c92d87dabfd7c7b8f"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.41914893835783007,
+      "n": 500,
+      "session_id": 1386598912,
+      "shard": "sessions/1386598912_H1.json",
+      "shard_digest": "aff573f67c84ea6c108114dc9c73eb0488ca7bf8d1d1921fda2a0d6ef3bd9a6f"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.5800474202632904,
+      "n": 500,
+      "session_id": 1386598912,
+      "shard": "sessions/1386598912_L1.json",
+      "shard_digest": "097b192388601c4274bf86123e4e7f56965c08a7f8c4b8070e7c1eaad43877f9"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.41258551001548766,
+      "n": 500,
+      "session_id": 1387117312,
+      "shard": "sessions/1387117312_H1.json",
+      "shard_digest": "8e6bff2af3df9597454edc5de98015baa58608aa7d0a55f7b1124c7fc72fe2a8"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4447505417466163,
+      "n": 500,
+      "session_id": 1387117312,
+      "shard": "sessions/1387117312_L1.json",
+      "shard_digest": "ceb38a3975bb70ac475848dbc632ce46a11af2c603ae9fed835214703dc2d8f0"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.4155356979370117,
+      "n": 500,
+      "session_id": 1388154112,
+      "shard": "sessions/1388154112_H1.json",
+      "shard_digest": "62ebad5ab710ca8140140bd3def53f63e155827fe36550a47ae1d4a6b2890334"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.5138094913959502,
+      "n": 500,
+      "session_id": 1388154112,
+      "shard": "sessions/1388154112_L1.json",
+      "shard_digest": "1f7a3b6bf9ab8d1ab5339a47b32fdd3c176b3afba7a796dfc7a2e97f206c6991"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.41035198569297787,
+      "n": 500,
+      "session_id": 1388672512,
+      "shard": "sessions/1388672512_H1.json",
+      "shard_digest": "7fbd734076d13135170323cd3e4544951fbb78bfdd9f10cee6af2154f35458a4"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.46805621504783623,
+      "n": 500,
+      "session_id": 1388672512,
+      "shard": "sessions/1388672512_L1.json",
+      "shard_digest": "4c178b52d3071be49677ee56ae3785ab82da3a862f21c25fe8857329db587dbd"
+    },
+    {
+      "detector": "H1",
+      "empirical_p99": 0.42570773035287857,
+      "n": 500,
+      "session_id": 1389190912,
+      "shard": "sessions/1389190912_H1.json",
+      "shard_digest": "c4df7f5ceaa788e9bb413da3378256d8cc727f800d392d3c114b0a41a675e17f"
+    },
+    {
+      "detector": "L1",
+      "empirical_p99": 0.4373433285951614,
+      "n": 500,
+      "session_id": 1389190912,
+      "shard": "sessions/1389190912_L1.json",
+      "shard_digest": "8834fbc5d9a38a84375d549f6fc12303a704af9f68dfb486bd4eef21507af854"
+    }
+  ]
+}

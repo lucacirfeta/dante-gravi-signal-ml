@@ -1,0 +1,87 @@
+{
+  "artifact_digest": "de7c79b1fb3dc7eab2662b728f70b1f51694e33958e2a8460fac04d2b4081274",
+  "cohort_artifact_digest": "293312180b9bfb5cb65f79227ec5598cf389b436661cba5229c6b01b4f53113f",
+  "cohort_row_total": 1294,
+  "contract_digest": "a34cea01026355219d7d55750b16a1cf1c5c832f49de6c77f24caa0c57741a90",
+  "counts_by_detector": {
+    "H1": 647,
+    "L1": 647
+  },
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_index_v1/native_index_401c619f86d84c4cfb66158a4d67495e0e5d9c27abb1f1c19e655510db7af9a8",
+    "index_filename": "patch_compressed_index_o4a_q4-64_detector_aware_v1.npz",
+    "replay_filename": "native_index_replay.jsonl",
+    "summary_filename": "native_index_summary.json"
+  },
+  "gates": {
+    "clean_window_hash_mismatches": 0,
+    "cohort_only": true,
+    "context_failures": 0,
+    "encoder_failures": 0,
+    "raw_source_hash_mismatches": 0
+  },
+  "index": {
+    "centroid_bytes_sha256": "dd31c705f6e4764533ce852eb10271557535fa8543609a5fad7ae51c8333ab53",
+    "centroid_shape": [
+      1216,
+      384
+    ],
+    "raw_sample_bytes_sha256": "585f6f08395b3dfb08e6e55bcc1988916ac49d36c6141bb174256e4e28f8e1fa",
+    "raw_sample_shape": [
+      50000,
+      384
+    ],
+    "sha256": "6a24ba02a6925bd5527b804c3ae8aa06b73fc36a654c8a6f789d22a1b3f2403b",
+    "size_bytes": 72970349,
+    "token_total": 1771486
+  },
+  "parent_native_contract_digest": "66f5796aecdea5a1009257a96a351e960c0801eadb60dc40bbf01bdfa74378c2",
+  "raw_sources": {
+    "complete_file_sha256_replayed": true,
+    "manifest_digest": "d834faa5732f7252476e3b302c6a093cd5c1d3f0d55870b6458ac193e685ad4b",
+    "total_size_bytes": 148630525618,
+    "unique_file_count": 1199
+  },
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_corrected.py",
+      "sha256": "d0b7cc7516d9eaa78a4b0f36774ed8394211a59114c25e6a0c9ec71373ed5dd7"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_index_v1.json",
+      "sha256": "4d63db624e7bb8abf25730b1981b85d48c3a520f298d3d4ecff13f99e49efbce"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_index.py",
+      "sha256": "6875065fde8ee219f43d822ccf432ad8138243a45994666b0662e175a6214d33"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_index.py",
+      "sha256": "75b44b913ca63cd36fe57303c80194bd52f7bf648fd70d112eebaa2abd0ae475"
+    }
+  },
+  "replay_ledger": {
+    "row_digest": "2cb59b00d9fde8f667231bdf10bf692628a757ada8f6fa79ddfad0e2d093dd41",
+    "row_total": 1294,
+    "sha256": "479488b20152d3b7ff9898699c8dbbb9749d2ac02b35a8ce7b8e81ae0c09f680",
+    "size_bytes": 759762
+  },
+  "run_key": "401c619f86d84c4cfb66158a4d67495e0e5d9c27abb1f1c19e655510db7af9a8",
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "cohort_membership_changed": false,
+    "historical_detector_identity_inferred": false,
+    "native_index_built_from_frozen_cohort_only": true,
+    "primary_scores_or_candidate_outcomes_used": false
+  },
+  "status": "PASS_VERIFIED_NATIVE_INDEX",
+  "verification": {
+    "native_index_verifier": "PASS",
+    "pytest": {
+      "passed": 27,
+      "warnings": 11,
+      "wall_time_seconds": 269.33
+    }
+  }
+}

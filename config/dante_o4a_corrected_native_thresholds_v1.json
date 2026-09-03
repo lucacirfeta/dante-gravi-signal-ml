@@ -1,0 +1,89 @@
+{
+  "contract_digest": "eb704f3a55e5d2c07f925233e79b4d129e8372f3a8f76bae9beb0c0217d49c73",
+  "contract_id": "dante-o4a-corrected-native-thresholds-v1",
+  "execution": {
+    "atomic_outputs_only": true,
+    "environment": "canonical WSL runtime",
+    "resume_partial_output": false
+  },
+  "gates": {
+    "exact_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "fail_closed": true,
+    "point_inside_confidence_interval": true,
+    "zero_candidate_or_historical_score_use": true,
+    "zero_nonfinite_scores": true
+  },
+  "method": {
+    "block_length": 17,
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_complete_blocks": true,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "name": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_rows": true
+  },
+  "output": {
+    "historical_artifacts_overwritten": false,
+    "large_outputs_committed_to_git": false,
+    "root": "E:/dante_cache/dante_light/o4a_corrected_native_thresholds_v1",
+    "summary_filename": "native_thresholds_summary.json"
+  },
+  "parent_native_rescore": {
+    "compact_artifact_digest": "64c693adf9eb23d02bfad7fca99e91211017c5659a11a9a148d5be7716dd12eb",
+    "contract_digest": "79aeb513f5c5da68a16f9441b9573bb23a40c3eaf56e3a7787eb0a4e27aa1a15",
+    "run_artifact_digest": "f842c23ed3f14e74cb45c5e0e2fc52faade3aa2084e0f0c81f4cf004aae8a361",
+    "run_summary_sha256": "6f47501e378e1f55a6be1c8a0d3052dff981703a0a90383140e25a94c2d71f6d",
+    "run_key": "cff22dc5276433820227fb38c15f2a617cd4745ea07302cde87806c0e66fcb57"
+  },
+  "references": {
+    "block_bootstrap_implementation": {
+      "path": "src/pipeline_v2_production/background_calibration.py",
+      "sha256": "832e141e78a6c084fe7bdc5d444853657799b31890871ac533463370e34e1d24"
+    },
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_thresholds.py",
+      "sha256": "5742a95a60fc1ecf7f9486868cd08dff1579f45ae83b4d5210860a508626b16b"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_thresholds.py",
+      "sha256": "52da1077434e0b5d3fe5c48da5807ff867a76cd9b81f247c31397e5b176989db"
+    },
+    "native_calibration_v2_contract": {
+      "path": "config/dante_o4a_corrected_native_calibration_v2.json",
+      "sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584"
+    },
+    "native_rescore_v2": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_rescore_v2.json",
+      "sha256": "fc7655122f46d45d988a6061e644fcc6d3e03aff244e95adad1946c1541ca918"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_thresholds.py",
+      "sha256": "0d847f45edb299d145a27081ac73b1e826a22fac00cb26439e0ff14f1d508b18"
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "bootstrap_uses_complete_non_overlapping_blocks": true,
+    "calibration_v2_scores_only": true,
+    "candidate_scores_used": false,
+    "classification_performed_in_this_stage": false,
+    "detector_specific": true,
+    "historical_artifacts_immutable": true,
+    "historical_scores_used": false,
+    "historical_thresholds_used": false,
+    "point_estimate_uses_all_calibration_rows": true
+  }
+}

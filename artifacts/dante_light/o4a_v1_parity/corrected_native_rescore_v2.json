@@ -1,0 +1,108 @@
+{
+  "artifact_digest": "64c693adf9eb23d02bfad7fca99e91211017c5659a11a9a148d5be7716dd12eb",
+  "calibration_artifact_digest": "88f1083c50c7ff9ad864869c08d3185eadd7cac99872351eb86da225b40252b4",
+  "contract_digest": "79aeb513f5c5da68a16f9441b9573bb23a40c3eaf56e3a7787eb0a4e27aa1a15",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_rescore_v2/native_rescore_cff22dc5276433820227fb38c15f2a617cd4745ea07302cde87806c0e66fcb57",
+    "summary_filename": "native_rescore_summary.json"
+  },
+  "gates": {
+    "calibration_image_hash_mismatches": 0,
+    "candidate_image_hash_mismatches": 0,
+    "context_failures": 0,
+    "context_provenance_mismatches": 0,
+    "nonfinite_scores": 0,
+    "old_native_scores_read": false,
+    "old_native_thresholds_read": false,
+    "zero_duplicate_detector_gps": true
+  },
+  "index_artifact_digest": "de7c79b1fb3dc7eab2662b728f70b1f51694e33958e2a8460fac04d2b4081274",
+  "input_counts": {
+    "native_calibration": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "primary_candidate": {
+      "H1": 4720,
+      "L1": 6222
+    }
+  },
+  "outputs": {
+    "native_calibration_H1": {
+      "filename": "native_calibration_H1.jsonl",
+      "row_digest": "d75ba46ab7bc5a8b8dffb73113c51d5cb716be3562edd9c82c18f151ca31c933",
+      "row_total": 5000,
+      "sha256": "d1b2cca0b76790d03f3d6d416db349e634df62760ec76f6180db2b2abdfd3710",
+      "size_bytes": 5421293
+    },
+    "native_calibration_L1": {
+      "filename": "native_calibration_L1.jsonl",
+      "row_digest": "8456bb62c018c5abea3b8d42d6943dbbd34c0c58cdfa3e734b7744a2927c40ad",
+      "row_total": 5000,
+      "sha256": "e6aea524d80d755714e81ae400fef5ff843f10ad573e744b9cf670272faf6213",
+      "size_bytes": 5424796
+    },
+    "primary_candidate": {
+      "filename": "native_candidates.jsonl",
+      "row_digest": "25749fc22101cf2dd9cf0548175cdec4e42c238aa9a20768e7164f4a26e7f405",
+      "row_total": 10942,
+      "sha256": "d3ab8cd737c4b96570f7e1ac280fe808303f8d985e5c27923775ea6709c1de76",
+      "size_bytes": 9931989
+    }
+  },
+  "primary_scan_artifact_digest": "2cca3c8fcdf00f2d7fb490c54d78e6403f0128f2f5a4f7bafdf8fe5ef2974edd",
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_rescore_v2.py",
+      "sha256": "9eda9e7f0a6944db2363becb5e74bcba75837fbb1fa8605f59630e635f7da4ac"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_rescore_v2.json",
+      "sha256": "4208a94d6c0a8fbf9f8bdecbc1a77cc07f35e923864b4b892988c0d63f0dfd6b"
+    },
+    "frozen_rescore_engine": {
+      "path": "src/dante_light/o4a_corrected_native_rescore.py",
+      "sha256": "50a60ede6ac956916925902656b583f0e68c1cdfa933d7c649ebcd0cfe31fdb1"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_rescore_v2.py",
+      "sha256": "ffe3e855510c3be3d07731703ab68050eaa56c7fcf5da656a65e7b7f3fa96d1c"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_rescore_v2.py",
+      "sha256": "8f3d55900ba3dde2025b6eb82cd0a45e935b0c2714d7cbcc65abafcd8a6d5209"
+    }
+  },
+  "row_total": 20942,
+  "run_key": "cff22dc5276433820227fb38c15f2a617cd4745ea07302cde87806c0e66fcb57",
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "historical_artifacts_immutable": true,
+    "native_calibration_identities_changed": true,
+    "old_native_scores_read": false,
+    "old_native_thresholds_read": false,
+    "preprocessing_changed": false,
+    "primary_candidate_identities_changed": false,
+    "thresholds_or_classes_computed_in_this_stage": false,
+    "top_k_changed": false
+  },
+  "status": "PASS_VERIFIED_NATIVE_RESCORE_V2",
+  "summary": {
+    "sha256": "6f47501e378e1f55a6be1c8a0d3052dff981703a0a90383140e25a94c2d71f6d",
+    "size_bytes": 2194
+  },
+  "verification": {
+    "historical_parity_regression": {
+      "line_endings_fixed_by_commit": "43f1b51",
+      "passed": 10,
+      "wall_time_seconds": 70.4
+    },
+    "native_rescore_v2_verifier": "PASS_WSL_FROZEN_RUNTIME",
+    "pytest": {
+      "passed": 38,
+      "wall_time_seconds": 179.02,
+      "warnings": 11
+    }
+  }
+}

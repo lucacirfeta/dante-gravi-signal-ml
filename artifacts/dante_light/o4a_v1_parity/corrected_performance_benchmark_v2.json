@@ -1,0 +1,326 @@
+{
+  "artifact_digest": "b0c79eaa03fd29af557b4ef3205a9a021edac1b335dfb4f9be40b2ed4d42f182",
+  "contract_digest": "9a1cf242bbf126131753db70bf267cc639d1f7747d7fe84d4d507b0c31dacd09",
+  "database_commit_rows": 1024,
+  "median_end_to_end_windows_per_s": {
+    "parallel_4x16": 21.82994380869897,
+    "parallel_8x32": 23.872185385640734,
+    "serial_2x8": 7.866315590728475,
+    "serial_8x32": 19.488051833302563
+  },
+  "outcome_access": {
+    "candidate_dispositions_inspected": false,
+    "candidate_scores_inspected": false,
+    "scientific_protocol_change_allowed": false,
+    "score_tolerance_change_allowed": false,
+    "score_values_used_only_for_cross_configuration_equivalence": true,
+    "taxonomy_or_scientific_labels_loaded": false,
+    "thresholds_loaded_or_compared": false
+  },
+  "records": [
+    {
+      "configuration": {
+        "batch_size": 8,
+        "detector_mode": "serial",
+        "id": "serial_2x8",
+        "workers_per_detector": 2
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "warmup",
+      "record_digest": "99381dc1823cfbbc1f7e5daa2e797af68ae133f77917d59b709e63f6bc5c6881",
+      "repetition": 0,
+      "timing": {
+        "end_to_end_s": 200.92435466199998,
+        "end_to_end_windows_per_s": 7.6446680771173705,
+        "scoring_s": 20.047885541000326
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 32,
+        "detector_mode": "serial",
+        "id": "serial_8x32",
+        "workers_per_detector": 8
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "warmup",
+      "record_digest": "eb2815694c771f0fe81036adee0b7daf205dd37a9c2212246b4cc73577793d15",
+      "repetition": 0,
+      "timing": {
+        "end_to_end_s": 77.87008534099999,
+        "end_to_end_windows_per_s": 19.725161379671285,
+        "scoring_s": 21.970017606
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 16,
+        "detector_mode": "parallel_shared_scorer",
+        "id": "parallel_4x16",
+        "workers_per_detector": 4
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "warmup",
+      "record_digest": "05f81e46f0db9dc6a4551de9880501e17adb82906ecf1ddcbd425be346b1b3d0",
+      "repetition": 0,
+      "timing": {
+        "end_to_end_s": 72.01805687400002,
+        "end_to_end_windows_per_s": 21.327984489880443,
+        "scoring_s": 23.06024104600027
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 32,
+        "detector_mode": "parallel_shared_scorer",
+        "id": "parallel_8x32",
+        "workers_per_detector": 8
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "warmup",
+      "record_digest": "2297c62fe77ca5e8d875606afd33358db6494f8c3e8e3619095547ef8e06ff61",
+      "repetition": 0,
+      "timing": {
+        "end_to_end_s": 66.10404983799998,
+        "end_to_end_windows_per_s": 23.23609527350061,
+        "scoring_s": 55.55863091500015
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 8,
+        "detector_mode": "serial",
+        "id": "serial_2x8",
+        "workers_per_detector": 2
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "46eea8a45f703971daf01cf42982fccdd0309e9a8f7ec61e494e91ab30f0967e",
+      "repetition": 1,
+      "timing": {
+        "end_to_end_s": 194.73961980699994,
+        "end_to_end_windows_per_s": 7.887455061904092,
+        "scoring_s": 18.79766371299945
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 32,
+        "detector_mode": "serial",
+        "id": "serial_8x32",
+        "workers_per_detector": 8
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "25bedd54de994482c5caf3724096b15f5d49ef4dec7a759399028bca0396a6e5",
+      "repetition": 1,
+      "timing": {
+        "end_to_end_s": 79.89099089700005,
+        "end_to_end_windows_per_s": 19.226197882315635,
+        "scoring_s": 22.626752246000024
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 16,
+        "detector_mode": "parallel_shared_scorer",
+        "id": "parallel_4x16",
+        "workers_per_detector": 4
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "05025b8cb5587bb3cf6b902bf339379b822cd0422866b5e843415797d4887c5b",
+      "repetition": 1,
+      "timing": {
+        "end_to_end_s": 70.32316770099999,
+        "end_to_end_windows_per_s": 21.842019496771876,
+        "scoring_s": 21.803696195999805
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 32,
+        "detector_mode": "parallel_shared_scorer",
+        "id": "parallel_8x32",
+        "workers_per_detector": 8
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "60a96446fdd8a38969ab632ac7d6a287f951449d821f88f836f09443867e5a0e",
+      "repetition": 1,
+      "timing": {
+        "end_to_end_s": 66.53375088300004,
+        "end_to_end_windows_per_s": 23.086027461476874,
+        "scoring_s": 55.73899894100009
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 8,
+        "detector_mode": "serial",
+        "id": "serial_2x8",
+        "workers_per_detector": 2
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 0.0,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "49911e536bafb0a2380cf5884a269583c2e35eb012f1edd391c323736ed0269c",
+      "repetition": 2,
+      "timing": {
+        "end_to_end_s": 195.78910359600002,
+        "end_to_end_windows_per_s": 7.845176119552859,
+        "scoring_s": 18.855315682000537
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 32,
+        "detector_mode": "serial",
+        "id": "serial_8x32",
+        "workers_per_detector": 8
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "baa8c80afede69dbed28f94d604701b1d80ca2a588aa0b282f08d198ea657803",
+      "repetition": 2,
+      "timing": {
+        "end_to_end_s": 77.77252290600018,
+        "end_to_end_windows_per_s": 19.749905784289492,
+        "scoring_s": 21.932233272999383
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 16,
+        "detector_mode": "parallel_shared_scorer",
+        "id": "parallel_4x16",
+        "workers_per_detector": 4
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "ddddef4542e303e1655ef4eed4b3bb3eb33d8d036e36b9aa9eba5f4b2b13a4de",
+      "repetition": 2,
+      "timing": {
+        "end_to_end_s": 70.40101221199996,
+        "end_to_end_windows_per_s": 21.817868120626063,
+        "scoring_s": 21.844144267999468
+      },
+      "window_count": 1536
+    },
+    {
+      "configuration": {
+        "batch_size": 32,
+        "detector_mode": "parallel_shared_scorer",
+        "id": "parallel_8x32",
+        "workers_per_detector": 8
+      },
+      "equivalence": {
+        "identities_exact": true,
+        "images_exact": true,
+        "max_abs_score_delta": 2.9802322387695312e-08,
+        "pass": true,
+        "score_atol": 2e-07
+      },
+      "phase": "measured",
+      "record_digest": "6dec939785fddf98ecbd951d3ff426bb20d86c98141378ad1763ddd5a2e1d165",
+      "repetition": 2,
+      "timing": {
+        "end_to_end_s": 62.291289430999996,
+        "end_to_end_windows_per_s": 24.65834330980459,
+        "scoring_s": 52.314388078000206
+      },
+      "window_count": 1536
+    }
+  ],
+  "run_key": "725c0f64b89dc2eb9882a619a40783ca02b1532369f6d7b7ea69fadb09b20391",
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 2,
+  "selected_configuration": {
+    "batch_size": 32,
+    "detector_mode": "parallel_shared_scorer",
+    "id": "parallel_8x32",
+    "workers_per_detector": 8
+  },
+  "speedup_over_baseline": {
+    "parallel_4x16": 2.7751167057711914,
+    "parallel_8x32": 3.034735272225457,
+    "serial_2x8": 1.0,
+    "serial_8x32": 2.4774052869518592
+  },
+  "status": "PASS_EQUIVALENCE_AND_PERSISTENT_SELECTION"
+}

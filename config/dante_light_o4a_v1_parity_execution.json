@@ -1,0 +1,68 @@
+{
+  "data": {
+    "cat1": "frozen_manifest_attestation_for_retrospective_replay",
+    "local_only": true,
+    "parity_cache_alias": "DANTE_O4A_V1_PARITY_CACHE_ROOT",
+    "raw_root_alias": "DANTE_O4A_RAW_ROOT"
+  },
+  "execution_digest": "7a8c716c0a288fddc3e140140673b82f8c00bc64187c0cc908d92b3c6923af86",
+  "execution_id": "dante-light-o4a-v1-canonical-parity",
+  "executor": {
+    "batch_size": 8,
+    "max_pending_writes": 2,
+    "max_preprocess_in_flight": 16,
+    "requested_device": "cuda",
+    "workers": 2
+  },
+  "failure_policy": "DEFER_FAIL_CLOSED_NO_THRESHOLD_OR_TOLERANCE_CHANGE",
+  "parity_contract_digest": "f47d114a4571fb158c06c18406549eb4a3468ea47b1c1af046ec91687c82fd1e",
+  "parity_manifest_digest": "abe45567769de440b2ff21c17a30c1b84f6f2e93ac22db41295429f65932b9f5",
+  "preprocessing": "canonical_whiten_context_then_crop_qtransform_cividis",
+  "schema_version": 1,
+  "scientific_engine": "canonical_two_encoder",
+  "scorer_construction": {
+    "native_index_source": "RepresentationContract.native_index_sha256",
+    "primary_index_source": "RepresentationContract.primary_index_sha256",
+    "shared_encoder": false,
+    "top_k_source": "RepresentationContract.top_k"
+  },
+  "source_references": {
+    "historical_epochs": {
+      "path": "config/dante_light_epochs_v1.json",
+      "sha256": "1f4bfa593ee2fe1902b390417b495cba83eab3d7447065801f6a301d34335ca6"
+    },
+    "parity_contract": {
+      "path": "config/dante_light_o4a_v1_parity_contract.json",
+      "sha256": "f86835afccc310dedbe5e782240753705ee3cbe2deea6b59ba51962eaae0184c"
+    },
+    "parity_entries": {
+      "path": "config/dante_light_o4a_v1_parity_manifest.jsonl",
+      "sha256": "d67cec47ecfc4ebb51fb4eaa6423240254d9ed985b9b456ed411564f5d3c31b6"
+    },
+    "parity_manifest": {
+      "path": "config/dante_light_o4a_v1_parity_manifest.json",
+      "sha256": "8ddb53897aeb7aeffb92be22a24924e437cecaef955e9833b6776e904644507b"
+    },
+    "patch_scorer": {
+      "path": "src/core/patch_scorer.py",
+      "sha256": "30ab4b53058572c445427b24d92e23c58a4208c4bfb396ba3efe6cf4c891f1df"
+    },
+    "preprocessing": {
+      "path": "src/dante_light/preprocessing.py",
+      "sha256": "164cf1a14f0dab19ff22905b21eed63522179602abb9ed5ca0e2b1e8878234d0"
+    },
+    "raw_cache_summary": {
+      "path": "artifacts/dante_light/o4a_v1_parity/raw_cache_summary.json",
+      "sha256": "f9333678fa646d61658a7bccd88041e463c57f5ede59e336ee808d406d5dc7c8"
+    },
+    "reference_artifacts": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+    },
+    "replay_code": {
+      "path": "src/dante_light/o4a_v1_parity_replay.py",
+      "sha256": "4728301cfbe600b41a4e61003761f6687d59f7365cbe0f8b10212747114cbe74"
+    }
+  },
+  "status": "FROZEN_BEFORE_CANONICAL_RESCORING"
+}

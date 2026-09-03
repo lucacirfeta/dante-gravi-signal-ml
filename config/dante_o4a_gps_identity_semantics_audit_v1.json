@@ -1,0 +1,89 @@
+{
+  "acceptance": {
+    "calibration_offset_by_disposition_s": {
+      "HISTORICAL_FULL_SYMMETRIC_4S": 4.0,
+      "HISTORICAL_LEFT_TRUNCATED_4S": 0.0,
+      "HISTORICAL_RIGHT_TRUNCATED_4S": 4.0
+    },
+    "candidate_catalog_offset_s": 4.0,
+    "candidate_edge_boundary_offset_s": 36.0,
+    "require_exhaustive_coverage": true,
+    "require_exact_geometry": true
+  },
+  "contract_digest": "ba587f319374a118ca517e2ed2cb7ca4caff19467f44301e42d7a9d1583ad839",
+  "expected_cardinality": {
+    "calibration_by_edge": {
+      "H1/HISTORICAL_LEFT_TRUNCATED_4S": 162,
+      "H1/HISTORICAL_RIGHT_TRUNCATED_4S": 128,
+      "L1/HISTORICAL_LEFT_TRUNCATED_4S": 169,
+      "L1/HISTORICAL_RIGHT_TRUNCATED_4S": 133
+    },
+    "calibration_offset_0s": 331,
+    "calibration_offset_4s": 39640,
+    "calibration_rows": 39971,
+    "candidate_edge_rows": 169,
+    "candidate_rows": 10429
+  },
+  "inputs": {
+    "calibration_compact": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_calibration.json",
+      "sha256": "0e9e02e4ea404a557ce6f850b4029c0d24c3520f11570932455d791e586ced51"
+    },
+    "candidate_edge_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/edge_padding_audit.json",
+      "sha256": "8fb54b897270a492f3ce4f9b33a2b22b36414289456c6dad2d94fc1e6e2976c9"
+    },
+    "candidate_entries": {
+      "path": "config/dante_light_o4a_v1_parity_manifest.jsonl",
+      "sha256": "d67cec47ecfc4ebb51fb4eaa6423240254d9ed985b9b456ed411564f5d3c31b6"
+    },
+    "candidate_header": {
+      "path": "config/dante_light_o4a_v1_parity_manifest.json",
+      "sha256": "8ddb53897aeb7aeffb92be22a24924e437cecaef955e9833b6776e904644507b"
+    },
+    "candidate_missing": {
+      "path": "config/dante_light_o4a_v1_parity_missing.jsonl",
+      "sha256": "a2737b6ae38ff5a9b31abf28e65aa66af683e860588cbf39fd260a0a9f044329"
+    }
+  },
+  "outcome_blindness": {
+    "allowed_candidate_fields": [
+      "case_id",
+      "catalog_identity",
+      "required_padded_interval_gps",
+      "source",
+      "window"
+    ],
+    "allowed_calibration_fields": [
+      "analysis_gps_start",
+      "catalog_gps_start",
+      "detector",
+      "historical_context_disposition",
+      "historical_context_interval",
+      "historical_source_span",
+      "required_padded_interval",
+      "session_id"
+    ],
+    "forbidden_semantics": [
+      "class",
+      "disposition",
+      "score",
+      "taxonomy",
+      "threshold"
+    ]
+  },
+  "protocol_id": "dante-o4a-gps-identity-semantics-audit-v1",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "authorizes_final_comparison": false,
+    "candidate_transform_may_not_be_reused_for_calibration": true,
+    "changes_any_scientific_output": false,
+    "establishes_identity_geometry_only": true,
+    "inspects_outcomes": false
+  },
+  "status": "FROZEN_BEFORE_EXHAUSTIVE_GEOMETRY_AUDIT",
+  "storage": {
+    "calibration_external_root_alias": "DANTE_O4A_CORRECTED_EXTERNAL_ROOT",
+    "default_calibration_external_root": "E:/dante_cache/dante_light/o4a_corrected_v2"
+  }
+}

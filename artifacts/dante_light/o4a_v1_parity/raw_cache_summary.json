@@ -1,0 +1,24 @@
+{
+  "artifact_digest": "04ddccc2185c605a8a8c06638415c41921231f903c1a510003face42fa10924e",
+  "completed_count": 169,
+  "contract_digest": "f47d114a4571fb158c06c18406549eb4a3468ea47b1c1af046ec91687c82fd1e",
+  "expected_missing_count": 169,
+  "external_summary_sha256": "7bbe9501042564e870d0fa13304d799c8532870ad23574fecaca9dad513abb79",
+  "failure_count": 0,
+  "implementation_references": {
+    "cache": {
+      "path": "src/dante_light/o4a_v1_parity_cache.py",
+      "sha256": "b721b296db9ebafeea663505a082033e85e4d97f77f412b85052d88039854652"
+    },
+    "freeze": {
+      "path": "src/dante_light/o4a_v1_parity.py",
+      "sha256": "a79989b4b9b850cda5e4e1b9cffc329ed01fe92da3af084033f64b4112ab2fef"
+    }
+  },
+  "logical_cache_root": "o4a_v1_comparison_cache",
+  "manifest_digest": "abe45567769de440b2ff21c17a30c1b84f6f2e93ac22db41295429f65932b9f5",
+  "record_digest_aggregate": "66704a44f4e512b6676b4d3e9621f2a5c14bad9fb81cb6c6b004ce19557e6f07",
+  "run_key": "2ea63d5ac8ee9fb80f8c4465421caf425db6f84a97940cdd7c0c9450c589f004",
+  "schema_version": 1,
+  "status": "COMPLETE_RAW_INPUT_CACHE"
+}

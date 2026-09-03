@@ -1,0 +1,158 @@
+{
+  "artifact_digest": "aff4547408775caa80fa1b0a0ccb0cb411838f63e335800390d985e9e39c0dfb",
+  "dependencies": {
+    "historical_primary_session_calibrations": {
+      "background_identity_count": 39971,
+      "counts": {
+        "H1/complete_only_by_stitch": 117,
+        "H1/complete_single_file": 19587,
+        "H1/not_complete_in_frozen_local_manifest": 11,
+        "L1/complete_only_by_stitch": 129,
+        "L1/complete_single_file": 20123,
+        "L1/not_complete_in_frozen_local_manifest": 4
+      },
+      "cross_boundary_count": 246,
+      "disposition": "RECOMPUTE_SAME_FROZEN_IDENTITIES",
+      "earliest_copy_calibration_identity_count": 38971,
+      "earliest_copy_counts": {
+        "H1/complete_only_by_stitch": 116,
+        "H1/complete_single_file": 19090,
+        "H1/not_complete_in_frozen_local_manifest": 9,
+        "L1/complete_only_by_stitch": 126,
+        "L1/complete_single_file": 19626,
+        "L1/not_complete_in_frozen_local_manifest": 4
+      },
+      "earliest_copy_session_detector_count": 82,
+      "hdf5_session_files": 84,
+      "identity_audit_digest": "84c51fa6af04e835ed2134fbb96c87dc75a9cd3e36e1eae332fafd6bdfc3a2a6",
+      "non_earliest_session_identity_count": 1000,
+      "non_earliest_sessions_are_required": true,
+      "not_complete_in_local_manifest_count": 15,
+      "reason": "The historical per-session primary thresholds contain 246 calibration windows scored with incomplete file-edge context. All 84 session-detector calibrations remain necessary because a duplicated raw span can fail the earliest session threshold but pass a later session threshold before candidate-level deduplication.",
+      "required_calibration_identity_count": 39971,
+      "required_counts": {
+        "H1/complete_only_by_stitch": 117,
+        "H1/complete_single_file": 19587,
+        "H1/not_complete_in_frozen_local_manifest": 11,
+        "L1/complete_only_by_stitch": 129,
+        "L1/complete_single_file": 20123,
+        "L1/not_complete_in_frozen_local_manifest": 4
+      },
+      "required_session_detector_count": 84
+    },
+    "historical_taxonomy_and_downstream": {
+      "disposition": "REBUILD_AFTER_CORRECTED_PRIMARY_SCAN",
+      "includes": [
+        "candidate catalogue and scores",
+        "detector-aware taxonomy",
+        "coincidence",
+        "PEM association",
+        "figures, tables and reports"
+      ]
+    },
+    "native_o4a_detector_thresholds": {
+      "detectors": {
+        "H1": {
+          "incomplete_padding_count": 0,
+          "ledger_path": "data/production/aggregated/background_scores_native_H1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_0e17e39a_eb941186_ledger.csv",
+          "ledger_sha256": "e19a966612cf38061e432467ef49c894817d0baaf3af6b4f0da62f7413ada588",
+          "score_disposition": "RECOMPUTE_AFTER_NATIVE_INDEX_REBUILD",
+          "window_count": 5000,
+          "window_preprocessing_disposition": "UNAFFECTED"
+        },
+        "L1": {
+          "incomplete_padding_count": 0,
+          "ledger_path": "data/production/aggregated/background_scores_native_L1_O4a_idxq4-64_queryq4-64_pad4_n5000_bgv3_0241b2a1_6d254973_eb941186_ledger.csv",
+          "ledger_sha256": "8c2672f2ad1d849c9a76bd8b5c00f40bd2a0122c28ec3cde42905d660638d398",
+          "score_disposition": "RECOMPUTE_AFTER_NATIVE_INDEX_REBUILD",
+          "window_count": 5000,
+          "window_preprocessing_disposition": "UNAFFECTED"
+        }
+      },
+      "disposition": "RECOMPUTE_AFTER_NATIVE_INDEX_REBUILD",
+      "reason": "The 10,000 calibration windows have complete padding, but every stored score depends on the O4a native index that must be rebuilt.",
+      "threshold_artifact_sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    },
+    "native_o4a_index": {
+      "causal_code_evidence": {
+        "edge_tolerance_s": 4.0,
+        "padding_result_was_not_checked": true,
+        "source_path": "src/pipeline_v3_multiscale/norm_leakage/common.py",
+        "source_sha256": "c66bc5e72e2e5bf3c31508a8ff0a50e3d6f6b7590e0062fe694d0fde2262b136"
+      },
+      "coverage_if_assigned_to_detector": {
+        "H1": {
+          "complete_only_by_stitch": 7,
+          "complete_single_file": 1087,
+          "not_complete_in_frozen_local_manifest": 200
+        },
+        "L1": {
+          "complete_only_by_stitch": 7,
+          "complete_single_file": 1089,
+          "not_complete_in_frozen_local_manifest": 198
+        }
+      },
+      "definitely_cross_boundary_gps": [
+        1370440183.0,
+        1373353988.0,
+        1378872045.0,
+        1384795659.0
+      ],
+      "definitely_cross_boundary_regardless_of_detector_count": 4,
+      "disposition": "REBUILD_REQUIRED",
+      "index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+      "ledger_missing_detector_identity": true,
+      "reason": "At least four training identities require stitching for both possible detector assignments, while the frozen builder accepted a four-second edge tolerance and ignored effective padding.",
+      "training_ledger_sha256": "eb94118672bbe50b8a7ead63cc298f92804aa54afd9750e01a9e3797843fb061",
+      "training_windows": 1294
+    },
+    "o4b_artifacts_bound_to_old_o4a_teacher": {
+      "disposition": "HISTORICAL_ONLY_PENDING_SEPARATE_REVALIDATION",
+      "reason": "Existing O4b DANTE-Light receipts bind the affected O4a native index and thresholds; they are not inputs to the corrected O4a run and are not silently promoted."
+    },
+    "primary_o3b_index": {
+      "boundary": "This establishes absence of incomplete padding in the preserved source images; it does not independently reproduce K-means centroids.",
+      "complete_pad_sidecars": 1017,
+      "corpora": {
+        "o3b_h1": {
+          "all_sidecars_complete_pad": true,
+          "builder_label_distribution_matches_index": false,
+          "image_count": 500,
+          "sidecar_count": 500
+        },
+        "o3b_l1": {
+          "all_sidecars_complete_pad": true,
+          "builder_label_distribution_matches_index": true,
+          "image_count": 517,
+          "sidecar_count": 517
+        }
+      },
+      "disposition": "UNAFFECTED_BY_O4A_PATCHPRODUCER_EDGE_DEFECT",
+      "index_centroids": 275,
+      "index_label_count": 275,
+      "index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+      "matched_builder_corpus": "o3b_l1"
+    }
+  },
+  "raw_manifest": {
+    "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+    "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86",
+    "unique_spans": 6928
+  },
+  "required_order": [
+    "recompute frozen primary session calibrations with complete context",
+    "run full unique-span O4a primary discovery",
+    "rebuild native O4a index excluding corrected primary candidates",
+    "recompute native detector thresholds on the frozen calibration ledgers",
+    "rescore and classify corrected candidates",
+    "rebuild taxonomy, coincidence, PEM and report chain"
+  ],
+  "schema_version": 1,
+  "scientific_boundary": {
+    "does_not_authorize_o4b_reinterpretation": true,
+    "does_not_validate_corrected_catalogue": true,
+    "no_posthoc_threshold_adjustment": true,
+    "published_artifacts_remain_immutable": true
+  },
+  "status": "REBUILD_CHAIN_REQUIRED"
+}

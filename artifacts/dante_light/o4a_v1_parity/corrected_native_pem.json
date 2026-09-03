@@ -1,0 +1,157 @@
+{
+  "artifact_digest": "4e49d95afeab1bfeb282b102c1c395d08a91a70ecfd4a116b7f7befab5f9fb75",
+  "contract_digest": "fc690d5f88700a03065e90b1b127d1dc44945c1f9a35650274730db0c93479eb",
+  "event_summary": {
+    "diagnostic": {
+      "calibrated": 56,
+      "total": 56,
+      "uncalibrated": 0,
+      "verdict_tier": {
+        "COUPLED": 3,
+        "NO_CORRELATION": 44,
+        "SUSPECT": 9
+      }
+    },
+    "primary": {
+      "calibrated": 9,
+      "total": 9,
+      "uncalibrated": 0,
+      "verdict_tier": {
+        "COUPLED": 3,
+        "NO_CORRELATION": 5,
+        "SUSPECT": 1
+      }
+    }
+  },
+  "external_artifact_digest": "1b92cc3bff838dca9bad8e0d13c31749a0c5c6b74f178fd09eca87ba8b3457a8",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1/native_pem_1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0",
+    "run_key": "1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0",
+    "summary_filename": "native_pem_summary.json",
+    "summary_sha256": "30787ed647f61b1176f6b0f91b546523882f674fd75da45c139a44ad57a171bb",
+    "summary_size_bytes": 4285
+  },
+  "gates": {
+    "all_65_targets_accounted": true,
+    "background_targets": 0,
+    "banned_channels_measured": 0,
+    "individual_null_exceeders_used": false,
+    "missing_calibration_counted_as_negative": false,
+    "primary_and_diagnostic_combined": false
+  },
+  "historical_v1_comparison": {
+    "corrected_target_total": 65,
+    "detector_gps_overlap": 0,
+    "disposition": "NOT_COMPARABLE_DISJOINT_TARGET_POPULATIONS",
+    "historical_target_total": 141,
+    "historical_targets_sha256": "096494610b8e102b583f076421347ea8f50db7675c75fb1bec413334a158cba5",
+    "historical_verdicts_sha256": "f069a0f162e698fe7ca45507276d1f9610312a759db93be8514db437da09bce0",
+    "identity_key": [
+      "detector",
+      "gps_start"
+    ],
+    "outcome_comparison_performed": false,
+    "reason": "No corrected PEM target shares detector+GPS identity with the 141 historical v1 PEM targets; aggregate verdict rates would compare different selected populations."
+  },
+  "infrastructure_recovery": {
+    "completed_events_before_retry": 50,
+    "retry_changed_contract_or_run_key": false,
+    "retry_count": 1,
+    "trigger": "transient GWOSC strain-download timeout"
+  },
+  "outputs": {
+    "diagnostic": {
+      "filename": "native_pem_ambiguous.jsonl",
+      "row_digest": "57923503e2ef33cf1de049edeb225930996c0b75867c7faf4e96aac5aae0bd83",
+      "row_total": 56,
+      "sha256": "79508fd7d0a8fc19a7c418410392618c2de676cffac176e71be838d4c969cf5c",
+      "size_bytes": 134847
+    },
+    "primary": {
+      "filename": "native_pem_robust.jsonl",
+      "row_digest": "ee8fff53d560c09eb02751d0f90e95147539279144c082e512debb1489184e9b",
+      "row_total": 9,
+      "sha256": "f4f39db2a259fcb189d26ecf930a87aa435a9ccfd1bb0313b54e99000d4c38f8",
+      "size_bytes": 21075
+    },
+    "targets": {
+      "filename": "native_pem_targets.jsonl",
+      "row_digest": "6542df67048cb29e8c0bc46ee5e1f1e9135ae2cc36da48222845851863a8d76c",
+      "row_total": 65,
+      "sha256": "68b6c0cd53131dfccb7116d956337577ccda7fdb5bfc2d1f13241f81a923fe4e",
+      "size_bytes": 46406
+    }
+  },
+  "population": {
+    "diagnostic": {
+      "class": "AMBIGUOUS",
+      "role": "separate_diagnostic",
+      "total": 56
+    },
+    "excluded": {
+      "background": true,
+      "individual_null_exceeders": true
+    },
+    "primary": {
+      "class": "ROBUST",
+      "role": "primary_diagnostic",
+      "total": 9
+    }
+  },
+  "references": {
+    "checkpoint": {
+      "path": "docs/DANTE_O4A_CORRECTED_PEM_CHECKPOINT_V1.md",
+      "sha256": "d28b7a4cbf98d3506c3b6c50c8f5a5762587d43ead8fbf61ea80af860972ccff"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_pem.py",
+      "sha256": "ce224027b1a9617617fec52ec1e8ae288f356d51643d56e2e4b5e23d4646ccd9"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_pem_v1.json",
+      "sha256": "3d054649b5ab18fd3fe2681c4ad90523febc5f4ed3df0d2e603cfe5930589513"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_pem.py",
+      "sha256": "ad63ce06fe920acd3d61797db9c5708053e67129021d195bc0dd55ffb120763d"
+    },
+    "pem_coherence": {
+      "path": "src/pipeline_v2_production/pem_coherence_analysis.py",
+      "sha256": "48c557db470441c38a0c1bd24e8a07abfca21616f7bdcc3304d2eea3b707652b"
+    },
+    "pem_null": {
+      "path": "src/pipeline_v2_production/pem_null_calibration.py",
+      "sha256": "00aad59b6ed55e82b955410833294e4af2efafd07f735f20100c07789ff8473f"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_pem.py",
+      "sha256": "7302ad305ed9bbf0b3cc31047ec81b995e88cf38364abe6dbf6d0796d3ade7d0"
+    }
+  },
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "future_global_null_required": true,
+    "historical_aggregate_rate_comparison_valid": false,
+    "pem_is_astrophysical_confirmation": false,
+    "pem_no_correlation_excludes_unreleased_sensors": false,
+    "shortlist_description": "pooled-null-threshold exceeders selected for PEM follow-up",
+    "shortlist_is_globally_significant": false
+  },
+  "sources": {
+    "candidate_exclusion_digest": "71e2a6686272dc7ccb7efcf19786ad1c6d2c4dcd3baac9abef21755cf20215f7",
+    "candidate_exclusion_total": 10942,
+    "classification_sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c"
+  },
+  "status": "PASS_VERIFIED_NATIVE_PEM_V1",
+  "verification": {
+    "native_pem_verifier": "PASS_EXACT_LEDGER_AND_DIGEST_REPLAY",
+    "pytest": {
+      "deselected": 118,
+      "passed": 33,
+      "wall_time_seconds": 20.93,
+      "warnings": 11
+    },
+    "ruff": "PASS"
+  }
+}

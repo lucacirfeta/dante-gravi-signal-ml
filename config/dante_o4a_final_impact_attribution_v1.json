@@ -1,0 +1,107 @@
+{
+  "contract_digest": "39be75fa1c429e4f52c0548855c85b3089aa6896e6d43dc6c3289b28d711a682",
+  "contract_id": "dante-o4a-final-impact-attribution-v1",
+  "expected_source_counts": {
+    "corrected_classification": 10942,
+    "corrected_only": 920,
+    "historical_edges": 169,
+    "historical_only": 407,
+    "historical_replay": 10429,
+    "pem_primary": 9,
+    "pem_targets": 65,
+    "shared": 10022
+  },
+  "external_files": {
+    "corrected_classification_rows": {
+      "path": "E:/dante_cache/dante_light/o4a_corrected_native_classification_v1/native_classification_248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef/native_classified_candidates.jsonl",
+      "sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c"
+    },
+    "final_corrected_only": {
+      "path": "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v2/final_comparison_d07356990e382110c0be48ab817f44be0a34f60c47d23e9fb29248d0627bd81e/corrected_only_candidates.jsonl",
+      "sha256": "b7f4b0b7c4b4effd763eacfb0c25455fa384993798224dbaa49db2806abb9f3f"
+    },
+    "final_historical_only": {
+      "path": "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v2/final_comparison_d07356990e382110c0be48ab817f44be0a34f60c47d23e9fb29248d0627bd81e/historical_only_candidates.jsonl",
+      "sha256": "746d0baa3f3de7b255a6e54980265dec857fc7ee3e873b475d1c2d13634e6c8e"
+    },
+    "final_shared": {
+      "path": "E:/dante_cache/dante_light/o4a_corrected_final_comparison_v2/final_comparison_d07356990e382110c0be48ab817f44be0a34f60c47d23e9fb29248d0627bd81e/shared_candidate_transitions.jsonl",
+      "sha256": "d06785b2364b01fad7cf92253745c95137aa33057e5fbaec76d3dbff87b61281"
+    },
+    "historical_complete_context_replay": {
+      "path": "E:/dante_cache/dante_light/o4a_v1_comparison/score_da26be89a9c9100e4c756b288160b4aa78076fad788a86985499377e8daf648b/records.jsonl",
+      "sha256": "34111a18d0b61a6375daea2d1c5c982b05f0be531ecdc2edfce58d9d142eed30"
+    },
+    "pem_primary": {
+      "path": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1/native_pem_1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0/native_pem_robust.jsonl",
+      "sha256": "f4f39db2a259fcb189d26ecf930a87aa435a9ccfd1bb0313b54e99000d4c38f8"
+    },
+    "pem_targets": {
+      "path": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1/native_pem_1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0/native_pem_targets.jsonl",
+      "sha256": "68b6c0cd53131dfccb7116d956337577ccda7fdb5bfc2d1f13241f81a923fe4e"
+    }
+  },
+  "method": {
+    "corrected_only_edge_geometry": "any_source_block_end_equals_analysis_gps_start_plus_32s",
+    "direct_padding_effect": "complete_context_score_with_historical_index_and_historical_thresholds",
+    "final_churn_partition": "membership_in_frozen_169_edge_cohort",
+    "historical_catalogue_gps_offset_s": 4.0,
+    "identity": [
+      "detector",
+      "analysis_gps_start"
+    ],
+    "pem_membership": "exact_detector_analysis_gps_identity",
+    "score_change_tolerance": 2e-7
+  },
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_final_impact_attribution.py",
+      "sha256": "fd6f1198eeeb03b9411d1f83db8cca177d8e754127c7a408eb27d2f5c4af7e55"
+    },
+    "corrected_classification": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_classification.json",
+      "sha256": "4e50dc9fd113aae60769caab86a5458dd7acd8d58861c870f1ddce29526665b8"
+    },
+    "corrected_pem": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_pem.json",
+      "sha256": "03a1da8e698b399b5ea1819ee8295940d78cb16bebfad1c69907ac5cc3a8f0ba"
+    },
+    "edge_padding_audit": {
+      "path": "artifacts/dante_light/o4a_v1_parity/edge_padding_audit.json",
+      "sha256": "8fb54b897270a492f3ce4f9b33a2b22b36414289456c6dad2d94fc1e6e2976c9"
+    },
+    "final_comparison": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_final_comparison_v2.json",
+      "sha256": "d63e3b4fa3e47033ceefabec22c8d8fa5c4763762390691c708db621cea682b7"
+    },
+    "historical_edge_identities": {
+      "path": "config/dante_light_o4a_v1_parity_missing.jsonl",
+      "sha256": "a2737b6ae38ff5a9b31abf28e65aa66af683e860588cbf39fd260a0a9f044329"
+    },
+    "historical_thresholds": {
+      "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+      "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_final_impact_attribution.py",
+      "sha256": "cf5f3e6d4757f39cd6d85bd880584acd9c864b1f147a08d4b44bd02a56a0f6c9"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_final_impact_attribution.py",
+      "sha256": "8810ef59391f59bde49a9c0755350a3af32fd2eb0c3c4fe6698fe90fe4c7b3b9"
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "controlled_padding_replay_is_direct_causal_evidence": true,
+    "corrected_only_membership_may_not_be_called_padding_false_negative": true,
+    "final_churn_is_descriptive_not_causal": true,
+    "global_significance_claim": false,
+    "new_index_and_new_thresholds_are_jointly_changed": true,
+    "nonedge_churn_may_not_be_called_threshold_only": true,
+    "outcome_blind": false,
+    "pem_is_not_astrophysical_confirmation": true,
+    "posthoc_after_final_comparison": true
+  },
+  "status": "FROZEN_POSTHOC_AFTER_EXPLORATORY_PREFLIGHT"
+}

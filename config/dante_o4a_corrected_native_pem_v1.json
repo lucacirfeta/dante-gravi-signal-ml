@@ -1,0 +1,155 @@
+{
+  "authorization": {
+    "approved_at": "2026-09-02",
+    "approved_population": "9_ROBUST_primary_plus_56_AMBIGUOUS_separate_diagnostic",
+    "globally_significant_population": false
+  },
+  "channels": {
+    "H1": [
+      "H1:CAL-PCALX_RX_PD_OUT_DQ",
+      "H1:CAL-PCALY_RX_PD_OUT_DQ",
+      "H1:IMC-WFS_A_DC_PIT_OUT_DQ",
+      "H1:IMC-WFS_A_DC_YAW_OUT_DQ",
+      "H1:LSC-POP_A_LF_OUT_DQ",
+      "H1:LSC-REFL_A_RIN_OUT_DQ",
+      "H1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
+      "H1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
+      "H1:SUS-ETMX_L3_CAL_LINE_OUT_DQ"
+    ],
+    "L1": [
+      "L1:ASC-X_TR_A_NSUM_OUT_DQ",
+      "L1:CAL-PCALX_RX_PD_OUT_DQ",
+      "L1:CAL-PCALY_RX_PD_OUT_DQ",
+      "L1:IMC-WFS_B_I_PIT_OUT_DQ",
+      "L1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
+      "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
+      "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ"
+    ],
+    "explicitly_excluded": [
+      "L1:PEM-EX_VMON_ETMX_ESDPOWER24_DQ",
+      "L1:PEM-EY_MAINSMON_EBAY_1_DQ"
+    ],
+    "public_subset_is_complete_sensor_network": false
+  },
+  "contract_digest": "fc690d5f88700a03065e90b1b127d1dc44945c1f9a35650274730db0c93479eb",
+  "contract_id": "dante-o4a-corrected-native-pem-v1",
+  "execution": {
+    "atomic_per_event_outputs": true,
+    "environment": "canonical WSL runtime with nds2",
+    "ephemeral_background_cache_purged": true,
+    "nds_host": "nds.gwosc.org",
+    "partial_run_interpretable": false,
+    "resume_exact_completed_events": true
+  },
+  "measurement": {
+    "alpha_family_wise": 0.01,
+    "background_block_s": 14400.0,
+    "background_stride_s": 96.0,
+    "background_window_s": 32.0,
+    "bootstrap_resamples": 200,
+    "bootstrap_unit": "background_window_indices",
+    "candidate_exclusion_population": "all_10942_corrected_native_candidates",
+    "candidate_exclusion_s": 96.0,
+    "coherence_fftlength_s": 2.0,
+    "coherence_overlap_s": 1.0,
+    "event_window_s": 32.0,
+    "frequency_band_hz": [20.0, 500.0],
+    "minimum_clean_windows": 60,
+    "primary_endpoint": "quiet_zero_lag_q99_confirmed",
+    "seed": 42,
+    "strain_highpass_hz": 20.0,
+    "surrogate_guard_s": 64.0,
+    "time_shift_endpoint": "event_max_over_tested_channels_and_20_500_hz",
+    "uncalibrated_is_negative": false
+  },
+  "output": {
+    "diagnostic_filename": "native_pem_ambiguous.jsonl",
+    "historical_artifacts_overwritten": false,
+    "large_outputs_committed_to_git": false,
+    "primary_filename": "native_pem_robust.jsonl",
+    "root": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1",
+    "summary_filename": "native_pem_summary.json",
+    "targets_filename": "native_pem_targets.jsonl"
+  },
+  "parents": {
+    "native_classification_artifact_digest": "e96e0bace601a57e453dd5b823999ca09280190c51fa598a65f9d9b11f86cf85",
+    "native_classification_row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19a783",
+    "native_classification_sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c",
+    "native_coincidence_artifact_digest": "da52e75a0d2cc6f2c90edd6e4bf6bef71d8465e9b1e6e8394dfde73f045a9cd1",
+    "native_coincidence_contract_digest": "2fd40a59bbfef8a33beb6858e1adf6de382508274a610f999b88aafb4aab8fe4",
+    "native_coincidence_diagnostic_sha256": "00cda8de2f5389419e9ae89122ddb80a450ac9039f9ea77da60b05d175660915",
+    "native_coincidence_primary_sha256": "94e354069bee90b3ca468eb44506769b9aff13d9f0cf960fabb2d0bcca1a7893"
+  },
+  "population": {
+    "diagnostic": {
+      "H1": 31,
+      "L1": 25,
+      "class": "AMBIGUOUS",
+      "role": "separate_diagnostic",
+      "total": 56
+    },
+    "exact_total": 65,
+    "excluded": {
+      "classes": ["BACKGROUND"],
+      "individual_null_exceeders_used": false
+    },
+    "primary": {
+      "H1": 3,
+      "L1": 6,
+      "class": "ROBUST",
+      "role": "primary_diagnostic",
+      "total": 9
+    },
+    "selection_source": "native_coincidence_exceeds_primary_threshold_true"
+  },
+  "references": {
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "checkpoint": {
+      "path": "docs/DANTE_O4A_CORRECTED_PEM_CHECKPOINT_V1.md",
+      "sha256": "d28b7a4cbf98d3506c3b6c50c8f5a5762587d43ead8fbf61ea80af860972ccff"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_pem.py",
+      "sha256": "ce224027b1a9617617fec52ec1e8ae288f356d51643d56e2e4b5e23d4646ccd9"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_pem.py",
+      "sha256": "ad63ce06fe920acd3d61797db9c5708053e67129021d195bc0dd55ffb120763d"
+    },
+    "native_classification": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_classification.json",
+      "sha256": "4e50dc9fd113aae60769caab86a5458dd7acd8d58861c870f1ddce29526665b8"
+    },
+    "native_coincidence": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_coincidence.json",
+      "sha256": "4cc839da8804752b83a2a4bcba919392e2a8aeb86e0c420e3838243c059d278f"
+    },
+    "pem_coherence": {
+      "path": "src/pipeline_v2_production/pem_coherence_analysis.py",
+      "sha256": "48c557db470441c38a0c1bd24e8a07abfca21616f7bdcc3304d2eea3b707652b"
+    },
+    "pem_null": {
+      "path": "src/pipeline_v2_production/pem_null_calibration.py",
+      "sha256": "00aad59b6ed55e82b955410833294e4af2efafd07f735f20100c07789ff8473f"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_pem.py",
+      "sha256": "7302ad305ed9bbf0b3cc31047ec81b995e88cf38364abe6dbf6d0796d3ade7d0"
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "background_processed": false,
+    "future_global_null_method": "repeat_full_pipeline_on_many_time_slides_and_calibrate_global_maximum_or_exceedance_count",
+    "future_global_null_required": true,
+    "historical_artifacts_immutable": true,
+    "pem_is_astrophysical_confirmation": false,
+    "pem_no_correlation_excludes_unreleased_sensors": false,
+    "primary_and_ambiguous_results_combined": false,
+    "shortlist_description": "pooled-null-threshold exceeders selected for PEM follow-up",
+    "shortlist_is_globally_significant": false
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "contract_digest": "f47d114a4571fb158c06c18406549eb4a3468ea47b1c1af046ec91687c82fd1e",
+  "counts": {
+    "by_detector_and_class": {
+      "H1/AMBIGUOUS": 562,
+      "H1/BACKGROUND": 1622,
+      "H1/ROBUST": 2227,
+      "L1/AMBIGUOUS": 713,
+      "L1/BACKGROUND": 1167,
+      "L1/ROBUST": 4138
+    },
+    "covered_by_raw_mirror": 10260,
+    "entries": 10429,
+    "escalated_by_class": {
+      "AMBIGUOUS": 619,
+      "ROBUST": 6365
+    },
+    "light_disposition": {
+      "ESCALATE": 6984,
+      "ROUTINE": 3445
+    },
+    "missing_by_detector_and_class": {
+      "H1/AMBIGUOUS": 18,
+      "H1/ROBUST": 60,
+      "L1/AMBIGUOUS": 43,
+      "L1/ROBUST": 48
+    },
+    "missing_from_raw_mirror": 169,
+    "recoverable_by_verified_local_stitch": 162,
+    "requires_gwosc_fetch": 7
+  },
+  "entries_digest": "44482b8b3d5c603e07ac5117a1db3467c23266744877925cc17f72b5f6da1642",
+  "entries_file_sha256": "d67cec47ecfc4ebb51fb4eaa6423240254d9ed985b9b456ed411564f5d3c31b6",
+  "entries_path": "config/dante_light_o4a_v1_parity_manifest.jsonl",
+  "manifest_digest": "abe45567769de440b2ff21c17a30c1b84f6f2e93ac22db41295429f65932b9f5",
+  "missing_file_sha256": "a2737b6ae38ff5a9b31abf28e65aa66af683e860588cbf39fd260a0a9f044329",
+  "missing_path": "config/dante_light_o4a_v1_parity_missing.jsonl",
+  "schema_version": 1,
+  "status": "FROZEN_BEFORE_RESCORING"
+}

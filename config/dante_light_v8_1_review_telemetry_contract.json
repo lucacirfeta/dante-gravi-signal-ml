@@ -1,5 +1,5 @@
 {
-  "contract_digest": "f541848159b9608a284841abe11d62b6a6f8a65644e4d8d59e67d912425a64e2",
+  "contract_digest": "78148e557b3dfec38511e56e5d679c116a8b0898b45ac53898bbfff206d4ad52",
   "historical_scale_anchor": {
     "interpretation": "real escalation-count anchor and optional backlog enrollment; no historical review timing is recoverable",
     "observed_escalations": 18,
@@ -41,7 +41,7 @@
   "protocol_id": "dante-light-v8.1-human-review-telemetry-v1",
   "provenance": {
     "phase0_result_path": "artifacts/dante_light/v8_1_phase0/phase0_summary_v8_1.json",
-    "phase0_result_sha256": "c3f10eee2176c740bf1cb33e743bcd6602fc280e1fda1e5c4faafa1e8060d90b",
+    "phase0_result_sha256": "4bf10c34025e672aa3959b53e93a739b26c952f6d8ec6aa0124e402a1aacd411",
     "storage_default": "E:/dante_cache/dante_light/v8_1_review_telemetry"
   },
   "review_procedure": {

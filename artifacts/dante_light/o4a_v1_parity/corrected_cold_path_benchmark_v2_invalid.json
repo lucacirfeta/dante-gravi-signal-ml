@@ -1,0 +1,9 @@
+{
+  "contract_digest": "336c13de2a1b2077083f79fbe1dee3f78cb2c4504007460680f4894bc7a30ee5",
+  "outcomes_inspected": false,
+  "promotable": false,
+  "reason": "The frozen selector required every analysis window to remain at least 4 s inside one source span. It therefore selected zero cross-file-context windows and could not test the stated raw-series-cache hypothesis.",
+  "resume_allowed": false,
+  "schema_version": 1,
+  "status": "INVALID_DESIGN_NO_EDGE_CONTEXT"
+}

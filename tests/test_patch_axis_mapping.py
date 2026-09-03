@@ -109,3 +109,56 @@ def test_producer_labels_the_analysis_window_not_the_crop() -> None:
     assert "return int(t0), rgb" not in src, (
         "_worker_preprocess still returns the crop start as the GPS label"
     )
+
+
+def test_worker_rejects_incomplete_whitening_context(monkeypatch) -> None:
+    from src.core import patch_producer
+
+    def incomplete(series, start, end, pad):
+        return series, {
+            "effective_left": pad,
+            "effective_right": 0.0,
+        }
+
+    monkeypatch.setattr("src.core.preprocessor.whiten_context", incomplete)
+    with pytest.raises(patch_producer.IncompleteContextError):
+        patch_producer._worker_preprocess(
+            np.zeros(36 * 16, dtype=np.float64),
+            996.0,
+            1.0 / 16.0,
+            "H1:STRAIN",
+            1000.0,
+            1032.0,
+        )
+
+
+def test_legacy_edge_reproduction_requires_explicit_opt_in(monkeypatch) -> None:
+    from src.core import patch_producer
+
+    monkeypatch.setattr(
+        "src.core.preprocessor.whiten_context",
+        lambda series, start, end, pad: (
+            series,
+            {"effective_left": pad, "effective_right": 0.0},
+        ),
+    )
+    monkeypatch.setattr(
+        "src.core.preprocessor.extract_clean_subwindow",
+        lambda series, start, end: series,
+    )
+    monkeypatch.setattr(
+        patch_producer,
+        "generate_qtransform",
+        lambda series, save_path, cmap: np.zeros((2, 2), dtype=np.float64),
+    )
+    gps, image = patch_producer._worker_preprocess(
+        np.zeros(36 * 16, dtype=np.float64),
+        996.0,
+        1.0 / 16.0,
+        "H1:STRAIN",
+        1000.0,
+        1032.0,
+        require_complete_padding=False,
+    )
+    assert gps == 1000
+    assert image is not None

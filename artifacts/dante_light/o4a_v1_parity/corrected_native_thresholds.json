@@ -1,0 +1,114 @@
+{
+  "artifact_digest": "80053015b55fecda002e0e872cea908534aa8061b873566dafc11f314b110bcd",
+  "contract_digest": "eb704f3a55e5d2c07f925233e79b4d129e8372f3a8f76bae9beb0c0217d49c73",
+  "external_artifact_digest": "a0f01429d14aff32b330fee8655b862af8b9f2a7fa436e7f6044b579b7a64031",
+  "external_run": {
+    "directory": "E:/dante_cache/dante_light/o4a_corrected_native_thresholds_v1/native_thresholds_cee0b79f1a3067cb2c5ae4a1c0ec1fe5da3496c4ca3dc57dea2b037800c5f216",
+    "run_key": "cee0b79f1a3067cb2c5ae4a1c0ec1fe5da3496c4ca3dc57dea2b037800c5f216",
+    "summary_filename": "native_thresholds_summary.json",
+    "summary_sha256": "74ff4efc7432da49e8653252c4bb6a3bb345660618bbcdc512e5ddf1f6cd1f66",
+    "summary_size_bytes": 3301
+  },
+  "gates": {
+    "candidate_scores_used": false,
+    "exact_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "historical_scores_used": false,
+    "historical_thresholds_used": false,
+    "nonfinite_scores": 0
+  },
+  "method": {
+    "block_length": 17,
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_complete_blocks": true,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "name": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_rows": true
+  },
+  "native_rescore_artifact_digest": "f842c23ed3f14e74cb45c5e0e2fc52faade3aa2084e0f0c81f4cf004aae8a361",
+  "pre_execution_failures": [
+    {
+      "contract_digest": "4006057a4ef8409db9b0480da1ec59e56ec3a30d7f42b9c048cef30996d01667",
+      "outputs_written": false,
+      "reason": "PARENT_COMPACT_AND_RUN_DIGESTS_NOT_DISTINGUISHED",
+      "status": "FAILED_PARENT_DIGEST_SCHEMA"
+    }
+  ],
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_thresholds.py",
+      "sha256": "5742a95a60fc1ecf7f9486868cd08dff1579f45ae83b4d5210860a508626b16b"
+    },
+    "contract": {
+      "path": "config/dante_o4a_corrected_native_thresholds_v1.json",
+      "sha256": "15a34d91349c949ec617633edc8919b16b13c594f4bf1ed639eebaeb22350993"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_thresholds.py",
+      "sha256": "52da1077434e0b5d3fe5c48da5807ff867a76cd9b81f247c31397e5b176989db"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_thresholds.py",
+      "sha256": "0d847f45edb299d145a27081ac73b1e826a22fac00cb26439e0ff14f1d508b18"
+    }
+  },
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "bootstrap_uses_complete_non_overlapping_blocks": true,
+    "calibration_v2_scores_only": true,
+    "candidate_scores_used": false,
+    "classification_performed_in_this_stage": false,
+    "detector_specific": true,
+    "historical_artifacts_immutable": true,
+    "historical_scores_used": false,
+    "historical_thresholds_used": false,
+    "point_estimate_uses_all_calibration_rows": true
+  },
+  "status": "PASS_VERIFIED_NATIVE_THRESHOLDS_V1",
+  "thresholds": {
+    "H1": {
+      "block_length": 17,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_rows_used": 4998,
+      "bootstrap_seed": 42,
+      "bootstrap_tail_rows_excluded": 2,
+      "ci_lower": 0.15050696104764674,
+      "ci_upper": 0.3573177209496465,
+      "n_calibration_scores": 5000,
+      "n_complete_blocks": 294,
+      "p99": 0.2121588587760954
+    },
+    "L1": {
+      "block_length": 17,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_rows_used": 4998,
+      "bootstrap_seed": 42,
+      "bootstrap_tail_rows_excluded": 2,
+      "ci_lower": 0.15897344797849652,
+      "ci_upper": 0.4026433527469635,
+      "n_calibration_scores": 5000,
+      "n_complete_blocks": 294,
+      "p99": 0.2203438572585587
+    }
+  },
+  "verification": {
+    "native_threshold_verifier": "PASS_EXACT_REPLAY",
+    "provenance_fix_commit": "5afec3b",
+    "pytest": {
+      "passed": 67,
+      "wall_time_seconds": 377.7,
+      "warnings": 11
+    },
+    "ruff": "PASS"
+  }
+}

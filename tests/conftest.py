@@ -3,7 +3,6 @@ import shutil
 import json
 from pathlib import Path
 
-import h5py
 import numpy as np
 import pandas as pd
 import pytest
@@ -40,6 +39,29 @@ def temp_workspace(tmp_path):
     ts = TimeSeries(rng.standard_normal(4096 * 128), sample_rate=4096, t0=1234567890, name="H1:GWOSC-4KHZ_R1_STRAIN")
     ts.write(raw_dir_o4a / "H1_1234567890_1234568018.hdf5", format="hdf5", overwrite=True)
     ts.write(raw_dir_o3b / "H1_1234567890_1234568018.hdf5", format="hdf5", overwrite=True)
+    ts_session_left = TimeSeries(
+        rng.standard_normal(4096 * 4),
+        sample_rate=4096,
+        t0=1234567886,
+        name="H1:GWOSC-4KHZ_R1_STRAIN",
+    )
+    ts_session_right = TimeSeries(
+        rng.standard_normal(4096 * 4),
+        sample_rate=4096,
+        t0=1234568018,
+        name="H1:GWOSC-4KHZ_R1_STRAIN",
+    )
+    for raw_dir in (raw_dir_o4a, raw_dir_o3b):
+        ts_session_left.write(
+            raw_dir / "H1_1234567886_1234567890.hdf5",
+            format="hdf5",
+            overwrite=True,
+        )
+        ts_session_right.write(
+            raw_dir / "H1_1234568018_1234568022.hdf5",
+            format="hdf5",
+            overwrite=True,
+        )
 
     # Independent calibration block outside the candidate guard interval.
     ts_background = TimeSeries(
@@ -58,6 +80,33 @@ def temp_workspace(tmp_path):
         format="hdf5",
         overwrite=True,
     )
+    # The production path whitens before cropping and therefore requires the
+    # same symmetric four-second context as real data.  Keep the 256-second
+    # calibration block as the sampling population and provide adjacent
+    # context-only blocks so this orchestration fixture exercises that contract.
+    ts_background_left = TimeSeries(
+        rng.standard_normal(4096 * 4),
+        sample_rate=4096,
+        t0=1234569996,
+        name="H1:GWOSC-4KHZ_R1_STRAIN",
+    )
+    ts_background_right = TimeSeries(
+        rng.standard_normal(4096 * 4),
+        sample_rate=4096,
+        t0=1234570256,
+        name="H1:GWOSC-4KHZ_R1_STRAIN",
+    )
+    for raw_dir in (raw_dir_o4a, raw_dir_o3b):
+        ts_background_left.write(
+            raw_dir / "H1_1234569996_1234570000.hdf5",
+            format="hdf5",
+            overwrite=True,
+        )
+        ts_background_right.write(
+            raw_dir / "H1_1234570256_1234570260.hdf5",
+            format="hdf5",
+            overwrite=True,
+        )
         
     # 2. Create dummy npz reference indices
     # Primary index

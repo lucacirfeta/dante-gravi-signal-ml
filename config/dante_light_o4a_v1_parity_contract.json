@@ -1,0 +1,107 @@
+{
+  "comparison": {
+    "light_routing_rule": "ESCALATE if native_score >= detector p99; ROUTINE otherwise",
+    "mismatch_policy": "repeat_current_then_stage_hashes_then_git_tag_3.7.0; never retune",
+    "offline_class_rule": "BACKGROUND if score < ci_lower; ROBUST if score > ci_upper; AMBIGUOUS otherwise",
+    "score_absolute_tolerance": 2e-07,
+    "score_tolerance_source": "src/dante_light/evidence.py::SCORE_ATOL",
+    "thresholds_loaded_from": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json"
+  },
+  "contract_digest": "f47d114a4571fb158c06c18406549eb4a3468ea47b1c1af046ec91687c82fd1e",
+  "protocol_id": "dante-light-o4a-v1-retrospective-parity",
+  "published_baseline": {
+    "evidence_doi": "10.5281/zenodo.21925453",
+    "git_commit": "67fc8b610277bea79f02757277d19696eee94b62",
+    "git_tag": "3.7.0",
+    "software_doi": "10.5281/zenodo.21912589"
+  },
+  "purpose": "candidate-conditioned exact replay against the published O4a v1 evidence",
+  "representation": {
+    "analysis_duration_s": 32.0,
+    "colormap": "cividis",
+    "contract_sha256": "ea72d0ea7231c10a48db2d4f4f73134b381a91548f0dc1abaad8b3580f447ba7",
+    "encoder_input_size": [
+      518,
+      518
+    ],
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "model_artifact_id": "dinov2_vits14_reg",
+    "model_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "model_source_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+    "native_index_sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744",
+    "primary_index_sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c",
+    "query_qrange": [
+      4,
+      64
+    ],
+    "sample_rate_hz": 4096,
+    "schema_version": 1,
+    "top_k": 68,
+    "variant": "idxq4-64_queryq4-64",
+    "weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb",
+    "whitening_pad_s": 4.0
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_identities_selected_from_published_taxonomy": true,
+    "establishes_full_o4a_discovery_sensitivity": false,
+    "establishes_independent_prospective_validation": false,
+    "may_change_thresholds_after_rescoring": false,
+    "may_drop_missing_class_dependent_rows": false,
+    "retrospective_non_regression_only": true
+  },
+  "source_references": {
+    "historical_epochs": {
+      "path": "config/dante_light_epochs_v1.json",
+      "sha256": "1f4bfa593ee2fe1902b390417b495cba83eab3d7447065801f6a301d34335ca6"
+    },
+    "o4a_dq_snapshot": {
+      "path": "config/dante_light_prefilter_v4_segments.json",
+      "sha256": "7e3649d8fd989375af5db3902bcc1aa287c6fe2c2b08a0b970e9e2a251754008"
+    },
+    "raw_identity_audit": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/identity_audit_v5.json",
+      "sha256": "23ea8ef97b77201e06297d98b5c6dfb24b284420875913f03b5456d36a0403a6"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "reference_artifacts": {
+      "path": "config/reference_artifacts.json",
+      "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+    },
+    "selection_code": {
+      "path": "src/dante_light/o4a_v1_parity.py",
+      "sha256": "a79989b4b9b850cda5e4e1b9cffc329ed01fe92da3af084033f64b4112ab2fef"
+    },
+    "taxonomy": {
+      "path": "data/production/aggregated/Master_Taxonomy_O4a_idxq4-64_queryq4-64.csv",
+      "sha256": "3503061fad17bef55b5e228940fb693a9a50dd60a33a1344ccd7e8aa3c70efca"
+    },
+    "thresholds": {
+      "path": "data/production/aggregated/dsd_thresholds_o4a_idxq4-64_queryq4-64.json",
+      "sha256": "ed8a7093c6916233d837117c92258ad83fea0e1329b5fb375f8430f31d6dfc02"
+    }
+  },
+  "status": "FROZEN_BEFORE_RESCORING",
+  "storage": {
+    "missing_cache": {
+      "logical_id": "o4a_v1_comparison_cache",
+      "runtime_alias": "DANTE_O4A_V1_PARITY_CACHE_ROOT"
+    },
+    "raw_mirror": {
+      "logical_id": "user_o4a_raw_mirror",
+      "mutated": false,
+      "runtime_alias": "DANTE_O4A_RAW_ROOT"
+    }
+  }
+}
