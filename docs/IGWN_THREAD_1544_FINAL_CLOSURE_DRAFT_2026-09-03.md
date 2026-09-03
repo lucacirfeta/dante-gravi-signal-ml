@@ -46,10 +46,11 @@ We are preserving all historical artifacts. A v2 correction for
 arXiv:2606.25702 has been submitted and is awaiting public posting; I will add
 the public link when it becomes available. The corrected evidence and
 provenance are currently available on the repository branch
-`codex/dante-light-o4a-v1-parity`, in particular
-`corrected_native_coincidence.json` and
-`corrected_final_impact_attribution_v1.json` under
-`artifacts/dante_light/o4a_v1_parity/`.
+[codex/dante-light-o4a-v1-parity](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/codex/dante-light-o4a-v1-parity),
+in particular
+[corrected_native_coincidence.json](https://github.com/lucacirfeta/dante-gravi-signal-ml/blob/codex/dante-light-o4a-v1-parity/artifacts/dante_light/o4a_v1_parity/corrected_native_coincidence.json)
+and
+[corrected_final_impact_attribution_v1.json](https://github.com/lucacirfeta/dante-gravi-signal-ml/blob/codex/dante-light-o4a-v1-parity/artifacts/dante_light/o4a_v1_parity/corrected_final_impact_attribution_v1.json).
 
 This message is intended to close the specific status question raised in
 thread #1544, not to make a discovery claim.
