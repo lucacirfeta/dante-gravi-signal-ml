@@ -1,0 +1,79 @@
+{
+  "arxiv_id": "2606.25702",
+  "changes": {
+    "corrected_catalogue_candidates": 10942,
+    "deletions": 66,
+    "historical_body_population": 140,
+    "insertions": 136,
+    "later_audit_identities": 10429,
+    "population_substitution_performed": false
+  },
+  "outputs": {
+    "bundle": {
+      "entries": 15,
+      "image_entries": 13,
+      "path": "E:/dante_cache/publication_drafts/arxiv_2606_25702_v2_20260903/arxiv_2606_25702_v2_source_2026-09-03.zip",
+      "sha256": "915a701e41260f86939f33fb39af0e6de296158ad7de85b707824836dd6ffced",
+      "size_bytes": 12486815
+    },
+    "main_tex": {
+      "path": "E:/dante_cache/publication_drafts/arxiv_2606_25702_v2_20260903/main.tex",
+      "sha256": "0713f01778eb5e70d0edad33c737c5234adab238569684a1d9dda18c5568847f",
+      "size_bytes": 119873
+    },
+    "pdf": {
+      "pages": 27,
+      "path": "E:/dante_cache/publication_drafts/arxiv_2606_25702_v2_20260903/main.pdf",
+      "sha256": "dce8318de1615b5fd09eb17499723965270a1ebe0a79f269396da1d1cd7f6b1c",
+      "size_bytes": 19097642
+    },
+    "staging_root": "E:/dante_cache/publication_drafts/arxiv_2606_25702_v2_20260903"
+  },
+  "prepared_at": "2026-09-03",
+  "publication": {
+    "external_posts": false,
+    "submitted": false
+  },
+  "references": {
+    "edge_padding_audit": {
+      "artifact_digest": "2d058717880226094a8af9d2e41797177e333302b956f354e6f0d42556c75321",
+      "path": "artifacts/dante_light/o4a_v1_parity/edge_padding_audit.json"
+    },
+    "final_impact_attribution": {
+      "artifact_digest": "af850934bf5ffa4fbae74a93f1a3a75466641835eaaf4889cdfd164b9989378c",
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_final_impact_attribution_v1.json"
+    },
+    "revision_note": {
+      "path": "docs/ARXIV_2606_25702_V2_REVISION_NOTE_2026-09-01.md"
+    },
+    "source_preparation_note": {
+      "path": "docs/ARXIV_2606_25702_V2_SOURCE_PREPARATION_2026-09-03.md"
+    }
+  },
+  "schema_version": 1,
+  "scientific_boundaries": {
+    "corrected_catalogue_replaces_historical_body_population": false,
+    "discovery_claim": false,
+    "global_significance_claim": false,
+    "historical_outputs_retained_for_provenance": true,
+    "operational_validation_claim": false,
+    "pem_is_astrophysical_confirmation": false,
+    "pooled_null_shortlist_is_diagnostic": true
+  },
+  "source_provenance": {
+    "original_main_sha256": "53e9706d749c9502301576c26e6394255fae875b9d22089a645467bd9c374539",
+    "source_archive_sha256": "b41595aa4182bb5fe2e54f9775e5dd7183a4feb34919f1cdb3e5f9fdf7366e2d",
+    "url": "https://arxiv.org/src/2606.25702"
+  },
+  "status": "READY_FOR_HUMAN_REVIEW_NOT_SUBMITTED",
+  "verification": {
+    "clean_bundle_compile": true,
+    "overfull_hbox_count": 1,
+    "overfull_line": 1168,
+    "pdflatex_passes": 2,
+    "rendered_pages": 27,
+    "undefined_citations": 0,
+    "undefined_references": 0,
+    "visual_qa": "PASS"
+  }
+}
