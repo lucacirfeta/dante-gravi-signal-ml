@@ -31,7 +31,7 @@
     "statistic_delta_per_event": false,
     "threshold_equivalence_claim": false
   },
-  "contract_digest": "2bebaad0ffa96db3118a2d0c94000ac2da8344d30b997d38090d781d5ccb5a08",
+  "contract_digest": "1ad441782b6320fce0c425acf59ea2fc0bb6a5b06da976d8082644f08fdfc03e",
   "contract_id": "dante-o4a-corrected-final-comparison-v1",
   "external_roots": {
     "classification": "E:/dante_cache/dante_light/o4a_corrected_native_classification_v1",
@@ -134,7 +134,7 @@
     },
     "implementation": {
       "path": "src/dante_light/o4a_corrected_final_comparison.py",
-      "sha256": "ab7405dcb3a72d9308615d0fbaa2c67baf6f1f591ed37316385751c09e83c140"
+      "sha256": "7decb5b9a4c044d9e712eda8046ca5d993eddb4b3b73775a5734a418567d2688"
     },
     "replay_contract": {
       "path": "config/dante_light_replay_v1.json",
@@ -146,7 +146,7 @@
     },
     "tests": {
       "path": "tests/test_dante_o4a_corrected_final_comparison.py",
-      "sha256": "b180d4c117da8df7f01386bda0e357af627953380562afa4cd8c555f784e82ce"
+      "sha256": "1cb96a21f4d88ec9c7ab6585e92500b51c7676d83adbc1e3f74f4c3352b33144"
     }
   },
   "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",

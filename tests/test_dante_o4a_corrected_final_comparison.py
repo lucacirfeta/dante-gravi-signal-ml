@@ -181,8 +181,18 @@ def test_singleton_alias_is_explicit_and_not_general_candidate_pairing() -> None
             "population": "primary",
         }
     ]
+    pem = [
+        {
+            "target": {
+                "detector": "L1",
+                "gps_start": 14.0,
+                "population": "primary",
+            },
+            "verdict_tier": "NO_CORRELATION",
+        }
+    ]
     result = recheck_historical_singletons(
-        cases, old, new, old_tax, new_tax, coincidence, []
+        cases, old, new, old_tax, new_tax, coincidence, pem
     )
     assert result[0]["corrected_exact_identity_present"] is False
     assert (
@@ -190,3 +200,7 @@ def test_singleton_alias_is_explicit_and_not_general_candidate_pairing() -> None
         == "frozen_analysis_window_alias"
     )
     assert result[0]["corrected_matches"][0]["native_class"] == "ROBUST"
+    assert result[0]["corrected_matches"][0]["pem"] == {
+        "population": "primary",
+        "verdict_tier": "NO_CORRELATION",
+    }

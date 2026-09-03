@@ -394,7 +394,22 @@ def recheck_historical_singletons(
     historical_taxonomy = _unique_index(historical_taxonomy_rows)
     corrected_taxonomy = _unique_index(corrected_taxonomy_rows)
     coincidence = _unique_index(corrected_coincidence_rows)
-    pem = _unique_index(corrected_pem_rows)
+    normalized_pem_rows: list[dict[str, Any]] = []
+    for result in corrected_pem_rows:
+        target = result.get("target")
+        if not isinstance(target, Mapping):
+            raise ContractError(
+                "corrected PEM result is missing nested target identity"
+            )
+        normalized_pem_rows.append(
+            {
+                "detector": target.get("detector"),
+                "gps_start": target.get("gps_start"),
+                "population": target.get("population"),
+                "verdict_tier": result.get("verdict_tier"),
+            }
+        )
+    pem = _unique_index(normalized_pem_rows)
     output: list[dict[str, Any]] = []
     for case in cases:
         historical_identity = (
