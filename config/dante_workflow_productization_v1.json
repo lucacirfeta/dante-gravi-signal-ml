@@ -1,0 +1,539 @@
+{
+  "adapter": "o4a_corrected",
+  "contract_digest": "4e242c8bc2fd9b2968617d8d91c64b55e5f623b56ee46e15bdd6cb9955a6b8b3",
+  "policies": {
+    "hide_outcomes_until_verified": true,
+    "new_run_on_contract_change": true,
+    "no_discovery_or_realtime_claim": true,
+    "preserve_historical_runs": true,
+    "resume_requires_identical_contract": true,
+    "scientific_configs_read_only": true,
+    "ui_worker_independent": true,
+    "verified_reports_only": true
+  },
+  "schema_version": 1,
+  "scientific_configs": {
+    "final_comparison": {
+      "path": "config/dante_o4a_corrected_final_comparison_v2.json",
+      "sha256": "0ea4670e8eeb3bfbff2d694212290b1575891979ec18e24b31ee3108053e1532"
+    },
+    "final_impact_attribution": {
+      "path": "config/dante_o4a_final_impact_attribution_v1.json",
+      "sha256": "4a4126ae4504446b555af28893dcc5722c4c7b47e011cef52eab0b73cb465915"
+    },
+    "native_calibration": {
+      "path": "config/dante_o4a_corrected_native_calibration_v2.json",
+      "sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584"
+    },
+    "native_classification": {
+      "path": "config/dante_o4a_corrected_native_classification_v1.json",
+      "sha256": "0fc773a6be16f90fd7d943742f0b79003baaa703d176ee657e9f5124c50ecb39"
+    },
+    "native_cohort": {
+      "path": "config/dante_o4a_corrected_native_v1.json",
+      "sha256": "c601205d5ceabe9aaca7f15a03afb91467eb23e45cd89d0d1add02397a83850b"
+    },
+    "native_coincidence": {
+      "path": "config/dante_o4a_corrected_native_coincidence_v1.json",
+      "sha256": "1f76e4c03d37f24cb3323db592ec7d6aae89944d17dc71c3cf661b32f70e92d5"
+    },
+    "native_index": {
+      "path": "config/dante_o4a_corrected_native_index_v1.json",
+      "sha256": "4d63db624e7bb8abf25730b1981b85d48c3a520f298d3d4ecff13f99e49efbce"
+    },
+    "native_pem": {
+      "path": "config/dante_o4a_corrected_native_pem_v1.json",
+      "sha256": "3d054649b5ab18fd3fe2681c4ad90523febc5f4ed3df0d2e603cfe5930589513"
+    },
+    "native_rescore": {
+      "path": "config/dante_o4a_corrected_native_rescore_v2.json",
+      "sha256": "4208a94d6c0a8fbf9f8bdecbc1a77cc07f35e923864b4b892988c0d63f0dfd6b"
+    },
+    "native_taxonomy": {
+      "path": "config/dante_o4a_corrected_native_taxonomy_v1.json",
+      "sha256": "8e031916a8df52077aa3c832e1647812fc316e6ba3bcd9ef11c9010d65d2417d"
+    },
+    "native_thresholds": {
+      "path": "config/dante_o4a_corrected_native_thresholds_v1.json",
+      "sha256": "15a34d91349c949ec617633edc8919b16b13c594f4bf1ed639eebaeb22350993"
+    },
+    "protocol": {
+      "path": "config/dante_o4a_corrected_protocol_v4.json",
+      "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+    },
+    "runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    }
+  },
+  "stages": [
+    {
+      "config_refs": [
+        "protocol",
+        "runtime"
+      ],
+      "dependencies": [],
+      "expected_outputs": [
+        "preflight_receipt"
+      ],
+      "name": "PREFLIGHT",
+      "outcome_visibility": "INFRASTRUCTURE_ONLY",
+      "required_inputs": [
+        "external:repository",
+        "external:raw_root",
+        "external:cache_root"
+      ],
+      "resumability": "NOT_APPLICABLE",
+      "verifier_command": [
+        "python",
+        "scripts/verify_dante_light_release.py",
+        "--stage",
+        "operational"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "PREFLIGHT"
+        }
+      ],
+      "expected_outputs": [
+        "acquisition_manifest"
+      ],
+      "name": "ACQUIRE",
+      "outcome_visibility": "INFRASTRUCTURE_ONLY",
+      "required_inputs": [
+        "preflight_receipt",
+        "external:raw_root",
+        "external:cache_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_corrected.py",
+        "--stage",
+        "verify-inputs"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "ACQUIRE"
+        }
+      ],
+      "expected_outputs": [
+        "primary_calibration_summary",
+        "primary_thresholds"
+      ],
+      "name": "CALIBRATE",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "acquisition_manifest",
+        "external:raw_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_corrected.py",
+        "--stage",
+        "verify-calibration"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "CALIBRATE"
+        }
+      ],
+      "expected_outputs": [
+        "primary_scan_database",
+        "primary_scan_summary",
+        "candidate_catalog"
+      ],
+      "name": "SCAN",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "acquisition_manifest",
+        "primary_thresholds",
+        "external:raw_root"
+      ],
+      "resumability": "RESUME_IN_PLACE",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_corrected.py",
+        "--stage",
+        "verify-scan"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_cohort"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "SCAN"
+        }
+      ],
+      "expected_outputs": [
+        "native_cohort_manifest",
+        "native_cohort_summary"
+      ],
+      "name": "COHORT",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "primary_scan_database",
+        "candidate_catalog",
+        "external:raw_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_corrected.py",
+        "--stage",
+        "verify-native-cohort"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_cohort",
+        "native_index"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "COHORT"
+        }
+      ],
+      "expected_outputs": [
+        "index_window_manifest",
+        "native_index_artifact",
+        "native_index_summary"
+      ],
+      "name": "INDEX",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_cohort_manifest",
+        "external:raw_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_corrected.py",
+        "--stage",
+        "verify-native-index"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_cohort",
+        "native_index",
+        "native_calibration"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "COHORT"
+        },
+        {
+          "artifact": "index_window_manifest",
+          "gate": "CONTENT_DIGESTED_ARTIFACT",
+          "stage": "INDEX"
+        }
+      ],
+      "expected_outputs": [
+        "native_calibration_ledger",
+        "native_calibration_summary"
+      ],
+      "name": "NATIVE_CALIBRATION",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_cohort_manifest",
+        "index_window_manifest",
+        "primary_scan_database",
+        "external:raw_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_native_calibration.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_index",
+        "native_calibration",
+        "native_rescore"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "INDEX"
+        },
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "NATIVE_CALIBRATION"
+        }
+      ],
+      "expected_outputs": [
+        "native_rescore_ledger",
+        "native_rescore_summary"
+      ],
+      "name": "RESCORE",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "candidate_catalog",
+        "native_index_artifact",
+        "native_calibration_ledger",
+        "external:raw_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_native_rescore_v2.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_calibration",
+        "native_rescore",
+        "native_thresholds"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "RESCORE"
+        }
+      ],
+      "expected_outputs": [
+        "native_thresholds",
+        "native_threshold_summary"
+      ],
+      "name": "THRESHOLDS",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_calibration_ledger",
+        "native_rescore_ledger"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_native_thresholds.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_classification",
+        "native_thresholds"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "THRESHOLDS"
+        }
+      ],
+      "expected_outputs": [
+        "native_classified_candidates",
+        "native_classification_summary"
+      ],
+      "name": "CLASSIFY",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_rescore_ledger",
+        "native_thresholds"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_native_classification.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_taxonomy"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "CLASSIFY"
+        }
+      ],
+      "expected_outputs": [
+        "native_taxonomy_artifacts",
+        "native_taxonomy_summary"
+      ],
+      "name": "TAXONOMY",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_classified_candidates",
+        "native_index_artifact"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_native_taxonomy.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "runtime",
+        "native_coincidence"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "TAXONOMY"
+        }
+      ],
+      "expected_outputs": [
+        "native_coincidence_events",
+        "native_coincidence_summary"
+      ],
+      "name": "COINCIDENCE",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_classified_candidates",
+        "native_index_artifact",
+        "primary_scan_database",
+        "external:raw_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_native_coincidence.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "native_pem"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "COINCIDENCE"
+        }
+      ],
+      "expected_outputs": [
+        "native_pem_artifacts",
+        "native_pem_summary"
+      ],
+      "name": "PEM",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_coincidence_events",
+        "external:raw_root"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_native_pem.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "final_comparison"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "PEM"
+        }
+      ],
+      "expected_outputs": [
+        "final_comparison_artifacts",
+        "final_comparison_summary"
+      ],
+      "name": "COMPARE",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "native_classified_candidates",
+        "native_taxonomy_artifacts",
+        "native_coincidence_events",
+        "native_pem_artifacts",
+        "external:historical_v1_artifacts"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_final_comparison.py",
+        "--stage",
+        "verify"
+      ]
+    },
+    {
+      "config_refs": [
+        "protocol",
+        "final_comparison",
+        "final_impact_attribution"
+      ],
+      "dependencies": [
+        {
+          "gate": "VERIFIED_STAGE",
+          "stage": "COMPARE"
+        }
+      ],
+      "expected_outputs": [
+        "final_report_artifact"
+      ],
+      "name": "REPORT",
+      "outcome_visibility": "AFTER_VERIFICATION",
+      "required_inputs": [
+        "final_comparison_artifacts",
+        "native_pem_artifacts",
+        "external:historical_v1_artifacts"
+      ],
+      "resumability": "RESTART_SAME_CONTRACT",
+      "verifier_command": [
+        "python",
+        "scripts/run_dante_o4a_final_impact_attribution.py"
+      ]
+    }
+  ],
+  "workflow_id": "dante-o4a-corrected-productization-v1"
+}
