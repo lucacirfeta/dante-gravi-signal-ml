@@ -54,7 +54,7 @@ def test_frozen_o4a_workflow_validates_with_exact_stage_graph() -> None:
     assert spec.topological_stage_names() == REQUIRED_STAGE_NAMES
     assert spec.workflow_id == "dante-o4a-corrected-productization-v1"
     assert spec.adapter == "o4a_corrected"
-    assert len(spec.scientific_configs) == 13
+    assert len(spec.scientific_configs) == 14
     assert all(spec.policies.values())
     with pytest.raises(TypeError):
         spec.scientific_configs["protocol"] = spec.scientific_configs[  # type: ignore[index]
@@ -83,6 +83,14 @@ def test_native_calibration_uses_digested_index_window_manifest_gate() -> None:
         ("INDEX", "VERIFIED_STAGE"),
         ("NATIVE_CALIBRATION", "VERIFIED_STAGE"),
     }
+
+
+def test_native_provenance_is_bound_before_native_execution() -> None:
+    spec = load_workflow_spec(CONFIG_PATH, root=ROOT)
+
+    assert "native_provenance" in spec.stage("PREFLIGHT").config_refs
+    assert "native_provenance" in spec.stage("COHORT").config_refs
+    assert "native_provenance" in spec.stage("INDEX").config_refs
 
 
 def test_workflow_references_science_without_copying_scientific_fields() -> None:

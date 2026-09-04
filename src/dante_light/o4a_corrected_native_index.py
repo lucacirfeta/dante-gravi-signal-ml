@@ -26,6 +26,9 @@ from src.dante_light.o4a_corrected_native import (
     verify_native_cohort,
 )
 from src.dante_light.o4a_corrected_runtime import load_canonical_runtime_contract
+from src.dante_light.o4a_native_provenance import (
+    verify_reference_with_reconciliation,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -80,8 +83,12 @@ def validate_native_index_contract(
         raise ContractError("unsupported corrected native-index contract schema")
     for reference in value.get("references", {}).values():
         path = root / str(reference["path"])
-        if not path.is_file() or sha256_file(path) != str(reference["sha256"]):
-            raise ContractError(f"corrected native-index reference mismatch: {path}")
+        verify_reference_with_reconciliation(
+            root=root,
+            path=path,
+            expected_sha256=str(reference["sha256"]),
+            raw_hasher=sha256_file,
+        )
 
     parent = load_native_contract(root)
     if value.get("parent_native_contract_digest") != parent["contract_digest"]:

@@ -29,6 +29,9 @@ from src.dante_light.o4a_corrected_native_rescore import (
     _scorer_manifest,
 )
 from src.dante_light.o4a_corrected_runtime import load_canonical_runtime_contract
+from src.dante_light.o4a_native_provenance import (
+    verify_reference_with_reconciliation,
+)
 from src.dante_light.prefilter_v5_protocol import sha256_path
 
 
@@ -86,8 +89,12 @@ def validate_native_rescore_v2_contract(
         raise ContractError("corrected native-rescore-v2 scoring boundary changed")
     for reference in value.get("references", {}).values():
         path = (root / str(reference["path"])).resolve()
-        if not path.is_file() or sha256_path(path) != reference["sha256"]:
-            raise ContractError(f"corrected native-rescore-v2 reference changed: {path}")
+        verify_reference_with_reconciliation(
+            root=root,
+            path=path,
+            expected_sha256=str(reference["sha256"]),
+            raw_hasher=sha256_path,
+        )
     return {"contract_digest": digest, **value}
 
 

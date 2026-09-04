@@ -1,6 +1,6 @@
 {
   "adapter": "o4a_corrected",
-  "contract_digest": "4e242c8bc2fd9b2968617d8d91c64b55e5f623b56ee46e15bdd6cb9955a6b8b3",
+  "contract_digest": "771fe0ae20612ff443d8c6af98cb143b4baba5935a6b0fc4aafa0ec24adcd7a6",
   "policies": {
     "hide_outcomes_until_verified": true,
     "new_run_on_contract_change": true,
@@ -45,6 +45,10 @@
       "path": "config/dante_o4a_corrected_native_pem_v1.json",
       "sha256": "3d054649b5ab18fd3fe2681c4ad90523febc5f4ed3df0d2e603cfe5930589513"
     },
+    "native_provenance": {
+      "path": "artifacts/dante_light/o4a_v1_parity/native_patch_producer_provenance_reconciliation_v1.json",
+      "sha256": "f5487edff9dc916da63ec132c2ab0e55d81a325b1b6a235ce537dd6ce4a7441c"
+    },
     "native_rescore": {
       "path": "config/dante_o4a_corrected_native_rescore_v2.json",
       "sha256": "4208a94d6c0a8fbf9f8bdecbc1a77cc07f35e923864b4b892988c0d63f0dfd6b"
@@ -70,7 +74,8 @@
     {
       "config_refs": [
         "protocol",
-        "runtime"
+        "runtime",
+        "native_provenance"
       ],
       "dependencies": [],
       "expected_outputs": [
@@ -184,7 +189,8 @@
       "config_refs": [
         "protocol",
         "runtime",
-        "native_cohort"
+        "native_cohort",
+        "native_provenance"
       ],
       "dependencies": [
         {
@@ -216,7 +222,8 @@
         "protocol",
         "runtime",
         "native_cohort",
-        "native_index"
+        "native_index",
+        "native_provenance"
       ],
       "dependencies": [
         {
