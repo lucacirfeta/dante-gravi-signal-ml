@@ -14,6 +14,9 @@ import numpy as np
 
 from src.core.index_contract import sha256_file
 from src.dante_light.contracts import ContractError, canonical_json_sha256
+from src.dante_light.o4a_native_provenance import (
+    verify_reference_with_reconciliation,
+)
 from src.dante_light.o4a_corrected_native_rescore import _atomic_json, _atomic_jsonl
 from src.dante_light.o4a_corrected_native_rescore_v2 import _load_jsonl
 from src.dante_light.o4a_corrected_runtime import load_canonical_runtime_contract
@@ -44,8 +47,12 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 def _file_reference(root: Path, reference: Mapping[str, Any]) -> Path:
     path = (root / str(reference["path"])).resolve()
-    if not path.is_file() or sha256_path(path) != str(reference["sha256"]):
-        raise ContractError(f"corrected native-PEM reference changed: {path}")
+    verify_reference_with_reconciliation(
+        root=root,
+        path=path,
+        expected_sha256=str(reference["sha256"]),
+        raw_hasher=sha256_path,
+    )
     return path
 
 

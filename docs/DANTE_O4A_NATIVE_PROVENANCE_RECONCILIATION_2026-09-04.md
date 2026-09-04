@@ -60,3 +60,14 @@ this finding.
 The earlier Windows replay is not evidence for or against numerical equality,
 because Windows is outside the frozen canonical runtime. Only the WSL result is
 part of this reconciliation.
+
+## Downstream text-byte audit
+
+The full O4a regression exposed two further checkout-byte mismatches with no
+content difference. The final-comparison contract recorded the CRLF byte hash
+`a01c064d...` of the GPS identity audit before Git stored the same JSON as LF
+(`37777885...`). Conversely, the PEM contract correctly recorded the LF hash
+`d28b7a4c...`, while a Windows checkout materialized that Markdown file as
+CRLF. Both pairs normalize exactly under `utf8_lf_v1`; their validators use the
+same exact-pair, fail-closed mechanism. No scientific field or contract was
+changed.

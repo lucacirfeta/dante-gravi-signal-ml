@@ -165,7 +165,7 @@
     "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
     "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
   },
-  "record_digest": "ab56ade9847cdc1a750b654d5e350490ca33cb3593e4aa661992c6fe6cf129a3",
+  "record_digest": "c1430f4c5cf23345e91d022d152d8fd82265264f987d3a19f5f1700e65c2827d",
   "reference_exceptions": [
     {
       "current_canonical_sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef",
@@ -195,6 +195,30 @@
       "current_canonical_sha256": "12a53066ebc39893dd6468ccd03e51e1716f3dfaea2853f718a053b1dd54548b",
       "historical_raw_sha256": "ffe3e855510c3be3d07731703ab68050eaa56c7fcf5da656a65e7b7f3fa96d1c",
       "path": "src/dante_light/o4a_corrected_native_rescore_v2.py",
+      "reason": "provenance_validator_only"
+    },
+    {
+      "current_canonical_sha256": "37777885b3aea358f181f6adbc204e00d07af1ced65d37ec78ea5650ead8c586",
+      "historical_raw_sha256": "a01c064d80ed3ecc9bee287194e13263def3a2d2044eabb7c402cc76aa503021",
+      "path": "artifacts/dante_light/o4a_v1_parity/gps_identity_semantics_audit_v1.json",
+      "reason": "line_ending_reconciliation"
+    },
+    {
+      "current_canonical_sha256": "d28b7a4cbf98d3506c3b6c50c8f5a5762587d43ead8fbf61ea80af860972ccff",
+      "historical_raw_sha256": "d28b7a4cbf98d3506c3b6c50c8f5a5762587d43ead8fbf61ea80af860972ccff",
+      "path": "docs/DANTE_O4A_CORRECTED_PEM_CHECKPOINT_V1.md",
+      "reason": "line_ending_reconciliation"
+    },
+    {
+      "current_canonical_sha256": "de0eb25dc09f7afd8d881336c30945bdd8dffe090c7266b69f52e7c8bd5a85ab",
+      "historical_raw_sha256": "74be1945214e40901822eb80a7175115fb4b077979728ce6dc2fbeb96043f1d1",
+      "path": "src/dante_light/o4a_corrected_final_comparison.py",
+      "reason": "provenance_validator_only"
+    },
+    {
+      "current_canonical_sha256": "72033ba63d4fe13b05cbb2336f0982af251c6303df6d73fb55cbc61b00ab2d3c",
+      "historical_raw_sha256": "ad63ce06fe920acd3d61797db9c5708053e67129021d195bc0dd55ffb120763d",
+      "path": "src/dante_light/o4a_corrected_native_pem.py",
       "reason": "provenance_validator_only"
     }
   ],
