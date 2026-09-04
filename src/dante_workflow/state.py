@@ -722,6 +722,45 @@ class WorkflowLedger:
             )
         )
 
+    def interrupt_attempt(
+        self,
+        lease: ExecutionLease,
+        attempt: AttemptHandle,
+        *,
+        reason: str,
+    ) -> None:
+        self._assert_active_attempt(lease, attempt)
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError("interruption reason must be non-empty")
+        self._append_event(
+            self._event(
+                "ATTEMPT_INTERRUPTED",
+                process=lease.process,
+                stage=attempt.stage,
+                attempt_id=attempt.attempt_id,
+                reason=reason,
+            )
+        )
+
+    def latest_verified_artifact(self, stage: str, name: str) -> ArtifactReceipt:
+        self.spec.stage(stage)
+        terminal = self._attempt_terminal_events()
+        for event in reversed(self._artifact_events()):
+            if event["stage"] != stage or event["artifact"]["name"] != name:
+                continue
+            finished = terminal.get(event["attempt_id"])
+            if (
+                finished is not None
+                and finished["event_type"] == "ATTEMPT_FINISHED"
+                and finished.get("exit_status") == 0
+                and finished.get("verifier_verdict") == "PASS"
+            ):
+                self._verify_recorded_artifact(event["artifact"])
+                return ArtifactReceipt(**event["artifact"])
+        raise InvalidTransitionError(
+            f"verified artifact {name!r} is unavailable from stage {stage}"
+        )
+
     def stage_status(self, stage: str) -> str:
         self.spec.stage(stage)
         status = "PENDING"

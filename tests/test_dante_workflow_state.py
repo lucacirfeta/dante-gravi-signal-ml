@@ -179,6 +179,19 @@ def test_stale_worker_recovery_is_append_only_and_resumes_first_incomplete(
     assert ledger.next_incomplete_stage() == "CALIBRATE"
 
 
+def test_worker_can_interrupt_attempt_explicitly(ledger: WorkflowLedger) -> None:
+    lease = ledger.acquire_lease(
+        process=_process(101, "worker-a"), process_alive=lambda _: True
+    )
+    attempt = ledger.start_attempt(lease, "PREFLIGHT")
+
+    ledger.interrupt_attempt(lease, attempt, reason="CONTROLLED_STOP")
+
+    assert ledger.stage_status("PREFLIGHT") == "INTERRUPTED"
+    assert ledger.read_events()[-1]["reason"] == "CONTROLLED_STOP"
+    ledger.release_lease(lease)
+
+
 def test_completed_stage_evidence_cannot_be_rewritten(ledger: WorkflowLedger) -> None:
     lease = ledger.acquire_lease(
         process=_process(101, "worker-a"), process_alive=lambda _: True
@@ -242,6 +255,26 @@ def test_native_calibration_rejects_tampered_index_manifest(
 
     with pytest.raises(ContractMismatchError, match="artifact digest mismatch"):
         ledger.start_attempt(lease, "NATIVE_CALIBRATION")
+
+
+def test_latest_verified_artifact_excludes_unverified_attempt(
+    ledger: WorkflowLedger,
+) -> None:
+    lease = ledger.acquire_lease(
+        process=_process(101, "worker-a"), process_alive=lambda _: True
+    )
+    attempt = ledger.start_attempt(lease, "PREFLIGHT")
+    receipt = _receipt(ledger, "preflight_receipt")
+    ledger.record_artifact(lease, attempt, receipt)
+    with pytest.raises(InvalidTransitionError, match="unavailable"):
+        ledger.latest_verified_artifact("PREFLIGHT", "preflight_receipt")
+
+    ledger.finish_attempt(
+        lease, attempt, exit_status=0, verifier_verdict="PASS"
+    )
+    assert ledger.latest_verified_artifact(
+        "PREFLIGHT", "preflight_receipt"
+    ) == receipt
 
 
 def test_artifact_and_verifier_records_fail_closed(ledger: WorkflowLedger) -> None:

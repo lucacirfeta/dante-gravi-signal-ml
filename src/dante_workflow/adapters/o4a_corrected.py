@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from .base import AdapterError, StageAdapter, StageCommand, WorkflowPaths
 from ..state import ArtifactReceipt
@@ -239,3 +241,30 @@ class O4aCorrectedAdapter(StageAdapter):
         """Bind INDEX consumption to the already frozen cohort ledger bytes."""
 
         return self.artifact_receipt("index_window_manifest", cohort_ledger)
+
+    def cohort_manifest_receipt_from_verifier(
+        self, verifier_payload: Mapping[str, Any]
+    ) -> ArtifactReceipt:
+        """Resolve the verified cohort ledger without opening scientific rows."""
+
+        run_dir = verifier_payload.get("run_dir")
+        ledger = verifier_payload.get("ledger")
+        if not isinstance(run_dir, str) or not run_dir.strip():
+            raise AdapterError("cohort verifier did not declare a run directory")
+        if not isinstance(ledger, Mapping):
+            raise AdapterError("cohort verifier did not declare a ledger")
+        filename = ledger.get("filename")
+        declared_sha256 = ledger.get("sha256")
+        if not isinstance(filename, str) or not filename.strip():
+            raise AdapterError("cohort verifier ledger filename is absent")
+        if Path(filename).name != filename:
+            raise AdapterError("cohort verifier ledger filename is not a basename")
+        if not isinstance(declared_sha256, str):
+            raise AdapterError("cohort verifier ledger digest is absent")
+        path = Path(run_dir).resolve() / filename
+        receipt = self.artifact_receipt("native_cohort_manifest", path)
+        if receipt.sha256 != declared_sha256:
+            raise AdapterError(
+                "cohort verifier ledger digest does not match the resolved bytes"
+            )
+        return receipt

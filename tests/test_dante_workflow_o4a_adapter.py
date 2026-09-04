@@ -129,6 +129,44 @@ def test_index_window_manifest_receipt_reuses_exact_cohort_bytes(
     assert receipt.sha256 == hashlib.sha256(cohort.read_bytes()).hexdigest()
 
 
+def test_cohort_manifest_is_resolved_from_verified_path_only(
+    adapter: O4aCorrectedAdapter, tmp_path: Path
+) -> None:
+    run_dir = tmp_path / "native_cohort_test"
+    run_dir.mkdir()
+    cohort = run_dir / "native_cohort.jsonl"
+    cohort.write_bytes(b'{"detector":"H1","gps_start":1}\n')
+    digest = hashlib.sha256(cohort.read_bytes()).hexdigest()
+
+    receipt = adapter.cohort_manifest_receipt_from_verifier(
+        {
+            "run_dir": str(run_dir),
+            "ledger": {"filename": cohort.name, "sha256": digest},
+        }
+    )
+
+    assert receipt.name == "native_cohort_manifest"
+    assert receipt.path == str(cohort.resolve())
+    assert receipt.sha256 == digest
+
+
+def test_cohort_manifest_rejects_verifier_digest_mismatch(
+    adapter: O4aCorrectedAdapter, tmp_path: Path
+) -> None:
+    run_dir = tmp_path / "native_cohort_test"
+    run_dir.mkdir()
+    cohort = run_dir / "native_cohort.jsonl"
+    cohort.write_text("{}\n", encoding="utf-8")
+
+    with pytest.raises(AdapterError, match="digest"):
+        adapter.cohort_manifest_receipt_from_verifier(
+            {
+                "run_dir": str(run_dir),
+                "ledger": {"filename": cohort.name, "sha256": "0" * 64},
+            }
+        )
+
+
 def test_adapter_rejects_unknown_stage_or_action(
     adapter: O4aCorrectedAdapter, paths: WorkflowPaths
 ) -> None:
