@@ -18,8 +18,16 @@ from src.dante_workflow.orchestrator import (  # noqa: E402
     OrchestrationError,
     WorkflowOrchestrator,
 )
+from src.dante_workflow.reporting import (  # noqa: E402
+    WorkflowReportingError,
+    write_workflow_report,
+)
 from src.dante_workflow.schema import load_workflow_spec  # noqa: E402
 from src.dante_workflow.state import WorkflowStateError  # noqa: E402
+from src.dante_workflow.verification import (  # noqa: E402
+    WorkflowVerificationError,
+    verify_workflow,
+)
 
 
 DEFAULT_CONFIG = ROOT / "config/dante_workflow_productization_v1.json"
@@ -71,11 +79,15 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "status":
             result = orchestrator.status()
         elif args.command == "verify":
-            result = orchestrator.verify_completed()
+            result = verify_workflow(orchestrator)
         elif args.command == "preflight":
             result = orchestrator.execute(through_stage="PREFLIGHT")
         elif args.command == "report":
             result = orchestrator.execute(through_stage="REPORT")
+            if not any(item.get("status") == "FAILED" for item in result["results"]):
+                result["derived_report_path"] = str(
+                    write_workflow_report(orchestrator)
+                )
         else:
             result = orchestrator.execute(
                 through_stage=args.through_stage,
@@ -95,7 +107,13 @@ def main(argv: list[str] | None = None) -> int:
         if result.get("verdict") == "FAIL":
             return 1
         return 0
-    except (OrchestrationError, WorkflowStateError, ValueError) as exc:
+    except (
+        OrchestrationError,
+        WorkflowReportingError,
+        WorkflowStateError,
+        WorkflowVerificationError,
+        ValueError,
+    ) as exc:
         print(
             json.dumps(
                 {
