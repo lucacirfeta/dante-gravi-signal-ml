@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import errno
 import hashlib
 import json
 import os
@@ -15,6 +14,7 @@ from typing import Any
 from uuid import uuid4
 
 from .schema import WorkflowSpec
+from .processes import process_alive
 
 
 STATE_SCHEMA_VERSION = 1
@@ -407,15 +407,7 @@ class WorkflowLedger:
     def _default_process_alive(process: ProcessIdentity) -> bool:
         if process.hostname != socket.gethostname():
             return True
-        try:
-            os.kill(process.pid, 0)
-        except ProcessLookupError:
-            return False
-        except PermissionError:
-            return True
-        except OSError as exc:
-            return exc.errno != errno.ESRCH
-        return True
+        return process_alive(process.pid)
 
     def _lease_payload(self, lease: ExecutionLease) -> dict[str, Any]:
         return {
