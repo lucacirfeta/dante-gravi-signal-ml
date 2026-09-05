@@ -1,6 +1,7 @@
 """Technical-smoke boundaries; no scientific execution in unit tests."""
 
 import json
+import subprocess
 from types import SimpleNamespace
 
 import pytest
@@ -14,6 +15,13 @@ def test_frozen_smoke_selects_one_background_identity_per_detector():
     source = smoke.ReplayManifestSource(smoke.ROOT / "config/dante_light_replay_v1.json", root=smoke.ROOT)
     tasks = source.tasks(roles={config["role"]}, limit_per_detector=config["limit_per_detector"])
     assert [task.window.detector for task in tasks] == ["H1", "L1"]
+
+
+def test_smoke_reference_pins_match_git_blob_bytes():
+    config = smoke.load_config()
+    for relative, digest in config["references"].items():
+        content = subprocess.check_output(["git", "show", f"HEAD:{relative}"], cwd=smoke.ROOT)
+        assert smoke.hashlib.sha256(content).hexdigest() == digest
 
 
 @pytest.mark.parametrize("field,value", [("scope", "production"), ("limit_per_detector", 0), ("timeout_seconds", True)])
