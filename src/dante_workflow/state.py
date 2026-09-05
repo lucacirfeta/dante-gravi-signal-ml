@@ -577,6 +577,9 @@ class WorkflowLedger:
                     raise InvalidTransitionError(
                         f"stage {stage} requires verified {dependency.stage}"
                     )
+                # A historical PASS is not permission to consume changed bytes.
+                for output in self.spec.stage(dependency.stage).expected_outputs:
+                    self.latest_verified_artifact(dependency.stage, output)
             elif not self._available_digested_artifact(
                 dependency.stage, str(dependency.artifact)
             ):

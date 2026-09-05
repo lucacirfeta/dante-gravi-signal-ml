@@ -395,6 +395,8 @@ class WorkflowOrchestrator:
 
     def _execute_stage(self, lease: ExecutionLease, stage: str) -> dict[str, Any]:
         if self.ledger.stage_status(stage) == "VERIFIED":
+            for output in self.spec.stage(stage).expected_outputs:
+                self.ledger.latest_verified_artifact(stage, output)
             return {"stage": stage, "status": "SKIPPED_VERIFIED"}
         attempt = self.ledger.start_attempt(lease, stage)
         attempt_dir = self.run_dir / "attempts" / stage.lower() / attempt.attempt_id
