@@ -34,6 +34,9 @@ validated is a separate scientific checkpoint and stops execution.
 
 Evidence and explicit limitations:
 `docs/DANTE_WORKFLOW_UI_CHECKPOINT_2026-09-05.md`.
+Clean-clone Plan/PREFLIGHT checks passed; the bounded scientific-smoke scope
+requires a decision before implementation:
+`docs/DANTE_WORKFLOW_CLEAN_CLONE_SCOPE_CHECKPOINT_2026-09-05.md`.
 This is not a ready-to-use product release. Scientific O4a artifacts are not
 rerun, promoted, or reinterpreted by this checkpoint.
 
