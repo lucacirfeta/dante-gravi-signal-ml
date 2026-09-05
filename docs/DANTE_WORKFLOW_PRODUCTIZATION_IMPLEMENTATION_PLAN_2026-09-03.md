@@ -29,14 +29,16 @@ validated is a separate scientific checkpoint and stops execution.
 | P3 | Implemented, regression-tested | Public evidence graph acceptance in P5 |
 | P4.1 | Approved and frozen (`176cf48`) | None |
 | P4.2 | Read/control UI implemented; component and process tests | Packaged end-to-end CLI/UI parity in P5/P6 |
-| P5 | In progress; initial recovery matrix tested | Bounded public smoke, clean clone, expanded failure coverage, quickstart |
+| P5 | Public technical smoke PASS; initial recovery matrix tested | Fresh dependency install, expanded failure coverage, packaged UI acceptance |
 | P6 | Not started | Release receipt, human acceptance, separate paper branch |
 
 Evidence and explicit limitations:
 `docs/DANTE_WORKFLOW_UI_CHECKPOINT_2026-09-05.md`.
-Clean-clone Plan/PREFLIGHT checks passed; the bounded scientific-smoke scope
-requires a decision before implementation:
+Clean-clone Plan/PREFLIGHT checks passed; the separate technical-smoke scope
+was approved (it is not a complete scientific O4a rerun):
 `docs/DANTE_WORKFLOW_CLEAN_CLONE_SCOPE_CHECKPOINT_2026-09-05.md`.
+Public technical smoke evidence:
+`docs/DANTE_WORKFLOW_PUBLIC_SMOKE_RESULT_2026-09-05.md`.
 This is not a ready-to-use product release. Scientific O4a artifacts are not
 rerun, promoted, or reinterpreted by this checkpoint.
 

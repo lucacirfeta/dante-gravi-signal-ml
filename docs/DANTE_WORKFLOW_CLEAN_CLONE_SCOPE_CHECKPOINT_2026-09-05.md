@@ -1,6 +1,6 @@
 # Clean-clone scope checkpoint — 2026-09-05
 
-Status: decision required before implementing the bounded scientific smoke.
+Status: technical smoke scope approved by the user on 2026-09-05.
 This is an intermediate checkpoint, not the final productization report.
 
 ## Observed evidence
@@ -58,5 +58,9 @@ Alternative: reproduce the entire frozen O4a chain in a fresh installation,
 including provisioning all required raw inputs and the canonical runtime.
 This preserves the complete scientific scope but is not a short smoke test.
 
-No smaller population, new smoke adapter, altered gate, or release acceptance
-change has been implemented. P5.1 and P6 remain open pending this scope choice.
+The user approved the recommended separate technical smoke after clarification.
+Implementation: `scripts/run_dante_workflow_clean_clone.py`, with a separate
+frozen config and receipt namespace. It uses one background identity per
+detector, selected by existing detector/GPS ordering, and the existing paired
+legacy Light replay. No production scientific contract or verifier changes.
+P5/P6 remain open until their remaining acceptance evidence exists.
