@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 import json
+import hashlib
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
 from .orchestrator import WorkflowOrchestrator
-from .verification import verify_workflow
+from .verification import verify_workflow, verify_release_receipt
 
 
 class WorkflowReportingError(RuntimeError):
@@ -201,4 +202,63 @@ def write_workflow_report(
         temporary.replace(target)
     finally:
         temporary.unlink(missing_ok=True)
+    # Administrative binding of the derived text, not a new scientific verdict.
+    receipt_path = orchestrator.run_dir / "workflow_release_receipt.json"
+    binding = {
+        "run_key": orchestrator.run_key,
+        "report_sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+        "release_sha256": hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+    }
+    binding_path = target.with_suffix(target.suffix + ".receipt.json")
+    temporary = binding_path.with_name(f".{binding_path.name}.{uuid4().hex}.tmp")
+    try:
+        temporary.write_text(json.dumps(binding, sort_keys=True) + "\n", encoding="utf-8")
+        temporary.replace(binding_path)
+    finally:
+        temporary.unlink(missing_ok=True)
     return target
+
+
+def verify_report_file(orchestrator: WorkflowOrchestrator) -> Path:
+    """Check stored report bytes and their evidence without running stage code.
+
+    This is an HTTP read boundary, not a replacement for verify_workflow. The
+    latter must have replayed all scientific verifiers before report creation.
+    """
+    target = orchestrator.run_dir / "workflow_report.md"
+    receipt_path = orchestrator.run_dir / "workflow_release_receipt.json"
+    try:
+        release = verify_release_receipt(receipt_path)
+        binding = json.loads(
+            target.with_suffix(".md.receipt.json").read_text(encoding="utf-8")
+        )
+        expected = {
+            "run_key": orchestrator.run_key,
+            "report_sha256": hashlib.sha256(target.read_bytes()).hexdigest(),
+            "release_sha256": hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
+        }
+        if binding != expected or release["run_key"] != orchestrator.run_key:
+            raise ValueError("report binding differs")
+        if [row["stage"] for row in release["stages"]] != list(
+            orchestrator.spec.topological_stage_names()
+        ):
+            raise ValueError("report stage graph differs")
+        for row in release["stages"]:
+            stage = row["stage"]
+            if orchestrator.ledger.stage_status(stage) != "VERIFIED":
+                raise ValueError("report stage is no longer verified")
+            current = [
+                orchestrator.ledger.latest_verified_artifact(stage, name).to_dict()
+                for name in orchestrator.spec.stage(stage).expected_outputs
+            ]
+            if row["artifacts"] != current:
+                raise ValueError("report artifacts differ")
+            wrapper = row.get("stage_receipt")
+            if wrapper:
+                value = json.loads(Path(wrapper["path"]).read_text(encoding="utf-8"))
+                for log in value["logs"].values():
+                    if hashlib.sha256(Path(log["path"]).read_bytes()).hexdigest() != log["sha256"]:
+                        raise ValueError("report source log differs")
+    except Exception as exc:
+        raise WorkflowReportingError("stored report or its evidence is unavailable or altered") from exc
+    return target.resolve()

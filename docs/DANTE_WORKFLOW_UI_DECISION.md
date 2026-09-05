@@ -157,7 +157,11 @@ References:
 - https://flask.palletsprojects.com/en/stable/deploying/
 - https://docs.pylonsproject.org/projects/waitress/en/stable/
 
-## Remaining P4.2 work
+## P4.2 implementation scope
+
+Implemented on 2026-09-05. Test evidence and remaining packaged acceptance
+are tracked in `DANTE_WORKFLOW_UI_CHECKPOINT_2026-09-05.md`; the list below
+is the approved scope, not an outstanding backlog.
 
 1. Move the spike into `src/dante_workflow/ui/` with templates and static
    assets.

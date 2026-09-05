@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}DANTE workflow controller{% endblock %}
+{% block content %}
+<section class="summary-grid" aria-label="Workflow summary">
+  <article class="summary-card">
+    <span>Run</span>
+    <strong class="mono">{{ status.run_key[:12] }}</strong>
+    <small title="{{ status.run_key }}">content-addressed identity</small>
+  </article>
+  <article class="summary-card">
+    <span>Worker</span>
+    <strong id="worker-state" class="state state-{{ status.worker.state|lower }}">{{ status.worker.state }}</strong>
+    <small>{% if status.worker.pid %}PID {{ status.worker.pid }}{% else %}ledger-owned{% endif %}</small>
+  </article>
+  <article class="summary-card">
+    <span>Next stage</span>
+    <strong id="next-stage">{{ status.next_incomplete_stage or "COMPLETE" }}</strong>
+    <small>15-stage frozen DAG</small>
+  </article>
+  <article class="summary-card">
+    <span>Launcher preflight</span>
+    <strong class="state state-{{ preflight.status|lower }}">{{ preflight.status }}</strong>
+    <small>scientific PREFLIGHT remains authoritative</small>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Paths</p>
+      <h2>Local selection</h2>
+    </div>
+    <p>Selectors are constrained to roots supplied when this UI was launched.</p>
+  </div>
+  <form method="post" action="{{ url_for('select_paths') }}" class="path-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="run_key" value="{{ status.run_key }}">
+    <label>Project repository
+      <input name="repository_root" value="{{ selection.repository_root }}" required>
+    </label>
+    <label>Raw data root
+      <input name="raw_root" value="{{ selection.raw_root }}" required>
+    </label>
+    <label>Cache root
+      <input name="cache_root" value="{{ selection.cache_root }}" required>
+    </label>
+    <label>Workflow ledger root <small>(optional)</small>
+      <input name="workflow_root" value="{{ selection.workflow_root or '' }}">
+    </label>
+    <button type="submit" class="secondary">Validate selection</button>
+  </form>
+</section>
+
+<section class="panel controls" aria-labelledby="controls-heading">
+  <div>
+    <p class="eyebrow">Execution</p>
+    <h2 id="controls-heading">Independent worker</h2>
+    <p>Start and Resume launch the CLI outside the web process. Stop is cooperative and takes effect after the current atomic stage.</p>
+  </div>
+  <div class="button-row">
+    {% for action, label in [("preflight", "Run preflight"), ("start", "Start"), ("resume", "Resume"), ("stop", "Stop after stage"), ("verify", "Verify and refresh report")] %}
+      <form method="post" action="{{ url_for('action', action=action) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="run_key" value="{{ status.run_key }}">
+        <button type="submit" class="{{ 'danger' if action == 'stop' else 'primary' }}">{{ label }}</button>
+      </form>
+    {% endfor %}
+    {% if report_ready %}<a class="button secondary" href="{{ url_for('report') }}">Open verified report</a>{% endif %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <div><p class="eyebrow">Gates</p><h2>Hardware and dependencies</h2></div>
+    <p>{{ preflight.note }}</p>
+  </div>
+  <div class="check-grid">
+    {% for check in preflight.checks %}
+      <article class="check">
+        <span class="badge badge-{{ check.verdict|lower }}">{{ check.verdict }}</span>
+        <strong>{{ check.name }}</strong>
+        <small class="mono">{{ check.detail }}</small>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <div><p class="eyebrow">Progress</p><h2>Frozen stage graph</h2></div>
+    <p>Outcome artifacts appear only after their stage verifier passes.</p>
+  </div>
+  <p id="connection-status" role="status" aria-live="polite">Connected. <a href="{{ url_for('dashboard') }}">Reload verified links and logs</a>.</p>
+  <div class="table-wrap">
+    <table>
+      <caption>Execution state for all 15 workflow stages</caption>
+      <thead><tr><th>Stage</th><th>Dependencies</th><th>Status</th><th>Verified logs</th></tr></thead>
+      <tbody>
+        {% for planned in plan.stages %}
+          {% set current = status.stages|selectattr('name', 'equalto', planned.name)|first %}
+          <tr>
+            <th scope="row">{{ planned.name }}</th>
+            <td>
+              {% if planned.dependencies %}
+                {% for dep in planned.dependencies %}<span class="dependency">{{ dep.stage }}</span>{% endfor %}
+              {% else %}<span class="muted">root</span>{% endif %}
+            </td>
+            <td><span data-stage="{{ planned.name }}" class="badge badge-{{ current.status|lower }}">{{ current.status }}</span></td>
+            <td>
+              {% if current.status == "VERIFIED" %}
+                <a href="{{ url_for('verified_log', stage=planned.name, name='verify.stdout.txt') }}">verifier</a>
+                <a href="{{ url_for('verified_log', stage=planned.name, name='run.stderr.txt') }}">stderr</a>
+              {% else %}<span class="muted">sealed</span>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="two-column">
+  <article class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Immutable</p><h2>Scientific contracts</h2></div></div>
+    <ul class="digest-list">
+      {% for config in configs %}
+        <li><strong>{{ config.name }}</strong><span class="mono">{{ config.sha256 }}</span><small>{{ config.path }}</small></li>
+      {% endfor %}
+    </ul>
+  </article>
+  <article class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Verified</p><h2>Artifact browser</h2></div></div>
+    {% if artifacts %}
+      <ul class="artifact-list">
+        {% for artifact in artifacts %}
+          <li><a href="{{ url_for('artifact', stage=artifact.stage, name=artifact.name) }}">{{ artifact.stage }} / {{ artifact.name }}</a><span class="mono">{{ artifact.sha256[:16] }}…</span></li>
+        {% endfor %}
+      </ul>
+    {% else %}<p class="empty">No verified artifacts yet.</p>{% endif %}
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-heading"><div><p class="eyebrow">Administrative only</p><h2>Controller log</h2></div><p>No scores, classes, or candidate outcomes are written here.</p></div>
+  <ol id="controller-log" class="event-list">
+    {% for event in logs %}<li><time>{{ event.timestamp }}</time> {{ event.event }}{% if event.pid %} · PID {{ event.pid }}{% endif %}</li>{% else %}<li class="empty">No controller actions yet.</li>{% endfor %}
+  </ol>
+</section>
+{% endblock %}

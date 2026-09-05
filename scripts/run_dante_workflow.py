@@ -41,6 +41,7 @@ def _add_common(parser: argparse.ArgumentParser) -> None:
         "--cache-root", type=Path, default=Path("E:/dante_cache/dante_light")
     )
     parser.add_argument("--workflow-root", type=Path)
+    parser.add_argument("--expected-run-key", help="Reject a changed UI launch identity")
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -74,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         orchestrator = _orchestrator(args)
+        if args.expected_run_key and args.expected_run_key != orchestrator.run_key:
+            raise OrchestrationError("requested run key differs from current source or paths")
         if args.command == "plan":
             result = orchestrator.plan()
         elif args.command == "status":
@@ -84,7 +87,11 @@ def main(argv: list[str] | None = None) -> int:
             result = orchestrator.execute(through_stage="PREFLIGHT")
         elif args.command == "report":
             result = orchestrator.execute(through_stage="REPORT")
-            if not any(item.get("status") == "FAILED" for item in result["results"]):
+            if (
+                result["status"] != "WORKFLOW_EXECUTION_STOPPED"
+                and orchestrator.ledger.next_incomplete_stage() is None
+                and not any(item.get("status") == "FAILED" for item in result["results"])
+            ):
                 result["derived_report_path"] = str(
                     write_workflow_report(orchestrator)
                 )

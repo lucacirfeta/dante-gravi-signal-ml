@@ -21,6 +21,7 @@ from .state import (
 
 
 WORKFLOW_RUNS_DIRECTORY = "workflow_productization_v1"
+STOP_REQUEST_NAME = "stop.request.json"
 
 
 class OrchestrationError(RuntimeError):
@@ -195,6 +196,60 @@ class WorkflowOrchestrator:
                 raise OrchestrationError("persisted run contract does not match run key")
         else:
             _atomic_json(contract_path, self.run_contract)
+
+    @property
+    def stop_request_path(self) -> Path:
+        """Return the run-local cooperative stop request path."""
+
+        return self.run_dir / STOP_REQUEST_NAME
+
+    def clear_stop_request(self) -> None:
+        """Remove a stale administrative stop request before a new launch."""
+
+        self.stop_request_path.unlink(missing_ok=True)
+
+    def request_stop(self) -> dict[str, Any]:
+        """Request a safe stop after the currently running atomic stage."""
+
+        if not self.ledger.lease_path.is_file():
+            raise OrchestrationError("no active workflow worker can be stopped")
+        owner = self.ledger._read_lease()
+        request = {
+            "schema_version": 1,
+            "status": "STOP_AFTER_CURRENT_STAGE_REQUESTED",
+            "workflow_id": self.spec.workflow_id,
+            "run_key": self.run_key,
+            "contract_digest": self.spec.contract_digest,
+            "worker_process_token": owner.process.token,
+        }
+        _atomic_json(self.stop_request_path, request)
+        return request
+
+    def stop_requested(self, lease: ExecutionLease) -> bool:
+        """Validate and report the run-local cooperative stop request."""
+
+        if not self.stop_request_path.is_file():
+            return False
+        try:
+            value = json.loads(self.stop_request_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise OrchestrationError("workflow stop request is corrupt") from exc
+        expected = {
+            "schema_version": 1,
+            "status": "STOP_AFTER_CURRENT_STAGE_REQUESTED",
+            "workflow_id": self.spec.workflow_id,
+            "run_key": self.run_key,
+            "contract_digest": self.spec.contract_digest,
+            "worker_process_token": lease.process.token,
+        }
+        if not isinstance(value, dict):
+            raise OrchestrationError("workflow stop request is malformed")
+        if value.get("worker_process_token") != lease.process.token:
+            self.clear_stop_request()
+            return False
+        if value != expected:
+            raise OrchestrationError("workflow stop request does not match this run")
+        return True
 
     @classmethod
     def corrected_o4a(
@@ -441,18 +496,28 @@ class WorkflowOrchestrator:
 
         lease = self.ledger.acquire_lease()
         results: list[dict[str, Any]] = []
+        stopped = False
         try:
             for stage in selected:
+                if self.stop_requested(lease):
+                    stopped = True
+                    break
                 result = self._execute_stage(lease, stage)
                 results.append(result)
                 if result["status"] == "FAILED":
                     break
+                if self.stop_requested(lease):
+                    stopped = True
+                    break
         finally:
             if self.ledger.lease_path.is_file():
                 self.ledger.release_lease(lease)
+            self.clear_stop_request()
         return {
             "schema_version": 1,
-            "status": "WORKFLOW_EXECUTION",
+            "status": (
+                "WORKFLOW_EXECUTION_STOPPED" if stopped else "WORKFLOW_EXECUTION"
+            ),
             "workflow_id": self.spec.workflow_id,
             "run_key": self.run_key,
             "results": results,

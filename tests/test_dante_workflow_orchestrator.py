@@ -204,3 +204,37 @@ def test_unknown_or_conflicting_stage_selection_fails_closed(tmp_path: Path) -> 
         orchestrator.execute(through_stage="NOPE")
     with pytest.raises(OrchestrationError, match="mutually exclusive"):
         orchestrator.execute(through_stage="SCAN", repair_stage="SCAN")
+
+
+def test_cooperative_stop_finishes_current_stage_and_preserves_resume(
+    tmp_path: Path,
+) -> None:
+    class StopAfterPreflightRunner(FakeRunner):
+        orchestrator: WorkflowOrchestrator
+
+        def __call__(self, command: StageCommand) -> CommandResult:
+            result = super().__call__(command)
+            if (command.stage, command.action) == ("PREFLIGHT", "verify"):
+                self.orchestrator.request_stop()
+            return result
+
+    runner = StopAfterPreflightRunner(tmp_path / "artifacts")
+    orchestrator = _orchestrator(tmp_path, runner)
+    runner.orchestrator = orchestrator
+
+    result = orchestrator.execute(through_stage="ACQUIRE")
+
+    assert result["status"] == "WORKFLOW_EXECUTION_STOPPED"
+    assert result["results"] == [{"stage": "PREFLIGHT", "status": "VERIFIED"}]
+    assert orchestrator.ledger.stage_status("PREFLIGHT") == "VERIFIED"
+    assert orchestrator.ledger.stage_status("ACQUIRE") == "PENDING"
+    assert not orchestrator.ledger.lease_path.exists()
+    assert not orchestrator.stop_request_path.exists()
+
+    resumed = orchestrator.execute(through_stage="ACQUIRE")
+
+    assert resumed["status"] == "WORKFLOW_EXECUTION"
+    assert resumed["results"] == [
+        {"stage": "PREFLIGHT", "status": "SKIPPED_VERIFIED"},
+        {"stage": "ACQUIRE", "status": "VERIFIED"},
+    ]

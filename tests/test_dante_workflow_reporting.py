@@ -12,6 +12,7 @@ from src.dante_workflow.reporting import (
     WorkflowReportingError,
     build_workflow_report,
     write_workflow_report,
+    verify_report_file,
 )
 from src.dante_workflow.schema import load_workflow_spec
 
@@ -115,3 +116,52 @@ def test_written_report_matches_derived_text(tmp_path: Path) -> None:
     path = write_workflow_report(orchestrator)
 
     assert path.read_text(encoding="utf-8") == expected
+    assert verify_report_file(orchestrator) == path
+
+
+@pytest.mark.parametrize("tamper", ["report", "binding", "log"])
+def test_report_download_rejects_changed_content_without_running_science(
+    tmp_path: Path, tamper: str
+) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    orchestrator.execute()
+    path = write_workflow_report(orchestrator)
+    if tamper == "report":
+        path.write_text("invented outcome", encoding="utf-8")
+    elif tamper == "binding":
+        path.with_suffix(".md.receipt.json").unlink()
+    else:
+        artifact = orchestrator.ledger.latest_verified_artifact("SCAN", "primary_scan_summary")
+        wrapper = json.loads(Path(artifact.path).read_text(encoding="utf-8"))
+        Path(wrapper["logs"]["verify.stdout.txt"]["path"]).write_text("altered", encoding="utf-8")
+
+    def forbidden_runner(command):
+        pytest.fail("HTTP report checks must not execute scientific stage commands")
+
+    orchestrator.runner = forbidden_runner
+    with pytest.raises(WorkflowReportingError, match="altered"):
+        verify_report_file(orchestrator)
+
+
+def test_completed_synthetic_workflow_report_is_served_by_ui(tmp_path, monkeypatch):
+    pytest.importorskip("flask")
+    from src.dante_workflow.ui.app import UISettings, create_app
+    from src.dante_workflow.ui.controller import WorkflowUIController
+
+    orchestrator = _orchestrator(tmp_path)
+    orchestrator.execute()
+    path = write_workflow_report(orchestrator)
+    monkeypatch.setattr(WorkflowUIController, "_build_orchestrator", lambda *args: orchestrator)
+    app = create_app(UISettings(
+        repository_root=ROOT,
+        config_path=ROOT / "config/dante_workflow_productization_v1.json",
+        raw_root=tmp_path / "raw", cache_root=tmp_path / "cache",
+    ))
+    client = app.test_client()
+    report = client.get("/report")
+    assert report.status_code == 200
+    assert report.data == path.read_bytes()
+    assert "Open verified report" in client.get("/").get_data(as_text=True)
+    path.write_text("altered", encoding="utf-8")
+    assert client.get("/report").status_code == 404
+    assert "Open verified report" not in client.get("/").get_data(as_text=True)
