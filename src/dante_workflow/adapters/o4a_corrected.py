@@ -34,6 +34,7 @@ class _CommandDefinition:
     root_arguments: tuple[tuple[str, str], ...] = ()
     raw_root: bool = False
     device: bool = False
+    static_verify: bool = False
 
 
 _DEFINITIONS = {
@@ -85,6 +86,7 @@ _DEFINITIONS = {
         ),
         raw_root=True,
         device=True,
+        static_verify=True,
     ),
     "NATIVE_CALIBRATION": _CommandDefinition(
         "scripts/run_dante_o4a_native_calibration.py",
@@ -97,6 +99,7 @@ _DEFINITIONS = {
         ),
         raw_root=True,
         device=True,
+        static_verify=True,
     ),
     "RESCORE": _CommandDefinition(
         "scripts/run_dante_o4a_native_rescore_v2.py",
@@ -111,6 +114,7 @@ _DEFINITIONS = {
         ),
         raw_root=True,
         device=True,
+        static_verify=True,
     ),
     "THRESHOLDS": _CommandDefinition(
         "scripts/run_dante_o4a_native_thresholds.py",
@@ -125,6 +129,7 @@ _DEFINITIONS = {
             ("--external-root", "thresholds"),
         ),
         device=True,
+        static_verify=True,
     ),
     "CLASSIFY": _CommandDefinition(
         "scripts/run_dante_o4a_native_classification.py",
@@ -140,6 +145,7 @@ _DEFINITIONS = {
             ("--external-root", "classification"),
         ),
         device=True,
+        static_verify=True,
     ),
     "TAXONOMY": _CommandDefinition(
         "scripts/run_dante_o4a_native_taxonomy.py",
@@ -151,6 +157,7 @@ _DEFINITIONS = {
             ("--external-root", "taxonomy"),
         ),
         device=True,
+        static_verify=True,
     ),
     "COINCIDENCE": _CommandDefinition(
         "scripts/run_dante_o4a_native_coincidence.py",
@@ -164,6 +171,7 @@ _DEFINITIONS = {
         ),
         raw_root=True,
         device=True,
+        static_verify=True,
     ),
     "PEM": _CommandDefinition(
         "scripts/run_dante_o4a_native_pem.py",
@@ -175,6 +183,7 @@ _DEFINITIONS = {
             ("--external-root", "pem"),
         ),
         raw_root=True,
+        static_verify=True,
     ),
     "COMPARE": _CommandDefinition(
         "scripts/run_dante_o4a_final_comparison.py",
@@ -216,7 +225,15 @@ class O4aCorrectedAdapter(StageAdapter):
         selector = (
             definition.run_selector if action == "run" else definition.verify_selector
         )
-        argv = [self.python_executable, definition.script, *selector]
+        if action == "verify" and definition.static_verify:
+            argv = [
+                self.python_executable,
+                "scripts/verify_dante_existing.py",
+                definition.script,
+                *selector,
+            ]
+        else:
+            argv = [self.python_executable, definition.script, *selector]
         roots = self.cache_roots(paths)
         for flag, root_name in definition.root_arguments:
             argv.extend((flag, str(roots[root_name])))

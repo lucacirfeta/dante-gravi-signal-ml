@@ -44,7 +44,12 @@ def test_adapter_covers_every_frozen_stage_with_existing_clis(
         assert (ROOT / verify_command.argv[1]).is_file()
         expected_prefix = SPEC.stage(stage).verifier_command
         assert ("python", *verify_command.argv[1 : len(expected_prefix)]) == expected_prefix
-        source = (ROOT / run_command.argv[1]).read_text(encoding="utf-8")
+        scientific_script = (
+            verify_command.argv[2]
+            if verify_command.argv[1] == "scripts/verify_dante_existing.py"
+            else run_command.argv[1]
+        )
+        source = (ROOT / scientific_script).read_text(encoding="utf-8")
         flags = {
             token
             for token in (*run_command.argv, *verify_command.argv)
@@ -110,10 +115,30 @@ def test_native_calibration_is_a_distinct_cli_stage(
         "freeze",
     )
     assert verify_command.argv[1:4] == (
+        "scripts/verify_dante_existing.py",
         "scripts/run_dante_o4a_native_calibration.py",
         "--stage",
-        "verify",
     )
+    assert verify_command.argv[4] == "verify"
+
+
+def test_static_verifier_wraps_only_hash_bound_verification(
+    adapter: O4aCorrectedAdapter, paths: WorkflowPaths
+) -> None:
+    for stage in (
+        "INDEX",
+        "NATIVE_CALIBRATION",
+        "RESCORE",
+        "THRESHOLDS",
+        "CLASSIFY",
+        "TAXONOMY",
+        "COINCIDENCE",
+        "PEM",
+    ):
+        run_command = adapter.build_command(stage, "run", paths)
+        verify_command = adapter.build_command(stage, "verify", paths)
+        assert run_command.argv[1] != "scripts/verify_dante_existing.py"
+        assert verify_command.argv[1] == "scripts/verify_dante_existing.py"
 
 
 def test_index_window_manifest_receipt_reuses_exact_cohort_bytes(
