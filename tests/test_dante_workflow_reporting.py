@@ -31,6 +31,8 @@ class ReportingRunner:
     def __call__(self, command: StageCommand) -> CommandResult:
         stage_dir = self.root / command.stage.lower()
         stage_dir.mkdir(parents=True, exist_ok=True)
+        if (command.stage, command.action) == ("PREFLIGHT", "verify"):
+            return CommandResult(0, "PASS preflight readiness\n", "")
         payload: dict[str, object] = {"run_dir": str(stage_dir)}
         if command.stage == "SCAN":
             payload.update(

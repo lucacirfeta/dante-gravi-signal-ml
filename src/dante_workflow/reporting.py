@@ -85,11 +85,18 @@ def _verified_payload(
     try:
         receipt = json.loads(Path(path).read_text(encoding="utf-8"))
         verify_log = Path(receipt["logs"]["verify.stdout.txt"]["path"])
-        payload = json.loads(verify_log.read_text(encoding="utf-8"))
+        verify_output = verify_log.read_text(encoding="utf-8")
     except (OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise WorkflowReportingError(
             f"verified payload cannot be read for {stage_receipt.get('stage')}"
         ) from exc
+    try:
+        payload = json.loads(verify_output)
+    except json.JSONDecodeError:
+        # Some administrative verifiers intentionally emit human-readable
+        # PASS lines. Their hash-bound log remains mandatory, but there is no
+        # structured payload from which to collect exclusion fields.
+        return None
     return payload if isinstance(payload, dict) else None
 
 
