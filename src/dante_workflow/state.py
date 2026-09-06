@@ -429,14 +429,20 @@ class WorkflowLedger:
             )
         except FileExistsError:
             return False
+        failed = False
         try:
             payload = _json_bytes(self._lease_payload(lease))
             written = 0
             while written < len(payload):
                 written += os.write(descriptor, payload[written:])
             os.fsync(descriptor)
+        except Exception:
+            failed = True
+            raise
         finally:
             os.close(descriptor)
+            if failed:
+                self.lease_path.unlink(missing_ok=True)
         return True
 
     def _read_lease(self) -> ExecutionLease:
@@ -473,6 +479,21 @@ class WorkflowLedger:
         )
         for _ in range(3):
             if self._create_lease_file(lease):
+                try:
+                    for attempt in self._active_attempts().values():
+                        old_process = ProcessIdentity.from_dict(attempt["process"])
+                        self._append_event(
+                            self._event(
+                                "ATTEMPT_INTERRUPTED",
+                                process=old_process,
+                                stage=attempt["stage"],
+                                attempt_id=attempt["attempt_id"],
+                                reason="ORPHANED_ATTEMPT_WITHOUT_LEASE",
+                            )
+                        )
+                except Exception:
+                    self.lease_path.unlink(missing_ok=True)
+                    raise
                 return lease
             persisted = self._read_lease()
             if is_alive(persisted.process):
@@ -793,4 +814,17 @@ class WorkflowLedger:
         persisted = self._read_lease()
         if persisted != lease:
             raise ConcurrentExecutionError("workflow worker lease changed before release")
+        self.lease_path.unlink()
+
+    def abandon_lease(self, lease: ExecutionLease) -> None:
+        """Remove this worker's lease after terminal-state persistence failed.
+
+        The active attempt remains append-only evidence. The next worker marks
+        it interrupted when acquiring a replacement lease.
+        """
+
+        self._assert_lease(lease)
+        persisted = self._read_lease()
+        if persisted != lease:
+            raise ConcurrentExecutionError("workflow worker lease changed before abandon")
         self.lease_path.unlink()

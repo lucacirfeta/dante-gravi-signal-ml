@@ -12,10 +12,10 @@ as corrected O4a classifications.
 Clone branch `codex/dante-workflow-productization-v1` from
 `https://github.com/lucacirfeta/dante-gravi-signal-ml.git` into a new directory.
 Do not copy local raw data or reference caches. Keep tracked files unchanged.
-Use Python 3.11+ with the repository scientific dependencies (`requirements.txt`).
-The optional UI uses `requirements-ui.txt` and is not needed for this CLI smoke.
-Fresh dependency installation is a separate acceptance item: the general
-requirements file is not a promise of exact historical environment reproduction.
+Use Python 3.11 with the portable CPU lock (`requirements-cpu.txt`) for the
+documented CPU path. The optional UI uses `requirements-ui.txt` in addition and
+is not needed for this CLI smoke. The CPU lock is an installation/replay
+environment, not a promise of exact historical CUDA environment reproduction.
 
 ## Run
 

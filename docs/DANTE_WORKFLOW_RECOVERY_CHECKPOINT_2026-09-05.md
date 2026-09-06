@@ -1,6 +1,6 @@
 # Workflow recovery checkpoint — 2026-09-05
 
-Status: initial P5.2 recovery coverage implemented; P5/P6 remain incomplete.
+Status: P5.2 recovery coverage complete; P6 remains incomplete.
 
 ## Defect and correction
 
@@ -28,20 +28,24 @@ Changed artifacts are retained and execution stops rather than overwriting them.
 
 The subprocess test terminates only its own recorded child. It does not launch
 or interrupt scientific work. CUDA/dependency failures are injected runner
-results, not actual device removal or package uninstallation. ENOSPC is injected
-at the stage-runner boundary, not a real full disk or a ledger-write failure.
+results, not actual device removal or package uninstallation. The initial
+ENOSPC case is injected at the stage-runner boundary. The completed matrix
+additionally injects a failed lease `fsync`, an ENOSPC terminal-ledger append,
+and a failed orphan-recovery append. Partial/new leases are removed, active
+evidence remains append-only, and the next successful lease records the
+orphaned attempt as `INTERRUPTED` before retrying the same run identity.
 
 Validation:
 
-- targeted recovery/state/orchestrator suite: **29 passed**;
-- all `tests/test_dante_workflow*.py`, Windows: **86 passed**, 22.06 s;
-- same suite, isolated WSL validation environment: **85 passed, 1 skipped**,
-  49.09 s; the skipped test is Windows-specific;
+- completed recovery/state/orchestrator/UI/CLI subset, Windows: **48 passed**;
+- all `tests/test_dante_workflow*.py`, Windows: **101 passed**, 20.39 s;
+- same suite, isolated WSL Python 3.11 environment: **100 passed, 1 skipped**,
+  49.91 s; the skipped test is Windows-specific;
 - Ruff on changed Python files: **PASS**; `git diff --check`: **PASS**.
 
 ## Remaining acceptance
 
-This does not close P5.1 public clean-clone smoke, packaged CLI/UI artifact
-parity, full failure coverage (including ledger/storage-boundary failures), or
-P6 human acceptance. No release-ready, real-time, or discovery claim follows
-from these component/recovery tests. Existing scientific artifacts are untouched.
+P5.1 public smoke and P5.2 failure coverage are complete. Packaged CLI/UI
+artifact parity and P6 human acceptance remain open. No release-ready,
+real-time, or discovery claim follows from these recovery tests. Existing
+scientific artifacts are untouched.

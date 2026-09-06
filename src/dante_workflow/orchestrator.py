@@ -16,6 +16,7 @@ from .schema import WorkflowSpec, canonical_json_sha256
 from .state import (
     ArtifactReceipt,
     ExecutionLease,
+    InvalidTransitionError,
     WorkflowLedger,
 )
 
@@ -470,9 +471,14 @@ class WorkflowOrchestrator:
             raise
         except Exception as exc:
             if not terminal:
-                self.ledger.finish_attempt(
-                    lease, attempt, exit_status=-1, verifier_verdict="FAIL"
-                )
+                try:
+                    self.ledger.finish_attempt(
+                        lease, attempt, exit_status=-1, verifier_verdict="FAIL"
+                    )
+                except Exception as persistence_exc:
+                    raise OrchestrationError(
+                        f"stage {stage} failed and terminal state could not be persisted"
+                    ) from persistence_exc
             raise OrchestrationError(f"stage {stage} orchestration failed") from exc
 
     def execute(
@@ -513,7 +519,10 @@ class WorkflowOrchestrator:
                     break
         finally:
             if self.ledger.lease_path.is_file():
-                self.ledger.release_lease(lease)
+                try:
+                    self.ledger.release_lease(lease)
+                except InvalidTransitionError:
+                    self.ledger.abandon_lease(lease)
             self.clear_stop_request()
         return {
             "schema_version": 1,

@@ -29,7 +29,7 @@ validated is a separate scientific checkpoint and stops execution.
 | P3 | Implemented, regression-tested | Public evidence graph acceptance in P5 |
 | P4.1 | Approved and frozen (`176cf48`) | None |
 | P4.2 | Read/control UI implemented; component and process tests | Packaged end-to-end CLI/UI parity in P5/P6 |
-| P5 | Public technical smoke PASS; initial recovery matrix tested | Fresh dependency install, expanded failure coverage, packaged UI acceptance |
+| P5 | Public smoke, fresh CPU install, and recovery matrix PASS | Packaged UI acceptance |
 | P6 | Not started | Release receipt, human acceptance, separate paper branch |
 
 Evidence and explicit limitations:

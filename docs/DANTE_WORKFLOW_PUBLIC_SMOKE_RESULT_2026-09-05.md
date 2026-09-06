@@ -44,11 +44,14 @@ Regression evidence: Windows **96 passed** (21.30 s); WSL **95 passed,
 The targeted WSL smoke/recovery/state/orchestrator suite passed all 39 tests.
 Ruff and `git diff --check` passed.
 
-- Fresh dependency-installation validation and actionable preflight guidance.
-- Remaining storage-boundary/failure-recovery tests.
 - Packaged UI/CLI acceptance, with the technical smoke clearly distinguished
   from the full scientific O4a adapter.
 - Human acceptance and final resoconto. No paper work starts from this checkpoint.
+
+Fresh CPU installation and the expanded storage-boundary recovery matrix passed
+on 2026-09-06. Their separate evidence is recorded in
+`DANTE_WORKFLOW_FRESH_INSTALL_RESULT_2026-09-06.md` and the updated recovery
+checkpoint; they do not alter or broaden this CUDA smoke claim.
 
 The technical smoke uses historical reference indices/epochs and the existing
 paired replay. Its decisions are not corrected O4a classifications, and this

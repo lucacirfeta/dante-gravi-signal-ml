@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import hashlib
-import json
 from pathlib import Path
 
 import pytest
 
+import src.dante_workflow.state as workflow_state
 from src.dante_workflow.schema import load_workflow_spec
 from src.dante_workflow.state import (
     ArtifactReceipt,
@@ -324,6 +324,63 @@ def test_worker_lease_cannot_be_released_with_active_attempt(
         verifier_verdict="PASS",
     )
     ledger.release_lease(lease)
+    assert not ledger.lease_path.exists()
+
+
+def test_failed_lease_fsync_removes_partial_lease(ledger, monkeypatch) -> None:
+    def fail_fsync(_descriptor: int) -> None:
+        raise OSError("injected lease fsync failure")
+
+    monkeypatch.setattr(workflow_state.os, "fsync", fail_fsync)
+
+    with pytest.raises(OSError, match="injected lease fsync failure"):
+        ledger.acquire_lease(
+            process=_process(101, "worker-a"), process_alive=lambda _: True
+        )
+
+    assert not ledger.lease_path.exists()
+
+
+def test_orphaned_attempt_is_interrupted_on_next_lease(ledger) -> None:
+    old_lease = ledger.acquire_lease(
+        process=_process(101, "worker-a"), process_alive=lambda _: True
+    )
+    ledger.start_attempt(old_lease, "PREFLIGHT")
+    evidence_before = ledger.event_path.read_bytes()
+    ledger.abandon_lease(old_lease)
+
+    new_lease = ledger.acquire_lease(
+        process=_process(202, "worker-b"), process_alive=lambda _: True
+    )
+
+    assert ledger.event_path.read_bytes().startswith(evidence_before)
+    assert ledger.stage_status("PREFLIGHT") == "INTERRUPTED"
+    assert ledger.read_events()[-1]["reason"] == "ORPHANED_ATTEMPT_WITHOUT_LEASE"
+    ledger.release_lease(new_lease)
+
+
+def test_failed_orphan_recovery_does_not_leave_new_lease(
+    ledger, monkeypatch
+) -> None:
+    old_lease = ledger.acquire_lease(
+        process=_process(101, "worker-a"), process_alive=lambda _: True
+    )
+    ledger.start_attempt(old_lease, "PREFLIGHT")
+    ledger.abandon_lease(old_lease)
+    append_event = ledger._append_event
+
+    def fail_interruption(event) -> None:
+        if event["event_type"] == "ATTEMPT_INTERRUPTED":
+            raise OSError("injected orphan recovery failure")
+        append_event(event)
+
+    monkeypatch.setattr(ledger, "_append_event", fail_interruption)
+
+    with pytest.raises(OSError, match="injected orphan recovery failure"):
+        ledger.acquire_lease(
+            process=_process(202, "worker-b"), process_alive=lambda _: True
+        )
+
     assert not ledger.lease_path.exists()
 
 

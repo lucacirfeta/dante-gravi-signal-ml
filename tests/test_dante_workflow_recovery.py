@@ -125,3 +125,36 @@ def test_real_worker_termination_recovers_stale_lease_append_only(tmp_path):
         if worker.poll() is None:
             worker.terminate()
         worker.wait(timeout=5)
+
+
+def test_terminal_ledger_write_failure_can_resume_without_overwrite(tmp_path):
+    workflow = make_workflow(tmp_path, lambda cmd: CommandResult(0, "{}", ""))
+    append_event = workflow.ledger._append_event
+
+    def fail_terminal_events(event):
+        if event["event_type"] == "ATTEMPT_FINISHED":
+            raise OSError(errno.ENOSPC, "injected terminal ledger failure")
+        append_event(event)
+
+    workflow.ledger._append_event = fail_terminal_events
+
+    with pytest.raises(
+        OrchestrationError, match="terminal state could not be persisted"
+    ):
+        workflow.execute(through_stage="PREFLIGHT")
+
+    assert workflow.ledger.stage_status("PREFLIGHT") == "RUNNING"
+    assert not workflow.ledger.lease_path.exists()
+    evidence_before = workflow.ledger.event_path.read_bytes()
+
+    resumed = make_workflow(tmp_path, lambda cmd: CommandResult(0, "{}", ""))
+    result = resumed.execute(through_stage="PREFLIGHT")
+
+    assert resumed.run_key == workflow.run_key
+    assert result["results"][-1]["status"] == "VERIFIED"
+    assert resumed.ledger.event_path.read_bytes().startswith(evidence_before)
+    assert any(
+        event.get("reason") == "ORPHANED_ATTEMPT_WITHOUT_LEASE"
+        for event in resumed.ledger.read_events()
+    )
+    assert not resumed.ledger.lease_path.exists()
