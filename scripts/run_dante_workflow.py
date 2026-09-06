@@ -47,13 +47,24 @@ def _add_common(parser: argparse.ArgumentParser) -> None:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("plan", "preflight", "run", "resume", "status", "verify", "report"):
+    for name in (
+        "plan",
+        "preflight",
+        "run",
+        "resume",
+        "adopt-verified",
+        "status",
+        "verify",
+        "report",
+    ):
         command = commands.add_parser(name)
         _add_common(command)
         if name in {"run", "resume"}:
             selection = command.add_mutually_exclusive_group()
             selection.add_argument("--through-stage")
             selection.add_argument("--repair-stage")
+        elif name == "adopt-verified":
+            command.add_argument("--through-stage")
     return parser
 
 
@@ -85,6 +96,10 @@ def main(argv: list[str] | None = None) -> int:
             result = verify_workflow(orchestrator)
         elif args.command == "preflight":
             result = orchestrator.execute(through_stage="PREFLIGHT")
+        elif args.command == "adopt-verified":
+            result = orchestrator.adopt_verified_existing(
+                through_stage=args.through_stage
+            )
         elif args.command == "report":
             result = orchestrator.execute(through_stage="REPORT")
             if (

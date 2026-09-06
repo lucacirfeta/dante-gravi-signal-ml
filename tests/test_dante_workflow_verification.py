@@ -82,7 +82,9 @@ def test_full_graph_emits_deterministic_content_signed_receipt(tmp_path: Path) -
     assert first["status"] == "PASS_VERIFIED_WORKFLOW"
     assert len(first["stages"]) == 15
     assert first["scientific_boundary"] == {
+        "adopted_stages_recomputed": False,
         "existing_stage_verifiers_replayed": True,
+        "stage_execution_modes": ["EXECUTED_AND_VERIFIED"],
         "metrics_transcribed": False,
         "outcomes_interpreted": False,
         "index_consumption_manifest_exact_match": True,
@@ -90,6 +92,65 @@ def test_full_graph_emits_deterministic_content_signed_receipt(tmp_path: Path) -
     assert "score_secret_not_for_receipt" not in json.dumps(first)
     persisted = verify_release_receipt(Path(first["receipt_path"]))
     assert persisted["receipt_digest"] == first["receipt_digest"]
+
+
+def test_adopted_graph_is_explicit_and_release_verifies(tmp_path: Path) -> None:
+    orchestrator, _ = _orchestrator(tmp_path)
+    adoption = orchestrator.adopt_verified_existing()
+
+    assert all(
+        item["status"] == "ADOPTED_VERIFIED_EXISTING"
+        for item in adoption["results"]
+    )
+    release = verify_workflow(orchestrator)
+    assert release["scientific_boundary"]["stage_execution_modes"] == [
+        "ADOPTED_VERIFIED_EXISTING"
+    ]
+    assert {
+        stage["stage_receipt"]["execution_mode"] for stage in release["stages"]
+    } == {"ADOPTED_VERIFIED_EXISTING"}
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("execution_mode", "EXECUTED_AND_VERIFIED"),
+        ("run_command_executed", True),
+        ("run_exit_status", 0),
+    ],
+)
+def test_adopted_receipt_rejects_execution_provenance_tampering(
+    tmp_path: Path, field: str, value: object
+) -> None:
+    orchestrator, _ = _orchestrator(tmp_path)
+    orchestrator.adopt_verified_existing()
+    artifact = orchestrator.ledger.latest_verified_artifact(
+        "PREFLIGHT", "preflight_receipt"
+    )
+    path = Path(artifact.path)
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    receipt[field] = value
+    path.write_text(json.dumps(receipt, sort_keys=True), encoding="utf-8")
+    changed_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+    events = [
+        json.loads(line)
+        for line in orchestrator.ledger.event_path.read_text(
+            encoding="utf-8"
+        ).splitlines()
+    ]
+    for event in events:
+        if (
+            event["event_type"] == "ARTIFACT_RECORDED"
+            and Path(event["artifact"]["path"]).resolve() == path.resolve()
+        ):
+            event["artifact"]["sha256"] = changed_sha
+    orchestrator.ledger.event_path.write_text(
+        "".join(json.dumps(event, sort_keys=True) + "\n" for event in events),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(WorkflowVerificationError, match="execution provenance"):
+        verify_workflow(orchestrator)
 
 
 def test_incomplete_workflow_cannot_emit_pass_receipt(tmp_path: Path) -> None:

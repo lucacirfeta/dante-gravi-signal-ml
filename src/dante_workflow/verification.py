@@ -83,6 +83,8 @@ def _validate_stage_receipt(
         "contract_digest",
         "stage",
         "attempt_id",
+        "execution_mode",
+        "run_command_executed",
         "run_command_digest",
         "verify_command_digest",
         "run_exit_status",
@@ -92,7 +94,7 @@ def _validate_stage_receipt(
     if set(value) != required and set(value) != required | {"verified_run_dir"}:
         raise WorkflowVerificationError(f"{stage} stage receipt fields changed")
     expected = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "VERIFIED_STAGE_RECEIPT",
         "workflow_id": orchestrator.spec.workflow_id,
         "run_key": orchestrator.run_key,
@@ -102,11 +104,26 @@ def _validate_stage_receipt(
         "verify_command_digest": orchestrator.commands[stage][
             "verify"
         ].command_digest,
-        "run_exit_status": 0,
         "verify_exit_status": 0,
     }
     if any(value.get(key) != expected_value for key, expected_value in expected.items()):
         raise WorkflowVerificationError(f"{stage} stage receipt identity is stale")
+    mode = value.get("execution_mode")
+    run_executed = value.get("run_command_executed")
+    run_exit_status = value.get("run_exit_status")
+    valid_execution = (
+        mode == "EXECUTED_AND_VERIFIED"
+        and run_executed is True
+        and run_exit_status == 0
+    ) or (
+        mode == "ADOPTED_VERIFIED_EXISTING"
+        and run_executed is False
+        and run_exit_status is None
+    )
+    if not valid_execution:
+        raise WorkflowVerificationError(
+            f"{stage} stage receipt execution provenance is invalid"
+        )
     if not isinstance(value.get("attempt_id"), str) or not value["attempt_id"]:
         raise WorkflowVerificationError(f"{stage} stage receipt attempt is absent")
     logs = value.get("logs")
@@ -129,6 +146,7 @@ def _validate_stage_receipt(
     return {
         "path": str(path),
         "sha256": receipt.sha256,
+        "execution_mode": mode,
         **(
             {"verified_run_dir": value["verified_run_dir"]}
             if "verified_run_dir" in value
@@ -193,6 +211,13 @@ def verify_workflow(orchestrator: WorkflowOrchestrator) -> dict[str, Any]:
             "INDEX did not consume the exact verified COHORT manifest"
         )
 
+    execution_modes = sorted(
+        {
+            stage_receipt["stage_receipt"]["execution_mode"]
+            for stage_receipt in stage_receipts
+            if "stage_receipt" in stage_receipt
+        }
+    )
     body = {
         "schema_version": 1,
         "status": "PASS_VERIFIED_WORKFLOW",
@@ -204,6 +229,8 @@ def verify_workflow(orchestrator: WorkflowOrchestrator) -> dict[str, Any]:
         "stages": stage_receipts,
         "scientific_boundary": {
             "existing_stage_verifiers_replayed": True,
+            "stage_execution_modes": execution_modes,
+            "adopted_stages_recomputed": False,
             "metrics_transcribed": False,
             "outcomes_interpreted": False,
             "index_consumption_manifest_exact_match": True,

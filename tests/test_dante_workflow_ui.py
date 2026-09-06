@@ -222,8 +222,15 @@ def test_path_policy_rejects_traversal_outside_explicit_roots(tmp_path: Path) ->
         policy.validate(UISelection(ROOT, CONFIG, raw, cache, tmp_path / "other"))
 
 
+@pytest.mark.parametrize(
+    ("action", "worker_command"),
+    [("start", "report"), ("adopt", "adopt-verified")],
+)
 def test_real_controller_launches_detached_cli_without_running_a_stage_in_ui(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    action: str,
+    worker_command: str,
 ) -> None:
     raw = tmp_path / "raw"
     cache = tmp_path / "cache"
@@ -249,20 +256,20 @@ def test_real_controller_launches_detached_cli_without_running_a_stage_in_ui(
         "src.dante_workflow.ui.controller.platform.platform", lambda: "test-platform"
     )
 
-    result = controller.launch("start")
+    result = controller.launch(action)
 
     assert result["status"] == "WORKER_LAUNCHED"
-    assert captured["command"][2] == "report"
+    assert captured["command"][2] == worker_command
     assert captured["options"]["stdin"] is not None
     assert "stdout" in captured["options"] and "stderr" in captured["options"]
     assert controller.orchestrator.ledger.read_events() == []
     assert controller.worker_state()["state"] == "LAUNCHING"
     assert controller.administrative_logs()[-1]["event"] == "WORKER_LAUNCHED"
     with pytest.raises(UIControlError, match="already present"):
-        controller.launch("start")
+        controller.launch(action)
 
 
-@pytest.mark.parametrize("action", ["preflight", "verify"])
+@pytest.mark.parametrize("action", ["preflight", "adopt", "verify"])
 def test_validation_buttons_use_the_independent_worker(tmp_path, action):
     app, controller = _app(tmp_path)
     response = app.test_client().post(

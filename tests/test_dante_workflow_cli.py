@@ -30,3 +30,17 @@ def test_worker_refuses_run_key_changed_since_ui_display(monkeypatch, capsys):
     monkeypatch.setattr(cli, "_orchestrator", lambda args: worker)
     assert cli.main(["report", "--expected-run-key", "displayed-run"]) == 1
     assert "requested run key differs" in capsys.readouterr().out
+
+
+def test_adopt_verified_command_never_routes_to_execute(monkeypatch):
+    calls = []
+    worker = SimpleNamespace(
+        run_key="test-run",
+        adopt_verified_existing=lambda **kwargs: calls.append(kwargs)
+        or {"status": "WORKFLOW_ADOPTION", "results": []},
+        execute=lambda **kwargs: pytest.fail("adoption must not execute science"),
+    )
+    monkeypatch.setattr(cli, "_orchestrator", lambda args: worker)
+
+    assert cli.main(["adopt-verified", "--through-stage", "SCAN"]) == 0
+    assert calls == [{"through_stage": "SCAN"}]

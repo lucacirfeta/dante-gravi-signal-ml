@@ -143,6 +143,64 @@ def test_execute_records_exact_index_consumption_before_native_calibration(
     assert not orchestrator.ledger.lease_path.exists()
 
 
+def test_adopt_verified_existing_replays_only_verifiers_and_records_mode(
+    tmp_path: Path,
+) -> None:
+    runner = FakeRunner(tmp_path / "artifacts")
+    orchestrator = _orchestrator(tmp_path, runner)
+
+    result = orchestrator.adopt_verified_existing()
+
+    assert len(result["results"]) == 15
+    assert all(
+        item["status"] == "ADOPTED_VERIFIED_EXISTING"
+        for item in result["results"]
+    )
+    assert all(action == "verify" for _, action in runner.calls)
+    receipt = orchestrator.ledger.latest_verified_artifact(
+        "PREFLIGHT", "preflight_receipt"
+    )
+    value = json.loads(Path(receipt.path).read_text(encoding="utf-8"))
+    assert value["execution_mode"] == "ADOPTED_VERIFIED_EXISTING"
+    assert value["run_command_executed"] is False
+    assert value["run_exit_status"] is None
+    assert (
+        json.loads(
+            Path(value["logs"]["run.stdout.txt"]["path"]).read_text(
+                encoding="utf-8"
+            )
+        )["status"]
+        == "RUN_COMMAND_NOT_EXECUTED"
+    )
+    cohort = orchestrator.ledger.latest_verified_artifact(
+        "COHORT", "native_cohort_manifest"
+    )
+    consumed = orchestrator.ledger.latest_verified_artifact(
+        "INDEX", "index_window_manifest"
+    )
+    assert Path(cohort.path).resolve() == Path(consumed.path).resolve()
+    assert cohort.sha256 == consumed.sha256
+
+
+def test_adoption_verifier_failure_stops_fail_closed(tmp_path: Path) -> None:
+    runner = FakeRunner(
+        tmp_path / "artifacts", fail=("CALIBRATE", "verify")
+    )
+    orchestrator = _orchestrator(tmp_path, runner)
+
+    result = orchestrator.adopt_verified_existing(through_stage="SCAN")
+
+    assert result["results"][-1] == {
+        "stage": "CALIBRATE",
+        "status": "FAILED",
+        "phase": "verify-existing",
+    }
+    assert orchestrator.ledger.stage_status("CALIBRATE") == "FAILED"
+    assert ("CALIBRATE", "run") not in runner.calls
+    assert ("SCAN", "verify") not in runner.calls
+    assert not orchestrator.ledger.lease_path.exists()
+
+
 def test_repeated_execution_is_idempotent(tmp_path: Path) -> None:
     runner = FakeRunner(tmp_path / "artifacts")
     first = _orchestrator(tmp_path, runner)

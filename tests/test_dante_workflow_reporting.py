@@ -83,6 +83,17 @@ def test_report_is_derived_from_verified_receipts(tmp_path: Path) -> None:
     assert "diagnostic follow-up outputs" in report
     assert "No global-significance or discovery claim" in report
     assert "not a public real-time or operational alerting system" in report
+    assert report.count("`EXECUTED_AND_VERIFIED`") == 15
+
+
+def test_report_marks_adopted_stages_as_not_recomputed(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    orchestrator.adopt_verified_existing()
+
+    report = build_workflow_report(orchestrator)
+
+    assert report.count("`ADOPTED_VERIFIED_EXISTING`") == 16
+    assert "scientific calculation commands were not executed" in report
 
 
 def test_report_cannot_be_pass_when_workflow_is_incomplete(tmp_path: Path) -> None:

@@ -118,6 +118,7 @@ def build_workflow_report(orchestrator: WorkflowOrchestrator) -> str:
         "## Scientific scope",
         "",
         "- The artifact graph and all existing stage verifiers passed.",
+        "- Stages marked `ADOPTED_VERIFIED_EXISTING` were verifier-replayed from frozen artifacts; their scientific calculation commands were not executed by this workflow run.",
         "- Coincidence and PEM products remain diagnostic follow-up outputs.",
         "- No global-significance or discovery claim is made.",
         "- This workflow is not a public real-time or operational alerting system.",
@@ -133,16 +134,17 @@ def build_workflow_report(orchestrator: WorkflowOrchestrator) -> str:
             "",
             "## Stages",
             "",
-            "| Stage | Verdict | Duration (s) | Verified output |",
-            "|---|---:|---:|---|",
+            "| Stage | Verdict | Mode | Duration (s) | Verified output |",
+            "|---|---:|---|---:|---|",
         ]
     )
     for stage in release["stages"]:
         wrapper = stage.get("stage_receipt", {})
         target = wrapper.get("verified_run_dir") or wrapper.get("path") or ""
         link = f"[open](<{target}>)" if target else "n/a"
+        mode = wrapper.get("execution_mode", "UNKNOWN")
         lines.append(
-            f"| {stage['stage']} | PASS | {durations[stage['stage']]:.3f} | {link} |"
+            f"| {stage['stage']} | PASS | `{mode}` | {durations[stage['stage']]:.3f} | {link} |"
         )
 
     exclusions: list[tuple[str, str, Any]] = []

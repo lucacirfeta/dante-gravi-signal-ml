@@ -55,10 +55,10 @@
   <div>
     <p class="eyebrow">Execution</p>
     <h2 id="controls-heading">Independent worker</h2>
-    <p>Start and Resume launch the CLI outside the web process. Stop is cooperative and takes effect after the current atomic stage.</p>
+    <p>Start and Resume launch the CLI outside the web process. Adopt verified existing replays every frozen verifier without executing scientific calculation commands. Stop is cooperative and takes effect after the current atomic stage.</p>
   </div>
   <div class="button-row">
-    {% for action, label in [("preflight", "Run preflight"), ("start", "Start"), ("resume", "Resume"), ("stop", "Stop after stage"), ("verify", "Verify and refresh report")] %}
+    {% for action, label in [("preflight", "Run preflight"), ("start", "Start"), ("resume", "Resume"), ("adopt", "Adopt verified existing"), ("stop", "Stop after stage"), ("verify", "Verify and refresh report")] %}
       <form method="post" action="{{ url_for('action', action=action) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="run_key" value="{{ status.run_key }}">

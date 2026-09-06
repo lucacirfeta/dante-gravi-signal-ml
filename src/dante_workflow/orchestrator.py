@@ -355,22 +355,27 @@ class WorkflowOrchestrator:
         *,
         stage: str,
         attempt_id: str,
-        run_result: CommandResult,
+        run_result: CommandResult | None,
         verify_result: CommandResult,
         attempt_dir: Path,
+        execution_mode: str,
     ) -> Path:
         verifier_payload = self._json_object(verify_result.stdout)
         receipt = {
-            "schema_version": 1,
+            "schema_version": 2,
             "status": "VERIFIED_STAGE_RECEIPT",
             "workflow_id": self.spec.workflow_id,
             "run_key": self.run_key,
             "contract_digest": self.spec.contract_digest,
             "stage": stage,
             "attempt_id": attempt_id,
+            "execution_mode": execution_mode,
+            "run_command_executed": run_result is not None,
             "run_command_digest": self.commands[stage]["run"].command_digest,
             "verify_command_digest": self.commands[stage]["verify"].command_digest,
-            "run_exit_status": run_result.exit_status,
+            "run_exit_status": (
+                run_result.exit_status if run_result is not None else None
+            ),
             "verify_exit_status": verify_result.exit_status,
             "logs": {
                 name: {
@@ -394,6 +399,36 @@ class WorkflowOrchestrator:
         path = attempt_dir / "verified_stage_receipt.json"
         _atomic_json(path, receipt)
         return path
+
+    def _record_verified_outputs(
+        self,
+        *,
+        lease: ExecutionLease,
+        attempt: Any,
+        stage: str,
+        verify_result: CommandResult,
+        receipt_path: Path,
+    ) -> None:
+        expected = set(self.spec.stage(stage).expected_outputs)
+        if stage == "COHORT":
+            payload = self._json_object(verify_result.stdout)
+            if payload is None:
+                raise OrchestrationError("COHORT verifier did not emit JSON")
+            manifest = self.adapter.cohort_manifest_receipt_from_verifier(payload)
+            self.ledger.record_artifact(lease, attempt, manifest)
+            expected.remove("native_cohort_manifest")
+        if stage == "INDEX":
+            expected.remove("index_window_manifest")
+        for output in sorted(expected):
+            self.ledger.record_artifact(
+                lease,
+                attempt,
+                ArtifactReceipt(
+                    name=output,
+                    path=str(receipt_path),
+                    sha256=_sha256_file(receipt_path),
+                ),
+            )
 
     def _execute_stage(self, lease: ExecutionLease, stage: str) -> dict[str, Any]:
         if self.ledger.stage_status(stage) == "VERIFIED":
@@ -438,27 +473,15 @@ class WorkflowOrchestrator:
                 run_result=run_result,
                 verify_result=verify_result,
                 attempt_dir=attempt_dir,
+                execution_mode="EXECUTED_AND_VERIFIED",
             )
-            expected = set(self.spec.stage(stage).expected_outputs)
-            if stage == "COHORT":
-                payload = self._json_object(verify_result.stdout)
-                if payload is None:
-                    raise OrchestrationError("COHORT verifier did not emit JSON")
-                manifest = self.adapter.cohort_manifest_receipt_from_verifier(payload)
-                self.ledger.record_artifact(lease, attempt, manifest)
-                expected.remove("native_cohort_manifest")
-            if stage == "INDEX":
-                expected.remove("index_window_manifest")
-            for output in sorted(expected):
-                self.ledger.record_artifact(
-                    lease,
-                    attempt,
-                    ArtifactReceipt(
-                        name=output,
-                        path=str(receipt_path),
-                        sha256=_sha256_file(receipt_path),
-                    ),
-                )
+            self._record_verified_outputs(
+                lease=lease,
+                attempt=attempt,
+                stage=stage,
+                verify_result=verify_result,
+                receipt_path=receipt_path,
+            )
             self.ledger.finish_attempt(
                 lease, attempt, exit_status=0, verifier_verdict="PASS"
             )
@@ -481,6 +504,132 @@ class WorkflowOrchestrator:
                         f"stage {stage} failed and terminal state could not be persisted"
                     ) from persistence_exc
             raise OrchestrationError(f"stage {stage} orchestration failed") from exc
+
+    def _adopt_verified_stage(
+        self, lease: ExecutionLease, stage: str
+    ) -> dict[str, Any]:
+        if self.ledger.stage_status(stage) == "VERIFIED":
+            for output in self.spec.stage(stage).expected_outputs:
+                self.ledger.latest_verified_artifact(stage, output)
+            return {"stage": stage, "status": "SKIPPED_VERIFIED"}
+        attempt = self.ledger.start_attempt(lease, stage)
+        attempt_dir = self.run_dir / "attempts" / stage.lower() / attempt.attempt_id
+        terminal = False
+        try:
+            attempt_dir.mkdir(parents=True, exist_ok=False)
+            if stage == "INDEX":
+                self._record_index_window_manifest(lease, attempt)
+            _write_text(
+                attempt_dir / "run.stdout.txt",
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "status": "RUN_COMMAND_NOT_EXECUTED",
+                        "reason": "ADOPT_VERIFIED_EXISTING",
+                    },
+                    sort_keys=True,
+                )
+                + "\n",
+            )
+            _write_text(attempt_dir / "run.stderr.txt", "")
+            verify_result = self.runner(self.commands[stage]["verify"])
+            _write_text(attempt_dir / "verify.stdout.txt", verify_result.stdout)
+            _write_text(attempt_dir / "verify.stderr.txt", verify_result.stderr)
+            if verify_result.exit_status != 0:
+                self.ledger.finish_attempt(
+                    lease,
+                    attempt,
+                    exit_status=verify_result.exit_status,
+                    verifier_verdict="FAIL",
+                )
+                terminal = True
+                return {
+                    "stage": stage,
+                    "status": "FAILED",
+                    "phase": "verify-existing",
+                }
+            receipt_path = self._stage_receipt(
+                stage=stage,
+                attempt_id=attempt.attempt_id,
+                run_result=None,
+                verify_result=verify_result,
+                attempt_dir=attempt_dir,
+                execution_mode="ADOPTED_VERIFIED_EXISTING",
+            )
+            self._record_verified_outputs(
+                lease=lease,
+                attempt=attempt,
+                stage=stage,
+                verify_result=verify_result,
+                receipt_path=receipt_path,
+            )
+            self.ledger.finish_attempt(
+                lease, attempt, exit_status=0, verifier_verdict="PASS"
+            )
+            terminal = True
+            return {"stage": stage, "status": "ADOPTED_VERIFIED_EXISTING"}
+        except KeyboardInterrupt:
+            self.ledger.interrupt_attempt(
+                lease, attempt, reason="CONTROLLED_WORKER_INTERRUPT"
+            )
+            terminal = True
+            raise
+        except Exception as exc:
+            if not terminal:
+                try:
+                    self.ledger.finish_attempt(
+                        lease, attempt, exit_status=-1, verifier_verdict="FAIL"
+                    )
+                except Exception as persistence_exc:
+                    raise OrchestrationError(
+                        f"stage {stage} failed and terminal state could not be persisted"
+                    ) from persistence_exc
+            raise OrchestrationError(
+                f"stage {stage} existing-artifact adoption failed"
+            ) from exc
+
+    def adopt_verified_existing(
+        self, *, through_stage: str | None = None
+    ) -> dict[str, Any]:
+        """Adopt existing artifacts only after replaying each frozen verifier."""
+
+        ordered = self.spec.topological_stage_names()
+        if through_stage is not None and through_stage not in ordered:
+            raise OrchestrationError(f"unknown through stage: {through_stage}")
+        stop = ordered.index(through_stage) + 1 if through_stage else len(ordered)
+        selected = ordered[:stop]
+        lease = self.ledger.acquire_lease()
+        results: list[dict[str, Any]] = []
+        stopped = False
+        try:
+            for stage in selected:
+                if self.stop_requested(lease):
+                    stopped = True
+                    break
+                result = self._adopt_verified_stage(lease, stage)
+                results.append(result)
+                if result["status"] == "FAILED":
+                    break
+                if self.stop_requested(lease):
+                    stopped = True
+                    break
+        finally:
+            if self.ledger.lease_path.is_file():
+                try:
+                    self.ledger.release_lease(lease)
+                except InvalidTransitionError:
+                    self.ledger.abandon_lease(lease)
+            self.clear_stop_request()
+        return {
+            "schema_version": 1,
+            "status": (
+                "WORKFLOW_ADOPTION_STOPPED" if stopped else "WORKFLOW_ADOPTION"
+            ),
+            "workflow_id": self.spec.workflow_id,
+            "run_key": self.run_key,
+            "results": results,
+            "workflow_status": self.status(),
+        }
 
     def execute(
         self,

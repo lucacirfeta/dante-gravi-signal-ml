@@ -425,7 +425,7 @@ class WorkflowUIController:
         }
 
     def launch(self, action: str) -> dict[str, Any]:
-        if action not in {"start", "resume", "preflight", "verify"}:
+        if action not in {"start", "resume", "adopt", "preflight", "verify"}:
             raise UIControlError("unsupported worker action")
         with self._lock:
             worker = self.worker_state()
@@ -471,10 +471,14 @@ class WorkflowUIController:
             finally:
                 os.close(descriptor)
             selection = self.selection
+            worker_command = {
+                "preflight": "preflight",
+                "adopt": "adopt-verified",
+            }.get(action, "report")
             command = [
                 executable,
                 str(selection.repository_root / "scripts/run_dante_workflow.py"),
-                "preflight" if action == "preflight" else "report",
+                worker_command,
                 "--config",
                 str(selection.config_path),
                 "--repository-root",

@@ -113,7 +113,7 @@ def register_routes(app) -> None:
                 if action == "stop":
                     controller.request_stop()
                     message = "Stop requested after the current atomic stage."
-                elif action in {"start", "resume", "preflight", "verify"}:
+                elif action in {"start", "resume", "adopt", "preflight", "verify"}:
                     result = controller.launch(action)
                     message = f"Independent worker launched (PID {result['pid']})."
                 else:
