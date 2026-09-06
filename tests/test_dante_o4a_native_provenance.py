@@ -59,6 +59,7 @@ def test_git_attributes_extension_is_exactly_allowlisted(
     allowed = (
         historical
         + b"config/dante_workflow_public_smoke_v1.json text eol=lf\n"
+        + b"tests/test_dante_o4a_final_impact_attribution.py text eol=lf\n"
     )
     path = tmp_path / ".gitattributes"
     path.write_bytes(allowed)

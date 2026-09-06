@@ -32,6 +32,7 @@ GIT_ATTRIBUTES_ALLOWED_ADDITIONS = frozenset(
     {
         "config/dante_o4a_final_impact_attribution_v1.json text eol=lf",
         "config/dante_workflow_public_smoke_v1.json text eol=lf",
+        "tests/test_dante_o4a_final_impact_attribution.py text eol=lf",
     }
 )
 

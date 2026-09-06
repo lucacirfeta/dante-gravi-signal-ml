@@ -27,6 +27,7 @@ docs/DANTE_LIGHT_PROSPECTIVE_PROTOCOL.md text eol=lf
 scripts/*.py text eol=lf
 src/**/*.py text eol=lf
 tests/test_dante_o4a_corrected_*.py text eol=lf
+tests/test_dante_o4a_final_impact_attribution.py text eol=lf
 docs/DANTE_LIGHT*.md text eol=lf
 data/production/aggregated/*.json binary
 data/production/aggregated/*.csv binary
