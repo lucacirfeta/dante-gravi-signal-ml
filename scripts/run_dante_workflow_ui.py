@@ -12,7 +12,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.dante_workflow.ui import UISettings, create_app  # noqa: E402
+from src.dante_workflow.ui import (  # noqa: E402
+    PublicSmokeUISettings,
+    UISettings,
+    create_app,
+    create_public_smoke_app,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -31,6 +36,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--allow-raw-root", action="append", type=Path, default=[])
     parser.add_argument("--allow-cache-root", action="append", type=Path, default=[])
     parser.add_argument("--worker-python", default=sys.executable)
+    parser.add_argument(
+        "--public-smoke",
+        action="store_true",
+        help="open the bounded public technical-smoke controller",
+    )
     parser.add_argument("--host", default="127.0.0.1", choices=("127.0.0.1", "::1"))
     parser.add_argument("--port", type=int, default=8765)
     return parser
@@ -43,19 +53,29 @@ def main(argv: list[str] | None = None) -> int:
     except ImportError:
         print("Install requirements-ui.txt before launching the UI.", file=sys.stderr)
         return 2
-    app = create_app(
-        UISettings(
-            repository_root=args.repository_root,
-            config_path=args.config,
-            raw_root=args.raw_root,
-            cache_root=args.cache_root,
-            workflow_root=args.workflow_root,
-            allowed_raw_roots=tuple(args.allow_raw_root) or (args.raw_root,),
-            allowed_cache_roots=tuple(args.allow_cache_root) or (args.cache_root,),
-            worker_python=args.worker_python,
+    if args.public_smoke:
+        app = create_public_smoke_app(
+            PublicSmokeUISettings(
+                repository_root=args.repository_root,
+                worker_python=args.worker_python,
+            )
         )
-    )
-    print(f"DANTE workflow UI: http://{args.host}:{args.port}")
+        label = "DANTE public technical smoke UI"
+    else:
+        app = create_app(
+            UISettings(
+                repository_root=args.repository_root,
+                config_path=args.config,
+                raw_root=args.raw_root,
+                cache_root=args.cache_root,
+                workflow_root=args.workflow_root,
+                allowed_raw_roots=tuple(args.allow_raw_root) or (args.raw_root,),
+                allowed_cache_roots=tuple(args.allow_cache_root) or (args.cache_root,),
+                worker_python=args.worker_python,
+            )
+        )
+        label = "DANTE workflow UI"
+    print(f"{label}: http://{args.host}:{args.port}")
     serve(app, host=args.host, port=args.port, threads=4)
     return 0
 

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}DANTE public technical smoke{% endblock %}
+{% block content %}
+<section class="summary-grid" aria-label="Technical smoke summary">
+  <article class="summary-card">
+    <span>Scope</span>
+    <strong>Technical smoke</strong>
+    <small>not a corrected O4a release</small>
+  </article>
+  <article class="summary-card">
+    <span>Device</span>
+    <strong>{{ status.device|upper }}</strong>
+    <small>CPU and CUDA have separate identities</small>
+  </article>
+  <article class="summary-card">
+    <span>Worker</span>
+    <strong class="state state-{{ status.worker.state|lower }}">{{ status.worker.state }}</strong>
+    <small>{% if status.worker.pid %}PID {{ status.worker.pid }}{% else %}detached runner{% endif %}</small>
+  </article>
+  <article class="summary-card">
+    <span>Receipt</span>
+    <strong class="state state-{{ 'verified' if status.status == 'VERIFIED_TECHNICAL_SMOKE' else 'running' }}">{{ status.status }}</strong>
+    <small>hash-checked before display</small>
+  </article>
+</section>
+
+<section class="panel controls" aria-labelledby="smoke-controls-heading">
+  <div>
+    <p class="eyebrow">Public reproduction</p>
+    <h2 id="smoke-controls-heading">Two-window bounded replay</h2>
+    <p>This launches the same CLI runner in a separate process. It downloads public inputs, reuses no private raw path, and never edits a scientific contract.</p>
+  </div>
+  <div class="button-row">
+    <a class="button secondary" href="{{ url_for('dashboard', device='cpu') }}">CPU</a>
+    <a class="button secondary" href="{{ url_for('dashboard', device='cuda') }}">CUDA</a>
+    {% for action, label in [('run', 'Run or resume'), ('verify', 'Verify receipt')] %}
+      <form method="post" action="{{ url_for('action', action=action) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="device" value="{{ status.device }}">
+        <input type="hidden" name="run_key" value="{{ status.run_key }}">
+        <button type="submit" class="primary">{{ label }}</button>
+      </form>
+    {% endfor %}
+    {% if status.status == 'VERIFIED_TECHNICAL_SMOKE' %}
+      <a class="button secondary" href="{{ url_for('receipt', device=status.device) }}">Open verified receipt</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <div><p class="eyebrow">Identity</p><h2>Content-addressed run</h2></div>
+    <p>Reloading the page never starts work. A stale form cannot launch a changed identity.</p>
+  </div>
+  <p class="mono">{{ status.run_key }}</p>
+  {% if status.receipt_sha256 %}<p>Receipt SHA-256: <span class="mono">{{ status.receipt_sha256 }}</span></p>{% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-heading">
+    <div><p class="eyebrow">Boundary</p><h2>What this proves</h2></div>
+  </div>
+  <p>PASS confirms public acquisition, the existing canonical/shared scoring comparison, durable retry, and receipt verification on two fixed background windows. It does not establish corrected O4a classifications, global significance, real-time operation, or full-run performance.</p>
+</section>
+{% endblock %}

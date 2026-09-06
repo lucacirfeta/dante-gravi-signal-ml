@@ -32,7 +32,13 @@ from ..reporting import WorkflowReportingError, verify_report_file
 
 def spawn_worker(command, **options):
     """Separate injectable launch boundary; never patch the global subprocess module."""
-    return subprocess.Popen(command, **options)
+    process = subprocess.Popen(command, **options)
+    threading.Thread(
+        target=process.wait,
+        name=f"dante-worker-reaper-{process.pid}",
+        daemon=True,
+    ).start()
+    return process
 
 
 class UIControlError(RuntimeError):

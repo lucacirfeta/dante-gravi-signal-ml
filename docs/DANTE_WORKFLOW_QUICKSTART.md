@@ -51,6 +51,22 @@ receipts are rechecked before returning `SKIPPED_VERIFIED_TECHNICAL_SMOKE`.
 Changed artifacts fail closed; do not delete or hand-edit receipts to bypass it.
 Failure details are in the attempt's `failure.json`, `stdout.log`, and `stderr.log`.
 
+## Optional local UI for the same smoke
+
+Install the optional UI lock into the same isolated environment, then launch:
+
+```shell
+python -m pip install -r requirements-ui.txt
+python scripts/run_dante_workflow_ui.py --public-smoke
+```
+
+Open `http://127.0.0.1:8765`, select CPU or CUDA, and use **Run or resume**.
+The web handler starts the exact CLI command above as a detached worker; closing
+the browser or UI server does not terminate it. Reloading only reads and
+hash-verifies the receipt. The smoke UI does not request private raw/cache paths
+and cannot edit scientific configuration. Use the default UI launcher without
+`--public-smoke` only for the full frozen 15-stage O4a workflow.
+
 This PASS is not a product release receipt, global significance test, full raw
 archive acquisition test, or packaged CLI/UI parity acceptance. The corrected
 O4a adapter still requires the full frozen raw archive and canonical runtime.
