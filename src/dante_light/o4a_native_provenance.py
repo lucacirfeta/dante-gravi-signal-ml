@@ -28,6 +28,12 @@ SOURCE_HASH_SEMANTICS = "utf8_lf_v1"
 RECONCILIATION_DIGEST = (
     "c1430f4c5cf23345e91d022d152d8fd82265264f987d3a19f5f1700e65c2827d"
 )
+GIT_ATTRIBUTES_ALLOWED_ADDITIONS = frozenset(
+    {
+        "config/dante_o4a_final_impact_attribution_v1.json text eol=lf",
+        "config/dante_workflow_public_smoke_v1.json text eol=lf",
+    }
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -60,6 +66,76 @@ def _require_reference(root: Path, reference: Mapping[str, Any], label: str) -> 
         raise ContractError(f"native provenance {label} escapes the repository") from exc
     if not path.is_file() or sha256_file(path) != str(reference["sha256"]):
         raise ContractError(f"native provenance {label} digest mismatch: {path}")
+    return path
+
+
+def _policy_rules(blob: bytes) -> set[str]:
+    try:
+        text = blob.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise ContractError("native provenance git attributes are not UTF-8") from exc
+    return {
+        line.strip()
+        for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+
+
+def _require_git_attributes_policy(
+    root: Path, reference: Mapping[str, Any]
+) -> Path:
+    """Accept the frozen policy bytes or the exact approved additive extension."""
+
+    path = (root / str(reference["path"])).resolve()
+    try:
+        relative = path.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise ContractError("native provenance git attributes escapes repository") from exc
+    if not path.is_file():
+        raise ContractError(f"native provenance git attributes is absent: {path}")
+    current = path.read_bytes()
+    expected_sha256 = str(reference["sha256"])
+    if hashlib.sha256(current).hexdigest() == expected_sha256:
+        return path
+
+    try:
+        commits = subprocess.check_output(
+            ["git", "log", "--format=%H", "--", relative],
+            cwd=root,
+            text=True,
+            encoding="utf-8",
+        ).splitlines()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ContractError(
+            "native provenance historical git attributes are unavailable"
+        ) from exc
+    historical: bytes | None = None
+    for commit in commits:
+        try:
+            candidate = subprocess.check_output(
+                ["git", "show", f"{commit}:{relative}"], cwd=root
+            )
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise ContractError(
+                "native provenance historical git attributes are unavailable"
+            ) from exc
+        if hashlib.sha256(candidate).hexdigest() == expected_sha256:
+            historical = candidate
+            break
+    if historical is None:
+        raise ContractError(
+            "native provenance frozen git attributes bytes are not retained"
+        )
+
+    historical_rules = _policy_rules(historical)
+    current_rules = _policy_rules(current)
+    additions = current_rules - historical_rules
+    if not historical_rules.issubset(current_rules) or not additions.issubset(
+        GIT_ATTRIBUTES_ALLOWED_ADDITIONS
+    ):
+        raise ContractError(
+            "native provenance git attributes change is not an approved additive extension"
+        )
     return path
 
 
@@ -96,9 +172,7 @@ def validate_reconciliation(
     if boundary != expected_boundary:
         raise ContractError("native provenance reconciliation scientific boundary changed")
 
-    attributes_path = _require_reference(
-        root, value["git_attributes"], "git attributes"
-    )
+    attributes_path = _require_git_attributes_policy(root, value["git_attributes"])
     if "src/**/*.py text eol=lf" not in attributes_path.read_text(encoding="utf-8"):
         raise ContractError("native provenance LF policy is absent")
 
