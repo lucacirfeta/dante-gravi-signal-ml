@@ -48,6 +48,25 @@ identity prevents reuse of evidence bound to the non-portable reference.
 - Optional Waitress UI startup/reconnect benchmark: PASS, 15 stages, identical
   run key/directory, worker lease survived both UI exits.
 
+## Packaged CLI/UI parity follow-up
+
+The packaged public-smoke UI was then tested from a second fresh HTTPS clone at
+commit `143b7539a23c216f323402a2fa2e36a29322c907`, using the same isolated
+Python 3.11 environment. `pip check` passed and the complete workflow test set
+reported **103 passed, 1 Windows-only skip** in that clone; the equivalent
+Windows suite reported **104 passed**.
+
+The CLI first produced run key
+`1e35367aa47cab5229e2722d47f99461905cf48d91ebe401f1ce07c5eb15853e`.
+Independent CLI verification and repetition both returned
+`SKIPPED_VERIFIED_TECHNICAL_SMOKE`. The actual Waitress UI then executed both
+Run/resume and Verify through HTTP POSTs. Both detached workers exited, the UI
+reported `VERIFIED_TECHNICAL_SMOKE`, and the receipt returned by the UI was
+byte-identical to the CLI receipt, SHA-256
+`e91c744891dc70ff2aa20e78c11b2f1f5ae4342a445d6a6a9bba90a479308e58`.
+
 The smoke receipt remains only in the isolated clone because it includes local
-absolute evidence paths. Its content hash is recorded here. Packaged UI control
-of this public smoke and the P6 human usability decision remain open.
+absolute evidence paths. Its bounded acceptance record is versioned at
+`artifacts/dante_workflow/public_smoke_ui_checkpoint_2026-09-06.json`.
+P5 is complete. P6 still requires the full corrected-O4a release receipt and
+human confirmation that the packaged path needs no undocumented expert choice.

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "status": "PASS_PACKAGED_PUBLIC_SMOKE_UI_CLI_PARITY",
+  "scope": "technical_public_replay_not_corrected_o4a_release",
+  "source_commit": "143b7539a23c216f323402a2fa2e36a29322c907",
+  "branch": "codex/dante-workflow-productization-v1",
+  "fresh_https_clone": true,
+  "fresh_clone_path": "/home/atafe/.cache/dante-p5-ui-20260906-yL9QvD",
+  "environment": {
+    "platform": "WSL",
+    "python": "3.11.15",
+    "requirements_cpu_sha256": "bcb1ae7155654a8b3ea440a65ea54b17711cb57d9a62bb3e0e2cc2aff36b70b1",
+    "pip_check": "PASS",
+    "ui_server": "Waitress",
+    "device": "cpu"
+  },
+  "run_key": "1e35367aa47cab5229e2722d47f99461905cf48d91ebe401f1ce07c5eb15853e",
+  "receipt_path": "/home/atafe/.cache/dante-p5-ui-20260906-yL9QvD/artifacts/dante_workflow/public_smoke_v1/1e35367aa47cab5229e2722d47f99461905cf48d91ebe401f1ce07c5eb15853e/technical_receipt.json",
+  "receipt_sha256": "e91c744891dc70ff2aa20e78c11b2f1f5ae4342a445d6a6a9bba90a479308e58",
+  "receipt_bytes": 5936,
+  "windows": 2,
+  "drops": 0,
+  "failures": [],
+  "max_abs_score_delta": 0.0,
+  "existing_score_atol": 2e-7,
+  "disposition_mismatches": 0,
+  "cli_initial_run": "PASS_TECHNICAL_SMOKE",
+  "cli_verify": "SKIPPED_VERIFIED_TECHNICAL_SMOKE",
+  "cli_repeat": "SKIPPED_VERIFIED_TECHNICAL_SMOKE",
+  "ui_run_action_http_status": 302,
+  "ui_verify_action_http_status": 302,
+  "ui_final_status": "VERIFIED_TECHNICAL_SMOKE",
+  "ui_worker_final_state": "EXITED",
+  "ui_receipt_byte_equal_to_cli": true,
+  "security_headers": {
+    "cache_control": "no-store",
+    "content_security_policy_present": true
+  },
+  "tests": {
+    "windows": {
+      "passed": 104,
+      "skipped": 0
+    },
+    "fresh_clone_wsl": {
+      "passed": 103,
+      "skipped": 1
+    },
+    "fresh_clone_skip_reason": "Windows-only lifecycle assertion"
+  },
+  "full_15_stage_scientific_validation": false,
+  "corrected_o4a_release_receipt": false,
+  "human_usability_acceptance": false,
+  "discovery_or_global_significance_claim": false
+}

@@ -24,12 +24,12 @@ validated is a separate scientific checkpoint and stops execution.
 
 | Phase | Status | Remaining acceptance |
 |---|---|---|
-| P1 | Implemented, regression-tested | Clean-clone/recovery acceptance in P5 |
-| P2 | Implemented, regression-tested | Public end-to-end acceptance in P5 |
-| P3 | Implemented, regression-tested | Public evidence graph acceptance in P5 |
+| P1 | Implemented; clean-clone/recovery acceptance PASS | None |
+| P2 | Implemented; bounded public end-to-end acceptance PASS | Full O4a release in P6 |
+| P3 | Implemented; bounded public evidence acceptance PASS | Full O4a release in P6 |
 | P4.1 | Approved and frozen (`176cf48`) | None |
-| P4.2 | Read/control UI implemented; component and process tests | Packaged end-to-end CLI/UI parity in P5/P6 |
-| P5 | Implemented and regression-tested | Fresh-clone CLI/UI parity execution |
+| P4.2 | Read/control UI and public-smoke UI implemented; process tests PASS | Human usability acceptance in P6 |
+| P5 | PASS: fresh install, recovery matrix, fresh-clone CLI/UI parity | None |
 | P6 | Not started | Release receipt, human acceptance, separate paper branch |
 
 Evidence and explicit limitations:
@@ -39,6 +39,8 @@ was approved (it is not a complete scientific O4a rerun):
 `docs/DANTE_WORKFLOW_CLEAN_CLONE_SCOPE_CHECKPOINT_2026-09-05.md`.
 Public technical smoke evidence:
 `docs/DANTE_WORKFLOW_PUBLIC_SMOKE_RESULT_2026-09-05.md`.
+Packaged fresh-clone CLI/UI parity evidence:
+`artifacts/dante_workflow/public_smoke_ui_checkpoint_2026-09-06.json`.
 This is not a ready-to-use product release. Scientific O4a artifacts are not
 rerun, promoted, or reinterpreted by this checkpoint.
 

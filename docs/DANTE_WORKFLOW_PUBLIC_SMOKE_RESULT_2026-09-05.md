@@ -37,16 +37,21 @@ to its existing LF attributes; no versioned scientific content changed.
 The failed first launch is not a successful reproduction. No verifier bypass
 or change to numerical tolerance was used to obtain the later PASS.
 
-## Remaining work
+## Packaged UI follow-up
 
 Regression evidence: Windows **96 passed** (21.30 s); WSL **95 passed,
 1 Windows-only skip** (48.94 s), all `test_dante_workflow*.py`.
 The targeted WSL smoke/recovery/state/orchestrator suite passed all 39 tests.
 Ruff and `git diff --check` passed.
 
-- Packaged UI/CLI acceptance, with the technical smoke clearly distinguished
-  from the full scientific O4a adapter.
-- Human acceptance and final resoconto. No paper work starts from this checkpoint.
+Fresh-clone packaged CLI/UI parity passed on CPU at commit `143b753`: the actual
+Waitress UI invoked the same runner through detached Run/resume and Verify
+actions and returned the byte-identical CLI receipt. Evidence is versioned in
+`artifacts/dante_workflow/public_smoke_ui_checkpoint_2026-09-06.json`.
+
+Remaining work is P6 only: full corrected-O4a release verification, human
+usability acceptance, and the final resoconto. No paper work starts from this
+checkpoint.
 
 Fresh CPU installation and the expanded storage-boundary recovery matrix passed
 on 2026-09-06. Their separate evidence is recorded in
