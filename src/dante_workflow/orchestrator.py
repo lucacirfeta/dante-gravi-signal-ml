@@ -8,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 from typing import Any
 from uuid import uuid4
 
@@ -264,7 +265,7 @@ class WorkflowOrchestrator:
     ) -> "WorkflowOrchestrator":
         return cls(
             spec=spec,
-            adapter=O4aCorrectedAdapter(spec),
+            adapter=O4aCorrectedAdapter(spec, python_executable=sys.executable),
             paths=paths,
             runner=runner,
             source_identity=source_identity,
