@@ -12,6 +12,7 @@ config/dante_light_v8_1_*.json text eol=lf
 config/dante_light_prefilter_*.json text eol=lf
 config/dante_light_prefilter_*.jsonl text eol=lf
 config/dante_o4a_corrected_*.json text eol=lf
+config/dante_o4a_final_impact_attribution_v1.json text eol=lf
 # These two shared inputs are hashed by corrected-O4a protocol references.
 config/reference_artifacts.json text eol=lf
 config.yaml text eol=lf

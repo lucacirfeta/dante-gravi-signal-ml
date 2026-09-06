@@ -1,6 +1,6 @@
 {
   "adapter": "o4a_corrected",
-  "contract_digest": "e6fc50027203963fc134dbd978a709b147520a9f856395785a37e4af0bb95650",
+  "contract_digest": "d1afa8d7100573d8d280bdaa0b37c3be2e1b8e13346d27d55bc132f38d513d00",
   "policies": {
     "hide_outcomes_until_verified": true,
     "new_run_on_contract_change": true,
@@ -19,7 +19,7 @@
     },
     "final_impact_attribution": {
       "path": "config/dante_o4a_final_impact_attribution_v1.json",
-      "sha256": "4a4126ae4504446b555af28893dcc5722c4c7b47e011cef52eab0b73cb465915"
+      "sha256": "ce409f03ac3cc702a5bcf15d2ea92984d36b02d95196a3625fd0e9152fd69c61"
     },
     "native_calibration": {
       "path": "config/dante_o4a_corrected_native_calibration_v2.json",

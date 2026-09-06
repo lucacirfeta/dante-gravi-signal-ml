@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import hashlib
 import json
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from src.dante_workflow.schema import (
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config/dante_workflow_productization_v1.json"
+FINAL_IMPACT_CONFIG = ROOT / "config/dante_o4a_final_impact_attribution_v1.json"
 
 
 def _payload() -> dict:
@@ -60,6 +62,19 @@ def test_frozen_o4a_workflow_validates_with_exact_stage_graph() -> None:
         spec.scientific_configs["protocol"] = spec.scientific_configs[  # type: ignore[index]
             "runtime"
         ]
+
+
+def test_final_impact_contract_is_bound_to_portable_lf_bytes() -> None:
+    payload = _payload()
+    reference = payload["scientific_configs"]["final_impact_attribution"]
+    content = FINAL_IMPACT_CONFIG.read_bytes()
+
+    assert b"\r\n" not in content
+    assert hashlib.sha256(content).hexdigest() == reference["sha256"]
+    assert (
+        "config/dante_o4a_final_impact_attribution_v1.json text eol=lf"
+        in (ROOT / ".gitattributes").read_text(encoding="utf-8").splitlines()
+    )
 
 
 def test_native_calibration_uses_digested_index_window_manifest_gate() -> None:
