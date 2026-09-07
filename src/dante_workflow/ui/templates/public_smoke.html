@@ -1,65 +1,160 @@
 {% extends "base.html" %}
 {% block title %}DANTE public technical smoke{% endblock %}
 {% block content %}
+<section class="intro panel" aria-labelledby="smoke-heading">
+  <p class="eyebrow">Guided public test</p>
+  <h2 id="smoke-heading">Verify that DANTE can acquire and process two public windows</h2>
+  <p>This bounded test downloads public inputs, runs two existing scoring engines, compares their outputs, and creates a verification receipt and a readable report. It does not rerun the corrected O4a analysis.</p>
+</section>
+
 <section class="summary-grid" aria-label="Technical smoke summary">
   <article class="summary-card">
-    <span>Scope</span>
-    <strong>Technical smoke</strong>
-    <small>not a corrected O4a release</small>
+    <span>Selected device</span>
+    <strong id="selected-device">{{ status.device|upper }}</strong>
+    <small>{{ "Recommended for this machine" if status.device == status.hardware.recommended_device else "Manual selection" }}</small>
   </article>
   <article class="summary-card">
-    <span>Device</span>
-    <strong>{{ status.device|upper }}</strong>
-    <small>CPU and CUDA have separate identities</small>
+    <span>Process</span>
+    <strong id="worker-state" class="state state-{{ status.worker.state|lower }}">{{ status.worker.state }}</strong>
+    <small>{% if status.worker.pid %}Worker PID {{ status.worker.pid }}{% else %}No active worker{% endif %}</small>
   </article>
   <article class="summary-card">
-    <span>Worker</span>
-    <strong class="state state-{{ status.worker.state|lower }}">{{ status.worker.state }}</strong>
-    <small>{% if status.worker.pid %}PID {{ status.worker.pid }}{% else %}detached runner{% endif %}</small>
+    <span>Current phase</span>
+    <strong id="current-phase">{{ status.progress.label }}</strong>
+    <small id="phase-detail">{{ status.progress.detail }}</small>
   </article>
   <article class="summary-card">
-    <span>Receipt</span>
-    <strong class="state state-{{ 'verified' if status.status == 'VERIFIED_TECHNICAL_SMOKE' else 'running' }}">{{ status.status }}</strong>
-    <small>hash-checked before display</small>
+    <span>Final verification</span>
+    <strong id="smoke-status" data-status="{{ status.status }}" class="state state-{{ 'verified' if status.status == 'VERIFIED_TECHNICAL_SMOKE' else 'running' }}">
+      {{ "Verified (PASS)" if status.status == "VERIFIED_TECHNICAL_SMOKE" else "Pending" }}
+    </strong>
+    <small>PASS appears only after hash verification</small>
   </article>
 </section>
 
-<section class="panel controls" aria-labelledby="smoke-controls-heading">
-  <div>
-    <p class="eyebrow">Public reproduction</p>
-    <h2 id="smoke-controls-heading">Two-window bounded replay</h2>
-    <p>This launches the same CLI runner in a separate process. It downloads public inputs, reuses no private raw path, and never edits a scientific contract.</p>
+<section class="panel" aria-labelledby="device-heading">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Step 1</p>
+      <h2 id="device-heading">Choose the compute device</h2>
+    </div>
+    <span class="recommendation">{{ status.hardware.reason }}{% if status.hardware.gpu_name %} Detected: {{ status.hardware.gpu_name }}.{% endif %}</span>
   </div>
-  <div class="button-row">
-    <a class="button secondary" href="{{ url_for('dashboard', device='cpu') }}">CPU</a>
-    <a class="button secondary" href="{{ url_for('dashboard', device='cuda') }}">CUDA</a>
-    {% for action, label in [('run', 'Run or resume'), ('verify', 'Verify receipt')] %}
-      <form method="post" action="{{ url_for('action', action=action) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <input type="hidden" name="device" value="{{ status.device }}">
-        <input type="hidden" name="run_key" value="{{ status.run_key }}">
-        <button type="submit" class="primary">{{ label }}</button>
-      </form>
-    {% endfor %}
-    {% if status.status == 'VERIFIED_TECHNICAL_SMOKE' %}
-      <a class="button secondary" href="{{ url_for('receipt', device=status.device) }}">Open verified receipt</a>
+  <div class="device-grid">
+    <a class="device-option {{ 'selected' if status.device == 'cpu' }}" href="{{ url_for('dashboard', device='cpu') }}" aria-current="{{ 'true' if status.device == 'cpu' else 'false' }}">
+      <strong>CPU</strong>
+      {% if status.hardware.recommended_device == 'cpu' %}<span class="recommended-badge">Recommended</span>{% endif %}
+      <small>Most compatible. Use when CUDA is unavailable; normally slower.</small>
+    </a>
+    {% if status.hardware.cuda_available %}
+      <a class="device-option {{ 'selected' if status.device == 'cuda' }}" href="{{ url_for('dashboard', device='cuda') }}" aria-current="{{ 'true' if status.device == 'cuda' else 'false' }}">
+        <strong>CUDA GPU</strong>
+        {% if status.hardware.recommended_device == 'cuda' %}<span class="recommended-badge">Recommended</span>{% endif %}
+        <small>Uses the detected compatible NVIDIA GPU and is normally faster.</small>
+      </a>
+    {% else %}
+      <span class="device-option disabled" aria-disabled="true">
+        <strong>CUDA GPU</strong>
+        <span class="unavailable-badge">Unavailable</span>
+        <small>No compatible CUDA device was detected in this environment.</small>
+      </span>
     {% endif %}
   </div>
 </section>
 
-<section class="panel">
-  <div class="panel-heading">
-    <div><p class="eyebrow">Identity</p><h2>Content-addressed run</h2></div>
-    <p>Reloading the page never starts work. A stale form cannot launch a changed identity.</p>
+<section class="panel controls start-panel" aria-labelledby="start-heading">
+  <div>
+    <p class="eyebrow">Step 2</p>
+    <h2 id="start-heading">Start or resume the test</h2>
+    <p>The worker runs independently from this page. Closing the browser does not stop it. If interrupted, the same button resumes from outputs that already passed verification.</p>
   </div>
-  <p class="mono">{{ status.run_key }}</p>
-  {% if status.receipt_sha256 %}<p>Receipt SHA-256: <span class="mono">{{ status.receipt_sha256 }}</span></p>{% endif %}
+  <div class="button-row action-row">
+    <form method="post" action="{{ url_for('action', action='run') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="device" value="{{ status.device }}">
+      <input type="hidden" name="run_key" value="{{ status.run_key }}">
+      {% if status.worker.state == 'ACTIVE' %}
+        <button type="submit" class="primary large-action" disabled>Test running</button>
+      {% elif status.status == 'VERIFIED_TECHNICAL_SMOKE' %}
+        <button type="submit" class="secondary large-action">Recheck completed test</button>
+      {% elif status.worker.state == 'EXITED' or status.progress.status in ['INTERRUPTED', 'FAILED'] %}
+        <button type="submit" class="primary large-action">Resume test</button>
+      {% else %}
+        <button type="submit" class="primary large-action">Start test</button>
+      {% endif %}
+    </form>
+    {% if status.status == 'VERIFIED_TECHNICAL_SMOKE' %}
+      <form method="post" action="{{ url_for('action', action='verify') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="device" value="{{ status.device }}">
+        <input type="hidden" name="run_key" value="{{ status.run_key }}">
+        <button type="submit" class="secondary">Verify hashes again</button>
+      </form>
+    {% endif %}
+  </div>
 </section>
 
-<section class="panel">
+<section class="panel" aria-labelledby="progress-heading">
   <div class="panel-heading">
-    <div><p class="eyebrow">Boundary</p><h2>What this proves</h2></div>
+    <div><p class="eyebrow">Live status</p><h2 id="progress-heading">Progress</h2></div>
+    <strong id="progress-percent">{{ status.progress.percent }}%</strong>
   </div>
-  <p>PASS confirms public acquisition, the existing canonical/shared scoring comparison, durable retry, and receipt verification on two fixed background windows. It does not establish corrected O4a classifications, global significance, real-time operation, or full-run performance.</p>
+  <progress id="smoke-progress" max="100" value="{{ status.progress.percent }}">{{ status.progress.percent }}%</progress>
+  <div class="progress-meta">
+    <span id="progress-step">Step {{ status.progress.completed_steps }} of {{ status.progress.total_steps }}</span>
+    <span id="progress-eta">
+      {% if status.progress.status == "COMPLETE" %}Complete{% elif status.progress.eta_seconds is not none %}Approximate time remaining: {{ status.progress.eta_seconds }} seconds{% else %}Time estimate becomes available after the first completed phase{% endif %}
+    </span>
+  </div>
+  <p class="muted">Progress is phase-based. The time estimate is approximate and is never used as scientific evidence.</p>
+  <p id="connection-status" role="status" aria-live="polite">Connected. Status and logs refresh every five seconds.</p>
+</section>
+
+<section class="panel" aria-labelledby="logs-heading">
+  <div class="panel-heading">
+    <div><p class="eyebrow">Diagnostics</p><h2 id="logs-heading">Live and detailed logs</h2></div>
+    <span id="active-log-name" class="mono">{{ status.logs.active_name or 'No log yet' }}</span>
+  </div>
+  <pre id="log-tail" class="log-tail">{{ status.logs.active_tail or 'Logs will appear here after the worker starts.' }}</pre>
+  <h3>Detailed files</h3>
+  <ul id="smoke-log-list" class="artifact-list">
+    {% for log in status.logs.files %}
+      <li><a href="{{ url_for('log_file', relative_path=log.path, device=status.device) }}">{{ log.name }}</a><span>{{ log.size_bytes }} bytes</span></li>
+    {% else %}
+      <li class="empty">No detailed log is available yet.</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="panel results-panel" aria-labelledby="results-heading">
+  <div><p class="eyebrow">Step 3</p><h2 id="results-heading">Verification results</h2></div>
+  {% if status.status == 'VERIFIED_TECHNICAL_SMOKE' %}
+    <p>The test completed and every recorded artifact passed its integrity check.</p>
+    <div class="result-grid">
+      <a class="result-card" href="{{ url_for('report', device=status.device) }}">
+        <strong>Open readable report</strong>
+        <small>A short explanation of what the test verified and what it did not verify.</small>
+      </a>
+      <a class="result-card" href="{{ url_for('receipt', device=status.device) }}">
+        <strong>Open technical receipt</strong>
+        <small>The machine-readable identity and SHA-256 evidence for reproducibility.</small>
+      </a>
+    </div>
+  {% else %}
+    <p class="empty">The report and receipt will appear here after final verification.</p>
+  {% endif %}
+</section>
+
+<details class="panel advanced-panel">
+  <summary>Advanced reproducibility details</summary>
+  <p>Run identity: <span class="mono">{{ status.run_key }}</span></p>
+  {% if status.receipt_sha256 %}<p>Receipt SHA-256: <span class="mono">{{ status.receipt_sha256 }}</span></p>{% endif %}
+  <p>This identity binds the device, Python environment, packages, frozen configuration, Git commit, and two selected public windows.</p>
+</details>
+
+<section class="panel boundary-panel">
+  <p class="eyebrow">Scientific boundary</p>
+  <h2>What this test does not claim</h2>
+  <p>It is not the corrected O4a release, a global-significance test, a real-time alerting system, or a discovery claim. It only validates public acquisition, bounded replay, retry, and receipt generation.</p>
 </section>
 {% endblock %}

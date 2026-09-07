@@ -41,7 +41,9 @@ def create_public_smoke_app(
     app.extensions["dante_public_smoke_controller"] = active
 
     def selected_device() -> str:
-        device = request.values.get("device", "cpu")
+        device = request.values.get("device")
+        if device is None:
+            device = active.hardware_status()["recommended_device"]
         if device not in {"cpu", "cuda"}:
             abort(400)
         return device
@@ -54,20 +56,40 @@ def create_public_smoke_app(
     @app.get("/")
     def dashboard():
         device = selected_device()
+        try:
+            status = active.public_status(device)
+        except (OSError, UIControlError) as exc:
+            return (
+                render_template(
+                    "public_smoke_error.html",
+                    error=str(exc),
+                ),
+                409,
+            )
         return render_template(
             "public_smoke.html",
             csrf_token=current_app.config["DANTE_CSRF_TOKEN"],
-            status=active.public_status(device),
+            status=status,
         )
 
     @app.get("/api/status")
     def api_status():
-        return jsonify(active.public_status(selected_device()))
+        try:
+            return jsonify(active.public_status(selected_device()))
+        except (OSError, UIControlError) as exc:
+            return jsonify({"status": "SETUP_REQUIRED", "error": str(exc)}), 409
 
     @app.post("/actions/<action>")
     def action(action: str):
         csrf()
         device = selected_device()
+        if device == "cuda" and not active.hardware_status()["cuda_available"]:
+            flash(
+                "CUDA is not available in this worker environment. Select CPU or "
+                "launch the UI from a CUDA-enabled environment.",
+                "error",
+            )
+            return redirect(url_for("dashboard", device=device))
         try:
             result = active.launch(action, device, request.form.get("run_key", ""))
         except (OSError, UIControlError) as exc:
@@ -91,6 +113,41 @@ def create_public_smoke_app(
             / "technical_receipt.json"
         )
         return send_file(path, as_attachment=False, download_name=path.name)
+
+    @app.get("/report")
+    def report():
+        device = selected_device()
+        status = active.public_status(device)
+        if status["status"] != "VERIFIED_TECHNICAL_SMOKE":
+            abort(404)
+        path = (
+            settings.repository_root
+            / "artifacts/dante_workflow/public_smoke_v1"
+            / status["run_key"]
+            / "report.md"
+        )
+        return send_file(
+            path,
+            as_attachment=False,
+            download_name=path.name,
+            mimetype="text/markdown",
+        )
+
+    @app.get("/logs/<path:relative_path>")
+    def log_file(relative_path: str):
+        device = selected_device()
+        status = active.public_status(device)
+        try:
+            path = active.read_log(status["run_key"], relative_path)
+        except UIControlError:
+            abort(404)
+        mimetype = "application/json" if path.name == "failure.json" else "text/plain"
+        return send_file(
+            path,
+            as_attachment=False,
+            download_name=path.name,
+            mimetype=mimetype,
+        )
 
     @app.after_request
     def security_headers(response):

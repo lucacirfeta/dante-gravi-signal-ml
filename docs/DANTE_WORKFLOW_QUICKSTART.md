@@ -7,11 +7,26 @@ select on scores. This uses the legacy paired Light replay, **not** the correcte
 15-stage O4a scientific chain. Historical replay decisions must not be presented
 as corrected O4a classifications.
 
-## Prepare a separate checkout
+## Prepare a separate WSL checkout
 
 Clone branch `codex/dante-workflow-productization-v1` from
-`https://github.com/lucacirfeta/dante-gravi-signal-ml.git` into a new directory.
-Do not copy local raw data or reference caches. Keep tracked files unchanged.
+`https://github.com/lucacirfeta/dante-gravi-signal-ml.git` into a new directory
+inside the WSL home filesystem. Do **not** run the smoke from the Windows
+checkout mounted below `/mnt/c`: Windows/WSL line-ending representation can
+make a clean Windows checkout appear modified to Git in WSL, and the smoke
+correctly stops when tracked files differ.
+
+```shell
+cd ~
+git clone --branch codex/dante-workflow-productization-v1 --single-branch \
+  https://github.com/lucacirfeta/dante-gravi-signal-ml.git \
+  dante-workflow-human-gate
+cd dante-workflow-human-gate
+git status --short
+```
+
+The final command must print nothing. Do not copy local raw data or reference
+caches. Keep tracked files unchanged.
 Use Python 3.11 with the portable CPU lock (`requirements-cpu.txt`) for the
 documented CPU path. The optional UI uses `requirements-ui.txt` in addition and
 is not needed for this CLI smoke. The CPU lock is an installation/replay
@@ -60,12 +75,36 @@ python -m pip install -r requirements-ui.txt
 python scripts/run_dante_workflow_ui.py --public-smoke
 ```
 
-Open `http://127.0.0.1:8765`, select CPU or CUDA, and use **Run or resume**.
+Open `http://127.0.0.1:8765` in the Windows browser. The server and worker stay
+inside WSL. The UI probes the worker environment: it recommends CUDA when a
+compatible NVIDIA GPU is available and otherwise recommends CPU. CPU is the
+portable path; CUDA is normally faster but has a separate run identity and is
+not an equivalence claim.
+
+The guided page has three steps:
+
+1. choose the recommended CPU or CUDA device;
+2. press **Start test** (or **Resume test** after an interruption);
+3. follow the current phase, phase-based percentage, approximate ETA, worker
+   state, and live log tail until final verification.
+
+Detailed `stdout`, `stderr`, and `failure.json` files are linked below the live
+log. On success, **Open readable report** explains the bounded result, while
+**Open technical receipt** exposes the machine-readable identities and hashes.
+The report is for people; the receipt is for reproducibility and integrity
+checking.
+
 The web handler starts the exact CLI command above as a detached worker; closing
 the browser or UI server does not terminate it. Reloading only reads and
-hash-verifies the receipt. The smoke UI does not request private raw/cache paths
-and cannot edit scientific configuration. Use the default UI launcher without
-`--public-smoke` only for the full frozen 15-stage O4a workflow.
+hash-verifies current state. Relaunch the UI and use **Resume test** to continue
+from verified engine checkpoints. The smoke UI does not request private
+raw/cache paths and cannot edit scientific configuration. Use the default UI
+launcher without `--public-smoke` only for the full frozen 15-stage O4a
+workflow.
+
+If setup is invalid, the UI presents a corrective page instead of a server
+traceback. Do not bypass the clean-checkout guard with `git reset`, receipt
+editing, or line-ending changes; create a fresh WSL-native clone instead.
 
 This PASS is not a product release receipt, global significance test, full raw
 archive acquisition test, or packaged CLI/UI parity acceptance. The corrected

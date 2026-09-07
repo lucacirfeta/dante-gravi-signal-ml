@@ -12,6 +12,7 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
+import time
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +27,7 @@ from src.dante_light.sources.files import ReplayManifestSource  # noqa: E402
 
 CONFIG = ROOT / "config/dante_workflow_public_smoke_v1.json"
 SCOPE = "technical_public_replay_not_corrected_o4a_release"
+PROGRESS_STEPS = 4
 
 
 def sha(path):
@@ -93,6 +95,33 @@ def replay_command(config, directory, engine, device):
             "--cat1-mode", "gwosc"]
 
 
+def write_progress(
+    directory,
+    *,
+    state,
+    phase,
+    label,
+    detail,
+    completed_steps,
+    started_at_unix,
+):
+    """Publish bounded administrative progress without interpreting outcomes."""
+    atomic_json(
+        Path(directory) / "progress.json",
+        {
+            "schema_version": 1,
+            "status": state,
+            "phase": phase,
+            "label": label,
+            "detail": detail,
+            "completed_steps": completed_steps,
+            "total_steps": PROGRESS_STEPS,
+            "started_at_unix": started_at_unix,
+            "updated_at_unix": time.time(),
+        },
+    )
+
+
 def run(mode, device):
     config = load_config()
     checkout = git_checkout_provenance(ROOT)
@@ -120,47 +149,179 @@ def run(mode, device):
             return {"status": "SKIPPED_VERIFIED_TECHNICAL_SMOKE", "run_key": key, "receipt": str(receipt_path)}
         if mode == "verify":
             raise ContractError("technical smoke receipt is absent")
-        bundle = download_reference_bundle(directory / "reference_bundle.zip")
-        install_reference_bundle(bundle, project_root=ROOT)
-        selected = {}
-        for engine in config["engines"]:
-            checkpoint = directory / f"{engine}.json"
-            if checkpoint.exists():
-                saved = json.loads(checkpoint.read_text(encoding="utf-8"))
-                verify_files(saved["files"])
-                selected[engine] = ROOT / saved["directory"]
-                validate_run_directory(selected[engine], root=ROOT, expected_engine=engine, prospective=False)
-                continue
-            attempt = directory / engine / uuid.uuid4().hex
-            attempt.mkdir(parents=True)
-            try:
-                with (attempt / "stdout.log").open("w") as out, (attempt / "stderr.log").open("w") as err:
-                    subprocess.run(replay_command(config, attempt, engine, device), cwd=ROOT,
-                                   stdout=out, stderr=err, check=True, timeout=config["timeout_seconds"])
-                verified = validate_run_directory(attempt, root=ROOT, expected_engine=engine, prospective=False)
-                if set(verified.records) != {task.window.window_id for task in tasks}:
-                    raise ContractError("smoke selected identities mismatch")
-                files = {p.relative_to(ROOT).as_posix(): sha(p) for p in attempt.iterdir() if p.is_file()}
-                atomic_json(checkpoint, {"directory": attempt.relative_to(ROOT).as_posix(), "files": files})
-                selected[engine] = attempt
-            except Exception as exc:
-                atomic_json(attempt / "failure.json", {"status": "FAILED_TECHNICAL_SMOKE", "error_type": type(exc).__name__, "error": str(exc)})
-                raise
-        evidence_path = directory / "paired_replay_evidence.json"
-        evidence = build_public_replay_evidence(selected["canonical"], selected["shared_encoder_score_only"],
-                                               bundle_path=bundle, output_path=evidence_path, root=ROOT, mode="public")
-        report = directory / "report.md"
-        report.write_text(f"# Technical public smoke\n\nPASS: {evidence['coverage']['windows']} public windows, paired existing engines.\n\n"
-                          "Not a corrected O4a release, full 15-stage validation, fresh-install proof, or scientific discovery.\n"
-                          "No calibration or threshold estimation was performed. Legacy replay decisions are not corrected O4a classifications.\n",
-                          encoding="utf-8", newline="\n")
-        files = {p.relative_to(ROOT).as_posix(): sha(p) for p in (evidence_path, report, bundle)}
-        for engine in config["engines"]:
-            checkpoint = directory / f"{engine}.json"
-            files[checkpoint.relative_to(ROOT).as_posix()] = sha(checkpoint)
-            files.update(json.loads(checkpoint.read_text())["files"])
-        atomic_json(receipt_path, {"status": "PASS_TECHNICAL_SMOKE", "scope": SCOPE, "identity": identity, "files": files})
-        return {"status": "PASS_TECHNICAL_SMOKE", "run_key": key, "receipt": str(receipt_path)}
+        started_at_unix = time.time()
+        completed_steps = 0
+        phase = "prepare"
+        label = "Preparing public inputs"
+        detail = "Checking the frozen reference bundle and local environment."
+        write_progress(
+            directory,
+            state="RUNNING",
+            phase=phase,
+            label=label,
+            detail=detail,
+            completed_steps=completed_steps,
+            started_at_unix=started_at_unix,
+        )
+        try:
+            bundle = download_reference_bundle(directory / "reference_bundle.zip")
+            install_reference_bundle(bundle, project_root=ROOT)
+            completed_steps = 1
+            selected = {}
+            engine_labels = {
+                "canonical": "Running canonical replay",
+                "shared_encoder_score_only": "Running shared-encoder replay",
+            }
+            for engine in config["engines"]:
+                phase = engine
+                label = engine_labels[engine]
+                detail = (
+                    "Processing the two fixed public background windows with "
+                    f"the {engine.replace('_', ' ')} engine."
+                )
+                write_progress(
+                    directory,
+                    state="RUNNING",
+                    phase=phase,
+                    label=label,
+                    detail=detail,
+                    completed_steps=completed_steps,
+                    started_at_unix=started_at_unix,
+                )
+                checkpoint = directory / f"{engine}.json"
+                if checkpoint.exists():
+                    saved = json.loads(checkpoint.read_text(encoding="utf-8"))
+                    verify_files(saved["files"])
+                    selected[engine] = ROOT / saved["directory"]
+                    validate_run_directory(
+                        selected[engine],
+                        root=ROOT,
+                        expected_engine=engine,
+                        prospective=False,
+                    )
+                else:
+                    attempt = directory / engine / uuid.uuid4().hex
+                    attempt.mkdir(parents=True)
+                    try:
+                        with (attempt / "stdout.log").open("w") as out, (
+                            attempt / "stderr.log"
+                        ).open("w") as err:
+                            subprocess.run(
+                                replay_command(config, attempt, engine, device),
+                                cwd=ROOT,
+                                stdout=out,
+                                stderr=err,
+                                check=True,
+                                timeout=config["timeout_seconds"],
+                            )
+                        verified = validate_run_directory(
+                            attempt,
+                            root=ROOT,
+                            expected_engine=engine,
+                            prospective=False,
+                        )
+                        if set(verified.records) != {
+                            task.window.window_id for task in tasks
+                        }:
+                            raise ContractError("smoke selected identities mismatch")
+                        files = {
+                            p.relative_to(ROOT).as_posix(): sha(p)
+                            for p in attempt.iterdir()
+                            if p.is_file()
+                        }
+                        atomic_json(
+                            checkpoint,
+                            {
+                                "directory": attempt.relative_to(ROOT).as_posix(),
+                                "files": files,
+                            },
+                        )
+                        selected[engine] = attempt
+                    except Exception as exc:
+                        atomic_json(
+                            attempt / "failure.json",
+                            {
+                                "status": "FAILED_TECHNICAL_SMOKE",
+                                "error_type": type(exc).__name__,
+                                "error": str(exc),
+                            },
+                        )
+                        raise
+                completed_steps += 1
+
+            phase = "finalize"
+            label = "Verifying evidence and building the report"
+            detail = "Comparing the paired replays and hashing every output."
+            write_progress(
+                directory,
+                state="RUNNING",
+                phase=phase,
+                label=label,
+                detail=detail,
+                completed_steps=completed_steps,
+                started_at_unix=started_at_unix,
+            )
+            evidence_path = directory / "paired_replay_evidence.json"
+            evidence = build_public_replay_evidence(
+                selected["canonical"],
+                selected["shared_encoder_score_only"],
+                bundle_path=bundle,
+                output_path=evidence_path,
+                root=ROOT,
+                mode="public",
+            )
+            report = directory / "report.md"
+            report.write_text(
+                f"# Technical public smoke\n\nPASS: {evidence['coverage']['windows']} public windows, paired existing engines.\n\n"
+                "Not a corrected O4a release, full 15-stage validation, fresh-install proof, or scientific discovery.\n"
+                "No calibration or threshold estimation was performed. Legacy replay decisions are not corrected O4a classifications.\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+            completed_steps = PROGRESS_STEPS
+            write_progress(
+                directory,
+                state="COMPLETE",
+                phase="complete",
+                label="Technical smoke verified",
+                detail="The receipt and human-readable report are ready.",
+                completed_steps=completed_steps,
+                started_at_unix=started_at_unix,
+            )
+            progress_path = directory / "progress.json"
+            files = {
+                p.relative_to(ROOT).as_posix(): sha(p)
+                for p in (evidence_path, report, bundle, progress_path)
+            }
+            for engine in config["engines"]:
+                checkpoint = directory / f"{engine}.json"
+                files[checkpoint.relative_to(ROOT).as_posix()] = sha(checkpoint)
+                files.update(json.loads(checkpoint.read_text())["files"])
+            atomic_json(
+                receipt_path,
+                {
+                    "status": "PASS_TECHNICAL_SMOKE",
+                    "scope": SCOPE,
+                    "identity": identity,
+                    "files": files,
+                },
+            )
+            return {
+                "status": "PASS_TECHNICAL_SMOKE",
+                "run_key": key,
+                "receipt": str(receipt_path),
+            }
+        except Exception as exc:
+            write_progress(
+                directory,
+                state="FAILED",
+                phase=phase,
+                label=label,
+                detail=f"{type(exc).__name__}: {exc}",
+                completed_steps=completed_steps,
+                started_at_unix=started_at_unix,
+            )
+            raise
 
 
 def main():

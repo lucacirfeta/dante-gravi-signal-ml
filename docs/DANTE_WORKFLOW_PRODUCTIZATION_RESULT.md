@@ -74,3 +74,28 @@ bounded workflow can be operated from the documented UI/quickstart without an
 undocumented expert-only choice. Until that acceptance is recorded, the plan
 remains `IN_PROGRESS` and P6.2—the separate architecture-paper branch—must not
 start.
+
+### Human usability attempt — 2026-09-07
+
+The first human attempt is `FAIL_USABILITY_GATE`. The user could not determine
+which action started work, whether CPU or CUDA was appropriate, the current
+phase or process state, how to resume, where detailed logs lived, or what the
+receipt and report represented. The shared `/mnt/c` checkout also surfaced its
+tracked-clean requirement as an HTTP exception instead of an actionable setup
+page. No scientific worker was launched; the UI server was stopped and ports
+8765/8766 were verified free.
+
+P6.1 remains open while the public-smoke UI and quickstart add a guided device
+recommendation, explicit start/resume action, durable phase progress, bounded
+ETA, live and detailed logs, explained report/receipt links, and actionable
+clean-checkout recovery. A new human attempt is required after automated and
+visual verification of that revision.
+
+The remediation revision was subsequently verified with all 120
+`test_dante_workflow_*` tests passing, Ruff passing on the changed Python, a
+successful JavaScript syntax check, and browser inspection of both the initial
+and completed guided states. The visual check covered device recommendation,
+the explicit start action, phase progress, completion, log links, and the
+separate readable-report and technical-receipt actions. These checks validate
+the implementation; they do not replace the outstanding human usability
+retest, so P6.1 remains open.
