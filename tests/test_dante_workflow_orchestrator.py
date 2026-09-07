@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-import sys
 
 import pytest
 
@@ -91,7 +90,7 @@ def test_plan_exposes_frozen_fifteen_stage_dag_and_manifest_gate(
     ]
 
 
-def test_corrected_factory_binds_stage_commands_to_current_python(
+def test_corrected_factory_binds_stage_commands_to_selected_python(
     tmp_path: Path,
 ) -> None:
     paths = WorkflowPaths(
@@ -102,6 +101,7 @@ def test_corrected_factory_binds_stage_commands_to_current_python(
     orchestrator = WorkflowOrchestrator.corrected_o4a(
         spec=SPEC,
         paths=paths,
+        python_executable="/opt/dante/bin/python",
         source_identity=SOURCE,
         workflow_root=tmp_path / "workflow-runs",
     )
@@ -110,7 +110,7 @@ def test_corrected_factory_binds_stage_commands_to_current_python(
         command.argv[0]
         for actions in orchestrator.commands.values()
         for command in actions.values()
-    } == {sys.executable}
+    } == {"/opt/dante/bin/python"}
 
 
 def test_execute_records_exact_index_consumption_before_native_calibration(

@@ -259,13 +259,17 @@ class WorkflowOrchestrator:
         *,
         spec: WorkflowSpec,
         paths: WorkflowPaths,
+        python_executable: str = sys.executable,
         runner: CommandRunner = subprocess_runner,
         source_identity: Mapping[str, str] | None = None,
         workflow_root: Path | None = None,
     ) -> "WorkflowOrchestrator":
         return cls(
             spec=spec,
-            adapter=O4aCorrectedAdapter(spec, python_executable=sys.executable),
+            adapter=O4aCorrectedAdapter(
+                spec,
+                python_executable=python_executable,
+            ),
             paths=paths,
             runner=runner,
             source_identity=source_identity,

@@ -222,6 +222,27 @@ def test_path_policy_rejects_traversal_outside_explicit_roots(tmp_path: Path) ->
         policy.validate(UISelection(ROOT, CONFIG, raw, cache, tmp_path / "other"))
 
 
+def test_controller_run_identity_uses_selected_worker_python(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    cache = tmp_path / "cache"
+    raw.mkdir()
+    cache.mkdir()
+    worker_python = tmp_path / "worker-python"
+    worker_python.write_text("", encoding="utf-8")
+
+    controller = WorkflowUIController(
+        selection=UISelection(ROOT, CONFIG, raw, cache, tmp_path / "workflow"),
+        path_policy=LocalPathPolicy(ROOT, (raw,), (cache, tmp_path / "workflow")),
+        worker_python=os.fspath(worker_python),
+    )
+
+    assert {
+        command.argv[0]
+        for actions in controller.orchestrator.commands.values()
+        for command in actions.values()
+    } == {os.fspath(worker_python)}
+
+
 @pytest.mark.parametrize(
     ("action", "worker_command"),
     [("start", "report"), ("adopt", "adopt-verified")],

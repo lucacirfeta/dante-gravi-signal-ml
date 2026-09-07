@@ -147,6 +147,12 @@ class WorkflowUIController:
         spec = load_workflow_spec(
             selection.config_path, root=selection.repository_root
         )
+        try:
+            worker_python = self._worker_executable()
+        except UIControlError:
+            # Keep the UI available so local_preflight can report an absent
+            # worker. A run cannot launch until this path becomes executable.
+            worker_python = self.worker_python
         return WorkflowOrchestrator.corrected_o4a(
             spec=spec,
             paths=WorkflowPaths(
@@ -154,6 +160,7 @@ class WorkflowUIController:
                 raw_root=selection.raw_root,
                 cache_root=selection.cache_root,
             ),
+            python_executable=worker_python,
             workflow_root=selection.workflow_root,
         )
 
