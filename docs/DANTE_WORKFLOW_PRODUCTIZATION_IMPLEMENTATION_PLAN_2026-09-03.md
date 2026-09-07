@@ -20,7 +20,7 @@ scores, populations, thresholds, null constructions, detector semantics, or
 published artifacts. Any requested change to what is measured or how it is
 validated is a separate scientific checkpoint and stops execution.
 
-## Implementation checkpoint — 2026-09-05
+## Implementation checkpoint — 2026-09-07
 
 | Phase | Status | Remaining acceptance |
 |---|---|---|
@@ -30,7 +30,7 @@ validated is a separate scientific checkpoint and stops execution.
 | P4.1 | Approved and frozen (`176cf48`) | None |
 | P4.2 | Read/control UI and public-smoke UI implemented; process tests PASS | Human usability acceptance in P6 |
 | P5 | PASS: fresh install, recovery matrix, fresh-clone CLI/UI parity | None |
-| P6 | Not started | Release receipt, human acceptance, separate paper branch |
+| P6 | P6.1 machine verification PASS: full receipt, CLI/UI identity parity, verified report | Human usability acceptance; then separate paper branch |
 
 Evidence and explicit limitations:
 `docs/DANTE_WORKFLOW_UI_CHECKPOINT_2026-09-05.md`.
@@ -41,8 +41,11 @@ Public technical smoke evidence:
 `docs/DANTE_WORKFLOW_PUBLIC_SMOKE_RESULT_2026-09-05.md`.
 Packaged fresh-clone CLI/UI parity evidence:
 `artifacts/dante_workflow/public_smoke_ui_checkpoint_2026-09-06.json`.
-This is not a ready-to-use product release. Scientific O4a artifacts are not
-rerun, promoted, or reinterpreted by this checkpoint.
+The machine-verifiable release evidence is recorded in
+`docs/DANTE_WORKFLOW_PRODUCTIZATION_RESULT.md` and
+`artifacts/dante_workflow/productization_v1_release.json`. Human usability
+acceptance remains open. Scientific O4a artifacts are not rerun, promoted, or
+reinterpreted by this checkpoint.
 
 ## Historical baseline at plan creation
 

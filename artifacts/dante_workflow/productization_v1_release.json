@@ -1,0 +1,362 @@
+{
+  "artifact_graph_digest": "188a93c5b73cac50987e208f289729f4b17650e7f82fd0d91ecb1b7a736049fa",
+  "contract_digest": "1d7270c0bcd15b3c344f94bb37fe82033b67bf4ad12615bb50b5efab43422cdd",
+  "receipt_digest": "3b062e473e70e348ba5f39cbca17676cf63eaa575ea1d95639280bd664440aa4",
+  "run_key": "3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "adopted_stages_recomputed": false,
+    "existing_stage_verifiers_replayed": true,
+    "index_consumption_manifest_exact_match": true,
+    "metrics_transcribed": false,
+    "outcomes_interpreted": false,
+    "stage_execution_modes": [
+      "ADOPTED_VERIFIED_EXISTING"
+    ]
+  },
+  "source_identity": {
+    "git_head": "b14f4384e00338ecaf3335926018f07b5b40de48",
+    "tracked_worktree_diff_sha256": "8251a15bdd3a24520419dd10af5e48bcea5daeb78a46935c07d3485942820895"
+  },
+  "stages": [
+    {
+      "artifacts": [
+        {
+          "name": "preflight_receipt",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/preflight/95b707d3981245f388ddf60b8735907c/verified_stage_receipt.json",
+          "sha256": "1846305e254604df40103c38902e25d4db3df8285915eb582ef809206c7b1392"
+        }
+      ],
+      "stage": "PREFLIGHT",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/preflight/95b707d3981245f388ddf60b8735907c/verified_stage_receipt.json",
+        "sha256": "1846305e254604df40103c38902e25d4db3df8285915eb582ef809206c7b1392"
+      },
+      "verifier_command_digest": "759b99ebaf4af0b62917fd9b2430b072f29e9d5bdfe6ba41370a5fc1a361a193",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "acquisition_manifest",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/acquire/ecb8bffc2af14297a081f5cd5a4bf43b/verified_stage_receipt.json",
+          "sha256": "ca6f8d2ca3ece27c0a11e192123707730388a49f568e727cfe335687cdde6fe0"
+        }
+      ],
+      "stage": "ACQUIRE",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/acquire/ecb8bffc2af14297a081f5cd5a4bf43b/verified_stage_receipt.json",
+        "sha256": "ca6f8d2ca3ece27c0a11e192123707730388a49f568e727cfe335687cdde6fe0"
+      },
+      "verifier_command_digest": "afe576631c9399fd995755fcb3b8d0284bfd51ce718c3b0d5f7976086101a940",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "primary_calibration_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/calibrate/b070b15aee814d73a99f0b5b15678d34/verified_stage_receipt.json",
+          "sha256": "4174d3ed6ec1679adc2d255775a83d3764ff53e3a149dbc943b9aecd29aa6712"
+        },
+        {
+          "name": "primary_thresholds",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/calibrate/b070b15aee814d73a99f0b5b15678d34/verified_stage_receipt.json",
+          "sha256": "4174d3ed6ec1679adc2d255775a83d3764ff53e3a149dbc943b9aecd29aa6712"
+        }
+      ],
+      "stage": "CALIBRATE",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/calibrate/b070b15aee814d73a99f0b5b15678d34/verified_stage_receipt.json",
+        "sha256": "4174d3ed6ec1679adc2d255775a83d3764ff53e3a149dbc943b9aecd29aa6712",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_v2/calibration_e70050ef91ce0c04522b17f0b51fd364ade77cd9c765d19dd4ec89df3a653ff7"
+      },
+      "verifier_command_digest": "d95db4a389edd44a25d425ae58a90995bebacacb0a8c38f10b49473be7b0ab75",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "primary_scan_database",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/scan/a6cd344bb44447338c34a8421e31f738/verified_stage_receipt.json",
+          "sha256": "7129648091e3139a8a8eba15664c35a0a96720f214c76ec73324f3c394b4e5c0"
+        },
+        {
+          "name": "primary_scan_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/scan/a6cd344bb44447338c34a8421e31f738/verified_stage_receipt.json",
+          "sha256": "7129648091e3139a8a8eba15664c35a0a96720f214c76ec73324f3c394b4e5c0"
+        },
+        {
+          "name": "candidate_catalog",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/scan/a6cd344bb44447338c34a8421e31f738/verified_stage_receipt.json",
+          "sha256": "7129648091e3139a8a8eba15664c35a0a96720f214c76ec73324f3c394b4e5c0"
+        }
+      ],
+      "stage": "SCAN",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/scan/a6cd344bb44447338c34a8421e31f738/verified_stage_receipt.json",
+        "sha256": "7129648091e3139a8a8eba15664c35a0a96720f214c76ec73324f3c394b4e5c0",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_v2/primary_scan_5c19c3141fdc79bed75434362ffbbeb31fe36a99a4e64554482cb0023f0631bb"
+      },
+      "verifier_command_digest": "a88cc20618edaaebb569cb02d1710e6889eb23a7bf36aa99e6a4b7b1021d1c45",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_cohort_manifest",
+          "path": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_v1/native_cohort_733a65f58de3143dc8ca860f4a800aba5d59d05bff6a59d92e3515e3de61f05b/native_cohort.jsonl",
+          "sha256": "358138d942267b73d5bbd95a8a0204b8dd2f260f1d2797e6cde2f6bd75252b46"
+        },
+        {
+          "name": "native_cohort_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/cohort/1df5b9f123614a24abf73fb9249bd591/verified_stage_receipt.json",
+          "sha256": "3cda3bfd3bc1aa7e653fc28ca423ce0771fbc6918e4fa0a61dcc6de66675b6ad"
+        }
+      ],
+      "stage": "COHORT",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/cohort/1df5b9f123614a24abf73fb9249bd591/verified_stage_receipt.json",
+        "sha256": "3cda3bfd3bc1aa7e653fc28ca423ce0771fbc6918e4fa0a61dcc6de66675b6ad",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_v1/native_cohort_733a65f58de3143dc8ca860f4a800aba5d59d05bff6a59d92e3515e3de61f05b"
+      },
+      "verifier_command_digest": "e7d29b209152e96040c7d50efb8c30ffb162692c3d408a8b888bb8e99a529534",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "index_window_manifest",
+          "path": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_v1/native_cohort_733a65f58de3143dc8ca860f4a800aba5d59d05bff6a59d92e3515e3de61f05b/native_cohort.jsonl",
+          "sha256": "358138d942267b73d5bbd95a8a0204b8dd2f260f1d2797e6cde2f6bd75252b46"
+        },
+        {
+          "name": "native_index_artifact",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/index/04b763b916a542bdb09d79b07c1425d6/verified_stage_receipt.json",
+          "sha256": "13aedcc1360278e1ec61b58ce8fdc4fea37dcac2fa15713a562dabe0a6dc97a6"
+        },
+        {
+          "name": "native_index_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/index/04b763b916a542bdb09d79b07c1425d6/verified_stage_receipt.json",
+          "sha256": "13aedcc1360278e1ec61b58ce8fdc4fea37dcac2fa15713a562dabe0a6dc97a6"
+        }
+      ],
+      "stage": "INDEX",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/index/04b763b916a542bdb09d79b07c1425d6/verified_stage_receipt.json",
+        "sha256": "13aedcc1360278e1ec61b58ce8fdc4fea37dcac2fa15713a562dabe0a6dc97a6",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_index_v1/native_index_401c619f86d84c4cfb66158a4d67495e0e5d9c27abb1f1c19e655510db7af9a8"
+      },
+      "verifier_command_digest": "f406d67cede2cdc8bd61ce5aeb9d206e1d103ba12b340e07debb6b819da776cc",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_calibration_ledger",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/native_calibration/c9e80cfb7ff5493fb6e0865426915aef/verified_stage_receipt.json",
+          "sha256": "643a13ea837e9f9b894262e659b654d7147455ea6b65944b8932de0b47243908"
+        },
+        {
+          "name": "native_calibration_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/native_calibration/c9e80cfb7ff5493fb6e0865426915aef/verified_stage_receipt.json",
+          "sha256": "643a13ea837e9f9b894262e659b654d7147455ea6b65944b8932de0b47243908"
+        }
+      ],
+      "stage": "NATIVE_CALIBRATION",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/native_calibration/c9e80cfb7ff5493fb6e0865426915aef/verified_stage_receipt.json",
+        "sha256": "643a13ea837e9f9b894262e659b654d7147455ea6b65944b8932de0b47243908",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_calibration_v2/native_calibration_4682531b3a231f3956ac53d531925525a31b6b556a5cd07b17574b854c21811c"
+      },
+      "verifier_command_digest": "cbb0272405456e1c0c167d99cd62c31402de79629a09f36e3a1f62f833cd43cc",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_rescore_ledger",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/rescore/6bea38c75f3149aa94b88a25531c9c92/verified_stage_receipt.json",
+          "sha256": "1f832f7306882b5c09567e73e4556bfbaae226cf0ce16e780027fae2953715b4"
+        },
+        {
+          "name": "native_rescore_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/rescore/6bea38c75f3149aa94b88a25531c9c92/verified_stage_receipt.json",
+          "sha256": "1f832f7306882b5c09567e73e4556bfbaae226cf0ce16e780027fae2953715b4"
+        }
+      ],
+      "stage": "RESCORE",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/rescore/6bea38c75f3149aa94b88a25531c9c92/verified_stage_receipt.json",
+        "sha256": "1f832f7306882b5c09567e73e4556bfbaae226cf0ce16e780027fae2953715b4",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_rescore_v2/native_rescore_cff22dc5276433820227fb38c15f2a617cd4745ea07302cde87806c0e66fcb57"
+      },
+      "verifier_command_digest": "7a6e7ba9646770e71a4992a57823c8e107a98fa69b6e8935ee3e840bf62959cb",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_thresholds",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/thresholds/0325e832b9dc4b719afb0cdbfdb4cebc/verified_stage_receipt.json",
+          "sha256": "d2a212f8d65764b86db1bab7388eb5ce6b451ff1ed9b384ad18c0ddf1a41c751"
+        },
+        {
+          "name": "native_threshold_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/thresholds/0325e832b9dc4b719afb0cdbfdb4cebc/verified_stage_receipt.json",
+          "sha256": "d2a212f8d65764b86db1bab7388eb5ce6b451ff1ed9b384ad18c0ddf1a41c751"
+        }
+      ],
+      "stage": "THRESHOLDS",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/thresholds/0325e832b9dc4b719afb0cdbfdb4cebc/verified_stage_receipt.json",
+        "sha256": "d2a212f8d65764b86db1bab7388eb5ce6b451ff1ed9b384ad18c0ddf1a41c751",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_thresholds_v1/native_thresholds_cee0b79f1a3067cb2c5ae4a1c0ec1fe5da3496c4ca3dc57dea2b037800c5f216"
+      },
+      "verifier_command_digest": "f2526872b4ab013b5a9590105d4da14f641b641341461b6f029dc505b500fb24",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_classified_candidates",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/classify/c4d1666758154b7ca15236dc0a5ca6c0/verified_stage_receipt.json",
+          "sha256": "d5a5add0c2932a6b5a58e2c11150b6e372cd23ee031c18a7db83793c71fbc203"
+        },
+        {
+          "name": "native_classification_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/classify/c4d1666758154b7ca15236dc0a5ca6c0/verified_stage_receipt.json",
+          "sha256": "d5a5add0c2932a6b5a58e2c11150b6e372cd23ee031c18a7db83793c71fbc203"
+        }
+      ],
+      "stage": "CLASSIFY",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/classify/c4d1666758154b7ca15236dc0a5ca6c0/verified_stage_receipt.json",
+        "sha256": "d5a5add0c2932a6b5a58e2c11150b6e372cd23ee031c18a7db83793c71fbc203",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_classification_v1/native_classification_248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef"
+      },
+      "verifier_command_digest": "51fa2915eed2c236cfe211fdf12425ce156358a74891ac3b00712810ab87690d",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_taxonomy_artifacts",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/taxonomy/8a9320be284948b0a11a219096344c12/verified_stage_receipt.json",
+          "sha256": "d5237af5af63fe304f546b00b62fae0e024c294bf0c294c6291652bc4c54874e"
+        },
+        {
+          "name": "native_taxonomy_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/taxonomy/8a9320be284948b0a11a219096344c12/verified_stage_receipt.json",
+          "sha256": "d5237af5af63fe304f546b00b62fae0e024c294bf0c294c6291652bc4c54874e"
+        }
+      ],
+      "stage": "TAXONOMY",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/taxonomy/8a9320be284948b0a11a219096344c12/verified_stage_receipt.json",
+        "sha256": "d5237af5af63fe304f546b00b62fae0e024c294bf0c294c6291652bc4c54874e",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_taxonomy_v1/native_taxonomy_5bfeec945dc9ec2b79692fc1ccff35c282c94568d6376265c86f07371620a9a3"
+      },
+      "verifier_command_digest": "30db9e6b062514df101cb61333496e12d6a6ec2d6e24dff35899d9bd3c8b3af2",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_coincidence_events",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/coincidence/72dd66c7afba493da7213c32993f70f6/verified_stage_receipt.json",
+          "sha256": "1690b121086481d6fd5b30b3e43fd66cfd8ebea0277670c921defbff9ee61906"
+        },
+        {
+          "name": "native_coincidence_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/coincidence/72dd66c7afba493da7213c32993f70f6/verified_stage_receipt.json",
+          "sha256": "1690b121086481d6fd5b30b3e43fd66cfd8ebea0277670c921defbff9ee61906"
+        }
+      ],
+      "stage": "COINCIDENCE",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/coincidence/72dd66c7afba493da7213c32993f70f6/verified_stage_receipt.json",
+        "sha256": "1690b121086481d6fd5b30b3e43fd66cfd8ebea0277670c921defbff9ee61906",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_coincidence_v1/native_coincidence_6d355473e642e4f8f7d5f9db045adae74aec4d4bec6e4f75208906f0a3a792b6"
+      },
+      "verifier_command_digest": "db17fc71adfe02f7df4bf9ecc8fe943bc7bf0325fb08a0ad0542582c982a33cc",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "native_pem_artifacts",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/pem/5e082bfab7194b84a0d3a25e1d833318/verified_stage_receipt.json",
+          "sha256": "1332e9e97771ea590b99ac24e83dac4550c67723b04354ca27406af3448be588"
+        },
+        {
+          "name": "native_pem_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/pem/5e082bfab7194b84a0d3a25e1d833318/verified_stage_receipt.json",
+          "sha256": "1332e9e97771ea590b99ac24e83dac4550c67723b04354ca27406af3448be588"
+        }
+      ],
+      "stage": "PEM",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/pem/5e082bfab7194b84a0d3a25e1d833318/verified_stage_receipt.json",
+        "sha256": "1332e9e97771ea590b99ac24e83dac4550c67723b04354ca27406af3448be588",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_native_pem_v1/native_pem_1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0"
+      },
+      "verifier_command_digest": "9a7bd98670856849e9020a231fae470493427fbded2c1c2b7b37f8adfd78320e",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "final_comparison_artifacts",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/compare/e01729b6a69f4cdf85dd2c5a6bec947e/verified_stage_receipt.json",
+          "sha256": "e1a39eac5dd0fe9326358db93405eabef21988325524b348fd88885159bc3b30"
+        },
+        {
+          "name": "final_comparison_summary",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/compare/e01729b6a69f4cdf85dd2c5a6bec947e/verified_stage_receipt.json",
+          "sha256": "e1a39eac5dd0fe9326358db93405eabef21988325524b348fd88885159bc3b30"
+        }
+      ],
+      "stage": "COMPARE",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/compare/e01729b6a69f4cdf85dd2c5a6bec947e/verified_stage_receipt.json",
+        "sha256": "e1a39eac5dd0fe9326358db93405eabef21988325524b348fd88885159bc3b30",
+        "verified_run_dir": "/mnt/e/dante_cache/dante_light/o4a_corrected_final_comparison_v2/final_comparison_d07356990e382110c0be48ab817f44be0a34f60c47d23e9fb29248d0627bd81e"
+      },
+      "verifier_command_digest": "161515eddd3e8d3ec36bcd045361b7a0cb17938ade218aeb59f6e1e8a5807de1",
+      "verifier_exit_status": 0
+    },
+    {
+      "artifacts": [
+        {
+          "name": "final_report_artifact",
+          "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/report/2e3dfb13438241e7a79060065c5ddfd2/verified_stage_receipt.json",
+          "sha256": "60b4f408ec5b09c9d287ac0d653ca3f30f7bf24f82c11d74b5c50a7a77c164a9"
+        }
+      ],
+      "stage": "REPORT",
+      "stage_receipt": {
+        "execution_mode": "ADOPTED_VERIFIED_EXISTING",
+        "path": "/mnt/e/dante_cache/dante_light/workflow_productization_v1/workflow_3c9ad0765b4d1f9f9a49cf105ca223058aafdba42ac25793d0ecff1d1d384e94/attempts/report/2e3dfb13438241e7a79060065c5ddfd2/verified_stage_receipt.json",
+        "sha256": "60b4f408ec5b09c9d287ac0d653ca3f30f7bf24f82c11d74b5c50a7a77c164a9"
+      },
+      "verifier_command_digest": "01a963b1db1584b2195fa7f8442c7593a6ffe7f2d5a290f514325766c76fa22a",
+      "verifier_exit_status": 0
+    }
+  ],
+  "status": "PASS_VERIFIED_WORKFLOW",
+  "workflow_id": "dante-o4a-corrected-productization-v1"
+}
