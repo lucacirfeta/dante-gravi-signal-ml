@@ -129,19 +129,10 @@
 <section class="panel results-panel" aria-labelledby="results-heading">
   <div><p class="eyebrow">Step 3</p><h2 id="results-heading">Verification results</h2></div>
   {% if status.status == 'VERIFIED_TECHNICAL_SMOKE' %}
-    <p>The test completed and every recorded artifact passed its integrity check.</p>
-    <div class="result-grid">
-      <a class="result-card" href="{{ url_for('report', device=status.device) }}">
-        <strong>Open readable report</strong>
-        <small>A short explanation of what the test verified and what it did not verify.</small>
-      </a>
-      <a class="result-card" href="{{ url_for('receipt', device=status.device) }}">
-        <strong>Open technical receipt</strong>
-        <small>The machine-readable identity and SHA-256 evidence for reproducibility.</small>
-      </a>
-    </div>
+    <p>The test completed and every recorded artifact passed its integrity check. Open the full result in a separate browser tab.</p>
+    <a class="button primary large-action" href="{{ url_for('results', device=status.device) }}" target="_blank" rel="noopener">Open verification results</a>
   {% else %}
-    <p class="empty">The report and receipt will appear here after final verification.</p>
+    <p class="empty">A separate verification-results tab will be available after final verification.</p>
   {% endif %}
 </section>
 

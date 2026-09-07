@@ -123,10 +123,15 @@ def test_public_smoke_ui_launches_same_cli_without_changing_receipt(tmp_path) ->
     assert client.get("/receipt?device=cpu").data == bytes_before
     assert b"Readable smoke report" in client.get("/report?device=cpu").data
     completed_page = client.get("/?device=cpu")
-    assert b"Open readable report" in completed_page.data
-    assert b"Open technical receipt" in completed_page.data
+    assert b"Open verification results" in completed_page.data
+    assert b'target="_blank"' in completed_page.data
     assert b"Verified (PASS)" in completed_page.data
     assert b'id="progress-eta">\n      Complete' in completed_page.data
+    results = client.get("/results?device=cpu")
+    assert results.status_code == 200
+    assert b"Technical smoke verified" in results.data
+    assert b"Open readable report" in results.data
+    assert b"Open technical receipt" in results.data
 
 
 def test_public_smoke_ui_rejects_csrf_stale_identity_and_bad_device(tmp_path) -> None:

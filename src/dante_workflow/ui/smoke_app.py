@@ -133,6 +133,14 @@ def create_public_smoke_app(
             mimetype="text/markdown",
         )
 
+    @app.get("/results")
+    def results():
+        device = selected_device()
+        status = active.public_status(device)
+        if status["status"] != "VERIFIED_TECHNICAL_SMOKE":
+            abort(404)
+        return render_template("public_smoke_results.html", status=status)
+
     @app.get("/logs/<path:relative_path>")
     def log_file(relative_path: str):
         device = selected_device()

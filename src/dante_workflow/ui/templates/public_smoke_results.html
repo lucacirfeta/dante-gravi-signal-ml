@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}DANTE technical smoke results{% endblock %}
+{% block content %}
+<section class="intro panel" aria-labelledby="results-heading">
+  <p class="eyebrow">Verification results</p>
+  <h2 id="results-heading">Technical smoke verified</h2>
+  <p>The bounded two-window public replay completed and every recorded artifact passed its integrity check.</p>
+</section>
+
+<section class="summary-grid" aria-label="Verification summary">
+  <article class="summary-card">
+    <span>Device</span>
+    <strong>{{ status.device|upper }}</strong>
+    <small>Device-specific technical smoke identity</small>
+  </article>
+  <article class="summary-card">
+    <span>Verification</span>
+    <strong class="state state-verified">PASS</strong>
+    <small>Receipt hashes have been checked</small>
+  </article>
+  <article class="summary-card">
+    <span>Run identity</span>
+    <strong class="mono compact-mono">{{ status.run_key }}</strong>
+    <small>Bound to code, environment, device, and public windows</small>
+  </article>
+  <article class="summary-card">
+    <span>Receipt SHA-256</span>
+    <strong class="mono compact-mono">{{ status.receipt_sha256 }}</strong>
+    <small>Machine-verifiable integrity record</small>
+  </article>
+</section>
+
+<section class="panel results-panel" aria-labelledby="artifacts-heading">
+  <p class="eyebrow">Artifacts</p>
+  <h2 id="artifacts-heading">Open the verification evidence</h2>
+  <div class="result-grid">
+    <a class="result-card" href="{{ url_for('report', device=status.device) }}">
+      <strong>Open readable report</strong>
+      <small>A short explanation of what the test verified and what it did not verify.</small>
+    </a>
+    <a class="result-card" href="{{ url_for('receipt', device=status.device) }}">
+      <strong>Open technical receipt</strong>
+      <small>The machine-readable identity and SHA-256 evidence for reproducibility.</small>
+    </a>
+  </div>
+</section>
+
+<section class="panel boundary-panel">
+  <p class="eyebrow">Scientific boundary</p>
+  <h2>What this PASS does not claim</h2>
+  <p>It is not the corrected O4a release, a global-significance test, a real-time alerting system, or a discovery claim. It only validates public acquisition, bounded replay, retry, and receipt generation.</p>
+</section>
+{% endblock %}

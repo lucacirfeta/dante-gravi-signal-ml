@@ -89,10 +89,11 @@ The guided page has three steps:
    state, and live log tail until final verification.
 
 Detailed `stdout`, `stderr`, and `failure.json` files are linked below the live
-log. On success, **Open readable report** explains the bounded result, while
-**Open technical receipt** exposes the machine-readable identities and hashes.
-The report is for people; the receipt is for reproducibility and integrity
-checking.
+log. On success, **Open verification results** opens a separate browser tab
+with the PASS summary, run identity, receipt hash, and links to the artifacts.
+There, **Open readable report** explains the bounded result, while **Open
+technical receipt** exposes the machine-readable identities and hashes. The
+report is for people; the receipt is for reproducibility and integrity checking.
 
 The web handler starts the exact CLI command above as a detached worker; closing
 the browser or UI server does not terminate it. Reloading only reads and

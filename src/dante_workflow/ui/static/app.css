@@ -56,6 +56,7 @@ button:disabled { cursor: not-allowed; opacity: .62; }
 progress { width: 100%; height: 1.25rem; margin-top: 1rem; accent-color: var(--accent); }
 .progress-meta { display: flex; justify-content: space-between; gap: 1rem; margin-top: .65rem; font-weight: 700; }
 .log-tail, .command-block { max-height: 22rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 1rem; border-radius: 10px; background: #111b1d; color: #d9f0eb; font: .78rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.compact-mono { font-size: .72rem; overflow-wrap: anywhere; }
 .results-panel .result-card small { line-height: 1.45; }
 .advanced-panel summary { cursor: pointer; font-weight: 800; }
 .error-panel { border-color: #d99da1; }
