@@ -105,21 +105,31 @@ def write_progress(
     completed_steps,
     started_at_unix,
 ):
-    """Publish bounded administrative progress without interpreting outcomes."""
-    atomic_json(
-        Path(directory) / "progress.json",
-        {
-            "schema_version": 1,
-            "status": state,
-            "phase": phase,
-            "label": label,
-            "detail": detail,
-            "completed_steps": completed_steps,
-            "total_steps": PROGRESS_STEPS,
-            "started_at_unix": started_at_unix,
-            "updated_at_unix": time.time(),
-        },
-    )
+    """Atomically replace mutable administrative progress, never evidence."""
+    path = Path(directory) / "progress.json"
+    payload = {
+        "schema_version": 1,
+        "status": state,
+        "phase": phase,
+        "label": label,
+        "detail": detail,
+        "completed_steps": completed_steps,
+        "total_steps": PROGRESS_STEPS,
+        "started_at_unix": started_at_unix,
+        "updated_at_unix": time.time(),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    try:
+        with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+            json.dump(payload, handle, indent=2, sort_keys=True, allow_nan=False)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def run(mode, device):

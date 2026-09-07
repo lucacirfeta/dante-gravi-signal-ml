@@ -72,6 +72,35 @@ def test_lock_is_exclusive_and_reusable(tmp_path):
         pass
 
 
+def test_progress_is_atomically_replaceable_but_receipts_remain_immutable(tmp_path):
+    smoke.write_progress(
+        tmp_path,
+        state="RUNNING",
+        phase="prepare",
+        label="Preparing public inputs",
+        detail="First update.",
+        completed_steps=0,
+        started_at_unix=1.0,
+    )
+    smoke.write_progress(
+        tmp_path,
+        state="RUNNING",
+        phase="canonical",
+        label="Running canonical replay",
+        detail="Second update.",
+        completed_steps=1,
+        started_at_unix=1.0,
+    )
+
+    progress = json.loads((tmp_path / "progress.json").read_text(encoding="utf-8"))
+
+    assert progress["phase"] == "canonical"
+    assert progress["completed_steps"] == 1
+    with pytest.raises(ContractError, match="divergent evidence"):
+        smoke.atomic_json(tmp_path / "receipt.json", {"status": "first"})
+        smoke.atomic_json(tmp_path / "receipt.json", {"status": "second"})
+
+
 def test_completed_smoke_resume_verifies_without_running(tmp_path, monkeypatch):
     config = smoke.load_config()
     task = SimpleNamespace(window=SimpleNamespace(window_id="fixture", to_dict=lambda: {"id": "fixture"}))
