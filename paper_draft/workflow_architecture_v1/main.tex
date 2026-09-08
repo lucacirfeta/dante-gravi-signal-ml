@@ -4,6 +4,7 @@
 \usepackage{graphicx}
 \usepackage{xurl}
 \usepackage[hidelinks]{hyperref}
+\graphicspath{{figures/}{paper_draft/workflow_architecture_v1/figures/}}
 
 \hypersetup{
   pdftitle={A Content-Addressed Workflow for Reproducible DANTE Gravitational-Wave Anomaly Analysis},
@@ -91,8 +92,20 @@ The frozen graph contains 15 stages from preflight and acquisition through
 calibration, scanning, native adaptation, follow-up, comparison, and reporting.
 The native-calibration node depends both on the cohort and on the window
 manifest consumed by the native index, preserving the frozen exclusion guard
-before rescoring.  A source-controlled DAG figure and an exact stage table will
-be added from the versioned workflow configuration.
+before rescoring.  Figure~\ref{fig:dag} is generated directly from the
+versioned workflow configuration; the layout is fixed for readability, while
+the stage and dependency sets are validated against the contract at generation
+time.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_workflow_dag.pdf}
+\caption{The frozen 15-stage workflow.  Solid arrows are verified stage
+dependencies.  The dashed green edge is the content-digested index-window
+manifest consumed by native calibration; it makes the exclusion relationship
+explicit before both native products enter rescoring.}
+\label{fig:dag}
+\end{figure*}
 
 \section{Identity, state, and provenance}
 \label{sec:provenance}
@@ -102,6 +115,16 @@ receipts, artifact digests, and the final release receipt.  It will distinguish
 mutable progress reporting from immutable scientific evidence and document the
 conditions under which retry, reuse, or fail-closed rejection occurs.
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.96\textwidth]{fig_evidence_lifecycle.pdf}
+\caption{Evidence lifecycle.  Incomplete work receives a new attempt under the
+same contract, whereas a digest or contract mismatch fails closed.  Verified
+evidence is immutable and outcome-bearing fields remain hidden until the
+corresponding gate passes.}
+\label{fig:evidence}
+\end{figure*}
+
 \section{Operator interfaces and recovery}
 \label{sec:interfaces}
 
@@ -110,6 +133,16 @@ browser is a loopback-only reader and controller; the workflow worker remains a
 separate process.  The final draft will describe device guidance, progress and
 ETA semantics, detailed logs, interruption recovery, and the dedicated
 verification-results view.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.96\textwidth]{fig_runtime_boundary.pdf}
+\caption{Runtime boundary shared by the command-line and browser paths.  The
+loopback UI is a disposable controller; the detached worker, durable attempts,
+and stage verifiers remain authoritative.  Scientific stage logic is not
+executed inside HTTP request handlers.}
+\label{fig:runtime}
+\end{figure*}
 
 \section{Verification methodology}
 \label{sec:verification}

@@ -20,6 +20,9 @@ Status values: `VERIFIED`, `TO_DRAFT`, `PROHIBITED`.
 | C14 | PROHIBITED | CPU and CUDA produce equivalent scientific outputs. | Explicitly not claimed by `docs/DANTE_WORKFLOW_QUICKSTART.md`. |
 | C15 | PROHIBITED | The workflow is a public real-time alerting system. | Explicitly excluded by the frozen product contract and release result. |
 | C16 | PROHIBITED | Productization itself independently reproduced all adopted O4a calculations. | Release execution mode is `ADOPTED_VERIFIED_EXISTING`; see C08. |
+| C17 | VERIFIED | The paper DAG is generated from the frozen stage/dependency contract and includes the content-digested index-window manifest edge into native calibration. | `paper_draft/workflow_architecture_v1/generate_figures.py`; `config/dante_workflow_productization_v1.json` |
+| C18 | VERIFIED | The UI is a loopback-only disposable controller and does not execute scientific stages in HTTP request handlers. | `docs/DANTE_WORKFLOW_UI_DECISION.md`; `src/dante_workflow/ui/controller.py`; `src/dante_workflow/ui/views.py` |
+| C19 | VERIFIED | Divergent evidence is rejected rather than overwritten, while mutable progress is updated atomically as operational state. | `src/dante_workflow/state.py`; `src/dante_workflow/ui/smoke.py`; tests under `tests/test_dante_workflow_*` |
 
 ## Rules
 

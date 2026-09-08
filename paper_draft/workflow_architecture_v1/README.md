@@ -32,3 +32,9 @@ pdflatex -interaction=nonstopmode -halt-on-error main.tex
 ```
 
 No publication command is part of this directory.
+
+Generate the contract-backed architecture figures with:
+
+```shell
+python generate_figures.py
+```
