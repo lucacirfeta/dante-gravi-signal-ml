@@ -19,10 +19,10 @@ baseline above does not.
 
 The manuscript has a compiled, evidence-backed six-page draft,
 contract-generated architecture figures, a primary-source bibliography, and a
-completed A5 consistency/scientific review. The claim ledger remains the gate
-for introducing substantive statements; the evidence audit records receipt,
-build, regression, and portability checks. Preparation of the minimal arXiv
-source bundle remains separate and does not include submission.
+completed A5 consistency/scientific review. A deterministic minimal arXiv
+source bundle has passed clean-extraction compilation and remains unsubmitted.
+The claim ledger remains the gate for introducing substantive statements; the
+evidence audit records receipt, build, regression, and portability checks.
 
 ## Source inventory
 
@@ -32,6 +32,9 @@ source bundle remains separate and does not include submission.
 - `VERIFICATION.md`: A5 implementation and build verification;
 - `SCIENTIFIC_REVIEW.md`: bounded scientific and LIGO-specific review;
 - `references.bib`: primary-source bibliography;
+- `prepare_arxiv_bundle.py`: deterministic bundle builder and checker;
+- `ARXIV_SOURCE_PREPARATION.md`: prepared-output identity and submission boundary;
+- `release/`: source bundle and external SHA-256 manifest;
 - `generate_figures.py`: contract-backed figure generator;
 - `figures/`: generated PDF and PNG figures.
 
@@ -47,6 +50,17 @@ pdflatex -interaction=nonstopmode -halt-on-error main.tex
 ```
 
 No publication command is part of this directory.
+
+Prepare and independently verify the minimal arXiv source bundle with:
+
+```shell
+python prepare_arxiv_bundle.py build
+python prepare_arxiv_bundle.py check
+```
+
+The builder normalizes TeX and BibTeX line endings to LF, uses fixed ZIP
+metadata, and writes a hash manifest beside the minimal archive. It does not
+submit or upload the bundle.
 
 Generate the contract-backed architecture figures with:
 

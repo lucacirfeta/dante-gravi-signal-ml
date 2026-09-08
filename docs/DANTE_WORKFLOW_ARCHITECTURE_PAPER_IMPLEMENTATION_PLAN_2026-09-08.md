@@ -1,6 +1,6 @@
 # DANTE workflow architecture paper — implementation plan
 
-Status: **IN_PROGRESS**
+Status: **COMPLETE — READY_FOR_HUMAN_REVIEW_NOT_SUBMITTED**
 
 Branch: `paper/dante-workflow-architecture-v1`
 
@@ -112,6 +112,10 @@ Required gates:
   presented as discovery significance.
 
 ### A6 — Prepare the arXiv package
+
+Status: **COMPLETE** — deterministic five-source-file bundle, external
+SHA-256 manifest, checker, and clean-extraction compilation PASS. The bundle
+has not been submitted or uploaded.
 
 Build a minimal source bundle from the verified manuscript. Record its file
 manifest and SHA-256 values. Do not submit it automatically.

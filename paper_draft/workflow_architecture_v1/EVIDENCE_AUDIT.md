@@ -73,3 +73,12 @@ Additional checks:
   `INDEX + NATIVE_CALIBRATION -> RESCORE` dependencies: PASS;
 - claim ledger: 33 unique claims, 29 verified, four prohibited, zero pending;
 - primary-source bibliography: five resolved citations.
+
+## A6 source-package verification
+
+The deterministic builder produced a five-source-file ZIP plus an external
+manifest. Two consecutive builds produced SHA-256
+`4d99122cd25c65c539493266295edfaa644724dc56792c3eef96acf4c6d78516`.
+The checker passed member, path, CRC, size, and SHA-256 validation. A clean
+extraction compiled to six pages with zero unresolved citations/references and
+zero overfull boxes. No upload or submission was performed.

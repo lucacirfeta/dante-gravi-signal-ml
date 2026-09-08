@@ -1,0 +1,44 @@
+{
+  "bundle_role": "arxiv_source_not_submitted",
+  "entries": [
+    {
+      "archive_path": "main.tex",
+      "normalization": "line_endings_lf",
+      "sha256": "366c3f4a898c27077cced78919dd3b25486b8402e02cf2be6231df4a54a74923",
+      "size_bytes": 22564,
+      "source_path": "main.tex"
+    },
+    {
+      "archive_path": "references.bib",
+      "normalization": "line_endings_lf",
+      "sha256": "ecaa1812f276c07cb1f1678799af9f69a013821beb36e758d537b10905796506",
+      "size_bytes": 1678,
+      "source_path": "references.bib"
+    },
+    {
+      "archive_path": "figures/fig_workflow_dag.pdf",
+      "normalization": "none",
+      "sha256": "6686b591f149e24fc31ed26efe914e4f7eb74db54d313c282717f3f07bc313e3",
+      "size_bytes": 26213,
+      "source_path": "figures/fig_workflow_dag.pdf"
+    },
+    {
+      "archive_path": "figures/fig_evidence_lifecycle.pdf",
+      "normalization": "none",
+      "sha256": "455461732772609b21e0e2d017dae0f796f32f4eb896f213e1f230f1694da534",
+      "size_bytes": 22928,
+      "source_path": "figures/fig_evidence_lifecycle.pdf"
+    },
+    {
+      "archive_path": "figures/fig_runtime_boundary.pdf",
+      "normalization": "none",
+      "sha256": "b9a07efe7955d52d863c31aa6602bfa6c0d4d164cd9b317c9a9e48ca3f504d2d",
+      "size_bytes": 17776,
+      "source_path": "figures/fig_runtime_boundary.pdf"
+    }
+  ],
+  "paper": "DANTE workflow architecture v1",
+  "schema_version": 1,
+  "software_baseline_commit": "e8f2098e99c9103514702ab680e9952333dc4eb7",
+  "software_baseline_tag": "dante-workflow-productization-v1"
+}
