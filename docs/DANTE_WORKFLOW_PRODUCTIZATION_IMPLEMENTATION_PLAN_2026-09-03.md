@@ -4,7 +4,7 @@ wave: 0-6
 depends_on:
   - merge codex/dante-light-o4a-v1-parity into main
 autonomous: false
-status: P6_1_COMPLETE
+status: COMPLETE
 ---
 
 # DANTE workflow productization v1 — implementation plan
@@ -30,7 +30,7 @@ validated is a separate scientific checkpoint and stops execution.
 | P4.1 | Approved and frozen (`176cf48`) | None |
 | P4.2 | Read/control UI and public-smoke UI implemented; process tests and human usability acceptance PASS | None |
 | P5 | PASS: fresh install, recovery matrix, fresh-clone CLI/UI parity | None |
-| P6 | P6.1 COMPLETE: machine verification and human usability acceptance PASS | P6.2 on a separate architecture-paper branch |
+| P6 | COMPLETE: P6.1 accepted; P6.2 opened from the tagged release | None |
 
 Evidence and explicit limitations:
 `docs/DANTE_WORKFLOW_UI_CHECKPOINT_2026-09-05.md`.
@@ -488,6 +488,10 @@ Done when the release receipt passes and a human confirms that no expert-only
 path or undocumented choice is required for the bounded workflow.
 
 ### Task P6.2 — Open the architecture-paper branch
+
+Status: **COMPLETE** — tag `dante-workflow-productization-v1` identifies merge
+commit `e8f2098`, and `paper/dante-workflow-architecture-v1` starts from that
+tag with a receipt-linked manuscript scaffold.
 
 Type: `checkpoint:human-action`
 
