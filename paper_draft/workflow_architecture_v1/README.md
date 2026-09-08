@@ -17,17 +17,21 @@ baseline above does not.
 
 ## Current state
 
-The manuscript has a compilable evidence-backed first draft and
-contract-generated architecture figures. Bibliography, consistency checks,
-scientific review, and final PDF review remain in the implementation plan. The
-claim ledger is the gate for introducing substantive statements; the evidence
-audit records drafting-time receipt checks and portability caveats.
+The manuscript has a compiled, evidence-backed six-page draft,
+contract-generated architecture figures, a primary-source bibliography, and a
+completed A5 consistency/scientific review. The claim ledger remains the gate
+for introducing substantive statements; the evidence audit records receipt,
+build, regression, and portability checks. Preparation of the minimal arXiv
+source bundle remains separate and does not include submission.
 
 ## Source inventory
 
 - `main.tex`: manuscript source;
 - `CLAIM_LEDGER.md`: permitted and prohibited claim map;
 - `EVIDENCE_AUDIT.md`: read-only evidence checks;
+- `VERIFICATION.md`: A5 implementation and build verification;
+- `SCIENTIFIC_REVIEW.md`: bounded scientific and LIGO-specific review;
+- `references.bib`: primary-source bibliography;
 - `generate_figures.py`: contract-backed figure generator;
 - `figures/`: generated PDF and PNG figures.
 
@@ -37,7 +41,7 @@ From this directory, using a TeX environment with REVTeX 4.2:
 
 ```shell
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
-\bibtex main
+bibtex main
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 ```

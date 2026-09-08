@@ -54,3 +54,22 @@ bytes.
 
 Changing the released tag or defining a productization patch release is a
 separate release decision and is not performed on the paper branch.
+
+## A5 build and regression verification
+
+The primary-source manuscript was compiled on 2026-09-08 with MiKTeX using
+`pdflatex`, `bibtex`, `pdflatex`, and `pdflatex`. The result contains six pages.
+The final log contains no unresolved citations or references, no BibTeX
+warnings, and no overfull boxes. All six rendered pages were visually
+inspected.
+
+Additional checks:
+
+- `tests/test_dante_workflow_*`: 120 passed and one Windows-only test skipped
+  in WSL;
+- Ruff on `generate_figures.py`: PASS;
+- frozen DAG assertions: 15 stages and exact `COHORT -> INDEX`,
+  `COHORT + INDEX -> NATIVE_CALIBRATION`, and
+  `INDEX + NATIVE_CALIBRATION -> RESCORE` dependencies: PASS;
+- claim ledger: 33 unique claims, 29 verified, four prohibited, zero pending;
+- primary-source bibliography: five resolved citations.

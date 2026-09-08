@@ -96,6 +96,10 @@ comparison claims narrower than the cited evidence.
 
 ### A5 — Verify consistency and build
 
+Status: **COMPLETE** — claim, receipt, DAG, regression, bibliography, PDF, and
+scientific-boundary checks passed; canonical-receipt newline portability is
+recorded as a disclosed non-scientific limitation.
+
 Required gates:
 
 - all claim-ledger entries resolve to versioned evidence;
