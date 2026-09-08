@@ -20,12 +20,12 @@ performed as part of this preparation.
 
 - source bundle:
   `release/dante_workflow_architecture_v1_arxiv_source.zip`;
-- bundle size: 69,127 bytes;
+- bundle size: 69,195 bytes;
 - bundle SHA-256:
-  `2b5e252183b57eda47265a9f80e3be2dfbdbd46871f53e3041352cd69ee45e5e`;
+  `7afc865bc9a8b59a0bc0cc189b9fbcceb7646256784f2e86a95a111604202862`;
 - external source manifest: `release/SOURCE_MANIFEST.json`;
 - manifest SHA-256:
-  `744b4ccee0673059d30b56b4f790a908f8f57991fe4162dfdada1ce6a1711156`.
+  `91872b1e2803c0b18ceb5dfe6e9a52c0dd638c332daec198860793f66caa2848`.
 
 The archive contains exactly five required source files: `main.tex`,
 `references.bib`, and the three PDF figures. It excludes the generated paper
@@ -60,7 +60,10 @@ pdflatex -interaction=nonstopmode -halt-on-error main.tex
 
 Result: seven pages, zero unresolved citations or references, zero BibTeX
 warnings, and zero overfull boxes. The source-bundle checker returned
-`PASS_ARXIV_SOURCE_BUNDLE`.
+`PASS_ARXIV_SOURCE_BUNDLE`. The adopted native-classification run digest was
+also checked byte-for-byte against the release receipt: the 64-character value
+remains within one PDF page and raw PDF text extraction reproduces it without
+inserting the page number.
 
 ## Publication boundary
 

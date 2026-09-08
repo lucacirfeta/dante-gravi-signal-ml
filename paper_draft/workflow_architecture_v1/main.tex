@@ -193,9 +193,14 @@ were not rerun, while the existing verifier associated with each stage was
 replayed.  This distinction is part of the receipt rather than an editorial
 qualification added after execution.
 
-The adopted current catalogue is the corrected-O4a native-classification run
-\nolinkurl{248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef}:
-10,942 detector--GPS candidates, comprising 5,406 \texttt{ROBUST}, 2,344
+\noindent\begin{minipage}{\columnwidth}
+The adopted current catalogue is the corrected-O4a native-classification run:
+\par\smallskip
+{\raggedright\noindent\footnotesize
+\nolinkurl{248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef}\par}
+\smallskip
+It contains 10,942 detector--GPS candidates, comprising 5,406
+\texttt{ROBUST}, 2,344
 \texttt{AMBIGUOUS}, and 3,192 \texttt{BACKGROUND}.  The 10,429-candidate v6
 detector-aware catalogue (6,365/1,275/2,789) remains immutable as the
 \emph{historical comparison baseline}; it is consumed by the final-comparison
@@ -204,6 +209,7 @@ receipt names both roles and binds the corrected classification and comparison
 run directories separately.  Thus \texttt{PASS\_VERIFIED\_WORKFLOW} certifies
 the current 10,942-candidate graph while preserving, rather than promoting, the
 10,429-row baseline.
+\end{minipage}
 
 \section{Workflow architecture}
 \label{sec:architecture}

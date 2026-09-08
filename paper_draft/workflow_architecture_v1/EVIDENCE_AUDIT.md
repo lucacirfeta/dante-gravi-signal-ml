@@ -95,7 +95,9 @@ Additional checks:
 
 The deterministic builder produced a five-source-file ZIP plus an external
 manifest. Two consecutive builds produced SHA-256
-`2b5e252183b57eda47265a9f80e3be2dfbdbd46871f53e3041352cd69ee45e5e`.
+`7afc865bc9a8b59a0bc0cc189b9fbcceb7646256784f2e86a95a111604202862`.
 The checker passed member, path, CRC, size, and SHA-256 validation. A clean
 extraction compiled to seven pages with zero unresolved citations/references and
-zero overfull boxes. No upload or submission was performed.
+zero overfull boxes. The 64-character adopted-classification digest matches the
+release receipt and no longer crosses a PDF page boundary. No upload or
+submission was performed.
