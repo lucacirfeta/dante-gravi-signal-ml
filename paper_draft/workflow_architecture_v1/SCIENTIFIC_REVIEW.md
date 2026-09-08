@@ -17,6 +17,11 @@ candidate population, statistical calibration, or astrophysical inference.
   and report gating are described separately and tied to versioned evidence.
 - The native-calibration exclusion dependency from the index-window manifest
   is explicit in the graph and prose.
+- The adopted 10,942-row corrected catalogue is distinguished from the
+  immutable 10,429-row historical v6 comparison baseline.
+- The related-work section compares concrete reuse, retry, ownership, operator,
+  and release-boundary semantics and acknowledges Git, Bazel, and Nix as direct
+  content-addressing prior art.
 - Limitations appear in the abstract, main text, dedicated limitations section,
   and conclusion.
 
@@ -47,6 +52,7 @@ release choice, not a manuscript-side scientific correction.
 | CLI and UI share one orchestrator and run identity. | reproducibility | UI decision/checkpoints, code paths, parity receipt | SUPPORTED | none |
 | Retry preserves verified evidence and creates new attempts for incomplete work. | robustness | recovery checkpoint and regression tests | SUPPORTED | none |
 | The release verifies rather than recomputes adopted O4a artifacts. | methodology | execution modes in the release receipt | SUPPORTED | none |
+| Productization adopts the corrected 10,942-row catalogue, not the historical 10,429-row comparison baseline. | methodology | release receipt, native classification summary, final comparison summary | SUPPORTED | none |
 | The public smoke supports portable local use. | generalization | two-window clean-clone CPU/UI evidence | PARTIALLY SUPPORTED and explicitly bounded | none |
 | Productization establishes detection significance or discovery. | statistics/physics | no supporting experiment; prohibited by scope | NOT CLAIMED | none |
 

@@ -24,7 +24,7 @@ Reproducible DANTE Gravitational-Wave Anomaly Analysis}}
 \author{Luca Cirfeta}
 \thanks{ORCID: \href{https://orcid.org/0009-0000-1235-3186}{0009-0000-1235-3186}}
 \affiliation{Independent Researcher, Rome, Italy}
-\date{Draft of September 8, 2026}
+\date{September 8, 2026}
 
 \begin{abstract}
 Unsupervised analysis of gravitational-wave detector data combines expensive
@@ -78,11 +78,65 @@ Snakemake derives a directed acyclic graph from file-oriented rules and uses it
 to schedule or resume work across local and cluster environments
 \cite{koster2012snakemake}; Nextflow combines a dataflow model with portable,
 container-oriented execution across computational platforms
-\cite{ditommaso2017nextflow}.  The workflow described here is not a replacement
-for either general-purpose engine.  It is a domain-specific control and
-evidence layer around already frozen \dante{} commands and verifiers.  Its
-distinct concern is binding stage evidence, retry history, operator interfaces,
-and report release to one content-derived local identity.
+\cite{ditommaso2017nextflow}.  Current Snakemake records job provenance and, by
+default, considers changes in code, inputs, parameters, software environment,
+and modification time when deciding whether to rerun a job
+\cite{snakemake2026cli}.  Nextflow computes per-task hashes from execution
+metadata that include the task inputs, script, and software environment, and
+\texttt{-resume} requires both a matching cache entry and retained outputs
+\cite{nextflow2026cache}.  Table~\ref{tab:comparison} therefore compares
+operational semantics rather than claiming that content-aware reuse is new.
+
+\begin{table*}[t]
+\caption{Design-scope comparison.  Entries describe the documented core
+semantics relevant to this work, not a feature ranking of the three systems.}
+\label{tab:comparison}
+\begin{ruledtabular}
+\begin{tabular}{p{0.12\textwidth}p{0.22\textwidth}p{0.22\textwidth}p{0.28\textwidth}}
+Dimension & Snakemake & Nextflow & This \dante{} workflow layer \\
+\hline
+Reuse identity & Per-job provenance/rerun triggers over code, inputs,
+parameters, environment, and time/checksum metadata & Per-task hash over
+session and task metadata, inputs, script, container or package environment &
+One workflow-wide canonical run key over the frozen workflow contract, source
+identity, roots, and concrete stage-command digests; stage artifacts have
+separate receipts \\
+Retry semantics & Re-evaluate the DAG and rerun jobs selected by provenance
+triggers & \texttt{-resume} reuses a task only
+when cache metadata and required work-directory outputs remain valid & Preserve
+every terminal/incomplete attempt; retry under the same run key creates a fresh
+attempt identity and re-verifies recorded artifact bytes \\
+Concurrent ownership & General scheduler/executor model for jobs & Concurrent
+dataflow execution; the default per-session cache store admits one
+reader/writer & One durable local worker lease per run key; stale active work is
+recorded as interrupted before replacement \\
+Operator surface & General-purpose command-line workflow interface and plugin
+ecosystem & General-purpose command-line interface and execution history &
+Local CLI and loopback browser invoke the same domain controller and resolve
+the same run key and evidence graph \\
+Release boundary & User-defined workflow targets and output validation &
+User-defined publish and reporting behavior & A report is refused until every
+declared scientific-stage verifier and current-byte artifact check passes \\
+\end{tabular}
+\end{ruledtabular}
+\end{table*}
+
+The workflow described here is not a replacement for either general-purpose
+engine.  It is a domain-specific control and evidence layer around already
+frozen \dante{} commands and verifiers.  Its contribution is the tested
+composition of workflow-wide identity, append-only attempt evidence, a durable
+single-owner local lease, one CLI/browser control path, and a fail-closed
+scientific-report boundary.  It does not claim algorithmic novelty for hashing,
+caching, DAG scheduling, or content addressing.
+
+The content-addressed design itself has direct prior art in software versioning
+and build systems.  Git exposes a content-addressable object database
+\cite{chacon2014progit}; Bazel separates an action cache from a
+content-addressable store of output files \cite{bazel2026cache}; and Nix uses a
+functional deployment model with immutable outputs and input-derived store
+identities \cite{dolstra2006nix}.  The present work adapts these ideas to a
+bounded scientific workflow in which cached evidence is insufficient until its
+current bytes and domain-specific verifier are checked again.
 
 The W3C PROV data model supplies a general vocabulary for entities, activities,
 agents, derivations, and provenance bundles \cite{moreau2013provdm}.  The
@@ -97,11 +151,13 @@ discoverability.
 
 Public strain and data-quality products distributed through the
 Gravitational-Wave Open Science Center make independent detector-data analyses
-possible \cite{abbott2021gwosc}.  The bounded public smoke uses that public-data
-boundary to test installation and interface parity.  Full corrected-O4a
-reproduction remains a stronger requirement: it additionally depends on the
-frozen archive, scientific runtime, contracts, and intermediate evidence named
-by this workflow.
+possible \cite{abbott2021gwosc}.  The O4a-specific release supplies H1 and L1
+strain, segment, checksum, and auxiliary-data products and identifies the
+released calibrated-strain channels \cite{gwosc2025o4a}.  The bounded public
+smoke uses that public-data boundary to test installation and interface parity.
+Full corrected-O4a reproduction remains a stronger requirement: it additionally
+depends on the frozen archive, scientific runtime, contracts, and intermediate
+evidence named by this workflow.
 
 \section{Scope and threat model}
 \label{sec:scope}
@@ -137,6 +193,18 @@ were not rerun, while the existing verifier associated with each stage was
 replayed.  This distinction is part of the receipt rather than an editorial
 qualification added after execution.
 
+The adopted current catalogue is the corrected-O4a native-classification run
+\nolinkurl{248df45d52faac527cb0e33932010b9fa8a354b2ace73bcdd42d714e49f4a1ef}:
+10,942 detector--GPS candidates, comprising 5,406 \texttt{ROBUST}, 2,344
+\texttt{AMBIGUOUS}, and 3,192 \texttt{BACKGROUND}.  The 10,429-candidate v6
+detector-aware catalogue (6,365/1,275/2,789) remains immutable as the
+\emph{historical comparison baseline}; it is consumed by the final-comparison
+stage and is not the adopted current classification snapshot.  The release
+receipt names both roles and binds the corrected classification and comparison
+run directories separately.  Thus \texttt{PASS\_VERIFIED\_WORKFLOW} certifies
+the current 10,942-candidate graph while preserving, rather than promoting, the
+10,429-row baseline.
+
 \section{Workflow architecture}
 \label{sec:architecture}
 
@@ -164,10 +232,11 @@ the human-facing report.  A downstream stage cannot start until each declared
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{fig_workflow_dag.pdf}
-\caption{The frozen 15-stage workflow.  Solid arrows are verified stage
-dependencies.  The dashed green edge is the content-digested index-window
-manifest consumed by native calibration; it makes the exclusion relationship
-explicit before both native products enter rescoring.}
+\caption{The frozen 15-stage workflow, numbered in execution order with both
+rows read left to right.  Solid arrows are verified stage dependencies.  The
+dashed green edge is the content-digested index-window manifest consumed by
+native calibration; it makes the exclusion relationship explicit before both
+native products enter rescoring.}
 \label{fig:dag}
 \end{figure*}
 
@@ -320,14 +389,38 @@ Derived-report SHA-256 & \texttt{3711b278b974cf0da2206b0136d5b26250e61c6492e2a56
 \end{table*}
 
 The acceptance evidence is intentionally layered rather than summed as one
-test count.  The packaged parity checkpoint reports 104 passing workflow tests
-on Windows and 103 passing plus one Windows-only skip in a fresh WSL clone.  It
-also records a 5936-byte technical receipt with SHA-256
+test count.  Table~\ref{tab:tests} reconciles the counts by source revision and
+platform.  The increase from 104 to 121 collected workflow tests reflects later
+UI, recovery, and verification-result coverage; it is not an additional sample
+of independent statistical trials.  The sole WSL skip is a Windows-specific
+process-lifecycle assertion.  The 121-test release corpus therefore appears as
+121 passes on Windows and as 120 passes plus one platform skip on WSL.
+
+\begin{table*}[t]
+\caption{Workflow regression checkpoints.  Evidence paths are repository
+relative and versioned; the counts within or across rows must not be summed.}
+\label{tab:tests}
+\begin{ruledtabular}
+\begin{tabular}{p{0.13\textwidth}p{0.10\textwidth}p{0.09\textwidth}p{0.12\textwidth}p{0.40\textwidth}}
+Checkpoint & Source revision & Windows & Fresh WSL & Versioned evidence \\
+\hline
+Packaged CLI/UI parity & \texttt{143b7539} & 104 pass & 103 pass, 1 skip &
+Parity checkpoint JSON \\
+Human-gate release & \texttt{e8f2098e} & 121 pass & 120 pass, 1 skip &
+Release result note \\
+\end{tabular}
+\end{ruledtabular}
+\end{table*}
+
+The exact evidence files are
+\path{artifacts/dante_workflow/public_smoke_ui_checkpoint_2026-09-06.json} and
+\path{docs/DANTE_WORKFLOW_PRODUCTIZATION_RESULT.md}.  The packaged parity
+checkpoint also records a 5936-byte technical receipt with
+SHA-256
 \nolinkurl{e91c744891dc70ff2aa20e78c11b2f1f5ae4342a445d6a6a9bba90a479308e58}
-from both interfaces.  The later human-facing revision reports all 121
-\texttt{test\_dante\_workflow\_*} tests passing together with lint, JavaScript,
-and browser checks.  These checkpoint-specific counts overlap and are not
-presented as independent statistical trials.
+from both interfaces.  The release tests are versioned local acceptance
+evidence; this paper does not substitute a CI badge for those recorded
+platform-specific executions.
 
 The result is therefore an engineering claim: the tagged local workflow can
 identify, inspect, resume, verify, and report the adopted artifact graph under
@@ -408,6 +501,9 @@ corrected-O4a workflow additionally requires the frozen raw archive, canonical
 scientific runtime, and paths named by the workflow configuration; the public
 two-window smoke is not a substitute.  The final arXiv bundle will include a
 source manifest and cryptographic digests but no automated publication step.
+The tagged source, including the named scripts, tests, configuration, and
+versioned evidence, is available at
+\url{https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/dante-workflow-productization-v1}.
 
 \section{Conclusion}
 \label{sec:conclusion}

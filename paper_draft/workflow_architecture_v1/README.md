@@ -17,7 +17,7 @@ baseline above does not.
 
 ## Current state
 
-The manuscript has a compiled, evidence-backed six-page draft,
+The manuscript has a compiled, evidence-backed seven-page draft,
 contract-generated architecture figures, a primary-source bibliography, and a
 completed A5 consistency/scientific review. A deterministic minimal arXiv
 source bundle has passed clean-extraction compilation and remains unsubmitted.

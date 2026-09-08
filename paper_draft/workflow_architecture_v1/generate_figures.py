@@ -90,6 +90,7 @@ def add_arrow(
             "arrowstyle": "-|>",
             "color": color,
             "lw": 1.2,
+            "mutation_scale": 13,
             "linestyle": style,
             "connectionstyle": f"arc3,rad={rad}",
             "shrinkA": 17,
@@ -100,7 +101,21 @@ def add_arrow(
     if label:
         x = (start[0] + end[0]) / 2 + label_offset[0]
         y = (start[1] + end[1]) / 2 + label_offset[1]
-        ax.text(x, y, label, ha="center", va="center", fontsize=7.1, color=color)
+        ax.text(
+            x,
+            y,
+            label,
+            ha="center",
+            va="center",
+            fontsize=7.1,
+            color=color,
+            bbox={
+                "boxstyle": "round,pad=0.15",
+                "facecolor": "white",
+                "edgecolor": "none",
+            },
+            zorder=5,
+        )
 
 
 def save_figure(fig: plt.Figure, stem: str) -> None:
@@ -112,33 +127,37 @@ def save_figure(fig: plt.Figure, stem: str) -> None:
 
 def workflow_dag(contract: dict) -> None:
     positions = {
-        "PREFLIGHT": (0.8, 4.3),
-        "ACQUIRE": (3.0, 4.3),
-        "CALIBRATE": (5.2, 4.3),
-        "SCAN": (7.4, 4.3),
-        "COHORT": (9.6, 4.3),
-        "INDEX": (8.45, 3.15),
-        "NATIVE_CALIBRATION": (10.75, 3.15),
-        "RESCORE": (9.6, 2.0),
-        "THRESHOLDS": (7.4, 2.0),
-        "CLASSIFY": (5.2, 2.0),
-        "TAXONOMY": (3.0, 2.0),
-        "COINCIDENCE": (0.8, 2.0),
-        "PEM": (3.0, 0.75),
-        "COMPARE": (5.2, 0.75),
-        "REPORT": (7.4, 0.75),
+        "PREFLIGHT": (0.8, 3.0),
+        "ACQUIRE": (2.3, 3.0),
+        "CALIBRATE": (3.8, 3.0),
+        "SCAN": (5.3, 3.0),
+        "COHORT": (6.8, 3.0),
+        "INDEX": (8.3, 3.0),
+        "NATIVE_CALIBRATION": (9.8, 3.0),
+        "RESCORE": (11.3, 3.0),
+        "THRESHOLDS": (0.8, 1.15),
+        "CLASSIFY": (2.3, 1.15),
+        "TAXONOMY": (3.8, 1.15),
+        "COINCIDENCE": (5.3, 1.15),
+        "PEM": (6.8, 1.15),
+        "COMPARE": (8.3, 1.15),
+        "REPORT": (9.8, 1.15),
     }
     labels = {
-        "NATIVE_CALIBRATION": "NATIVE\nCALIBRATION",
-        "COINCIDENCE": "COINCIDENCE",
+        "NATIVE_CALIBRATION": "07  NATIVE\nCALIBRATION",
+        "COINCIDENCE": "12  COINCIDENCE",
     }
     stages = {stage["name"]: stage for stage in contract["stages"]}
     if set(positions) != set(stages):
         raise RuntimeError("figure layout and frozen stage set differ")
 
-    fig, ax = plt.subplots(figsize=(11.6, 5.2))
-    ax.set_xlim(-0.35, 11.9)
-    ax.set_ylim(0.15, 4.9)
+    stage_numbers = {
+        stage["name"]: number for number, stage in enumerate(contract["stages"], 1)
+    }
+
+    fig, ax = plt.subplots(figsize=(12.8, 4.0))
+    ax.set_xlim(-0.15, 12.55)
+    ax.set_ylim(-0.05, 3.65)
     ax.axis("off")
 
     for name, center in positions.items():
@@ -147,36 +166,78 @@ def workflow_dag(contract: dict) -> None:
         add_box(
             ax,
             center,
-            labels.get(name, name),
-            width=2.0 if name == "NATIVE_CALIBRATION" else 1.82,
+            labels.get(name, f"{stage_numbers[name]:02d}  {name}"),
+            width=1.35 if name == "NATIVE_CALIBRATION" else 1.28,
+            height=0.58,
             facecolor=LIGHT_GREEN
             if adaptive
             else LIGHT_AMBER
             if terminal
             else LIGHT_BLUE,
             edgecolor=GREEN if adaptive else AMBER if terminal else BLUE,
-            fontsize=7.3 if name in {"NATIVE_CALIBRATION", "COINCIDENCE"} else 8.0,
+            fontsize=6.0 if name in {"NATIVE_CALIBRATION", "COINCIDENCE"} else 6.5,
         )
 
     for destination, stage in stages.items():
         for dependency in stage["dependencies"]:
             source = dependency["stage"]
             artifact_edge = dependency.get("artifact") == "index_window_manifest"
+            if (source, destination) == ("RESCORE", "THRESHOLDS"):
+                continue
             add_arrow(
                 ax,
                 positions[source],
                 positions[destination],
                 color=GREEN if artifact_edge else GRAY,
                 style="--" if artifact_edge else "-",
-                rad=-0.13 if artifact_edge else 0.0,
+                rad=-0.18
+                if artifact_edge
+                else 0.28
+                if (source, destination)
+                in {("COHORT", "NATIVE_CALIBRATION"), ("INDEX", "RESCORE")}
+                else 0.0,
                 label="index-window manifest" if artifact_edge else None,
-                label_offset=(0.04, 0.38),
+                label_offset=(0.0, -0.63),
             )
 
+    # Keep every numbered row left-to-right.  The only row wrap is routed around
+    # the boxes so the visual order cannot be mistaken for a reversed chain.
+    ax.plot(
+        [11.94, 12.3, 12.3, 0.08, 0.08],
+        [3.0, 3.0, 0.35, 0.35, 1.15],
+        color=GRAY,
+        linewidth=1.2,
+        zorder=1,
+    )
+    ax.annotate(
+        "",
+        xy=positions["THRESHOLDS"],
+        xytext=(0.08, 1.15),
+        arrowprops={
+            "arrowstyle": "-|>",
+            "color": GRAY,
+            "lw": 1.2,
+            "mutation_scale": 13,
+            "shrinkA": 0,
+            "shrinkB": 17,
+        },
+        zorder=2,
+    )
     ax.text(
-        0.8,
-        4.78,
-        "Acquisition and primary analysis",
+        11.88,
+        0.55,
+        "08 → 09",
+        ha="right",
+        va="center",
+        fontsize=7.0,
+        color=GRAY,
+        weight="bold",
+    )
+
+    ax.text(
+        0.18,
+        3.5,
+        "Read numbered nodes 01 → 15; every row runs left to right",
         ha="left",
         va="center",
         fontsize=9.5,
@@ -184,8 +245,8 @@ def workflow_dag(contract: dict) -> None:
         weight="bold",
     )
     ax.text(
-        8.25,
-        3.75,
+        7.45,
+        3.5,
         "Detector-aware native adaptation",
         ha="left",
         va="center",
@@ -194,18 +255,18 @@ def workflow_dag(contract: dict) -> None:
         weight="bold",
     )
     ax.text(
-        8.0,
-        1.35,
+        0.18,
+        1.7,
         "Classification and diagnostic follow-up",
-        ha="center",
+        ha="left",
         va="center",
         fontsize=9.5,
         color=NAVY,
         weight="bold",
     )
     ax.text(
-        8.4,
-        0.75,
+        10.55,
+        1.15,
         "Verified human-readable output",
         ha="left",
         va="center",

@@ -55,30 +55,47 @@ bytes.
 Changing the released tag or defining a productization patch release is a
 separate release decision and is not performed on the paper branch.
 
+## Adopted corrected-O4a snapshot
+
+The release receipt binds `CLASSIFY` to
+`o4a_corrected_native_classification_v1/native_classification_248df45...`.
+Its run summary reports exactly 10,942 rows and detector/class totals that sum
+to 5,406 ROBUST, 2,344 AMBIGUOUS, and 3,192 BACKGROUND. The same receipt binds
+`COMPARE` separately to
+`o4a_corrected_final_comparison_v2/final_comparison_d073569...`; that summary
+labels 10,429 as `historical_total` and 10,942 as `corrected_total`.
+
+Accordingly, the 10,429-row v6 detector-aware catalogue in the root README is
+the frozen historical comparison baseline, not the current classification
+adopted by productization-v1. The README and manuscript now state the two roles
+explicitly. No scientific artifact, class, threshold, or population was
+changed by that clarification.
+
 ## A5 build and regression verification
 
 The primary-source manuscript was compiled on 2026-09-08 with MiKTeX using
-`pdflatex`, `bibtex`, `pdflatex`, and `pdflatex`. The result contains six pages.
+`pdflatex`, `bibtex`, `pdflatex`, and `pdflatex`. The result contains seven pages.
 The final log contains no unresolved citations or references, no BibTeX
-warnings, and no overfull boxes. All six rendered pages were visually
+warnings, and no overfull boxes. All seven rendered pages were visually
 inspected.
 
 Additional checks:
 
-- `tests/test_dante_workflow_*`: 120 passed and one Windows-only test skipped
-  in WSL;
+- `tests/test_dante_workflow_*`: 121 passed on Windows; 120 passed and one
+  Windows-only test skipped in WSL. The workflow-test files are unchanged from
+  release merge `e8f2098e` to the paper revision;
 - Ruff on `generate_figures.py`: PASS;
 - frozen DAG assertions: 15 stages and exact `COHORT -> INDEX`,
   `COHORT + INDEX -> NATIVE_CALIBRATION`, and
   `INDEX + NATIVE_CALIBRATION -> RESCORE` dependencies: PASS;
-- claim ledger: 33 unique claims, 29 verified, four prohibited, zero pending;
-- primary-source bibliography: five resolved citations.
+- claim ledger: 37 unique claims, 33 verified, four prohibited, zero pending;
+- primary-source bibliography: eleven resolved citations.
 
 ## A6 source-package verification
 
 The deterministic builder produced a five-source-file ZIP plus an external
 manifest. Two consecutive builds produced SHA-256
-`4d99122cd25c65c539493266295edfaa644724dc56792c3eef96acf4c6d78516`.
+`2b5e252183b57eda47265a9f80e3be2dfbdbd46871f53e3041352cd69ee45e5e`.
 The checker passed member, path, CRC, size, and SHA-256 validation. A clean
-extraction compiled to six pages with zero unresolved citations/references and
+extraction compiled to seven pages with zero unresolved citations/references and
 zero overfull boxes. No upload or submission was performed.

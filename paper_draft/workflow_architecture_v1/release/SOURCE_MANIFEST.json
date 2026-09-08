@@ -4,36 +4,36 @@
     {
       "archive_path": "main.tex",
       "normalization": "line_endings_lf",
-      "sha256": "366c3f4a898c27077cced78919dd3b25486b8402e02cf2be6231df4a54a74923",
-      "size_bytes": 22564,
+      "sha256": "576177e5f150a5a51064007b8893b1d5a8202d15bedbd45e6250aa243a82be4e",
+      "size_bytes": 28070,
       "source_path": "main.tex"
     },
     {
       "archive_path": "references.bib",
       "normalization": "line_endings_lf",
-      "sha256": "ecaa1812f276c07cb1f1678799af9f69a013821beb36e758d537b10905796506",
-      "size_bytes": 1678,
+      "sha256": "b047539fae37f24d3b648052e53447ee4564cc373cded4abe5dc87259491c8bc",
+      "size_bytes": 3362,
       "source_path": "references.bib"
     },
     {
       "archive_path": "figures/fig_workflow_dag.pdf",
       "normalization": "none",
-      "sha256": "6686b591f149e24fc31ed26efe914e4f7eb74db54d313c282717f3f07bc313e3",
-      "size_bytes": 26213,
+      "sha256": "f1de4389f4013d4ca9b2016b1dc2b46a0f05cb80ae5e9853a69e3f947120384a",
+      "size_bytes": 35820,
       "source_path": "figures/fig_workflow_dag.pdf"
     },
     {
       "archive_path": "figures/fig_evidence_lifecycle.pdf",
       "normalization": "none",
-      "sha256": "455461732772609b21e0e2d017dae0f796f32f4eb896f213e1f230f1694da534",
-      "size_bytes": 22928,
+      "sha256": "23a40943304871e2d8d4d459c446395aa508a518e0332a634f97af9357991e3f",
+      "size_bytes": 25560,
       "source_path": "figures/fig_evidence_lifecycle.pdf"
     },
     {
       "archive_path": "figures/fig_runtime_boundary.pdf",
       "normalization": "none",
-      "sha256": "b9a07efe7955d52d863c31aa6602bfa6c0d4d164cd9b317c9a9e48ca3f504d2d",
-      "size_bytes": 17776,
+      "sha256": "34e47963c95cc1126483827b09dc44a725b553ed2d60f86d838e4d1de1c8e425",
+      "size_bytes": 20496,
       "source_path": "figures/fig_runtime_boundary.pdf"
     }
   ],
