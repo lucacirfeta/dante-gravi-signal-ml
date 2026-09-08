@@ -1,6 +1,6 @@
 # DANTE workflow productization v1 — release result
 
-Status: **P6.1 machine verification PASS; human usability acceptance pending**.
+Status: **P6.1 COMPLETE — machine verification and human usability acceptance PASS**.
 
 This checkpoint productizes the already frozen corrected-O4a analysis. It does
 not recompute adopted scientific stages, change any scientific configuration,
@@ -67,13 +67,7 @@ already accepted in the preceding P5 checkpoints:
   claim is authorized.
 - Historical, failed, and superseded runs remain preserved.
 
-## Remaining gate
-
-The automated portion of P6.1 is complete. A human must still confirm that the
-bounded workflow can be operated from the documented UI/quickstart without an
-undocumented expert-only choice. Until that acceptance is recorded, the plan
-remains `IN_PROGRESS` and P6.2—the separate architecture-paper branch—must not
-start.
+## Human usability acceptance
 
 ### Human usability attempt — 2026-09-07
 
@@ -85,8 +79,8 @@ tracked-clean requirement as an HTTP exception instead of an actionable setup
 page. No scientific worker was launched; the UI server was stopped and ports
 8765/8766 were verified free.
 
-P6.1 remains open while the public-smoke UI and quickstart add a guided device
-recommendation, explicit start/resume action, durable phase progress, bounded
+At that point P6.1 remained open pending a guided device recommendation,
+explicit start/resume action, durable phase progress, bounded
 ETA, live and detailed logs, explained report/receipt links, and actionable
 clean-checkout recovery. A new human attempt is required after automated and
 visual verification of that revision.
@@ -97,5 +91,21 @@ successful JavaScript syntax check, and browser inspection of both the initial
 and completed guided states. The visual check covered device recommendation,
 the explicit start action, phase progress, completion, log links, and the
 separate readable-report and technical-receipt actions. These checks validate
-the implementation; they do not replace the outstanding human usability
-retest, so P6.1 remains open.
+the implementation.
+
+### Human usability retest — 2026-09-08
+
+The guided public-smoke workflow was operated successfully from WSL. The human
+retest accepted the start/resume action, device guidance, live phase and
+progress state, ETA, detailed logs, and explained report/receipt access. The
+only requested follow-up was to move verification results to a separate
+browser tab. That change is implemented in commit `15198f5`, where the main
+page opens a dedicated results view containing the PASS state, run identity,
+receipt hash, readable report, technical receipt, and scientific boundary.
+
+The post-change verification passed all 121 `test_dante_workflow_*` tests,
+Ruff, JavaScript syntax validation, and browser inspection of the dedicated
+results tab. No scientific contract or adopted scientific artifact changed.
+The human usability gate is therefore **PASS**, P6.1 is complete, and the
+productization plan may proceed to P6.2 only from a separately reviewed
+architecture-paper branch based on the released software state.

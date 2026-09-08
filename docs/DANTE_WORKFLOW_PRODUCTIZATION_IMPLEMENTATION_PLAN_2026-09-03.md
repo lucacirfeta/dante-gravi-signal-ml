@@ -4,7 +4,7 @@ wave: 0-6
 depends_on:
   - merge codex/dante-light-o4a-v1-parity into main
 autonomous: false
-status: IN_PROGRESS
+status: P6_1_COMPLETE
 ---
 
 # DANTE workflow productization v1 — implementation plan
@@ -20,7 +20,7 @@ scores, populations, thresholds, null constructions, detector semantics, or
 published artifacts. Any requested change to what is measured or how it is
 validated is a separate scientific checkpoint and stops execution.
 
-## Implementation checkpoint — 2026-09-07
+## Implementation checkpoint — 2026-09-08
 
 | Phase | Status | Remaining acceptance |
 |---|---|---|
@@ -28,9 +28,9 @@ validated is a separate scientific checkpoint and stops execution.
 | P2 | Implemented; bounded public end-to-end acceptance PASS | Full O4a release in P6 |
 | P3 | Implemented; bounded public evidence acceptance PASS | Full O4a release in P6 |
 | P4.1 | Approved and frozen (`176cf48`) | None |
-| P4.2 | Read/control UI and public-smoke UI implemented; process tests PASS | Human usability acceptance in P6 |
+| P4.2 | Read/control UI and public-smoke UI implemented; process tests and human usability acceptance PASS | None |
 | P5 | PASS: fresh install, recovery matrix, fresh-clone CLI/UI parity | None |
-| P6 | P6.1 machine verification PASS: full receipt, CLI/UI identity parity, verified report | Human usability acceptance; then separate paper branch |
+| P6 | P6.1 COMPLETE: machine verification and human usability acceptance PASS | P6.2 on a separate architecture-paper branch |
 
 Evidence and explicit limitations:
 `docs/DANTE_WORKFLOW_UI_CHECKPOINT_2026-09-05.md`.
@@ -44,8 +44,9 @@ Packaged fresh-clone CLI/UI parity evidence:
 The machine-verifiable release evidence is recorded in
 `docs/DANTE_WORKFLOW_PRODUCTIZATION_RESULT.md` and
 `artifacts/dante_workflow/productization_v1_release.json`. Human usability
-acceptance remains open. Scientific O4a artifacts are not rerun, promoted, or
-reinterpreted by this checkpoint.
+acceptance passed on 2026-09-08 after the guided UI remediation and the
+separate verification-results view were exercised. Scientific O4a artifacts
+were not rerun, promoted, or reinterpreted by this checkpoint.
 
 ## Historical baseline at plan creation
 
@@ -458,6 +459,9 @@ Wave: 5
 Depends on: P5
 
 ### Task P6.1 — Verify the packaged user path
+
+Status: **COMPLETE** — machine verification and human usability acceptance
+PASS on 2026-09-08.
 
 Type: `checkpoint:human-verify`
 
