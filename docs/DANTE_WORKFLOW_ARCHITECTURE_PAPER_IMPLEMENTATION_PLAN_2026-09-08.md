@@ -86,6 +86,9 @@ statement must have a claim-ledger entry and a source path.
 
 ### A4 — Add literature and related-work context
 
+Status: **COMPLETE** — primary-source bibliography and bounded comparison
+claims added without changing the scientific or software contracts.
+
 Use primary sources for workflow provenance, reproducible computational
 science, gravitational-wave data analysis, and the software components named
 in the implementation. Verify bibliographic metadata before adding it. Keep

@@ -70,6 +70,39 @@ implementation is frozen by the annotated tag
 \texttt{dante-workflow-productization-v1}; its machine-readable release receipt
 is distributed in the tagged source tree.
 
+\section{Related work and design position}
+\label{sec:related}
+
+General workflow systems already express computations as dependency graphs.
+Snakemake derives a directed acyclic graph from file-oriented rules and uses it
+to schedule or resume work across local and cluster environments
+\cite{koster2012snakemake}; Nextflow combines a dataflow model with portable,
+container-oriented execution across computational platforms
+\cite{ditommaso2017nextflow}.  The workflow described here is not a replacement
+for either general-purpose engine.  It is a domain-specific control and
+evidence layer around already frozen \dante{} commands and verifiers.  Its
+distinct concern is binding stage evidence, retry history, operator interfaces,
+and report release to one content-derived local identity.
+
+The W3C PROV data model supplies a general vocabulary for entities, activities,
+agents, derivations, and provenance bundles \cite{moreau2013provdm}.  The
+\dante{} receipts instantiate a narrower application-specific JSON model and
+do not claim PROV conformance or interchangeability.  Likewise, the FAIR
+principles emphasize findable, accessible, interoperable, and reusable digital
+research objects, including data, algorithms, tools, and workflows
+\cite{wilkinson2016fair}.  Content-addressed receipts and documented reuse
+support traceability within this release, but they do not by themselves
+establish FAIR compliance, archival persistence, or repository-level
+discoverability.
+
+Public strain and data-quality products distributed through the
+Gravitational-Wave Open Science Center make independent detector-data analyses
+possible \cite{abbott2021gwosc}.  The bounded public smoke uses that public-data
+boundary to test installation and interface parity.  Full corrected-O4a
+reproduction remains a stronger requirement: it additionally depends on the
+frozen archive, scientific runtime, contracts, and intermediate evidence named
+by this workflow.
+
 \section{Scope and threat model}
 \label{sec:scope}
 
@@ -388,5 +421,8 @@ failures without redefining the analysis.  The tagged release verifies a
 15-stage adopted artifact graph and a bounded clean-clone smoke.  It neither
 recomputes the full corrected-O4a chain nor supplies a claim of global
 significance, astrophysical discovery, or public real-time operation.
+
+\bibliographystyle{apsrev4-2}
+\bibliography{references}
 
 \end{document}

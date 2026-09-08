@@ -37,6 +37,8 @@ From this directory, using a TeX environment with REVTeX 4.2:
 
 ```shell
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
+\bibtex main
+pdflatex -interaction=nonstopmode -halt-on-error main.tex
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 ```
 
