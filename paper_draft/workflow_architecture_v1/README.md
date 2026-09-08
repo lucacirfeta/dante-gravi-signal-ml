@@ -17,10 +17,19 @@ baseline above does not.
 
 ## Current state
 
-The manuscript is a compilable structural draft. Evidence-backed prose,
-figures, bibliography, consistency checks, and PDF review remain in the
-implementation plan. The claim ledger is the gate for introducing substantive
-statements.
+The manuscript has a compilable evidence-backed first draft and
+contract-generated architecture figures. Bibliography, consistency checks,
+scientific review, and final PDF review remain in the implementation plan. The
+claim ledger is the gate for introducing substantive statements; the evidence
+audit records drafting-time receipt checks and portability caveats.
+
+## Source inventory
+
+- `main.tex`: manuscript source;
+- `CLAIM_LEDGER.md`: permitted and prohibited claim map;
+- `EVIDENCE_AUDIT.md`: read-only evidence checks;
+- `generate_figures.py`: contract-backed figure generator;
+- `figures/`: generated PDF and PNG figures.
 
 ## Build
 

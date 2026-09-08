@@ -48,6 +48,8 @@ The following boundaries are fixed:
 
 ### A1 — Freeze the manuscript contract
 
+Status: **COMPLETE** — commit `5d6dade`.
+
 Outputs:
 
 - `paper_draft/workflow_architecture_v1/README.md`
@@ -58,6 +60,8 @@ Done when the draft identifies the tagged baseline, receipt, scope, section
 structure, and prohibited claims without importing numbers from memory or chat.
 
 ### A2 — Build the architecture and lifecycle figures
+
+Status: **COMPLETE** — contract-backed source and figures in commit `e1e8aeb`.
 
 Create source-controlled figures for:
 
@@ -71,6 +75,9 @@ Figures must be generated from versioned source or checked manually against
 the frozen config. They must not encode scientific thresholds or outcomes.
 
 ### A3 — Draft the evidence-backed manuscript
+
+Status: **COMPLETE** — first evidence-backed full draft; literature remains
+separate under A4.
 
 Complete introduction, design objectives, architecture, provenance model,
 operator workflow, verification methodology, results, limitations,
