@@ -23,6 +23,9 @@ import numpy as np
 from src.core.index_contract import sha256_file
 from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.o4a_corrected_execution import verify_primary_scan
+from src.dante_light.o4a_native_provenance import (
+    verify_reference_with_reconciliation,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -99,8 +102,12 @@ def validate_native_contract(
     )
     for reference in references:
         path = root / str(reference["path"])
-        if not path.is_file() or sha256_file(path) != str(reference["sha256"]):
-            raise ContractError(f"corrected native reference mismatch: {path}")
+        verify_reference_with_reconciliation(
+            root=root,
+            path=path,
+            expected_sha256=str(reference["sha256"]),
+            raw_hasher=sha256_file,
+        )
     parent_path = root / value["parent_protocol"]["path"]
     parent = json.loads(parent_path.read_text(encoding="utf-8"))
     if parent.get("protocol_digest") != value["parent_protocol"]["protocol_digest"]:

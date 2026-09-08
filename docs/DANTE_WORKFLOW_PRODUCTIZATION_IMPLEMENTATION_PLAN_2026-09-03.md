@@ -4,7 +4,7 @@ wave: 0-6
 depends_on:
   - merge codex/dante-light-o4a-v1-parity into main
 autonomous: false
-status: READY_FOR_EXECUTION_AFTER_MERGE
+status: P6_1_COMPLETE
 ---
 
 # DANTE workflow productization v1 — implementation plan
@@ -20,7 +20,35 @@ scores, populations, thresholds, null constructions, detector semantics, or
 published artifacts. Any requested change to what is measured or how it is
 validated is a separate scientific checkpoint and stops execution.
 
-## Current baseline
+## Implementation checkpoint — 2026-09-08
+
+| Phase | Status | Remaining acceptance |
+|---|---|---|
+| P1 | Implemented; clean-clone/recovery acceptance PASS | None |
+| P2 | Implemented; bounded public end-to-end acceptance PASS | Full O4a release in P6 |
+| P3 | Implemented; bounded public evidence acceptance PASS | Full O4a release in P6 |
+| P4.1 | Approved and frozen (`176cf48`) | None |
+| P4.2 | Read/control UI and public-smoke UI implemented; process tests and human usability acceptance PASS | None |
+| P5 | PASS: fresh install, recovery matrix, fresh-clone CLI/UI parity | None |
+| P6 | P6.1 COMPLETE: machine verification and human usability acceptance PASS | P6.2 on a separate architecture-paper branch |
+
+Evidence and explicit limitations:
+`docs/DANTE_WORKFLOW_UI_CHECKPOINT_2026-09-05.md`.
+Clean-clone Plan/PREFLIGHT checks passed; the separate technical-smoke scope
+was approved (it is not a complete scientific O4a rerun):
+`docs/DANTE_WORKFLOW_CLEAN_CLONE_SCOPE_CHECKPOINT_2026-09-05.md`.
+Public technical smoke evidence:
+`docs/DANTE_WORKFLOW_PUBLIC_SMOKE_RESULT_2026-09-05.md`.
+Packaged fresh-clone CLI/UI parity evidence:
+`artifacts/dante_workflow/public_smoke_ui_checkpoint_2026-09-06.json`.
+The machine-verifiable release evidence is recorded in
+`docs/DANTE_WORKFLOW_PRODUCTIZATION_RESULT.md` and
+`artifacts/dante_workflow/productization_v1_release.json`. Human usability
+acceptance passed on 2026-09-08 after the guided UI remediation and the
+separate verification-results view were exercised. Scientific O4a artifacts
+were not rerun, promoted, or reinterpreted by this checkpoint.
+
+## Historical baseline at plan creation
 
 - corrected O4a regression: 115 tests pass;
 - DANTE-Light operational verifier: all eight required gates pass;
@@ -32,6 +60,9 @@ validated is a separate scientific checkpoint and stops execution.
   environment, and the corrected workflow is not exposed through it;
 - long-running execution currently depends on expert knowledge of WSL, CUDA,
   external roots, stage order, frozen contracts, and artifact verification.
+- the IGWN thread #1544 closure draft has been versioned since commit
+  `9f17206` and the user has completed the external forum post; it is retained
+  as historical publication evidence, not an outstanding backlog item.
 
 ## Non-negotiable product contract
 
@@ -52,11 +83,11 @@ validated is a separate scientific checkpoint and stops execution.
 8. No productization result authorizes public real-time alerts, automatic
    adaptation, or an astrophysical/discovery claim.
 
-## Branching and merge gate
+## Completed branching and merge gate
 
-The current branch is a completed scientific milestone: `origin/main` is its
-direct ancestor and the branch is 100 commits ahead with no divergence. Close
-the current branch before productization:
+The scientific milestone was merged into `main` as merge commit `d160007`.
+Productization now proceeds on `codex/dante-workflow-productization-v1`.
+The completed transition was:
 
 1. commit the final IGWN copy and this plan on
    `codex/dante-light-o4a-v1-parity`;
@@ -121,8 +152,11 @@ Files:
 Action:
 
 - define stages `PREFLIGHT`, `ACQUIRE`, `CALIBRATE`, `SCAN`, `COHORT`,
-  `INDEX`, `RESCORE`, `THRESHOLDS`, `CLASSIFY`, `TAXONOMY`, `COINCIDENCE`,
-  `PEM`, `COMPARE`, `REPORT`;
+  `INDEX`, `NATIVE_CALIBRATION`, `RESCORE`, `THRESHOLDS`, `CLASSIFY`,
+  `TAXONOMY`, `COINCIDENCE`, `PEM`, `COMPARE`, `REPORT`;
+- require `NATIVE_CALIBRATION` to depend on both `COHORT` and the consumed
+  window manifest emitted by `INDEX`, so its frozen 128 s exclusion guard can
+  reject overlap with the index population before rescoring;
 - encode dependencies, required inputs, expected outputs, verifier command,
   outcome-visibility policy, and resumability for each stage;
 - reference frozen scientific configs by path and SHA-256 rather than copying
@@ -137,6 +171,23 @@ python -m pytest -q tests/test_dante_workflow_schema.py
 
 Done when malformed or scientifically incomplete workflow specs fail closed
 and the frozen O4a spec validates without duplicating a scientific constant.
+
+Scientific-stage dependency detail:
+
+```text
+PREFLIGHT -> ACQUIRE -> CALIBRATE -> SCAN -> COHORT
+                                               |-> INDEX -------------------|
+                                               |       |                    |
+                                               |       v                    v
+                                               |-> NATIVE_CALIBRATION -> RESCORE
+                                                                        |
+                                                                        v
+THRESHOLDS -> CLASSIFY -> TAXONOMY -> COINCIDENCE -> PEM -> COMPARE -> REPORT
+```
+
+`NATIVE_CALIBRATION` consumes only the verified index window manifest needed
+for the frozen overlap guard; it does not inspect index outcomes. `RESCORE`
+requires verified outputs from both branches.
 
 ### Task P1.2 — Implement an append-only workflow ledger
 
@@ -408,6 +459,9 @@ Wave: 5
 Depends on: P5
 
 ### Task P6.1 — Verify the packaged user path
+
+Status: **COMPLETE** — machine verification and human usability acceptance
+PASS on 2026-09-08.
 
 Type: `checkpoint:human-verify`
 

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}DANTE technical smoke — setup required{% endblock %}
+{% block content %}
+<section class="panel error-panel" aria-labelledby="setup-error-heading">
+  <p class="eyebrow">Setup required</p>
+  <h2 id="setup-error-heading">The test cannot start from this checkout</h2>
+  <p class="error-detail">{{ error }}</p>
+  <h3>Recommended WSL setup</h3>
+  <ol>
+    <li>Stop this server.</li>
+    <li>Clone the productization branch inside your WSL home directory.</li>
+    <li>Launch this UI from that tracked-clean clone.</li>
+  </ol>
+  <pre class="command-block">git clone --branch codex/dante-workflow-productization-v1 --single-branch \
+https://github.com/lucacirfeta/dante-gravi-signal-ml.git \
+~/dante-workflow-human-gate</pre>
+  <p>No scientific data or existing run needs to be deleted.</p>
+</section>
+{% endblock %}

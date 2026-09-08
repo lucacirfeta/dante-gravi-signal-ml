@@ -15,6 +15,9 @@ from sklearn.metrics import adjusted_rand_score
 
 from src.core.index_contract import sha256_file
 from src.dante_light.contracts import ContractError, canonical_json_sha256
+from src.dante_light.o4a_native_provenance import (
+    verify_reference_with_reconciliation,
+)
 from src.dante_light.o4a_corrected_native_rescore import _atomic_json, _atomic_jsonl
 from src.dante_light.o4a_corrected_native_rescore_v2 import _load_jsonl
 from src.dante_light.prefilter_v5_protocol import sha256_path
@@ -107,8 +110,12 @@ def _require_historical_candidate_subset(
 
 def _repo_reference(root: Path, reference: Mapping[str, Any]) -> Path:
     path = (root / str(reference["path"])).resolve()
-    if not path.is_file() or sha256_path(path) != str(reference["sha256"]):
-        raise ContractError(f"final-comparison reference changed: {path}")
+    verify_reference_with_reconciliation(
+        root=root,
+        path=path,
+        expected_sha256=str(reference["sha256"]),
+        raw_hasher=sha256_path,
+    )
     return path
 
 
