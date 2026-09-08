@@ -262,8 +262,11 @@ layout are documented in [`CLI_REFERENCE.md`](CLI_REFERENCE.md#dante-light-v81-r
 ## 📊 Key Results
 *Note: All empirical claims are strictly bounded by the conditions under which they were measured.*
 
-> **v6 detector-aware audit:** the final coherent Q64/Q64 taxonomy contains
-> 10,429 detector--GPS keys: 6,365 ROBUST, 1,275 AMBIGUOUS and 2,789 BACKGROUND.
+> **Historical v6 detector-aware audit:** the coherent Q64/Q64 catalogue used
+> as the frozen comparison baseline contains 10,429 detector--GPS keys: 6,365
+> ROBUST, 1,275 AMBIGUOUS and 2,789 BACKGROUND. It is not the later corrected-O4a
+> catalogue adopted by `dante-workflow-productization-v1`; that snapshot contains
+> 10,942 candidates (5,406 ROBUST, 2,344 AMBIGUOUS, 3,192 BACKGROUND).
 > Of 10,372 historical paired keys, 4,676 dispositions change under the coherent
 > representation; 57 detector-specific keys were restored. These are statistical
 > DSD dispositions, not physical glitch classes.
