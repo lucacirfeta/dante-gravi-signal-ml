@@ -1,13 +1,13 @@
 # DANTE JOSS J3 clean-clone rehearsal
 
-Status: **LOCAL REHEARSAL PASS; INDEPENDENT PUBLIC REPRODUCTION PENDING**
+Status: **PUBLIC HTTPS REPRODUCTION PASS; EXTERNAL HUMAN REVIEW PENDING**
 
 ## Scope
 
 This checkpoint exercises the documented Python 3.11 CPU installation and
-bounded public technical smoke from a new WSL-native clone at commit
-`0d5f395635129d31b4c971f9bce5d6919262c249`. It is not an independent-user
-acceptance result, a full corrected-O4a rerun, or a scientific result.
+bounded public technical smoke from new WSL-native clones. It is not an
+independent-user acceptance result, a full corrected-O4a rerun, or a scientific
+result.
 
 The source commit was cloned from the local repository because the branch had
 not been pushed. The smoke correctly rejected the initial `file://` origin.
@@ -15,7 +15,9 @@ For the pre-publication rehearsal only, the clone's untracked Git configuration
 was changed to the canonical HTTPS repository URL. The tracked checkout stayed
 clean. Consequently, this checkpoint validates the installation and smoke
 mechanics but does not satisfy the public-source or independent-user parts of
-J3.
+J3. After the branch was published, the complete procedure was repeated from a
+new clone obtained directly from the canonical GitHub HTTPS remote at commit
+`8a807c1b2a91c0483bba9b61f4e32747e226744d`.
 
 ## Environment
 
@@ -42,6 +44,15 @@ No raw mirror or corrected-O4a cache was copied into the clone.
 | Installed UI dashboard/results discovery | PASS |
 | Packaging, smoke-UI, and CLI tests | 14 passed |
 
+The public HTTPS rerun produced run key
+`94688ca79c266e7f7c420dccd7fab78b65f27ee7df3c8f79de07e460f9dae944`.
+Its verified receipt SHA-256 was
+`8b10cafa7335a269d423df10b51b9aafd5415df23a9af2de1b0711a2ab3200c2`;
+the readable report SHA-256 was
+`9fa828cb8d51fa1c6868bb791a0fa2e0803d32cf1746aec028e3210e888927a5`.
+Explicit verification and a subsequent rerun both returned
+`SKIPPED_VERIFIED_TECHNICAL_SMOKE`, demonstrating hash-checked reuse.
+
 The smoke run key was
 `ca55f8304d5b07ace3693e065e5cc4244f1292cf33e9e37b26c69e11c2419215`.
 The verified technical receipt SHA-256 was
@@ -58,9 +69,8 @@ human usability review.
 
 ## Remaining J3 gate
 
-After the branch is published, repeat the documented clone and installation
-from the public HTTPS repository without altering the remote configuration.
-Then ask an external user to execute the CPU smoke and record only:
+Ask an external user to clone the published branch, execute the documented CPU
+smoke, and record only:
 
 - source tag/commit and environment identity;
 - final status and run key;
@@ -68,4 +78,4 @@ Then ask an external user to execute the CPU smoke and record only:
 - whether start, resume, progress, logs, report, and receipt were discoverable;
 - any undocumented choice or corrective action that was required.
 
-Do not promote this rehearsal to independent reproduction evidence.
+Do not mark J3 complete until that independent human result is recorded.
