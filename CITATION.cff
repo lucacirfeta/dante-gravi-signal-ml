@@ -44,6 +44,7 @@ authors:
 version: "3.8.0"
 date-released: "2026-09-09"
 
+doi: "10.5281/zenodo.22681395"
 url: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 repository-code: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 

@@ -45,5 +45,6 @@ source checkout. Release 3.8.0 is licensed GPL-3.0-only.
 
 The historical DANTE 3.7.0 archive remains available at
 <https://doi.org/10.5281/zenodo.21912589>. That version DOI does not identify
-3.8.0. The 3.8.0 version DOI must be reserved and inserted into the release
-metadata before the immutable tag and Zenodo record are published.
+3.8.0. The reserved 3.8.0 version DOI is
+<https://doi.org/10.5281/zenodo.22681395>; it becomes registered when the
+Zenodo record is published.

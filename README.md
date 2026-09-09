@@ -3,14 +3,15 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
 [![Workflow arXiv](https://img.shields.io/badge/arXiv-2609.08695-b31b1b.svg)](https://arxiv.org/abs/2609.08695)
-[![Zenodo 3.7.0](https://img.shields.io/badge/3.7.0_DOI-10.5281/zenodo.21912589-blue.svg)](https://doi.org/10.5281/zenodo.21912589)
+[![Zenodo 3.8.0](https://img.shields.io/badge/3.8.0_DOI-10.5281/zenodo.22681395-blue.svg)](https://doi.org/10.5281/zenodo.22681395)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Workflow Python 3.11+](https://img.shields.io/badge/workflow_python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 > **Release status (2026-09-09).** Version `3.8.0` adds the installable
-> content-addressed workflow controller and its bounded public CPU smoke; its
-> release DOI will be added only after Zenodo archives the immutable `v3.8.0`
-> tag. The released scientific software baseline remains `3.7.0` (2026-08-13;
+> content-addressed workflow controller and its bounded public CPU smoke. Its
+> reserved version DOI is `10.5281/zenodo.22681395` and becomes registered when
+> Zenodo publishes the immutable `v3.8.0` archive. The released scientific
+> software baseline remains `3.7.0` (2026-08-13;
 > DOI `10.5281/zenodo.21912589`). The latest
 > auxiliary release is `dante-reference-artifacts-v1` (2026-08-15; DOI
 > `10.5281/zenodo.21957984`). The v6 evidence bundle is dated 2026-08-13
@@ -375,7 +376,22 @@ cite:
 }
 ```
 
-To cite the archived software and analysis artifacts:
+For the 3.8.0 software release, use the reserved version DOI (which resolves
+after the Zenodo record is published):
+
+```bibtex
+@software{cirfeta_dante_3_8_0,
+  title     = {DANTE (Domain-Adaptive Network for Transient Evaluation)},
+  author    = {Cirfeta, Luca},
+  year      = {2026},
+  version   = {3.8.0},
+  doi       = {10.5281/zenodo.22681395},
+  publisher = {Zenodo},
+  url       = {https://doi.org/10.5281/zenodo.22681395}
+}
+```
+
+To cite the historical 3.7.0 software and analysis artifacts:
 
 ```bibtex
 @software{dante_v3_zenodo,
@@ -393,8 +409,8 @@ To cite the archived software and analysis artifacts:
 > [`3.7.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0).
 > The workflow architecture preprint separately identifies its immutable
 > productization baseline and adopted corrected-O4a evidence.
-> Release `3.8.0` has no DOI until its immutable tag is archived by Zenodo; do
-> not cite the historical 3.7.0 DOI as the identifier for 3.8.0.
+> Release `3.8.0` uses the reserved DOI `10.5281/zenodo.22681395`; do not cite
+> the historical 3.7.0 DOI as its identifier.
 
 ### LLM Disclosure
 The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.

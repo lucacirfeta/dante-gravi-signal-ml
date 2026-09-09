@@ -1,6 +1,6 @@
 # DANTE 3.8.0 archival release checklist
 
-Status: **PREPARED; PUBLICATION REQUIRES HUMAN CHECKPOINT**
+Status: **DOI RESERVED; FINAL VERIFICATION COMPLETE; PUBLICATION REQUIRES HUMAN CHECKPOINT**
 
 This checklist creates a new immutable software version without moving the
 historical `3.7.0` or `dante-workflow-productization-v1` tags. It does not
@@ -15,7 +15,7 @@ authorize a GitHub Release or Zenodo publication.
 - license: `GPL-3.0-only`
 - historical 3.7.0 version DOI: `10.5281/zenodo.21912589`
 - Zenodo concept DOI: `10.5281/zenodo.20121859`
-- 3.8.0 version DOI: **not yet reserved**
+- 3.8.0 version DOI: `10.5281/zenodo.22681395` (reserved, not published)
 
 If publication occurs after 2026-09-09, update `date-released` and the
 changelog date before building or tagging.
@@ -39,12 +39,12 @@ changelog date before building or tagging.
 To keep the immutable tag self-describing, create a draft **new version** of
 the existing Zenodo concept record and reserve its version DOI before tagging:
 
-1. Open Zenodo record `21912589` and choose **New version**.
-2. Keep the draft unpublished and reserve its DOI.
-3. Replace the pending DOI marker in `CITATION.cff`, README, and these release
-   notes with that exact version DOI.
-4. Re-run metadata validation, archive builds, install checks, and tests.
-5. Commit the DOI-only metadata change and obtain final human approval.
+1. [x] Open Zenodo record `21912589` and choose **New version**.
+2. [x] Keep the draft unpublished and reserve its DOI.
+3. [x] Insert `10.5281/zenodo.22681395` into `CITATION.cff`, README, changelog,
+   release notes, and release checks.
+4. [x] Re-run metadata validation, archive builds, install checks, and tests.
+5. [ ] Commit the DOI-only metadata change and obtain final human approval.
 
 Do not enable a second automatic GitHub-to-Zenodo deposit for this tag if the
 new-version draft is being managed manually; that could create a duplicate
