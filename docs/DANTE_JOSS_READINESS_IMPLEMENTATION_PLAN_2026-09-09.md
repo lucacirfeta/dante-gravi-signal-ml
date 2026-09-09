@@ -31,7 +31,7 @@ by rewriting the historical tag.
 |---|---|---|
 | J1 public metadata and policy | Complete | Commit `9580624`; 121 workflow tests passed. |
 | J2 installation and packaging | Complete locally | Hybrid Option B; wheel/base/UI isolation and CLI run-key parity passed; 125 Windows and 124+1-skip WSL workflow tests passed. |
-| J3 independent reproduction | Pending | Run after the J2 installation contract is frozen. |
+| J3 independent reproduction | Local rehearsal passed | Clean WSL clone, isolated install, CPU smoke/retry/verify, UI discovery, and 14 focused tests passed; public-source and external-user gates remain. |
 | J4 archival release | Pending | Human choice of new version and release metadata. |
 | J5 JOSS manuscript/submission | Pending | Requires J3/J4 and the public-history gate. |
 
