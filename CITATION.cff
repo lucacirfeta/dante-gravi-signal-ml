@@ -178,3 +178,15 @@ references:
         given-names: "Luca"
     year: 2026
     url: "https://arxiv.org/abs/2607.18136"
+
+  - type: article
+    title: >
+      A Content-Addressed Workflow for Reproducible DANTE
+      Gravitational-Wave Anomaly Analysis
+    authors:
+      - family-names: "Cirfeta"
+        given-names: "Luca"
+        orcid: "https://orcid.org/0009-0000-1235-3186"
+    year: 2026
+    doi: "10.48550/arXiv.2609.08695"
+    url: "https://arxiv.org/abs/2609.08695"

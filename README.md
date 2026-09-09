@@ -2,6 +2,7 @@
 > Unsupervised morphological characterization of gravitational-wave transients using frozen Vision Transformers and Multiple Instance Learning.
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
+[![Workflow arXiv](https://img.shields.io/badge/arXiv-2609.08695-b31b1b.svg)](https://arxiv.org/abs/2609.08695)
 [![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21912589-blue.svg)](https://doi.org/10.5281/zenodo.21912589)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -14,6 +15,9 @@
 > public version v3, revised 2026-07-23 (`arXiv:2607.18136`). This branch also
 > documents the additive, unreleased DANTE-Light v8.1 engineering workflow; it
 > does not replace or relabel the validated 3.7.0 analysis.
+> The separately tagged workflow-productization architecture is described in
+> [`arXiv:2609.08695`](https://arxiv.org/abs/2609.08695); it verifies adopted
+> corrected-O4a artifacts and does not claim a fresh scientific recomputation.
 
 ```mermaid
 graph TD
@@ -314,6 +318,9 @@ Every experimentally-validated invariant of the pipeline is protected by a regre
 
 Contributions are welcome. This project is open-source under the **Apache License 2.0**.
 See [LICENSE](LICENSE) for details.
+Contribution, support, conduct, and decision expectations are documented in
+[CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md),
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [GOVERNANCE.md](GOVERNANCE.md).
 
 ### Citation
 If you use this software in your research, please cite our preprint:
@@ -328,6 +335,23 @@ If you use this software in your research, please cite our preprint:
   archivePrefix = {arXiv},
   primaryClass = {astro-ph.IM},
   url    = {https://arxiv.org/abs/2607.18136}
+}
+```
+
+For the content-addressed workflow and its bounded reproducibility evidence,
+cite:
+
+```bibtex
+@misc{cirfeta2026danteworkflow,
+  title         = {A Content-Addressed Workflow for Reproducible DANTE
+                   Gravitational-Wave Anomaly Analysis},
+  author        = {Cirfeta, Luca},
+  year          = {2026},
+  eprint        = {2609.08695},
+  archivePrefix = {arXiv},
+  primaryClass  = {astro-ph.IM},
+  doi           = {10.48550/arXiv.2609.08695},
+  url           = {https://arxiv.org/abs/2609.08695}
 }
 ```
 
