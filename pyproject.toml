@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dante-workflow"
-version = "3.8.0.dev0"
+version = "3.8.0"
 description = "Content-addressed orchestration for reproducible DANTE gravitational-wave analysis"
 readme = "README.md"
 requires-python = ">=3.11"
-license = "Apache-2.0"
+license = "GPL-3.0-only"
 license-files = ["LICENSE"]
 authors = [
   { name = "Luca Cirfeta" },
@@ -46,6 +46,9 @@ Documentation = "https://github.com/lucacirfeta/dante-gravi-signal-ml#readme"
 Repository = "https://github.com/lucacirfeta/dante-gravi-signal-ml.git"
 Issues = "https://github.com/lucacirfeta/dante-gravi-signal-ml/issues"
 Preprint = "https://arxiv.org/abs/2609.08695"
+
+[tool.setuptools]
+include-package-data = false
 
 [tool.setuptools.packages.find]
 where = ["src"]

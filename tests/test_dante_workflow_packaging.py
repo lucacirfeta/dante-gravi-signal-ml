@@ -10,6 +10,7 @@ import sys
 import tomllib
 
 import pytest
+import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,16 +36,34 @@ def test_pyproject_packages_only_the_workflow_boundary() -> None:
     metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert metadata["project"]["name"] == "dante-workflow"
-    assert metadata["project"]["version"].endswith(".dev0")
+    assert metadata["project"]["version"] == "3.8.0"
+    assert metadata["project"]["license"] == "GPL-3.0-only"
     assert metadata["project"]["dependencies"] == []
     assert metadata["project"]["scripts"] == {
         "dante-workflow": "dante_workflow.cli:main",
         "dante-workflow-ui": "dante_workflow.ui.cli:main",
     }
+    assert metadata["tool"]["setuptools"]["include-package-data"] is False
     assert metadata["tool"]["setuptools"]["packages"]["find"]["include"] == [
         "dante_workflow",
         "dante_workflow.*",
     ]
+
+
+def test_release_metadata_is_consistent_and_does_not_relabel_old_doi() -> None:
+    package = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    citation = yaml.safe_load((ROOT / "CITATION.cff").read_text(encoding="utf-8"))
+
+    assert citation["version"] == package["project"]["version"] == "3.8.0"
+    assert citation["license"] == package["project"]["license"] == "GPL-3.0-only"
+    assert "doi" not in citation
+    historical = [
+        item
+        for item in citation["references"]
+        if item.get("type") == "software" and item.get("version") == "3.7.0"
+    ]
+    assert len(historical) == 1
+    assert historical[0]["doi"] == "10.5281/zenodo.21912589"
 
 
 def test_checkout_wrapper_and_package_module_have_identical_plan(tmp_path: Path) -> None:

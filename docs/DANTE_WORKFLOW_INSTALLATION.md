@@ -94,6 +94,7 @@ python -m pip install -e .
 python -m pytest -q tests/test_dante_workflow_packaging.py
 ```
 
-The development version in `pyproject.toml` is not an archival release. Version,
-`CITATION.cff`, tag, GitHub Release, and Zenodo metadata will be aligned at the
-explicit release checkpoint.
+The package metadata is prepared for release `3.8.0`. The immutable tag,
+GitHub Release, and Zenodo archive must be created only from the final verified
+commit at the explicit release checkpoint. Until Zenodo archives that tag,
+3.8.0 has no DOI and must not inherit the historical 3.7.0 DOI.

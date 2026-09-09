@@ -64,5 +64,6 @@ superseded attempts, and report bounded claims with machine-readable evidence.
 
 The maintainer reviews contributions for scope, correctness, reproducibility,
 and compatibility with the scientific contracts. By contributing, you agree
-that your contribution is provided under the repository's Apache License 2.0.
+that your contribution is provided under the repository's GNU General Public
+License v3.0.
 Participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

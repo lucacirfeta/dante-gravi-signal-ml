@@ -21,9 +21,11 @@ The existing root `CITATION.cff` describes DANTE release `3.7.0` and DOI
 workflow release until the repository metadata and the new release identity
 agree. The old DOI remains valid only for the archived 3.7.0 software record.
 
-The first archival release prepared by this plan will use a new immutable tag.
-Selecting its version identifier is a release checkpoint; it is not inferred
-by rewriting the historical tag.
+The first archival release prepared by this plan is version `3.8.0` with the
+new immutable tag `v3.8.0`. The choice does not rewrite either historical tag.
+The 3.8.0 version DOI must be reserved in a new-version draft under the existing
+Zenodo concept before the final tag so the immutable release metadata can name
+the correct DOI.
 
 ## Progress
 
@@ -32,7 +34,7 @@ by rewriting the historical tag.
 | J1 public metadata and policy | Complete | Commit `9580624`; 121 workflow tests passed. |
 | J2 installation and packaging | Complete locally | Hybrid Option B; wheel/base/UI isolation and CLI run-key parity passed; 125 Windows and 124+1-skip WSL workflow tests passed. |
 | J3 clean-environment reproduction | Complete | Fresh GitHub HTTPS clone, isolated install, CPU smoke/retry/verify, UI discovery, 14 focused tests, and hosted CI passed. No external human pre-review is claimed; the checklist remains available for optional community validation. |
-| J4 archival release | In progress | Prepare version `3.8.0` metadata and release evidence; tag, GitHub Release, and Zenodo publication remain human checkpoints. |
+| J4 archival release | Prepared, unpublished | Version `3.8.0`; metadata, changelog, release notes, CFF validation, package builds, archive inspection, isolated install, 126 Windows tests, and 125+1-skip WSL tests pass. DOI reservation, tag, GitHub Release, and Zenodo publication remain human checkpoints. |
 | J5 JOSS manuscript/submission | Pending | Requires J3/J4 and the public-history gate. |
 
 ## Dependency order
@@ -117,9 +119,11 @@ Acceptance:
 
 ## J4 — Archival software release
 
-At a human release checkpoint, choose a new version that distinguishes the
-JOSS-ready software from both `3.7.0` and the immutable architecture-paper
-baseline tag. Update release metadata before creating the tag.
+Version `3.8.0` distinguishes the JOSS-ready software from both `3.7.0` and the
+immutable architecture-paper baseline tag. Package, citation, license,
+changelog, and release-note metadata are prepared before creating the tag.
+Tagging, GitHub Release creation, and Zenodo publication remain explicit human
+checkpoints.
 
 Acceptance:
 

@@ -3,12 +3,15 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
 [![Workflow arXiv](https://img.shields.io/badge/arXiv-2609.08695-b31b1b.svg)](https://arxiv.org/abs/2609.08695)
-[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21912589-blue.svg)](https://doi.org/10.5281/zenodo.21912589)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Zenodo 3.7.0](https://img.shields.io/badge/3.7.0_DOI-10.5281/zenodo.21912589-blue.svg)](https://doi.org/10.5281/zenodo.21912589)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Workflow Python 3.11+](https://img.shields.io/badge/workflow_python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-> **Documentation status (2026-08-28).** The released scientific software
-> baseline is `3.7.0` (2026-08-13; DOI `10.5281/zenodo.21912589`). The latest
+> **Release status (2026-09-09).** Version `3.8.0` adds the installable
+> content-addressed workflow controller and its bounded public CPU smoke; its
+> release DOI will be added only after Zenodo archives the immutable `v3.8.0`
+> tag. The released scientific software baseline remains `3.7.0` (2026-08-13;
+> DOI `10.5281/zenodo.21912589`). The latest
 > auxiliary release is `dante-reference-artifacts-v1` (2026-08-15; DOI
 > `10.5281/zenodo.21957984`). The v6 evidence bundle is dated 2026-08-13
 > (DOI `10.5281/zenodo.21925453`), and the associated arXiv record is currently
@@ -332,7 +335,8 @@ Every experimentally-validated invariant of the pipeline is protected by a regre
 
 ## 📝 Citation and License
 
-Contributions are welcome. This project is open-source under the **Apache License 2.0**.
+Contributions are welcome. This project is open-source under the
+**GNU General Public License v3.0**.
 See [LICENSE](LICENSE) for details.
 Contribution, support, conduct, and decision expectations are documented in
 [CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md),
@@ -385,8 +389,12 @@ To cite the archived software and analysis artifacts:
 }
 ```
 
-> The exact version used for every number in the manuscripts is pinned at git
-> tag [`3.7.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0).
+> The archived 3.7.0 scientific-analysis results are pinned at git tag
+> [`3.7.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0).
+> The workflow architecture preprint separately identifies its immutable
+> productization baseline and adopted corrected-O4a evidence.
+> Release `3.8.0` has no DOI until its immutable tag is archived by Zenodo; do
+> not cite the historical 3.7.0 DOI as the identifier for 3.8.0.
 
 ### LLM Disclosure
 The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.
