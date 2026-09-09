@@ -16,10 +16,10 @@ that preprint and must never be moved.
 
 ## Release boundary
 
-The existing root `CITATION.cff` describes DANTE release `3.7.0` and DOI
-`10.5281/zenodo.21912589`. A Zenodo archive must not be generated for a new
-workflow release until the repository metadata and the new release identity
-agree. The old DOI remains valid only for the archived 3.7.0 software record.
+Before J4, the root `CITATION.cff` described DANTE release `3.7.0` and DOI
+`10.5281/zenodo.21912589`. It now identifies 3.8.0 with the reserved version
+DOI `10.5281/zenodo.22681395`. The old DOI remains valid only for the archived
+3.7.0 software record.
 
 The first archival release prepared by this plan is version `3.8.0` with the
 new immutable tag `v3.8.0`. The choice does not rewrite either historical tag.
@@ -34,7 +34,7 @@ the correct DOI.
 | J1 public metadata and policy | Complete | Commit `9580624`; 121 workflow tests passed. |
 | J2 installation and packaging | Complete locally | Hybrid Option B; wheel/base/UI isolation and CLI run-key parity passed; 125 Windows and 124+1-skip WSL workflow tests passed. |
 | J3 clean-environment reproduction | Complete | Fresh GitHub HTTPS clone, isolated install, CPU smoke/retry/verify, UI discovery, 14 focused tests, and hosted CI passed. No external human pre-review is claimed; the checklist remains available for optional community validation. |
-| J4 archival release | Prepared, unpublished | Version `3.8.0`; metadata, changelog, release notes, CFF validation, package builds, archive inspection, isolated install, 126 Windows tests, and 125+1-skip WSL tests pass. DOI reservation, tag, GitHub Release, and Zenodo publication remain human checkpoints. |
+| J4 archival release | DOI reserved; final verification | Version `3.8.0`, DOI `10.5281/zenodo.22681395`; final metadata/build/test checks precede the tag. GitHub Release and Zenodo publication remain human checkpoints. |
 | J5 JOSS manuscript/submission | Pending | Requires J3/J4 and the public-history gate. |
 
 ## Dependency order
@@ -52,10 +52,13 @@ Install/package boundary and reviewer smoke
 Independent clean-clone reproduction
         |
         v
-Release identity checkpoint
+Reserve Zenodo version DOI
         |
         v
-GitHub Release -> Zenodo version DOI
+Release identity verification
+        |
+        v
+Tag and GitHub Release -> publish reserved Zenodo version
         |
         v
 JOSS paper and submission

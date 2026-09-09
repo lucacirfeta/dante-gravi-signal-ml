@@ -56,7 +56,7 @@ def test_release_metadata_is_consistent_and_does_not_relabel_old_doi() -> None:
 
     assert citation["version"] == package["project"]["version"] == "3.8.0"
     assert citation["license"] == package["project"]["license"] == "GPL-3.0-only"
-    assert "doi" not in citation
+    assert citation["doi"] == "10.5281/zenodo.22681395"
     historical = [
         item
         for item in citation["references"]

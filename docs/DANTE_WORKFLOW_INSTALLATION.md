@@ -96,5 +96,6 @@ python -m pytest -q tests/test_dante_workflow_packaging.py
 
 The package metadata is prepared for release `3.8.0`. The immutable tag,
 GitHub Release, and Zenodo archive must be created only from the final verified
-commit at the explicit release checkpoint. Until Zenodo archives that tag,
-3.8.0 has no DOI and must not inherit the historical 3.7.0 DOI.
+commit at the explicit release checkpoint. The reserved 3.8.0 version DOI is
+`10.5281/zenodo.22681395`; it becomes registered only when Zenodo publishes
+the archive. Version 3.8.0 must not inherit the historical 3.7.0 DOI.

@@ -24,7 +24,8 @@ remain available through their immutable Git tags and archived records.
 - Updated repository licensing from Apache-2.0 to GPL-3.0-only. Historical
   archives retain the license metadata shipped in those immutable versions.
 - Prepared package and citation metadata for the `v3.8.0` archival release.
-  The 3.7.0 version DOI remains historical and is not assigned to 3.8.0.
+  Its reserved version DOI is `10.5281/zenodo.22681395`; the 3.7.0 version DOI
+  remains historical and is not assigned to 3.8.0.
 
 ### Verification
 
