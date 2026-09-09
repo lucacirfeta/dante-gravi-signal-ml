@@ -2,18 +2,41 @@
 > Unsupervised morphological characterization of gravitational-wave transients using frozen Vision Transformers and Multiple Instance Learning.
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
-[![Zenodo Software](https://img.shields.io/badge/DOI-10.5281/zenodo.21912589-blue.svg)](https://doi.org/10.5281/zenodo.21912589)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Workflow arXiv](https://img.shields.io/badge/arXiv-2609.08695-b31b1b.svg)](https://arxiv.org/abs/2609.08695)
+[![Zenodo 3.7.0](https://img.shields.io/badge/3.7.0_DOI-10.5281/zenodo.21912589-blue.svg)](https://doi.org/10.5281/zenodo.21912589)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Workflow Python 3.11+](https://img.shields.io/badge/workflow_python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-> **Documentation status (2026-08-28).** The released scientific software
-> baseline is `3.7.0` (2026-08-13; DOI `10.5281/zenodo.21912589`). The latest
+> **Release status (2026-09-09).** Version `3.8.0` adds the installable
+> content-addressed workflow controller and its bounded public CPU smoke; its
+> release DOI will be added only after Zenodo archives the immutable `v3.8.0`
+> tag. The released scientific software baseline remains `3.7.0` (2026-08-13;
+> DOI `10.5281/zenodo.21912589`). The latest
 > auxiliary release is `dante-reference-artifacts-v1` (2026-08-15; DOI
 > `10.5281/zenodo.21957984`). The v6 evidence bundle is dated 2026-08-13
 > (DOI `10.5281/zenodo.21925453`), and the associated arXiv record is currently
 > public version v3, revised 2026-07-23 (`arXiv:2607.18136`). This branch also
 > documents the additive, unreleased DANTE-Light v8.1 engineering workflow; it
 > does not replace or relabel the validated 3.7.0 analysis.
+> The separately tagged workflow-productization architecture is described in
+> [`arXiv:2609.08695`](https://arxiv.org/abs/2609.08695); it verifies adopted
+> corrected-O4a artifacts and does not claim a fresh scientific recomputation.
+
+## Productized workflow controller
+
+The content-addressed orchestration library is installable from a source
+checkout without pulling the scientific stack:
+
+```bash
+python -m pip install .
+dante-workflow --help
+```
+
+The installed package contains the orchestration controller, not the complete
+scientific application or its data. Full stages and the bounded public smoke
+still require this repository checkout; the UI is installed with `.[ui]`.
+See [the installation guide](docs/DANTE_WORKFLOW_INSTALLATION.md) for the exact
+base, CPU-smoke, UI, and corrected-O4a boundaries.
 
 ```mermaid
 graph TD
@@ -312,8 +335,12 @@ Every experimentally-validated invariant of the pipeline is protected by a regre
 
 ## 📝 Citation and License
 
-Contributions are welcome. This project is open-source under the **Apache License 2.0**.
+Contributions are welcome. This project is open-source under the
+**GNU General Public License v3.0**.
 See [LICENSE](LICENSE) for details.
+Contribution, support, conduct, and decision expectations are documented in
+[CONTRIBUTING.md](CONTRIBUTING.md), [SUPPORT.md](SUPPORT.md),
+[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [GOVERNANCE.md](GOVERNANCE.md).
 
 ### Citation
 If you use this software in your research, please cite our preprint:
@@ -331,6 +358,23 @@ If you use this software in your research, please cite our preprint:
 }
 ```
 
+For the content-addressed workflow and its bounded reproducibility evidence,
+cite:
+
+```bibtex
+@misc{cirfeta2026danteworkflow,
+  title         = {A Content-Addressed Workflow for Reproducible DANTE
+                   Gravitational-Wave Anomaly Analysis},
+  author        = {Cirfeta, Luca},
+  year          = {2026},
+  eprint        = {2609.08695},
+  archivePrefix = {arXiv},
+  primaryClass  = {astro-ph.IM},
+  doi           = {10.48550/arXiv.2609.08695},
+  url           = {https://arxiv.org/abs/2609.08695}
+}
+```
+
 To cite the archived software and analysis artifacts:
 
 ```bibtex
@@ -345,8 +389,12 @@ To cite the archived software and analysis artifacts:
 }
 ```
 
-> The exact version used for every number in the manuscripts is pinned at git
-> tag [`3.7.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0).
+> The archived 3.7.0 scientific-analysis results are pinned at git tag
+> [`3.7.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0).
+> The workflow architecture preprint separately identifies its immutable
+> productization baseline and adopted corrected-O4a evidence.
+> Release `3.8.0` has no DOI until its immutable tag is archived by Zenodo; do
+> not cite the historical 3.7.0 DOI as the identifier for 3.8.0.
 
 ### LLM Disclosure
 The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.

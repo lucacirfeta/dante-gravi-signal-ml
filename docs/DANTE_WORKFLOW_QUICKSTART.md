@@ -9,7 +9,7 @@ as corrected O4a classifications.
 
 ## Prepare a separate WSL checkout
 
-Clone branch `codex/dante-workflow-productization-v1` from
+Clone the immutable tag `dante-workflow-productization-v1` from
 `https://github.com/lucacirfeta/dante-gravi-signal-ml.git` into a new directory
 inside the WSL home filesystem. Do **not** run the smoke from the Windows
 checkout mounted below `/mnt/c`: Windows/WSL line-ending representation can
@@ -18,7 +18,7 @@ correctly stops when tracked files differ.
 
 ```shell
 cd ~
-git clone --branch codex/dante-workflow-productization-v1 --single-branch \
+git clone --branch dante-workflow-productization-v1 --single-branch \
   https://github.com/lucacirfeta/dante-gravi-signal-ml.git \
   dante-workflow-human-gate
 cd dante-workflow-human-gate

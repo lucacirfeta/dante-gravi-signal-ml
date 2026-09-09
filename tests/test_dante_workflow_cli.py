@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from scripts import run_dante_workflow as cli
+from src.dante_workflow import cli
 
 
 @pytest.mark.parametrize("status,stage,results", [

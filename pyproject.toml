@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dante-workflow"
+version = "3.8.0"
+description = "Content-addressed orchestration for reproducible DANTE gravitational-wave analysis"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Luca Cirfeta" },
+]
+keywords = [
+  "gravitational waves",
+  "research software",
+  "reproducibility",
+  "workflow orchestration",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Astronomy",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = []
+
+[project.optional-dependencies]
+ui = [
+  "Flask==3.1.3",
+  "waitress==3.0.2",
+]
+
+[project.scripts]
+dante-workflow = "dante_workflow.cli:main"
+dante-workflow-ui = "dante_workflow.ui.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/lucacirfeta/dante-gravi-signal-ml"
+Documentation = "https://github.com/lucacirfeta/dante-gravi-signal-ml#readme"
+Repository = "https://github.com/lucacirfeta/dante-gravi-signal-ml.git"
+Issues = "https://github.com/lucacirfeta/dante-gravi-signal-ml/issues"
+Preprint = "https://arxiv.org/abs/2609.08695"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dante_workflow", "dante_workflow.*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"dante_workflow.ui" = [
+  "static/*.css",
+  "static/*.js",
+  "templates/*.html",
+]

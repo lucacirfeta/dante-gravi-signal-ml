@@ -148,5 +148,5 @@ def test_user_docs_do_not_restore_superseded_setup_claims() -> None:
     assert "shared/canonical throughput ratio 0.9815" in readme
     assert "10.5281/zenodo.21957984" in readme
     assert "10.5281/zenodo.21957984" in citation
-    assert 'version: "3.7.0"' in citation
+    assert 'version: "3.8.0"' in citation
     assert 'doi: "10.5281/zenodo.21912589"' in citation
