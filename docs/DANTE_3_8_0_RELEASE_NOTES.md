@@ -30,7 +30,7 @@ release or a discovery claim.
 - Public GitHub HTTPS clean clone: isolated Python 3.11.15 CPU install, smoke,
   verification, reuse, UI discovery, and 14 focused tests passed.
 - GitHub Actions CPU smoke and artifact-contract run:
-  <https://github.com/lucacirfeta/dante-gravi-signal-ml/actions/runs/34353378444>.
+  <https://github.com/lucacirfeta/dante-gravi-signal-ml/actions/runs/34375935061>.
 
 No external colleague was available for a separate pre-release human
 reproduction. The evidence is therefore described as verified public
