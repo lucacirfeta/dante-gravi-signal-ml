@@ -1,6 +1,6 @@
 # DANTE JOSS packaging audit
 
-Status: **DECISION REQUIRED BEFORE IMPLEMENTATION**
+Status: **OPTION B IMPLEMENTED AND LOCALLY VERIFIED**
 
 ## Scope
 
@@ -99,9 +99,24 @@ The implementation should be additive:
 Do not select Option C without a dedicated structural design and a new
 clean-clone validation matrix.
 
-## Required decision
+## Decision and implementation
 
-Confirm whether the first JOSS-ready release adopts the recommended hybrid
-Option B, remains a source-checkout application with the resulting JOSS risk
-(Option A), or attempts the full application wheel (Option C). No package
-metadata or import migration should be implemented before that choice.
+Option B was approved on 2026-09-09. The implementation adds:
+
+- a `dante-workflow` distribution containing only `dante_workflow` packages;
+- installed `dante-workflow` and `dante-workflow-ui` commands;
+- checkout wrappers that call the same package entry points;
+- lazy optional-UI imports and explicit Flask template/static package data;
+- isolated wheel/import/UI checks and run-key parity regression coverage;
+- a dedicated installation guide that preserves the source-checkout boundary.
+
+The development package version is deliberately a `.dev0` identifier. The
+archival version remains a later human release checkpoint and must be reconciled
+with `CITATION.cff`, the Git tag, GitHub Release, and Zenodo before publication.
+
+Local validation built and inspected the wheel, installed both the base and UI
+variants in isolated environments, opened the installed UI with a test client,
+and confirmed identical plan bytes and run key between installed and checkout
+controllers using the same Python interpreter and arguments. The focused
+workflow suite passed on Windows (125 tests) and WSL (124 passed, one expected
+Windows-only skip); Ruff passed in WSL.

@@ -19,6 +19,22 @@
 > [`arXiv:2609.08695`](https://arxiv.org/abs/2609.08695); it verifies adopted
 > corrected-O4a artifacts and does not claim a fresh scientific recomputation.
 
+## Productized workflow controller
+
+The content-addressed orchestration library is installable from a source
+checkout without pulling the scientific stack:
+
+```bash
+python -m pip install .
+dante-workflow --help
+```
+
+The installed package contains the orchestration controller, not the complete
+scientific application or its data. Full stages and the bounded public smoke
+still require this repository checkout; the UI is installed with `.[ui]`.
+See [the installation guide](docs/DANTE_WORKFLOW_INSTALLATION.md) for the exact
+base, CPU-smoke, UI, and corrected-O4a boundaries.
+
 ```mermaid
 graph TD
     A[Raw Strain Data] -->|Q-Transform| B[256x256 Spectrogram]

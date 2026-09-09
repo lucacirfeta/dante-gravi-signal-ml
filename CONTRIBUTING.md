@@ -22,6 +22,7 @@ The portable reference environment is Python 3.11 on a WSL-native checkout:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-cpu.txt
+python -m pip install -e .
 python -m pytest -m smoke -q
 ```
 
@@ -29,6 +30,10 @@ Install `requirements-ui.txt` only when working on the optional local browser
 interface. CUDA and historical scientific environments have separate recorded
 identities; passing the CPU smoke does not establish CPU/CUDA numerical
 equivalence.
+
+Packaging changes must preserve both installed `dante_workflow` imports and
+the checkout compatibility scripts. Run
+`python -m pytest -q tests/test_dante_workflow_packaging.py` for that boundary.
 
 ## Pull requests
 
