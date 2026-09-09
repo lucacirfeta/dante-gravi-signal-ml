@@ -25,6 +25,16 @@ The first archival release prepared by this plan will use a new immutable tag.
 Selecting its version identifier is a release checkpoint; it is not inferred
 by rewriting the historical tag.
 
+## Progress
+
+| Increment | Status | Evidence or next gate |
+|---|---|---|
+| J1 public metadata and policy | Complete | Commit `9580624`; 121 workflow tests passed. |
+| J2 installation and packaging | Audit complete | Commit `3d6598a`; installed-package scope requires a structural decision. |
+| J3 independent reproduction | Pending | Run after the J2 installation contract is frozen. |
+| J4 archival release | Pending | Human choice of new version and release metadata. |
+| J5 JOSS manuscript/submission | Pending | Requires J3/J4 and the public-history gate. |
+
 ## Dependency order
 
 ```text
