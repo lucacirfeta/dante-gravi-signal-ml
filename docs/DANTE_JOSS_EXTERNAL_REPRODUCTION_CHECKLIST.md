@@ -1,7 +1,8 @@
-# JOSS external reproduction checklist
+# Optional external reproduction checklist
 
-This checklist validates the bounded public CPU smoke for the JOSS release
-candidate. It does not rerun corrected O4a and must not be interpreted as a
+This optional checklist can be used by a future contributor or community
+reviewer to validate the bounded public CPU smoke. It is not completed J3
+evidence, does not rerun corrected O4a, and must not be interpreted as a
 scientific result.
 
 ## Requirements
@@ -100,6 +101,7 @@ Undocumented choice required: yes/no (explain if yes)
 Unexpected failure or ambiguity: none/details
 ```
 
-J3 passes only if the execution verifies and the reviewer reports no
-undocumented scientific or path choice. Cosmetic suggestions may be recorded
-separately and do not override a failed reproducibility gate.
+An external reproduction passes only if the execution verifies and the
+reviewer reports no undocumented scientific or path choice. Cosmetic
+suggestions may be recorded separately and do not override a failed
+reproducibility finding.

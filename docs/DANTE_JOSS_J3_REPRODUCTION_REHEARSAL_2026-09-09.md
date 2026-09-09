@@ -1,6 +1,6 @@
 # DANTE JOSS J3 clean-clone rehearsal
 
-Status: **PUBLIC HTTPS REPRODUCTION PASS; EXTERNAL HUMAN REVIEW PENDING**
+Status: **VERIFIED PUBLIC CLEAN-ENVIRONMENT REPRODUCTION; NO EXTERNAL HUMAN PRE-REVIEW**
 
 ## Scope
 
@@ -64,19 +64,25 @@ engines, with no calibration or threshold estimation.
 
 The installed UI exposed the completed phase and `100%`, detailed log links,
 the separate verification-results view, the readable report, and the technical
-receipt. The automated check did not substitute for the required external
-human usability review.
+receipt. The maintainer separately exercised the UI and accepted the revised
+start, progress, ETA, resume, log, report, and receipt presentation.
 
-## Remaining J3 gate
+The published branch also passed its GitHub-hosted workflow run at
+<https://github.com/lucacirfeta/dante-gravi-signal-ml/actions/runs/34353378444>.
+This adds a repository-hosted clean worker to the local WSL clean-clone
+evidence, but it is still automated evidence.
 
-Ask an external user to clone the published branch, execute the documented CPU
-smoke using [`DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md`](DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md),
-and record only:
+## Evidence boundary
 
-- source tag/commit and environment identity;
-- final status and run key;
-- receipt/report hashes;
-- whether start, resume, progress, logs, report, and receipt were discoverable;
-- any undocumented choice or corrective action that was required.
+No external colleague was available to perform a separate pre-submission
+reproduction. Therefore J3 closes as verified public clean-environment
+reproduction, not as independent human reproduction. This limitation is
+recorded rather than replacing the missing review with an automated claim.
+The optional
+[`DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md`](DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md)
+is retained for a future contributor or community reviewer. JOSS reviewers are
+expected to install and verify the submitted software independently during the
+formal review.
 
-Do not mark J3 complete until that independent human result is recorded.
+This checkpoint makes no full-O4a reproduction, scientific-result, or
+independent-user claim.

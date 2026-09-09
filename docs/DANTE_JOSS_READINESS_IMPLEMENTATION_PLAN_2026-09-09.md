@@ -31,8 +31,8 @@ by rewriting the historical tag.
 |---|---|---|
 | J1 public metadata and policy | Complete | Commit `9580624`; 121 workflow tests passed. |
 | J2 installation and packaging | Complete locally | Hybrid Option B; wheel/base/UI isolation and CLI run-key parity passed; 125 Windows and 124+1-skip WSL workflow tests passed. |
-| J3 independent reproduction | Public-source reproduction passed | Fresh GitHub HTTPS clone, isolated install, CPU smoke/retry/verify, UI discovery, and 14 focused tests passed; external-user gate remains. |
-| J4 archival release | Pending | Human choice of new version and release metadata. |
+| J3 clean-environment reproduction | Complete | Fresh GitHub HTTPS clone, isolated install, CPU smoke/retry/verify, UI discovery, 14 focused tests, and hosted CI passed. No external human pre-review is claimed; the checklist remains available for optional community validation. |
+| J4 archival release | In progress | Prepare version `3.8.0` metadata and release evidence; tag, GitHub Release, and Zenodo publication remain human checkpoints. |
 | J5 JOSS manuscript/submission | Pending | Requires J3/J4 and the public-history gate. |
 
 ## Dependency order
@@ -95,19 +95,25 @@ Acceptance:
   authoritative environment locks unless explicitly superseded;
 - regression and public-smoke tests pass on Windows and WSL.
 
-## J3 — Independent reproduction evidence
+## J3 — Clean-environment reproduction evidence
 
 Run the public CPU smoke from a new WSL-native clone using only documented
-commands. Ask an external user to repeat the installation and smoke workflow,
-then preserve only non-sensitive acceptance evidence using
-[`DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md`](DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md).
+commands. The published branch was also exercised by GitHub-hosted CI. No
+external colleague was available for a separate pre-submission run, so this
+checkpoint is explicitly not described as independent human reproduction.
+JOSS reviewers will perform their own installation and functional checks. The
+[`DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md`](DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md)
+remains available for optional community validation without being represented
+as completed evidence.
 
 Acceptance:
 
 - no undocumented path, parameter, or scientific choice is required;
 - start, resume, progress, logs, report, and receipt are discoverable;
 - failures are actionable and no full-O4a claim is inferred from the bounded
-  smoke.
+  smoke;
+- the evidence record distinguishes automated clean-environment reproduction,
+  maintainer usability acceptance, and unavailable external human pre-review.
 
 ## J4 — Archival software release
 
