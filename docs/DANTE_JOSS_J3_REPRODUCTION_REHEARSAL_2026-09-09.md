@@ -70,7 +70,8 @@ human usability review.
 ## Remaining J3 gate
 
 Ask an external user to clone the published branch, execute the documented CPU
-smoke, and record only:
+smoke using [`DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md`](DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md),
+and record only:
 
 - source tag/commit and environment identity;
 - final status and run key;

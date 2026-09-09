@@ -99,7 +99,8 @@ Acceptance:
 
 Run the public CPU smoke from a new WSL-native clone using only documented
 commands. Ask an external user to repeat the installation and smoke workflow,
-then preserve only non-sensitive acceptance evidence.
+then preserve only non-sensitive acceptance evidence using
+[`DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md`](DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md).
 
 Acceptance:
 
