@@ -3,7 +3,7 @@
 All notable changes to DANTE are documented in this file. Historical releases
 remain available through their immutable Git tags and archived records.
 
-## [3.8.0] - 2026-09-09
+## [3.8.0] - 2026-09-10
 
 ### Added
 

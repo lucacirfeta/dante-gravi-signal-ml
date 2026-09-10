@@ -55,6 +55,7 @@ def test_release_metadata_is_consistent_and_does_not_relabel_old_doi() -> None:
     citation = yaml.safe_load((ROOT / "CITATION.cff").read_text(encoding="utf-8"))
 
     assert citation["version"] == package["project"]["version"] == "3.8.0"
+    assert citation["date-released"] == "2026-09-10"
     assert citation["license"] == package["project"]["license"] == "GPL-3.0-only"
     assert citation["doi"] == "10.5281/zenodo.22681395"
     historical = [

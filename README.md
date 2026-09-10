@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Workflow Python 3.11+](https://img.shields.io/badge/workflow_python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-> **Release status (2026-09-09).** Version `3.8.0` adds the installable
+> **Release status (2026-09-10).** Version `3.8.0` adds the installable
 > content-addressed workflow controller and its bounded public CPU smoke. Its
 > reserved version DOI is `10.5281/zenodo.22681395` and becomes registered when
 > Zenodo publishes the immutable `v3.8.0` archive. The released scientific
