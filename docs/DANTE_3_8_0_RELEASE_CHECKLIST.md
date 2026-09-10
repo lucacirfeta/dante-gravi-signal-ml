@@ -17,7 +17,7 @@ authorize a GitHub Release or Zenodo publication.
 - Zenodo concept DOI: `10.5281/zenodo.20121859`
 - 3.8.0 version DOI: `10.5281/zenodo.22681395` (reserved, not published)
 
-If publication occurs after 2026-09-09, update `date-released` and the
+If publication occurs after 2026-09-10, update `date-released` and the
 changelog date before building or tagging.
 
 ## Pre-tag gate
