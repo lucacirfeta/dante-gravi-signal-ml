@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "amendment_id": "dante-o4a-canonical-provenance-runtime-amendment-v1",
+  "amendment_digest": "7234ed247b06973e86e1b5aa84f98bca40a7d44cc03a92c156daec463b151e72",
+  "status": "FROZEN_BEFORE_INDEX_RECOMPUTATION",
+  "authorization": {
+    "authorized_on": "2026-09-12",
+    "decision": "permit routine NVIDIA driver updates through a newly frozen remediation runtime without changing scientific parameters or tolerances"
+  },
+  "parent_protocol": {
+    "path": "config/dante_o4a_canonical_provenance_rerun_v1.json",
+    "sha256": "b2e17474e60219a62c65a9f0f6f5c0f853aee40bfe715bd7f1664b8b8357f42c",
+    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05"
+  },
+  "scope": {
+    "stage": "INDEX",
+    "allowed_contract_changes": [
+      "/references/canonical_runtime/**",
+      "/runtime/canonical_runtime_contract_digest"
+    ]
+  },
+  "historical_runtime": {
+    "path": "config/dante_o4a_corrected_runtime_v1.json",
+    "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2",
+    "contract_digest": "d2406e13ecff1018b8f012a386ede17340c1db5531755e599fc0f28a118f3bd2",
+    "environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+    "driver_version": "610.74"
+  },
+  "remediation_runtime": {
+    "path": "config/o4a_canonical_provenance_rerun_v1/runtime.json",
+    "sha256": "ad8081445bc7297a844c52a16254de0414d4e00f45541940f8b0e08f69f35e2c",
+    "contract_digest": "0e09de34355d8530e630740d7d640698df68acee2bf5167eabc337d6389d1db2",
+    "environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+    "driver_version": "616.92"
+  },
+  "required_environment_differences": [
+    "/cuda_device/driver_version",
+    "/environment_digest"
+  ],
+  "scientific_boundary": {
+    "classification_changed": false,
+    "cohort_changed": false,
+    "index_hyperparameters_changed": false,
+    "package_versions_changed": false,
+    "preprocessing_changed": false,
+    "scoring_changed": false,
+    "statistical_validation_changed": false,
+    "thresholds_changed": false,
+    "tolerances_changed": false
+  }
+}

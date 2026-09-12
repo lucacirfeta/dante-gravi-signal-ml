@@ -11,7 +11,7 @@
     "raw_sample_algorithm": "numpy.default_rng(seed).choice(total_tokens,size,replace=False)",
     "raw_sample_l2_normalization": true
   },
-  "contract_digest": "644522f8aba579f4fa3d3a9e75c76b2a7d112b358e40261c86d8436cb56a9ac7",
+  "contract_digest": "b4676e21f35c0ad7413b7732e424fe653ea640938503c79c3dc0891a5f741f6c",
   "contract_id": "dante-o4a-canonical-provenance-rerun-index-v1",
   "gates": {
     "exact_centroid_shape": [
@@ -51,8 +51,8 @@
   },
   "references": {
     "canonical_runtime": {
-      "path": "config/dante_o4a_corrected_runtime_v1.json",
-      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+      "path": "config/o4a_canonical_provenance_rerun_v1/runtime.json",
+      "sha256": "ad8081445bc7297a844c52a16254de0414d4e00f45541940f8b0e08f69f35e2c"
     },
     "encoder": {
       "path": "src/core/encoder.py",
@@ -88,13 +88,24 @@
     "canonical_source_sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef",
     "cohort_artifact_digest": "bfe2b08bfd0ea3f4386c4dc8e3f66161251b12c694a6ab90eb2a45f9ab5097e2",
     "cohort_ledger_sha256": "358138d942267b73d5bbd95a8a0204b8dd2f260f1d2797e6cde2f6bd75252b46",
+    "driver_transition": {
+      "all_other_runtime_fields_unchanged": true,
+      "historical": "610.74",
+      "remediation": "616.92"
+    },
     "historical_outputs_immutable": true,
     "index_consumption_manifest_required": true,
     "orchestrator": {
       "path": "src/dante_light/o4a_canonical_provenance_rerun.py",
-      "sha256": "ef0b66b5022396f88f53e8b6ebe7cd2f9140673b1f71ce9a0152dea227899c59"
+      "sha256": "3d3826bc7ee57015ea897c3fb1abe3cb883c2bb8f925db42db9c7fe5342551d9"
     },
-    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05"
+    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05",
+    "runtime_amendment": {
+      "digest": "7234ed247b06973e86e1b5aa84f98bca40a7d44cc03a92c156daec463b151e72",
+      "path": "config/dante_o4a_canonical_provenance_runtime_amendment_v1.json"
+    },
+    "runtime_contract_digest": "0e09de34355d8530e630740d7d640698df68acee2bf5167eabc337d6389d1db2",
+    "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d"
   },
   "representation": {
     "colormap": "cividis",
@@ -115,7 +126,7 @@
     ]
   },
   "runtime": {
-    "canonical_runtime_contract_digest": "d2406e13ecff1018b8f012a386ede17340c1db5531755e599fc0f28a118f3bd2",
+    "canonical_runtime_contract_digest": "0e09de34355d8530e630740d7d640698df68acee2bf5167eabc337d6389d1db2",
     "cross_environment_reuse_allowed": false,
     "device": "cuda",
     "sklearn_version": "1.9.0"

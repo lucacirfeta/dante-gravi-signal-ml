@@ -24,6 +24,9 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL_REL = Path("config/dante_o4a_canonical_provenance_rerun_v1.json")
+RUNTIME_AMENDMENT_REL = Path(
+    "config/dante_o4a_canonical_provenance_runtime_amendment_v1.json"
+)
 COHORT_EVIDENCE_REL = Path(
     "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/"
     "corrected_native_cohort.json"
@@ -32,6 +35,9 @@ INDEX_CONSUMPTION_FILENAME = "native_index_consumption_manifest.json"
 SCHEMA_VERSION = 1
 EXPECTED_PROTOCOL_DIGEST = (
     "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05"
+)
+EXPECTED_RUNTIME_AMENDMENT_DIGEST = (
+    "7234ed247b06973e86e1b5aa84f98bca40a7d44cc03a92c156daec463b151e72"
 )
 EXPECTED_STAGES = (
     "COHORT",
@@ -270,6 +276,107 @@ def load_protocol(*, root: Path = ROOT, verify_git: bool = True) -> dict[str, An
     )
 
 
+def load_runtime_amendment(
+    *, root: Path = ROOT, require_current: bool = False
+) -> dict[str, Any]:
+    """Validate the driver-only runtime amendment without changing the master."""
+
+    root = root.resolve()
+    path = root / RUNTIME_AMENDMENT_REL
+    if not path.is_file():
+        raise ContractError("canonical provenance runtime amendment is absent")
+    value = json.loads(path.read_text(encoding="utf-8"))
+    payload = dict(value)
+    declared = payload.pop("amendment_digest", None)
+    if (
+        declared != EXPECTED_RUNTIME_AMENDMENT_DIGEST
+        or declared != canonical_json_sha256(payload)
+    ):
+        raise ContractError("canonical provenance runtime amendment digest mismatch")
+    if (
+        value.get("schema_version") != SCHEMA_VERSION
+        or value.get("status") != "FROZEN_BEFORE_INDEX_RECOMPUTATION"
+        or value.get("scope")
+        != {
+            "stage": "INDEX",
+            "allowed_contract_changes": [
+                "/references/canonical_runtime/**",
+                "/runtime/canonical_runtime_contract_digest",
+            ],
+        }
+    ):
+        raise ContractError("canonical provenance runtime amendment scope changed")
+    parent_path = _require_file_reference(
+        root, value["parent_protocol"], label="runtime amendment parent protocol"
+    )
+    parent = json.loads(parent_path.read_text(encoding="utf-8"))
+    if parent.get("protocol_digest") != value["parent_protocol"]["protocol_digest"]:
+        raise ContractError("runtime amendment parent protocol digest mismatch")
+
+    historical_path = _require_file_reference(
+        root, value["historical_runtime"], label="historical runtime contract"
+    )
+    remediation_path = _require_file_reference(
+        root, value["remediation_runtime"], label="remediation runtime contract"
+    )
+    from src.dante_light.o4a_corrected_runtime import (
+        validate_canonical_runtime_contract,
+    )
+
+    historical = validate_canonical_runtime_contract(
+        json.loads(historical_path.read_text(encoding="utf-8")),
+        root=root,
+        require_current=False,
+    )
+    remediation = validate_canonical_runtime_contract(
+        json.loads(remediation_path.read_text(encoding="utf-8")),
+        root=root,
+        require_current=require_current,
+        device="cuda",
+    )
+    for label, runtime, reference in (
+        ("historical", historical, value["historical_runtime"]),
+        ("remediation", remediation, value["remediation_runtime"]),
+    ):
+        if (
+            runtime["contract_digest"] != reference["contract_digest"]
+            or runtime["runtime_environment"]["environment_digest"]
+            != reference["environment_digest"]
+            or runtime["runtime_environment"]["cuda_device"]["driver_version"]
+            != reference["driver_version"]
+        ):
+            raise ContractError(f"{label} runtime amendment binding mismatch")
+    differences = json_leaf_differences(
+        historical["runtime_environment"], remediation["runtime_environment"]
+    )
+    if differences != set(value["required_environment_differences"]):
+        raise ContractError("runtime amendment is not driver-only")
+    expected_boundary = {
+        "classification_changed": False,
+        "cohort_changed": False,
+        "index_hyperparameters_changed": False,
+        "package_versions_changed": False,
+        "preprocessing_changed": False,
+        "scoring_changed": False,
+        "statistical_validation_changed": False,
+        "thresholds_changed": False,
+        "tolerances_changed": False,
+    }
+    if value.get("scientific_boundary") != expected_boundary:
+        raise ContractError("runtime amendment scientific boundary changed")
+    return value
+
+
+def stage_allowed_changes(
+    protocol: Mapping[str, Any], stage_name: str, *, root: Path = ROOT
+) -> list[str]:
+    changes = list(stage_spec(protocol, stage_name)["allowed_changes"])
+    if str(stage_name).upper() == "INDEX":
+        amendment = load_runtime_amendment(root=root, require_current=False)
+        changes.extend(amendment["scope"]["allowed_contract_changes"])
+    return changes
+
+
 def stage_spec(protocol: Mapping[str, Any], stage_name: str) -> dict[str, Any]:
     name = str(stage_name).upper()
     for stage in protocol["stages"]:
@@ -372,6 +479,12 @@ def build_index_contract(*, root: Path = ROOT) -> dict[str, Any]:
         != "BYTE_IDENTICAL"
     ):
         raise ContractError("verified remediation COHORT evidence is not PASS")
+    runtime_amendment = load_runtime_amendment(root=root, require_current=False)
+    runtime_reference = runtime_amendment["remediation_runtime"]
+    runtime_path = _inside_root(
+        root, runtime_reference["path"], label="remediation runtime contract"
+    )
+    runtime_contract = json.loads(runtime_path.read_text(encoding="utf-8"))
 
     candidate = copy.deepcopy(baseline)
     candidate["contract_id"] = "dante-o4a-canonical-provenance-rerun-index-v1"
@@ -383,6 +496,13 @@ def build_index_contract(*, root: Path = ROOT) -> dict[str, Any]:
     candidate["references"]["frozen_native_cohort"] = {
         "path": COHORT_EVIDENCE_REL.as_posix(),
         "sha256": sha256_file(cohort_evidence_path),
+    }
+    candidate["runtime"]["canonical_runtime_contract_digest"] = runtime_contract[
+        "contract_digest"
+    ]
+    candidate["references"]["canonical_runtime"] = {
+        "path": runtime_reference["path"],
+        "sha256": runtime_reference["sha256"],
     }
     implementation_path = root / candidate["references"]["implementation"]["path"]
     candidate["references"]["implementation"]["sha256"] = sha256_file(
@@ -397,6 +517,21 @@ def build_index_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "canonical_source_sha256": protocol["canonical_source"][
             "canonical_sha256"
         ],
+        "runtime_contract_digest": runtime_contract["contract_digest"],
+        "runtime_amendment": {
+            "path": RUNTIME_AMENDMENT_REL.as_posix(),
+            "digest": runtime_amendment["amendment_digest"],
+        },
+        "runtime_environment_digest": runtime_contract["runtime_environment"][
+            "environment_digest"
+        ],
+        "driver_transition": {
+            "historical": runtime_amendment["historical_runtime"][
+                "driver_version"
+            ],
+            "remediation": runtime_reference["driver_version"],
+            "all_other_runtime_fields_unchanged": True,
+        },
         "cohort_artifact_digest": cohort_evidence["external_artifact_digest"],
         "cohort_ledger_sha256": cohort_evidence["ledger"]["sha256"],
         "orchestrator": {
@@ -410,16 +545,20 @@ def build_index_contract(*, root: Path = ROOT) -> dict[str, Any]:
     assert_allowed_contract_transition(
         baseline,
         candidate,
-        allowed_changes=stage["allowed_changes"],
+        allowed_changes=stage_allowed_changes(protocol, "INDEX", root=root),
     )
 
     from src.dante_light import o4a_corrected_native as cohort_module
+    from src.dante_light import o4a_corrected_runtime as runtime_module
     from src.dante_light.o4a_corrected_native_index import (
         validate_native_index_contract,
     )
 
     with use_stage_contract(cohort_module, cohort_stage["remediation_contract"]):
-        return validate_native_index_contract(candidate, root=root)
+        with use_module_path(
+            runtime_module, "OUTPUT_REL", runtime_reference["path"]
+        ):
+            return validate_native_index_contract(candidate, root=root)
 
 
 def write_frozen_index_contract(*, root: Path = ROOT) -> Path:
@@ -442,15 +581,21 @@ def write_frozen_index_contract(*, root: Path = ROOT) -> Path:
 
 
 @contextmanager
-def use_stage_contract(module: Any, contract_rel: str):
-    """Temporarily route an existing stage module to a remediation contract."""
+def use_module_path(module: Any, attribute: str, relative: str):
+    """Temporarily route one module path and restore it after the stage call."""
 
-    previous = module.CONTRACT_REL
-    module.CONTRACT_REL = Path(contract_rel)
+    previous = getattr(module, attribute)
+    setattr(module, attribute, Path(relative))
     try:
         yield
     finally:
-        module.CONTRACT_REL = previous
+        setattr(module, attribute, previous)
+
+
+def use_stage_contract(module: Any, contract_rel: str):
+    """Temporarily route an existing stage module to a remediation contract."""
+
+    return use_module_path(module, "CONTRACT_REL", contract_rel)
 
 
 def run_cohort(
@@ -474,7 +619,9 @@ def run_cohort(
     )
     candidate = json.loads(contract_path.read_text(encoding="utf-8"))
     assert_allowed_contract_transition(
-        baseline, candidate, allowed_changes=stage["allowed_changes"]
+        baseline,
+        candidate,
+        allowed_changes=stage_allowed_changes(protocol, "INDEX", root=root),
     )
 
     from src.dante_light import o4a_corrected_native as cohort_module
@@ -615,11 +762,33 @@ def run_index(
     )
     candidate = json.loads(contract_path.read_text(encoding="utf-8"))
     assert_allowed_contract_transition(
-        baseline, candidate, allowed_changes=stage["allowed_changes"]
+        baseline,
+        candidate,
+        allowed_changes=stage_allowed_changes(protocol, "INDEX", root=root),
     )
 
     from src.dante_light import o4a_corrected_native as cohort_module
     from src.dante_light import o4a_corrected_native_index as index_module
+    from src.dante_light import o4a_corrected_runtime as runtime_module
+
+    runtime_amendment = load_runtime_amendment(root=root, require_current=False)
+    runtime_reference = runtime_amendment["remediation_runtime"]
+    runtime_contract = json.loads(
+        _inside_root(
+            root,
+            runtime_reference["path"],
+            label="remediation runtime contract",
+        ).read_text(encoding="utf-8")
+    )
+    if (
+        candidate.get("runtime", {}).get("canonical_runtime_contract_digest")
+        != runtime_contract.get("contract_digest")
+        or candidate.get("references", {}).get("canonical_runtime", {}).get(
+            "sha256"
+        )
+        != runtime_reference["sha256"]
+    ):
+        raise ContractError("INDEX remediation runtime binding mismatch")
 
     common = {
         "root": root.resolve(),
@@ -633,16 +802,17 @@ def run_index(
         "device": device,
     }
     with use_stage_contract(cohort_module, cohort_stage["remediation_contract"]):
-        with use_stage_contract(index_module, stage["remediation_contract"]):
-            if verify_only:
-                summary, run_dir = index_module.verify_native_index(**common)
-            else:
-                summary, run_dir = index_module.build_native_index(
-                    raw_root=Path(protocol["paths"]["raw_root_wsl"]),
-                    workers=workers,
-                    encoder_batch_size=encoder_batch_size,
-                    **common,
-                )
+        with use_module_path(runtime_module, "OUTPUT_REL", runtime_reference["path"]):
+            with use_stage_contract(index_module, stage["remediation_contract"]):
+                if verify_only:
+                    summary, run_dir = index_module.verify_native_index(**common)
+                else:
+                    summary, run_dir = index_module.build_native_index(
+                        raw_root=Path(protocol["paths"]["raw_root_wsl"]),
+                        workers=workers,
+                        encoder_batch_size=encoder_batch_size,
+                        **common,
+                    )
     manifest_path = run_dir / INDEX_CONSUMPTION_FILENAME
     if not verify_only and not manifest_path.is_file():
         replay_path = run_dir / summary["replay_ledger"]["filename"]
@@ -682,6 +852,10 @@ def is_wsl() -> bool:
 
 def preflight(*, root: Path = ROOT, require_cuda: bool = True) -> dict[str, Any]:
     protocol = load_protocol(root=root, verify_git=True)
+    runtime_amendment = load_runtime_amendment(
+        root=root, require_current=require_cuda
+    )
+    runtime_reference = runtime_amendment["remediation_runtime"]
     require_tracked_clean(root)
     if not is_wsl():
         raise ContractError("canonical provenance rerun must execute inside WSL")
@@ -710,6 +884,17 @@ def preflight(*, root: Path = ROOT, require_cuda: bool = True) -> dict[str, Any]
         "tracked_clean": True,
         "wsl": True,
         "cuda_required": require_cuda,
+        "runtime_contract_digest": (
+            json.loads(
+                _inside_root(
+                    root,
+                    runtime_reference["path"],
+                    label="remediation runtime contract",
+                ).read_text(encoding="utf-8")
+            )["contract_digest"]
+            if require_cuda
+            else None
+        ),
         "raw_root": os.fspath(raw_root),
         "external_root": os.fspath(output_root),
         "free_bytes": free_bytes,
@@ -718,9 +903,11 @@ def preflight(*, root: Path = ROOT, require_cuda: bool = True) -> dict[str, Any]
 
 __all__ = [
     "COHORT_EVIDENCE_REL",
+    "EXPECTED_RUNTIME_AMENDMENT_DIGEST",
     "EXPECTED_STAGES",
     "INDEX_CONSUMPTION_FILENAME",
     "PROTOCOL_REL",
+    "RUNTIME_AMENDMENT_REL",
     "ROOT",
     "assert_allowed_contract_transition",
     "build_cohort_contract",
@@ -730,13 +917,16 @@ __all__ = [
     "contract_digest",
     "json_leaf_differences",
     "load_protocol",
+    "load_runtime_amendment",
     "preflight",
     "require_tracked_clean",
     "run_cohort",
     "run_index",
     "sha256_file",
     "stage_spec",
+    "stage_allowed_changes",
     "use_stage_contract",
+    "use_module_path",
     "validate_protocol",
     "verify_index_consumption_manifest",
     "write_frozen_cohort_contract",

@@ -48,6 +48,24 @@ def test_frozen_protocol_validates_all_bound_baselines() -> None:
     assert len(protocol["stages"]) == 10
 
 
+def test_runtime_amendment_is_driver_only_and_index_scoped() -> None:
+    amendment = remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    assert amendment["scope"] == {
+        "stage": "INDEX",
+        "allowed_contract_changes": [
+            "/references/canonical_runtime/**",
+            "/runtime/canonical_runtime_contract_digest",
+        ],
+    }
+    assert amendment["required_environment_differences"] == [
+        "/cuda_device/driver_version",
+        "/environment_digest",
+    ]
+    assert amendment["scientific_boundary"]["tolerances_changed"] is False
+
+
 def test_contract_gate_accepts_only_declared_metadata_transition() -> None:
     baseline, candidate, allowed = _candidate_contract("COHORT")
     differences = remediation.assert_allowed_contract_transition(
@@ -163,7 +181,11 @@ def test_built_index_contract_preserves_scientific_sections() -> None:
     )
     candidate = remediation.build_index_contract(root=ROOT)
     remediation.assert_allowed_contract_transition(
-        baseline, candidate, allowed_changes=stage["allowed_changes"]
+        baseline,
+        candidate,
+        allowed_changes=remediation.stage_allowed_changes(
+            protocol, "INDEX", root=ROOT
+        ),
     )
     for key in (
         "scientific_boundary",
@@ -171,15 +193,23 @@ def test_built_index_contract_preserves_scientific_sections() -> None:
         "representation",
         "clustering",
         "token_order",
-        "runtime",
         "output",
         "gates",
     ):
         assert candidate[key] == baseline[key]
+    assert candidate["runtime"] == {
+        **baseline["runtime"],
+        "canonical_runtime_contract_digest": (
+            "0e09de34355d8530e630740d7d640698df68acee2bf5167eabc337d6389d1db2"
+        ),
+    }
     assert candidate["parent_native_contract_digest"] == (
         "ddca4c6e8e791f1242c2b289d51781ea874f0b5031a187c887fe029472acbe80"
     )
     assert candidate["remediation"]["index_consumption_manifest_required"] is True
+    assert candidate["remediation"]["runtime_amendment"]["digest"] == (
+        remediation.EXPECTED_RUNTIME_AMENDMENT_DIGEST
+    )
 
 
 def test_frozen_index_contract_matches_deterministic_builder() -> None:

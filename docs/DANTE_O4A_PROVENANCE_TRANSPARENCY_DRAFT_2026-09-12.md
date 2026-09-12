@@ -75,6 +75,17 @@ new output is compared with the retained historical output at byte level or
 under an already versioned numerical tolerance. No tolerance may be introduced
 after outcomes are inspected.
 
+The first `INDEX` launch stopped before creating a run identity or scientific
+artifact because the host NVIDIA driver no longer matched the historical
+runtime contract (`610.74` versus the then-current driver). The master rerun
+protocol and historical runtime contract remain immutable. Following explicit
+authorization to support routine driver updates, the project froze a separate,
+INDEX-scoped runtime amendment for driver `616.92`. Its validation requires all
+other operating-system, Python, package, CUDA, cuDNN, device, representation,
+and numerical-policy fields to remain identical; it does not add or relax a
+scientific tolerance. The resulting index is still subject to the same
+byte/numerical comparison against the historical artifact.
+
 ## Rerun result
 
 Pending. This section will report:
