@@ -581,21 +581,60 @@ def write_frozen_index_contract(*, root: Path = ROOT) -> Path:
 
 
 @contextmanager
-def use_module_path(module: Any, attribute: str, relative: str):
-    """Temporarily route one module path and restore it after the stage call."""
+def use_module_attribute(module: Any, attribute: str, value: Any):
+    """Temporarily replace one module attribute and restore it afterward."""
 
     previous = getattr(module, attribute)
-    setattr(module, attribute, Path(relative))
+    setattr(module, attribute, value)
     try:
         yield
     finally:
         setattr(module, attribute, previous)
 
 
+@contextmanager
+def use_module_path(module: Any, attribute: str, relative: str):
+    """Temporarily route one module path and restore it after the stage call."""
+
+    with use_module_attribute(module, attribute, Path(relative)):
+        yield
+
+
 def use_stage_contract(module: Any, contract_rel: str):
     """Temporarily route an existing stage module to a remediation contract."""
 
     return use_module_path(module, "CONTRACT_REL", contract_rel)
+
+
+@contextmanager
+def use_index_runtime_contract(
+    index_module: Any,
+    runtime_module: Any,
+    runtime_contract: Mapping[str, Any],
+):
+    """Inject the amended runtime into INDEX without changing global paths.
+
+    The historical corrected-O4a protocol imports the runtime path as a module
+    constant.  Mutating ``runtime_module.OUTPUT_REL`` would therefore make that
+    immutable protocol appear stale when it is validated during cohort replay.
+    """
+
+    def load_amended_runtime(
+        *, root: Path = ROOT, require_current: bool = False, device: str = "cuda"
+    ) -> dict[str, Any]:
+        return runtime_module.validate_canonical_runtime_contract(
+            copy.deepcopy(dict(runtime_contract)),
+            root=root,
+            require_current=require_current,
+            device=device,
+        )
+
+    with use_module_attribute(
+        index_module,
+        "load_canonical_runtime_contract",
+        load_amended_runtime,
+    ):
+        yield
 
 
 def run_cohort(
@@ -802,7 +841,11 @@ def run_index(
         "device": device,
     }
     with use_stage_contract(cohort_module, cohort_stage["remediation_contract"]):
-        with use_module_path(runtime_module, "OUTPUT_REL", runtime_reference["path"]):
+        with use_index_runtime_contract(
+            index_module,
+            runtime_module,
+            runtime_contract,
+        ):
             with use_stage_contract(index_module, stage["remediation_contract"]):
                 if verify_only:
                     summary, run_dir = index_module.verify_native_index(**common)

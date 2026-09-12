@@ -11,7 +11,7 @@
     "raw_sample_algorithm": "numpy.default_rng(seed).choice(total_tokens,size,replace=False)",
     "raw_sample_l2_normalization": true
   },
-  "contract_digest": "6c5628a4f19ec296f8d0160cd6e443b3389493f089f3966accfda3cffbc64ee5",
+  "contract_digest": "7c2446b50f4c3abe2d182954ef9d9ed460b84ffb7f37271efea6ceca75c4eaa9",
   "contract_id": "dante-o4a-canonical-provenance-rerun-index-v1",
   "gates": {
     "exact_centroid_shape": [
@@ -97,7 +97,7 @@
     "index_consumption_manifest_required": true,
     "orchestrator": {
       "path": "src/dante_light/o4a_canonical_provenance_rerun.py",
-      "sha256": "7757ad75795bff073e95f6299543a68db1bb412e1cda86092f1049b827da469a"
+      "sha256": "9a7d401f60183d40bad66f7f5dc6c70ae770df1ca840029af8d46c1a77218860"
     },
     "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05",
     "runtime_amendment": {

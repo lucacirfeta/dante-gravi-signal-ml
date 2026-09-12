@@ -4,6 +4,7 @@ import copy
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -178,6 +179,42 @@ def test_runtime_amendment_allowlist_is_scoped_to_index() -> None:
     ]
     assert all(change not in cohort_changes for change in amendment_changes)
     assert all(change in index_changes for change in amendment_changes)
+
+
+def test_index_runtime_injection_does_not_mutate_historical_runtime_path() -> None:
+    calls: list[dict[str, object]] = []
+
+    def validate(payload: object, **kwargs: object) -> dict[str, object]:
+        calls.append({"payload": payload, **kwargs})
+        return {"validated": True}
+
+    original_loader = object()
+    index_module = SimpleNamespace(load_canonical_runtime_contract=original_loader)
+    runtime_module = SimpleNamespace(
+        OUTPUT_REL="config/dante_o4a_corrected_runtime_v1.json",
+        validate_canonical_runtime_contract=validate,
+    )
+    amended = {"contract_digest": "a" * 64}
+
+    with remediation.use_index_runtime_contract(
+        index_module, runtime_module, amended
+    ):
+        assert index_module.load_canonical_runtime_contract(
+            root=ROOT, require_current=True, device="cuda"
+        ) == {"validated": True}
+        assert runtime_module.OUTPUT_REL == (
+            "config/dante_o4a_corrected_runtime_v1.json"
+        )
+
+    assert index_module.load_canonical_runtime_contract is original_loader
+    assert calls == [
+        {
+            "payload": amended,
+            "root": ROOT,
+            "require_current": True,
+            "device": "cuda",
+        }
+    ]
 
 
 def test_frozen_cohort_contract_matches_deterministic_builder() -> None:
