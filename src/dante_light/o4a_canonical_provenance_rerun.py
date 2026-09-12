@@ -24,6 +24,11 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL_REL = Path("config/dante_o4a_canonical_provenance_rerun_v1.json")
+COHORT_EVIDENCE_REL = Path(
+    "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/"
+    "corrected_native_cohort.json"
+)
+INDEX_CONSUMPTION_FILENAME = "native_index_consumption_manifest.json"
 SCHEMA_VERSION = 1
 EXPECTED_PROTOCOL_DIGEST = (
     "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05"
@@ -333,6 +338,109 @@ def write_frozen_cohort_contract(*, root: Path = ROOT) -> Path:
     return target
 
 
+def build_index_contract(*, root: Path = ROOT) -> dict[str, Any]:
+    """Bind INDEX to the verified remediation cohort without science drift."""
+
+    root = root.resolve()
+    protocol = load_protocol(root=root, verify_git=True)
+    stage = stage_spec(protocol, "INDEX")
+    cohort_stage = stage_spec(protocol, "COHORT")
+    baseline = json.loads(
+        (root / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    cohort_contract_path = _inside_root(
+        root,
+        cohort_stage["remediation_contract"],
+        label="COHORT remediation contract",
+    )
+    if not cohort_contract_path.is_file():
+        raise ContractError("COHORT remediation contract is not frozen")
+    cohort_contract = json.loads(cohort_contract_path.read_text(encoding="utf-8"))
+    cohort_evidence_path = (root / COHORT_EVIDENCE_REL).resolve()
+    if not cohort_evidence_path.is_file():
+        raise ContractError("verified remediation COHORT evidence is absent")
+    cohort_evidence = json.loads(cohort_evidence_path.read_text(encoding="utf-8"))
+    if (
+        cohort_evidence.get("status") != "PASS_VERIFIED_CANONICAL_COHORT"
+        or cohort_evidence.get("contract_digest")
+        != cohort_contract.get("contract_digest")
+        or cohort_evidence.get("row_total") != 1294
+        or cohort_evidence.get("counts_by_detector") != {"H1": 647, "L1": 647}
+        or cohort_evidence.get("comparison_to_historical", {}).get(
+            "classification"
+        )
+        != "BYTE_IDENTICAL"
+    ):
+        raise ContractError("verified remediation COHORT evidence is not PASS")
+
+    candidate = copy.deepcopy(baseline)
+    candidate["contract_id"] = "dante-o4a-canonical-provenance-rerun-index-v1"
+    candidate["parent_native_contract_digest"] = cohort_contract["contract_digest"]
+    candidate["references"]["native_contract"] = {
+        "path": cohort_stage["remediation_contract"],
+        "sha256": sha256_file(cohort_contract_path),
+    }
+    candidate["references"]["frozen_native_cohort"] = {
+        "path": COHORT_EVIDENCE_REL.as_posix(),
+        "sha256": sha256_file(cohort_evidence_path),
+    }
+    implementation_path = root / candidate["references"]["implementation"]["path"]
+    candidate["references"]["implementation"]["sha256"] = sha256_file(
+        implementation_path
+    )
+    candidate["references"]["patch_producer"]["sha256"] = protocol[
+        "canonical_source"
+    ]["canonical_sha256"]
+    candidate["remediation"] = {
+        "protocol_digest": protocol["protocol_digest"],
+        "baseline_contract_sha256": stage["baseline_contract"]["sha256"],
+        "canonical_source_sha256": protocol["canonical_source"][
+            "canonical_sha256"
+        ],
+        "cohort_artifact_digest": cohort_evidence["external_artifact_digest"],
+        "cohort_ledger_sha256": cohort_evidence["ledger"]["sha256"],
+        "orchestrator": {
+            "path": "src/dante_light/o4a_canonical_provenance_rerun.py",
+            "sha256": sha256_file(Path(__file__).resolve()),
+        },
+        "historical_outputs_immutable": True,
+        "index_consumption_manifest_required": True,
+    }
+    candidate["contract_digest"] = contract_digest(candidate)
+    assert_allowed_contract_transition(
+        baseline,
+        candidate,
+        allowed_changes=stage["allowed_changes"],
+    )
+
+    from src.dante_light import o4a_corrected_native as cohort_module
+    from src.dante_light.o4a_corrected_native_index import (
+        validate_native_index_contract,
+    )
+
+    with use_stage_contract(cohort_module, cohort_stage["remediation_contract"]):
+        return validate_native_index_contract(candidate, root=root)
+
+
+def write_frozen_index_contract(*, root: Path = ROOT) -> Path:
+    protocol = load_protocol(root=root, verify_git=True)
+    stage = stage_spec(protocol, "INDEX")
+    target = _inside_root(
+        root, stage["remediation_contract"], label="INDEX remediation contract"
+    )
+    candidate = build_index_contract(root=root)
+    serialized = json.dumps(candidate, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    if target.is_file():
+        if target.read_text(encoding="utf-8") != serialized:
+            raise ContractError(f"refusing divergent frozen INDEX contract: {target}")
+        return target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+    temporary.write_text(serialized, encoding="utf-8", newline="\n")
+    temporary.replace(target)
+    return target
+
+
 @contextmanager
 def use_stage_contract(module: Any, contract_rel: str):
     """Temporarily route an existing stage module to a remediation contract."""
@@ -387,6 +495,163 @@ def run_cohort(
             quality_batch_size=quality_batch_size,
             **common,
         )
+
+
+def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(
+        json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    temporary.replace(path)
+
+
+def _load_jsonl(path: Path) -> list[dict[str, Any]]:
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+
+def build_index_consumption_manifest(
+    index_summary: Mapping[str, Any], replay_rows: Sequence[Mapping[str, Any]]
+) -> dict[str, Any]:
+    """Record exactly which detector windows were consumed by INDEX."""
+
+    fields = (
+        "cohort_index",
+        "detector",
+        "gps_start",
+        "identity_digest",
+        "clean_window_sha256",
+        "context_sources_digest",
+        "raw_context_sha256",
+        "image_sha256",
+        "patch_tokens_sha256",
+    )
+    rows: list[dict[str, Any]] = []
+    for source in replay_rows:
+        if set(fields) - set(source):
+            raise ContractError("INDEX replay row is incomplete")
+        rows.append({field: source[field] for field in fields})
+    rows.sort(key=lambda row: int(row["cohort_index"]))
+    expected_indices = list(range(len(rows)))
+    if [int(row["cohort_index"]) for row in rows] != expected_indices:
+        raise ContractError("INDEX consumption cohort order is incomplete")
+    counts = {
+        detector: sum(row["detector"] == detector for row in rows)
+        for detector in ("H1", "L1")
+    }
+    expected_counts = {
+        key: int(value) for key, value in index_summary["counts_by_detector"].items()
+    }
+    if len(rows) != int(index_summary["cohort_row_total"]) or counts != expected_counts:
+        raise ContractError("INDEX consumption cardinality mismatch")
+    body = {
+        "schema_version": SCHEMA_VERSION,
+        "status": "PASS_INDEX_CONSUMPTION_MANIFEST",
+        "run_key": index_summary["run_key"],
+        "contract_digest": index_summary["contract_digest"],
+        "cohort_artifact_digest": index_summary["cohort_artifact_digest"],
+        "row_total": len(rows),
+        "counts_by_detector": counts,
+        "source_replay_ledger": dict(index_summary["replay_ledger"]),
+        "rows": rows,
+        "row_digest": canonical_json_sha256(rows),
+        "scientific_boundary": {
+            "derived_from_verified_index_replay_only": True,
+            "outcomes_or_scores_included": False,
+            "window_identity_changed": False,
+        },
+    }
+    return {**body, "artifact_digest": canonical_json_sha256(body)}
+
+
+def verify_index_consumption_manifest(
+    *, run_dir: Path, index_summary: Mapping[str, Any]
+) -> tuple[dict[str, Any], Path]:
+    path = run_dir / INDEX_CONSUMPTION_FILENAME
+    if not path.is_file():
+        raise ContractError("INDEX consumption manifest is missing")
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    body = dict(manifest)
+    declared = body.pop("artifact_digest", None)
+    if declared != canonical_json_sha256(body):
+        raise ContractError("INDEX consumption manifest digest mismatch")
+    replay_path = run_dir / index_summary["replay_ledger"]["filename"]
+    if sha256_file(replay_path) != index_summary["replay_ledger"]["sha256"]:
+        raise ContractError("INDEX replay ledger changed before consumption audit")
+    expected = build_index_consumption_manifest(
+        index_summary, _load_jsonl(replay_path)
+    )
+    if manifest != expected:
+        raise ContractError("INDEX consumption manifest does not match replay ledger")
+    return manifest, path
+
+
+def run_index(
+    *,
+    root: Path = ROOT,
+    workers: int = 8,
+    encoder_batch_size: int = 8,
+    device: str = "cuda",
+    verify_only: bool = False,
+) -> tuple[dict[str, Any], Path]:
+    """Run or verify INDEX with the remediation cohort and isolated output."""
+
+    protocol = load_protocol(root=root, verify_git=True)
+    cohort_stage = stage_spec(protocol, "COHORT")
+    stage = stage_spec(protocol, "INDEX")
+    contract_path = _inside_root(
+        root, stage["remediation_contract"], label="INDEX remediation contract"
+    )
+    if not contract_path.is_file():
+        raise ContractError("INDEX remediation contract is not frozen")
+    baseline = json.loads(
+        (root / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = json.loads(contract_path.read_text(encoding="utf-8"))
+    assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+
+    from src.dante_light import o4a_corrected_native as cohort_module
+    from src.dante_light import o4a_corrected_native_index as index_module
+
+    common = {
+        "root": root.resolve(),
+        "primary_external_root": Path(
+            protocol["paths"]["primary_external_root_wsl"]
+        ),
+        "cohort_external_root": Path(
+            protocol["paths"]["remediation_external_roots"][0]
+        ),
+        "external_root": Path(protocol["paths"]["remediation_external_roots"][1]),
+        "device": device,
+    }
+    with use_stage_contract(cohort_module, cohort_stage["remediation_contract"]):
+        with use_stage_contract(index_module, stage["remediation_contract"]):
+            if verify_only:
+                summary, run_dir = index_module.verify_native_index(**common)
+            else:
+                summary, run_dir = index_module.build_native_index(
+                    raw_root=Path(protocol["paths"]["raw_root_wsl"]),
+                    workers=workers,
+                    encoder_batch_size=encoder_batch_size,
+                    **common,
+                )
+    manifest_path = run_dir / INDEX_CONSUMPTION_FILENAME
+    if not verify_only and not manifest_path.is_file():
+        replay_path = run_dir / summary["replay_ledger"]["filename"]
+        _atomic_json(
+            manifest_path,
+            build_index_consumption_manifest(summary, _load_jsonl(replay_path)),
+        )
+    verify_index_consumption_manifest(run_dir=run_dir, index_summary=summary)
+    return summary, run_dir
 
 
 def require_tracked_clean(root: Path = ROOT) -> None:
@@ -452,11 +717,15 @@ def preflight(*, root: Path = ROOT, require_cuda: bool = True) -> dict[str, Any]
 
 
 __all__ = [
+    "COHORT_EVIDENCE_REL",
     "EXPECTED_STAGES",
+    "INDEX_CONSUMPTION_FILENAME",
     "PROTOCOL_REL",
     "ROOT",
     "assert_allowed_contract_transition",
     "build_cohort_contract",
+    "build_index_consumption_manifest",
+    "build_index_contract",
     "canonical_source_sha256",
     "contract_digest",
     "json_leaf_differences",
@@ -464,9 +733,12 @@ __all__ = [
     "preflight",
     "require_tracked_clean",
     "run_cohort",
+    "run_index",
     "sha256_file",
     "stage_spec",
     "use_stage_contract",
     "validate_protocol",
+    "verify_index_consumption_manifest",
     "write_frozen_cohort_contract",
+    "write_frozen_index_contract",
 ]

@@ -155,6 +155,103 @@ def test_frozen_cohort_contract_matches_deterministic_builder() -> None:
     assert frozen == remediation.build_cohort_contract(root=ROOT)
 
 
+def test_built_index_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "INDEX")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = remediation.build_index_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+    for key in (
+        "scientific_boundary",
+        "preprocessing",
+        "representation",
+        "clustering",
+        "token_order",
+        "runtime",
+        "output",
+        "gates",
+    ):
+        assert candidate[key] == baseline[key]
+    assert candidate["parent_native_contract_digest"] == (
+        "ddca4c6e8e791f1242c2b289d51781ea874f0b5031a187c887fe029472acbe80"
+    )
+    assert candidate["remediation"]["index_consumption_manifest_required"] is True
+
+
+def test_frozen_index_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "INDEX")
+    frozen = json.loads(
+        (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
+    )
+    assert frozen == remediation.build_index_contract(root=ROOT)
+
+
+def test_index_consumption_manifest_is_exact_and_outcome_blind() -> None:
+    summary = {
+        "run_key": "a" * 64,
+        "contract_digest": "b" * 64,
+        "cohort_artifact_digest": "c" * 64,
+        "cohort_row_total": 2,
+        "counts_by_detector": {"H1": 1, "L1": 1},
+        "replay_ledger": {
+            "filename": "native_index_replay.jsonl",
+            "sha256": "d" * 64,
+            "row_digest": "e" * 64,
+            "row_total": 2,
+        },
+    }
+    rows = [
+        {
+            "cohort_index": index,
+            "detector": detector,
+            "gps_start": 1000.0 + index,
+            "identity_digest": f"{index + 1:064x}",
+            "clean_window_sha256": f"{index + 2:064x}",
+            "context_sources_digest": f"{index + 3:064x}",
+            "raw_context_sha256": f"{index + 4:064x}",
+            "image_sha256": f"{index + 5:064x}",
+            "patch_tokens_sha256": f"{index + 6:064x}",
+            "unused_diagnostic": "not copied",
+        }
+        for index, detector in enumerate(("H1", "L1"))
+    ]
+    manifest = remediation.build_index_consumption_manifest(summary, rows)
+    assert manifest["status"] == "PASS_INDEX_CONSUMPTION_MANIFEST"
+    assert manifest["row_total"] == 2
+    assert manifest["counts_by_detector"] == {"H1": 1, "L1": 1}
+    assert "unused_diagnostic" not in manifest["rows"][0]
+    assert manifest["scientific_boundary"]["outcomes_or_scores_included"] is False
+
+
+def test_index_consumption_manifest_rejects_noncontiguous_order() -> None:
+    summary = {
+        "run_key": "a" * 64,
+        "contract_digest": "b" * 64,
+        "cohort_artifact_digest": "c" * 64,
+        "cohort_row_total": 1,
+        "counts_by_detector": {"H1": 1, "L1": 0},
+        "replay_ledger": {},
+    }
+    row = {
+        "cohort_index": 1,
+        "detector": "H1",
+        "gps_start": 1000.0,
+        "identity_digest": "1" * 64,
+        "clean_window_sha256": "2" * 64,
+        "context_sources_digest": "3" * 64,
+        "raw_context_sha256": "4" * 64,
+        "image_sha256": "5" * 64,
+        "patch_tokens_sha256": "6" * 64,
+    }
+    with pytest.raises(ContractError, match="cohort order"):
+        remediation.build_index_consumption_manifest(summary, [row])
+
+
 def test_stage_contract_routing_is_restored() -> None:
     module = SimpleNamespace(CONTRACT_REL=Path("legacy.json"))
     with remediation.use_stage_contract(module, "remediation.json"):

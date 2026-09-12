@@ -1,0 +1,138 @@
+{
+  "clustering": {
+    "algorithm": "sklearn.cluster.MiniBatchKMeans.fit",
+    "centroid_count": 1216,
+    "centroid_l2_normalization": true,
+    "compute_labels": false,
+    "minibatch_kmeans_batch_size": 4096,
+    "minibatch_kmeans_n_init": "auto",
+    "random_seed": 42,
+    "raw_embedding_sample_size": 50000,
+    "raw_sample_algorithm": "numpy.default_rng(seed).choice(total_tokens,size,replace=False)",
+    "raw_sample_l2_normalization": true
+  },
+  "contract_digest": "644522f8aba579f4fa3d3a9e75c76b2a7d112b358e40261c86d8436cb56a9ac7",
+  "contract_id": "dante-o4a-canonical-provenance-rerun-index-v1",
+  "gates": {
+    "exact_centroid_shape": [
+      1216,
+      384
+    ],
+    "exact_cohort_rows": 1294,
+    "exact_counts_by_detector": {
+      "H1": 647,
+      "L1": 647
+    },
+    "exact_patch_token_total": 1771486,
+    "exact_raw_sample_shape": [
+      50000,
+      384
+    ],
+    "fail_closed": true,
+    "maximum_l2_norm_error": 2e-06,
+    "zero_hash_or_context_failures": true
+  },
+  "output": {
+    "compact_summary_committed_to_git": true,
+    "historical_index_overwritten": false,
+    "index_filename": "patch_compressed_index_o4a_q4-64_detector_aware_v1.npz",
+    "large_artifacts_committed_to_git": false,
+    "replay_ledger_filename": "native_index_replay.jsonl",
+    "summary_filename": "native_index_summary.json"
+  },
+  "parent_native_contract_digest": "ddca4c6e8e791f1242c2b289d51781ea874f0b5031a187c887fe029472acbe80",
+  "preprocessing": {
+    "analysis_duration_s": 32.0,
+    "require_complete_raw_file_sha256_replay": true,
+    "require_exact_clean_window_hash_replay": true,
+    "require_same_excess_power_disposition": true,
+    "sample_rate_hz": 4096,
+    "whitening_pad_s": 4.0
+  },
+  "references": {
+    "canonical_runtime": {
+      "path": "config/dante_o4a_corrected_runtime_v1.json",
+      "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+    },
+    "encoder": {
+      "path": "src/core/encoder.py",
+      "sha256": "db579c866c2aa351ca6495c6717c2d775dac6a00aa1729c1e18db12ed8e9115f"
+    },
+    "frozen_native_cohort": {
+      "path": "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_cohort.json",
+      "sha256": "a993a73484aa8a89c800a1d624bdef48f9d06a5d2f979ece5dd569a545077c25"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_index.py",
+      "sha256": "71b752c1ca57d409d470a90b5dea0d89c7f9947ef0e9e77dab41452f63b86191"
+    },
+    "model_loader": {
+      "path": "src/core/model_loader.py",
+      "sha256": "16cc4dd386412aac0d2c87ddec4332d607d73542f8d9ce9f5c9c83fa52da9c40"
+    },
+    "native_contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/cohort.json",
+      "sha256": "e4fa14b30693567d397b5a073e8cfc9f03c8a9ceb25860f0c2d8143da1f70418"
+    },
+    "patch_producer": {
+      "path": "src/core/patch_producer.py",
+      "sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef"
+    },
+    "preprocessor": {
+      "path": "src/core/preprocessor.py",
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    }
+  },
+  "remediation": {
+    "baseline_contract_sha256": "4d63db624e7bb8abf25730b1981b85d48c3a520f298d3d4ecff13f99e49efbce",
+    "canonical_source_sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef",
+    "cohort_artifact_digest": "bfe2b08bfd0ea3f4386c4dc8e3f66161251b12c694a6ab90eb2a45f9ab5097e2",
+    "cohort_ledger_sha256": "358138d942267b73d5bbd95a8a0204b8dd2f260f1d2797e6cde2f6bd75252b46",
+    "historical_outputs_immutable": true,
+    "index_consumption_manifest_required": true,
+    "orchestrator": {
+      "path": "src/dante_light/o4a_canonical_provenance_rerun.py",
+      "sha256": "ef0b66b5022396f88f53e8b6ebe7cd2f9140673b1f71ce9a0152dea227899c59"
+    },
+    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05"
+  },
+  "representation": {
+    "colormap": "cividis",
+    "embedding_dimension": 384,
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "patch_tokens_per_image": 1369,
+    "qrange": [
+      4,
+      64
+    ]
+  },
+  "runtime": {
+    "canonical_runtime_contract_digest": "d2406e13ecff1018b8f012a386ede17340c1db5531755e599fc0f28a118f3bd2",
+    "cross_environment_reuse_allowed": false,
+    "device": "cuda",
+    "sklearn_version": "1.9.0"
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "clustering_hyperparameters_changed": false,
+    "cohort_changed": false,
+    "detector_identity_inferred": false,
+    "historical_artifacts_immutable": true,
+    "preprocessing_changed": false,
+    "representation_changed": false
+  },
+  "token_order": {
+    "patch_order": "DINOv2 x_norm_patchtokens row-major",
+    "temporary_storage": "float32 numpy memmap on the canonical WSL filesystem",
+    "temporary_tokens_are_artifacts": false,
+    "window_order": "ascending frozen cohort_index"
+  }
+}
