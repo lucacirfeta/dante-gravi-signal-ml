@@ -26,17 +26,29 @@ from src.dante_light.o4a_canonical_native_calibration_rerun import (  # noqa: E4
     run as run_native_calibration,
     write_frozen_contract as write_frozen_native_calibration_contract,
 )
+from src.dante_light.o4a_canonical_native_rescore_rerun import (  # noqa: E402
+    run as run_native_rescore,
+    write_frozen_contract as write_frozen_native_rescore_contract,
+    write_verified_evidence as write_native_rescore_evidence,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "operation",
-        choices=("validate", "preflight", "freeze-contract", "run", "verify"),
+        choices=(
+            "validate",
+            "preflight",
+            "freeze-contract",
+            "run",
+            "verify",
+            "record-evidence",
+        ),
     )
     parser.add_argument(
         "--stage",
-        choices=("COHORT", "INDEX", "NATIVE_CALIBRATION"),
+        choices=("COHORT", "INDEX", "NATIVE_CALIBRATION", "RESCORE"),
         default="COHORT",
     )
     parser.add_argument("--workers", type=int, default=8)
@@ -58,9 +70,19 @@ def main(argv: list[str] | None = None) -> int:
                 "COHORT": write_frozen_cohort_contract,
                 "INDEX": write_frozen_index_contract,
                 "NATIVE_CALIBRATION": write_frozen_native_calibration_contract,
+                "RESCORE": write_frozen_native_rescore_contract,
             }
             path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
+        elif args.operation == "record-evidence":
+            if args.stage != "RESCORE":
+                raise ContractError("record-evidence is currently defined only for RESCORE")
+            path = write_native_rescore_evidence(root=ROOT)
+            result = {
+                "status": "RECORDED_VERIFIED_EVIDENCE",
+                "stage": args.stage,
+                "path": str(path),
+            }
         else:
             if args.stage == "COHORT":
                 summary, run_dir = run_cohort(
@@ -76,8 +98,13 @@ def main(argv: list[str] | None = None) -> int:
                     encoder_batch_size=args.encoder_batch_size,
                     verify_only=args.operation == "verify",
                 )
-            else:
+            elif args.stage == "NATIVE_CALIBRATION":
                 summary, run_dir, manifest_evidence = run_native_calibration(
+                    root=ROOT,
+                    verify_only=args.operation == "verify",
+                )
+            else:
+                summary, run_dir = run_native_rescore(
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )

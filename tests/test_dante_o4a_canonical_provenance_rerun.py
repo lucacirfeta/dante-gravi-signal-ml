@@ -11,6 +11,7 @@ import pytest
 from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light import o4a_canonical_provenance_rerun as remediation
 from src.dante_light import o4a_canonical_native_calibration_rerun as calibration_remediation
+from src.dante_light import o4a_canonical_native_rescore_rerun as rescore_remediation
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -80,6 +81,22 @@ def test_native_calibration_runtime_amendment_is_driver_only_and_stage_scoped() 
         "/environment_digest",
     ]
     assert amendment["scientific_boundary"]["calibration_population_changed"] is False
+    assert amendment["scientific_boundary"]["tolerances_changed"] is False
+
+
+def test_rescore_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
+    amendment = rescore_remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    assert amendment["scope"] == {
+        "stage": "RESCORE",
+        "allowed_contract_changes": ["/references/canonical_runtime/**"],
+    }
+    assert amendment["required_environment_differences"] == [
+        "/cuda_device/driver_version",
+        "/environment_digest",
+    ]
+    assert amendment["scientific_boundary"]["scoring_changed"] is False
     assert amendment["scientific_boundary"]["tolerances_changed"] is False
 
 
@@ -336,6 +353,46 @@ def test_frozen_native_calibration_contract_matches_deterministic_builder() -> N
         (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
     )
     assert frozen == calibration_remediation.build_contract(root=ROOT)
+
+
+def test_built_rescore_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "RESCORE")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = rescore_remediation.build_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline,
+        candidate,
+        allowed_changes=rescore_remediation.allowed_contract_changes(
+            protocol, root=ROOT
+        ),
+    )
+    for key in (
+        "scientific_boundary",
+        "preprocessing",
+        "scoring",
+        "execution",
+        "gates",
+    ):
+        assert candidate[key] == baseline[key]
+    assert candidate["parent_native_calibration"]["contract_digest"] == (
+        "e79fe3f6fef1af5d84e9aab6e535761cd52f13c61ac7a588eeebad7ec5c32327"
+    )
+    assert candidate["parent_native_index"]["contract_digest"] == (
+        "7c2446b50f4c3abe2d182954ef9d9ed460b84ffb7f37271efea6ceca75c4eaa9"
+    )
+    assert candidate["remediation"]["thresholds_or_classes_computed"] is False
+
+
+def test_frozen_rescore_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "RESCORE")
+    frozen = json.loads(
+        (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
+    )
+    assert frozen == rescore_remediation.build_contract(root=ROOT)
 
 
 def _index_manifest_fixture(tmp_path: Path) -> tuple[dict, Path, list[dict]]:
