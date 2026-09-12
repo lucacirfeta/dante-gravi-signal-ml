@@ -38,10 +38,19 @@ def test_corrected_runtime_contract_fails_closed_on_environment_change() -> None
         validate_canonical_runtime_contract(changed, root=ROOT)
 
 
-def test_corrected_runtime_rejects_noncanonical_current_host() -> None:
+def test_corrected_runtime_rejects_host_outside_selected_frozen_contract() -> None:
     is_wsl = platform.system() == "Linux" and "microsoft" in platform.release().lower()
     if is_wsl:
-        load_canonical_runtime_contract(root=ROOT, require_current=True, device="cuda")
+        from src.dante_light.o4a_canonical_provenance_rerun import (
+            load_runtime_amendment,
+        )
+
+        with pytest.raises(ContractError, match="STOP_ENVIRONMENT_MISMATCH"):
+            load_canonical_runtime_contract(
+                root=ROOT, require_current=True, device="cuda"
+            )
+        amendment = load_runtime_amendment(root=ROOT, require_current=True)
+        assert amendment["remediation_runtime"]["driver_version"] == "616.92"
     else:
         with pytest.raises(ContractError, match="STOP_ENVIRONMENT_MISMATCH"):
             load_canonical_runtime_contract(root=ROOT, require_current=True, device="cuda")
