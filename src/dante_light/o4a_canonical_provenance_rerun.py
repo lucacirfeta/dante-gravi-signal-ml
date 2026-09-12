@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 import copy
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -25,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL_REL = Path("config/dante_o4a_canonical_provenance_rerun_v1.json")
 SCHEMA_VERSION = 1
 EXPECTED_PROTOCOL_DIGEST = (
-    "cd336daca7f06e53383f266c4ac082d414e080561b0001bbb3ee2bb93311dd47"
+    "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05"
 )
 EXPECTED_STAGES = (
     "COHORT",
@@ -264,10 +265,141 @@ def load_protocol(*, root: Path = ROOT, verify_git: bool = True) -> dict[str, An
     )
 
 
+def stage_spec(protocol: Mapping[str, Any], stage_name: str) -> dict[str, Any]:
+    name = str(stage_name).upper()
+    for stage in protocol["stages"]:
+        if stage["name"] == name:
+            return dict(stage)
+    raise ContractError(f"unknown canonical provenance rerun stage: {stage_name}")
+
+
+def build_cohort_contract(*, root: Path = ROOT) -> dict[str, Any]:
+    """Derive the COHORT contract without changing any scientific field."""
+
+    protocol = load_protocol(root=root, verify_git=True)
+    stage = stage_spec(protocol, "COHORT")
+    baseline_path = root / stage["baseline_contract"]["path"]
+    baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+    candidate = copy.deepcopy(baseline)
+    candidate["contract_id"] = "dante-o4a-canonical-provenance-rerun-cohort-v1"
+    candidate["references"]["patch_producer"]["sha256"] = protocol[
+        "canonical_source"
+    ]["canonical_sha256"]
+    implementation = root / candidate["references"]["native_implementation"]["path"]
+    candidate["references"]["native_implementation"]["sha256"] = sha256_file(
+        implementation
+    )
+    candidate["external_output"]["root"] = protocol["paths"][
+        "remediation_external_roots"
+    ][0]
+    candidate["remediation"] = {
+        "protocol_digest": protocol["protocol_digest"],
+        "baseline_contract_sha256": stage["baseline_contract"]["sha256"],
+        "historical_source_sha256": protocol["unresolved_historical_source"][
+            "sha256"
+        ],
+        "canonical_source_sha256": protocol["canonical_source"][
+            "canonical_sha256"
+        ],
+        "historical_outputs_immutable": True,
+    }
+    candidate["contract_digest"] = contract_digest(candidate)
+    assert_allowed_contract_transition(
+        baseline,
+        candidate,
+        allowed_changes=stage["allowed_changes"],
+    )
+    from src.dante_light.o4a_corrected_native import validate_native_contract
+
+    return validate_native_contract(candidate, root=root.resolve())
+
+
+def write_frozen_cohort_contract(*, root: Path = ROOT) -> Path:
+    protocol = load_protocol(root=root, verify_git=True)
+    stage = stage_spec(protocol, "COHORT")
+    target = _inside_root(
+        root, stage["remediation_contract"], label="COHORT remediation contract"
+    )
+    candidate = build_cohort_contract(root=root)
+    serialized = json.dumps(candidate, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    if target.is_file():
+        if target.read_text(encoding="utf-8") != serialized:
+            raise ContractError(f"refusing divergent frozen COHORT contract: {target}")
+        return target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+    temporary.write_text(serialized, encoding="utf-8", newline="\n")
+    temporary.replace(target)
+    return target
+
+
+@contextmanager
+def use_stage_contract(module: Any, contract_rel: str):
+    """Temporarily route an existing stage module to a remediation contract."""
+
+    previous = module.CONTRACT_REL
+    module.CONTRACT_REL = Path(contract_rel)
+    try:
+        yield
+    finally:
+        module.CONTRACT_REL = previous
+
+
+def run_cohort(
+    *,
+    root: Path = ROOT,
+    workers: int = 8,
+    quality_batch_size: int = 128,
+    verify_only: bool = False,
+) -> tuple[dict[str, Any], Path]:
+    """Run or verify COHORT in its isolated remediation namespace."""
+
+    protocol = load_protocol(root=root, verify_git=True)
+    stage = stage_spec(protocol, "COHORT")
+    contract_path = _inside_root(
+        root, stage["remediation_contract"], label="COHORT remediation contract"
+    )
+    if not contract_path.is_file():
+        raise ContractError("COHORT remediation contract is not frozen")
+    baseline = json.loads(
+        (root / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = json.loads(contract_path.read_text(encoding="utf-8"))
+    assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+
+    from src.dante_light import o4a_corrected_native as cohort_module
+
+    common = {
+        "root": root.resolve(),
+        "primary_external_root": Path(
+            protocol["paths"]["primary_external_root_wsl"]
+        ),
+        "external_root": Path(protocol["paths"]["remediation_external_roots"][0]),
+    }
+    with use_stage_contract(cohort_module, stage["remediation_contract"]):
+        if verify_only:
+            return cohort_module.verify_native_cohort(**common)
+        return cohort_module.freeze_native_cohort(
+            raw_root=Path(protocol["paths"]["raw_root_wsl"]),
+            workers=workers,
+            quality_batch_size=quality_batch_size,
+            **common,
+        )
+
+
 def require_tracked_clean(root: Path = ROOT) -> None:
     try:
         status = subprocess.check_output(
-            ["git", "status", "--porcelain=v1", "--untracked-files=no"],
+            [
+                "git",
+                "-c",
+                "core.autocrlf=true",
+                "status",
+                "--porcelain=v1",
+                "--untracked-files=no",
+            ],
             cwd=root,
             text=True,
             encoding="utf-8",
@@ -324,12 +456,17 @@ __all__ = [
     "PROTOCOL_REL",
     "ROOT",
     "assert_allowed_contract_transition",
+    "build_cohort_contract",
     "canonical_source_sha256",
     "contract_digest",
     "json_leaf_differences",
     "load_protocol",
     "preflight",
     "require_tracked_clean",
+    "run_cohort",
     "sha256_file",
+    "stage_spec",
+    "use_stage_contract",
     "validate_protocol",
+    "write_frozen_cohort_contract",
 ]

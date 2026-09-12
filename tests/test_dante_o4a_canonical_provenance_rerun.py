@@ -3,6 +3,8 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
@@ -122,3 +124,49 @@ def test_canonical_source_hash_is_git_recoverable() -> None:
     assert remediation.canonical_source_sha256(ROOT / source["path"]) == source[
         "canonical_sha256"
     ]
+
+
+def test_built_cohort_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "COHORT")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = remediation.build_cohort_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+    for key in (
+        "historical_parity",
+        "cohort",
+        "preprocessing",
+        "clustering",
+        "gates",
+    ):
+        assert candidate[key] == baseline[key]
+
+
+def test_frozen_cohort_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "COHORT")
+    frozen = json.loads(
+        (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
+    )
+    assert frozen == remediation.build_cohort_contract(root=ROOT)
+
+
+def test_stage_contract_routing_is_restored() -> None:
+    module = SimpleNamespace(CONTRACT_REL=Path("legacy.json"))
+    with remediation.use_stage_contract(module, "remediation.json"):
+        assert module.CONTRACT_REL == Path("remediation.json")
+    assert module.CONTRACT_REL == Path("legacy.json")
+
+
+def test_tracked_clean_uses_shared_checkout_normalization() -> None:
+    with patch(
+        "src.dante_light.o4a_canonical_provenance_rerun.subprocess.check_output",
+        return_value="",
+    ) as check:
+        remediation.require_tracked_clean(ROOT)
+    command = check.call_args.args[0]
+    assert command[:4] == ["git", "-c", "core.autocrlf=true", "status"]

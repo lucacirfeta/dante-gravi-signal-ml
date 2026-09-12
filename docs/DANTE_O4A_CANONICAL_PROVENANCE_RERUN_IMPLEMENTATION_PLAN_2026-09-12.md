@@ -61,6 +61,12 @@ if an existing target contains divergent evidence, or if the repository source
 does not match the frozen canonical hashes. No historical run may be resumed,
 overwritten, deleted, or marked as superseded by this process.
 
+Because WSL executes from the shared Windows checkout, the tracked-clean check
+uses Git's `core.autocrlf=true` comparison semantics. This avoids treating the
+expected CRLF materialization of non-scientific text files as edits; every
+contract-bound scientific source is still verified by its exact frozen digest
+and its canonical Git blob before execution.
+
 ## Dependency chain
 
 ```text
