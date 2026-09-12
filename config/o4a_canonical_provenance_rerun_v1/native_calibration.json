@@ -1,0 +1,164 @@
+{
+  "authorization": {
+    "authorized_on": "2026-09-01",
+    "decision": "replace the historically contaminated native-threshold calibration population with a fresh outcome-blind detector-aware cohort",
+    "historical_outputs_immutable": true
+  },
+  "contract_digest": "e79fe3f6fef1af5d84e9aab6e535761cd52f13c61ac7a588eeebad7ec5c32327",
+  "contract_id": "dante-o4a-canonical-provenance-rerun-native-calibration-v1",
+  "execution": {
+    "atomic_outputs_only": true,
+    "freeze_environment": "canonical WSL runtime",
+    "raw_root_by_environment": {
+      "windows": "E:/o4a",
+      "wsl": "/mnt/e/o4a"
+    },
+    "raw_strain_or_model_opened_during_freeze": false,
+    "resume_partial_output": false
+  },
+  "future_threshold_contract": {
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_4998_rows_as_294_complete_blocks": true,
+    "classification_rule": "BACKGROUND if score < ci_lower; ROBUST if score > ci_upper; AMBIGUOUS otherwise",
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "method": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_5000_rows": true
+  },
+  "gates": {
+    "exact_primary_image_and_identity_replay": true,
+    "exact_raw_manifest_provenance": true,
+    "exact_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "fail_closed": true,
+    "zero_candidate_guard_violation": true,
+    "zero_duplicate_detector_gps": true,
+    "zero_native_index_guard_violation": true,
+    "zero_outcome_field_in_ledger": true
+  },
+  "output": {
+    "historical_artifacts_overwritten": false,
+    "large_ledgers_committed_to_git": false,
+    "ledger_filename": "native_calibration_cohort.jsonl",
+    "root": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/native_calibration",
+    "summary_filename": "native_calibration_summary.json"
+  },
+  "population": {
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "equivalent_start_delta_s": 128.0,
+    "forbidden_guard_s": 96.0,
+    "guard_populations": [
+      "all_corrected_primary_candidates_cross_detector",
+      "all_corrected_native_index_training_windows_cross_detector"
+    ],
+    "identity_unit": "detector_plus_32s_analysis_window_start",
+    "run_bounds_gps": [
+      1368975618.0,
+      1389456018.0
+    ],
+    "selection_algorithm": "verified_scan_grid_full_run_stratified_nonoverlapping_blocks",
+    "source_population": "verified_corrected_primary_scan_geometry",
+    "target_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "temporal_block_length": 17,
+    "whitening_pad_s": 4.0,
+    "window_duration_s": 32.0,
+    "window_stride_s": 64.0
+  },
+  "references": {
+    "block_bootstrap_implementation": {
+      "path": "src/pipeline_v2_production/background_calibration.py",
+      "sha256": "832e141e78a6c084fe7bdc5d444853657799b31890871ac533463370e34e1d24"
+    },
+    "canonical_runtime": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/runtime.json",
+      "sha256": "ad8081445bc7297a844c52a16254de0414d4e00f45541940f8b0e08f69f35e2c"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_calibration.py",
+      "sha256": "c72b9db9309948e261c6a3c6fad5d62720bef40ccdee981f207bf25f18d0a0e8"
+    },
+    "corrected_native_cohort": {
+      "path": "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_cohort.json",
+      "sha256": "a993a73484aa8a89c800a1d624bdef48f9d06a5d2f979ece5dd569a545077c25"
+    },
+    "corrected_primary_scan": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json",
+      "sha256": "6660911a1082fa651a1143aaf8307f1f8942cbebc0b229fa702efa7686b9246f"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_calibration_rerun.py",
+      "sha256": "42a59c1e0dd4d3ab6c5bf0663bbdc432b934282c1112013e1c19e2dc84fa8690"
+    },
+    "native_index_consumption_manifest": {
+      "manifest_artifact_digest": "c1e6520a88de77402c271ded10a28001bb7376caa1ae639a1280a8dc1d870703",
+      "manifest_row_digest": "2cb59b00d9fde8f667231bdf10bf692628a757ada8f6fa79ddfad0e2d093dd41",
+      "manifest_sha256": "c60a48cfc777d43f364f375337718d5f9b01af1fa039e6e6b4cfad6e5aaa36e7",
+      "path": "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_index.json",
+      "row_total": 1294,
+      "sha256": "926ebb980fcf3457c7955d35343194f8c83bfde257e355c03a503b6e664ef6d3"
+    },
+    "raw_manifest": {
+      "path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl",
+      "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_calibration.py",
+      "sha256": "61d24338ce1156e82c5de8cd80fb732fdd82ffe1f9a6c88d4622b4747901ca5a"
+    }
+  },
+  "remediation": {
+    "baseline_contract_sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584",
+    "cohort_artifact_digest": "bfe2b08bfd0ea3f4386c4dc8e3f66161251b12c694a6ab90eb2a45f9ab5097e2",
+    "cohort_ledger_sha256": "358138d942267b73d5bbd95a8a0204b8dd2f260f1d2797e6cde2f6bd75252b46",
+    "historical_outputs_immutable": true,
+    "index_artifact_digest": "edf3178ac2292047e1ad2d24555ef4bfd92270775c3ed97d18618f6eeee1cd49",
+    "index_consumption_manifest_artifact_digest": "c1e6520a88de77402c271ded10a28001bb7376caa1ae639a1280a8dc1d870703",
+    "index_consumption_manifest_row_digest": "2cb59b00d9fde8f667231bdf10bf692628a757ada8f6fa79ddfad0e2d093dd41",
+    "index_consumption_manifest_sha256": "c60a48cfc777d43f364f375337718d5f9b01af1fa039e6e6b4cfad6e5aaa36e7",
+    "outcomes_or_scores_read": false,
+    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05",
+    "runtime_amendment": {
+      "digest": "d2ff4cdf0af4df8c1cf7a883e813c1717972b72bb6791e812a5f630d492cccaa",
+      "path": "config/dante_o4a_canonical_provenance_native_calibration_runtime_amendment_v1.json"
+    },
+    "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d"
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_guard_is_cross_detector": true,
+    "complete_temporal_blocks_required": true,
+    "context_provenance_from_frozen_raw_manifest": true,
+    "forbidden_fields": [
+      "primary_score",
+      "native_score",
+      "score",
+      "score_hex",
+      "threshold",
+      "threshold_lower",
+      "threshold_upper",
+      "class",
+      "robustness_class",
+      "taxonomy",
+      "taxonomy_family",
+      "disposition"
+    ],
+    "historical_calibration_population_reused": false,
+    "native_index_guard_is_cross_detector": true,
+    "selection_reads_identity_and_candidate_firewall_only": true,
+    "thresholds_computed_during_freeze": false
+  }
+}

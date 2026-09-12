@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "amendment_id": "dante-o4a-canonical-provenance-native-calibration-runtime-amendment-v1",
+  "amendment_digest": "d2ff4cdf0af4df8c1cf7a883e813c1717972b72bb6791e812a5f630d492cccaa",
+  "status": "FROZEN_BEFORE_NATIVE_CALIBRATION_RECOMPUTATION",
+  "authorization": {
+    "authorized_on": "2026-09-12",
+    "decision": "continue the canonical provenance rerun under the already frozen driver-only remediation runtime without changing scientific parameters or tolerances"
+  },
+  "parent_protocol": {
+    "path": "config/dante_o4a_canonical_provenance_rerun_v1.json",
+    "sha256": "b2e17474e60219a62c65a9f0f6f5c0f853aee40bfe715bd7f1664b8b8357f42c",
+    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05"
+  },
+  "parent_runtime_amendment": {
+    "path": "config/dante_o4a_canonical_provenance_runtime_amendment_v1.json",
+    "sha256": "59cba45a4a8a3090b9b3e5a9726c3c520223acb9e415459c77494db975964cad",
+    "amendment_digest": "7234ed247b06973e86e1b5aa84f98bca40a7d44cc03a92c156daec463b151e72"
+  },
+  "scope": {
+    "stage": "NATIVE_CALIBRATION",
+    "allowed_contract_changes": [
+      "/references/canonical_runtime/**"
+    ]
+  },
+  "historical_runtime": {
+    "path": "config/dante_o4a_corrected_runtime_v1.json",
+    "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2",
+    "contract_digest": "d2406e13ecff1018b8f012a386ede17340c1db5531755e599fc0f28a118f3bd2",
+    "environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+    "driver_version": "610.74"
+  },
+  "remediation_runtime": {
+    "path": "config/o4a_canonical_provenance_rerun_v1/runtime.json",
+    "sha256": "ad8081445bc7297a844c52a16254de0414d4e00f45541940f8b0e08f69f35e2c",
+    "contract_digest": "0e09de34355d8530e630740d7d640698df68acee2bf5167eabc337d6389d1db2",
+    "environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+    "driver_version": "616.92"
+  },
+  "required_environment_differences": [
+    "/cuda_device/driver_version",
+    "/environment_digest"
+  ],
+  "scientific_boundary": {
+    "calibration_population_changed": false,
+    "guard_geometry_changed": false,
+    "outcome_firewall_changed": false,
+    "package_versions_changed": false,
+    "preprocessing_changed": false,
+    "scoring_changed": false,
+    "statistical_validation_changed": false,
+    "thresholds_changed": false,
+    "tolerances_changed": false
+  }
+}

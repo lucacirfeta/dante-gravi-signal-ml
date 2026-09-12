@@ -22,6 +22,10 @@ from src.dante_light.o4a_canonical_provenance_rerun import (  # noqa: E402
     write_frozen_cohort_contract,
     write_frozen_index_contract,
 )
+from src.dante_light.o4a_canonical_native_calibration_rerun import (  # noqa: E402
+    run as run_native_calibration,
+    write_frozen_contract as write_frozen_native_calibration_contract,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -30,7 +34,11 @@ def _parser() -> argparse.ArgumentParser:
         "operation",
         choices=("validate", "preflight", "freeze-contract", "run", "verify"),
     )
-    parser.add_argument("--stage", choices=("COHORT", "INDEX"), default="COHORT")
+    parser.add_argument(
+        "--stage",
+        choices=("COHORT", "INDEX", "NATIVE_CALIBRATION"),
+        default="COHORT",
+    )
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--quality-batch-size", type=int, default=128)
     parser.add_argument("--encoder-batch-size", type=int, default=8)
@@ -46,11 +54,12 @@ def main(argv: list[str] | None = None) -> int:
         elif args.operation == "preflight":
             result = preflight(root=ROOT, require_cuda=not args.no_cuda_check)
         elif args.operation == "freeze-contract":
-            path = (
-                write_frozen_cohort_contract(root=ROOT)
-                if args.stage == "COHORT"
-                else write_frozen_index_contract(root=ROOT)
-            )
+            writers = {
+                "COHORT": write_frozen_cohort_contract,
+                "INDEX": write_frozen_index_contract,
+                "NATIVE_CALIBRATION": write_frozen_native_calibration_contract,
+            }
+            path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
         else:
             if args.stage == "COHORT":
@@ -60,11 +69,16 @@ def main(argv: list[str] | None = None) -> int:
                     quality_batch_size=args.quality_batch_size,
                     verify_only=args.operation == "verify",
                 )
-            else:
+            elif args.stage == "INDEX":
                 summary, run_dir = run_index(
                     root=ROOT,
                     workers=args.workers,
                     encoder_batch_size=args.encoder_batch_size,
+                    verify_only=args.operation == "verify",
+                )
+            else:
+                summary, run_dir = run_native_calibration(
+                    root=ROOT,
                     verify_only=args.operation == "verify",
                 )
             result = {"run_dir": str(run_dir), **summary}

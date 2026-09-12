@@ -4,13 +4,13 @@ import copy
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light import o4a_canonical_provenance_rerun as remediation
+from src.dante_light import o4a_canonical_native_calibration_rerun as calibration_remediation
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,6 +64,22 @@ def test_runtime_amendment_is_driver_only_and_index_scoped() -> None:
         "/cuda_device/driver_version",
         "/environment_digest",
     ]
+    assert amendment["scientific_boundary"]["tolerances_changed"] is False
+
+
+def test_native_calibration_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
+    amendment = calibration_remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    assert amendment["scope"] == {
+        "stage": "NATIVE_CALIBRATION",
+        "allowed_contract_changes": ["/references/canonical_runtime/**"],
+    }
+    assert amendment["required_environment_differences"] == [
+        "/cuda_device/driver_version",
+        "/environment_digest",
+    ]
+    assert amendment["scientific_boundary"]["calibration_population_changed"] is False
     assert amendment["scientific_boundary"]["tolerances_changed"] is False
 
 
@@ -165,10 +181,13 @@ def test_built_cohort_contract_preserves_scientific_sections() -> None:
         assert candidate[key] == baseline[key]
 
 
-def test_runtime_amendment_allowlist_is_scoped_to_index() -> None:
+def test_runtime_amendment_allowlists_are_stage_scoped() -> None:
     protocol = remediation.load_protocol(root=ROOT, verify_git=True)
     cohort_changes = remediation.stage_allowed_changes(protocol, "COHORT", root=ROOT)
     index_changes = remediation.stage_allowed_changes(protocol, "INDEX", root=ROOT)
+    calibration_changes = calibration_remediation.allowed_contract_changes(
+        protocol, root=ROOT
+    )
     amendment = remediation.load_runtime_amendment(
         root=ROOT, require_current=False
     )
@@ -179,6 +198,15 @@ def test_runtime_amendment_allowlist_is_scoped_to_index() -> None:
     ]
     assert all(change not in cohort_changes for change in amendment_changes)
     assert all(change in index_changes for change in amendment_changes)
+    calibration_amendment = calibration_remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    calibration_amendment_changes = calibration_amendment["scope"][
+        "allowed_contract_changes"
+    ]
+    assert all(change not in cohort_changes for change in calibration_amendment_changes)
+    assert all(change in calibration_changes for change in calibration_amendment_changes)
+    assert "/runtime/canonical_runtime_contract_digest" not in calibration_changes
 
 
 def test_index_runtime_injection_does_not_mutate_historical_runtime_path() -> None:
@@ -272,6 +300,133 @@ def test_frozen_index_contract_matches_deterministic_builder() -> None:
         (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
     )
     assert frozen == remediation.build_index_contract(root=ROOT)
+
+
+def test_built_native_calibration_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "NATIVE_CALIBRATION")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = calibration_remediation.build_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline,
+        candidate,
+        allowed_changes=calibration_remediation.allowed_contract_changes(
+            protocol, root=ROOT
+        ),
+    )
+    for key in (
+        "population",
+        "scientific_boundary",
+        "future_threshold_contract",
+        "execution",
+        "gates",
+    ):
+        assert candidate[key] == baseline[key]
+    manifest = candidate["references"]["native_index_consumption_manifest"]
+    assert manifest["row_total"] == 1294
+    assert candidate["remediation"]["outcomes_or_scores_read"] is False
+
+
+def test_frozen_native_calibration_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "NATIVE_CALIBRATION")
+    frozen = json.loads(
+        (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
+    )
+    assert frozen == calibration_remediation.build_contract(root=ROOT)
+
+
+def _index_manifest_fixture(tmp_path: Path) -> tuple[dict, Path, list[dict]]:
+    rows = []
+    for cohort_index in range(1294):
+        detector = "H1" if cohort_index < 647 else "L1"
+        rows.append(
+            {
+                "cohort_index": cohort_index,
+                "detector": detector,
+                "gps_start": float(1000 + cohort_index * 64),
+                "identity_digest": f"{cohort_index + 1:064x}",
+                "clean_window_sha256": f"{cohort_index + 2:064x}",
+                "context_sources_digest": f"{cohort_index + 3:064x}",
+                "raw_context_sha256": f"{cohort_index + 4:064x}",
+                "image_sha256": f"{cohort_index + 5:064x}",
+                "patch_tokens_sha256": f"{cohort_index + 6:064x}",
+            }
+        )
+    body = {
+        "schema_version": 1,
+        "status": "PASS_INDEX_CONSUMPTION_MANIFEST",
+        "row_total": len(rows),
+        "counts_by_detector": {"H1": 647, "L1": 647},
+        "rows": rows,
+        "row_digest": canonical_json_sha256(rows),
+        "scientific_boundary": {
+            "derived_from_verified_index_replay_only": True,
+            "outcomes_or_scores_included": False,
+            "window_identity_changed": False,
+        },
+    }
+    manifest = {**body, "artifact_digest": canonical_json_sha256(body)}
+    path = tmp_path / "native_index_consumption_manifest.json"
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    contract = {
+        "references": {
+            "native_index_consumption_manifest": {
+                "manifest_sha256": remediation.sha256_file(path),
+                "manifest_artifact_digest": manifest["artifact_digest"],
+                "manifest_row_digest": manifest["row_digest"],
+                "row_total": len(rows),
+            }
+        }
+    }
+    cohort_rows = [
+        {
+            "detector": row["detector"],
+            "gps_start": row["gps_start"],
+            "identity_digest": row["identity_digest"],
+        }
+        for row in rows
+    ]
+    return contract, path, cohort_rows
+
+
+def test_native_calibration_replays_exact_outcome_blind_index_manifest(
+    tmp_path: Path,
+) -> None:
+    contract, path, cohort_rows = _index_manifest_fixture(tmp_path)
+    evidence = calibration_remediation.verify_consumption_manifest(
+        contract=contract,
+        manifest_path=path,
+        cohort_rows=cohort_rows,
+    )
+    assert evidence["row_total"] == 1294
+    assert evidence["outcomes_or_scores_included"] is False
+    assert evidence["identity_set_equals_cohort"] is True
+
+
+def test_native_calibration_rejects_outcome_in_index_manifest(tmp_path: Path) -> None:
+    contract, path, cohort_rows = _index_manifest_fixture(tmp_path)
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    manifest["rows"][0]["score"] = 1.0
+    body = dict(manifest)
+    body.pop("artifact_digest")
+    manifest["row_digest"] = canonical_json_sha256(manifest["rows"])
+    body = dict(manifest)
+    body.pop("artifact_digest")
+    manifest["artifact_digest"] = canonical_json_sha256(body)
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    reference = contract["references"]["native_index_consumption_manifest"]
+    reference["manifest_sha256"] = remediation.sha256_file(path)
+    reference["manifest_artifact_digest"] = manifest["artifact_digest"]
+    reference["manifest_row_digest"] = manifest["row_digest"]
+    with pytest.raises(ContractError, match="boundary changed"):
+        calibration_remediation.verify_consumption_manifest(
+            contract=contract,
+            manifest_path=path,
+            cohort_rows=cohort_rows,
+        )
 
 
 def test_index_consumption_manifest_is_exact_and_outcome_blind() -> None:
