@@ -88,12 +88,12 @@ byte/numerical comparison against the historical artifact.
 
 ## Rerun result
 
-The outcome-blind `COHORT` and representation-building `INDEX` stages are now
-complete. The canonical cohort contains 647 H1 and 647 L1 windows and its ledger
-is byte-identical to the retained historical ledger. The canonical index replay
-ledger is also byte-identical to the historical replay ledger. Its centroid
-array, raw-embedding sample, and labels are byte-identical to the corresponding
-historical NPZ members.
+The outcome-blind `COHORT`, representation-building `INDEX`, and outcome-blind
+`NATIVE_CALIBRATION` stages are now complete. The canonical cohort contains 647
+H1 and 647 L1 windows and its ledger is byte-identical to the retained
+historical ledger. The canonical index replay ledger is also byte-identical to
+the historical replay ledger. Its centroid array, raw-embedding sample, and
+labels are byte-identical to the corresponding historical NPZ members.
 
 The complete NPZ container hash differs because three bound metadata values now
 identify the canonical cohort, remediation contract, and amended runtime. No
@@ -103,8 +103,18 @@ gates passed with zero raw, clean-window, context, or encoder failure. Compact
 evidence is recorded in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_index.json`.
 
-The downstream stages from `NATIVE_CALIBRATION` through `COMPARE` remain
-pending. Their results must not be inferred from the completed index alone.
+The canonical native-calibration cohort contains 5,000 H1 and 5,000 L1
+identities. Its ledger is byte-identical to the retained historical ledger
+(SHA-256 `31438cd2d2df2014732467b99cf15dbcffd5f38cddf4784f1dc74fbe5ab47c00`).
+Before selection, the remediation independently verified that the 1,294
+outcome-blind identities in the INDEX consumption manifest exactly equal the
+verified COHORT identities; this provides the frozen cross-detector 128-second
+guard population required by the calibration contract. No score, threshold, or
+class was read or computed by this stage. Compact evidence is recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_calibration.json`.
+
+The downstream stages from `RESCORE` through `COMPARE` remain pending. Their
+results must not be inferred from the completed calibration identity replay.
 The final version of this section will additionally report:
 
 - canonical contracts and run identifiers;

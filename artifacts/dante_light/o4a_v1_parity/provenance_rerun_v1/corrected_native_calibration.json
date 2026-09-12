@@ -1,0 +1,74 @@
+{
+  "bootstrap_geometry": {
+    "block_length": 17,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "complete_blocks_per_detector": 294,
+    "point_percentile_uses_all_rows": true,
+    "rows_used_per_bootstrap_draw": 4998,
+    "tail_rows_excluded_from_bootstrap_draw": 2
+  },
+  "comparison_to_historical": {
+    "classification": "BYTE_IDENTICAL",
+    "historical_ledger_sha256": "31438cd2d2df2014732467b99cf15dbcffd5f38cddf4784f1dc74fbe5ab47c00",
+    "ledger_bytes_equal": true,
+    "new_ledger_sha256": "31438cd2d2df2014732467b99cf15dbcffd5f38cddf4784f1dc74fbe5ab47c00"
+  },
+  "contract_digest": "e79fe3f6fef1af5d84e9aab6e535761cd52f13c61ac7a588eeebad7ec5c32327",
+  "counts_by_detector": {
+    "H1": 5000,
+    "L1": 5000
+  },
+  "external_artifact_digest": "84c28d3e4522227a805793792fe448f0e748f77bc5bb26e015905d8815fccea8",
+  "external_run": {
+    "directory": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/native_calibration/native_calibration_152d077c0c2211b3d7574ad230e0a672e69027c1eaa220a9af20df9e5b7f7b4a",
+    "ledger_filename": "native_calibration_cohort.jsonl",
+    "summary_filename": "native_calibration_summary.json",
+    "summary_sha256": "fefe33db3ff1bfd404092531293f42f1bba177d6cc5f6e962f28fda2d4e5cc98"
+  },
+  "index_consumption_manifest": {
+    "artifact_digest": "c1e6520a88de77402c271ded10a28001bb7376caa1ae639a1280a8dc1d870703",
+    "identity_set_equals_cohort": true,
+    "outcomes_or_scores_included": false,
+    "row_digest": "2cb59b00d9fde8f667231bdf10bf692628a757ada8f6fa79ddfad0e2d093dd41",
+    "row_total": 1294,
+    "sha256": "c60a48cfc777d43f364f375337718d5f9b01af1fa039e6e6b4cfad6e5aaa36e7"
+  },
+  "ledger": {
+    "row_digest": "f2b4f089a91f58cbad615a465e413d7ed70f4352cc721e3b524e19d942e0bfea",
+    "sha256": "31438cd2d2df2014732467b99cf15dbcffd5f38cddf4784f1dc74fbe5ab47c00",
+    "size_bytes": 6005430
+  },
+  "references": {
+    "contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/native_calibration.json",
+      "sha256": "51039e2e8006452b7d8302443120d3e0add48b5689a90570e5f82a87e85f5289"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_calibration_rerun.py",
+      "sha256": "42a59c1e0dd4d3ab6c5bf0663bbdc432b934282c1112013e1c19e2dc84fa8690"
+    },
+    "runtime_amendment": {
+      "digest": "d2ff4cdf0af4df8c1cf7a883e813c1717972b72bb6791e812a5f630d492cccaa",
+      "path": "config/dante_o4a_canonical_provenance_native_calibration_runtime_amendment_v1.json",
+      "sha256": "0ef9c6af4e1982e4f1ca71216b42ba2888cb050444b0e2530a31b21cdd75f734"
+    }
+  },
+  "row_total": 10000,
+  "run_key": "152d077c0c2211b3d7574ad230e0a672e69027c1eaa220a9af20df9e5b7f7b4a",
+  "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_guard_is_cross_detector": true,
+    "historical_calibration_population_reused": false,
+    "native_index_guard_is_cross_detector": true,
+    "primary_or_native_scores_read": false,
+    "thresholds_or_classes_computed": false
+  },
+  "status": "PASS_VERIFIED_CANONICAL_NATIVE_CALIBRATION",
+  "verification": {
+    "failure_artifact_absent": true,
+    "independent_verifier": "PASS",
+    "index_consumption_manifest_gate": "PASS"
+  }
+}
