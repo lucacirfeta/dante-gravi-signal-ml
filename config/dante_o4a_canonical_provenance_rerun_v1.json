@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "protocol_id": "dante-o4a-canonical-provenance-rerun-v1",
+  "protocol_digest": "cd336daca7f06e53383f266c4ac082d414e080561b0001bbb3ee2bb93311dd47",
+  "status": "FROZEN_BEFORE_RECOMPUTATION",
+  "authorization": {
+    "authorized_on": "2026-09-12",
+    "decision": "rerun the complete detector-aware native chain with Git-recoverable canonical source identity and compare against retained published outputs",
+    "a1_multiscale_suspended": true,
+    "historical_runs_immutable": true,
+    "external_publication_requires_separate_confirmation": true
+  },
+  "unresolved_historical_source": {
+    "path": "src/core/patch_producer.py",
+    "sha256": "2c20d4e89b48060986770127bf41c2d860d22efc4f98f430cb152cfb71f39dcf",
+    "byte_stream_retained": false,
+    "formal_status": "EXECUTED_WORKING_TREE_BYTES_NOT_RECOVERED"
+  },
+  "canonical_source": {
+    "path": "src/core/patch_producer.py",
+    "canonical_sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef",
+    "git_commit": "68388e6727b8738561a0c40346fce5646d120ecc",
+    "hash_semantics": "utf8_lf_v1"
+  },
+  "scientific_boundary": {
+    "classification_changed": false,
+    "cohort_population_changed": false,
+    "coincidence_changed": false,
+    "index_hyperparameters_changed": false,
+    "pem_changed": false,
+    "preprocessing_changed": false,
+    "scoring_changed": false,
+    "statistical_validation_changed": false,
+    "taxonomy_changed": false,
+    "thresholds_changed": false
+  },
+  "ordered_stages": [
+    "COHORT",
+    "INDEX",
+    "NATIVE_CALIBRATION",
+    "RESCORE",
+    "THRESHOLDS",
+    "CLASSIFY",
+    "TAXONOMY",
+    "COINCIDENCE",
+    "PEM",
+    "COMPARE"
+  ],
+  "paths": {
+    "raw_root_windows": "E:/o4a",
+    "raw_root_wsl": "/mnt/e/o4a",
+    "repository_evidence_root": "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1",
+    "remediation_contract_root": "config/o4a_canonical_provenance_rerun_v1",
+    "remediation_external_root": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1",
+    "remediation_external_roots": [
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/cohort",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/index",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/native_calibration",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/rescore",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/thresholds",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/classification",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/taxonomy",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/coincidence",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/pem",
+      "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/compare"
+    ],
+    "historical_external_roots": [
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_v1",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_index_v1",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_calibration_v2",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_rescore_v2",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_thresholds_v1",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_classification_v1",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_taxonomy_v1",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_coincidence_v1",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_native_pem_v1",
+      "/mnt/e/dante_cache/dante_light/o4a_corrected_final_comparison_v2"
+    ]
+  },
+  "stages": [
+    {
+      "name": "COHORT",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_v1.json",
+        "sha256": "c601205d5ceabe9aaca7f15a03afb91467eb23e45cd89d0d1add02397a83850b"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/cohort.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/references/patch_producer/**",
+        "/references/native_implementation/**",
+        "/external_output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "INDEX",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_index_v1.json",
+        "sha256": "4d63db624e7bb8abf25730b1981b85d48c3a520f298d3d4ecff13f99e49efbce"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/index.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/parent_native_contract_digest",
+        "/references/native_contract/**",
+        "/references/frozen_native_cohort/**",
+        "/references/implementation/**",
+        "/references/patch_producer/**",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "NATIVE_CALIBRATION",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_calibration_v2.json",
+        "sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/native_calibration.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/references/corrected_native_cohort/**",
+        "/references/native_index_consumption_manifest/**",
+        "/references/implementation/**",
+        "/output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "RESCORE",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_rescore_v2.json",
+        "sha256": "4208a94d6c0a8fbf9f8bdecbc1a77cc07f35e923864b4b892988c0d63f0dfd6b"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/rescore.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/parent_native_calibration/**",
+        "/parent_native_index/**",
+        "/references/corrected_native_calibration_v2/**",
+        "/references/corrected_native_index/**",
+        "/references/implementation/**",
+        "/references/frozen_rescore_engine/**",
+        "/output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "THRESHOLDS",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_thresholds_v1.json",
+        "sha256": "15a34d91349c949ec617633edc8919b16b13c594f4bf1ed639eebaeb22350993"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/thresholds.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/parent_native_rescore/**",
+        "/references/native_rescore_v2/**",
+        "/references/implementation/**",
+        "/output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "CLASSIFY",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_classification_v1.json",
+        "sha256": "0fc773a6be16f90fd7d943742f0b79003baaa703d176ee657e9f5124c50ecb39"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/classification.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/parent_native_rescore/**",
+        "/parent_native_thresholds/**",
+        "/references/native_rescore_v2/**",
+        "/references/native_thresholds/**",
+        "/references/implementation/**",
+        "/output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "TAXONOMY",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_taxonomy_v1.json",
+        "sha256": "8e031916a8df52077aa3c832e1647812fc316e6ba3bcd9ef11c9010d65d2417d"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/taxonomy.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/parent_native_classification/**",
+        "/references/native_classification/**",
+        "/references/implementation/**",
+        "/output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "COINCIDENCE",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_coincidence_v1.json",
+        "sha256": "1f76e4c03d37f24cb3323db592ec7d6aae89944d17dc71c3cf661b32f70e92d5"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/coincidence.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/parents/**",
+        "/references/native_classification/**",
+        "/references/native_index/**",
+        "/references/native_taxonomy/**",
+        "/references/implementation/**",
+        "/output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "PEM",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_native_pem_v1.json",
+        "sha256": "3d054649b5ab18fd3fe2681c4ad90523febc5f4ed3df0d2e603cfe5930589513"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/pem.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/parents/**",
+        "/references/native_classification/**",
+        "/references/native_coincidence/**",
+        "/references/implementation/**",
+        "/output/root",
+        "/remediation"
+      ]
+    },
+    {
+      "name": "COMPARE",
+      "baseline_contract": {
+        "path": "config/dante_o4a_corrected_final_comparison_v2.json",
+        "sha256": "0ea4670e8eeb3bfbff2d694212290b1575891979ec18e24b31ee3108053e1532"
+      },
+      "remediation_contract": "config/o4a_canonical_provenance_rerun_v1/compare.json",
+      "allowed_changes": [
+        "/contract_id",
+        "/contract_digest",
+        "/external_roots/**",
+        "/references/corrected_classification/**",
+        "/references/corrected_coincidence/**",
+        "/references/corrected_pem/**",
+        "/references/corrected_taxonomy/**",
+        "/references/implementation/**",
+        "/output/root",
+        "/remediation"
+      ]
+    }
+  ],
+  "gates": {
+    "minimum_free_bytes": 21474836480,
+    "tracked_clean_required": true,
+    "wsl_required": true,
+    "cuda_required": true,
+    "old_runs_mutated": false,
+    "out_of_order_execution_allowed": false,
+    "new_tolerances_allowed": false,
+    "unexpected_failure_or_defer_allowed": false
+  },
+  "comparison": {
+    "classifications": [
+      "BYTE_IDENTICAL",
+      "NUMERICALLY_EQUIVALENT_WITHIN_FROZEN_TOLERANCE",
+      "CHANGED"
+    ],
+    "tolerance_source": "existing versioned stage contracts only",
+    "new_tolerance_after_outcome_inspection": false
+  },
+  "mandatory_transparency_note": true,
+  "transparency_note_path": "docs/DANTE_O4A_PROVENANCE_TRANSPARENCY_DRAFT_2026-09-12.md",
+  "public_records_requiring_transparency_review": [
+    "https://arxiv.org/abs/2606.25702",
+    "https://arxiv.org/abs/2609.08695",
+    "https://github.com/lucacirfeta/dante-gravi-signal-ml/releases/tag/v3.8.0",
+    "https://zenodo.org/records/22681395",
+    "https://ask.igwn.org/t/1544"
+  ]
+}

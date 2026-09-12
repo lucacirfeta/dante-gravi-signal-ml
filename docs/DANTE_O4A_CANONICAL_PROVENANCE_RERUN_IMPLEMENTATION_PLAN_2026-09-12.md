@@ -1,7 +1,9 @@
 # DANTE O4a canonical provenance rerun — implementation plan
 
-Date: 2026-09-12  
-Branch: `provenance/o4a-canonical-rerun-v1`  
+Date: 2026-09-12
+
+Branch: `provenance/o4a-canonical-rerun-v1`
+
 Status: frozen before recomputation
 
 ## Objective

@@ -30,8 +30,12 @@ RECONCILIATION_DIGEST = (
 )
 GIT_ATTRIBUTES_ALLOWED_ADDITIONS = frozenset(
     {
+        "config/dante_o4a_canonical_provenance_rerun_v1.json text eol=lf",
         "config/dante_o4a_final_impact_attribution_v1.json text eol=lf",
         "config/dante_workflow_public_smoke_v1.json text eol=lf",
+        "docs/DANTE_O4A_CANONICAL_PROVENANCE_RERUN_IMPLEMENTATION_PLAN_2026-09-12.md text eol=lf",
+        "docs/DANTE_O4A_PROVENANCE_TRANSPARENCY_DRAFT_2026-09-12.md text eol=lf",
+        "tests/test_dante_o4a_canonical_provenance_rerun.py text eol=lf",
         "tests/test_dante_o4a_final_impact_attribution.py text eol=lf",
     }
 )
