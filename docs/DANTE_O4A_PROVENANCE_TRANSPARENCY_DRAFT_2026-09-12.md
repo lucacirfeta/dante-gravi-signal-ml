@@ -88,7 +88,24 @@ byte/numerical comparison against the historical artifact.
 
 ## Rerun result
 
-Pending. This section will report:
+The outcome-blind `COHORT` and representation-building `INDEX` stages are now
+complete. The canonical cohort contains 647 H1 and 647 L1 windows and its ledger
+is byte-identical to the retained historical ledger. The canonical index replay
+ledger is also byte-identical to the historical replay ledger. Its centroid
+array, raw-embedding sample, and labels are byte-identical to the corresponding
+historical NPZ members.
+
+The complete NPZ container hash differs because three bound metadata values now
+identify the canonical cohort, remediation contract, and amended runtime. No
+scientific array differs. All 1,199 raw-source hashes, 1,294 clean-window
+replays, 1,771,486 patch tokens, and the frozen K=1216 and 50,000-row sample
+gates passed with zero raw, clean-window, context, or encoder failure. Compact
+evidence is recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_index.json`.
+
+The downstream stages from `NATIVE_CALIBRATION` through `COMPARE` remain
+pending. Their results must not be inferred from the completed index alone.
+The final version of this section will additionally report:
 
 - canonical contracts and run identifiers;
 - byte-level and numerical comparison status for every stage;

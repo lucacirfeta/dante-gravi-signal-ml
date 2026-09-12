@@ -1,0 +1,87 @@
+{
+  "comparison_to_historical": {
+    "classification": "SCIENTIFIC_PAYLOAD_BYTE_IDENTICAL",
+    "historical_index_sha256": "6a24ba02a6925bd5527b804c3ae8aa06b73fc36a654c8a6f789d22a1b3f2403b",
+    "historical_replay_ledger_sha256": "479488b20152d3b7ff9898699c8dbbb9749d2ac02b35a8ce7b8e81ae0c09f680",
+    "index_container_bytes_equal": false,
+    "labels_equal": true,
+    "metadata_only_changes": [
+      "cohort_artifact_digest",
+      "contract_digest",
+      "runtime_environment_digest"
+    ],
+    "new_index_sha256": "9b84880cfa9b168ec0a448ca71c8b12f9e1e120bd48c8c250754197f357c9052",
+    "raw_sample_bytes_equal": true,
+    "replay_ledger_bytes_equal": true,
+    "centroid_bytes_equal": true
+  },
+  "consumption_manifest": {
+    "artifact_digest": "c1e6520a88de77402c271ded10a28001bb7376caa1ae639a1280a8dc1d870703",
+    "filename": "native_index_consumption_manifest.json",
+    "row_digest": "2cb59b00d9fde8f667231bdf10bf692628a757ada8f6fa79ddfad0e2d093dd41",
+    "row_total": 1294,
+    "sha256": "c60a48cfc777d43f364f375337718d5f9b01af1fa039e6e6b4cfad6e5aaa36e7"
+  },
+  "contract_digest": "7c2446b50f4c3abe2d182954ef9d9ed460b84ffb7f37271efea6ceca75c4eaa9",
+  "counts_by_detector": {
+    "H1": 647,
+    "L1": 647
+  },
+  "external_artifact_digest": "edf3178ac2292047e1ad2d24555ef4bfd92270775c3ed97d18618f6eeee1cd49",
+  "external_run": {
+    "directory": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/index/native_index_750681d0e35f1a9f766e37e6d3b858280b903d50dbbc982458f0662c6553488b",
+    "index_filename": "patch_compressed_index_o4a_q4-64_detector_aware_v1.npz",
+    "replay_ledger_filename": "native_index_replay.jsonl",
+    "summary_filename": "native_index_summary.json"
+  },
+  "index": {
+    "centroid_bytes_sha256": "dd31c705f6e4764533ce852eb10271557535fa8543609a5fad7ae51c8333ab53",
+    "centroid_shape": [
+      1216,
+      384
+    ],
+    "raw_sample_bytes_sha256": "585f6f08395b3dfb08e6e55bcc1988916ac49d36c6141bb174256e4e28f8e1fa",
+    "raw_sample_shape": [
+      50000,
+      384
+    ],
+    "sha256": "9b84880cfa9b168ec0a448ca71c8b12f9e1e120bd48c8c250754197f357c9052",
+    "size_bytes": 72970352,
+    "token_total": 1771486
+  },
+  "raw_sources": {
+    "complete_file_sha256_replayed": true,
+    "manifest_digest": "d834faa5732f7252476e3b302c6a093cd5c1d3f0d55870b6458ac193e685ad4b",
+    "total_size_bytes": 148630525618,
+    "unique_file_count": 1199
+  },
+  "references": {
+    "contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/index.json",
+      "sha256": "7aeec21a3684ee1085b93790677528bbdf140d22f841637deabf254f53bf10a1"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_corrected_native_index.py",
+      "sha256": "71b752c1ca57d409d470a90b5dea0d89c7f9947ef0e9e77dab41452f63b86191"
+    },
+    "orchestrator": {
+      "path": "src/dante_light/o4a_canonical_provenance_rerun.py",
+      "sha256": "9a7d401f60183d40bad66f7f5dc6c70ae770df1ca840029af8d46c1a77218860"
+    }
+  },
+  "replay_ledger": {
+    "row_digest": "2cb59b00d9fde8f667231bdf10bf692628a757ada8f6fa79ddfad0e2d093dd41",
+    "row_total": 1294,
+    "sha256": "479488b20152d3b7ff9898699c8dbbb9749d2ac02b35a8ce7b8e81ae0c09f680"
+  },
+  "run_key": "750681d0e35f1a9f766e37e6d3b858280b903d50dbbc982458f0662c6553488b",
+  "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_CANONICAL_INDEX",
+  "verification": {
+    "clean_window_hash_mismatches": 0,
+    "context_failures": 0,
+    "encoder_failures": 0,
+    "raw_source_hash_mismatches": 0
+  }
+}
