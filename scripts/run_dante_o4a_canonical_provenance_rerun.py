@@ -77,11 +77,13 @@ def main(argv: list[str] | None = None) -> int:
                     verify_only=args.operation == "verify",
                 )
             else:
-                summary, run_dir = run_native_calibration(
+                summary, run_dir, manifest_evidence = run_native_calibration(
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
             result = {"run_dir": str(run_dir), **summary}
+            if args.stage == "NATIVE_CALIBRATION":
+                result["index_consumption_manifest"] = manifest_evidence
     except (ContractError, OSError, ValueError) as exc:
         print(
             json.dumps(
