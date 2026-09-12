@@ -164,6 +164,22 @@ def test_built_cohort_contract_preserves_scientific_sections() -> None:
         assert candidate[key] == baseline[key]
 
 
+def test_runtime_amendment_allowlist_is_scoped_to_index() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    cohort_changes = remediation.stage_allowed_changes(protocol, "COHORT", root=ROOT)
+    index_changes = remediation.stage_allowed_changes(protocol, "INDEX", root=ROOT)
+    amendment = remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    amendment_changes = amendment["scope"]["allowed_contract_changes"]
+
+    assert cohort_changes == remediation.stage_spec(protocol, "COHORT")[
+        "allowed_changes"
+    ]
+    assert all(change not in cohort_changes for change in amendment_changes)
+    assert all(change in index_changes for change in amendment_changes)
+
+
 def test_frozen_cohort_contract_matches_deterministic_builder() -> None:
     protocol = remediation.load_protocol(root=ROOT, verify_git=True)
     stage = remediation.stage_spec(protocol, "COHORT")

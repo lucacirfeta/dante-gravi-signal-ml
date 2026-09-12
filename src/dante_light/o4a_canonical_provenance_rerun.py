@@ -419,7 +419,7 @@ def build_cohort_contract(*, root: Path = ROOT) -> dict[str, Any]:
     assert_allowed_contract_transition(
         baseline,
         candidate,
-        allowed_changes=stage["allowed_changes"],
+        allowed_changes=stage_allowed_changes(protocol, "COHORT", root=root),
     )
     from src.dante_light.o4a_corrected_native import validate_native_contract
 
@@ -621,7 +621,7 @@ def run_cohort(
     assert_allowed_contract_transition(
         baseline,
         candidate,
-        allowed_changes=stage_allowed_changes(protocol, "INDEX", root=root),
+        allowed_changes=stage_allowed_changes(protocol, "COHORT", root=root),
     )
 
     from src.dante_light import o4a_corrected_native as cohort_module
