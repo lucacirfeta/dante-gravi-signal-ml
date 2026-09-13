@@ -90,9 +90,9 @@ byte/numerical comparison against its historical counterpart.
 ## Rerun result
 
 The outcome-blind `COHORT`, representation-building `INDEX`, outcome-blind
-`NATIVE_CALIBRATION`, score-only `RESCORE`, and detector-specific `THRESHOLDS`
-stages are now complete. The canonical cohort contains 647 H1 and 647 L1
-windows and its ledger is
+`NATIVE_CALIBRATION`, score-only `RESCORE`, detector-specific `THRESHOLDS`,
+and deterministic `CLASSIFY` stages are now complete. The canonical cohort
+contains 647 H1 and 647 L1 windows and its ledger is
 byte-identical to the retained historical ledger. The canonical index replay
 ledger is also byte-identical to the historical replay ledger. Its centroid
 array, raw-embedding sample, and labels are byte-identical to the corresponding
@@ -135,9 +135,18 @@ thresholds, and no classification was performed. Compact evidence is recorded
 in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_thresholds.json`.
 
-The downstream stages from `CLASSIFY` through `COMPARE` remain pending. Their
-results must not be inferred solely from the byte-identical score and threshold
-replays. The final version of this section will additionally report:
+The canonical `CLASSIFY` replay deterministically classified all 10,942
+candidates with the unchanged detector-specific confidence-bound rule. The
+complete classified ledger is byte-identical to the retained historical ledger
+(SHA-256 `4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c`).
+It contains 5,406 ROBUST, 2,344 AMBIGUOUS, and 3,192 BACKGROUND candidates.
+No historical class, taxonomy, coincidence, or PEM disposition was read while
+constructing it. Compact evidence is recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_classification.json`.
+
+The downstream stages from `TAXONOMY` through `COMPARE` remain pending. Their
+results must not be inferred solely from the byte-identical upstream replays.
+The final version of this section will additionally report:
 
 - canonical contracts and run identifiers;
 - byte-level and numerical comparison status for every stage;

@@ -1,0 +1,106 @@
+{
+  "artifact_digest": "f1efc5c3cae28e9afb520cb2d8635abb17df70281cb2089478cf9459ff1ea97a",
+  "classification": {
+    "lower_boundary_class": "AMBIGUOUS",
+    "output_field": "native_class",
+    "rule": "BACKGROUND if score < ci_lower; ROBUST if score > ci_upper; AMBIGUOUS otherwise",
+    "score_field": "native_score",
+    "upper_boundary_class": "AMBIGUOUS"
+  },
+  "comparison_to_historical": {
+    "all_classification_outputs_identical": true,
+    "checks": {
+      "classification_equal": true,
+      "counts_equal": true,
+      "gates_equal": true,
+      "output_bytes_equal": true,
+      "source_equal": true
+    },
+    "classification": "BYTE_IDENTICAL"
+  },
+  "contract_digest": "8ad71d6c10db704f41889697aa7fd9dae083886711c64617307d654b8436dabb",
+  "counts_by_class": {
+    "AMBIGUOUS": 2344,
+    "BACKGROUND": 3192,
+    "ROBUST": 5406
+  },
+  "counts_by_detector_and_class": {
+    "H1": {
+      "AMBIGUOUS": 672,
+      "BACKGROUND": 1958,
+      "ROBUST": 2090
+    },
+    "L1": {
+      "AMBIGUOUS": 1672,
+      "BACKGROUND": 1234,
+      "ROBUST": 3316
+    }
+  },
+  "external_artifact_digest": "8fcc9395d28ac9ba8981cce5e9ce798389f91cc95cf98e0e7792a77774788a30",
+  "external_run": {
+    "directory": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/classification/native_classification_4b5132b3086057ed8981eba954c8aa9b29f51d05496b4269bf095fe7e4198548",
+    "summary_filename": "native_classification_summary.json",
+    "summary_sha256": "2ee7e88f85538afd32c29472927e268f8b77c5ed71ce1a8dc18ff5138ba319af",
+    "summary_size_bytes": 2293
+  },
+  "gates": {
+    "class_labels": [
+      "BACKGROUND",
+      "AMBIGUOUS",
+      "ROBUST"
+    ],
+    "disposition_read": false,
+    "duplicate_detector_gps": 0,
+    "historical_classes_read": false,
+    "nonfinite_scores": 0,
+    "taxonomy_read": false
+  },
+  "native_rescore_artifact_digest": "9924445491270e394446cdc79e44ab24ff2a5b6c78b6917508d543f096505bfc",
+  "native_threshold_artifact_digest": "725f8e9418ed0285926731cb898b09e5fc0afc89a8d3f2452d7f8a1560642be4",
+  "output": {
+    "filename": "native_classified_candidates.jsonl",
+    "row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19a783",
+    "sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c",
+    "size_bytes": 11713451
+  },
+  "references": {
+    "contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/classification.json",
+      "sha256": "8285b66e03a3a07b7feb85008f2e991ac31f98a115975b1a698173ef3b485bfc"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_classification_rerun.py",
+      "sha256": "f115cfb8c1f90527519ed23c58a1fece167707240891063c2108fd9094e3daf0"
+    },
+    "runtime_amendment": {
+      "digest": "99364392627aca14e1621cd08037b80e76cdba4c9ac2b38ce65c74f83a946edf",
+      "path": "config/dante_o4a_canonical_provenance_classification_runtime_amendment_v1.json",
+      "sha256": "be451a5245afaa592c63f996d7cf8572adc45a01c864a8f98a6e0a330d932834"
+    }
+  },
+  "row_total": 10942,
+  "run_key": "4b5132b3086057ed8981eba954c8aa9b29f51d05496b4269bf095fe7e4198548",
+  "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_population_changed": false,
+    "coincidence_performed_in_this_stage": false,
+    "deterministic_classes_only": true,
+    "historical_artifacts_immutable": true,
+    "native_scores_changed": false,
+    "native_thresholds_changed": false,
+    "pem_performed_in_this_stage": false,
+    "taxonomy_performed_in_this_stage": false
+  },
+  "source": {
+    "filename": "native_candidates.jsonl",
+    "row_digest": "25749fc22101cf2dd9cf0548175cdec4e42c238aa9a20768e7164f4a26e7f405",
+    "sha256": "d3ab8cd737c4b96570f7e1ac280fe808303f8d985e5c27923775ea6709c1de76"
+  },
+  "status": "PASS_VERIFIED_CANONICAL_CLASSIFICATION",
+  "verification": {
+    "failure_artifact_absent": true,
+    "independent_verifier": "PASS_EXACT_REPLAY",
+    "taxonomy_or_coincidence_or_pem_computed": false
+  }
+}
