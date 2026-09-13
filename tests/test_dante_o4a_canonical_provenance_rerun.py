@@ -20,6 +20,9 @@ from src.dante_light import o4a_canonical_native_taxonomy_rerun as taxonomy_reme
 from src.dante_light import (
     o4a_canonical_native_coincidence_rerun as coincidence_remediation,
 )
+from src.dante_light import (
+    o4a_canonical_native_coincidence_verifier as coincidence_verifier,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -616,6 +619,43 @@ def test_coincidence_comparator_limits_numeric_tolerance_to_seed_replay() -> Non
     assert not coincidence_remediation._rows_equivalent(
         [changed_statistic], [baseline], tolerance=2e-7
     )
+
+
+def test_coincidence_independent_verifier_uses_baseline_verify_signature() -> None:
+    protocol = {
+        "paths": {
+            "primary_external_root_wsl": "/primary",
+            "remediation_external_roots": [
+                "/cohort",
+                "/index",
+                "/calibration",
+                "/rescore",
+                "/thresholds",
+                "/classification",
+                "/taxonomy",
+                "/coincidence",
+            ],
+        }
+    }
+    observed: dict = {}
+
+    def verify_native_coincidence(**kwargs):
+        observed.update(kwargs)
+        return {"status": "PASS_COMPLETE_NATIVE_COINCIDENCE_V1"}, Path("run")
+
+    module = SimpleNamespace(verify_native_coincidence=verify_native_coincidence)
+    with (
+        patch.object(coincidence_verifier.base, "load_protocol", return_value=protocol),
+        patch.object(coincidence_verifier.stage, "_frozen_contract", return_value={}),
+        patch.object(coincidence_verifier.stage, "_patched_module") as patched_module,
+    ):
+        patched_module.return_value.__enter__.return_value = module
+        summary, run_dir = coincidence_verifier.verify(root=ROOT)
+
+    assert summary["status"] == "PASS_COMPLETE_NATIVE_COINCIDENCE_V1"
+    assert run_dir == Path("run")
+    assert "raw_root" not in observed
+    assert observed["external_root"] == Path("/coincidence")
 
 
 def _index_manifest_fixture(tmp_path: Path) -> tuple[dict, Path, list[dict]]:

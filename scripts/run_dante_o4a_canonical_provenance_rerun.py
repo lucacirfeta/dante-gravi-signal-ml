@@ -49,6 +49,9 @@ from src.dante_light.o4a_canonical_native_taxonomy_rerun import (  # noqa: E402
 from src.dante_light.o4a_canonical_native_coincidence_rerun import (  # noqa: E402
     run as run_native_coincidence,
     write_frozen_contract as write_frozen_native_coincidence_contract,
+)
+from src.dante_light.o4a_canonical_native_coincidence_verifier import (  # noqa: E402
+    verify as verify_native_coincidence,
     write_verified_evidence as write_native_coincidence_evidence,
 )
 
@@ -168,12 +171,14 @@ def main(argv: list[str] | None = None) -> int:
                     verify_only=args.operation == "verify",
                 )
             else:
-                summary, run_dir = run_native_coincidence(
-                    root=ROOT,
-                    workers=args.workers,
-                    batch_size=args.coincidence_batch_size,
-                    verify_only=args.operation == "verify",
-                )
+                if args.operation == "verify":
+                    summary, run_dir = verify_native_coincidence(root=ROOT)
+                else:
+                    summary, run_dir = run_native_coincidence(
+                        root=ROOT,
+                        workers=args.workers,
+                        batch_size=args.coincidence_batch_size,
+                    )
             result = {"run_dir": str(run_dir), **summary}
             if args.stage == "NATIVE_CALIBRATION":
                 result["index_consumption_manifest"] = manifest_evidence

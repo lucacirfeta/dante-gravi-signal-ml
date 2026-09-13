@@ -91,8 +91,8 @@ byte/numerical comparison against its historical counterpart.
 
 The outcome-blind `COHORT`, representation-building `INDEX`, outcome-blind
 `NATIVE_CALIBRATION`, score-only `RESCORE`, detector-specific `THRESHOLDS`,
-deterministic `CLASSIFY`, and morphology-only `TAXONOMY` stages are now
-complete. The canonical cohort
+deterministic `CLASSIFY`, morphology-only `TAXONOMY`, and physical
+`COINCIDENCE` stages are now complete. The canonical cohort
 contains 647 H1 and 647 L1 windows and its ledger is
 byte-identical to the retained historical ledger. The canonical index replay
 ledger is also byte-identical to the historical replay ledger. Its centroid
@@ -157,8 +157,22 @@ taxonomy and not evidence of physical coincidence. Compact evidence is
 recorded in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_taxonomy.json`.
 
-The downstream stages from `COINCIDENCE` through `COMPARE` remain pending. Their
-results must not be inferred solely from the byte-identical upstream replays.
+The canonical `COINCIDENCE` replay retained the asymmetric seed design: 5,406
+ROBUST candidates were primary seeds, 2,344 AMBIGUOUS candidates were evaluated
+as a separate diagnostic population, and 3,192 BACKGROUND candidates were not
+processed. The partner detector was evaluated independently of its class or
+catalogue presence. The complete primary ledger, diagnostic ledger, and
+5,246-row raw-source receipt are byte-identical to their retained historical
+counterparts. The unchanged pooled-null diagnostic threshold selected 9 ROBUST
+and 56 AMBIGUOUS events for PEM follow-up; these are not described as globally
+significant coincidences. All identity, replay, population, and physical
+measurement gates passed, with maximum seed-score replay delta 0.0. The L1
+feature localized at GPS 1382955253.17 remains in the ROBUST seed population;
+its analysis window starts at GPS 1382955232. Compact evidence is recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_coincidence.json`.
+
+The downstream `PEM` and `COMPARE` stages remain pending. Their results must not
+be inferred solely from the byte-identical upstream replays.
 The final version of this section will additionally report:
 
 - canonical contracts and run identifiers;
