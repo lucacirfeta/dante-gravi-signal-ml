@@ -91,7 +91,8 @@ byte/numerical comparison against its historical counterpart.
 
 The outcome-blind `COHORT`, representation-building `INDEX`, outcome-blind
 `NATIVE_CALIBRATION`, score-only `RESCORE`, detector-specific `THRESHOLDS`,
-and deterministic `CLASSIFY` stages are now complete. The canonical cohort
+deterministic `CLASSIFY`, and morphology-only `TAXONOMY` stages are now
+complete. The canonical cohort
 contains 647 H1 and 647 L1 windows and its ledger is
 byte-identical to the retained historical ledger. The canonical index replay
 ledger is also byte-identical to the historical replay ledger. Its centroid
@@ -144,7 +145,19 @@ No historical class, taxonomy, coincidence, or PEM disposition was read while
 constructing it. Compact evidence is recorded in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_classification.json`.
 
-The downstream stages from `TAXONOMY` through `COMPARE` remain pending. Their
+The canonical `TAXONOMY` replay used the unchanged primary-scan MIL vectors,
+cosine distance, 0.25 distance threshold, single linkage, and historical family
+naming over all 10,942 classified candidates. Its complete output ledger is
+byte-identical to the retained historical ledger (SHA-256
+`42ebf22a38ff20bdae8c9f2f92ef6c8b78ef336ec059e4ef00834bedb1f89bd8`),
+and an independent label-invariant partition digest also agrees. The retained
+single-linkage result is three clusters: one 10,940-member family and two
+singletons. This reproduces the known chaining behavior; it is a morphology
+taxonomy and not evidence of physical coincidence. Compact evidence is
+recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_taxonomy.json`.
+
+The downstream stages from `COINCIDENCE` through `COMPARE` remain pending. Their
 results must not be inferred solely from the byte-identical upstream replays.
 The final version of this section will additionally report:
 
