@@ -54,6 +54,11 @@ from src.dante_light.o4a_canonical_native_coincidence_verifier import (  # noqa:
     verify as verify_native_coincidence,
     write_verified_evidence as write_native_coincidence_evidence,
 )
+from src.dante_light.o4a_canonical_native_pem_rerun import (  # noqa: E402
+    run as run_native_pem,
+    write_frozen_contract as write_frozen_native_pem_contract,
+    write_verified_evidence as write_native_pem_evidence,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -80,6 +85,7 @@ def _parser() -> argparse.ArgumentParser:
             "CLASSIFY",
             "TAXONOMY",
             "COINCIDENCE",
+            "PEM",
         ),
         default="COHORT",
     )
@@ -108,6 +114,7 @@ def main(argv: list[str] | None = None) -> int:
                 "CLASSIFY": write_frozen_native_classification_contract,
                 "TAXONOMY": write_frozen_native_taxonomy_contract,
                 "COINCIDENCE": write_frozen_native_coincidence_contract,
+                "PEM": write_frozen_native_pem_contract,
             }
             path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
@@ -118,11 +125,12 @@ def main(argv: list[str] | None = None) -> int:
                 "CLASSIFY": write_native_classification_evidence,
                 "TAXONOMY": write_native_taxonomy_evidence,
                 "COINCIDENCE": write_native_coincidence_evidence,
+                "PEM": write_native_pem_evidence,
             }
             if args.stage not in writers:
                 raise ContractError(
                     "record-evidence is defined only for RESCORE, THRESHOLDS, "
-                    "CLASSIFY, TAXONOMY, or COINCIDENCE"
+                    "CLASSIFY, TAXONOMY, COINCIDENCE, or PEM"
                 )
             path = writers[args.stage](root=ROOT)
             result = {
@@ -170,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
-            else:
+            elif args.stage == "COINCIDENCE":
                 if args.operation == "verify":
                     summary, run_dir = verify_native_coincidence(root=ROOT)
                 else:
@@ -179,6 +187,11 @@ def main(argv: list[str] | None = None) -> int:
                         workers=args.workers,
                         batch_size=args.coincidence_batch_size,
                     )
+            else:
+                summary, run_dir = run_native_pem(
+                    root=ROOT,
+                    verify_only=args.operation == "verify",
+                )
             result = {"run_dir": str(run_dir), **summary}
             if args.stage == "NATIVE_CALIBRATION":
                 result["index_consumption_manifest"] = manifest_evidence

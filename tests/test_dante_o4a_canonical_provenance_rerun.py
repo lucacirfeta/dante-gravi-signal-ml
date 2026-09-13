@@ -23,6 +23,7 @@ from src.dante_light import (
 from src.dante_light import (
     o4a_canonical_native_coincidence_verifier as coincidence_verifier,
 )
+from src.dante_light import o4a_canonical_native_pem_rerun as pem_remediation
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,6 +94,30 @@ def test_native_calibration_runtime_amendment_is_driver_only_and_stage_scoped() 
     ]
     assert amendment["scientific_boundary"]["calibration_population_changed"] is False
     assert amendment["scientific_boundary"]["tolerances_changed"] is False
+
+
+def test_pem_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
+    amendment = pem_remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    assert amendment["scope"] == {
+        "stage": "PEM",
+        "allowed_contract_changes": [],
+    }
+    assert amendment["required_environment_differences"] == [
+        "/cuda_device/driver_version",
+        "/environment_digest",
+    ]
+    assert amendment["scientific_boundary"] == {
+        "bootstrap_changed": False,
+        "channel_policy_changed": False,
+        "coherence_measurement_changed": False,
+        "null_calibration_changed": False,
+        "package_versions_changed": False,
+        "target_population_changed": False,
+        "threshold_or_verdict_rule_changed": False,
+        "tolerances_changed": False,
+    }
 
 
 def test_rescore_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
@@ -656,6 +681,45 @@ def test_coincidence_independent_verifier_uses_baseline_verify_signature() -> No
     assert run_dir == Path("run")
     assert "raw_root" not in observed
     assert observed["external_root"] == Path("/coincidence")
+
+
+def test_built_pem_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "PEM")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = pem_remediation.build_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+    for key in (
+        "authorization",
+        "scientific_boundary",
+        "population",
+        "measurement",
+        "channels",
+        "execution",
+    ):
+        assert candidate[key] == baseline[key]
+    assert candidate["parents"]["native_coincidence_primary_sha256"] == (
+        "94e354069bee90b3ca468eb44506769b9aff13d9f0cf960fabb2d0bcca1a7893"
+    )
+    assert candidate["parents"]["native_coincidence_diagnostic_sha256"] == (
+        "00cda8de2f5389419e9ae89122ddb80a450ac9039f9ea77da60b05d175660915"
+    )
+    assert candidate["remediation"]["shortlist_population_changed"] is False
+    assert candidate["remediation"]["compare_computed"] is False
+
+
+def test_frozen_pem_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "PEM")
+    path = ROOT / stage["remediation_contract"]
+    if not path.is_file():
+        pytest.skip("PEM contract has not been frozen yet")
+    frozen = json.loads(path.read_text(encoding="utf-8"))
+    assert frozen == pem_remediation.build_contract(root=ROOT)
 
 
 def _index_manifest_fixture(tmp_path: Path) -> tuple[dict, Path, list[dict]]:
