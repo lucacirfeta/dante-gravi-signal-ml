@@ -16,6 +16,7 @@ from src.dante_light import o4a_canonical_native_thresholds_rerun as thresholds_
 from src.dante_light import (
     o4a_canonical_native_classification_rerun as classification_remediation,
 )
+from src.dante_light import o4a_canonical_native_taxonomy_rerun as taxonomy_remediation
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,6 +134,22 @@ def test_classification_runtime_amendment_is_driver_only_and_stage_scoped() -> N
         "/environment_digest",
     ]
     assert amendment["scientific_boundary"]["classification_rule_changed"] is False
+    assert amendment["scientific_boundary"]["tolerances_changed"] is False
+
+
+def test_taxonomy_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
+    amendment = taxonomy_remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    assert amendment["scope"] == {
+        "stage": "TAXONOMY",
+        "allowed_contract_changes": [],
+    }
+    assert amendment["required_environment_differences"] == [
+        "/cuda_device/driver_version",
+        "/environment_digest",
+    ]
+    assert amendment["scientific_boundary"]["linkage_or_distance_changed"] is False
     assert amendment["scientific_boundary"]["tolerances_changed"] is False
 
 
@@ -487,6 +504,35 @@ def test_frozen_classification_contract_matches_deterministic_builder() -> None:
         (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
     )
     assert frozen == classification_remediation.build_contract(root=ROOT)
+
+
+def test_built_taxonomy_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "TAXONOMY")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = taxonomy_remediation.build_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+    for key in ("scientific_boundary", "taxonomy", "execution", "gates"):
+        assert candidate[key] == baseline[key]
+    assert candidate["parent_native_classification"]["contract_digest"] == (
+        "8ad71d6c10db704f41889697aa7fd9dae083886711c64617307d654b8436dabb"
+    )
+    assert candidate["remediation"]["classification_ledger_byte_identical"] is True
+    assert candidate["remediation"]["coincidence_computed"] is False
+    assert candidate["remediation"]["pem_computed"] is False
+
+
+def test_frozen_taxonomy_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "TAXONOMY")
+    frozen = json.loads(
+        (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
+    )
+    assert frozen == taxonomy_remediation.build_contract(root=ROOT)
 
 
 def _index_manifest_fixture(tmp_path: Path) -> tuple[dict, Path, list[dict]]:

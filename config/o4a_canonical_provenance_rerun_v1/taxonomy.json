@@ -1,0 +1,140 @@
+{
+  "contract_digest": "381d05639a9c311cfca60b401855cdac15b152782d3c1ae65c5c49c18bbcb231",
+  "contract_id": "dante-o4a-canonical-provenance-rerun-taxonomy-v1",
+  "execution": {
+    "atomic_outputs_only": true,
+    "environment": "canonical WSL runtime",
+    "resume_partial_output": false
+  },
+  "gates": {
+    "exact_detector_gps_join": true,
+    "exact_identity_digest_join": true,
+    "exact_image_sha256_join": true,
+    "exact_rows_by_detector": {
+      "H1": 4720,
+      "L1": 6222
+    },
+    "exact_total_rows": 10942,
+    "fail_closed": true,
+    "full_replay_verification": true,
+    "primary_scores_unread": true,
+    "vector_blob_bytes": 1536,
+    "vector_dim": 384,
+    "zero_duplicate_detector_gps": true,
+    "zero_missing_or_invalid_mil_vectors": true,
+    "zero_prior_taxonomy_use": true
+  },
+  "output": {
+    "historical_artifacts_overwritten": false,
+    "large_outputs_committed_to_git": false,
+    "root": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/taxonomy",
+    "summary_filename": "native_taxonomy_summary.json",
+    "taxonomy_filename": "native_taxonomy.jsonl"
+  },
+  "parent_native_classification": {
+    "compact_artifact_digest": "f1efc5c3cae28e9afb520cb2d8635abb17df70281cb2089478cf9459ff1ea97a",
+    "contract_digest": "8ad71d6c10db704f41889697aa7fd9dae083886711c64617307d654b8436dabb",
+    "counts_by_detector_and_class": {
+      "H1": {
+        "AMBIGUOUS": 672,
+        "BACKGROUND": 1958,
+        "ROBUST": 2090
+      },
+      "L1": {
+        "AMBIGUOUS": 1672,
+        "BACKGROUND": 1234,
+        "ROBUST": 3316
+      }
+    },
+    "output_filename": "native_classified_candidates.jsonl",
+    "output_row_digest": "ac10133e8fd498ef931ab327782ee72f3a987215f0a02edb248ebc473d19a783",
+    "output_sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c",
+    "run_artifact_digest": "8fcc9395d28ac9ba8981cce5e9ce798389f91cc95cf98e0e7792a77774788a30",
+    "run_key": "4b5132b3086057ed8981eba954c8aa9b29f51d05496b4269bf095fe7e4198548",
+    "summary_sha256": "2ee7e88f85538afd32c29472927e268f8b77c5ed71ce1a8dc18ff5138ba319af"
+  },
+  "parent_primary_scan": {
+    "candidate_counts": {
+      "H1": 4720,
+      "L1": 6222
+    },
+    "candidate_total": 10942,
+    "compact_artifact_digest": "2cca3c8fcdf00f2d7fb490c54d78e6403f0128f2f5a4f7bafdf8fe5ef2974edd",
+    "database_filename": "primary_scan.sqlite",
+    "database_sha256": "4b37a6a100b423e5b5a14f326d491ae311242cfa0914cee5c244415d42c5932c",
+    "run_key": "5c19c3141fdc79bed75434362ffbbeb31fe36a99a4e64554482cb0023f0631bb"
+  },
+  "references": {
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_taxonomy.py",
+      "sha256": "19be8b850f714b007ec2a1d74c2027463461cd3c6460de1144db97eb69f259e3"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_taxonomy_rerun.py",
+      "sha256": "b69b4490c8791f28149bd76714da4e189aea3506a45cdbc7c44297dba9d0a1f4"
+    },
+    "native_classification": {
+      "path": "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_classification.json",
+      "sha256": "f002b701e168bebe05d4b71ad118bd16056fca174117ec7b7a47306c90e19108"
+    },
+    "primary_scan": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json",
+      "sha256": "6660911a1082fa651a1143aaf8307f1f8942cbebc0b229fa702efa7686b9246f"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_taxonomy.py",
+      "sha256": "7aa07f738dd08aa7db9eed2f2f30bcd5cbc14c41378f4366eacf40de33506137"
+    }
+  },
+  "remediation": {
+    "baseline_contract_sha256": "8e031916a8df52077aa3c832e1647812fc316e6ba3bcd9ef11c9010d65d2417d",
+    "classification_external_artifact_digest": "8fcc9395d28ac9ba8981cce5e9ce798389f91cc95cf98e0e7792a77774788a30",
+    "classification_ledger_byte_identical": true,
+    "coincidence_computed": false,
+    "delegated_implementation": {
+      "path": "src/dante_light/o4a_corrected_native_taxonomy.py",
+      "sha256": "333bb0f9d4536175c40380441d61153f99dfabf1ee9e38efb61e849bef6b1080"
+    },
+    "historical_outputs_immutable": true,
+    "historical_taxonomy_evidence": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_taxonomy.json",
+      "sha256": "bdd270872f081f0397d85f595b1155fe5786dc623404a87621febe38395a23ba"
+    },
+    "pem_computed": false,
+    "primary_scan_immutable": true,
+    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05",
+    "runtime_amendment": {
+      "digest": "d41831b4540e2e6d86b0adedf4e726369f9487340fe89f7deb28a3f3d06de81b",
+      "path": "config/dante_o4a_canonical_provenance_taxonomy_runtime_amendment_v1.json"
+    },
+    "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d"
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_population_changed": false,
+    "coincidence_performed_in_this_stage": false,
+    "historical_artifacts_immutable": true,
+    "historical_v1_family_definition_preserved": true,
+    "morphology_representation_recomputed": false,
+    "morphology_representation_source": "corrected primary scan MIL vectors",
+    "native_index_used_for_morphology": false,
+    "native_scores_or_classes_changed": false,
+    "pem_performed_in_this_stage": false,
+    "taxonomy_is_not_physical_coincidence": true
+  },
+  "taxonomy": {
+    "distance_threshold": 0.25,
+    "family_naming": "scipy_label_order_multi_member_then_historical_singleton_gps",
+    "family_template": "Family_{ordinal:02d}",
+    "flat_cluster_criterion": "distance",
+    "linkage": "single",
+    "normalization": "l2_per_vector",
+    "population": "all_corrected_primary_candidates",
+    "representation": "corrected_primary_scan_mil_v1",
+    "similarity": "cosine_similarity",
+    "similarity_threshold": 0.75,
+    "singleton_template": "Singleton_{gps_integer}",
+    "vector_dim": 384,
+    "vector_dtype": "float32_little_endian"
+  }
+}

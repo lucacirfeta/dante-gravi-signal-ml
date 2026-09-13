@@ -41,6 +41,11 @@ from src.dante_light.o4a_canonical_native_classification_rerun import (  # noqa:
     write_frozen_contract as write_frozen_native_classification_contract,
     write_verified_evidence as write_native_classification_evidence,
 )
+from src.dante_light.o4a_canonical_native_taxonomy_rerun import (  # noqa: E402
+    run as run_native_taxonomy,
+    write_frozen_contract as write_frozen_native_taxonomy_contract,
+    write_verified_evidence as write_native_taxonomy_evidence,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -65,6 +70,7 @@ def _parser() -> argparse.ArgumentParser:
             "RESCORE",
             "THRESHOLDS",
             "CLASSIFY",
+            "TAXONOMY",
         ),
         default="COHORT",
     )
@@ -90,6 +96,7 @@ def main(argv: list[str] | None = None) -> int:
                 "RESCORE": write_frozen_native_rescore_contract,
                 "THRESHOLDS": write_frozen_native_thresholds_contract,
                 "CLASSIFY": write_frozen_native_classification_contract,
+                "TAXONOMY": write_frozen_native_taxonomy_contract,
             }
             path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
@@ -98,10 +105,12 @@ def main(argv: list[str] | None = None) -> int:
                 "RESCORE": write_native_rescore_evidence,
                 "THRESHOLDS": write_native_thresholds_evidence,
                 "CLASSIFY": write_native_classification_evidence,
+                "TAXONOMY": write_native_taxonomy_evidence,
             }
             if args.stage not in writers:
                 raise ContractError(
-                    "record-evidence is defined only for RESCORE, THRESHOLDS, or CLASSIFY"
+                    "record-evidence is defined only for RESCORE, THRESHOLDS, "
+                    "CLASSIFY, or TAXONOMY"
                 )
             path = writers[args.stage](root=ROOT)
             result = {
@@ -139,8 +148,13 @@ def main(argv: list[str] | None = None) -> int:
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
-            else:
+            elif args.stage == "CLASSIFY":
                 summary, run_dir = run_native_classification(
+                    root=ROOT,
+                    verify_only=args.operation == "verify",
+                )
+            else:
+                summary, run_dir = run_native_taxonomy(
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
