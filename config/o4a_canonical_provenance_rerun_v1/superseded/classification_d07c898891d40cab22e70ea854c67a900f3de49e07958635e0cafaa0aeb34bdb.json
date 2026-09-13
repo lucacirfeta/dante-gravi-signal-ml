@@ -6,7 +6,7 @@
     "score_field": "native_score",
     "upper_boundary_class": "AMBIGUOUS"
   },
-  "contract_digest": "8ad71d6c10db704f41889697aa7fd9dae083886711c64617307d654b8436dabb",
+  "contract_digest": "d07c898891d40cab22e70ea854c67a900f3de49e07958635e0cafaa0aeb34bdb",
   "contract_id": "dante-o4a-canonical-provenance-rerun-classification-v1",
   "execution": {
     "atomic_outputs_only": true,
@@ -54,7 +54,7 @@
     },
     "implementation": {
       "path": "src/dante_light/o4a_canonical_native_classification_rerun.py",
-      "sha256": "f115cfb8c1f90527519ed23c58a1fece167707240891063c2108fd9094e3daf0"
+      "sha256": "8b7dcfd1eb9639caa686ccb1739dd62cec4fc0ee7130909c47c93f200f95666e"
     },
     "native_rescore_v2": {
       "path": "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_rescore.json",

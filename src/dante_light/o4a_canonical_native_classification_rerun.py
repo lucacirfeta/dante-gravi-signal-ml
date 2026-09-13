@@ -389,6 +389,15 @@ def compare_to_historical(
     if historical.get("status") != "PASS_VERIFIED_NATIVE_CLASSIFICATION_V1":
         raise ContractError("historical CLASSIFY evidence is not PASS")
     historical_dir = _external_path(historical["external_run"]["directory"])
+    historical_summary_path = historical_dir / historical["external_run"][
+        "summary_filename"
+    ]
+    if (
+        sha256_file(historical_summary_path)
+        != historical["external_run"]["summary_sha256"]
+    ):
+        raise ContractError("historical CLASSIFY summary hash changed")
+    historical_summary = _read_json(historical_summary_path)
     current_output = run_dir / summary["output"]["filename"]
     historical_output = historical_dir / historical["output"]["filename"]
     if sha256_file(historical_output) != historical["output"]["sha256"]:
@@ -397,11 +406,11 @@ def compare_to_historical(
         "output_bytes_equal": current_output.read_bytes()
         == historical_output.read_bytes(),
         "classification_equal": summary["classification"]
-        == historical["classification"],
+        == historical_summary["classification"],
         "counts_equal": summary["counts_by_detector_and_class"]
-        == historical["counts_by_detector_and_class"],
-        "gates_equal": summary["gates"] == historical["gates"],
-        "source_equal": summary["source"] == historical["source"],
+        == historical_summary["counts_by_detector_and_class"],
+        "gates_equal": summary["gates"] == historical_summary["gates"],
+        "source_equal": summary["source"] == historical_summary["source"],
     }
     all_equal = all(checks.values())
     return {
