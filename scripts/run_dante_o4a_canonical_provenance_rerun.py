@@ -36,6 +36,11 @@ from src.dante_light.o4a_canonical_native_thresholds_rerun import (  # noqa: E40
     write_frozen_contract as write_frozen_native_thresholds_contract,
     write_verified_evidence as write_native_thresholds_evidence,
 )
+from src.dante_light.o4a_canonical_native_classification_rerun import (  # noqa: E402
+    run as run_native_classification,
+    write_frozen_contract as write_frozen_native_classification_contract,
+    write_verified_evidence as write_native_classification_evidence,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -59,6 +64,7 @@ def _parser() -> argparse.ArgumentParser:
             "NATIVE_CALIBRATION",
             "RESCORE",
             "THRESHOLDS",
+            "CLASSIFY",
         ),
         default="COHORT",
     )
@@ -83,6 +89,7 @@ def main(argv: list[str] | None = None) -> int:
                 "NATIVE_CALIBRATION": write_frozen_native_calibration_contract,
                 "RESCORE": write_frozen_native_rescore_contract,
                 "THRESHOLDS": write_frozen_native_thresholds_contract,
+                "CLASSIFY": write_frozen_native_classification_contract,
             }
             path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
@@ -90,10 +97,11 @@ def main(argv: list[str] | None = None) -> int:
             writers = {
                 "RESCORE": write_native_rescore_evidence,
                 "THRESHOLDS": write_native_thresholds_evidence,
+                "CLASSIFY": write_native_classification_evidence,
             }
             if args.stage not in writers:
                 raise ContractError(
-                    "record-evidence is currently defined only for RESCORE or THRESHOLDS"
+                    "record-evidence is defined only for RESCORE, THRESHOLDS, or CLASSIFY"
                 )
             path = writers[args.stage](root=ROOT)
             result = {
@@ -126,8 +134,13 @@ def main(argv: list[str] | None = None) -> int:
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
-            else:
+            elif args.stage == "THRESHOLDS":
                 summary, run_dir = run_native_thresholds(
+                    root=ROOT,
+                    verify_only=args.operation == "verify",
+                )
+            else:
+                summary, run_dir = run_native_classification(
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
