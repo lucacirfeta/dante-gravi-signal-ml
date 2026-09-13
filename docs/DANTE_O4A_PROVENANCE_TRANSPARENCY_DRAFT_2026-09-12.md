@@ -88,12 +88,13 @@ byte/numerical comparison against the historical artifact.
 
 ## Rerun result
 
-The outcome-blind `COHORT`, representation-building `INDEX`, and outcome-blind
-`NATIVE_CALIBRATION` stages are now complete. The canonical cohort contains 647
-H1 and 647 L1 windows and its ledger is byte-identical to the retained
-historical ledger. The canonical index replay ledger is also byte-identical to
-the historical replay ledger. Its centroid array, raw-embedding sample, and
-labels are byte-identical to the corresponding historical NPZ members.
+The outcome-blind `COHORT`, representation-building `INDEX`, outcome-blind
+`NATIVE_CALIBRATION`, and score-only `RESCORE` stages are now complete. The
+canonical cohort contains 647 H1 and 647 L1 windows and its ledger is
+byte-identical to the retained historical ledger. The canonical index replay
+ledger is also byte-identical to the historical replay ledger. Its centroid
+array, raw-embedding sample, and labels are byte-identical to the corresponding
+historical NPZ members.
 
 The complete NPZ container hash differs because three bound metadata values now
 identify the canonical cohort, remediation contract, and amended runtime. No
@@ -113,9 +114,18 @@ guard population required by the calibration contract. No score, threshold, or
 class was read or computed by this stage. Compact evidence is recorded in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_calibration.json`.
 
-The downstream stages from `RESCORE` through `COMPARE` remain pending. Their
-results must not be inferred from the completed calibration identity replay.
-The final version of this section will additionally report:
+The canonical `RESCORE` replay contains 5,000 H1 and 5,000 L1
+native-calibration rows plus 10,942 primary candidates (4,720 H1 and 6,222 L1).
+All image, context-provenance, finiteness, and identity gates passed. The H1
+calibration, L1 calibration, and candidate ledgers are each byte-identical to
+their retained historical counterparts. No historical score or threshold was
+read during the recomputation, and no threshold or class was computed in this
+stage. Compact evidence is recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_rescore.json`.
+
+The downstream stages from `THRESHOLDS` through `COMPARE` remain pending. Their
+results must not be inferred solely from the byte-identical score replay. The
+final version of this section will additionally report:
 
 - canonical contracts and run identifiers;
 - byte-level and numerical comparison status for every stage;

@@ -1,0 +1,120 @@
+{
+  "artifact_digest": "71a6b3a7461ae649f236463bb5fd900b959e9631b7c34720023bf727e18fb19a",
+  "calibration_artifact_digest": "84c28d3e4522227a805793792fe448f0e748f77bc5bb26e015905d8815fccea8",
+  "comparison_to_historical": {
+    "all_output_ledgers_byte_identical": true,
+    "classification": "BYTE_IDENTICAL",
+    "outputs": {
+      "native_calibration_H1": {
+        "bytes_equal": true,
+        "historical_row_digest": "d75ba46ab7bc5a8b8dffb73113c51d5cb716be3562edd9c82c18f151ca31c933",
+        "historical_sha256": "d1b2cca0b76790d03f3d6d416db349e634df62760ec76f6180db2b2abdfd3710",
+        "new_row_digest": "d75ba46ab7bc5a8b8dffb73113c51d5cb716be3562edd9c82c18f151ca31c933",
+        "new_sha256": "d1b2cca0b76790d03f3d6d416db349e634df62760ec76f6180db2b2abdfd3710",
+        "row_total": 5000
+      },
+      "native_calibration_L1": {
+        "bytes_equal": true,
+        "historical_row_digest": "8456bb62c018c5abea3b8d42d6943dbbd34c0c58cdfa3e734b7744a2927c40ad",
+        "historical_sha256": "e6aea524d80d755714e81ae400fef5ff843f10ad573e744b9cf670272faf6213",
+        "new_row_digest": "8456bb62c018c5abea3b8d42d6943dbbd34c0c58cdfa3e734b7744a2927c40ad",
+        "new_sha256": "e6aea524d80d755714e81ae400fef5ff843f10ad573e744b9cf670272faf6213",
+        "row_total": 5000
+      },
+      "primary_candidate": {
+        "bytes_equal": true,
+        "historical_row_digest": "25749fc22101cf2dd9cf0548175cdec4e42c238aa9a20768e7164f4a26e7f405",
+        "historical_sha256": "d3ab8cd737c4b96570f7e1ac280fe808303f8d985e5c27923775ea6709c1de76",
+        "new_row_digest": "25749fc22101cf2dd9cf0548175cdec4e42c238aa9a20768e7164f4a26e7f405",
+        "new_sha256": "d3ab8cd737c4b96570f7e1ac280fe808303f8d985e5c27923775ea6709c1de76",
+        "row_total": 10942
+      }
+    },
+    "thresholds_or_classes_compared": false
+  },
+  "contract_digest": "22c8d336990527adc4f7145aaa81d16a657dcece47ef1b2077742bc60e5f3754",
+  "external_run": {
+    "directory": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/rescore/native_rescore_cfb5620e028cd8d1b2c5930aa55ec774e886bde0bc9acfb5a00a5cb10a892077",
+    "summary_filename": "native_rescore_summary.json",
+    "summary_sha256": "48ef14dd250256e4f498456db58afd08969cf20d7d641fd036a2069245a485d1"
+  },
+  "gates": {
+    "calibration_image_hash_mismatches": 0,
+    "candidate_image_hash_mismatches": 0,
+    "context_failures": 0,
+    "context_provenance_mismatches": 0,
+    "nonfinite_scores": 0,
+    "old_native_scores_read": false,
+    "old_native_thresholds_read": false
+  },
+  "index_artifact_digest": "edf3178ac2292047e1ad2d24555ef4bfd92270775c3ed97d18618f6eeee1cd49",
+  "input_counts": {
+    "native_calibration": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "primary_candidate": {
+      "H1": 4720,
+      "L1": 6222
+    }
+  },
+  "outputs": {
+    "native_calibration_H1": {
+      "filename": "native_calibration_H1.jsonl",
+      "row_digest": "d75ba46ab7bc5a8b8dffb73113c51d5cb716be3562edd9c82c18f151ca31c933",
+      "row_total": 5000,
+      "sha256": "d1b2cca0b76790d03f3d6d416db349e634df62760ec76f6180db2b2abdfd3710",
+      "size_bytes": 5421293
+    },
+    "native_calibration_L1": {
+      "filename": "native_calibration_L1.jsonl",
+      "row_digest": "8456bb62c018c5abea3b8d42d6943dbbd34c0c58cdfa3e734b7744a2927c40ad",
+      "row_total": 5000,
+      "sha256": "e6aea524d80d755714e81ae400fef5ff843f10ad573e744b9cf670272faf6213",
+      "size_bytes": 5424796
+    },
+    "primary_candidate": {
+      "filename": "native_candidates.jsonl",
+      "row_digest": "25749fc22101cf2dd9cf0548175cdec4e42c238aa9a20768e7164f4a26e7f405",
+      "row_total": 10942,
+      "sha256": "d3ab8cd737c4b96570f7e1ac280fe808303f8d985e5c27923775ea6709c1de76",
+      "size_bytes": 9931989
+    }
+  },
+  "primary_scan_artifact_digest": "2cca3c8fcdf00f2d7fb490c54d78e6403f0128f2f5a4f7bafdf8fe5ef2974edd",
+  "references": {
+    "contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/rescore.json",
+      "sha256": "b61bfae5c691886fb946456be2f02d66729cd58d50b4214f8a8bfefa07662c5e"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_rescore_rerun.py",
+      "sha256": "64233fb50b5325ac5621cec3b584ba81f2476533e4d35ba7cbd7874723feed15"
+    },
+    "runtime_amendment": {
+      "digest": "a08e3532e3fce9b263e09620a2f83262259b8cd5e4d10afc6685900bae9bb5d9",
+      "path": "config/dante_o4a_canonical_provenance_rescore_runtime_amendment_v1.json",
+      "sha256": "ac24a4a30956b8f7ba8c056225e2f5314c7da4d5866ecfba6bc2d37bb3c3d11e"
+    }
+  },
+  "row_total": 20942,
+  "run_key": "cfb5620e028cd8d1b2c5930aa55ec774e886bde0bc9acfb5a00a5cb10a892077",
+  "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "historical_artifacts_immutable": true,
+    "native_calibration_identities_changed": true,
+    "old_native_scores_read": false,
+    "old_native_thresholds_read": false,
+    "preprocessing_changed": false,
+    "primary_candidate_identities_changed": false,
+    "thresholds_or_classes_computed_in_this_stage": false,
+    "top_k_changed": false
+  },
+  "status": "PASS_VERIFIED_CANONICAL_RESCORE",
+  "verification": {
+    "failure_artifact_absent": true,
+    "independent_verifier": "PASS",
+    "thresholds_or_classes_computed": false
+  }
+}
