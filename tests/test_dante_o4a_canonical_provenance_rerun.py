@@ -12,6 +12,7 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light import o4a_canonical_provenance_rerun as remediation
 from src.dante_light import o4a_canonical_native_calibration_rerun as calibration_remediation
 from src.dante_light import o4a_canonical_native_rescore_rerun as rescore_remediation
+from src.dante_light import o4a_canonical_native_thresholds_rerun as thresholds_remediation
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -97,6 +98,22 @@ def test_rescore_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
         "/environment_digest",
     ]
     assert amendment["scientific_boundary"]["scoring_changed"] is False
+    assert amendment["scientific_boundary"]["tolerances_changed"] is False
+
+
+def test_thresholds_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
+    amendment = thresholds_remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    assert amendment["scope"] == {
+        "stage": "THRESHOLDS",
+        "allowed_contract_changes": ["/references/canonical_runtime/**"],
+    }
+    assert amendment["required_environment_differences"] == [
+        "/cuda_device/driver_version",
+        "/environment_digest",
+    ]
+    assert amendment["scientific_boundary"]["bootstrap_changed"] is False
     assert amendment["scientific_boundary"]["tolerances_changed"] is False
 
 
@@ -393,6 +410,37 @@ def test_frozen_rescore_contract_matches_deterministic_builder() -> None:
         (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
     )
     assert frozen == rescore_remediation.build_contract(root=ROOT)
+
+
+def test_built_thresholds_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "THRESHOLDS")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = thresholds_remediation.build_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline,
+        candidate,
+        allowed_changes=thresholds_remediation.allowed_contract_changes(
+            protocol, root=ROOT
+        ),
+    )
+    for key in ("scientific_boundary", "method", "execution", "gates"):
+        assert candidate[key] == baseline[key]
+    assert candidate["parent_native_rescore"]["contract_digest"] == (
+        "22c8d336990527adc4f7145aaa81d16a657dcece47ef1b2077742bc60e5f3754"
+    )
+    assert candidate["remediation"]["classification_computed"] is False
+
+
+def test_frozen_thresholds_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "THRESHOLDS")
+    frozen = json.loads(
+        (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
+    )
+    assert frozen == thresholds_remediation.build_contract(root=ROOT)
 
 
 def _index_manifest_fixture(tmp_path: Path) -> tuple[dict, Path, list[dict]]:

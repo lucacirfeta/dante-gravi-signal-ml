@@ -1,0 +1,110 @@
+{
+  "contract_digest": "56f4c33d07c4d45847e0ac31699ff1facddc285b224ef2d71f75cade0f4b8c54",
+  "contract_id": "dante-o4a-canonical-provenance-rerun-thresholds-v1",
+  "execution": {
+    "atomic_outputs_only": true,
+    "environment": "canonical WSL runtime",
+    "resume_partial_output": false
+  },
+  "gates": {
+    "exact_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "fail_closed": true,
+    "point_inside_confidence_interval": true,
+    "zero_candidate_or_historical_score_use": true,
+    "zero_nonfinite_scores": true
+  },
+  "method": {
+    "block_length": 17,
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_complete_blocks": true,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "name": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_rows": true
+  },
+  "output": {
+    "historical_artifacts_overwritten": false,
+    "large_outputs_committed_to_git": false,
+    "root": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/thresholds",
+    "summary_filename": "native_thresholds_summary.json"
+  },
+  "parent_native_rescore": {
+    "compact_artifact_digest": "71a6b3a7461ae649f236463bb5fd900b959e9631b7c34720023bf727e18fb19a",
+    "contract_digest": "22c8d336990527adc4f7145aaa81d16a657dcece47ef1b2077742bc60e5f3754",
+    "run_artifact_digest": "9924445491270e394446cdc79e44ab24ff2a5b6c78b6917508d543f096505bfc",
+    "run_key": "cfb5620e028cd8d1b2c5930aa55ec774e886bde0bc9acfb5a00a5cb10a892077",
+    "run_summary_sha256": "48ef14dd250256e4f498456db58afd08969cf20d7d641fd036a2069245a485d1"
+  },
+  "references": {
+    "block_bootstrap_implementation": {
+      "path": "src/pipeline_v2_production/background_calibration.py",
+      "sha256": "832e141e78a6c084fe7bdc5d444853657799b31890871ac533463370e34e1d24"
+    },
+    "canonical_runtime": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/runtime.json",
+      "sha256": "ad8081445bc7297a844c52a16254de0414d4e00f45541940f8b0e08f69f35e2c"
+    },
+    "cli": {
+      "path": "scripts/run_dante_o4a_native_thresholds.py",
+      "sha256": "5742a95a60fc1ecf7f9486868cd08dff1579f45ae83b4d5210860a508626b16b"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_thresholds_rerun.py",
+      "sha256": "7aa2ad4b1522122a1cb723f8e76f261759c1557a907400640dd6476801fc85e5"
+    },
+    "native_calibration_v2_contract": {
+      "path": "config/dante_o4a_corrected_native_calibration_v2.json",
+      "sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584"
+    },
+    "native_rescore_v2": {
+      "path": "artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_rescore.json",
+      "sha256": "d0cf99e5bd5eeb7503d53efd312b5195c06baef6cc4deecce2511f3da0af3570"
+    },
+    "tests": {
+      "path": "tests/test_dante_o4a_corrected_native_thresholds.py",
+      "sha256": "0d847f45edb299d145a27081ac73b1e826a22fac00cb26439e0ff14f1d508b18"
+    }
+  },
+  "remediation": {
+    "baseline_contract_sha256": "15a34d91349c949ec617633edc8919b16b13c594f4bf1ed639eebaeb22350993",
+    "classification_computed": false,
+    "delegated_implementation": {
+      "path": "src/dante_light/o4a_corrected_native_thresholds.py",
+      "sha256": "52da1077434e0b5d3fe5c48da5807ff867a76cd9b81f247c31397e5b176989db"
+    },
+    "historical_outputs_immutable": true,
+    "historical_thresholds_evidence": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_thresholds.json",
+      "sha256": "6e5f6ef185e7a94725c2f052171aff23c6cb7923b1506ab9a5286d63e62d6b15"
+    },
+    "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05",
+    "rescore_evidence_sha256": "d0cf99e5bd5eeb7503d53efd312b5195c06baef6cc4deecce2511f3da0af3570",
+    "rescore_ledgers_byte_identical": true,
+    "runtime_amendment": {
+      "digest": "754e62f2af1ba47e996382c2527cb1636206c506daa7f7fbec91f14e4502421d",
+      "path": "config/dante_o4a_canonical_provenance_thresholds_runtime_amendment_v1.json"
+    },
+    "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d"
+  },
+  "schema_version": 1,
+  "scientific_boundary": {
+    "bootstrap_uses_complete_non_overlapping_blocks": true,
+    "calibration_v2_scores_only": true,
+    "candidate_scores_used": false,
+    "classification_performed_in_this_stage": false,
+    "detector_specific": true,
+    "historical_artifacts_immutable": true,
+    "historical_scores_used": false,
+    "historical_thresholds_used": false,
+    "point_estimate_uses_all_calibration_rows": true
+  }
+}

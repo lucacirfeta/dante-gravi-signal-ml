@@ -31,6 +31,11 @@ from src.dante_light.o4a_canonical_native_rescore_rerun import (  # noqa: E402
     write_frozen_contract as write_frozen_native_rescore_contract,
     write_verified_evidence as write_native_rescore_evidence,
 )
+from src.dante_light.o4a_canonical_native_thresholds_rerun import (  # noqa: E402
+    run as run_native_thresholds,
+    write_frozen_contract as write_frozen_native_thresholds_contract,
+    write_verified_evidence as write_native_thresholds_evidence,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -48,7 +53,13 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--stage",
-        choices=("COHORT", "INDEX", "NATIVE_CALIBRATION", "RESCORE"),
+        choices=(
+            "COHORT",
+            "INDEX",
+            "NATIVE_CALIBRATION",
+            "RESCORE",
+            "THRESHOLDS",
+        ),
         default="COHORT",
     )
     parser.add_argument("--workers", type=int, default=8)
@@ -71,13 +82,20 @@ def main(argv: list[str] | None = None) -> int:
                 "INDEX": write_frozen_index_contract,
                 "NATIVE_CALIBRATION": write_frozen_native_calibration_contract,
                 "RESCORE": write_frozen_native_rescore_contract,
+                "THRESHOLDS": write_frozen_native_thresholds_contract,
             }
             path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
         elif args.operation == "record-evidence":
-            if args.stage != "RESCORE":
-                raise ContractError("record-evidence is currently defined only for RESCORE")
-            path = write_native_rescore_evidence(root=ROOT)
+            writers = {
+                "RESCORE": write_native_rescore_evidence,
+                "THRESHOLDS": write_native_thresholds_evidence,
+            }
+            if args.stage not in writers:
+                raise ContractError(
+                    "record-evidence is currently defined only for RESCORE or THRESHOLDS"
+                )
+            path = writers[args.stage](root=ROOT)
             result = {
                 "status": "RECORDED_VERIFIED_EVIDENCE",
                 "stage": args.stage,
@@ -103,8 +121,13 @@ def main(argv: list[str] | None = None) -> int:
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
-            else:
+            elif args.stage == "RESCORE":
                 summary, run_dir = run_native_rescore(
+                    root=ROOT,
+                    verify_only=args.operation == "verify",
+                )
+            else:
+                summary, run_dir = run_native_thresholds(
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
