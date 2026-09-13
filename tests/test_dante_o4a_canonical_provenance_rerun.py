@@ -17,6 +17,9 @@ from src.dante_light import (
     o4a_canonical_native_classification_rerun as classification_remediation,
 )
 from src.dante_light import o4a_canonical_native_taxonomy_rerun as taxonomy_remediation
+from src.dante_light import (
+    o4a_canonical_native_coincidence_rerun as coincidence_remediation,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -150,6 +153,22 @@ def test_taxonomy_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
         "/environment_digest",
     ]
     assert amendment["scientific_boundary"]["linkage_or_distance_changed"] is False
+    assert amendment["scientific_boundary"]["tolerances_changed"] is False
+
+
+def test_coincidence_runtime_amendment_is_driver_only_and_stage_scoped() -> None:
+    amendment = coincidence_remediation.load_runtime_amendment(
+        root=ROOT, require_current=False
+    )
+    assert amendment["scope"] == {
+        "stage": "COINCIDENCE",
+        "allowed_contract_changes": [],
+    }
+    assert amendment["required_environment_differences"] == [
+        "/cuda_device/driver_version",
+        "/environment_digest",
+    ]
+    assert amendment["scientific_boundary"]["measurement_or_null_changed"] is False
     assert amendment["scientific_boundary"]["tolerances_changed"] is False
 
 
@@ -533,6 +552,70 @@ def test_frozen_taxonomy_contract_matches_deterministic_builder() -> None:
         (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
     )
     assert frozen == taxonomy_remediation.build_contract(root=ROOT)
+
+
+def test_built_coincidence_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "COINCIDENCE")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = coincidence_remediation.build_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+    for key in (
+        "authorization",
+        "scientific_boundary",
+        "population",
+        "measurement",
+        "scoring",
+        "execution",
+        "gates",
+    ):
+        assert candidate[key] == baseline[key]
+    assert candidate["parents"]["native_classification_contract_digest"] == (
+        "8ad71d6c10db704f41889697aa7fd9dae083886711c64617307d654b8436dabb"
+    )
+    assert candidate["parents"]["native_index_contract_digest"] == (
+        "7c2446b50f4c3abe2d182954ef9d9ed460b84ffb7f37271efea6ceca75c4eaa9"
+    )
+    assert candidate["parents"]["native_taxonomy_artifact_digest"] == (
+        "6881fb3b7d2e97f45a25eb5858818e6f6794ec46efdb493f715fd346fc8e1840"
+    )
+    assert candidate["remediation"]["index_scientific_payload_byte_identical"]
+    assert candidate["remediation"]["pem_computed"] is False
+
+
+def test_frozen_coincidence_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "COINCIDENCE")
+    frozen = json.loads(
+        (ROOT / stage["remediation_contract"]).read_text(encoding="utf-8")
+    )
+    assert frozen == coincidence_remediation.build_contract(root=ROOT)
+
+
+def test_coincidence_comparator_limits_numeric_tolerance_to_seed_replay() -> None:
+    baseline = {
+        "detector": "H1",
+        "gps_start": 1.0,
+        "seed_replay_score": 0.5,
+        "seed_score_delta": 0.0,
+        "cc_onsource": 0.25,
+    }
+    changed_score = {
+        **baseline,
+        "seed_replay_score": 0.5000001,
+        "seed_score_delta": 0.0000001,
+    }
+    assert coincidence_remediation._rows_equivalent(
+        [changed_score], [baseline], tolerance=2e-7
+    )
+    changed_statistic = {**changed_score, "cc_onsource": 0.2500001}
+    assert not coincidence_remediation._rows_equivalent(
+        [changed_statistic], [baseline], tolerance=2e-7
+    )
 
 
 def _index_manifest_fixture(tmp_path: Path) -> tuple[dict, Path, list[dict]]:

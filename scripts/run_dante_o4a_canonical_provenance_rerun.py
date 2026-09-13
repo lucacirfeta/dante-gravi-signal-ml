@@ -46,6 +46,11 @@ from src.dante_light.o4a_canonical_native_taxonomy_rerun import (  # noqa: E402
     write_frozen_contract as write_frozen_native_taxonomy_contract,
     write_verified_evidence as write_native_taxonomy_evidence,
 )
+from src.dante_light.o4a_canonical_native_coincidence_rerun import (  # noqa: E402
+    run as run_native_coincidence,
+    write_frozen_contract as write_frozen_native_coincidence_contract,
+    write_verified_evidence as write_native_coincidence_evidence,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -71,12 +76,14 @@ def _parser() -> argparse.ArgumentParser:
             "THRESHOLDS",
             "CLASSIFY",
             "TAXONOMY",
+            "COINCIDENCE",
         ),
         default="COHORT",
     )
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--quality-batch-size", type=int, default=128)
     parser.add_argument("--encoder-batch-size", type=int, default=8)
+    parser.add_argument("--coincidence-batch-size", type=int, default=32)
     parser.add_argument("--no-cuda-check", action="store_true")
     return parser
 
@@ -97,6 +104,7 @@ def main(argv: list[str] | None = None) -> int:
                 "THRESHOLDS": write_frozen_native_thresholds_contract,
                 "CLASSIFY": write_frozen_native_classification_contract,
                 "TAXONOMY": write_frozen_native_taxonomy_contract,
+                "COINCIDENCE": write_frozen_native_coincidence_contract,
             }
             path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
@@ -106,11 +114,12 @@ def main(argv: list[str] | None = None) -> int:
                 "THRESHOLDS": write_native_thresholds_evidence,
                 "CLASSIFY": write_native_classification_evidence,
                 "TAXONOMY": write_native_taxonomy_evidence,
+                "COINCIDENCE": write_native_coincidence_evidence,
             }
             if args.stage not in writers:
                 raise ContractError(
                     "record-evidence is defined only for RESCORE, THRESHOLDS, "
-                    "CLASSIFY, or TAXONOMY"
+                    "CLASSIFY, TAXONOMY, or COINCIDENCE"
                 )
             path = writers[args.stage](root=ROOT)
             result = {
@@ -153,9 +162,16 @@ def main(argv: list[str] | None = None) -> int:
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
-            else:
+            elif args.stage == "TAXONOMY":
                 summary, run_dir = run_native_taxonomy(
                     root=ROOT,
+                    verify_only=args.operation == "verify",
+                )
+            else:
+                summary, run_dir = run_native_coincidence(
+                    root=ROOT,
+                    workers=args.workers,
+                    batch_size=args.coincidence_batch_size,
                     verify_only=args.operation == "verify",
                 )
             result = {"run_dir": str(run_dir), **summary}
