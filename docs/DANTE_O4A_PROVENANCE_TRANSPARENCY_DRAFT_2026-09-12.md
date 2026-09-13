@@ -80,17 +80,19 @@ artifact because the host NVIDIA driver no longer matched the historical
 runtime contract (`610.74` versus the then-current driver). The master rerun
 protocol and historical runtime contract remain immutable. Following explicit
 authorization to support routine driver updates, the project froze a separate,
-INDEX-scoped runtime amendment for driver `616.92`. Its validation requires all
+INDEX-scoped runtime amendment for driver `616.92` and chained stage-scoped
+amendments for the later GPU-dependent stages. Their validation requires all
 other operating-system, Python, package, CUDA, cuDNN, device, representation,
-and numerical-policy fields to remain identical; it does not add or relax a
-scientific tolerance. The resulting index is still subject to the same
-byte/numerical comparison against the historical artifact.
+and numerical-policy fields to remain identical; they do not add or relax a
+scientific tolerance. Every resulting artifact remains subject to the same
+byte/numerical comparison against its historical counterpart.
 
 ## Rerun result
 
 The outcome-blind `COHORT`, representation-building `INDEX`, outcome-blind
-`NATIVE_CALIBRATION`, and score-only `RESCORE` stages are now complete. The
-canonical cohort contains 647 H1 and 647 L1 windows and its ledger is
+`NATIVE_CALIBRATION`, score-only `RESCORE`, and detector-specific `THRESHOLDS`
+stages are now complete. The canonical cohort contains 647 H1 and 647 L1
+windows and its ledger is
 byte-identical to the retained historical ledger. The canonical index replay
 ledger is also byte-identical to the historical replay ledger. Its centroid
 array, raw-embedding sample, and labels are byte-identical to the corresponding
@@ -123,9 +125,19 @@ read during the recomputation, and no threshold or class was computed in this
 stage. Compact evidence is recorded in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_rescore.json`.
 
-The downstream stages from `THRESHOLDS` through `COMPARE` remain pending. Their
-results must not be inferred solely from the byte-identical score replay. The
-final version of this section will additionally report:
+The canonical `THRESHOLDS` replay used only the 5,000 calibration scores for
+each detector. It retained the frozen non-overlapping block-bootstrap method
+(block length 17, 1,000,000 replicates, seed 42), percentile 99 point estimate,
+and 95% interval. The complete H1 and L1 input score-vector digests, method,
+gates, point thresholds, and confidence bounds are identical to the retained
+historical result. Candidate and historical scores were not used to derive the
+thresholds, and no classification was performed. Compact evidence is recorded
+in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_thresholds.json`.
+
+The downstream stages from `CLASSIFY` through `COMPARE` remain pending. Their
+results must not be inferred solely from the byte-identical score and threshold
+replays. The final version of this section will additionally report:
 
 - canonical contracts and run identifiers;
 - byte-level and numerical comparison status for every stage;

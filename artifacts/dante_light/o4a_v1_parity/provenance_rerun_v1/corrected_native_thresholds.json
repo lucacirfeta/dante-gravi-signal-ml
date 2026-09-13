@@ -1,0 +1,129 @@
+{
+  "artifact_digest": "06746655a97acf0a6b1e77651730cc1bd02651f1ef426f44756175b434135cea",
+  "comparison_to_historical": {
+    "all_scientific_values_identical": true,
+    "checks": {
+      "H1_identity_score_digest_equal": true,
+      "H1_input_score_vector_equal": true,
+      "L1_identity_score_digest_equal": true,
+      "L1_input_score_vector_equal": true,
+      "gates_equal": true,
+      "method_equal": true,
+      "thresholds_equal": true
+    },
+    "classification": "SCIENTIFIC_OUTPUT_IDENTICAL"
+  },
+  "contract_digest": "56f4c33d07c4d45847e0ac31699ff1facddc285b224ef2d71f75cade0f4b8c54",
+  "external_artifact_digest": "725f8e9418ed0285926731cb898b09e5fc0afc89a8d3f2452d7f8a1560642be4",
+  "external_run": {
+    "directory": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/thresholds/native_thresholds_b6fae7d8534e08c0f84889a8734e12b7ecc3801d52f1f700594765684c33eb77",
+    "summary_filename": "native_thresholds_summary.json",
+    "summary_sha256": "a491e42dc6973bedfe06b4c41940c27a815b4a97e77c3926b526122af67c3b78",
+    "summary_size_bytes": 3301
+  },
+  "gates": {
+    "candidate_scores_used": false,
+    "exact_rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "historical_scores_used": false,
+    "historical_thresholds_used": false,
+    "nonfinite_scores": 0
+  },
+  "inputs": {
+    "H1": {
+      "filename": "native_calibration_H1.jsonl",
+      "identity_score_digest": "f9a7c8382109d5a784dccfa60e9f1f2ccbc511f9108815f1002d81df485f8bf2",
+      "row_digest": "d75ba46ab7bc5a8b8dffb73113c51d5cb716be3562edd9c82c18f151ca31c933",
+      "row_total": 5000,
+      "score_vector_float64_sha256": "d0360dfba83785d101e5025a47d457325bce62eaf0cce8e6dedaec4e5be6e5da",
+      "sha256": "d1b2cca0b76790d03f3d6d416db349e634df62760ec76f6180db2b2abdfd3710"
+    },
+    "L1": {
+      "filename": "native_calibration_L1.jsonl",
+      "identity_score_digest": "ae0bc5b49548203ac47ff969d6d88c359616e17b8673853c9594206d18fd0ebe",
+      "row_digest": "8456bb62c018c5abea3b8d42d6943dbbd34c0c58cdfa3e734b7744a2927c40ad",
+      "row_total": 5000,
+      "score_vector_float64_sha256": "ab6a6cd9a3fbfca430a51cc8650f4f2501ed7ba34ce50db4bbbd29b0527b92a0",
+      "sha256": "e6aea524d80d755714e81ae400fef5ff843f10ad573e744b9cf670272faf6213"
+    }
+  },
+  "method": {
+    "block_length": 17,
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_complete_blocks": true,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "name": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_rows": true
+  },
+  "native_rescore_artifact_digest": "9924445491270e394446cdc79e44ab24ff2a5b6c78b6917508d543f096505bfc",
+  "references": {
+    "contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/thresholds.json",
+      "sha256": "64fb7d1c19551f525469f2b011a08b2caaae262e6a56f575bfeabd687634b83a"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_thresholds_rerun.py",
+      "sha256": "7aa2ad4b1522122a1cb723f8e76f261759c1557a907400640dd6476801fc85e5"
+    },
+    "runtime_amendment": {
+      "digest": "754e62f2af1ba47e996382c2527cb1636206c506daa7f7fbec91f14e4502421d",
+      "path": "config/dante_o4a_canonical_provenance_thresholds_runtime_amendment_v1.json",
+      "sha256": "4c9c4a6f465e8ac0f8e2ea7e66f4a18d4ff1369940f0c37e897ee4c9db077e9b"
+    }
+  },
+  "run_key": "b6fae7d8534e08c0f84889a8734e12b7ecc3801d52f1f700594765684c33eb77",
+  "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "bootstrap_uses_complete_non_overlapping_blocks": true,
+    "calibration_v2_scores_only": true,
+    "candidate_scores_used": false,
+    "classification_performed_in_this_stage": false,
+    "detector_specific": true,
+    "historical_artifacts_immutable": true,
+    "historical_scores_used": false,
+    "historical_thresholds_used": false,
+    "point_estimate_uses_all_calibration_rows": true
+  },
+  "status": "PASS_VERIFIED_CANONICAL_THRESHOLDS",
+  "thresholds": {
+    "H1": {
+      "block_length": 17,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_rows_used": 4998,
+      "bootstrap_seed": 42,
+      "bootstrap_tail_rows_excluded": 2,
+      "ci_lower": 0.15050696104764674,
+      "ci_upper": 0.3573177209496465,
+      "n_calibration_scores": 5000,
+      "n_complete_blocks": 294,
+      "p99": 0.2121588587760954
+    },
+    "L1": {
+      "block_length": 17,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_rows_used": 4998,
+      "bootstrap_seed": 42,
+      "bootstrap_tail_rows_excluded": 2,
+      "ci_lower": 0.15897344797849652,
+      "ci_upper": 0.4026433527469635,
+      "n_calibration_scores": 5000,
+      "n_complete_blocks": 294,
+      "p99": 0.2203438572585587
+    }
+  },
+  "verification": {
+    "classification_computed": false,
+    "failure_artifact_absent": true,
+    "independent_verifier": "PASS_EXACT_REPLAY"
+  }
+}
