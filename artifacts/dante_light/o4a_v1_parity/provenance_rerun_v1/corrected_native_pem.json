@@ -1,0 +1,171 @@
+{
+  "artifact_digest": "d369292b7e11456cedb219809486c8f70771e6bbe5b82e3d20dc1b515073f6fe",
+  "comparison_to_historical": {
+    "all_outputs_identical": true,
+    "changed_identity_counts": {
+      "diagnostic": 0,
+      "primary": 0,
+      "targets": 0
+    },
+    "checks": {
+      "candidate_exclusion_equal": true,
+      "diagnostic_bytes_equal": true,
+      "event_summary_equal": true,
+      "gates_equal": true,
+      "measurement_equal": true,
+      "population_equal": true,
+      "primary_bytes_equal": true,
+      "scientific_boundary_equal": true,
+      "targets_bytes_equal": true
+    },
+    "classification": "BYTE_IDENTICAL",
+    "new_tolerance_introduced": false
+  },
+  "contract_digest": "1d4ba0a6ff51ee020496cb46ae8611b42a5179696d24da3885b6209072b694f9",
+  "event_summary": {
+    "diagnostic": {
+      "calibrated": 56,
+      "total": 56,
+      "uncalibrated": 0,
+      "verdict_tier": {
+        "COUPLED": 3,
+        "NO_CORRELATION": 44,
+        "SUSPECT": 9
+      }
+    },
+    "primary": {
+      "calibrated": 9,
+      "total": 9,
+      "uncalibrated": 0,
+      "verdict_tier": {
+        "COUPLED": 3,
+        "NO_CORRELATION": 5,
+        "SUSPECT": 1
+      }
+    }
+  },
+  "external_artifact_digest": "38956f959cb10e3c944c4c909780e4b717d07267cf870a3a7a5a37bf91279971",
+  "external_run": {
+    "directory": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/pem/native_pem_529a3149d746ef03fdbabef13936ae9f479a8efae39692a05e5f862d47c7bf02",
+    "summary_filename": "native_pem_summary.json",
+    "summary_sha256": "2b77b5f3daee6aa74ab5583eded850166e7ca21b7762bd0c680543311a652c59",
+    "summary_size_bytes": 4295
+  },
+  "gates": {
+    "all_65_targets_accounted": true,
+    "background_targets": 0,
+    "banned_channels_measured": 0,
+    "individual_null_exceeders_used": false,
+    "missing_calibration_counted_as_negative": false,
+    "primary_and_diagnostic_combined": false
+  },
+  "measurement": {
+    "alpha_family_wise": 0.01,
+    "background_block_s": 14400.0,
+    "background_stride_s": 96.0,
+    "background_window_s": 32.0,
+    "bootstrap_resamples": 200,
+    "bootstrap_unit": "background_window_indices",
+    "candidate_exclusion_population": "all_10942_corrected_native_candidates",
+    "candidate_exclusion_s": 96.0,
+    "coherence_fftlength_s": 2.0,
+    "coherence_overlap_s": 1.0,
+    "event_window_s": 32.0,
+    "frequency_band_hz": [
+      20.0,
+      500.0
+    ],
+    "minimum_clean_windows": 60,
+    "primary_endpoint": "quiet_zero_lag_q99_confirmed",
+    "seed": 42,
+    "strain_highpass_hz": 20.0,
+    "surrogate_guard_s": 64.0,
+    "time_shift_endpoint": "event_max_over_tested_channels_and_20_500_hz",
+    "uncalibrated_is_negative": false
+  },
+  "outputs": {
+    "diagnostic": {
+      "filename": "native_pem_ambiguous.jsonl",
+      "row_digest": "57923503e2ef33cf1de049edeb225930996c0b75867c7faf4e96aac5aae0bd83",
+      "row_total": 56,
+      "sha256": "79508fd7d0a8fc19a7c418410392618c2de676cffac176e71be838d4c969cf5c"
+    },
+    "primary": {
+      "filename": "native_pem_robust.jsonl",
+      "row_digest": "ee8fff53d560c09eb02751d0f90e95147539279144c082e512debb1489184e9b",
+      "row_total": 9,
+      "sha256": "f4f39db2a259fcb189d26ecf930a87aa435a9ccfd1bb0313b54e99000d4c38f8"
+    },
+    "targets": {
+      "filename": "native_pem_targets.jsonl",
+      "row_digest": "6542df67048cb29e8c0bc46ee5e1f1e9135ae2cc36da48222845851863a8d76c",
+      "row_total": 65,
+      "sha256": "68b6c0cd53131dfccb7116d956337577ccda7fdb5bfc2d1f13241f81a923fe4e"
+    }
+  },
+  "population": {
+    "diagnostic": {
+      "H1": 31,
+      "L1": 25,
+      "class": "AMBIGUOUS",
+      "role": "separate_diagnostic",
+      "total": 56
+    },
+    "exact_total": 65,
+    "excluded": {
+      "classes": [
+        "BACKGROUND"
+      ],
+      "individual_null_exceeders_used": false
+    },
+    "primary": {
+      "H1": 3,
+      "L1": 6,
+      "class": "ROBUST",
+      "role": "primary_diagnostic",
+      "total": 9
+    },
+    "selection_source": "native_coincidence_exceeds_primary_threshold_true"
+  },
+  "references": {
+    "contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/pem.json",
+      "sha256": "7c0ceadd7ff38c973b9771079d8ab334f67b5821e2f23c0d5c15c63c15611b25"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_native_pem_rerun.py",
+      "sha256": "c695a5063a0d61896ef51cd350fd47a0fe134ded8d2586a6aadd772bf2b9d5c3"
+    },
+    "runtime_amendment": {
+      "digest": "9c99663909edfb43e306d08d09020712e59dc34a119cb6668692bcc297616b4d",
+      "path": "config/dante_o4a_canonical_provenance_pem_runtime_amendment_v1.json",
+      "sha256": "6d6fcec8a8b0cbb07ca368d64a4b4960318a40fbc8381c292cb13cfce26768c1"
+    }
+  },
+  "run_key": "529a3149d746ef03fdbabef13936ae9f479a8efae39692a05e5f862d47c7bf02",
+  "runtime_environment_digest": "9efe87e5ca59fa141a8a8f4a0390c5f0e5e676a1806ee7595bfb9f0bc8efd32d",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "background_processed": false,
+    "future_global_null_method": "repeat_full_pipeline_on_many_time_slides_and_calibrate_global_maximum_or_exceedance_count",
+    "future_global_null_required": true,
+    "historical_artifacts_immutable": true,
+    "pem_is_astrophysical_confirmation": false,
+    "pem_no_correlation_excludes_unreleased_sensors": false,
+    "primary_and_ambiguous_results_combined": false,
+    "shortlist_description": "pooled-null-threshold exceeders selected for PEM follow-up",
+    "shortlist_is_globally_significant": false
+  },
+  "sources": {
+    "candidate_exclusion_digest": "71e2a6686272dc7ccb7efcf19786ad1c6d2c4dcd3baac9abef21755cf20215f7",
+    "candidate_exclusion_total": 10942,
+    "classification_path": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/classification/native_classification_4b5132b3086057ed8981eba954c8aa9b29f51d05496b4269bf095fe7e4198548/native_classified_candidates.jsonl",
+    "classification_sha256": "4369a099e1cbb310ba936088e88f8a17cdcd23c71ca5dc539750d5c93ada092c"
+  },
+  "status": "PASS_VERIFIED_CANONICAL_PEM",
+  "verification": {
+    "all_65_targets_accounted": true,
+    "compare_computed": false,
+    "failure_artifact_absent": true
+  }
+}

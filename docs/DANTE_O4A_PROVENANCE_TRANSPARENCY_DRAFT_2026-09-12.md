@@ -171,8 +171,20 @@ feature localized at GPS 1382955253.17 remains in the ROBUST seed population;
 its analysis window starts at GPS 1382955232. Compact evidence is recorded in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_coincidence.json`.
 
-The downstream `PEM` and `COMPARE` stages remain pending. Their results must not
-be inferred solely from the byte-identical upstream replays.
+The canonical `PEM` replay evaluated the unchanged shortlist of 9 ROBUST primary
+targets and 56 AMBIGUOUS diagnostic targets. The target, primary-result, and
+diagnostic-result ledgers are byte-identical to their retained historical
+counterparts. All 65 targets were calibrated: the primary population contains
+3 COUPLED, 1 SUSPECT, and 5 NO_CORRELATION verdicts; the separate diagnostic
+population contains 3 COUPLED, 9 SUSPECT, and 44 NO_CORRELATION verdicts. The
+excluded channel policy, family-wise alpha, block-based null calibration, and
+diagnostic-only interpretation remain unchanged. These verdicts do not provide
+astrophysical confirmation and do not cover unreleased sensors. Compact
+evidence is recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_pem.json`.
+
+Only the final `COMPARE` stage remains pending. Its result must not be inferred
+solely from the byte-identical upstream replays.
 The final version of this section will additionally report:
 
 - canonical contracts and run identifiers;
