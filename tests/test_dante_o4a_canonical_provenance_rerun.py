@@ -771,6 +771,12 @@ def test_compare_adapter_binds_top_level_row_total_to_output() -> None:
         compare_remediation._output_with_row_total({"output": evidence["output"]})
 
 
+def test_compare_json_writer_reproduces_historical_crlf(tmp_path: Path) -> None:
+    path = tmp_path / "evidence.json"
+    compare_remediation._atomic_json_crlf(path, {"value": 1})
+    assert path.read_bytes() == b'{\r\n  "value": 1\r\n}\r\n'
+
+
 def test_frozen_pem_contract_matches_deterministic_builder() -> None:
     protocol = remediation.load_protocol(root=ROOT, verify_git=True)
     stage = remediation.stage_spec(protocol, "PEM")

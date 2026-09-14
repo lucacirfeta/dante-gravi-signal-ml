@@ -31,8 +31,8 @@
     "statistic_delta_per_event": false,
     "threshold_equivalence_claim": false
   },
-  "contract_digest": "65f3cdc45b43e95765b2e87e47a7065bea94768d0dcf627d27ba172470ee8207",
-  "contract_id": "dante-o4a-canonical-provenance-rerun-compare-v2",
+  "contract_digest": "ffe704a9771048274a55f03d809deb9c37940081df02e363f96c8b5cd571c548",
+  "contract_id": "dante-o4a-canonical-provenance-rerun-compare-v3",
   "external_roots": {
     "classification": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/classification",
     "coincidence": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/coincidence",
@@ -152,7 +152,7 @@
     },
     "implementation": {
       "path": "src/dante_light/o4a_canonical_final_comparison_rerun.py",
-      "sha256": "f87f47799070661c6174cf6ba8f22997db8550da91152a0a008529021d561fca"
+      "sha256": "616995a41c108d384f608d1a4ee6692248bcc576f5fb2b9fe9d224130aa26a5c"
     },
     "replay_contract": {
       "path": "config/dante_light_replay_v1.json",
@@ -179,6 +179,7 @@
       "sha256": "d63e3b4fa3e47033ceefabec22c8d8fa5c4763762390691c708db621cea682b7"
     },
     "historical_outputs_immutable": true,
+    "line_ending_remediation": "explicit_crlf_for_historical_byte_identity",
     "new_tolerance_introduced": false,
     "protocol_digest": "a50e77424501e1bcb01475d840ae40f9ae3fa306ab259a01b5e3529f179a6a05",
     "runtime_environment_digest_preserved_as_historical_contract_metadata": true,
@@ -187,6 +188,8 @@
     "superseded_failure_scope": "adapter_row_total_metadata_only",
     "supersedes_failed_contract_digest": "f7b7d226a78c80a687822ab55dc8427d40edac0bdab041e5131ba9b3fd25dbe9",
     "supersedes_failed_run_key": "1f1c19882e5b0a45e44e5d2dc23d130f1a73f9a8dc84231399315ec38efefa25",
+    "supersedes_line_ending_contract_digest": "65f3cdc45b43e95765b2e87e47a7065bea94768d0dcf627d27ba172470ee8207",
+    "supersedes_line_ending_run_key": "faaf9cd6253b02a557c76ec2117159a94573059be5c8c91e8312744c707e5951",
     "upstream_run_keys": {
       "classification": "4b5132b3086057ed8981eba954c8aa9b29f51d05496b4269bf095fe7e4198548",
       "coincidence": "fa847338ac1e59008c07434510233e991da00d626435805f1f5ffadd8fe50e8e",

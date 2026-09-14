@@ -39,6 +39,12 @@ SUPERSEDED_CONTRACT_DIGEST = (
 SUPERSEDED_RUN_KEY = (
     "1f1c19882e5b0a45e44e5d2dc23d130f1a73f9a8dc84231399315ec38efefa25"
 )
+SUPERSEDED_LINE_ENDING_CONTRACT_DIGEST = (
+    "65f3cdc45b43e95765b2e87e47a7065bea94768d0dcf627d27ba172470ee8207"
+)
+SUPERSEDED_LINE_ENDING_RUN_KEY = (
+    "faaf9cd6253b02a557c76ec2117159a94573059be5c8c91e8312744c707e5951"
+)
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -179,7 +185,7 @@ def build_contract(*, root: Path = ROOT) -> dict[str, Any]:
         raise ContractError("canonical COMPARE inputs are not byte-identical")
 
     candidate = copy.deepcopy(baseline)
-    candidate["contract_id"] = "dante-o4a-canonical-provenance-rerun-compare-v2"
+    candidate["contract_id"] = "dante-o4a-canonical-provenance-rerun-compare-v3"
     roots = protocol["paths"]["remediation_external_roots"]
     candidate["external_roots"] = {
         "classification": roots[5],
@@ -228,6 +234,11 @@ def build_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "supersedes_failed_contract_digest": SUPERSEDED_CONTRACT_DIGEST,
         "supersedes_failed_run_key": SUPERSEDED_RUN_KEY,
         "superseded_failure_scope": "adapter_row_total_metadata_only",
+        "supersedes_line_ending_contract_digest": (
+            SUPERSEDED_LINE_ENDING_CONTRACT_DIGEST
+        ),
+        "supersedes_line_ending_run_key": SUPERSEDED_LINE_ENDING_RUN_KEY,
+        "line_ending_remediation": "explicit_crlf_for_historical_byte_identity",
     }
     candidate["contract_digest"] = base.contract_digest(candidate)
     return validate_contract(candidate, root=root)
@@ -259,11 +270,22 @@ def write_frozen_contract(*, root: Path = ROOT) -> Path:
                     "singletons_filename",
                 )
             }
-            if (
-                previous.get("contract_digest") != SUPERSEDED_CONTRACT_DIGEST
-                or not (failed_run / "failure.json").is_file()
-                or any((failed_run / name).exists() for name in scientific_outputs)
-            ):
+            failed_contract = (
+                previous.get("contract_digest") == SUPERSEDED_CONTRACT_DIGEST
+                and (failed_run / "failure.json").is_file()
+                and not any((failed_run / name).exists() for name in scientific_outputs)
+            )
+            line_ending_run = _external_path(
+                Path(candidate["output"]["root"])
+                / f"final_comparison_{SUPERSEDED_LINE_ENDING_RUN_KEY}"
+            )
+            line_ending_contract = (
+                previous.get("contract_digest")
+                == SUPERSEDED_LINE_ENDING_CONTRACT_DIGEST
+                and (line_ending_run / "superseded.json").is_file()
+                and all((line_ending_run / name).is_file() for name in scientific_outputs)
+            )
+            if not (failed_contract or line_ending_contract):
                 raise ContractError(f"refusing divergent frozen contract: {target}")
             temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
             temporary.write_text(serialized, encoding="utf-8", newline="\n")
@@ -368,6 +390,17 @@ def _output_with_row_total(evidence: Mapping[str, Any]) -> dict[str, Any]:
     return output
 
 
+def _atomic_json_crlf(path: Path, value: Mapping[str, Any]) -> None:
+    """Write the historical Windows JSON byte representation explicitly."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    serialized = json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    payload = serialized.replace("\n", "\r\n").encode("utf-8")
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_bytes(payload)
+    temporary.replace(path)
+
+
 @contextmanager
 def _patched_module(
     *, root: Path, contract: Mapping[str, Any]
@@ -381,6 +414,7 @@ def _patched_module(
     with (
         base.use_module_attribute(module, "load_final_comparison_contract", load_contract),
         base.use_module_attribute(module, "_load_inputs", _canonical_load_inputs),
+        base.use_module_attribute(module, "_atomic_json", _atomic_json_crlf),
     ):
         yield module
 
