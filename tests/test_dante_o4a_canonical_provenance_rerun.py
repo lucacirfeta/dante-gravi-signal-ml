@@ -24,6 +24,9 @@ from src.dante_light import (
     o4a_canonical_native_coincidence_verifier as coincidence_verifier,
 )
 from src.dante_light import o4a_canonical_native_pem_rerun as pem_remediation
+from src.dante_light import (
+    o4a_canonical_final_comparison_rerun as compare_remediation,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -710,6 +713,45 @@ def test_built_pem_contract_preserves_scientific_sections() -> None:
     )
     assert candidate["remediation"]["shortlist_population_changed"] is False
     assert candidate["remediation"]["compare_computed"] is False
+
+
+def test_built_compare_contract_preserves_scientific_sections() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "COMPARE")
+    baseline = json.loads(
+        (ROOT / stage["baseline_contract"]["path"]).read_text(encoding="utf-8")
+    )
+    candidate = compare_remediation.build_contract(root=ROOT)
+    remediation.assert_allowed_contract_transition(
+        baseline, candidate, allowed_changes=stage["allowed_changes"]
+    )
+    for key in (
+        "candidate_comparison",
+        "coincidence_comparison",
+        "historical_singletons",
+        "identity",
+        "pem_comparison",
+        "runtime_environment_digest",
+        "scientific_boundary",
+        "taxonomy_comparison",
+    ):
+        assert candidate[key] == baseline[key]
+    assert candidate["remediation"][
+        "all_upstream_scientific_ledgers_byte_identical"
+    ] is True
+    assert candidate["remediation"]["runtime_reexecution_required"] is False
+    assert candidate["remediation"]["scientific_method_changed"] is False
+    assert candidate["remediation"]["new_tolerance_introduced"] is False
+
+
+def test_frozen_compare_contract_matches_deterministic_builder() -> None:
+    protocol = remediation.load_protocol(root=ROOT, verify_git=True)
+    stage = remediation.stage_spec(protocol, "COMPARE")
+    path = ROOT / stage["remediation_contract"]
+    if not path.is_file():
+        pytest.skip("COMPARE contract has not been frozen yet")
+    frozen = json.loads(path.read_text(encoding="utf-8"))
+    assert frozen == compare_remediation.build_contract(root=ROOT)
 
 
 def test_frozen_pem_contract_matches_deterministic_builder() -> None:

@@ -59,6 +59,11 @@ from src.dante_light.o4a_canonical_native_pem_rerun import (  # noqa: E402
     write_frozen_contract as write_frozen_native_pem_contract,
     write_verified_evidence as write_native_pem_evidence,
 )
+from src.dante_light.o4a_canonical_final_comparison_rerun import (  # noqa: E402
+    run as run_final_comparison,
+    write_frozen_contract as write_frozen_final_comparison_contract,
+    write_verified_evidence as write_final_comparison_evidence,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -86,6 +91,7 @@ def _parser() -> argparse.ArgumentParser:
             "TAXONOMY",
             "COINCIDENCE",
             "PEM",
+            "COMPARE",
         ),
         default="COHORT",
     )
@@ -115,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
                 "TAXONOMY": write_frozen_native_taxonomy_contract,
                 "COINCIDENCE": write_frozen_native_coincidence_contract,
                 "PEM": write_frozen_native_pem_contract,
+                "COMPARE": write_frozen_final_comparison_contract,
             }
             path = writers[args.stage](root=ROOT)
             result = {"status": "FROZEN_CONTRACT", "stage": args.stage, "path": str(path)}
@@ -126,11 +133,12 @@ def main(argv: list[str] | None = None) -> int:
                 "TAXONOMY": write_native_taxonomy_evidence,
                 "COINCIDENCE": write_native_coincidence_evidence,
                 "PEM": write_native_pem_evidence,
+                "COMPARE": write_final_comparison_evidence,
             }
             if args.stage not in writers:
                 raise ContractError(
                     "record-evidence is defined only for RESCORE, THRESHOLDS, "
-                    "CLASSIFY, TAXONOMY, COINCIDENCE, or PEM"
+                    "CLASSIFY, TAXONOMY, COINCIDENCE, PEM, or COMPARE"
                 )
             path = writers[args.stage](root=ROOT)
             result = {
@@ -187,8 +195,13 @@ def main(argv: list[str] | None = None) -> int:
                         workers=args.workers,
                         batch_size=args.coincidence_batch_size,
                     )
-            else:
+            elif args.stage == "PEM":
                 summary, run_dir = run_native_pem(
+                    root=ROOT,
+                    verify_only=args.operation == "verify",
+                )
+            else:
+                summary, run_dir = run_final_comparison(
                     root=ROOT,
                     verify_only=args.operation == "verify",
                 )
