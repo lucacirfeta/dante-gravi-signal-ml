@@ -31,8 +31,8 @@
     "statistic_delta_per_event": false,
     "threshold_equivalence_claim": false
   },
-  "contract_digest": "f7b7d226a78c80a687822ab55dc8427d40edac0bdab041e5131ba9b3fd25dbe9",
-  "contract_id": "dante-o4a-canonical-provenance-rerun-compare-v1",
+  "contract_digest": "65f3cdc45b43e95765b2e87e47a7065bea94768d0dcf627d27ba172470ee8207",
+  "contract_id": "dante-o4a-canonical-provenance-rerun-compare-v2",
   "external_roots": {
     "classification": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/classification",
     "coincidence": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/coincidence",
@@ -152,7 +152,7 @@
     },
     "implementation": {
       "path": "src/dante_light/o4a_canonical_final_comparison_rerun.py",
-      "sha256": "bae66eb5d7461d0a64b5dd66829fdb6a8835b61dc196ca457ea65bb1d25d06d8"
+      "sha256": "f87f47799070661c6174cf6ba8f22997db8550da91152a0a008529021d561fca"
     },
     "replay_contract": {
       "path": "config/dante_light_replay_v1.json",
@@ -184,6 +184,9 @@
     "runtime_environment_digest_preserved_as_historical_contract_metadata": true,
     "runtime_reexecution_required": false,
     "scientific_method_changed": false,
+    "superseded_failure_scope": "adapter_row_total_metadata_only",
+    "supersedes_failed_contract_digest": "f7b7d226a78c80a687822ab55dc8427d40edac0bdab041e5131ba9b3fd25dbe9",
+    "supersedes_failed_run_key": "1f1c19882e5b0a45e44e5d2dc23d130f1a73f9a8dc84231399315ec38efefa25",
     "upstream_run_keys": {
       "classification": "4b5132b3086057ed8981eba954c8aa9b29f51d05496b4269bf095fe7e4198548",
       "coincidence": "fa847338ac1e59008c07434510233e991da00d626435805f1f5ffadd8fe50e8e",

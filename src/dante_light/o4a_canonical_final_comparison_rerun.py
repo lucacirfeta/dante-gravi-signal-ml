@@ -33,6 +33,12 @@ COMPARE_EVIDENCE_REL = Path(
 HISTORICAL_EVIDENCE_REL = Path(
     "artifacts/dante_light/o4a_v1_parity/corrected_final_comparison_v2.json"
 )
+SUPERSEDED_CONTRACT_DIGEST = (
+    "f7b7d226a78c80a687822ab55dc8427d40edac0bdab041e5131ba9b3fd25dbe9"
+)
+SUPERSEDED_RUN_KEY = (
+    "1f1c19882e5b0a45e44e5d2dc23d130f1a73f9a8dc84231399315ec38efefa25"
+)
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -173,7 +179,7 @@ def build_contract(*, root: Path = ROOT) -> dict[str, Any]:
         raise ContractError("canonical COMPARE inputs are not byte-identical")
 
     candidate = copy.deepcopy(baseline)
-    candidate["contract_id"] = "dante-o4a-canonical-provenance-rerun-compare-v1"
+    candidate["contract_id"] = "dante-o4a-canonical-provenance-rerun-compare-v2"
     roots = protocol["paths"]["remediation_external_roots"]
     candidate["external_roots"] = {
         "classification": roots[5],
@@ -219,6 +225,9 @@ def build_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "runtime_environment_digest_preserved_as_historical_contract_metadata": True,
         "scientific_method_changed": False,
         "new_tolerance_introduced": False,
+        "supersedes_failed_contract_digest": SUPERSEDED_CONTRACT_DIGEST,
+        "supersedes_failed_run_key": SUPERSEDED_RUN_KEY,
+        "superseded_failure_scope": "adapter_row_total_metadata_only",
     }
     candidate["contract_digest"] = base.contract_digest(candidate)
     return validate_contract(candidate, root=root)
@@ -235,7 +244,31 @@ def write_frozen_contract(*, root: Path = ROOT) -> Path:
     serialized = json.dumps(candidate, indent=2, sort_keys=True, allow_nan=False) + "\n"
     if target.is_file():
         if target.read_text(encoding="utf-8") != serialized:
-            raise ContractError(f"refusing divergent frozen contract: {target}")
+            previous = _read_json(target)
+            failed_run = _external_path(
+                Path(candidate["output"]["root"])
+                / f"final_comparison_{SUPERSEDED_RUN_KEY}"
+            )
+            scientific_outputs = {
+                candidate["output"][name]
+                for name in (
+                    "summary_filename",
+                    "shared_filename",
+                    "removed_filename",
+                    "new_filename",
+                    "singletons_filename",
+                )
+            }
+            if (
+                previous.get("contract_digest") != SUPERSEDED_CONTRACT_DIGEST
+                or not (failed_run / "failure.json").is_file()
+                or any((failed_run / name).exists() for name in scientific_outputs)
+            ):
+                raise ContractError(f"refusing divergent frozen contract: {target}")
+            temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+            temporary.write_text(serialized, encoding="utf-8", newline="\n")
+            temporary.replace(target)
+            return target
         return target
     target.parent.mkdir(parents=True, exist_ok=True)
     temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
@@ -284,13 +317,17 @@ def _canonical_load_inputs(root: Path, contract: Mapping[str, Any]) -> dict[str,
         upstream["coincidence"]["external_run"]["directory"]
     )
     pem_dir = _external_path(upstream["pem"]["external_run"]["directory"])
+    corrected_classification_spec = _output_with_row_total(
+        upstream["classification"]
+    )
     corrected_classification = module._load_and_verify_jsonl(
         classification_dir / upstream["classification"]["output"]["filename"],
-        upstream["classification"]["output"],
+        corrected_classification_spec,
     )
+    corrected_taxonomy_spec = _output_with_row_total(upstream["taxonomy"])
     corrected_taxonomy = module._load_and_verify_jsonl(
         taxonomy_dir / upstream["taxonomy"]["output"]["filename"],
-        upstream["taxonomy"]["output"],
+        corrected_taxonomy_spec,
     )
     corrected_coincidence: list[dict[str, Any]] = []
     for population in ("primary", "diagnostic"):
@@ -320,6 +357,15 @@ def _canonical_load_inputs(root: Path, contract: Mapping[str, Any]) -> dict[str,
         "corrected_pem_targets": corrected_pem_targets,
         "corrected_pem": corrected_pem,
     }
+
+
+def _output_with_row_total(evidence: Mapping[str, Any]) -> dict[str, Any]:
+    output = dict(evidence["output"])
+    row_total = evidence.get("row_total")
+    if not isinstance(row_total, int) or row_total < 0:
+        raise ContractError("canonical upstream output row total is invalid")
+    output["row_total"] = row_total
+    return output
 
 
 @contextmanager

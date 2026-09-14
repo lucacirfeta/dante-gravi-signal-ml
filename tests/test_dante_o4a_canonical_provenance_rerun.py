@@ -754,6 +754,23 @@ def test_frozen_compare_contract_matches_deterministic_builder() -> None:
     assert frozen == compare_remediation.build_contract(root=ROOT)
 
 
+def test_compare_adapter_binds_top_level_row_total_to_output() -> None:
+    evidence = {
+        "row_total": 10942,
+        "output": {
+            "filename": "rows.jsonl",
+            "sha256": "a" * 64,
+            "row_digest": "b" * 64,
+        },
+    }
+    assert compare_remediation._output_with_row_total(evidence) == {
+        **evidence["output"],
+        "row_total": 10942,
+    }
+    with pytest.raises(ContractError, match="row total"):
+        compare_remediation._output_with_row_total({"output": evidence["output"]})
+
+
 def test_frozen_pem_contract_matches_deterministic_builder() -> None:
     protocol = remediation.load_protocol(root=ROOT, verify_git=True)
     stage = remediation.stage_spec(protocol, "PEM")
