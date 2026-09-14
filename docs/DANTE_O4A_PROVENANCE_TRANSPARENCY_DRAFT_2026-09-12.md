@@ -1,8 +1,10 @@
 # DANTE O4a native-source provenance transparency note
 
-Status: draft pending completion of the canonical full rerun
+Status: complete draft pending public cross-reference review
 
 Prepared: 2026-09-12
+
+Canonical rerun completed: 2026-09-14
 
 ## Purpose
 
@@ -183,25 +185,69 @@ astrophysical confirmation and do not cover unreleased sensors. Compact
 evidence is recorded in
 `artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_native_pem.json`.
 
-Only the final `COMPARE` stage remains pending. Its result must not be inferred
-solely from the byte-identical upstream replays.
-The final version of this section will additionally report:
+The final `COMPARE` stage is complete. It replayed the frozen detector plus
+normalized-analysis-GPS union, class-transition, adjusted-Rand-index,
+identity-set coincidence, fail-closed PEM, and singleton rules. All three
+candidate ledgers and the singleton record are byte-identical to the retained
+historical outputs. All metrics and scientific-boundary fields are exactly
+equal. The final comparison therefore retains 10,022 shared identities, 407
+historical-only identities, 920 corrected-only identities, 1,626 class
+changes, adjusted Rand index 1.0, 65 corrected pooled-null threshold exceeders,
+and one normalized detector-GPS overlap between the corrected and historical
+PEM target populations. No cross-contract PEM outcome comparison was made.
 
-- canonical contracts and run identifiers;
-- byte-level and numerical comparison status for every stage;
-- any changed identities, scores, thresholds, classes, families, coincidence
-  selections, PEM dispositions, or final-comparison claims;
-- direct source-sensitive changes separately from downstream recalibration
-  effects;
-- the status of GPS 1382955253.17 under the recomputed chain.
+The L1 feature at GPS 1382955253.17 remains ROBUST in the analysis window
+starting at GPS 1382955232, does not exceed the pooled coincidence threshold,
+and is not a PEM target. The H1 historical singleton at normalized GPS
+1369305280 remains ROBUST, exceeds that diagnostic threshold, and has the
+unchanged primary PEM verdict COUPLED. Neither statement is a claim of global
+significance or astrophysical confirmation.
+
+The first final-comparison launch was stopped by missing adapter row-count
+metadata before any scientific output was written. A second complete launch
+reproduced every JSON value but serialized the singleton record with WSL LF
+line endings rather than the historical Windows CRLF representation. Both run
+directories and their explicit failure/supersession records are retained. A
+third contract froze explicit CRLF serialization before rerunning; it then
+reproduced all four historical output files byte for byte without a tolerance
+or scientific change.
+
+The verified canonical run and contract identifiers are:
+
+| Stage | Run key | Contract digest | Historical comparison |
+|---|---|---|---|
+| COHORT | `0b76b9852c825fe26344f6468ff464865f10471d8b289912680225d08b447397` | `ddca4c6e8e791f1242c2b289d51781ea874f0b5031a187c887fe029472acbe80` | byte-identical ledger |
+| INDEX | `750681d0e35f1a9f766e37e6d3b858280b903d50dbbc982458f0662c6553488b` | `7c2446b50f4c3abe2d182954ef9d9ed460b84ffb7f37271efea6ceca75c4eaa9` | scientific payload byte-identical |
+| NATIVE_CALIBRATION | `152d077c0c2211b3d7574ad230e0a672e69027c1eaa220a9af20df9e5b7f7b4a` | `e79fe3f6fef1af5d84e9aab6e535761cd52f13c61ac7a588eeebad7ec5c32327` | byte-identical ledger |
+| RESCORE | `cfb5620e028cd8d1b2c5930aa55ec774e886bde0bc9acfb5a00a5cb10a892077` | `22c8d336990527adc4f7145aaa81d16a657dcece47ef1b2077742bc60e5f3754` | byte-identical ledgers |
+| THRESHOLDS | `b6fae7d8534e08c0f84889a8734e12b7ecc3801d52f1f700594765684c33eb77` | `56f4c33d07c4d45847e0ac31699ff1facddc285b224ef2d71f75cade0f4b8c54` | scientific output identical |
+| CLASSIFY | `4b5132b3086057ed8981eba954c8aa9b29f51d05496b4269bf095fe7e4198548` | `8ad71d6c10db704f41889697aa7fd9dae083886711c64617307d654b8436dabb` | byte-identical ledger |
+| TAXONOMY | `02b60e82e59c198187cb4cb295ee3149c9bc7c2c0635b6c8bc720f8e37d5712c` | `381d05639a9c311cfca60b401855cdac15b152782d3c1ae65c5c49c18bbcb231` | byte-identical ledger |
+| COINCIDENCE | `fa847338ac1e59008c07434510233e991da00d626435805f1f5ffadd8fe50e8e` | `269e6df82bf7db71bfead36d331de6045439de35732f3d81e4bb96355bf753fc` | byte-identical ledgers and receipt |
+| PEM | `529a3149d746ef03fdbabef13936ae9f479a8efae39692a05e5f862d47c7bf02` | `1d4ba0a6ff51ee020496cb46ae8611b42a5179696d24da3885b6209072b694f9` | byte-identical ledgers |
+| COMPARE | `7db808838ce9f0ca4149048ec6257695b9dccfb3e3b16ce382b8e350d2d03371` | `ffe704a9771048274a55f03d809deb9c37940081df02e363f96c8b5cd571c548` | byte-identical outputs |
+
+Compact evidence for the final stage is recorded in
+`artifacts/dante_light/o4a_v1_parity/provenance_rerun_v1/corrected_final_comparison_v2.json`.
 
 ## Interpretation and record updates
 
-Pending. If every output is identical or numerically equivalent, the conclusion
-will be limited to empirical equivalence under the frozen comparison protocol;
-it will not retroactively make the lost source bytes recoverable or the earlier
-explanation precise. If anything changes, the impact will be quantified before
-any scientific text is updated.
+The complete canonical rerun establishes empirical equivalence of the retained
+scientific payload under the frozen protocol. It found zero changed cohort or
+calibration identities, scores, thresholds, classes, family assignments,
+coincidence selections, PEM dispositions, or final-comparison values. The only
+non-byte-identical containers were already-declared provenance metadata and the
+superseded LF serialization attempt; their scientific arrays or JSON values
+were identical.
+
+This result does not recover the lost `2c20...` source bytes, prove what those
+bytes contained, or retroactively make the 2026-09-04 explanation precise. It
+does show, by complete recomputation with the retained Git source rather than a
+12-window subset, that the published corrected scientific outputs are
+unchanged. Consequently no numerical scientific correction is indicated by
+this rerun. A public transparency cross-reference remains required because the
+earlier provenance explanation was incomplete, independent of the unchanged
+scientific result.
 
 The final note and any GitHub, Zenodo, arXiv, or IGWN update will be prepared for
 human review and will not be published automatically.

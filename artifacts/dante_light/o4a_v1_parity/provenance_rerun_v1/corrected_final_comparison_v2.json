@@ -1,0 +1,255 @@
+{
+  "artifact_digest": "919a0d26051dbfff53d1e543cd480bde78d76a62f67857d0a3f238159a6a97a8",
+  "comparison_to_historical": {
+    "all_final_comparison_outputs_identical": true,
+    "changed_identity_counts": {
+      "corrected_only": 0,
+      "historical_only": 0,
+      "shared": 0,
+      "singletons": 0
+    },
+    "checks": {
+      "historical_singletons_equal": true,
+      "metrics_equal": true,
+      "new_bytes_equal": true,
+      "removed_bytes_equal": true,
+      "scientific_boundary_equal": true,
+      "shared_bytes_equal": true,
+      "singletons_bytes_equal": true
+    },
+    "classification": "BYTE_IDENTICAL",
+    "new_tolerance_introduced": false
+  },
+  "contract_digest": "ffe704a9771048274a55f03d809deb9c37940081df02e363f96c8b5cd571c548",
+  "external_artifact_digest": "0cd8cca778d4f230d3bed880ebe9c2a0556dce37675663dabe4300e255132389",
+  "external_run": {
+    "directory": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/compare/final_comparison_7db808838ce9f0ca4149048ec6257695b9dccfb3e3b16ce382b8e350d2d03371",
+    "summary_filename": "final_comparison_summary.json",
+    "summary_sha256": "eb869d4164965acaa4e51377b19f88c0f530917fc0ac1b0cada0e5d5ebcc88f7",
+    "summary_size_bytes": 7521
+  },
+  "historical_singletons": [
+    {
+      "corrected_matches": [
+        {
+          "coincidence": {
+            "exceeds_primary_threshold": true,
+            "measurement_status": "MEASURED",
+            "population": "primary"
+          },
+          "detector": "H1",
+          "global_family_id": "Singleton_1369305280",
+          "gps_start": 1369305280.0,
+          "match_role": "exact_normalized_analysis_identity",
+          "native_class": "ROBUST",
+          "native_score": 0.43430405855178833,
+          "pem": {
+            "population": "primary",
+            "verdict_tier": "COUPLED"
+          }
+        }
+      ],
+      "corrected_normalized_identity_present": true,
+      "historical": {
+        "global_family_id": "Singleton_1369305276",
+        "native_class": "ROBUST",
+        "native_score": 0.4300166964530945
+      },
+      "historical_catalog_identity": {
+        "detector": "H1",
+        "gps_start": 1369305276.0
+      },
+      "localized_feature_gps": null,
+      "name": "historical_h1_singleton",
+      "normalized_analysis_identity": {
+        "detector": "H1",
+        "gps_start": 1369305280.0
+      }
+    },
+    {
+      "corrected_matches": [
+        {
+          "coincidence": {
+            "exceeds_primary_threshold": false,
+            "measurement_status": "MEASURED",
+            "population": "primary"
+          },
+          "detector": "L1",
+          "global_family_id": "Singleton_1382955232",
+          "gps_start": 1382955232.0,
+          "match_role": "exact_normalized_analysis_identity",
+          "native_class": "ROBUST",
+          "native_score": 0.6122661232948303,
+          "pem": null
+        }
+      ],
+      "corrected_normalized_identity_present": true,
+      "historical": {
+        "global_family_id": "Singleton_1382955228",
+        "native_class": "ROBUST",
+        "native_score": 0.5988767743110657
+      },
+      "historical_catalog_identity": {
+        "detector": "L1",
+        "gps_start": 1382955228.0
+      },
+      "localized_feature_gps": 1382955253.17,
+      "name": "historical_l1_forum_singleton",
+      "normalized_analysis_identity": {
+        "detector": "L1",
+        "gps_start": 1382955232.0
+      }
+    }
+  ],
+  "metrics": {
+    "candidates": {
+      "class_changed_total": 1626,
+      "class_transitions": {
+        "AMBIGUOUS": {
+          "AMBIGUOUS": 900,
+          "BACKGROUND": 308,
+          "ROBUST": 0
+        },
+        "BACKGROUND": {
+          "AMBIGUOUS": 2,
+          "BACKGROUND": 2526,
+          "ROBUST": 0
+        },
+        "ROBUST": {
+          "AMBIGUOUS": 1295,
+          "BACKGROUND": 21,
+          "ROBUST": 4970
+        }
+      },
+      "corrected_only_total": 920,
+      "corrected_total": 10942,
+      "historical_only_total": 407,
+      "historical_total": 10429,
+      "score_delta": {
+        "count": 10022,
+        "descriptive_only": true,
+        "maximum": 0.0753460228443146,
+        "maximum_absolute": 0.14854425936937332,
+        "mean": -0.0017619192432236455,
+        "median": -0.00027029216289520264,
+        "minimum": -0.14854425936937332,
+        "q25": -0.003533333539962713,
+        "q75": 0.0023060571402311984
+      },
+      "shared_total": 10022,
+      "taxonomy": {
+        "adjusted_rand_index": 1.0,
+        "corrected_family_count_all": 3,
+        "corrected_largest_family_all": 10940,
+        "corrected_singleton_count_all": 2,
+        "historical_family_count_all": 3,
+        "historical_largest_family_all": 10427,
+        "historical_singleton_count_all": 2,
+        "physical_coincidence_interpretation": false,
+        "population": "exact_shared_normalized_identities",
+        "shared_total": 10022
+      },
+      "union_total": 11349
+    },
+    "coincidence": {
+      "corrected": {
+        "measured_total": 5809,
+        "seed_total": 7750,
+        "threshold_exceeder_total": 65
+      },
+      "global_significance_claim": false,
+      "historical": {
+        "catalogue_total": 10429,
+        "measured_total": 8806,
+        "recorded_null_max_p99": 0.4045910817732782,
+        "threshold_exceeder_total": 13
+      },
+      "historical_gps_normalization_offset_s": 4.0,
+      "measured_identity_overlap": 5332,
+      "mode": "identity_set_accounting_only",
+      "threshold_equivalence_claim": false,
+      "threshold_exceeder_identity_overlap": 0
+    },
+    "identity_normalization": {
+      "calibration_identities_transformed": 0,
+      "downstream_subset_membership_verified": true,
+      "gps_identity_audit_sha256": "a01c064d80ed3ecc9bee287194e13263def3a2d2044eabb7c402cc76aa503021",
+      "historical_candidate_total": 10429,
+      "historical_coincidence_event_total": 8806,
+      "historical_gps_offset_s": 4.0,
+      "historical_pem_target_total": 141,
+      "historical_pem_verdict_total": 141,
+      "scope": "frozen_candidate_catalogue_and_verified_downstream_subsets"
+    },
+    "pem": {
+      "aggregate_verdict_rate_comparison_performed": false,
+      "corrected_target_total": 65,
+      "detector_gps_overlap": 1,
+      "disposition": "IDENTITY_OVERLAP_PRESENT_OUTCOMES_NOT_CROSS_CONTRACT_COMPARABLE",
+      "historical_gps_normalization_offset_s": 4.0,
+      "historical_target_total": 141,
+      "historical_verdict_total": 141,
+      "outcome_comparison_performed": false
+    }
+  },
+  "outputs": {
+    "new": {
+      "filename": "corrected_only_candidates.jsonl",
+      "row_digest": "fc6ff68fa336371c6ab9c28ce2e66525831d4f0da9cf6e3e24f255ce27fedc5b",
+      "row_total": 920,
+      "sha256": "b7f4b0b7c4b4effd763eacfb0c25455fa384993798224dbaa49db2806abb9f3f"
+    },
+    "removed": {
+      "filename": "historical_only_candidates.jsonl",
+      "row_digest": "7e3b1d0c50a22a6c7d9daf97fee1ca4f4975d26ddac604edb06863cdaee59b5d",
+      "row_total": 407,
+      "sha256": "746d0baa3f3de7b255a6e54980265dec857fc7ee3e873b475d1c2d13634e6c8e"
+    },
+    "shared": {
+      "filename": "shared_candidate_transitions.jsonl",
+      "row_digest": "2b0eaba38a9041897fbc687f16a50b4a8d90637845961afd6868a252bcb6beb6",
+      "row_total": 10022,
+      "sha256": "d06785b2364b01fad7cf92253745c95137aa33057e5fbaec76d3dbff87b61281"
+    },
+    "singletons": {
+      "digest": "0fb774927a749f6d915b1e55163d879245789bb654bbfc9546c3fbf4b300f31a",
+      "filename": "historical_singleton_rechecks.json",
+      "sha256": "84dc3abb78acc5125f9fd21c9f888fe878f75cabbc525e2743f58c2963eaf05f"
+    }
+  },
+  "references": {
+    "contract": {
+      "path": "config/o4a_canonical_provenance_rerun_v1/compare.json",
+      "sha256": "a8889e4231c2a213410e25dbf1e08fb4ebc6206825d618e62d6b690b35d6179b"
+    },
+    "historical_comparison_evidence": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_final_comparison_v2.json",
+      "sha256": "d63e3b4fa3e47033ceefabec22c8d8fa5c4763762390691c708db621cea682b7"
+    },
+    "implementation": {
+      "path": "src/dante_light/o4a_canonical_final_comparison_rerun.py",
+      "sha256": "616995a41c108d384f608d1a4ee6692248bcc576f5fb2b9fe9d224130aa26a5c"
+    }
+  },
+  "run_key": "7db808838ce9f0ca4149048ec6257695b9dccfb3e3b16ce382b8e350d2d03371",
+  "runtime_environment_digest": "48c20ee7ffe39f4cab10e959865691ca2afb65225344fa105d186acf491ff77a",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "calibration_identities_excluded_from_gps_normalization": true,
+    "corrected_artifacts_immutable": true,
+    "future_full_pipeline_time_slide_null_required": true,
+    "historical_artifacts_immutable": true,
+    "historical_gps_normalization_predeclared": true,
+    "no_cross_null_statistic_comparison": true,
+    "no_global_significance_claim": true,
+    "no_post_hoc_candidate_pairing": true,
+    "operational_validation_claim": false,
+    "pem_is_not_astrophysical_confirmation": true
+  },
+  "status": "PASS_VERIFIED_CANONICAL_FINAL_COMPARISON",
+  "verification": {
+    "all_ten_stages_complete": true,
+    "failure_artifact_absent": true,
+    "independent_verifier": "PASS_EXACT_LEDGER_AND_DIGEST_REPLAY"
+  }
+}
