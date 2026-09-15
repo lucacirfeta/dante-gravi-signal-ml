@@ -40,6 +40,15 @@ The resulting `dante-o4a-provenance-evidence-v3.8.1.zip` is an evidence
 supplement to the source release. It contains no raw GWOSC strain, model cache,
 credentials, or machine-local paths.
 
+## Release verification
+
+The release candidate passed 134 focused regressions on Windows and 133 on
+WSL, with one expected platform skip. Ruff, archive-layout and metadata checks,
+a fresh Python 3.11 wheel installation including the optional browser UI, and
+the bounded public CPU smoke all passed. The smoke was then reopened through
+the verification-only path and accepted only after its recorded files matched
+their hashes.
+
 ## Scope
 
 This is not a new paper, a new O4a analysis, or a discovery claim. The corrected
