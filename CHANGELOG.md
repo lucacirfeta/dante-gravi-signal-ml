@@ -3,7 +3,7 @@
 All notable changes to DANTE are documented in this file. Historical releases
 remain available through their immutable Git tags and archived records.
 
-## [Unreleased]
+## [3.8.1] - 2026-09-15
 
 ### Provenance transparency
 
@@ -18,6 +18,8 @@ remain available through their immutable Git tags and archived records.
   metadata changes, tagging, and publication remain pending human checkpoints.
 - Pinned all canonical-provenance JSON contracts and runtime amendments to LF
   checkout bytes so SHA-256 gates do not depend on Windows `core.autocrlf`.
+- Reserved version DOI `10.5281/zenodo.22763556` for the immutable 3.8.1
+  software and evidence archive. Publication remains a human checkpoint.
 
 ## [3.8.0] - 2026-09-10
 
@@ -56,4 +58,5 @@ remain available through their immutable Git tags and archived records.
 - Archived scientific software baseline: <https://doi.org/10.5281/zenodo.21912589>.
 
 [3.8.0]: https://github.com/lucacirfeta/dante-gravi-signal-ml/compare/3.7.0...v3.8.0
+[3.8.1]: https://github.com/lucacirfeta/dante-gravi-signal-ml/compare/v3.8.0...v3.8.1
 [3.7.0]: https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0

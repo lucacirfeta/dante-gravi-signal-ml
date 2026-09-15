@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dante-workflow"
-version = "3.8.0"
+version = "3.8.1"
 description = "Content-addressed orchestration for reproducible DANTE gravitational-wave analysis"
 readme = "README.md"
 requires-python = ">=3.11"

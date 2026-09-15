@@ -47,5 +47,7 @@ science remains unchanged. Short cross-references may be added to affected
 public records so that readers of those records can find this append-only
 provenance correction; those links do not republish or replace the papers.
 
-The 3.8.1 version DOI will be inserted after it is reserved in the existing
-Zenodo concept record and before the immutable Git tag is created.
+The reserved 3.8.1 version DOI is
+[`10.5281/zenodo.22763556`](https://doi.org/10.5281/zenodo.22763556). It becomes
+registered when the Zenodo draft is published. The previous 3.8.0 archive
+remains immutable at `10.5281/zenodo.22681395`.

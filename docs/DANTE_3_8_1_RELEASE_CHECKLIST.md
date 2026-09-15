@@ -1,6 +1,6 @@
 # DANTE 3.8.1 provenance release checklist
 
-Status: **PREPARED; DOI, FINAL ARTIFACTS, TAG, AND PUBLICATION PENDING**
+Status: **DOI RESERVED; METADATA PREPARED; FINAL ARTIFACTS, TAG, AND PUBLICATION PENDING**
 
 ## Frozen release identity
 
@@ -10,7 +10,7 @@ Status: **PREPARED; DOI, FINAL ARTIFACTS, TAG, AND PUBLICATION PENDING**
 - canonical rerun commit: `cf774dd059e5b26da205e5abed3073d574e53c30`
 - previous version DOI: `10.5281/zenodo.22681395`
 - Zenodo concept DOI: `10.5281/zenodo.20121859`
-- 3.8.1 version DOI: **pending reservation**
+- 3.8.1 version DOI: `10.5281/zenodo.22763556` (reserved, not published)
 
 ## Verified scientific boundary
 
@@ -31,8 +31,8 @@ Status: **PREPARED; DOI, FINAL ARTIFACTS, TAG, AND PUBLICATION PENDING**
 - [x] Bundle integrity and reproducibility tests added.
 - [x] Canonical-provenance JSON checkout bytes pinned to LF across Windows and
       WSL.
-- [ ] Reserve the 3.8.1 DOI in a new-version Zenodo draft.
-- [ ] Update `pyproject.toml`, `CITATION.cff`, README, changelog, installation
+- [x] Reserve the 3.8.1 DOI in a new-version Zenodo draft.
+- [x] Update `pyproject.toml`, `CITATION.cff`, README, changelog, installation
       guide, and metadata tests to version 3.8.1 and the reserved DOI.
 - [ ] Build wheel, source distribution, source ZIP, compact evidence ZIP,
       `RELEASE_MANIFEST.txt`, and `SHA256SUMS.txt` from the selected clean commit.
