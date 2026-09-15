@@ -3,6 +3,22 @@
 All notable changes to DANTE are documented in this file. Historical releases
 remain available through their immutable Git tags and archived records.
 
+## [Unreleased]
+
+### Provenance transparency
+
+- Completed the frozen ten-stage canonical-source rerun of the corrected O4a
+  native chain after identifying that the historical `2c20...` working-tree
+  source bytes were not retained.
+- Reproduced all retained scientific outputs byte for byte; no score,
+  population, threshold, class, taxonomy, coincidence selection, PEM
+  disposition, numerical result, or scientific conclusion changed.
+- Prepared the 3.8.1 transparency note, claim-to-artifact map, deterministic
+  compact evidence bundle, and release checklist. DOI reservation, version
+  metadata changes, tagging, and publication remain pending human checkpoints.
+- Pinned all canonical-provenance JSON contracts and runtime amendments to LF
+  checkout bytes so SHA-256 gates do not depend on Windows `core.autocrlf`.
+
 ## [3.8.0] - 2026-09-10
 
 ### Added
