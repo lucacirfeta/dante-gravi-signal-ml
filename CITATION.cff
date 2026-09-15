@@ -27,11 +27,14 @@ abstract: >
   morphologies. Includes extensive ablation studies and spatial
   saliency mapping. O3b Gravity Spy classes provide bounded known-morphology
   controls; no released Gravity Spy classification set covers the O4a epoch.
-  Release 3.8.0 adds the installable content-addressed workflow controller,
+  Release 3.8.0 added the installable content-addressed workflow controller,
   shared CLI and browser control surface, durable resume state, fail-closed
   receipt verification, and a bounded public CPU smoke. It adopts and verifies
   the existing corrected-O4a artifacts and introduces no new scientific score,
-  threshold, population, null construction, or discovery claim.
+  threshold, population, null construction, or discovery claim. Release 3.8.1
+  adds the complete canonical-source provenance rerun and its compact evidence
+  bundle. The retained corrected-O4a scientific outputs are byte-identical, so
+  this maintenance release changes no scientific result or conclusion.
 
 authors:
   - family-names: "Cirfeta"
@@ -41,10 +44,10 @@ authors:
     city: "Rome"
     country: "IT"
 
-version: "3.8.0"
-date-released: "2026-09-10"
+version: "3.8.1"
+date-released: "2026-09-15"
 
-doi: "10.5281/zenodo.22681395"
+doi: "10.5281/zenodo.22763556"
 url: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 repository-code: "https://github.com/lucacirfeta/dante-gravi-signal-ml"
 
@@ -67,6 +70,17 @@ keywords:
   - domain shift defense
 
 references:
+  - type: software
+    title: "DANTE (Domain-Adaptive Network for Transient Evaluation) 3.8.0"
+    authors:
+      - family-names: "Cirfeta"
+        given-names: "Luca"
+        orcid: "https://orcid.org/0009-0000-1235-3186"
+    version: "3.8.0"
+    date-released: "2026-09-10"
+    doi: "10.5281/zenodo.22681395"
+    url: "https://doi.org/10.5281/zenodo.22681395"
+
   - type: software
     title: "DANTE (Domain-Adaptive Network for Transient Evaluation) 3.7.0"
     authors:

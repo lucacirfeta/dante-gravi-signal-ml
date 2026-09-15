@@ -36,7 +36,7 @@ def test_pyproject_packages_only_the_workflow_boundary() -> None:
     metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert metadata["project"]["name"] == "dante-workflow"
-    assert metadata["project"]["version"] == "3.8.0"
+    assert metadata["project"]["version"] == "3.8.1"
     assert metadata["project"]["license"] == "GPL-3.0-only"
     assert metadata["project"]["dependencies"] == []
     assert metadata["project"]["scripts"] == {
@@ -54,10 +54,17 @@ def test_release_metadata_is_consistent_and_does_not_relabel_old_doi() -> None:
     package = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     citation = yaml.safe_load((ROOT / "CITATION.cff").read_text(encoding="utf-8"))
 
-    assert citation["version"] == package["project"]["version"] == "3.8.0"
-    assert citation["date-released"] == "2026-09-10"
+    assert citation["version"] == package["project"]["version"] == "3.8.1"
+    assert citation["date-released"] == "2026-09-15"
     assert citation["license"] == package["project"]["license"] == "GPL-3.0-only"
-    assert citation["doi"] == "10.5281/zenodo.22681395"
+    assert citation["doi"] == "10.5281/zenodo.22763556"
+    previous = [
+        item
+        for item in citation["references"]
+        if item.get("type") == "software" and item.get("version") == "3.8.0"
+    ]
+    assert len(previous) == 1
+    assert previous[0]["doi"] == "10.5281/zenodo.22681395"
     historical = [
         item
         for item in citation["references"]

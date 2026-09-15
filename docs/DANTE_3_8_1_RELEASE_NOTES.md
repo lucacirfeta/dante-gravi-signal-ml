@@ -40,6 +40,15 @@ The resulting `dante-o4a-provenance-evidence-v3.8.1.zip` is an evidence
 supplement to the source release. It contains no raw GWOSC strain, model cache,
 credentials, or machine-local paths.
 
+## Release verification
+
+The release candidate passed 134 focused regressions on Windows and 133 on
+WSL, with one expected platform skip. Ruff, archive-layout and metadata checks,
+a fresh Python 3.11 wheel installation including the optional browser UI, and
+the bounded public CPU smoke all passed. The smoke was then reopened through
+the verification-only path and accepted only after its recorded files matched
+their hashes.
+
 ## Scope
 
 This is not a new paper, a new O4a analysis, or a discovery claim. The corrected
@@ -47,5 +56,7 @@ science remains unchanged. Short cross-references may be added to affected
 public records so that readers of those records can find this append-only
 provenance correction; those links do not republish or replace the papers.
 
-The 3.8.1 version DOI will be inserted after it is reserved in the existing
-Zenodo concept record and before the immutable Git tag is created.
+The reserved 3.8.1 version DOI is
+[`10.5281/zenodo.22763556`](https://doi.org/10.5281/zenodo.22763556). It becomes
+registered when the Zenodo draft is published. The previous 3.8.0 archive
+remains immutable at `10.5281/zenodo.22681395`.

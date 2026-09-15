@@ -3,13 +3,18 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.18136-b31b1b.svg)](https://arxiv.org/abs/2607.18136)
 [![Workflow arXiv](https://img.shields.io/badge/arXiv-2609.08695-b31b1b.svg)](https://arxiv.org/abs/2609.08695)
-[![Zenodo 3.8.0](https://img.shields.io/badge/3.8.0_DOI-10.5281/zenodo.22681395-blue.svg)](https://doi.org/10.5281/zenodo.22681395)
+[![Zenodo 3.8.1](https://img.shields.io/badge/3.8.1_DOI-10.5281/zenodo.22763556-blue.svg)](https://doi.org/10.5281/zenodo.22763556)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Workflow Python 3.11+](https://img.shields.io/badge/workflow_python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-> **Release status (2026-09-10).** Version `3.8.0` adds the installable
-> content-addressed workflow controller and its bounded public CPU smoke. Its
-> immutable archive is published at DOI `10.5281/zenodo.22681395`. The
+> **Release status (2026-09-15).** Version `3.8.1` is the provenance-
+> transparency maintenance release for the corrected-O4a canonical-source
+> rerun. The complete frozen chain reproduced the retained scientific outputs
+> byte for byte; no scientific result or conclusion changed. Its version DOI
+> is `10.5281/zenodo.22763556` and becomes registered when the reserved Zenodo
+> draft is published. Version `3.8.0`, which added the installable
+> content-addressed workflow controller and bounded public CPU smoke, remains
+> archived at DOI `10.5281/zenodo.22681395`. The
 > underlying scientific-analysis baseline remains `3.7.0` (2026-08-13;
 > DOI `10.5281/zenodo.21912589`). The latest
 > auxiliary release is `dante-reference-artifacts-v1` (2026-08-15; DOI
@@ -375,17 +380,17 @@ cite:
 }
 ```
 
-For the published 3.8.0 software release, use its version DOI:
+For the 3.8.1 provenance-transparency maintenance release, use its version DOI:
 
 ```bibtex
-@software{cirfeta_dante_3_8_0,
+@software{cirfeta_dante_3_8_1,
   title     = {DANTE (Domain-Adaptive Network for Transient Evaluation)},
   author    = {Cirfeta, Luca},
   year      = {2026},
-  version   = {3.8.0},
-  doi       = {10.5281/zenodo.22681395},
+  version   = {3.8.1},
+  doi       = {10.5281/zenodo.22763556},
   publisher = {Zenodo},
-  url       = {https://doi.org/10.5281/zenodo.22681395}
+  url       = {https://doi.org/10.5281/zenodo.22763556}
 }
 ```
 
@@ -407,8 +412,9 @@ To cite the historical 3.7.0 software and analysis artifacts:
 > [`3.7.0`](https://github.com/lucacirfeta/dante-gravi-signal-ml/tree/3.7.0).
 > The workflow architecture preprint separately identifies its immutable
 > productization baseline and adopted corrected-O4a evidence.
-> Release `3.8.0` is archived at DOI `10.5281/zenodo.22681395`; do not cite the
-> historical 3.7.0 DOI as its identifier.
+> Release `3.8.1` has version DOI `10.5281/zenodo.22763556`; release `3.8.0`
+> remains archived at DOI `10.5281/zenodo.22681395`. Do not cite the historical
+> 3.7.0 DOI as the identifier for either workflow release.
 
 ### LLM Disclosure
 The authors acknowledge the use of Large Language Models (LLMs) for linguistic polishing and code debugging during the preparation of this repository and the associated manuscript. All scientific concepts, data analysis, physical interpretations, and final conclusions were performed entirely by the authors.
