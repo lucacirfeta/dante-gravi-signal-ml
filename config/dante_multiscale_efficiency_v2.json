@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "dante-multiscale-efficiency-v2",
-  "contract_digest": "c309c57907089d6623a4b37a8fc3877d565162276695ffa9b20174778d2329a6",
+  "contract_digest": "2934f55f6b994adf07fc04205f403518fc3c4a2e009568a67d1ae6ed7bfc67ac",
   "status": "APPROVED_OUTCOME_BLIND_FREEZE_INPUT",
   "authorization": {
     "authorized_on": "2026-09-15",
@@ -51,10 +51,18 @@
     "sample_rate_hz": 4096,
     "analysis_duration_s": 32.0,
     "whitening_pad_s": 4.0,
+    "bandpass_hz": [20.0, 2000.0],
     "whitening_before_crop": true,
     "require_finite_clean_and_injected_windows": true
   },
   "representation": {
+    "frequency_range_hz": [20, 2048],
+    "image_shape": [256, 256, 3],
+    "colormap": "cividis",
+    "encoder_model": "dinov2_vits14_reg",
+    "encoder_input_size": 518,
+    "embedding_dimension": 384,
+    "patch_tokens_per_image": 1369,
     "discovery": {
       "qrange": [4, 64],
       "top_k": 68,
@@ -62,6 +70,7 @@
     },
     "conditional_multiscale": {
       "scales_s": [0.5, 1.0, 2.0, 4.0],
+      "alignment": "centered_on_32s_window_midpoint",
       "qrange": [4, 32],
       "top_k": 68,
       "centroids_per_detector_scale": 275,
@@ -80,6 +89,7 @@
   },
   "uncertainty": {
     "method": "detector_raw_source_block_bootstrap",
+    "percentile": 99.0,
     "n_resamples": 2000,
     "seed": 42,
     "confidence": 0.95,
@@ -100,8 +110,9 @@
     "canonical_threshold_contract": {"path": "config/o4a_canonical_provenance_rerun_v1/thresholds.json", "sha256": "64fb7d1c19551f525469f2b011a08b2caaae262e6a56f575bfeabd687634b83a"},
     "primary_scan_summary": {"path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json", "sha256": "6660911a1082fa651a1143aaf8307f1f8942cbebc0b229fa702efa7686b9246f"},
     "raw_manifest": {"path": "artifacts/dante_light/prefilter_l4_v5_design/raw_file_manifest_v5.jsonl", "sha256": "7a595d2f252e44df8320dbf2c688a626ca57671ce9bc0eeed0d2993b1dc32d86"},
-    "cohort_implementation": {"path": "src/pipeline_v3_multiscale/efficiency_v2.py", "sha256": "0acf049eab987e0c06801f3d8079e66394304c02c8b29c2b2433174180e8dcdf"},
-    "cohort_cli": {"path": "scripts/freeze_multiscale_efficiency_v2.py", "sha256": "633f18f16b8d8e809a107b612bb5037b75348e567abd50f332d89bbc872c5f5d"},
+    "runtime_config": {"path": "config.yaml", "sha256": "8706c65bf80c88e933d9e64e7e095790f1574c652be3816bb838872037ff0fef"},
+    "cohort_implementation": {"path": "src/pipeline_v3_multiscale/efficiency_v2.py", "sha256": "26b7c1c0c6376b7be786e45aa7d42172917e93e3c0c7961747125010c4b462d6"},
+    "cohort_cli": {"path": "scripts/freeze_multiscale_efficiency_v2.py", "sha256": "d42a35ca6b2dae325dca9812163583bcb4ff1072ac8b3caa152c1ff7b534682b"},
     "injection_source": {"path": "src/core/injection.py", "sha256": "6c2c5f64e5328936f1d7e1a9131b76796fea0bac948a342c863fce4934c78998"},
     "preprocessor": {"path": "src/core/preprocessor.py", "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"},
     "patch_producer": {"path": "src/core/patch_producer.py", "sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef"},

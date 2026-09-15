@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "status": "PASS_MULTISCALE_EFFICIENCY_V2_REFERENCE_PREFLIGHT",
+  "artifact_digest": "939baab143a33698652c6951bb909771d3095016cf346982e72c4397b10a1707",
+  "executed_on": "2026-09-15",
+  "reference_contract_digest": "ba7576bb4e31c068a51be73c4375dadedb2489265d634baf69865196be33ac94",
+  "cohort_artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+  "runtime": {
+    "environment_digest": "69468dd1a1645718890cac64b3d8707298a015fa1a9c99fd04df86f2425b3b76",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "python": "3.11.15",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 5070",
+    "torch": "2.12.1",
+    "torch_cuda": "13.0",
+    "gwpy": "4.0.1",
+    "dinov2_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "dinov2_weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb"
+  },
+  "replay": {
+    "detector": "H1",
+    "gps_start": 1379245504.0,
+    "raw_source_sha256": "b9878f6edd313fb3477d7748e3d8fa91dc61ea59f645e1f27fffd82fafe87a0f",
+    "raw_context_sha256": "2271c89cba5f68346017a60ca0d36daffcd60005b3cdf05b1d62a24cd0cfc2df",
+    "clean_window_sha256": "4f2b6fa3d5d83e2c75d6f12d6d182bc61c3e7ffbd8d8c5a54f7d53cbb82b99f1",
+    "image_sha256_by_scale": {
+      "0.5": "2d6b4edb6d04e0ac33204b38701c44fbcb88c031e77bffdf255b62926c9100f3",
+      "1": "f410260c65bbee3dbca3e28a78133af8e8145fbceb7ec623b27f3ffada8d56dd",
+      "2": "916064e6781577e475729daf808a8845a6f12dc1698ef282ccfc6cee8b01a172",
+      "4": "cf1525247b24b6f64f4ff53a9add8429363f14464beb42f412a2ec0ac90426a4"
+    },
+    "token_shape": [4, 1369, 384],
+    "token_sha256": "11f07958950ff964464f6675fdd0f430a4771280c5e6408e7630bce161ec0821"
+  },
+  "runtime_notes": [
+    "xFormers was unavailable; the canonical PyTorch attention path was used.",
+    "GWPy emitted two deterministic upper-frequency clipping warnings from 2048 Hz to 1291.0530521679268 Hz for the approved short-window Q-transform geometry; image and token hashes bind the effective behavior."
+  ]
+}

@@ -10,7 +10,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.pipeline_v3_multiscale.efficiency_v2 import freeze_cohort, verify_cohort
+from src.pipeline_v3_multiscale.efficiency_v2 import (  # noqa: E402
+    freeze_cohort,
+    verify_cohort,
+)
 
 DEFAULT_PRIMARY = Path(
     "E:/dante_cache/dante_light/o4a_corrected_v2/"

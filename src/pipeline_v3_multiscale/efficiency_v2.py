@@ -169,12 +169,48 @@ def validate_contract(payload: Mapping[str, Any], root: Path = ROOT) -> dict[str
     uncertainty = value.get("uncertainty", {})
     if uncertainty.get("method") != "detector_raw_source_block_bootstrap":
         raise ContractError("uncertainty must remain raw-block based")
+    if float(uncertainty.get("percentile", -1.0)) != 99.0:
+        raise ContractError("bootstrap percentile changed")
     if int(uncertainty.get("n_resamples", -1)) != 2000:
         raise ContractError("bootstrap replicate count changed")
     if float(uncertainty.get("confidence", -1.0)) != 0.95:
         raise ContractError("bootstrap confidence changed")
     if uncertainty.get("iid_bootstrap_allowed") is not False:
         raise ContractError("i.i.d. bootstrap is forbidden")
+
+    preprocessing = value.get("preprocessing", {})
+    if (
+        int(preprocessing.get("sample_rate_hz", -1)) != 4096
+        or float(preprocessing.get("analysis_duration_s", -1.0)) != 32.0
+        or float(preprocessing.get("whitening_pad_s", -1.0)) != 4.0
+        or preprocessing.get("bandpass_hz") != [20.0, 2000.0]
+        or preprocessing.get("whitening_before_crop") is not True
+    ):
+        raise ContractError("preprocessing geometry changed")
+    representation = value.get("representation", {})
+    expected_representation = {
+        "frequency_range_hz": [20, 2048],
+        "image_shape": [256, 256, 3],
+        "colormap": "cividis",
+        "encoder_model": "dinov2_vits14_reg",
+        "encoder_input_size": 518,
+        "embedding_dimension": 384,
+        "patch_tokens_per_image": 1369,
+    }
+    if any(
+        representation.get(key) != expected
+        for key, expected in expected_representation.items()
+    ):
+        raise ContractError("representation geometry changed")
+    conditional = representation.get("conditional_multiscale", {})
+    if conditional.get("scales_s") != [0.5, 1.0, 2.0, 4.0]:
+        raise ContractError("multiscale durations changed")
+    if conditional.get("alignment") != "centered_on_32s_window_midpoint":
+        raise ContractError("multiscale alignment changed")
+    if conditional.get("qrange") != [4, 32] or int(conditional.get("top_k", -1)) != 68:
+        raise ContractError("multiscale scoring geometry changed")
+    if int(conditional.get("centroids_per_detector_scale", -1)) != 275:
+        raise ContractError("multiscale centroid count changed")
 
     for name, reference in value.get("references", {}).items():
         path = root / str(reference["path"])
