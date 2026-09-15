@@ -262,6 +262,9 @@ docs/*
 !docs/GITIGNORE_AUDIT.md
 !docs/DANTE_3_8_0_RELEASE_CHECKLIST.md
 !docs/DANTE_3_8_0_RELEASE_NOTES.md
+!docs/DANTE_3_8_1_RELEASE_CHECKLIST.md
+!docs/DANTE_3_8_1_RELEASE_NOTES.md
+!docs/DANTE_O4A_PROVENANCE_PUBLIC_RECORD_MAP_2026-09-15.md
 !docs/DANTE_LIGHT_L4_PREFILTER.md
 !docs/DANTE_LIGHT_L4_PREFILTER_NOT_READY_2026-08-22.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V2_NOT_READY_2026-08-22.md
@@ -322,6 +325,7 @@ reports/
 # clone cannot regenerate the paper artifacts, which is the same
 # reproducibility gap as the unpinned dependencies (CORRECTIONS_2026-07-21, C4).
 scripts/*
+!scripts/build_o4a_provenance_release_bundle.py
 !scripts/audit_dante_light_v8_1_phase0.py
 !scripts/manage_dante_light_v8_1_review_telemetry.py
 !scripts/cross_session_unification.py
