@@ -60,6 +60,23 @@ def test_checked_in_runner_preflight_evidence_is_self_consistent() -> None:
     ]
 
 
+def test_checked_in_paired_injection_evidence_is_self_consistent() -> None:
+    path = (
+        ROOT
+        / "artifacts/dante_light/multiscale_efficiency_v2"
+        / "paired_injection_summary.json"
+    )
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    declared = evidence.pop("artifact_digest")
+    assert declared == canonical_json_sha256(evidence)
+    assert (
+        evidence["status"] == "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_PAIRED_INJECTIONS"
+    )
+    assert evidence["clean_controls"]["row_total"] == 280
+    assert evidence["trials"]["row_total"] == 7440
+    assert evidence["scientific_boundary"]["scale_or_fusion_applied"] is False
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [
