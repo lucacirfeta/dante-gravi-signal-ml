@@ -58,6 +58,20 @@ def test_checked_in_preflight_evidence_is_self_consistent() -> None:
     assert evidence["replay"]["token_shape"] == [4, 1369, 384]
 
 
+def test_checked_in_reference_build_evidence_is_self_consistent() -> None:
+    path = (
+        ROOT
+        / "artifacts/dante_light/multiscale_efficiency_v2"
+        / "reference_build_summary.json"
+    )
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    declared = evidence.pop("artifact_digest")
+    assert declared == canonical_json_sha256(evidence)
+    assert evidence["status"] == "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_REFERENCE"
+    assert evidence["index_replay"]["row_total"] == 1000
+    assert evidence["calibration"]["row_total"] == 10000
+
+
 @pytest.mark.parametrize(
     "mutation",
     [

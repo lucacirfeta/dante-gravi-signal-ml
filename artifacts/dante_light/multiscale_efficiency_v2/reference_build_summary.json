@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_REFERENCE",
+  "artifact_digest": "f10344f99f931e84379404a86c84e7f753d33f485a7be7dc08e618e3f6395a14",
+  "run_key": "3e1eb87a2eed3347b3b78ed99491b416cf27cde1bece0c0e84cd0abd38ba8d47",
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2/reference_3e1eb87a2eed3347b3b78ed99491b416cf27cde1bece0c0e84cd0abd38ba8d47",
+  "external_summary_sha256": "b296a9e3c0759926886651c5ad13e435d45905ef7a7fb08d09443c4b85082bbb",
+  "external_artifact_digest": "ea343480c2619cda117b3d632bc7c44296ae00ea99707c4cdc2ef2c1a5342905",
+  "reference_contract_digest": "ba7576bb4e31c068a51be73c4375dadedb2489265d634baf69865196be33ac94",
+  "parent_contract_digest": "2934f55f6b994adf07fc04205f403518fc3c4a2e009568a67d1ae6ed7bfc67ac",
+  "cohort_artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+  "raw_source_verification_sha256": "aa17ef33bc95b7cd2e01db19584d55515cb821bb14e87f4d399aac86c55668ab",
+  "index_replay": {
+    "row_total": 1000,
+    "sha256": "375ccf45e6e39dfd5bc7e0a7d67fbd06e2450e38d701762a2911c8c59b99989c"
+  },
+  "calibration": {
+    "row_total": 10000,
+    "sha256": "1e5748d397485f6582769ae9520de42d4710b109039ace71e4b35f40af59154d"
+  },
+  "thresholds_sha256": "1278f635888943a1aaa6738e8d79236b16ec7232bc2cd6330411419ad2607cda",
+  "scientific_boundary": {
+    "bootstrap_unit": "raw_source_block",
+    "detectors_pooled": false,
+    "scales_pooled": false,
+    "legacy_artifacts_consumed": false
+  },
+  "verification": {
+    "standalone_verifier": "PASS",
+    "windows_focused_tests": "20 passed",
+    "wsl_focused_tests": "20 passed",
+    "ruff": "PASS"
+  }
+}
