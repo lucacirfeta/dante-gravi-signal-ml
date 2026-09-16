@@ -265,6 +265,7 @@ docs/*
 !docs/DANTE_3_8_1_RELEASE_CHECKLIST.md
 !docs/DANTE_3_8_1_RELEASE_NOTES.md
 !docs/DANTE_O4A_PROVENANCE_PUBLIC_RECORD_MAP_2026-09-15.md
+!docs/MULTISCALE_EFFICIENCY_V2_REPORT.md
 !docs/DANTE_LIGHT_L4_PREFILTER.md
 !docs/DANTE_LIGHT_L4_PREFILTER_NOT_READY_2026-08-22.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V2_NOT_READY_2026-08-22.md
@@ -402,6 +403,7 @@ scripts/*
 !scripts/freeze_dante_light_prefilter_v7_risk_calibration.py
 !scripts/run_dante_light_prefilter_v7_risk_calibration.py
 !scripts/verify_dante_light_prefilter_v7_risk_calibration.py
+!scripts/analyze_multiscale_efficiency_v2.py
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_IDENTITY_AUDIT_2026-08-23.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_SCATTERING_FEASIBILITY_2026-08-23.md
 !docs/DANTE_LIGHT_L4_PREFILTER_V5_FREEZE_2026-08-24.md

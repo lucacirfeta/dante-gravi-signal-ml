@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_ANALYSIS",
+  "artifact_digest": "ea8fec43a131412148e819a1cdc3e65d2d2b980552bb5004199a5e07f643e268",
+  "run_key": "27199d657f5a8e0ba5e6dd50754a51c3eb0b22817393a754e4569b3be470fbdb",
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2/analysis_27199d657f5a8e0ba5e6dd50754a51c3eb0b22817393a754e4569b3be470fbdb",
+  "external_summary_sha256": "6835f09505980fc884df31b9d0303ffe263b519e0799518f2aa5610c5dc2807c",
+  "external_artifact_digest": "a8555f73b927318e6e7df9333e0ae4007238421538b47e67ebb762a39cf31474",
+  "analysis_contract_digest": "39bafe2bfb30b844620c8b4040158a8318f4ea4175fdf97dc5d52cea381eeeaf",
+  "injection_run_key": "b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+  "injection_artifact_digest": "9e0cbd9648c4cb4ca9a53b59ffb81fed4255850f1f82f7183a4c90ff0bb57161",
+  "primary_efficiency": {
+    "row_total": 96,
+    "sha256": "40187ed1cb8c84ffe480ae0327a4d1a3fb875aa5a14be85fa8c8b8ed27085d98",
+    "zero_recovery_cells": 27,
+    "interior_cells_with_ci": 69
+  },
+  "conditional_response": {
+    "row_total": 384,
+    "sha256": "4c860c2c95e05b9696c2300d8480ae3fb0470863ddc3b851627de07a567afae1",
+    "undefined_no_primary_cells": 108,
+    "defined_cells": 276,
+    "observed_zero_cells": 140,
+    "observed_one_cells": 110,
+    "interior_cells": 26,
+    "interior_cells_with_ci": 18,
+    "interior_cells_fail_closed": 8,
+    "endpoint_fraction_of_defined": 0.9057971014492754
+  },
+  "report": {
+    "path": "docs/MULTISCALE_EFFICIENCY_V2_REPORT.md",
+    "sha256": "5045d16a0aaf7805100bcdc1f1c3247780db7a84caed1723a6512a703ccd31d5"
+  },
+  "wall_of_lines_high_snr": {
+    "snr_values": [32, 48],
+    "primary_recovered_per_detector_cell": 0,
+    "trials_per_detector_cell": 40,
+    "h1_snr48_max_score": 0.12264658510684967,
+    "h1_threshold": 0.2121588587760954,
+    "l1_snr48_max_score": 0.18012914061546326,
+    "l1_threshold": 0.2203438572585587,
+    "status": "CHARACTERIZED_EMPIRICAL_LIMITATION_CAUSE_NOT_PROVEN"
+  },
+  "scientific_boundary": {
+    "bootstrap_unit": "raw_source_block",
+    "bootstrap_resamples": 2000,
+    "detectors_pooled": false,
+    "morphology_tiers_pooled": false,
+    "scale_or_fusion_applied": false,
+    "rate_upper_limit_computed": false,
+    "endpoint_values_are_true_probability_claims": false,
+    "wall_of_lines_mechanism_proven": false
+  },
+  "verification": {
+    "standalone_verifier": "PASS",
+    "windows_focused_tests": "45 passed",
+    "wsl_focused_tests": "45 passed",
+    "ruff": "PASS"
+  }
+}
