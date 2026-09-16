@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "dante-multiscale-efficiency-v2-runner",
-  "contract_digest": "e31fd3b9418dafc5439c3b4634b623cc1eff6ef7835850e664e1813aff8d7ddf",
+  "contract_digest": "9c1b8f7a3ac46f274b40f47b05e862863823b051b4112df70cf9c34c1def773e",
   "status": "APPROVED_PAIRED_INJECTION_INPUT",
   "authorization": {
     "authorized_on": "2026-09-16",
@@ -98,7 +98,7 @@
   "references": {
     "implementation": {
       "path": "src/pipeline_v3_multiscale/efficiency_v2_runner.py",
-      "sha256": "d6d64d5cd38acb407bd9013e507b44262fdde017adad951a41ec02648a8345b4"
+      "sha256": "d2f664ea315d14be1d1099546a4745a5a050571612e7d75f7f017b60ad8ecfae"
     },
     "cli": {
       "path": "scripts/run_multiscale_efficiency_v2.py",

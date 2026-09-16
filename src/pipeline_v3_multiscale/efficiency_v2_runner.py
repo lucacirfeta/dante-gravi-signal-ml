@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 import os
 import time
+import warnings
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -203,12 +205,19 @@ def _generate_unit_waveform(
     from src.core.injection import SyntheticGlitchGenerator
 
     state = np.random.get_state()
+    injection_logger = logging.getLogger("src.core.injection")
+    previous_level = injection_logger.level
     try:
         np.random.seed(seed)
+        if duration_s > 2.0:
+            # The legacy generator warns above its historical recommendation.
+            # Four seconds is an explicitly approved duration in this contract.
+            injection_logger.setLevel(logging.ERROR)
         waveform = SyntheticGlitchGenerator(sample_rate=sample_rate_hz).generate(
             morphology, amplitude=1.0, duration=duration_s
         )
     finally:
+        injection_logger.setLevel(previous_level)
         np.random.set_state(state)
     waveform = np.ascontiguousarray(np.asarray(waveform, dtype=np.float64))
     expected = round(duration_s * sample_rate_hz)
@@ -257,14 +266,24 @@ def _render_images(
     image_shape = list(representation["image_shape"])
 
     def image_for(window: Any, qrange: Sequence[int]) -> np.ndarray:
-        spectrogram = generate_qtransform(
-            window,
-            qrange=tuple(qrange),
-            frange=tuple(representation["frequency_range_hz"]),
-            output_size=tuple(image_shape[:2]),
-            save_path=None,
-            cmap=cmap_name,
-        )
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=(
+                    r"upper frequency of .* Hz is too high for the given Q range, "
+                    r"resetting to .* Hz"
+                ),
+                category=UserWarning,
+                module=r"gwpy\.signal\.qtransform",
+            )
+            spectrogram = generate_qtransform(
+                window,
+                qrange=tuple(qrange),
+                frange=tuple(representation["frequency_range_hz"]),
+                output_size=tuple(image_shape[:2]),
+                save_path=None,
+                cmap=cmap_name,
+            )
         image = np.ascontiguousarray(
             (cmap(spectrogram)[:, :, :3] * 255).astype(np.uint8)
         )
