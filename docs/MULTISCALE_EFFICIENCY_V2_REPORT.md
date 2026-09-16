@@ -1,6 +1,6 @@
 # Multiscale efficiency v2: verified analysis report
 
-Run key: `27199d657f5a8e0ba5e6dd50754a51c3eb0b22817393a754e4569b3be470fbdb`
+Run key: `e456530b8bfc42efcb552497061f236f9d1b0f68f6f5a3997e9e20d26c654da9`
 
 ## Scope
 
@@ -44,14 +44,26 @@ Each entry is recovered/total for SNR 8, 12, 16, 24, 32, and 48. Full point esti
 | L1 | secondary_dsd_control | KoiFish | 0/40 | 0/40 | 0/40 | 0/40 | 2/40 | 5/40 |
 | L1 | secondary_dsd_control | WallOfLines | 0/40 | 0/40 | 0/40 | 0/40 | 0/40 | 0/40 |
 
-## WallOfLines limitation
+## Morphology-dependent primary sensitivity
 
-- H1 at SNR 32: primary recovery 0/40; maximum primary score 0.101625 versus threshold 0.212159; non-gating short-scale threshold exceedances 0.5s=0/40, 1s=1/40, 2s=0/40, 4s=0/40.
-- L1 at SNR 32: primary recovery 0/40; maximum primary score 0.116335 versus threshold 0.220344; non-gating short-scale threshold exceedances 0.5s=2/40, 1s=1/40, 2s=2/40, 4s=1/40.
+The primary curves are not uniformly SNR-responsive. `NoiseBlob` is flat in both detectors (1/100, 1/100, 1/100, 1/100, 1/100, 1/100 in H1 and 2/100, 2/100, 2/100, 2/100, 2/100, 2/100 in L1). At every SNR, the recovered identities are exactly the clean-control identities that were already above threshold. At SNR 48, the mean injected-minus-clean score is +0.000009 in H1 and -0.000010 in L1. Within this experiment, `NoiseBlob` therefore produces essentially no primary-score response across the tested dynamic range.
+
+`Whistle` has a mostly flat recovery count but not a flat representation score: the SNR-48 mean score increment is +0.069557 in H1 and +0.078621 in L1, while the median within-block score/SNR correlations are 0.850 and 0.859. The injected morphology is encoded increasingly strongly, but usually remains below the frozen p99 primary threshold. This is distinct from the `NoiseBlob` failure mode.
+
+`Blip` shows weak, late sensitivity rather than complete blindness: recovery stays near the clean-control baseline through SNR 24 and rises to 6/100 in H1 and 6/100 in L1 only at SNR 48. By contrast, `NarrowChirp` rises to 97/100 (H1) and 99/100 (L1), and `ScatteredLight` rises to 76/100 and 38/100. These positive controls show that the same frozen pipeline can produce rising efficiency curves; the flatness is morphology-dependent rather than a universal property of the injection study.
+
+## WallOfLines full-range limitation
+
 - H1 at SNR 48: primary recovery 0/40; maximum primary score 0.122647 versus threshold 0.212159; non-gating short-scale threshold exceedances 0.5s=0/40, 1s=1/40, 2s=0/40, 4s=0/40.
 - L1 at SNR 48: primary recovery 0/40; maximum primary score 0.180129 versus threshold 0.220344; non-gating short-scale threshold exceedances 0.5s=2/40, 1s=1/40, 2s=1/40, 4s=1/40.
 
-`WallOfLines` is thus characterized as systematically unrecovered by the primary endpoint at the tested high SNR values. A plausible hypothesis is that the Q-transform/DINO/VQ representation, designed around localized transient structure, can treat persistent or quasi-stationary spectral lines as background-like. The experiment does not establish that mechanism as the cause.
+`WallOfLines` is thus characterized as systematically unrecovered by the primary endpoint in both detectors at every tested SNR from 8 through 48 (0/40 in all 12 detector/SNR cells), not only at high SNR. It is substantially blind to this morphology over the tested dynamic range. A plausible hypothesis is that the Q-transform/DINO/VQ representation, designed around localized transient structure, can treat persistent or quasi-stationary spectral lines as background-like. The experiment does not establish that mechanism as the cause.
+
+## Injection-scaling audit
+
+The frozen ledger satisfies `amplitude_scale * unit_snr = target_snr` with a maximum absolute error of 7.105e-15. Every detector/role/morphology/raw-block group contains the complete six-point SNR grid, six distinct scaled-waveform hashes, and six distinct injected-raw hashes. A direct replay from the frozen clean raw window independently recomputed unit and scaled matched-filter SNR for one block per detector for `NoiseBlob`, `Whistle`, `Blip`, and `WallOfLines`: all eight paths reproduced all six targets with maximum absolute error 7.105e-15, zero unit-SNR relative error, and matching scaled-waveform hashes.
+
+These checks find no evidence that the flat curves arise from unchanged injections, incorrect amplitude scaling, or mislabeled target SNR. The remaining limitation lies after injection, in the interaction among preprocessing, representation, index, and the frozen detector-native threshold. This audit does not isolate a unique causal component.
 
 ## Uncertainty and audit boundary
 

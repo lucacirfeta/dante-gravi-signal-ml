@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "contract_id": "dante-multiscale-efficiency-v2-analysis",
-  "contract_digest": "39bafe2bfb30b844620c8b4040158a8318f4ea4175fdf97dc5d52cea381eeeaf",
+  "contract_digest": "99af56e0c8cf227e49d70ab6ce0589d1184759f7931d622bda0911857ae7abb7",
   "status": "APPROVED_BLOCK_BOOTSTRAP_ANALYSIS_INPUT",
   "authorization": {
     "authorized_on": "2026-09-16",
-    "decision": "apply fail-closed endpoint rules to primary and conditional binary responses, report endpoint prevalence explicitly, and characterize WallOfLines high-SNR non-recovery without claiming a proven mechanism"
+    "decision": "apply fail-closed endpoint rules, report conditional endpoint prevalence and morphology-dependent primary sensitivity, characterize full-range WallOfLines non-recovery, and audit flat-response SNR scaling without claiming a proven mechanism"
   },
   "runner_contract": {
     "path": "config/dante_multiscale_efficiency_v2_runner.json",
@@ -65,9 +65,23 @@
     },
     "endpoint_values_are_not_true_probability_claims": true
   },
+  "technical_replay": {
+    "path": "artifacts/dante_light/multiscale_efficiency_v2/flat_response_snr_replay.json",
+    "sha256": "001acc1c7eb0bc2f92ff88dd6d3092ea223995ae19be170491679faf00905bec",
+    "artifact_digest": "2cc8edb476ce055d1c3ded292c7214b34170e8ccda1a1da3d255b3512cb98812",
+    "summary": {
+      "row_total": 8,
+      "detectors": ["H1", "L1"],
+      "morphologies": ["Blip", "NoiseBlob", "WallOfLines", "Whistle"],
+      "maximum_absolute_snr_error": 7.105427357601002e-15,
+      "maximum_unit_snr_relative_error": 0.0,
+      "all_scaled_waveform_hashes_match": true
+    }
+  },
   "required_interpretation": {
     "report_conditional_endpoint_prevalence": true,
-    "wall_of_lines_high_snr_limitation": "characterized_empirical_limitation",
+    "report_primary_morphology_response": true,
+    "wall_of_lines_full_snr_range_limitation": "characterized_empirical_limitation",
     "representation_cause_status": "plausible_hypothesis_not_demonstrated",
     "scale_fusion_allowed": false,
     "rate_upper_limit_allowed": false
@@ -75,7 +89,7 @@
   "references": {
     "implementation": {
       "path": "src/pipeline_v3_multiscale/efficiency_v2_analysis.py",
-      "sha256": "03257086126c5429f5169e9eac982a834afd119fdb572b0b8ca44e3b0bc34928"
+      "sha256": "9445706bb7798b0b5d55cd8e0ff16adea8b3fd31f28a1e1d7a853da7df9723bf"
     },
     "cli": {
       "path": "scripts/analyze_multiscale_efficiency_v2.py",

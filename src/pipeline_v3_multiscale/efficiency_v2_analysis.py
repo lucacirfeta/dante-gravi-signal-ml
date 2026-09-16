@@ -161,7 +161,8 @@ def validate_analysis_contract(
     interpretation = value.get("required_interpretation", {})
     if (
         interpretation.get("report_conditional_endpoint_prevalence") is not True
-        or interpretation.get("wall_of_lines_high_snr_limitation")
+        or interpretation.get("report_primary_morphology_response") is not True
+        or interpretation.get("wall_of_lines_full_snr_range_limitation")
         != "characterized_empirical_limitation"
         or interpretation.get("representation_cause_status")
         != "plausible_hypothesis_not_demonstrated"
@@ -172,6 +173,7 @@ def validate_analysis_contract(
 
     for label, reference in value.get("references", {}).items():
         _assert_file_reference(root, reference, label)
+    _validate_technical_replay(value, root=root)
     return value
 
 
@@ -324,6 +326,190 @@ def _group_rows(
     return dict(grouped)
 
 
+def _validate_technical_replay(
+    contract: Mapping[str, Any], *, root: Path
+) -> None:
+    reference = contract.get("technical_replay", {})
+    _assert_file_reference(root, reference, "flat-response SNR replay")
+    path = root / str(reference.get("path", ""))
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    body = dict(evidence)
+    declared = body.pop("artifact_digest", None)
+    if declared != canonical_json_sha256(body):
+        raise ContractError("flat-response SNR replay artifact digest mismatch")
+    if (
+        evidence.get("status") != "PASS_FLAT_RESPONSE_SNR_SCALING_REPLAY"
+        or declared != reference.get("artifact_digest")
+        or evidence.get("summary") != reference.get("summary")
+        or evidence.get("target_snr") != [8, 12, 16, 24, 32, 48]
+        or len(evidence.get("rows", [])) != 8
+    ):
+        raise ContractError("flat-response SNR replay identity changed")
+    targets = [8, 12, 16, 24, 32, 48]
+    expected_paths = {
+        (detector, morphology)
+        for detector in ("H1", "L1")
+        for morphology in ("Blip", "NoiseBlob", "WallOfLines", "Whistle")
+    }
+    observed_paths = {
+        (str(row.get("detector")), str(row.get("morphology")))
+        for row in evidence["rows"]
+    }
+    if observed_paths != expected_paths:
+        raise ContractError("flat-response SNR replay coverage changed")
+    for row in evidence["rows"]:
+        expected_role = (
+            "secondary_dsd_control"
+            if row.get("morphology") == "WallOfLines"
+            else "primary_injection"
+        )
+        if (
+            row.get("role_index") != 0
+            or row.get("role") != expected_role
+            or len(row.get("achieved_snr", [])) != len(targets)
+            or float(row.get("unit_snr_relative_error", 1.0)) != 0.0
+            or float(row.get("maximum_absolute_snr_error", 1.0)) > 1e-12
+            or row.get("all_scaled_waveform_hashes_match") is not True
+        ):
+            raise ContractError("flat-response SNR replay failed closed")
+        if any(
+            abs(float(achieved) - target) > 1e-12
+            for achieved, target in zip(row["achieved_snr"], targets, strict=True)
+        ):
+            raise ContractError("flat-response SNR target was not reproduced")
+
+
+def _primary_response_diagnostics(
+    rows: Sequence[Mapping[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    target_grid = [8.0, 12.0, 16.0, 24.0, 32.0, 48.0]
+    groups: dict[tuple[str, str, str], list[Mapping[str, Any]]] = defaultdict(list)
+    block_groups: dict[
+        tuple[str, str, str, str], list[Mapping[str, Any]]
+    ] = defaultdict(list)
+    maximum_scale_identity_error = 0.0
+    for row in rows:
+        key = (str(row["detector"]), str(row["role"]), str(row["morphology"]))
+        groups[key].append(row)
+        block_groups[(*key, str(row["raw_source_sha256"]))].append(row)
+        maximum_scale_identity_error = max(
+            maximum_scale_identity_error,
+            abs(
+                float(row["amplitude_scale"]) * float(row["unit_snr"])
+                - float(row["target_snr"])
+            ),
+        )
+
+    all_complete = True
+    all_waveforms_unique = True
+    all_injected_raw_unique = True
+    for block_rows in block_groups.values():
+        targets = sorted(float(row["target_snr"]) for row in block_rows)
+        all_complete &= targets == target_grid
+        all_waveforms_unique &= (
+            len({str(row["scaled_waveform_sha256"]) for row in block_rows})
+            == len(target_grid)
+        )
+        all_injected_raw_unique &= (
+            len({str(row["injected_raw_context_sha256"]) for row in block_rows})
+            == len(target_grid)
+        )
+
+    diagnostics: list[dict[str, Any]] = []
+    for (detector, role, morphology), group in sorted(groups.items()):
+        by_snr: dict[float, list[Mapping[str, Any]]] = defaultdict(list)
+        by_block: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
+        for row in group:
+            by_snr[float(row["target_snr"])].append(row)
+            by_block[str(row["raw_source_sha256"])].append(row)
+        if sorted(by_snr) != target_grid:
+            raise ContractError("primary response SNR grid changed")
+
+        correlations: list[float] = []
+        for block_rows in by_block.values():
+            ordered = sorted(block_rows, key=lambda item: float(item["target_snr"]))
+            scores = np.asarray(
+                [
+                    float(row["endpoints"]["primary"]["injected_score"])
+                    for row in ordered
+                ],
+                dtype=float,
+            )
+            if float(np.std(scores)) > 0.0:
+                correlations.append(
+                    float(np.corrcoef(np.asarray(target_grid), scores)[0, 1])
+                )
+
+        cells = []
+        for target_snr in target_grid:
+            cell = by_snr[target_snr]
+            thresholds = {
+                float(row["endpoints"]["primary"]["threshold"]) for row in cell
+            }
+            if len(thresholds) != 1:
+                raise ContractError("primary threshold changed within diagnostic cell")
+            recovered = {
+                str(row["identity_digest"])
+                for row in cell
+                if bool(row["endpoints"]["primary"]["end_to_end_recovered"])
+            }
+            clean_above = {
+                str(row["identity_digest"])
+                for row in cell
+                if bool(row["endpoints"]["primary"]["clean_exceeds_threshold"])
+            }
+            injected_scores = np.asarray(
+                [float(row["endpoints"]["primary"]["injected_score"]) for row in cell]
+            )
+            clean_scores = np.asarray(
+                [float(row["endpoints"]["primary"]["clean_score"]) for row in cell]
+            )
+            cells.append(
+                {
+                    "target_snr": target_snr,
+                    "n_total": len(cell),
+                    "n_recovered": len(recovered),
+                    "n_clean_above_threshold": len(clean_above),
+                    "recovered_identities_equal_clean_above_threshold": recovered
+                    == clean_above,
+                    "threshold": thresholds.pop(),
+                    "mean_clean_score": float(clean_scores.mean()),
+                    "mean_injected_score": float(injected_scores.mean()),
+                    "mean_injected_minus_clean_score": float(
+                        (injected_scores - clean_scores).mean()
+                    ),
+                    "maximum_injected_score": float(injected_scores.max()),
+                }
+            )
+        diagnostics.append(
+            {
+                "detector": detector,
+                "role": role,
+                "morphology": morphology,
+                "median_within_block_score_snr_correlation": (
+                    float(np.median(correlations)) if correlations else None
+                ),
+                "cells": cells,
+            }
+        )
+
+    integrity = {
+        "maximum_amplitude_scale_times_unit_snr_error": float(
+            maximum_scale_identity_error
+        ),
+        "all_blocks_have_complete_snr_grid": bool(all_complete),
+        "all_blocks_have_six_unique_scaled_waveform_hashes": bool(
+            all_waveforms_unique
+        ),
+        "all_blocks_have_six_unique_injected_raw_hashes": bool(
+            all_injected_raw_unique
+        ),
+    }
+    if not all(integrity[key] for key in integrity if key.startswith("all_")):
+        raise ContractError("primary response injection identity audit failed")
+    return diagnostics, integrity
+
+
 def build_analysis_tables(
     rows: Sequence[Mapping[str, Any]],
     contract: Mapping[str, Any],
@@ -401,7 +587,7 @@ def build_analysis_tables(
                     }
                 )
 
-            if morphology == "WallOfLines" and target_snr in (32.0, 48.0):
+            if morphology == "WallOfLines":
                 primary_scores = [
                     float(row["endpoints"]["primary"]["injected_score"])
                     for row in ordered_rows
@@ -489,6 +675,9 @@ def build_analysis_tables(
                 ],
             }
         )
+    response_diagnostics, injection_identity_audit = _primary_response_diagnostics(
+        rows
+    )
     overview = {
         "primary_cells": len(primary_rows),
         "primary_status_counts": dict(
@@ -499,6 +688,9 @@ def build_analysis_tables(
             for role, counts in sorted(primary_by_role.items())
         },
         "primary_recovery_grid": primary_grid,
+        "primary_morphology_response": response_diagnostics,
+        "injection_identity_audit": injection_identity_audit,
+        "flat_response_snr_replay": dict(contract["technical_replay"]["summary"]),
         "conditional_cells": len(conditional_rows),
         "conditional_status_counts": dict(sorted(conditional_status.items())),
         "conditional_status_counts_by_scale": {
@@ -513,7 +705,7 @@ def build_analysis_tables(
         "conditional_interior_cells": defined - endpoints,
         "conditional_endpoint_cells": endpoints,
         "conditional_endpoint_fraction_of_defined": float(endpoints / defined),
-        "wall_of_lines_high_snr": sorted(
+        "wall_of_lines_full_snr_range": sorted(
             wall_rows, key=lambda row: (row["target_snr"], row["detector"])
         ),
     }
@@ -525,6 +717,20 @@ def render_report(summary: Mapping[str, Any]) -> str:
     endpoints = int(overview["conditional_endpoint_cells"])
     defined = int(overview["conditional_defined_cells"])
     percent = 100.0 * float(overview["conditional_endpoint_fraction_of_defined"])
+    response_lookup = {
+        (row["detector"], row["role"], row["morphology"]): row
+        for row in overview["primary_morphology_response"]
+    }
+
+    def _counts(detector: str, role: str, morphology: str) -> str:
+        row = response_lookup[(detector, role, morphology)]
+        return ", ".join(
+            f"{cell['n_recovered']}/{cell['n_total']}" for cell in row["cells"]
+        )
+
+    def _snr48(detector: str, role: str, morphology: str) -> Mapping[str, Any]:
+        row = response_lookup[(detector, role, morphology)]
+        return next(cell for cell in row["cells"] if cell["target_snr"] == 48.0)
     lines = [
         "# Multiscale efficiency v2: verified analysis report",
         "",
@@ -587,11 +793,50 @@ def render_report(summary: Mapping[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "## WallOfLines limitation",
+            "## Morphology-dependent primary sensitivity",
+            "",
+            "The primary curves are not uniformly SNR-responsive. `NoiseBlob` is flat in both "
+            f"detectors ({_counts('H1', 'primary_injection', 'NoiseBlob')} in H1 and "
+            f"{_counts('L1', 'primary_injection', 'NoiseBlob')} in L1). At every SNR, the "
+            "recovered identities are exactly the clean-control identities that were already "
+            "above threshold. At SNR 48, the mean injected-minus-clean score is "
+            f"{_snr48('H1', 'primary_injection', 'NoiseBlob')['mean_injected_minus_clean_score']:+.6f} "
+            "in H1 and "
+            f"{_snr48('L1', 'primary_injection', 'NoiseBlob')['mean_injected_minus_clean_score']:+.6f} "
+            "in L1. Within this experiment, `NoiseBlob` therefore produces essentially no "
+            "primary-score response across the tested dynamic range.",
+            "",
+            "`Whistle` has a mostly flat recovery count but not a flat representation score: "
+            f"the SNR-48 mean score increment is {_snr48('H1', 'primary_injection', 'Whistle')['mean_injected_minus_clean_score']:+.6f} "
+            f"in H1 and {_snr48('L1', 'primary_injection', 'Whistle')['mean_injected_minus_clean_score']:+.6f} "
+            "in L1, while the median within-block score/SNR correlations are "
+            f"{response_lookup[('H1', 'primary_injection', 'Whistle')]['median_within_block_score_snr_correlation']:.3f} "
+            f"and {response_lookup[('L1', 'primary_injection', 'Whistle')]['median_within_block_score_snr_correlation']:.3f}. "
+            "The injected morphology is encoded increasingly strongly, but usually remains "
+            "below the frozen p99 primary threshold. This is distinct from the `NoiseBlob` "
+            "failure mode.",
+            "",
+            "`Blip` shows weak, late sensitivity rather than complete blindness: recovery stays "
+            "near the clean-control baseline through SNR 24 and rises to "
+            f"{_snr48('H1', 'primary_injection', 'Blip')['n_recovered']}/100 in H1 and "
+            f"{_snr48('L1', 'primary_injection', 'Blip')['n_recovered']}/100 in L1 only at SNR 48. "
+            "By contrast, `NarrowChirp` rises to "
+            f"{_snr48('H1', 'primary_injection', 'NarrowChirp')['n_recovered']}/100 (H1) and "
+            f"{_snr48('L1', 'primary_injection', 'NarrowChirp')['n_recovered']}/100 (L1), and "
+            "`ScatteredLight` rises to "
+            f"{_snr48('H1', 'primary_injection', 'ScatteredLight')['n_recovered']}/100 and "
+            f"{_snr48('L1', 'primary_injection', 'ScatteredLight')['n_recovered']}/100. "
+            "These positive controls show that "
+            "the same frozen pipeline can produce rising efficiency curves; the flatness is "
+            "morphology-dependent rather than a universal property of the injection study.",
+            "",
+            "## WallOfLines full-range limitation",
             "",
         ]
     )
-    for row in overview["wall_of_lines_high_snr"]:
+    for row in overview["wall_of_lines_full_snr_range"]:
+        if row["target_snr"] != 48.0:
+            continue
         diagnostics = ", ".join(
             f"{scale}s={entry['n_exceeds_threshold']}/{entry['n_total']}"
             for scale, entry in row["short_scale_diagnostics"].items()
@@ -606,10 +851,30 @@ def render_report(summary: Mapping[str, Any]) -> str:
         [
             "",
             "`WallOfLines` is thus characterized as systematically unrecovered by the primary "
-            "endpoint at the tested high SNR values. A plausible hypothesis is that the "
+            "endpoint in both detectors at every tested SNR from 8 through 48 (0/40 in all "
+            "12 detector/SNR cells), not only at high SNR. It is substantially blind to this "
+            "morphology over the tested dynamic range. A plausible hypothesis is that the "
             "Q-transform/DINO/VQ representation, designed around localized transient structure, "
             "can treat persistent or quasi-stationary spectral lines as background-like. The "
             "experiment does not establish that mechanism as the cause.",
+            "",
+            "## Injection-scaling audit",
+            "",
+            "The frozen ledger satisfies `amplitude_scale * unit_snr = target_snr` with a maximum "
+            f"absolute error of {overview['injection_identity_audit']['maximum_amplitude_scale_times_unit_snr_error']:.3e}. "
+            "Every detector/role/morphology/raw-block group contains the complete six-point SNR "
+            "grid, six distinct scaled-waveform hashes, and six distinct injected-raw hashes. "
+            "A direct replay from the frozen clean raw window independently recomputed unit and "
+            "scaled matched-filter SNR for one block per detector for `NoiseBlob`, `Whistle`, "
+            "`Blip`, and `WallOfLines`: all eight paths reproduced all six targets with maximum "
+            f"absolute error {overview['flat_response_snr_replay']['maximum_absolute_snr_error']:.3e}, "
+            "zero unit-SNR relative error, and matching scaled-waveform hashes.",
+            "",
+            "These checks find no evidence that the flat curves arise from unchanged injections, "
+            "incorrect amplitude scaling, or mislabeled target SNR. The remaining limitation lies "
+            "after injection, in the interaction among preprocessing, representation, index, and "
+            "the frozen detector-native threshold. This audit does not isolate a unique causal "
+            "component.",
             "",
             "## Uncertainty and audit boundary",
             "",
@@ -661,6 +926,9 @@ def _summary_body(
             "rate_upper_limit_computed": False,
             "endpoint_values_are_true_probability_claims": False,
             "wall_of_lines_mechanism_proven": False,
+            "flat_response_snr_scaling_replay": "PASS",
+            "flat_response_unique_injected_raw_hashes": True,
+            "post_injection_failure_component_isolated": False,
         },
     }
 
@@ -780,6 +1048,9 @@ def verify_analysis_run(
         "rate_upper_limit_computed": False,
         "endpoint_values_are_true_probability_claims": False,
         "wall_of_lines_mechanism_proven": False,
+        "flat_response_snr_scaling_replay": "PASS",
+        "flat_response_unique_injected_raw_hashes": True,
+        "post_injection_failure_component_isolated": False,
     }:
         raise ContractError("multiscale analysis scientific boundary changed")
     return summary

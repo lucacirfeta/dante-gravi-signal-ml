@@ -38,6 +38,10 @@ def test_analysis_contract_accepts_checked_in_protocol() -> None:
     assert contract["boundary_policy"][
         "endpoint_values_are_not_true_probability_claims"
     ]
+    assert contract["required_interpretation"]["report_primary_morphology_response"]
+    assert contract["technical_replay"]["summary"][
+        "all_scaled_waveform_hashes_match"
+    ]
 
 
 def test_checked_in_analysis_evidence_is_self_consistent() -> None:
@@ -62,6 +66,13 @@ def test_checked_in_analysis_evidence_is_self_consistent() -> None:
     assert evidence["scientific_boundary"]["scale_or_fusion_applied"] is False
     assert evidence["scientific_boundary"]["rate_upper_limit_computed"] is False
     assert evidence["scientific_boundary"]["wall_of_lines_mechanism_proven"] is False
+    assert evidence["scientific_boundary"]["flat_response_snr_scaling_replay"] == "PASS"
+    assert evidence["primary_morphology_response"]["wall_of_lines_full_range"][
+        "zero_recovery_cells"
+    ] == 12
+    assert evidence["primary_morphology_response"]["noise_blob"][
+        "all_recovered_identities_equal_clean_above_threshold"
+    ]
 
 
 @pytest.mark.parametrize(
@@ -86,6 +97,12 @@ def test_checked_in_analysis_evidence_is_self_consistent() -> None:
                 scale_fusion_allowed=True
             ),
             "interpretation boundary",
+        ),
+        (
+            lambda value: value["technical_replay"]["summary"].update(
+                maximum_absolute_snr_error=1.0
+            ),
+            "flat-response SNR replay",
         ),
     ],
 )
