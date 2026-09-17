@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_CAUSAL_DIAGNOSTIC",
+  "artifact_digest": "b848bc3cc97442040ca2571d2b532ffda0dd81d66f192dfbe5adeb2585e17eb1",
+  "run_key": "b16e8d81f9f141566c56b7ceeceb1c8f1c6a5ad8b7948cfaa3426cbd61b8eba2",
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2_causal/causal_b16e8d81f9f141566c56b7ceeceb1c8f1c6a5ad8b7948cfaa3426cbd61b8eba2",
+  "external_summary_sha256": "d451e59125c313872af6387adf947ab28a90fd024f2c89d9a0dc9c08d90d76fd",
+  "external_artifact_digest": "3a64d685d3240f9a0afd1581cca351af6f720578fab93394a2c9024deab0e57a",
+  "contract_digest": "a4aeb9cdfc9a418786b555c21329c79ee0d85a3167b67edfa137d8d8aaba0fc9",
+  "injection_run_key": "b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+  "injection_artifact_digest": "9e0cbd9648c4cb4ca9a53b59ffb81fed4255850f1f82f7183a4c90ff0bb57161",
+  "selection": {
+    "outcome_blind": true,
+    "selected_clean_controls": 80,
+    "trace_rows": 1200,
+    "trace_cells": 60,
+    "raw_source_blocks_per_cell": 20
+  },
+  "replay": {
+    "all_primary_image_hashes_match": true,
+    "all_endpoints_match": true,
+    "maximum_score_absolute_delta": 1.1920928955078125e-07,
+    "score_absolute_tolerance": 2e-07
+  },
+  "trace_rows": {
+    "sha256": "b935ec96465915c0e2a73e77c1ca76dd14535956f6ad2619de12557199ffe053"
+  },
+  "trace_cells": {
+    "sha256": "1ef239f652df5ec87db797f6eb342078d38f8c4dcc295646a967a320c26007b0"
+  },
+  "stage_localization": {
+    "NarrowChirp": "POSITIVE_CONTROL_PROPAGATES_THROUGH_FULL_CHAIN",
+    "NoiseBlob": "EARLIEST_STRONG_ATTENUATION_AT_OR_BEFORE_32S_Q_REPRESENTATION",
+    "WallOfLines": "ATTENUATION_ACROSS_32S_REPRESENTATION_AND_VQ_TOP_K_SCORE",
+    "Whistle": "REPRESENTATION_RESPONDS_BUT_VQ_SCORE_MARGIN_REMAINS_INSUFFICIENT",
+    "Blip": "REPRESENTATION_CHANGES_COMPRESSED_BY_VQ_TOP_K_ENDPOINT"
+  },
+  "report": {
+    "path": "docs/MULTISCALE_EFFICIENCY_V2_CAUSAL_TRACE.md",
+    "sha256": "4e3001385648ea3d42b472339d3e28023120b96594e8542afc04f27e598cf432"
+  },
+  "scientific_boundary": {
+    "automatic_causal_label_assigned": false,
+    "unique_mechanism_proven": false,
+    "production_outputs_changed": false,
+    "index_changed": false,
+    "thresholds_changed": false,
+    "populations_changed": false,
+    "detectors_pooled": false,
+    "morphologies_pooled": false,
+    "O3_transfer_validity_established": false
+  },
+  "verification": {
+    "standalone_verifier": "PASS",
+    "focused_tests": "57 passed",
+    "ruff": "PASS"
+  }
+}

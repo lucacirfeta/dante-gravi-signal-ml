@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from src.dante_light.contracts import ContractError, canonical_json_sha256
+from src.pipeline_v3_multiscale.efficiency_v2 import sha256_file
 from src.pipeline_v3_multiscale.efficiency_v2_causal import (
     _diagnostic_trial_id,
     _run_key,
@@ -178,3 +179,23 @@ def test_diagnostic_identity_and_run_key_bind_frozen_inputs() -> None:
     baseline = _run_key(**arguments)
     changed = _run_key(**{**arguments, "runtime_environment_digest": "d" * 64})
     assert baseline != changed
+
+
+def test_checked_in_causal_evidence_is_hash_bound() -> None:
+    path = (
+        ROOT
+        / "artifacts/dante_light/multiscale_efficiency_v2/causal_diagnostic_summary.json"
+    )
+    summary = json.loads(path.read_text(encoding="utf-8"))
+    body = dict(summary)
+    declared = body.pop("artifact_digest")
+    assert declared == canonical_json_sha256(body)
+    assert summary["status"] == (
+        "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_CAUSAL_DIAGNOSTIC"
+    )
+    assert summary["selection"]["trace_rows"] == 1200
+    assert summary["selection"]["trace_cells"] == 60
+    report = ROOT / summary["report"]["path"]
+    assert sha256_file(report) == summary["report"]["sha256"]
+    assert summary["scientific_boundary"]["unique_mechanism_proven"] is False
+    assert summary["scientific_boundary"]["production_outputs_changed"] is False
