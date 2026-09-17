@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_CAUSAL_DIAGNOSTIC",
-  "artifact_digest": "b848bc3cc97442040ca2571d2b532ffda0dd81d66f192dfbe5adeb2585e17eb1",
+  "artifact_digest": "0bd49bea924ed5a3ece13f20950678b12f26905739711330d6d0a50abc871a02",
   "run_key": "b16e8d81f9f141566c56b7ceeceb1c8f1c6a5ad8b7948cfaa3426cbd61b8eba2",
   "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2_causal/causal_b16e8d81f9f141566c56b7ceeceb1c8f1c6a5ad8b7948cfaa3426cbd61b8eba2",
   "external_summary_sha256": "d451e59125c313872af6387adf947ab28a90fd024f2c89d9a0dc9c08d90d76fd",
@@ -37,7 +37,7 @@
   },
   "report": {
     "path": "docs/MULTISCALE_EFFICIENCY_V2_CAUSAL_TRACE.md",
-    "sha256": "4e3001385648ea3d42b472339d3e28023120b96594e8542afc04f27e598cf432"
+    "sha256": "bd351ea50152252c2746762c29cce213cfcc371c2cf64a06e809566623cd783e"
   },
   "scientific_boundary": {
     "automatic_causal_label_assigned": false,

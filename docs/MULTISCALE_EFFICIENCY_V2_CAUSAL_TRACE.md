@@ -1,7 +1,9 @@
 # Multiscale efficiency v2: causal stage trace
 
-**Status:** `PASS_MULTISCALE_EFFICIENCY_V2_CAUSAL_DIAGNOSTIC`  
-**Run key:** `b16e8d81f9f141566c56b7ceeceb1c8f1c6a5ad8b7948cfaa3426cbd61b8eba2`  
+**Status:** `PASS_MULTISCALE_EFFICIENCY_V2_CAUSAL_DIAGNOSTIC`
+
+**Run key:** `b16e8d81f9f141566c56b7ceeceb1c8f1c6a5ad8b7948cfaa3426cbd61b8eba2`
+
 **Contract:** `a4aeb9cdfc9a418786b555c21329c79ee0d85a3167b67edfa137d8d8aaba0fc9`
 
 ## Question and boundary
@@ -140,4 +142,3 @@ on the same paired blocks without changing the current result.
   `b935ec96465915c0e2a73e77c1ca76dd14535956f6ad2619de12557199ffe053`
 - Trace cells: 60, SHA-256
   `1ef239f652df5ec87db797f6eb342078d38f8c4dcc295646a967a320c26007b0`
-
