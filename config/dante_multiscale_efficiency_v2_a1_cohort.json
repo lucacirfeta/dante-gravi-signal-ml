@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-multiscale-efficiency-v2-a1-cohort",
+  "contract_digest": "83245a4cb80bb5f40187b7977e106911b5a9a8ba1c7dee3ce4f63b6d20cc460f",
+  "status": "APPROVED_OUTCOME_BLIND_A1_CONFIRMATION_COHORT",
+  "authorization": {
+    "authorized_on": "2026-09-18",
+    "decision": "freeze a raw-block-disjoint confirmatory A1 cohort with 1000 background, 100 primary-injection, and 40 secondary-control blocks per detector"
+  },
+  "parent_contract": {
+    "path": "config/dante_multiscale_efficiency_v2.json",
+    "sha256": "02844aa8cf2e10870f3494ae6e69b2d4b5e66c2753780d153f00c6830a292658",
+    "contract_digest": "2934f55f6b994adf07fc04205f403518fc3c4a2e009568a67d1ae6ed7bfc67ac"
+  },
+  "exploratory_cohort": {
+    "run_key": "a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad",
+    "artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+    "summary": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2/cohort_a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad/multiscale_efficiency_v2_cohort_summary.json",
+        "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2/cohort_a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad/multiscale_efficiency_v2_cohort_summary.json"
+      },
+      "sha256": "f2f1f506dd5c11a8cc7ddab0a28ef8913c641d6eaf8fec614b82a15bf3a8a08f"
+    },
+    "ledger": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2/cohort_a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad/multiscale_efficiency_v2_cohort.jsonl",
+        "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2/cohort_a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad/multiscale_efficiency_v2_cohort.jsonl"
+      },
+      "sha256": "f40ef657c172679f20fa54b8cd4af1fbd22bb7267b4ce00da058b86e57abc6ea"
+    }
+  },
+  "population": {
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "roles": {
+      "heldout_background": {
+        "source_blocks_per_detector": 1000
+      },
+      "heldout_primary_injection": {
+        "source_blocks_per_detector": 100,
+        "morphologies": [
+          "Blip",
+          "NarrowChirp",
+          "Whistle",
+          "ScatteredLight",
+          "NoiseBlob"
+        ],
+        "target_snr": [
+          8,
+          12,
+          16,
+          24,
+          32,
+          48
+        ]
+      },
+      "heldout_secondary_control": {
+        "source_blocks_per_detector": 40,
+        "morphologies": [
+          "HarmonicComb",
+          "WallOfLines",
+          "KoiFish"
+        ],
+        "target_snr": [
+          8,
+          12,
+          16,
+          24,
+          32,
+          48
+        ]
+      }
+    }
+  },
+  "selection": {
+    "algorithm": "sha256_role_block_then_identity_priority",
+    "role_allocation_order": [
+      "heldout_background",
+      "heldout_primary_injection",
+      "heldout_secondary_control"
+    ],
+    "selection_reads_identity_and_candidate_firewall_only": true,
+    "candidate_guard_is_cross_detector": true,
+    "candidate_start_guard_s": 128.0,
+    "within_role_minimum_separation_s": 96.0,
+    "single_raw_block_context_required": true,
+    "one_identity_per_raw_block": true,
+    "raw_block_roles_mutually_disjoint": true,
+    "canonical_index_blocks_excluded": true,
+    "canonical_calibration_blocks_excluded": true,
+    "complete_exploratory_cohort_blocks_excluded": true,
+    "raw_strain_or_model_opened_during_freeze": false
+  },
+  "expected_cardinality": {
+    "rows_per_detector": 1140,
+    "rows_total": 2280,
+    "unique_blocks_per_detector": 1140,
+    "unique_blocks_total": 2280
+  },
+  "external_inputs": {
+    "primary_scan_database": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/o4a_corrected_v2/primary_scan_5c19c3141fdc79bed75434362ffbbeb31fe36a99a4e64554482cb0023f0631bb/primary_scan.sqlite",
+        "wsl": "/mnt/e/dante_cache/dante_light/o4a_corrected_v2/primary_scan_5c19c3141fdc79bed75434362ffbbeb31fe36a99a4e64554482cb0023f0631bb/primary_scan.sqlite"
+      },
+      "sha256": "4b37a6a100b423e5b5a14f326d491ae311242cfa0914cee5c244415d42c5932c"
+    },
+    "native_index_manifest": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/index/native_index_750681d0e35f1a9f766e37e6d3b858280b903d50dbbc982458f0662c6553488b/native_index_consumption_manifest.json",
+        "wsl": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/index/native_index_750681d0e35f1a9f766e37e6d3b858280b903d50dbbc982458f0662c6553488b/native_index_consumption_manifest.json"
+      },
+      "sha256": "c60a48cfc777d43f364f375337718d5f9b01af1fa039e6e6b4cfad6e5aaa36e7"
+    },
+    "native_index_cohort_ledger": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/cohort/native_cohort_0b76b9852c825fe26344f6468ff464865f10471d8b289912680225d08b447397/native_cohort.jsonl",
+        "wsl": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/cohort/native_cohort_0b76b9852c825fe26344f6468ff464865f10471d8b289912680225d08b447397/native_cohort.jsonl"
+      },
+      "sha256": "358138d942267b73d5bbd95a8a0204b8dd2f260f1d2797e6cde2f6bd75252b46"
+    },
+    "native_calibration_ledger": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/native_calibration/native_calibration_152d077c0c2211b3d7574ad230e0a672e69027c1eaa220a9af20df9e5b7f7b4a/native_calibration_cohort.jsonl",
+        "wsl": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/native_calibration/native_calibration_152d077c0c2211b3d7574ad230e0a672e69027c1eaa220a9af20df9e5b7f7b4a/native_calibration_cohort.jsonl"
+      },
+      "sha256": "31438cd2d2df2014732467b99cf15dbcffd5f38cddf4784f1dc74fbe5ab47c00"
+    }
+  },
+  "references": {
+    "implementation": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_a1_cohort.py",
+      "sha256": "9321dc31168e14c793e8b850a0ee7ddf887d5692b8d7d9de4c2e984ba28c2bd8"
+    },
+    "cli": {
+      "path": "scripts/freeze_multiscale_efficiency_v2_a1_cohort.py",
+      "sha256": "ad8f185b6775b102e6653e309c7cf07042d8a21a06198fc7a49c7e59491a5759"
+    }
+  },
+  "scientific_boundary": {
+    "heldout_outcomes_opened": false,
+    "production_endpoint_changed": false,
+    "O3_transfer_validity_established": false,
+    "forbidden_fields": [
+      "primary_score",
+      "native_score",
+      "score",
+      "score_hex",
+      "threshold",
+      "threshold_lower",
+      "threshold_upper",
+      "class",
+      "robustness_class",
+      "taxonomy",
+      "taxonomy_family",
+      "disposition",
+      "detected",
+      "recovered"
+    ]
+  }
+}
