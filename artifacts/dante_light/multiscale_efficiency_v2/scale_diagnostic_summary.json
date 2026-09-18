@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_SCALE_DIAGNOSTIC",
+  "artifact_digest": "314876b6877e50e81b5e21025e1ed2887ef5011f94a116412fa3be19a5fbbbba",
+  "run_key": "10acd141618494ce87d26df5eb203378d8c5b96404681759833732c7adc05d99",
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2_scale_diagnostic/scale_diagnostic_10acd141618494ce87d26df5eb203378d8c5b96404681759833732c7adc05d99",
+  "external_summary_sha256": "289629e2a86d02ad048866282e7e1cbdc958c51e08383c836f8c05cf98a7db54",
+  "external_artifact_digest": "36f301f87160e300c48e53198f6e1290ce0f2648e33d1dbf97a3392433eadde1",
+  "contract_digest": "4ce74a1ea447f99eb157e55fb1c65a099ba92da8d73e07c5fff30273d422e63c",
+  "injection_run_key": "b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+  "injection_artifact_digest": "9e0cbd9648c4cb4ca9a53b59ffb81fed4255850f1f82f7183a4c90ff0bb57161",
+  "selection": {
+    "uses_all_frozen_blocks": true,
+    "selected_trial_rows": 5280,
+    "scale_cells": 240,
+    "trajectories": 40,
+    "paired_exceedance_boundary_cells": 133
+  },
+  "outputs": {
+    "scale_cells_sha256": "5cfa1b573b1d9dc3b813c024b65f1c3043a3161f2ff3332ad4d4436ec4793978",
+    "scale_trajectories_sha256": "1430e9a9f5b9a98a4514f0a2a20ecab70ac9c52cb84fdea41c126722f430d21a",
+    "external_report_sha256": "dba741bd58d0f5f5e6e0943c4015040bb2865c63835d9d66d536934394d952dd"
+  },
+  "snr_48_summary": {
+    "Blip": {
+      "injected_exceeds": 800,
+      "clean_exceeds": 6,
+      "trial_total": 800,
+      "mean_score_delta_range": [
+        0.16671176690608264,
+        0.2367076013982296
+      ],
+      "positive_ci_cells": 8,
+      "negative_ci_cells": 0
+    },
+    "NarrowChirp": {
+      "injected_exceeds": 800,
+      "clean_exceeds": 6,
+      "trial_total": 800,
+      "mean_score_delta_range": [
+        0.25850827813148497,
+        0.3254792733490467
+      ],
+      "positive_ci_cells": 8,
+      "negative_ci_cells": 0
+    },
+    "Whistle": {
+      "injected_exceeds": 800,
+      "clean_exceeds": 6,
+      "trial_total": 800,
+      "mean_score_delta_range": [
+        0.24316617086529732,
+        0.27409693252295253
+      ],
+      "positive_ci_cells": 8,
+      "negative_ci_cells": 0
+    },
+    "NoiseBlob": {
+      "injected_exceeds": 5,
+      "clean_exceeds": 6,
+      "trial_total": 800,
+      "mean_score_delta_range": [
+        -0.002787783406674862,
+        0.0017241572961211205
+      ],
+      "positive_ci_cells": 1,
+      "negative_ci_cells": 2
+    },
+    "WallOfLines": {
+      "injected_exceeds": 6,
+      "clean_exceeds": 6,
+      "trial_total": 320,
+      "mean_score_delta_range": [
+        -0.0017108754254877567,
+        0.002131112664937973
+      ],
+      "positive_ci_cells": 0,
+      "negative_ci_cells": 0
+    }
+  },
+  "interpretation": {
+    "Blip": "STRONG_SHORT_SCALE_RESPONSE_IN_BOTH_DETECTORS",
+    "NarrowChirp": "POSITIVE_CONTROL_RESPONDS_AT_ALL_SHORT_SCALES",
+    "Whistle": "STRONG_SHORT_SCALE_RESPONSE_IN_BOTH_DETECTORS",
+    "NoiseBlob": "NO_CONSISTENT_SHORT_SCALE_RESPONSE",
+    "WallOfLines": "NO_DETECTOR_CONSISTENT_SHORT_SCALE_RESPONSE"
+  },
+  "report": {
+    "path": "docs/MULTISCALE_EFFICIENCY_V2_SCALE_DIAGNOSTIC.md",
+    "sha256": "fea74863ec74da1086863fcfd7c4ac5a310816e4971dba1da042e10f8e5847a4"
+  },
+  "scientific_boundary": {
+    "primary_endpoint_changed": false,
+    "scale_or_fusion_applied": false,
+    "automatic_best_scale_selected": false,
+    "cross_scale_raw_score_comparison_performed": false,
+    "multiple_testing_significance_claimed": false,
+    "O3_transfer_validity_established": false
+  },
+  "verification": {
+    "standalone_verifier": "PASS",
+    "focused_tests": "70 passed",
+    "ruff": "PASS"
+  }
+}

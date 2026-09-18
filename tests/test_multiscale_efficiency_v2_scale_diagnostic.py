@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 
 import numpy as np
 import pytest
@@ -42,6 +43,28 @@ def test_scale_diagnostic_contract_accepts_checked_in_freeze() -> None:
     ]
     assert contract["metrics"]["scale_or_fusion_allowed"] is False
     assert contract["scientific_boundary"]["primary_endpoint_changed"] is False
+
+
+def test_checked_in_scale_diagnostic_evidence_is_self_consistent() -> None:
+    path = (
+        ROOT
+        / "artifacts/dante_light/multiscale_efficiency_v2"
+        / "scale_diagnostic_summary.json"
+    )
+    evidence = json.loads(path.read_text(encoding="utf-8"))
+    declared = evidence.pop("artifact_digest")
+    assert declared == canonical_json_sha256(evidence)
+    assert evidence["status"] == (
+        "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_SCALE_DIAGNOSTIC"
+    )
+    assert evidence["selection"]["selected_trial_rows"] == 5280
+    assert evidence["selection"]["scale_cells"] == 240
+    assert evidence["selection"]["trajectories"] == 40
+    assert evidence["snr_48_summary"]["Whistle"]["injected_exceeds"] == 800
+    assert evidence["snr_48_summary"]["NoiseBlob"]["injected_exceeds"] == 5
+    assert evidence["snr_48_summary"]["WallOfLines"]["injected_exceeds"] == 6
+    assert evidence["scientific_boundary"]["scale_or_fusion_applied"] is False
+    assert evidence["scientific_boundary"]["automatic_best_scale_selected"] is False
 
 
 @pytest.mark.parametrize(
