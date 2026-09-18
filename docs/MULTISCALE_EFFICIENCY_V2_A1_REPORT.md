@@ -52,7 +52,7 @@ The experiment therefore changed what is known about the system. It did not mere
 
 ## Direction
 
-Continue the research direction, but do not promote A1 to the production pipeline and do not transfer the result to O3 yet. The causal endpoint audit is complete: it identifies the frozen family-wise multiplicity penalty as the source of the `HarmonicComb` regression. Selecting a remedy is now a new scientific-design decision rather than a debugging task.
+Continue the research direction, but do not promote A1 to the production pipeline and do not transfer the result to O3 yet. The causal endpoint audit is complete: it identifies the frozen family-wise multiplicity penalty as the source of the `HarmonicComb` regression. The authorized A2 response is to preserve the native 32 s production decision and expose A1 only as a separate diagnostic channel; no unified decision or false-positive claim is formed.
 
 Any new fusion or gate designed to preserve native 32 s sensitivity while retaining A1 gains changes how the scientific decision is made. It requires an explicit, separately frozen choice before implementation and a new independent validation; it must not be selected by optimizing on this held-out cohort.
 

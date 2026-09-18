@@ -37,8 +37,33 @@ Freeze an explicit division or joint allocation of the 1% detector-wise error bu
 
 Keep the canonical native threshold and add a rescue gate only after explicitly authorizing a detector-wise global false-positive target above 1%. The complete union must then be calibrated and reported at that new target.
 
-## Gate status
+## Authorized decision
 
-`A2_SCIENTIFIC_DECISION_REQUIRED`
+On 2026-09-18 the author selected option A: `separate_diagnostic_channels`.
+The canonical detector-native 32 s decision remains the only production
+decision. The frozen A1 joint-max result is exposed only as a diagnostic
+follow-up field. It cannot override or promote a production candidate, and no
+OR-combined or unified 1% false-positive claim is emitted.
 
-No A2 decision logic should be implemented until one option is authorized. The recommended path is option A for the current release and evidence base. Option B is the appropriate later experiment if a single production decision is required and a fresh held-out cohort can be reserved.
+Gate status: `APPROVED_SEPARATE_DIAGNOSTIC_CHANNELS`.
+
+Option B remains the appropriate later experiment if a single production
+decision is required and a fresh held-out cohort can be reserved.
+
+## Verified implementation
+
+The frozen option-A projection completed with status
+`PASS_A2_SEPARATE_DIAGNOSTIC_CHANNELS` over all 7,440 paired injection rows.
+The production field is replayed exclusively from the detector-native 32 s
+decision; the diagnostic field is replayed independently from the verified A1
+joint maximum. No combined decision field is emitted.
+
+- Contract digest: `f14188a7e57d0914f5fb48b896fbe4ebe1a57e1b3febccfe79b478b6999c6d36`
+- Run key: `490f45d17c1699ecbde7685218f69a7737ae1140b8ef62c5cb7516f697d478a2`
+- Artifact digest: `fd12093c7209eba0392780b6c08aa9959ad317d6931b126f9d56a4a319115539`
+- Ledger SHA-256: `c85e3d67c07320da36966f65c7a6a568bb71e197c2c3aaef16cce6467383fd06`
+
+Across the simulation ledger, 596 trials satisfy the unchanged native
+production decision and 2,695 trigger the separate diagnostic channel. Their
+overlap is 499; 97 are production-only and 2,196 diagnostic-only. The latter
+remain follow-up evidence only and are not promoted to production candidates.
