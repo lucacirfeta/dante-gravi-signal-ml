@@ -1,0 +1,99 @@
+{
+  "audit_digest": "b2656b2c0f28bb74ecc30768b1c593da3f6ac3258027caf7f4a8290500b338ba",
+  "detectors": {
+    "H1": {
+      "calibration_capacity_multiple": 34.9934,
+      "calibration_pool_fraction": 0.02857681734269891,
+      "calibration_target_rows": 5000,
+      "capacity_gates_pass": true,
+      "cbc_cat1_livetime_s": 11218675,
+      "eligible_calibration_starts": 174967,
+      "eligible_scan_starts": 349925,
+      "greedy_index_capacity_at_required_separation": 116810,
+      "index_capacity_multiple": 180.54095826893354,
+      "index_pool_fraction": 0.005538909339953771,
+      "index_target_rows": 647,
+      "o3a_to_o4a_eligible_ratio": 0.8716701291842907,
+      "o4a_corrected_eligible_scan_starts": 401442
+    },
+    "L1": {
+      "calibration_capacity_multiple": 37.2982,
+      "calibration_pool_fraction": 0.026810945300309398,
+      "calibration_target_rows": 5000,
+      "capacity_gates_pass": true,
+      "cbc_cat1_livetime_s": 11956179,
+      "eligible_calibration_starts": 186491,
+      "eligible_scan_starts": 372986,
+      "greedy_index_capacity_at_required_separation": 124494,
+      "index_capacity_multiple": 192.41731066460588,
+      "index_pool_fraction": 0.005197037608238148,
+      "index_target_rows": 647,
+      "o3a_to_o4a_eligible_ratio": 0.9101459460382764,
+      "o4a_corrected_eligible_scan_starts": 409809
+    }
+  },
+  "dq_snapshot_digest": "4b8d8bb6e991641d250ba066614601d4dd37480363975d3fdee0043f30f73bb2",
+  "geometry": {
+    "analysis_duration_s": 32,
+    "calibration_alignment_s": 64,
+    "complete_symmetric_context_required": true,
+    "index_minimum_separation_s": 96,
+    "scan_alignment_s": 32,
+    "whitening_pad_s": 4
+  },
+  "interpretation_boundary": {
+    "does_not_guarantee_post_guard_population_completion": true,
+    "does_not_guarantee_realized_threshold_ci_width": true,
+    "establishes_geometric_capacity": true,
+    "execution_time_selection_must_fail_closed_on_shortfall": true,
+    "index_cardinality_is_architectural_parity_not_a_power_claim": true,
+    "new_post_hoc_ci_width_cutoff_introduced": false,
+    "preserves_nominal_p99_tail_count_and_block_count": true,
+    "realized_ci_must_be_finite_nondegenerate_and_contain_point": true
+  },
+  "nominal_statistical_and_representation_parity": {
+    "block_length_rows": 17,
+    "calibration_rows_per_detector": 5000,
+    "centroid_count": 1216,
+    "complete_non_overlapping_blocks": 294,
+    "exact_patch_token_total": 1771486,
+    "index_rows_total": 1294,
+    "matches_corrected_o4a_design": true,
+    "nominal_expected_upper_tail_observations": 50.0,
+    "patch_tokens_per_window": 1369,
+    "point_estimate_uses_all_rows": true,
+    "raw_embedding_sample_size": 50000,
+    "rows_excluded_from_complete_block_resampling": 2,
+    "score_percentile": 99,
+    "tokens_per_centroid": 1456.814144736842
+  },
+  "outcome_data_accessed": false,
+  "read_only_geometry_audit": true,
+  "reference_evidence": {
+    "corrected_o4a_native_index_contract": {
+      "path": "config/dante_o4a_corrected_native_index_v1.json",
+      "sha256": "4d63db624e7bb8abf25730b1981b85d48c3a520f298d3d4ecff13f99e49efbce"
+    },
+    "corrected_o4a_scan": {
+      "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_scan.json",
+      "sha256": "6660911a1082fa651a1143aaf8307f1f8942cbebc0b229fa702efa7686b9246f"
+    },
+    "freeze_entrypoint": {
+      "path": "scripts/freeze_dante_o3a_stage_contract.py",
+      "sha256": "4ae28d478f07ade203ea4477537499ed655f337ba989ae964d27f1adc47b2e07"
+    },
+    "scale_audit_implementation": {
+      "path": "src/dante_light/o3a_scale_adequacy.py",
+      "sha256": "8b39e180e7c190132fe6c8df30329750728cea17ee37b604b3774159f893b958"
+    }
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "stage_decision_gate": {
+    "gate_digest": "11818f625ca26945ec71a14c1e88505105b8c7c872f84d73e9a4e8284f118535",
+    "path": "config/dante_o3a_native_v1_stage_decision_gate.json",
+    "sha256": "e621f382e90f34a8200e53465f554854d3c2799b83cbebdb0800d28b3a93bb92"
+  },
+  "status": "PASS_METHOD_PARITY_SCALE_ADEQUATE",
+  "strain_data_accessed": false
+}

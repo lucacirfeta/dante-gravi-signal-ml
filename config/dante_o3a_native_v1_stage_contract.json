@@ -1,0 +1,93 @@
+{
+  "approval_date": "2026-09-19",
+  "author_decisions": {
+    "coincidence_interpretation": {
+      "global_significance_claim_allowed": false,
+      "partner_class_required": false,
+      "primary_role": "POOLED_NULL_EXCEEDANCES_ARE_DIAGNOSTIC_PEM_SHORTLIST_ONLY",
+      "robust_seed_asymmetric_partner_evaluation": true,
+      "time_slide_full_pipeline_null_required_for_global_claim": true
+    },
+    "initial_calibration_and_scan": {
+      "analysis_duration_s": 32,
+      "calibration_rows_per_detector": 5000,
+      "calibration_selection": "OUTCOME_BLIND_HASH_STRATIFIED_COMPLETE_RUN_BLOCKS",
+      "detectors": [
+        "H1",
+        "L1"
+      ],
+      "full_scan_grid": "GPS_MULTIPLE_OF_32_WITHIN_CBC_CAT1_AND_COMPLETE_CONTEXT",
+      "initial_reference_role": "O3B_K275_PRIMARY_SCAN_SEED_ONLY",
+      "primary_candidate_rule": "DETECTOR_SCORE_ABOVE_DETECTOR_SPECIFIC_P99",
+      "whitening_pad_s": 4,
+      "window_stride_s": 64
+    },
+    "native_index_architecture": {
+      "centroid_count": 1216,
+      "centroid_l2_normalization": true,
+      "compute_labels": false,
+      "embedding_dimension": 384,
+      "index_data_source": "FRESH_O3A_NATIVE_COHORT_ONLY",
+      "minibatch_kmeans_batch_size": 4096,
+      "minibatch_kmeans_n_init": "auto",
+      "random_seed": 42,
+      "raw_embedding_sample_l2_normalization": true,
+      "raw_embedding_sample_size": 50000
+    },
+    "native_threshold_statistics": {
+      "block_length_rows": 17,
+      "bootstrap_chunk_size": 500,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_seed": 42,
+      "bootstrap_unit": "COMPLETE_NON_OVERLAPPING_TEMPORAL_BLOCKS",
+      "classification_rule": "BACKGROUND_BELOW_CI_LOWER_ROBUST_ABOVE_CI_UPPER_AMBIGUOUS_OTHERWISE",
+      "confidence_percentiles": [
+        2.5,
+        97.5
+      ],
+      "detector_specific": true,
+      "native_calibration_rows_per_detector": 5000,
+      "point_percentile_uses_all_rows": true,
+      "score_percentile": 99
+    },
+    "population_firewall": {
+      "candidate_guard_cross_detector": true,
+      "candidate_guard_start_delta_s": 128,
+      "complete_symmetric_context_required": true,
+      "index_cohort_rows_per_detector": 647,
+      "index_same_detector_minimum_separation_s": 96,
+      "native_calibration_guard_interval_gap_s": 96,
+      "native_calibration_guard_start_delta_s": 128,
+      "selection_priority": "SHA256_CONTRACT_DETECTOR_GPS",
+      "selection_reads_scores_or_classes": false,
+      "validation_population_disjoint": true
+    }
+  },
+  "contract_digest": "fb29f22ffc5a796843383d6ed48032879b1b44252b46a93163e7db2eec157a7d",
+  "execution_boundary": {
+    "full_scan_allowed": false,
+    "next_gate": "freeze and verify disjoint outcome-blind O3a population identity manifests before any strain access",
+    "outcome_blind_identity_manifest_preparation_allowed": true,
+    "public_dq_metadata_use_allowed": true,
+    "scoring_allowed": false,
+    "strain_access_allowed": false,
+    "threshold_fitting_allowed": false
+  },
+  "historical_unresolved_gate_preserved": true,
+  "methodological_parity": {
+    "architecture_and_statistics_preserved": true,
+    "fresh_o3a_populations_required": true,
+    "o4a_scientific_rows_or_outputs_imported": false,
+    "post_hoc_o3a_hyperparameter_tuning_allowed": false
+  },
+  "run": "O3A",
+  "scale_adequacy": {
+    "audit_digest": "b2656b2c0f28bb74ecc30768b1c593da3f6ac3258027caf7f4a8290500b338ba",
+    "path": "artifacts/dante_light/o3a_native_v1/o3a_scale_adequacy.json",
+    "sha256": "c7616e9371ed3932603947bedf5e4469c28f0a99dc72c0c94ae9b1236451465c",
+    "status": "PASS_METHOD_PARITY_SCALE_ADEQUATE"
+  },
+  "schema_version": 1,
+  "source_gate_digest": "11818f625ca26945ec71a14c1e88505105b8c7c872f84d73e9a4e8284f118535",
+  "status": "AUTHOR_APPROVED_METHOD_PARITY_STAGE_CONTRACT"
+}

@@ -282,6 +282,7 @@ docs/*
 !docs/DANTE_JOSS_READINESS_IMPLEMENTATION_PLAN_2026-09-09.md
 !docs/DANTE_JOSS_PACKAGING_AUDIT_2026-09-09.md
 !docs/DANTE_WORKFLOW_INSTALLATION.md
+!docs/O3A_SCALE_ADEQUACY_AND_STAGE_FREEZE_2026-09-19.md
 !docs/DANTE_JOSS_J3_REPRODUCTION_REHEARSAL_2026-09-09.md
 !docs/DANTE_JOSS_EXTERNAL_REPRODUCTION_CHECKLIST.md
 runs/
@@ -329,6 +330,7 @@ scripts/*
 !scripts/audit_dante_o3a_transfer_readiness.py
 !scripts/freeze_dante_o3a_native_v1.py
 !scripts/freeze_dante_o3a_dq_snapshot.py
+!scripts/freeze_dante_o3a_stage_contract.py
 !scripts/build_o4a_provenance_release_bundle.py
 !scripts/audit_dante_light_v8_1_phase0.py
 !scripts/manage_dante_light_v8_1_review_telemetry.py
