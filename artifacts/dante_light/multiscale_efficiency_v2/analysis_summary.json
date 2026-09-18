@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_ANALYSIS",
+  "artifact_digest": "59bd82937e59ff2c80d365c0d8e1174f3cae92bae91412f197b3c6a955b9bd83",
+  "run_key": "e456530b8bfc42efcb552497061f236f9d1b0f68f6f5a3997e9e20d26c654da9",
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2/analysis_e456530b8bfc42efcb552497061f236f9d1b0f68f6f5a3997e9e20d26c654da9",
+  "external_summary_sha256": "6646bda14687fa7f24b075265e051fdb5591b22c71abdc7905400e0d4cfd316f",
+  "external_artifact_digest": "6824fa2f9f08a3d0135ad64428edd80307c2d5928aa83b70c3a516b0fc2c02cc",
+  "analysis_contract_digest": "99af56e0c8cf227e49d70ab6ce0589d1184759f7931d622bda0911857ae7abb7",
+  "injection_run_key": "b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+  "injection_artifact_digest": "9e0cbd9648c4cb4ca9a53b59ffb81fed4255850f1f82f7183a4c90ff0bb57161",
+  "primary_efficiency": {
+    "row_total": 96,
+    "sha256": "40187ed1cb8c84ffe480ae0327a4d1a3fb875aa5a14be85fa8c8b8ed27085d98",
+    "zero_recovery_cells": 27,
+    "interior_cells_with_ci": 69
+  },
+  "conditional_response": {
+    "row_total": 384,
+    "sha256": "4c860c2c95e05b9696c2300d8480ae3fb0470863ddc3b851627de07a567afae1",
+    "undefined_no_primary_cells": 108,
+    "defined_cells": 276,
+    "observed_zero_cells": 140,
+    "observed_one_cells": 110,
+    "interior_cells": 26,
+    "interior_cells_with_ci": 18,
+    "interior_cells_fail_closed": 8,
+    "endpoint_fraction_of_defined": 0.9057971014492754
+  },
+  "report": {
+    "path": "docs/MULTISCALE_EFFICIENCY_V2_REPORT.md",
+    "sha256": "05e67490e58102136364e902d74f9f43ac708a443a518e727e9d2f11ab42a9f2"
+  },
+  "primary_morphology_response": {
+    "wall_of_lines_full_range": {
+      "snr_values": [8, 12, 16, 24, 32, 48],
+      "detector_snr_cells": 12,
+      "zero_recovery_cells": 12,
+      "primary_recovered_per_detector_cell": 0,
+      "trials_per_detector_cell": 40,
+      "status": "CHARACTERIZED_FULL_RANGE_EMPIRICAL_LIMITATION_CAUSE_NOT_PROVEN"
+    },
+    "noise_blob": {
+      "h1_recovered_per_snr": [1, 1, 1, 1, 1, 1],
+      "l1_recovered_per_snr": [2, 2, 2, 2, 2, 2],
+      "all_recovered_identities_equal_clean_above_threshold": true,
+      "h1_snr48_mean_injected_minus_clean_score": 9.403787553310394e-06,
+      "l1_snr48_mean_injected_minus_clean_score": -1.0448284447193146e-05,
+      "status": "ESSENTIALLY_NO_PRIMARY_SCORE_RESPONSE"
+    },
+    "whistle": {
+      "h1_recovered_per_snr": [1, 1, 1, 1, 1, 1],
+      "l1_recovered_per_snr": [2, 2, 2, 2, 2, 4],
+      "h1_snr48_mean_injected_minus_clean_score": 0.06955723494291305,
+      "l1_snr48_mean_injected_minus_clean_score": 0.07862053673714399,
+      "h1_median_score_snr_correlation": 0.8501087927155662,
+      "l1_median_score_snr_correlation": 0.8591464954765267,
+      "status": "SCORE_RESPONDS_BUT_MOSTLY_BELOW_FROZEN_THRESHOLD"
+    },
+    "blip": {
+      "h1_recovered_per_snr": [1, 1, 1, 1, 2, 6],
+      "l1_recovered_per_snr": [2, 2, 2, 2, 2, 6],
+      "status": "WEAK_LATE_PRIMARY_SENSITIVITY"
+    }
+  },
+  "injection_scaling_audit": {
+    "ledger_maximum_absolute_snr_error": 7.105427357601002e-15,
+    "all_blocks_have_complete_snr_grid": true,
+    "all_blocks_have_six_unique_scaled_waveform_hashes": true,
+    "all_blocks_have_six_unique_injected_raw_hashes": true,
+    "direct_replay_rows": 8,
+    "direct_replay_maximum_absolute_snr_error": 7.105427357601002e-15,
+    "direct_replay_all_scaled_waveform_hashes_match": true,
+    "status": "PASS_NO_SCALING_OR_UNCHANGED_INJECTION_DEFECT_FOUND"
+  },
+  "wall_of_lines_snr48": {
+    "trials_per_detector_cell": 40,
+    "h1_snr48_max_score": 0.12264658510684967,
+    "h1_threshold": 0.2121588587760954,
+    "l1_snr48_max_score": 0.18012914061546326,
+    "l1_threshold": 0.2203438572585587,
+    "status": "BELOW_THRESHOLD_IN_BOTH_DETECTORS"
+  },
+  "scientific_boundary": {
+    "bootstrap_unit": "raw_source_block",
+    "bootstrap_resamples": 2000,
+    "detectors_pooled": false,
+    "morphology_tiers_pooled": false,
+    "scale_or_fusion_applied": false,
+    "rate_upper_limit_computed": false,
+    "endpoint_values_are_true_probability_claims": false,
+    "wall_of_lines_mechanism_proven": false,
+    "flat_response_snr_scaling_replay": "PASS",
+    "flat_response_unique_injected_raw_hashes": true,
+    "post_injection_failure_component_isolated": false
+  },
+  "verification": {
+    "standalone_verifier": "PASS",
+    "windows_focused_tests": "46 passed",
+    "wsl_focused_tests": "46 passed",
+    "ruff": "PASS"
+  }
+}

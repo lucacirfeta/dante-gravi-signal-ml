@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-multiscale-efficiency-v2-a2",
+  "contract_digest": "f14188a7e57d0914f5fb48b896fbe4ebe1a57e1b3febccfe79b478b6999c6d36",
+  "status": "APPROVED_SEPARATE_DIAGNOSTIC_CHANNELS",
+  "authorization": {
+    "authorized_on": "2026-09-18",
+    "decision": "option_1_separate_diagnostic_channels"
+  },
+  "repository_inputs": {
+    "a1_contract": {
+      "path": "config/dante_multiscale_efficiency_v2_a1.json",
+      "sha256": "972fbdc0b405319b7d4540067e5e56aff9f393ba6728479241e44639a4dc0c25"
+    },
+    "a2_feasibility": {
+      "path": "artifacts/dante_light/multiscale_efficiency_v2_a1/a2_feasibility_summary.json",
+      "sha256": "dac9e0f434f06cbbfa231459591983126938607b851ad36d8febf0f9adf738f8"
+    }
+  },
+  "frozen_inputs": {
+    "heldout_run_key": "795421d5a276b56fc64254e355a00f1c8edbc45e5469e5c560104beef5655f38",
+    "heldout_artifact_digest": "3db030229c570d1f9c001c4cec7a0846f41a11ab6a8061760c6c1b9ecc1d6074",
+    "joint_null_run_key": "50dfe6fa0751019105d0ab3f194cd5fb6b2b16667d7f516443769dce11bddd6c",
+    "joint_null_artifact_digest": "58439373d5005794f3967b605acc1ca9dec9218432b205182429ae0b2478e66d"
+  },
+  "channels": {
+    "production": {
+      "name": "detector_native_32s",
+      "source_field": "baseline_32_recovered",
+      "threshold_field": "baseline_32_threshold",
+      "score_field": "scores.primary_32",
+      "threshold_changed": false,
+      "decision_authority": true
+    },
+    "diagnostic": {
+      "name": "multiscale_a1_joint_max",
+      "source_field": "a1_recovered",
+      "threshold_field": "joint_threshold",
+      "score_field": "joint_surprise",
+      "threshold_changed": false,
+      "decision_authority": false
+    }
+  },
+  "combination_policy": {
+    "logical_or_allowed": false,
+    "diagnostic_may_override_production": false,
+    "diagnostic_may_promote_candidate": false,
+    "unified_false_positive_claim_allowed": false,
+    "production_output_equals_native_32s": true
+  },
+  "references": {
+    "implementation": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_a2_channels.py",
+      "sha256": "c1671e98bba2026ac85cda2dedbdfc712ea850926f34623a55245b5c82d91517"
+    },
+    "cli": {
+      "path": "scripts/run_multiscale_efficiency_v2_a2.py",
+      "sha256": "1083d9b833936a4b16b6c39b5fdc592ec86d69da02a69b8e69b84cd2ddcd2676"
+    }
+  },
+  "scientific_boundary": {
+    "new_thresholds_fit": false,
+    "heldout_used_for_tuning": false,
+    "production_endpoint_changed": false,
+    "global_detection_significance_established": false,
+    "o3_transfer_validity_established": false,
+    "interpretation": "separate simulation-specific diagnostic channel"
+  }
+}

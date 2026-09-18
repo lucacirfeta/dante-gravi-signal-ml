@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-multiscale-efficiency-v2-runner",
+  "contract_digest": "9c1b8f7a3ac46f274b40f47b05e862863823b051b4112df70cf9c34c1def773e",
+  "status": "APPROVED_PAIRED_INJECTION_INPUT",
+  "authorization": {
+    "authorized_on": "2026-09-16",
+    "decision": "freeze waveform durations, centered raw-strain injection, paired clean SNR reference, deterministic waveform seeds, and no scale OR fusion"
+  },
+  "parent_contract": {
+    "path": "config/dante_multiscale_efficiency_v2.json",
+    "sha256": "02844aa8cf2e10870f3494ae6e69b2d4b5e66c2753780d153f00c6830a292658",
+    "contract_digest": "2934f55f6b994adf07fc04205f403518fc3c4a2e009568a67d1ae6ed7bfc67ac"
+  },
+  "reference_contract": {
+    "path": "config/dante_multiscale_efficiency_v2_reference.json",
+    "sha256": "4982754d5f12aceea8d2290ca82f3f097bd55805e75d01a100092cf01db3b8c6",
+    "contract_digest": "ba7576bb4e31c068a51be73c4375dadedb2489265d634baf69865196be33ac94"
+  },
+  "waveform": {
+    "generator": "src.core.injection.SyntheticGlitchGenerator",
+    "duration_s_by_morphology": {
+      "Blip": 1.0,
+      "NarrowChirp": 1.0,
+      "Whistle": 1.0,
+      "ScatteredLight": 2.0,
+      "NoiseBlob": 4.0,
+      "HarmonicComb": 4.0,
+      "WallOfLines": 4.0,
+      "KoiFish": 1.0
+    },
+    "injection_alignment": "center_of_32s_analysis_window",
+    "injection_domain": "raw_strain_before_whitening",
+    "snr_reference": "paired_clean_raw_32s_window",
+    "snr_scaling": "linear_target_over_unit_matched_filter_snr",
+    "seed_algorithm": "sha256(contract+detector+raw_block+morphology+identity)_uint32_be",
+    "seed_reused_across_target_snr": true
+  },
+  "paired_design": {
+    "same_backgrounds_across_morphologies": true,
+    "same_backgrounds_across_target_snr": true,
+    "clean_control_scored_once_per_background": true,
+    "primary_source_blocks_per_detector": 100,
+    "secondary_source_blocks_per_detector": 40,
+    "expected_clean_controls": 280,
+    "expected_primary_trials": 6000,
+    "expected_secondary_trials": 1440,
+    "expected_total_trials": 7440
+  },
+  "endpoints": {
+    "primary_decision": "injected_32s_score_gt_detector_native_p99",
+    "clean_primary_flag_is_recorded_not_subtracted": true,
+    "conditional_eligibility": "primary_recovered",
+    "conditional_scale_scores_computed_for_all_trials": true,
+    "conditional_response_is_null_when_ineligible": true,
+    "scale_or_fusion_allowed": false,
+    "paired_clean_control_required": true,
+    "rate_upper_limit_allowed": false,
+    "global_significance_claim_allowed": false
+  },
+  "execution": {
+    "canonical_environment": "WSL_CUDA",
+    "atomic_chunk_unit": "background_plus_morphology_all_target_snr",
+    "verified_chunk_resume_only": true,
+    "runtime_environment_in_run_key": true,
+    "raw_source_sha256_replay_required": true,
+    "large_ledgers_committed_to_git": false,
+    "compact_summaries_committed_to_git": true
+  },
+  "frozen_inputs": {
+    "cohort": {
+      "run_key": "a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad",
+      "artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+      "compact_summary_path": "artifacts/dante_light/multiscale_efficiency_v2/cohort_freeze_summary.json",
+      "compact_summary_sha256": "13656ea72912adafd5452cba52313ffa2f378b30d2ec598f29dab185719042b1"
+    },
+    "reference_build": {
+      "run_key": "3e1eb87a2eed3347b3b78ed99491b416cf27cde1bece0c0e84cd0abd38ba8d47",
+      "artifact_digest": "ea343480c2619cda117b3d632bc7c44296ae00ea99707c4cdc2ef2c1a5342905",
+      "compact_summary_path": "artifacts/dante_light/multiscale_efficiency_v2/reference_build_summary.json",
+      "compact_summary_sha256": "021aff3b9984ffc9ba8499327c5a28b56a11c4148752d90f65e5a2370899fce4"
+    },
+    "canonical_native_index": {
+      "sha256": "9b84880cfa9b168ec0a448ca71c8b12f9e1e120bd48c8c250754197f357c9052",
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/index/native_index_750681d0e35f1a9f766e37e6d3b858280b903d50dbbc982458f0662c6553488b/patch_compressed_index_o4a_q4-64_detector_aware_v1.npz",
+        "wsl": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/index/native_index_750681d0e35f1a9f766e37e6d3b858280b903d50dbbc982458f0662c6553488b/patch_compressed_index_o4a_q4-64_detector_aware_v1.npz"
+      }
+    },
+    "canonical_native_thresholds": {
+      "sha256": "a491e42dc6973bedfe06b4c41940c27a815b4a97e77c3926b526122af67c3b78",
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/thresholds/native_thresholds_b6fae7d8534e08c0f84889a8734e12b7ecc3801d52f1f700594765684c33eb77/native_thresholds_summary.json",
+        "wsl": "/mnt/e/dante_cache/dante_light/o4a_canonical_provenance_rerun_v1/thresholds/native_thresholds_b6fae7d8534e08c0f84889a8734e12b7ecc3801d52f1f700594765684c33eb77/native_thresholds_summary.json"
+      }
+    }
+  },
+  "references": {
+    "implementation": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_runner.py",
+      "sha256": "d2f664ea315d14be1d1099546a4745a5a050571612e7d75f7f017b60ad8ecfae"
+    },
+    "cli": {
+      "path": "scripts/run_multiscale_efficiency_v2.py",
+      "sha256": "173d53eabb2567cdb3852bcaa2f05ae070354d789a00aac1e0a7e2c321c1793c"
+    },
+    "injection_source": {
+      "path": "src/core/injection.py",
+      "sha256": "6c2c5f64e5328936f1d7e1a9131b76796fea0bac948a342c863fce4934c78998"
+    }
+  },
+  "scientific_boundary": {
+    "simulation_specific_efficiency_only": true,
+    "legacy_july_2026_artifacts_consumed": false,
+    "scale_fusion_performed": false,
+    "rate_upper_limit_computed": false,
+    "does_not_establish": [
+      "astrophysical_population_efficiency",
+      "morphology_rate_upper_limit",
+      "global_detection_significance",
+      "O3_transfer_validity"
+    ]
+  }
+}

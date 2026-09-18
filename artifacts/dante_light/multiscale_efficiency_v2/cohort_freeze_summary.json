@@ -1,0 +1,37 @@
+{
+  "artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+  "canonical_forbidden_raw_blocks": 1813,
+  "contract_digest": "2934f55f6b994adf07fc04205f403518fc3c4a2e009568a67d1ae6ed7bfc67ac",
+  "contract_sha256": "02844aa8cf2e10870f3494ae6e69b2d4b5e66c2753780d153f00c6830a292658",
+  "detectors": {
+    "H1": {
+      "candidate_guard_rejections": 55421,
+      "canonical_block_rejections": 98048,
+      "roles": {
+        "primary_injection": {"selected_blocks": 100, "selected_rows": 100},
+        "secondary_dsd_control": {"selected_blocks": 40, "selected_rows": 40},
+        "short_scale_calibration": {"selected_blocks": 175, "selected_rows": 5000},
+        "short_scale_index": {"selected_blocks": 500, "selected_rows": 500}
+      },
+      "single_block_context_rejections": 3631
+    },
+    "L1": {
+      "candidate_guard_rejections": 57708,
+      "canonical_block_rejections": 99556,
+      "roles": {
+        "primary_injection": {"selected_blocks": 100, "selected_rows": 100},
+        "secondary_dsd_control": {"selected_blocks": 40, "selected_rows": 40},
+        "short_scale_calibration": {"selected_blocks": 173, "selected_rows": 5000},
+        "short_scale_index": {"selected_blocks": 500, "selected_rows": 500}
+      },
+      "single_block_context_rejections": 3785
+    }
+  },
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2/cohort_a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad",
+  "external_summary_sha256": "f2f1f506dd5c11a8cc7ddab0a28ef8913c641d6eaf8fec614b82a15bf3a8a08f",
+  "ledger_row_count": 11280,
+  "ledger_sha256": "f40ef657c172679f20fa54b8cd4af1fbd22bb7267b4ce00da058b86e57abc6ea",
+  "run_key": "a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad",
+  "schema_version": 1,
+  "status": "PASS_FROZEN_MULTISCALE_EFFICIENCY_V2_COHORT"
+}

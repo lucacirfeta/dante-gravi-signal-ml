@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "status": "PASS_A2_SEPARATE_DIAGNOSTIC_CHANNELS",
+  "artifact_digest": "888279651bdbb90f1c283b2d01e89f67ea4ef69e058edfd7cf8e073e44b410dc",
+  "contract_digest": "f14188a7e57d0914f5fb48b896fbe4ebe1a57e1b3febccfe79b478b6999c6d36",
+  "run_key": "490f45d17c1699ecbde7685218f69a7737ae1140b8ef62c5cb7516f697d478a2",
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2_a2/separate_channels_490f45d17c1699ecbde7685218f69a7737ae1140b8ef62c5cb7516f697d478a2",
+  "external_summary_sha256": "ea53ae53e773a28cad6095c291a2fbc34bc7a988346f2aeb160e925601021ffc",
+  "external_artifact_digest": "fd12093c7209eba0392780b6c08aa9959ad317d6931b126f9d56a4a319115539",
+  "ledger": {
+    "rows": 7440,
+    "sha256": "c85e3d67c07320da36966f65c7a6a568bb71e197c2c3aaef16cce6467383fd06"
+  },
+  "aggregate_counts": {
+    "production_recovered": 596,
+    "diagnostic_triggered": 2695,
+    "both": 499,
+    "production_only": 97,
+    "diagnostic_only": 2196
+  },
+  "separation_invariants": {
+    "production_decision_source": "detector_native_32s_only",
+    "diagnostic_decision_authority": false,
+    "combined_decision_emitted": false,
+    "production_threshold_changed": false,
+    "diagnostic_threshold_changed": false
+  },
+  "scientific_boundary": {
+    "new_thresholds_fit": false,
+    "heldout_used_for_tuning": false,
+    "production_endpoint_changed": false,
+    "global_detection_significance_established": false,
+    "o3_transfer_validity_established": false,
+    "interpretation": "separate simulation-specific diagnostic channel"
+  }
+}

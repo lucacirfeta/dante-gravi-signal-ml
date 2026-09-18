@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-multiscale-efficiency-v2-reference",
+  "contract_digest": "ba7576bb4e31c068a51be73c4375dadedb2489265d634baf69865196be33ac94",
+  "status": "APPROVED_REFERENCE_BUILD_INPUT",
+  "parent_contract": {
+    "path": "config/dante_multiscale_efficiency_v2.json",
+    "sha256": "02844aa8cf2e10870f3494ae6e69b2d4b5e66c2753780d153f00c6830a292658",
+    "contract_digest": "2934f55f6b994adf07fc04205f403518fc3c4a2e009568a67d1ae6ed7bfc67ac"
+  },
+  "cohort": {
+    "run_key": "a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad",
+    "artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+    "summary_sha256": "f2f1f506dd5c11a8cc7ddab0a28ef8913c641d6eaf8fec614b82a15bf3a8a08f",
+    "ledger_sha256": "f40ef657c172679f20fa54b8cd4af1fbd22bb7267b4ce00da058b86e57abc6ea",
+    "row_total": 11280,
+    "status": "PASS_FROZEN_MULTISCALE_EFFICIENCY_V2_COHORT"
+  },
+  "execution": {
+    "canonical_environment": "WSL_CUDA",
+    "raw_root_by_environment": {
+      "windows": "E:/o4a",
+      "wsl": "/mnt/e/o4a"
+    },
+    "output_root_by_environment": {
+      "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2",
+      "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2"
+    },
+    "raw_source_sha256_replay_required": true,
+    "atomic_outputs_only": true,
+    "partial_output_reuse_allowed": false,
+    "runtime_environment_in_run_key": true
+  },
+  "gates": {
+    "index_rows_per_detector": 500,
+    "calibration_rows_per_detector": 5000,
+    "scales": [0.5, 1.0, 2.0, 4.0],
+    "centroids_per_detector_scale": 275,
+    "scores_per_detector_scale": 5000,
+    "bootstrap_replicates": 2000,
+    "bootstrap_confidence": 0.95,
+    "bootstrap_unit": "raw_source_block",
+    "detectors_pooled": false,
+    "scales_pooled": false,
+    "legacy_artifacts_consumed": false
+  },
+  "references": {
+    "implementation": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_reference.py",
+      "sha256": "abb1afcbfdeb5db27fc77812312ebbd231bb71d0e9251c9c169ddde8939ba7fa"
+    },
+    "cli": {
+      "path": "scripts/build_multiscale_efficiency_v2_reference.py",
+      "sha256": "84b90f5250ef16bcf5355bbe99233efbf45ead6df3fcde397e42c75997269a1b"
+    }
+  },
+  "scientific_boundary": {
+    "index_role": "short_scale_index",
+    "calibration_role": "short_scale_calibration",
+    "legacy_july_2026_artifacts_consumed": false,
+    "injection_roles_consumed": false,
+    "thresholds_are_detector_and_scale_specific": true,
+    "bootstrap_resamples_complete_raw_source_blocks": true,
+    "no_efficiency_or_significance_claim_computed": true
+  }
+}

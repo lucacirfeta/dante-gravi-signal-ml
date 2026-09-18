@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "PASS_MULTISCALE_EFFICIENCY_V2_RUNNER_PREFLIGHT",
+  "artifact_digest": "fc8fee831c8013078e52539903626aaac0fe27c99f56bbe17f323b8b68fec2cc",
+  "executed_on": "2026-09-16",
+  "runner_contract_digest": "9c1b8f7a3ac46f274b40f47b05e862863823b051b4112df70cf9c34c1def773e",
+  "cohort_artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+  "reference_artifact_digest": "ea343480c2619cda117b3d632bc7c44296ae00ea99707c4cdc2ef2c1a5342905",
+  "runtime": {
+    "environment_digest": "69468dd1a1645718890cac64b3d8707298a015fa1a9c99fd04df86f2425b3b76",
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "python": "3.11.15",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 5070",
+    "gpu_capability": [12, 0],
+    "torch": "2.12.1",
+    "torch_cuda": "13.0",
+    "gwpy": "4.0.1",
+    "dinov2_revision": "7b187bd4df8efce2cbcbbb67bd01532c19bf4c9c",
+    "dinov2_source_python_tree_sha256": "ca377bf21900d316a2c17dbff04b0e01d44770fe2706becb94a79ac3b60b74ef",
+    "dinov2_weights_sha256": "f433177089a681826f849f194ece3bb48f4d63fb38d32fc837e3dc7a4e5641fb"
+  },
+  "replay": {
+    "detector": "H1",
+    "role": "primary_injection",
+    "role_index": 0,
+    "gps_start": 1388419552.0,
+    "identity_digest": "7f8f6c4c82db53954b17be77540eaf83c21c4d4827034a654b397237c43fe71e",
+    "raw_source_sha256": "744b074744a3c3909cf561c5867f19c70be30f9cf5d5ffa98bbebfc918477ed1",
+    "raw_context_sha256": "94262bc9f0995fa497ee338a60f7c3fc1233916039525b834b14490e99840c34",
+    "clean_analysis_window_sha256": "8f737d9367123f13a29a88ddb97be9b6e6d0fd79b0e4fa60f9e849180872a782",
+    "clean_primary_image_sha256": "bcc7989f8c30e318d733cd65dee22bbd5b3f8ddc57b17b38c512acf6b9df627e",
+    "morphology": "Blip",
+    "duration_s": 1.0,
+    "target_snr": 8.0,
+    "waveform_seed": 632399966,
+    "waveform_seed_digest": "25b1a85e6a2f7b658bb70111e35ac3273b9e95829457f233392e0d60737e5989",
+    "unit_waveform_sha256": "46363680c667fdf840e59b2b50b7a9659389becdd54db592a828e0efa89e0058",
+    "scaled_waveform_sha256": "da287380d3c3d74964ced1f59e1f594befa0d9dc1054725c144afc1101316a0b",
+    "injected_raw_context_sha256": "47a620cac39009787911b3fc69c26d2964a5ca2912c5c410f622f48f67624940",
+    "injected_analysis_window_sha256": "e22189b20dfb2595856e9c40b0a1bc25e74eabafeb641be5d1f8425e4e8d1e6a",
+    "injected_primary_image_sha256": "4e20a05b925aea4ad50993c7f17e47108a7e879f2809063d7bacd38eec276fa1",
+    "image_group_count": 2,
+    "images_per_group": 5,
+    "paired_clean_snr_reference_verified": true,
+    "injection_before_whitening_verified": true,
+    "endpoint_construction_verified_without_publishing_scores": true
+  },
+  "runtime_notes": [
+    "xFormers was unavailable; the canonical PyTorch attention path was used.",
+    "GWPy deterministically clipped the requested 2048 Hz upper frequency to 1291.0530521679268 Hz for this approved Q-transform geometry; replay hashes bind the effective behavior."
+  ]
+}

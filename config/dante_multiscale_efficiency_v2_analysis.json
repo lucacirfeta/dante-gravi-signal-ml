@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-multiscale-efficiency-v2-analysis",
+  "contract_digest": "99af56e0c8cf227e49d70ab6ce0589d1184759f7931d622bda0911857ae7abb7",
+  "status": "APPROVED_BLOCK_BOOTSTRAP_ANALYSIS_INPUT",
+  "authorization": {
+    "authorized_on": "2026-09-16",
+    "decision": "apply fail-closed endpoint rules, report conditional endpoint prevalence and morphology-dependent primary sensitivity, characterize full-range WallOfLines non-recovery, and audit flat-response SNR scaling without claiming a proven mechanism"
+  },
+  "runner_contract": {
+    "path": "config/dante_multiscale_efficiency_v2_runner.json",
+    "sha256": "c248c1d90a6b6c8e38048859fae3b7ef27abd7f31d1a4272b61335ae2509ecb5",
+    "contract_digest": "9c1b8f7a3ac46f274b40f47b05e862863823b051b4112df70cf9c34c1def773e"
+  },
+  "frozen_input": {
+    "compact_summary_path": "artifacts/dante_light/multiscale_efficiency_v2/paired_injection_summary.json",
+    "compact_summary_sha256": "f8ae2c1fef3d63a6b6d4268d85c2f8c4ce33686f23b83d4b07d1416147ccf207",
+    "run_key": "b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+    "artifact_digest": "9e0cbd9648c4cb4ca9a53b59ffb81fed4255850f1f82f7183a4c90ff0bb57161",
+    "trials_sha256": "a29e50b4bae4a4caa48dcddb9e7a5560b627f88c47438b0ed3f48d03c2db9d9f"
+  },
+  "uncertainty": {
+    "method": "detector_raw_source_block_bootstrap",
+    "unit": "raw_source_block",
+    "resamples": 2000,
+    "confidence": 0.95,
+    "seed": 42,
+    "quantile_method": "linear",
+    "draw_group": "detector_plus_population_role",
+    "shared_draws_across_morphology_snr_scale": true,
+    "iid_bootstrap_allowed": false,
+    "detectors_pooled": false,
+    "morphology_tiers_pooled": false
+  },
+  "boundary_policy": {
+    "zero_primary_successes": {
+      "point": "observed_zero",
+      "confidence_interval": null,
+      "status": "NO_OBSERVED_PRIMARY_RECOVERY_BOOTSTRAP_BOUNDARY"
+    },
+    "all_primary_successes": {
+      "point": "observed_one",
+      "confidence_interval": null,
+      "status": "ALL_OBSERVED_PRIMARY_RECOVERIES_BOOTSTRAP_BOUNDARY"
+    },
+    "zero_conditional_denominator": {
+      "point": null,
+      "confidence_interval": null,
+      "status": "NO_PRIMARY_RECOVERY_CONDITIONAL_UNDEFINED"
+    },
+    "zero_conditional_responses": {
+      "point": "observed_zero",
+      "confidence_interval": null,
+      "status": "NO_OBSERVED_CONDITIONAL_RESPONSE_BOOTSTRAP_BOUNDARY"
+    },
+    "all_conditional_responses": {
+      "point": "observed_one",
+      "confidence_interval": null,
+      "status": "ALL_OBSERVED_CONDITIONAL_RESPONSES_BOOTSTRAP_BOUNDARY"
+    },
+    "conditional_replicate_zero_denominator": {
+      "confidence_interval": null,
+      "status": "UNDEFINED_CONDITIONAL_BOOTSTRAP_REPLICATES",
+      "ci_requires_all_replicates_defined": true
+    },
+    "endpoint_values_are_not_true_probability_claims": true
+  },
+  "technical_replay": {
+    "path": "artifacts/dante_light/multiscale_efficiency_v2/flat_response_snr_replay.json",
+    "sha256": "001acc1c7eb0bc2f92ff88dd6d3092ea223995ae19be170491679faf00905bec",
+    "artifact_digest": "2cc8edb476ce055d1c3ded292c7214b34170e8ccda1a1da3d255b3512cb98812",
+    "summary": {
+      "row_total": 8,
+      "detectors": ["H1", "L1"],
+      "morphologies": ["Blip", "NoiseBlob", "WallOfLines", "Whistle"],
+      "maximum_absolute_snr_error": 7.105427357601002e-15,
+      "maximum_unit_snr_relative_error": 0.0,
+      "all_scaled_waveform_hashes_match": true
+    }
+  },
+  "required_interpretation": {
+    "report_conditional_endpoint_prevalence": true,
+    "report_primary_morphology_response": true,
+    "wall_of_lines_full_snr_range_limitation": "characterized_empirical_limitation",
+    "representation_cause_status": "plausible_hypothesis_not_demonstrated",
+    "scale_fusion_allowed": false,
+    "rate_upper_limit_allowed": false
+  },
+  "references": {
+    "implementation": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_analysis.py",
+      "sha256": "9445706bb7798b0b5d55cd8e0ff16adea8b3fd31f28a1e1d7a853da7df9723bf"
+    },
+    "cli": {
+      "path": "scripts/analyze_multiscale_efficiency_v2.py",
+      "sha256": "7dc5182904cb604386153017752768ce7190558c451833409eea2ff4a62929fe"
+    }
+  }
+}

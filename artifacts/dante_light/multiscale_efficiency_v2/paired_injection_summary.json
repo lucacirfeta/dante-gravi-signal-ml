@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "status": "PASS_VERIFIED_MULTISCALE_EFFICIENCY_V2_PAIRED_INJECTIONS",
+  "artifact_digest": "0e39a7e3fd5df9ef5870679a772630649b617cf076904be85bd7c58388dec938",
+  "run_key": "b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+  "external_run_dir": "E:/dante_cache/dante_light/multiscale_efficiency_v2/injections_b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+  "external_summary_sha256": "954e5d154520bad80b55337a0ed439b3a9f64f225619c4afe10c4d64e2a921e0",
+  "external_artifact_digest": "9e0cbd9648c4cb4ca9a53b59ffb81fed4255850f1f82f7183a4c90ff0bb57161",
+  "runner_contract_digest": "9c1b8f7a3ac46f274b40f47b05e862863823b051b4112df70cf9c34c1def773e",
+  "cohort_artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e",
+  "reference_artifact_digest": "ea343480c2619cda117b3d632bc7c44296ae00ea99707c4cdc2ef2c1a5342905",
+  "runtime_environment_digest": "69468dd1a1645718890cac64b3d8707298a015fa1a9c99fd04df86f2425b3b76",
+  "clean_controls": {
+    "row_total": 280,
+    "sha256": "0ed91c9a2a343308920e86f59a6e1a24bf6d958b31fd5701a8aac25fe4ac5a40"
+  },
+  "trials": {
+    "row_total": 7440,
+    "sha256": "a29e50b4bae4a4caa48dcddb9e7a5560b627f88c47438b0ed3f48d03c2db9d9f",
+    "primary_injection": 6000,
+    "secondary_dsd_control": 1440
+  },
+  "scientific_boundary": {
+    "primary_endpoint": "32s_detector_native_threshold",
+    "multiscale_endpoint": "conditional_diagnostic_only",
+    "scale_or_fusion_applied": false,
+    "rate_upper_limit_computed": false,
+    "legacy_artifacts_consumed": false
+  },
+  "verification": {
+    "standalone_verifier": "PASS",
+    "windows_focused_tests": "32 passed",
+    "wsl_focused_tests": "32 passed",
+    "ruff": "PASS"
+  }
+}

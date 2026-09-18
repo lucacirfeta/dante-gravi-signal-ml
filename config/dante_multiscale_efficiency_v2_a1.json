@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-multiscale-efficiency-v2-a1",
+  "contract_digest": "3efb58ae6c15590d74170cef619f88345d1e3edd55f7e3b0c149decb46d8cdb5",
+  "status": "APPROVED_CONFIRMATORY_JOINT_NULL_INPUT",
+  "authorization": {
+    "authorized_on": "2026-09-18",
+    "decision": "calibrate a detector-specific joint empirical max-null over 32, 0.5, 1, 2, and 4 second endpoints, then evaluate the frozen raw-block-disjoint A1 held-out cohort without automatic production promotion"
+  },
+  "parent_contract": {
+    "path": "config/dante_multiscale_efficiency_v2.json",
+    "sha256": "02844aa8cf2e10870f3494ae6e69b2d4b5e66c2753780d153f00c6830a292658",
+    "contract_digest": "2934f55f6b994adf07fc04205f403518fc3c4a2e009568a67d1ae6ed7bfc67ac"
+  },
+  "runner_contract": {
+    "path": "config/dante_multiscale_efficiency_v2_runner.json",
+    "sha256": "c248c1d90a6b6c8e38048859fae3b7ef27abd7f31d1a4272b61335ae2509ecb5",
+    "contract_digest": "9c1b8f7a3ac46f274b40f47b05e862863823b051b4112df70cf9c34c1def773e"
+  },
+  "reference_contract": {
+    "path": "config/dante_multiscale_efficiency_v2_reference.json",
+    "sha256": "4982754d5f12aceea8d2290ca82f3f097bd55805e75d01a100092cf01db3b8c6",
+    "contract_digest": "ba7576bb4e31c068a51be73c4375dadedb2489265d634baf69865196be33ac94"
+  },
+  "heldout_cohort": {
+    "run_key": "e60013f47528f993bb46cfe9759847cca5bf46ec7520068a2beb33c940443d60",
+    "artifact_digest": "1a1952d30c9a25b5cab1b17c41b1e232e44132c11eab011a032c470381db4d5c",
+    "summary": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2_a1/a1_cohort_e60013f47528f993bb46cfe9759847cca5bf46ec7520068a2beb33c940443d60/a1_heldout_cohort_summary.json",
+        "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2_a1/a1_cohort_e60013f47528f993bb46cfe9759847cca5bf46ec7520068a2beb33c940443d60/a1_heldout_cohort_summary.json"
+      },
+      "sha256": "c4c293535869fa1e668a81fd702d771b4388f9a701a0a814518c06b5eb0ba88b"
+    },
+    "ledger": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2_a1/a1_cohort_e60013f47528f993bb46cfe9759847cca5bf46ec7520068a2beb33c940443d60/a1_heldout_cohort.jsonl",
+        "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2_a1/a1_cohort_e60013f47528f993bb46cfe9759847cca5bf46ec7520068a2beb33c940443d60/a1_heldout_cohort.jsonl"
+      },
+      "sha256": "620cf8b162497a6476a018681f03112fa445c1b2694126e432c394663b0575d5"
+    }
+  },
+  "external_inputs": {
+    "reference_summary": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2/reference_3e1eb87a2eed3347b3b78ed99491b416cf27cde1bece0c0e84cd0abd38ba8d47/reference_summary.json",
+        "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2/reference_3e1eb87a2eed3347b3b78ed99491b416cf27cde1bece0c0e84cd0abd38ba8d47/reference_summary.json"
+      },
+      "sha256": "b296a9e3c0759926886651c5ad13e435d45905ef7a7fb08d09443c4b85082bbb",
+      "artifact_digest": "ea343480c2619cda117b3d632bc7c44296ae00ea99707c4cdc2ef2c1a5342905"
+    },
+    "exploratory_cohort_summary": {
+      "path_by_environment": {
+        "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2/cohort_a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad/multiscale_efficiency_v2_cohort_summary.json",
+        "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2/cohort_a0d8ce06d0357f8d0d2c77c4e5901fa9faa2c7fd3b3f47288cf633076a67f0ad/multiscale_efficiency_v2_cohort_summary.json"
+      },
+      "sha256": "f2f1f506dd5c11a8cc7ddab0a28ef8913c641d6eaf8fec614b82a15bf3a8a08f",
+      "artifact_digest": "159b5c96a64be3f62b2d925d1ea1a68f912cda411c4be4f7a39281bcc6c2849e"
+    }
+  },
+  "waveform": {
+    "duration_s_by_morphology": {
+      "Blip": 1.0,
+      "NarrowChirp": 1.0,
+      "Whistle": 1.0,
+      "KoiFish": 1.0,
+      "ScatteredLight": 2.0,
+      "NoiseBlob": 4.0,
+      "HarmonicComb": 4.0,
+      "WallOfLines": 4.0
+    },
+    "injection_alignment": "center_of_32s_analysis_window",
+    "injection_domain": "raw_strain_before_whitening",
+    "snr_reference": "paired_clean_raw_32s_window",
+    "seed_algorithm": "sha256(contract+detector+raw_block+morphology+identity)_uint32_be"
+  },
+  "joint_statistic": {
+    "endpoints": [
+      "primary_32",
+      "0.5",
+      "1",
+      "2",
+      "4"
+    ],
+    "marginal_transform": "empirical_upper_tail_probability",
+    "calibration_probability": "count_greater_or_equal_divided_by_n",
+    "heldout_probability": "one_plus_count_greater_or_equal_divided_by_n_plus_one",
+    "combination": "maximum_negative_log10_tail_probability",
+    "detector_specific": true,
+    "joint_null_preserves_cross_scale_dependence": true,
+    "naive_scale_or_allowed": false
+  },
+  "joint_null_calibration": {
+    "source_role": "short_scale_calibration",
+    "rows_per_detector": 5000,
+    "existing_short_scores_reused_by_hash": true,
+    "primary_32_score_replayed": true,
+    "candidate_or_injection_scores_used": false,
+    "percentile": 99.0,
+    "bootstrap_unit": "raw_source_block",
+    "bootstrap_resamples": 2000,
+    "bootstrap_confidence": 0.95,
+    "bootstrap_seed": 42,
+    "point_threshold_used_for_heldout_decision": true
+  },
+  "heldout_confirmation": {
+    "background_blocks_per_detector": 1000,
+    "primary_blocks_per_detector": 100,
+    "secondary_blocks_per_detector": 40,
+    "roles": {
+      "heldout_primary_injection": {
+        "morphologies": [
+          "Blip",
+          "NarrowChirp",
+          "Whistle",
+          "ScatteredLight",
+          "NoiseBlob"
+        ]
+      },
+      "heldout_secondary_control": {
+        "morphologies": [
+          "HarmonicComb",
+          "WallOfLines",
+          "KoiFish"
+        ]
+      }
+    },
+    "target_snr": [
+      8,
+      12,
+      16,
+      24,
+      32,
+      48
+    ],
+    "confirmatory_morphologies": [
+      "Blip",
+      "Whistle"
+    ],
+    "confirmatory_statistic": "paired_mean_recovery_gain_across_snr_grid",
+    "paired_sign_flip_resamples": 2000,
+    "shared_sign_flips_within_detector": true,
+    "hypothesis_family": "detector_cross_confirmatory_morphology",
+    "hypothesis_correction": "holm",
+    "familywise_alpha": 0.05,
+    "background_nominal_fpr": 0.01,
+    "background_test": "one_sided_exact_binomial_greater",
+    "background_hypothesis_correction": "holm_across_detectors",
+    "other_morphologies_are_descriptive": true,
+    "automatic_production_promotion": false
+  },
+  "uncertainty": {
+    "method": "paired_detector_raw_source_block_bootstrap",
+    "resamples": 2000,
+    "confidence": 0.95,
+    "seed": 42,
+    "iid_bootstrap_allowed": false,
+    "detectors_pooled": false,
+    "morphologies_pooled": false
+  },
+  "execution": {
+    "calibration_chunk_rows": 100,
+    "heldout_clean_chunk_rows": 50,
+    "atomic_chunks": true,
+    "resume_requires_exact_contract_and_identity_match": true
+  },
+  "references": {
+    "implementation": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_a1_runner.py",
+      "sha256": "deccc078039ad58280291050c1a4c24c935ffa76bc1633d29f48139959119073"
+    },
+    "cli": {
+      "path": "scripts/run_multiscale_efficiency_v2_a1.py",
+      "sha256": "a3b20d27bf14742cccbedd91f5ff4ea9a143cbe20ea9788aff46f33aae6b8a1f"
+    },
+    "causal_preprocessor": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_causal.py",
+      "sha256": "65d3609a467da8db9a3b93be354f0cf2b02e8a5f02b6f47155aa90bee554ea95"
+    },
+    "paired_injection_runner": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_runner.py",
+      "sha256": "d2f664ea315d14be1d1099546a4745a5a050571612e7d75f7f017b60ad8ecfae"
+    },
+    "reference_builder": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_reference.py",
+      "sha256": "abb1afcbfdeb5db27fc77812312ebbd231bb71d0e9251c9c169ddde8939ba7fa"
+    }
+  },
+  "scientific_boundary": {
+    "production_endpoint_changed": false,
+    "automatic_endpoint_promotion": false,
+    "global_detection_significance_established": false,
+    "O3_transfer_validity_established": false,
+    "interpretation": "simulation-specific paired held-out evidence only"
+  }
+}

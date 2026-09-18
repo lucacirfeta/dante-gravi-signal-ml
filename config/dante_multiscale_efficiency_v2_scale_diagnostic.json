@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-multiscale-efficiency-v2-scale-diagnostic",
+  "contract_digest": "4ce74a1ea447f99eb157e55fb1c65a099ba92da8d73e07c5fff30273d422e63c",
+  "status": "APPROVED_UNCONDITIONAL_PAIRED_SCALE_DIAGNOSTIC_INPUT",
+  "authorization": {
+    "authorized_on": "2026-09-18",
+    "decision": "analyze the already-computed 0.5/1/2/4 s paired scores without new injections, scale fusion, best-scale selection, or primary-endpoint changes"
+  },
+  "runner_contract": {
+    "path": "config/dante_multiscale_efficiency_v2_runner.json",
+    "sha256": "c248c1d90a6b6c8e38048859fae3b7ef27abd7f31d1a4272b61335ae2509ecb5",
+    "contract_digest": "9c1b8f7a3ac46f274b40f47b05e862863823b051b4112df70cf9c34c1def773e"
+  },
+  "frozen_input": {
+    "compact_summary_path": "artifacts/dante_light/multiscale_efficiency_v2/paired_injection_summary.json",
+    "compact_summary_sha256": "f8ae2c1fef3d63a6b6d4268d85c2f8c4ce33686f23b83d4b07d1416147ccf207",
+    "run_key": "b56882a474ff381ce0408337c79e775e980019ee3685b8d116acd8305addf1bb",
+    "artifact_digest": "9e0cbd9648c4cb4ca9a53b59ffb81fed4255850f1f82f7183a4c90ff0bb57161",
+    "trials_sha256": "a29e50b4bae4a4caa48dcddb9e7a5560b627f88c47438b0ed3f48d03c2db9d9f",
+    "clean_controls_sha256": "0ed91c9a2a343308920e86f59a6e1a24bf6d958b31fd5701a8aac25fe4ac5a40"
+  },
+  "population": {
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "roles": {
+      "primary_injection": [
+        "Blip",
+        "NarrowChirp",
+        "Whistle",
+        "NoiseBlob"
+      ],
+      "secondary_dsd_control": [
+        "WallOfLines"
+      ]
+    },
+    "target_snr": [
+      8,
+      12,
+      16,
+      24,
+      32,
+      48
+    ],
+    "scales_s": [
+      0.5,
+      1.0,
+      2.0,
+      4.0
+    ],
+    "uses_all_frozen_blocks": true
+  },
+  "expected_cardinality": {
+    "selected_trials": 5280,
+    "scale_cells": 240,
+    "trajectories": 40,
+    "primary_blocks_per_cell": 100,
+    "secondary_blocks_per_cell": 40
+  },
+  "metrics": {
+    "score_delta": "injected_score_minus_paired_clean_score",
+    "injected_margin": "injected_score_minus_scale_p99",
+    "clean_margin": "paired_clean_score_minus_scale_p99",
+    "paired_exceedance_gain": "injected_exceeds_p99_minus_clean_exceeds_p99",
+    "cross_scale_raw_score_comparison_allowed": false,
+    "scale_or_fusion_allowed": false
+  },
+  "uncertainty": {
+    "method": "paired_detector_raw_source_block_bootstrap",
+    "unit": "raw_source_block",
+    "resamples": 2000,
+    "confidence": 0.95,
+    "seed": 42,
+    "quantile_method": "linear",
+    "draw_group": "detector_plus_population_role",
+    "shared_draws_across_morphology_snr_scale_and_metric": true,
+    "iid_bootstrap_allowed": false,
+    "detectors_pooled": false,
+    "morphologies_pooled": false,
+    "scales_pooled": false
+  },
+  "boundary_policy": {
+    "paired_exceedance_all_equal": "retain observed point estimate, set confidence interval to null, and mark the empirical boundary explicitly",
+    "undefined_within_block_spearman": "retain the median over defined source blocks, set confidence interval to null when any source block is undefined, and report defined and undefined counts",
+    "interpretation": "descriptive simulation-specific scale response only"
+  },
+  "execution": {
+    "output_root_by_environment": {
+      "windows": "E:/dante_cache/dante_light/multiscale_efficiency_v2_scale_diagnostic",
+      "wsl": "/mnt/e/dante_cache/dante_light/multiscale_efficiency_v2_scale_diagnostic"
+    },
+    "large_ledgers_committed_to_git": false,
+    "compact_summaries_committed_to_git": true,
+    "standalone_replay_verification_required": true
+  },
+  "references": {
+    "implementation": {
+      "path": "src/pipeline_v3_multiscale/efficiency_v2_scale_diagnostic.py",
+      "sha256": "1732c620aeb189ea2071c22753161b55269fdc92399b7233411e26de76acb06d"
+    },
+    "cli": {
+      "path": "scripts/analyze_multiscale_efficiency_v2_scales.py",
+      "sha256": "0a9d924af95939a44f932f2e658e03a690a2448388d1f40f5547b19e050c6901"
+    }
+  },
+  "scientific_boundary": {
+    "primary_endpoint_changed": false,
+    "scale_fusion_performed": false,
+    "automatic_best_scale_selected": false,
+    "multiple_testing_significance_claim_allowed": false,
+    "O3_transfer_validity_established": false,
+    "does_not_establish": [
+      "production_scale_selection",
+      "globally_significant_detection_rule",
+      "astrophysical_population_efficiency",
+      "O3_transfer_validity"
+    ]
+  }
+}
