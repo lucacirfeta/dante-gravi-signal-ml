@@ -1,0 +1,80 @@
+{
+  "authorization_digest": "1d994c2af01ea797621888f5e1318df5aaee88eb5a9a94e647417ed31d5322ec",
+  "contract_digest": "c6a255d038126ac39d44113017a8751e8efc5d577f72eb0e499f8cc0bb25966f",
+  "detectors": [
+    "H1",
+    "L1"
+  ],
+  "implementation_sources": {
+    "config/reference_artifacts.json": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe",
+    "src/core/artifact_manager.py": "edc0b646963c5428f7f401da03d3ea8d063f9de0a01bad9bc73ec538fde0cc5e",
+    "src/dante_light/o3a_native_contract.py": "e43ee8f851bf60754dfd52ec26a33b65ce242d79242fd7ec95f7d04b71f5f203",
+    "src/dante_light/o4a_corrected_runtime.py": "35f1ce6a785ab6e56bedd16324962c6eeca057a07eb4215bb40f4cf9138aacaf"
+  },
+  "official_run_bounds_gps": [
+    1238166018,
+    1253977218
+  ],
+  "pipeline_execution_allowed": false,
+  "pipeline_execution_blocker": "DQ snapshot and stage-specific population/statistical contracts absent",
+  "public_dq_semantics": "CBC_CAT1",
+  "references": {
+    "forbidden_o4a_reference": {
+      "artifact_id": "o4a_native_q4_64_k1216",
+      "scientific_import_allowed": false,
+      "sha256": "0241b2a1ea2a460334f2c7ae0ab1bb62052706ea05c48443af32ae60a2488744"
+    },
+    "initial_source_representation": {
+      "artifact_id": "o3b_production_k275",
+      "eligible_for_native_o3a_outputs": false,
+      "n_centroids": 275,
+      "path": "data/reference/patch_compressed_index_o3b.npz",
+      "qrange": [
+        4,
+        32
+      ],
+      "role": "PRIMARY_SCAN_SEED_ONLY",
+      "sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c"
+    }
+  },
+  "run": "O3A",
+  "run_dependent_artifacts": {
+    "classes_and_downstream_products": "FRESH_O3A_ONLY",
+    "initial_calibration": "FRESH_O3A_ONLY",
+    "native_calibration": "FRESH_O3A_ONLY",
+    "native_cohort": "FRESH_O3A_ONLY",
+    "native_index": "FRESH_O3A_ONLY",
+    "primary_scan": "FRESH_O3A_ONLY",
+    "thresholds": "FRESH_O3A_DETECTOR_SPECIFIC"
+  },
+  "runtime_contract_digest": "e5c8b2324f631489d229cd878c109597da8e5c7fd4e62ba5d53fa7222e050dea",
+  "schema_version": 1,
+  "scientific_invariants": {
+    "block_bootstrap_only": true,
+    "detector_specific_thresholds": true,
+    "intra_and_cross_detector_nulls_comparable": false,
+    "multiscale_a2_role": "DIAGNOSTIC_ONLY_NO_CANDIDATE_PROMOTION",
+    "multiscale_requires_independent_o3a_validation": true,
+    "o4a_populations_thresholds_scores_classes_import_allowed": false,
+    "outcome_blind_population_selection": true,
+    "population_disjointness_and_guard_required": true,
+    "whitening_before_qtransform_crop_with_context": true
+  },
+  "scope_execution_authorized": true,
+  "status": "FROZEN_O3A_SCOPE_PREPARATION_ONLY",
+  "storage": {
+    "primary_scan_raw_cache": 0,
+    "retained_raw_scope": "BOUNDED_FROZEN_COHORT_BLOCKS_ONLY",
+    "windows_cache_root": "E:\\dante_cache\\dante_light\\o3a_native_v1"
+  },
+  "unresolved_stage_parameters": [
+    "initial_calibration_population_and_size",
+    "cross_population_guard_seconds",
+    "native_cohort_population_and_size",
+    "native_index_clustering_parameters",
+    "native_calibration_population_and_size",
+    "block_bootstrap_block_length_and_replicates",
+    "detector_threshold_quantile_and_confidence_interval",
+    "coincidence_null_and_multiple_testing_policy"
+  ]
+}

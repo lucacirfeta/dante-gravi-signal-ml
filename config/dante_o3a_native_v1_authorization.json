@@ -1,0 +1,31 @@
+{
+  "authorization_digest": "1d994c2af01ea797621888f5e1318df5aaee88eb5a9a94e647417ed31d5322ec",
+  "author_decisions": {
+    "dq_semantics": "CBC_CAT1",
+    "multiscale": "DIAGNOSTIC_ONLY_DEFERRED",
+    "run_dependent_artifacts": "FRESH_O3A_ONLY",
+    "scope": "O3A_ONLY_COMPLETE_NATIVE_RECONSTRUCTION"
+  },
+  "decision_date": "2026-09-18",
+  "detectors": [
+    "H1",
+    "L1"
+  ],
+  "official_run_bounds_gps": [
+    1238166018,
+    1253977218
+  ],
+  "outcome_data_accessed": false,
+  "run": "O3A",
+  "schema_version": 1,
+  "source_decision_gate": {
+    "path": "config/dante_o3a_native_v1_decision_gate.json",
+    "sha256": "41dcc7c2ca5619f403d87d7b71f4fac005f17646bf6f80389fb34e7f11b20ea1"
+  },
+  "status": "AUTHOR_APPROVED_O3A_NATIVE_SCOPE",
+  "storage": {
+    "primary_scan_raw_cache": 0,
+    "retained_raw_scope": "BOUNDED_FROZEN_COHORT_BLOCKS_ONLY",
+    "windows_cache_root": "E:\\dante_cache\\dante_light\\o3a_native_v1"
+  }
+}

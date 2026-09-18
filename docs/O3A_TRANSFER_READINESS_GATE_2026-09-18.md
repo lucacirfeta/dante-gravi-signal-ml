@@ -1,6 +1,11 @@
 # O3a transfer-readiness gate
 
-Status: **READY FOR AUTHOR DECISION; NO O3a SCIENTIFIC CONTRACT FROZEN**
+Status: **RESOLVED BY AUTHOR DECISION; PRESERVED AS THE PRE-DECISION RECORD**
+
+The four decisions requested by this gate were approved on 2026-09-18. Their
+self-digested authorization, frozen runtime, and fail-closed preparation
+contract are documented in `docs/O3A_NATIVE_SCOPE_FREEZE_2026-09-18.md`. This
+file retains the evidence and alternatives available before that decision.
 
 ## Question
 
