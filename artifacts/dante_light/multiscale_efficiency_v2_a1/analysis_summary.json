@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "PASS_VERIFIED_A1_ANALYSIS",
-  "artifact_digest": "66efc09dab7795327e65c016b33772594dd7b5f7627f8592771d4e7ad9aac870",
+  "artifact_digest": "fbec0259251dd833b8989deb09648e5960b5feefef9091e794e04f189376be77",
   "assessment": "GENUINE_CONFIRMATORY_ADVANCE_WITH_MORPHOLOGY_LIMITS",
   "contract_digest": "3efb58ae6c15590d74170cef619f88345d1e3edd55f7e3b0c149decb46d8cdb5",
   "joint_null": {
@@ -62,6 +62,26 @@
     "confirmatory_signal": "Blip and Whistle recoveries are driven mainly by the 0.5 s and 1 s endpoints in both detectors.",
     "long_duration_signal": "ScatteredLight recoveries are driven mainly by 2 s and 4 s endpoints.",
     "regression_signal": "HarmonicComb has 45 H1 and 46 L1 baseline-only recoveries; A1 does not preserve the long-window baseline sensitivity."
+  },
+  "harmonic_comb_regression_audit": {
+    "interpretation": "The native 32 s endpoint remains present. Baseline-only cases fail because the frozen joint-maximum null requires a substantially smaller empirical tail probability than the native threshold, not because the 32 s score was removed.",
+    "H1": {
+      "baseline_only": 45,
+      "baseline_and_a1": 1,
+      "a1_only": 5,
+      "joint_critical_tail_probability": 0.002600000000000001,
+      "baseline_only_minimum_endpoint_tail_probability_range": [0.003799240151969606, 0.007198560287942412],
+      "baseline_only_median_minimum_endpoint_tail_probability": 0.00599880023995201
+    },
+    "L1": {
+      "baseline_only": 46,
+      "baseline_and_a1": 0,
+      "a1_only": 0,
+      "joint_critical_tail_probability": 0.003000000000000001,
+      "baseline_only_minimum_endpoint_tail_probability_range": [0.0065986802639472104, 0.014997000599880024],
+      "baseline_only_median_minimum_endpoint_tail_probability": 0.012397520495900819
+    },
+    "status": "CHARACTERIZED_MULTIPLICITY_PENALTY_NOT_REPRESENTATION_REMOVAL"
   },
   "decision_boundary": {
     "automatic_production_promotion": false,

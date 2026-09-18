@@ -49,6 +49,13 @@ def test_a1_report_preserves_limitations_and_decision_boundary() -> None:
     assert sum(h1["WallOfLines"]["a1"]) == 0
     assert sum(l1["WallOfLines"]["a1"]) == 0
     assert evidence["descriptive_recovery"]["no_additional_inference"] is True
+    audit = evidence["harmonic_comb_regression_audit"]
+    assert audit["status"] == "CHARACTERIZED_MULTIPLICITY_PENALTY_NOT_REPRESENTATION_REMOVAL"
+    for detector in ("H1", "L1"):
+        assert (
+            audit[detector]["baseline_only_minimum_endpoint_tail_probability_range"][0]
+            > audit[detector]["joint_critical_tail_probability"]
+        )
     boundary = evidence["decision_boundary"]
     assert boundary["automatic_production_promotion"] is False
     assert boundary["o3_transfer_claim"] is False

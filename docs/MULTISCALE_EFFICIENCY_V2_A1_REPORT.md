@@ -39,18 +39,20 @@ The non-confirmatory morphologies were inspected descriptively without adding hy
 
 Endpoint attribution is coherent with duration: `Blip` and `Whistle` recoveries are driven mainly by 0.5 s and 1 s endpoints; `ScatteredLight` is driven mainly by 2 s and 4 s endpoints. The same audit shows why A1 is not a drop-in replacement: the multiplicity-controlled joint maximum does not preserve the long-window `HarmonicComb` sensitivity.
 
+The `HarmonicComb` regression is now causally localized to the multiplicity penalty rather than removal of the native representation. The 32 s endpoint is still part of A1. In the 45 H1 baseline-only cases, the smallest endpoint tail probability ranges from 0.00380 to 0.00720, while the joint maximum requires 0.00260. In the 46 L1 baseline-only cases, the corresponding range is 0.00660 to 0.01500 against a joint requirement of 0.00300. Thus these events retain their native 32 s response but do not clear the stricter family-wise joint threshold.
+
 ## What was discovered
 
 1. The earlier weak `Blip` and `Whistle` efficiency was substantially a scale mismatch, not a universal failure of the DANTE representation.
 2. The useful scale is morphology-dependent and physically interpretable across both detectors.
 3. Short scales do not solve every representation failure: `NoiseBlob` and `WallOfLines` remain blind spots.
-4. A jointly calibrated multiscale maximum has a real tradeoff: it gains short transient sensitivity but can lose sensitivity already present in the native 32 s endpoint.
+4. A jointly calibrated multiscale maximum has a real tradeoff: it gains short transient sensitivity but can reject native 32 s responses through its stricter multiplicity correction.
 
 The experiment therefore changed what is known about the system. It did not merely reproduce old results or add workflow machinery.
 
 ## Direction
 
-Continue the research direction, but do not promote A1 to the production pipeline and do not transfer the result to O3 yet. The next safe step is a causal endpoint audit using the existing frozen scores to quantify the multiplicity penalty and the scale contribution for baseline-only `HarmonicComb` cases.
+Continue the research direction, but do not promote A1 to the production pipeline and do not transfer the result to O3 yet. The causal endpoint audit is complete: it identifies the frozen family-wise multiplicity penalty as the source of the `HarmonicComb` regression. Selecting a remedy is now a new scientific-design decision rather than a debugging task.
 
 Any new fusion or gate designed to preserve native 32 s sensitivity while retaining A1 gains changes how the scientific decision is made. It requires an explicit, separately frozen choice before implementation and a new independent validation; it must not be selected by optimizing on this held-out cohort.
 
