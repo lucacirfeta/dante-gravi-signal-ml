@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "AUTHOR_DECISION_REQUIRED",
+  "run": "O3A",
+  "official_run_bounds_gps": [
+    1238166018,
+    1253977218
+  ],
+  "detectors": [
+    "H1",
+    "L1"
+  ],
+  "outcome_data_accessed": false,
+  "execution_allowed": false,
+  "recommendations": {
+    "scope": "O3A_ONLY_COMPLETE_NATIVE_RECONSTRUCTION",
+    "dq_semantics": "CBC_CAT1",
+    "run_dependent_artifacts": "FRESH_O3A_ONLY",
+    "multiscale": "DIAGNOSTIC_ONLY_DEFERRED"
+  },
+  "author_decisions": {
+    "scope": null,
+    "dq_semantics": null,
+    "run_dependent_artifacts": null,
+    "multiscale": null
+  },
+  "storage": {
+    "windows_cache_root": "E:\\dante_cache\\dante_light\\o3a_native_v1",
+    "primary_scan_raw_cache": 0,
+    "retained_raw_scope": "BOUNDED_FROZEN_COHORT_BLOCKS_ONLY"
+  },
+  "interpretation": "This file records recommendations and unresolved author decisions. It is not a scientific run contract and cannot authorize data selection, scoring, fitting, or scanning."
+}

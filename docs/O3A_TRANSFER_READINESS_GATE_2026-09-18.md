@@ -38,6 +38,24 @@ The local and external storage audit found:
   mirrored as uncompressed 4096 Hz float64 samples, so a full raw mirror is not
   an acceptable default.
 
+### Post-audit storage remediation
+
+After the initial audit, the re-downloadable O4a raw mirrors were removed and
+the non-versioned historical O4a project outputs were copied to
+`E:\dante_archive\o4a_project_outputs_20260918`, verified file-by-file with
+SHA-256, and removed from the checkout only after verification. The operation
+left all Git-tracked scientific artifacts intact. The administrative manifests
+are:
+
+- `E:\dante_cache\dante_light\storage_cleanup\o4a_raw_cleanup_20260918.json`;
+- `E:\dante_cache\dante_light\storage_cleanup\o4a_bulk_mirror_cleanup_20260918.json`;
+- `E:\dante_archive\o4a_project_outputs_20260918\archive_manifest.json`.
+
+The verified post-remediation free space was 846.74 GiB on `E:` and 493.16 GiB
+on `C:`. This changes storage feasibility, not the scientific transfer gate:
+the whole O3a run must still not be retained by default, and no population or
+threshold decision is implied by the additional capacity.
+
 ## Why the existing O3a scripts are not a production path
 
 `src/pipeline_v3_multiscale/build_multiscale_dictionaries_o3a.py` and
@@ -116,8 +134,8 @@ recommended policy is:
 - no deletion or reuse of O4a evidence as a side effect of the O3a run.
 
 This policy honors the project rule that raw or reusable scientific data live
-on `E:` while remaining compatible with the current 84.06 GiB free-space
-constraint.
+on `E:`. The larger post-cleanup capacity is a safety margin, not authorization
+to create a full raw mirror.
 
 ## Rejected shortcuts
 
@@ -151,3 +169,8 @@ Until these four points are approved, the next implementation may add only
 read-only preflight and contract-validation machinery. It must not select
 windows, build an index, fit a threshold, inspect candidate outcomes, or start
 a full O3a scan.
+
+The checked-in `config/dante_o3a_native_v1_decision_gate.json` and
+`scripts/audit_dante_o3a_transfer_readiness.py` implement that restricted
+read-only phase. The gate deliberately rejects partial or silent author
+decisions and cannot authorize execution.

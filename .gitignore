@@ -326,6 +326,7 @@ reports/
 # clone cannot regenerate the paper artifacts, which is the same
 # reproducibility gap as the unpinned dependencies (CORRECTIONS_2026-07-21, C4).
 scripts/*
+!scripts/audit_dante_o3a_transfer_readiness.py
 !scripts/build_o4a_provenance_release_bundle.py
 !scripts/audit_dante_light_v8_1_phase0.py
 !scripts/manage_dante_light_v8_1_review_telemetry.py
