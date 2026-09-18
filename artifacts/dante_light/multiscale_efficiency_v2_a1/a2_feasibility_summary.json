@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "status": "A2_SCIENTIFIC_DECISION_REQUIRED",
+  "artifact_digest": "868095ec72033f6b128b11c5ef18f52d843a2317013a348e0f534b82e446a859",
+  "scope": "Outcome-blind feasibility audit using only the frozen A1 joint-null calibration background and canonical native thresholds.",
+  "inputs": {
+    "a1_contract_digest": "3efb58ae6c15590d74170cef619f88345d1e3edd55f7e3b0c149decb46d8cdb5",
+    "joint_null_run_key": "50dfe6fa0751019105d0ab3f194cd5fb6b2b16667d7f516443769dce11bddd6c",
+    "joint_null_calibration_sha256": "4e63935454073f6fa7763767dfb837858ac70e0443515766c93c924ddbea4708",
+    "canonical_native_thresholds_sha256": "a491e42dc6973bedfe06b4c41940c27a815b4a97e77c3926b526122af67c3b78",
+    "rows_per_detector": 5000,
+    "heldout_outcomes_used": false
+  },
+  "fixed_native_threshold_transfer": {
+    "comparison": "score_strictly_greater_than_canonical_native_p99",
+    "nominal_one_percent_rows": 50,
+    "H1": {
+      "canonical_native_p99": 0.2121588587760954,
+      "exceedances": 35,
+      "realized_fraction": 0.007,
+      "nominal_slots_remaining": 15
+    },
+    "L1": {
+      "canonical_native_p99": 0.2203438572585587,
+      "exceedances": 75,
+      "realized_fraction": 0.015,
+      "nominal_slots_remaining": -25
+    }
+  },
+  "finding": {
+    "fixed_native_gate_plus_positive_rescue_at_global_one_percent_feasible_in_both_detectors": false,
+    "reason": "The transferred native gate alone occupies 1.5% of the independent L1 calibration background. A positive rescue gate cannot be added while simultaneously preserving that threshold and claiming a detector-wise 1% global false-positive rate.",
+    "bootstrap_note": "Counts are a feasibility diagnostic, not final thresholds. Any approved A2 must be recalibrated with raw-source-block bootstrap under its complete frozen decision rule."
+  },
+  "scientific_options": {
+    "separate_diagnostic_channels": "Keep the canonical native decision unchanged and report multiscale rescue separately, without a unified 1% detection claim.",
+    "unified_one_percent_gate": "Preserve a detector-wise 1% global target by allocating alpha and recalibrating both native and rescue components; the canonical native threshold cannot remain invariant.",
+    "preserve_native_and_raise_global_alpha": "Keep the canonical native threshold and add rescue only after explicitly accepting and calibrating a global false-positive target above 1%."
+  },
+  "recommended_option": "separate_diagnostic_channels",
+  "decision_boundary": "Selection of a unified alpha allocation or a higher global alpha changes what is measured and requires explicit scientific authorization before implementation."
+}
