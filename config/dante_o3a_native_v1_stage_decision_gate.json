@@ -1,0 +1,100 @@
+{
+  "author_decisions": {
+    "coincidence_interpretation": null,
+    "initial_calibration_and_scan": null,
+    "native_index_architecture": null,
+    "population_firewall": null,
+    "native_threshold_statistics": null
+  },
+  "dq_snapshot_digest": "4b8d8bb6e991641d250ba066614601d4dd37480363975d3fdee0043f30f73bb2",
+  "execution_allowed": false,
+  "gate_digest": "11818f625ca26945ec71a14c1e88505105b8c7c872f84d73e9a4e8284f118535",
+  "outcome_data_accessed": false,
+  "strain_data_accessed": false,
+  "recommendations": {
+    "coincidence_interpretation": {
+      "global_significance_claim_allowed": false,
+      "partner_class_required": false,
+      "primary_role": "POOLED_NULL_EXCEEDANCES_ARE_DIAGNOSTIC_PEM_SHORTLIST_ONLY",
+      "robust_seed_asymmetric_partner_evaluation": true,
+      "time_slide_full_pipeline_null_required_for_global_claim": true
+    },
+    "initial_calibration_and_scan": {
+      "analysis_duration_s": 32,
+      "calibration_rows_per_detector": 5000,
+      "calibration_selection": "OUTCOME_BLIND_HASH_STRATIFIED_COMPLETE_RUN_BLOCKS",
+      "detectors": [
+        "H1",
+        "L1"
+      ],
+      "full_scan_grid": "GPS_MULTIPLE_OF_32_WITHIN_CBC_CAT1_AND_COMPLETE_CONTEXT",
+      "initial_reference_role": "O3B_K275_PRIMARY_SCAN_SEED_ONLY",
+      "primary_candidate_rule": "DETECTOR_SCORE_ABOVE_DETECTOR_SPECIFIC_P99",
+      "whitening_pad_s": 4,
+      "window_stride_s": 64
+    },
+    "native_index_architecture": {
+      "centroid_count": 1216,
+      "centroid_l2_normalization": true,
+      "compute_labels": false,
+      "embedding_dimension": 384,
+      "index_data_source": "FRESH_O3A_NATIVE_COHORT_ONLY",
+      "minibatch_kmeans_batch_size": 4096,
+      "minibatch_kmeans_n_init": "auto",
+      "random_seed": 42,
+      "raw_embedding_sample_l2_normalization": true,
+      "raw_embedding_sample_size": 50000
+    },
+    "native_threshold_statistics": {
+      "block_length_rows": 17,
+      "bootstrap_chunk_size": 500,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_seed": 42,
+      "bootstrap_unit": "COMPLETE_NON_OVERLAPPING_TEMPORAL_BLOCKS",
+      "classification_rule": "BACKGROUND_BELOW_CI_LOWER_ROBUST_ABOVE_CI_UPPER_AMBIGUOUS_OTHERWISE",
+      "confidence_percentiles": [
+        2.5,
+        97.5
+      ],
+      "detector_specific": true,
+      "native_calibration_rows_per_detector": 5000,
+      "point_percentile_uses_all_rows": true,
+      "score_percentile": 99
+    },
+    "population_firewall": {
+      "candidate_guard_cross_detector": true,
+      "candidate_guard_start_delta_s": 128,
+      "complete_symmetric_context_required": true,
+      "index_cohort_rows_per_detector": 647,
+      "index_same_detector_minimum_separation_s": 96,
+      "native_calibration_guard_interval_gap_s": 96,
+      "native_calibration_guard_start_delta_s": 128,
+      "selection_priority": "SHA256_CONTRACT_DETECTOR_GPS",
+      "selection_reads_scores_or_classes": false,
+      "validation_population_disjoint": true
+    }
+  },
+  "reference_method_contracts": {
+    "o4a_native_calibration_v2": {
+      "path": "config/dante_o4a_corrected_native_calibration_v2.json",
+      "sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584"
+    },
+    "o4a_native_cohort_v1": {
+      "path": "config/dante_o4a_corrected_native_v1.json",
+      "sha256": "c601205d5ceabe9aaca7f15a03afb91467eb23e45cd89d0d1add02397a83850b"
+    },
+    "o4a_native_index_v1": {
+      "path": "config/dante_o4a_corrected_native_index_v1.json",
+      "sha256": "4d63db624e7bb8abf25730b1981b85d48c3a520f298d3d4ecff13f99e49efbce"
+    },
+    "o4a_native_thresholds_v1": {
+      "path": "config/dante_o4a_corrected_native_thresholds_v1.json",
+      "sha256": "15a34d91349c949ec617633edc8919b16b13c594f4bf1ed639eebaeb22350993"
+    }
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "scope_contract_digest": "a18dabf24f8143e6d5842379561ef2c6a58d93a573dbcc7ef8f82a0ee49eaa20",
+  "status": "AUTHOR_DECISION_REQUIRED",
+  "interpretation": "These are explicit methodological-parity recommendations, not frozen O3a parameters. They import no O4a rows, scores, indices, thresholds, or classes and cannot authorize execution until the author approves each decision."
+}

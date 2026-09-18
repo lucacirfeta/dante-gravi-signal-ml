@@ -1,7 +1,7 @@
 # O3a native reconstruction: approved scope freeze
 
-Status: **SCOPE APPROVED; RUNTIME AND REFERENCES VERIFIED; SCIENTIFIC
-EXECUTION STILL FAIL-CLOSED**
+Status: **SCOPE AND PUBLIC DQ SNAPSHOT FROZEN; SCIENTIFIC EXECUTION STILL
+FAIL-CLOSED**
 
 ## Approved decisions
 
@@ -48,19 +48,23 @@ input.
 
 ## Why execution remains blocked
 
-The approved scope does not determine stage-level population sizes, guard
-duration, native clustering parameters, block-bootstrap configuration,
+The public O3a `CBC_CAT1` snapshot is now frozen at
+`config/dante_o3a_cbc_cat1_segments_v1.json`: 545 H1 segments covering
+11,218,675 s and 535 L1 segments covering 11,956,179 s. Only DQ metadata was
+queried; no strain or DANTE outcome was accessed.
+
+The approved scope still does not determine stage-level population sizes,
+guard duration, native clustering parameters, block-bootstrap configuration,
 threshold quantile/confidence interval, or the coincidence multiple-testing
-policy. These are scientific choices and are intentionally listed as
-unresolved in `config/dante_o3a_native_v1_contract.json` rather than copied
-from O4a or inferred from prior chat context.
+policy. These remain scientific choices and are presented, but not approved,
+in `config/dante_o3a_native_v1_stage_decision_gate.json`.
 
 Accordingly:
 
 - `scope_execution_authorized` is `true`;
 - `pipeline_execution_allowed` is `false`;
-- no DQ snapshot, strain, window selection, score, fit, or scan was accessed or
+- no strain, window selection, score, fit, index build, or scan was accessed or
   started by this increment.
 
-The next checkpoint is a public O3a `CBC_CAT1` snapshot plus explicit,
-stage-specific outcome-blind population and statistical contracts.
+The next checkpoint is author approval of the explicit stage-level
+outcome-blind population and statistical recommendations.

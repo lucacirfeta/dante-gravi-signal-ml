@@ -1,14 +1,29 @@
 {
   "authorization_digest": "1d994c2af01ea797621888f5e1318df5aaee88eb5a9a94e647417ed31d5322ec",
-  "contract_digest": "c6a255d038126ac39d44113017a8751e8efc5d577f72eb0e499f8cc0bb25966f",
+  "contract_digest": "a18dabf24f8143e6d5842379561ef2c6a58d93a573dbcc7ef8f82a0ee49eaa20",
   "detectors": [
     "H1",
     "L1"
   ],
+  "dq_snapshot": {
+    "path": "config/dante_o3a_cbc_cat1_segments_v1.json",
+    "sha256": "49dcfdbe642dbfb1624a1ddf544abc69667317e6be62102dc6c0424811e1e6ac",
+    "snapshot_digest": "4b8d8bb6e991641d250ba066614601d4dd37480363975d3fdee0043f30f73bb2",
+    "summaries": {
+      "H1": {
+        "livetime_s": 11218675,
+        "segment_count": 545
+      },
+      "L1": {
+        "livetime_s": 11956179,
+        "segment_count": 535
+      }
+    }
+  },
   "implementation_sources": {
     "config/reference_artifacts.json": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe",
     "src/core/artifact_manager.py": "edc0b646963c5428f7f401da03d3ea8d063f9de0a01bad9bc73ec538fde0cc5e",
-    "src/dante_light/o3a_native_contract.py": "e43ee8f851bf60754dfd52ec26a33b65ce242d79242fd7ec95f7d04b71f5f203",
+    "src/dante_light/o3a_native_contract.py": "b9aa099fd66c4f2d10b97927540a3a9a4b651d0f97db2108f1db477f3f25fbcc",
     "src/dante_light/o4a_corrected_runtime.py": "35f1ce6a785ab6e56bedd16324962c6eeca057a07eb4215bb40f4cf9138aacaf"
   },
   "official_run_bounds_gps": [
@@ -16,7 +31,7 @@
     1253977218
   ],
   "pipeline_execution_allowed": false,
-  "pipeline_execution_blocker": "DQ snapshot and stage-specific population/statistical contracts absent",
+  "pipeline_execution_blocker": "stage-specific population/statistical contracts absent",
   "public_dq_semantics": "CBC_CAT1",
   "references": {
     "forbidden_o4a_reference": {

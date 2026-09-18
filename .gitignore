@@ -328,6 +328,7 @@ reports/
 scripts/*
 !scripts/audit_dante_o3a_transfer_readiness.py
 !scripts/freeze_dante_o3a_native_v1.py
+!scripts/freeze_dante_o3a_dq_snapshot.py
 !scripts/build_o4a_provenance_release_bundle.py
 !scripts/audit_dante_light_v8_1_phase0.py
 !scripts/manage_dante_light_v8_1_review_telemetry.py

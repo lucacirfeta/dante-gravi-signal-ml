@@ -13,7 +13,7 @@ import importlib.metadata
 import json
 import os
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from src.core.artifact_manager import model_contract_summary
 from src.dante_light.contracts import ContractError, canonical_json_sha256
@@ -29,6 +29,8 @@ ROOT = Path(__file__).resolve().parents[2]
 AUTHORIZATION_REL = "config/dante_o3a_native_v1_authorization.json"
 RUNTIME_REL = "config/dante_o3a_native_v1_runtime.json"
 CONTRACT_REL = "config/dante_o3a_native_v1_contract.json"
+DQ_SNAPSHOT_REL = "config/dante_o3a_cbc_cat1_segments_v1.json"
+STAGE_GATE_REL = "config/dante_o3a_native_v1_stage_decision_gate.json"
 REFERENCE_REL = "config/reference_artifacts.json"
 SCHEMA_VERSION = 1
 RUNTIME_ID = "dante-o3a-native-wsl-cuda-runtime-v1"
@@ -136,6 +138,127 @@ def _source_contract(root: Path) -> dict[str, str]:
     return {path: _sha256_file(root / path) for path in _SOURCE_FILES}
 
 
+def _normalized_segments(values: Any, detector: str) -> list[list[int]]:
+    segments: list[list[int]] = []
+    previous_right: int | None = None
+    for item in values:
+        if len(item) != 2:
+            raise ContractError(f"O3a {detector} DQ segment is not a pair")
+        left_raw, right_raw = float(item[0]), float(item[1])
+        if not left_raw.is_integer() or not right_raw.is_integer():
+            raise ContractError(f"O3a {detector} DQ endpoint is not integral GPS")
+        left, right = int(left_raw), int(right_raw)
+        if left < O3A_BOUNDS[0] or right > O3A_BOUNDS[1] or right <= left:
+            raise ContractError(f"O3a {detector} DQ segment is outside run bounds")
+        if previous_right is not None and left < previous_right:
+            raise ContractError(f"O3a {detector} DQ segments overlap or are unsorted")
+        segments.append([left, right])
+        previous_right = right
+    if not segments:
+        raise ContractError(f"O3a {detector} CBC_CAT1 response is empty")
+    return segments
+
+
+def build_dq_snapshot(
+    *,
+    root: Path = ROOT,
+    segment_fetcher: Callable[[str, int, int], Any] | None = None,
+) -> dict[str, Any]:
+    """Fetch public CBC_CAT1 metadata only and return a self-digested snapshot."""
+    authorization = load_authorization(root=root)
+    if authorization["author_decisions"]["dq_semantics"] != "CBC_CAT1":
+        raise ContractError("O3a authorization does not select CBC_CAT1")
+    if segment_fetcher is None:
+        from gwosc.timeline import get_segments
+
+        segment_fetcher = get_segments
+    segments: dict[str, list[list[int]]] = {}
+    summaries: dict[str, dict[str, int]] = {}
+    for detector in DETECTORS:
+        rows = _normalized_segments(
+            segment_fetcher(
+                f"{detector}_CBC_CAT1", O3A_BOUNDS[0], O3A_BOUNDS[1]
+            ),
+            detector,
+        )
+        segments[detector] = rows
+        summaries[detector] = {
+            "segment_count": len(rows),
+            "livetime_s": sum(right - left for left, right in rows),
+        }
+    body = {
+        "schema_version": SCHEMA_VERSION,
+        "status": "FROZEN_PUBLIC_DQ_ONLY",
+        "run": "O3A",
+        "official_run_bounds_gps": O3A_BOUNDS,
+        "detectors": DETECTORS,
+        "source": {
+            "provider": "GWOSC",
+            "api": "gwosc.timeline.get_segments",
+            "release_url": "https://gwosc.org/O3/",
+            "flags": {detector: f"{detector}_CBC_CAT1" for detector in DETECTORS},
+            "outcome_data_accessed": False,
+            "strain_data_accessed": False,
+        },
+        "query_bounds_gps": O3A_BOUNDS,
+        "segments": segments,
+        "summaries": summaries,
+    }
+    return {**body, "snapshot_digest": canonical_json_sha256(body)}
+
+
+def validate_dq_snapshot(value: Mapping[str, Any]) -> dict[str, Any]:
+    _validate_self_digest(value, "snapshot_digest", "DQ snapshot")
+    if (
+        value.get("schema_version") != SCHEMA_VERSION
+        or value.get("status") != "FROZEN_PUBLIC_DQ_ONLY"
+        or value.get("run") != "O3A"
+        or value.get("official_run_bounds_gps") != O3A_BOUNDS
+        or value.get("query_bounds_gps") != O3A_BOUNDS
+        or value.get("detectors") != DETECTORS
+    ):
+        raise ContractError("O3a DQ snapshot scope mismatch")
+    source = value.get("source", {})
+    if (
+        source.get("provider") != "GWOSC"
+        or source.get("api") != "gwosc.timeline.get_segments"
+        or source.get("flags")
+        != {detector: f"{detector}_CBC_CAT1" for detector in DETECTORS}
+        or source.get("outcome_data_accessed") is not False
+        or source.get("strain_data_accessed") is not False
+    ):
+        raise ContractError("O3a DQ snapshot source mismatch")
+    normalized: dict[str, list[list[int]]] = {}
+    summaries: dict[str, dict[str, int]] = {}
+    for detector in DETECTORS:
+        rows = _normalized_segments(value.get("segments", {}).get(detector, []), detector)
+        normalized[detector] = rows
+        summaries[detector] = {
+            "segment_count": len(rows),
+            "livetime_s": sum(right - left for left, right in rows),
+        }
+    if value.get("segments") != normalized or value.get("summaries") != summaries:
+        raise ContractError("O3a DQ snapshot summaries mismatch")
+    return dict(value)
+
+
+def load_dq_snapshot(*, root: Path = ROOT) -> dict[str, Any]:
+    path = root / DQ_SNAPSHOT_REL
+    if not path.is_file():
+        raise ContractError("O3a CBC_CAT1 snapshot is absent")
+    return validate_dq_snapshot(json.loads(path.read_text(encoding="utf-8")))
+
+
+def write_dq_snapshot(
+    *,
+    root: Path = ROOT,
+    segment_fetcher: Callable[[str, int, int], Any] | None = None,
+) -> dict[str, Any]:
+    value = build_dq_snapshot(root=root, segment_fetcher=segment_fetcher)
+    _write_json(root / DQ_SNAPSHOT_REL, value)
+    return value
+
+
 def build_runtime_contract(
     *, root: Path = ROOT, device: str = "cuda"
 ) -> dict[str, Any]:
@@ -223,6 +346,8 @@ def build_scope_contract(*, root: Path = ROOT) -> dict[str, Any]:
     authorization = load_authorization(root=root)
     runtime = load_runtime_contract(root=root)
     references = _reference_contract(root)
+    dq_snapshot = load_dq_snapshot(root=root)
+    dq_path = root / DQ_SNAPSHOT_REL
     body = {
         "schema_version": SCHEMA_VERSION,
         "status": "FROZEN_O3A_SCOPE_PREPARATION_ONLY",
@@ -235,8 +360,14 @@ def build_scope_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "scope_execution_authorized": True,
         "pipeline_execution_allowed": False,
         "pipeline_execution_blocker": (
-            "DQ snapshot and stage-specific population/statistical contracts absent"
+            "stage-specific population/statistical contracts absent"
         ),
+        "dq_snapshot": {
+            "path": DQ_SNAPSHOT_REL,
+            "sha256": _sha256_file(dq_path),
+            "snapshot_digest": dq_snapshot["snapshot_digest"],
+            "summaries": dq_snapshot["summaries"],
+        },
         "references": references,
         "implementation_sources": _source_contract(root),
         "run_dependent_artifacts": {
@@ -271,6 +402,14 @@ def validate_scope_contract(
     _validate_self_digest(value, "contract_digest", "scope contract")
     authorization = load_authorization(root=root)
     runtime = load_runtime_contract(root=root)
+    dq_snapshot = load_dq_snapshot(root=root)
+    dq_path = root / DQ_SNAPSHOT_REL
+    expected_dq = {
+        "path": DQ_SNAPSHOT_REL,
+        "sha256": _sha256_file(dq_path),
+        "snapshot_digest": dq_snapshot["snapshot_digest"],
+        "summaries": dq_snapshot["summaries"],
+    }
     if (
         value.get("schema_version") != SCHEMA_VERSION
         or value.get("status") != "FROZEN_O3A_SCOPE_PREPARATION_ONLY"
@@ -282,6 +421,7 @@ def validate_scope_contract(
         or value.get("runtime_contract_digest") != runtime["contract_digest"]
         or value.get("scope_execution_authorized") is not True
         or value.get("pipeline_execution_allowed") is not False
+        or value.get("dq_snapshot") != expected_dq
         or tuple(value.get("unresolved_stage_parameters", ()))
         != _UNRESOLVED_STAGE_PARAMETERS
         or value.get("references") != _reference_contract(root)
@@ -310,6 +450,34 @@ def load_scope_contract(*, root: Path = ROOT) -> dict[str, Any]:
     )
 
 
+def load_stage_decision_gate(*, root: Path = ROOT) -> dict[str, Any]:
+    path = root / STAGE_GATE_REL
+    if not path.is_file():
+        raise ContractError("O3a stage decision gate is absent")
+    value = json.loads(path.read_text(encoding="utf-8"))
+    _validate_self_digest(value, "gate_digest", "stage decision gate")
+    scope = load_scope_contract(root=root)
+    dq = load_dq_snapshot(root=root)
+    if (
+        value.get("schema_version") != SCHEMA_VERSION
+        or value.get("status") != "AUTHOR_DECISION_REQUIRED"
+        or value.get("run") != "O3A"
+        or value.get("scope_contract_digest") != scope["contract_digest"]
+        or value.get("dq_snapshot_digest") != dq["snapshot_digest"]
+        or value.get("outcome_data_accessed") is not False
+        or value.get("strain_data_accessed") is not False
+        or value.get("execution_allowed") is not False
+    ):
+        raise ContractError("O3a stage decision gate scope mismatch")
+    recommendations = value.get("recommendations", {})
+    decisions = value.get("author_decisions", {})
+    if not isinstance(recommendations, dict) or set(decisions) != set(recommendations):
+        raise ContractError("O3a stage decision fields are incomplete")
+    if any(decision is not None for decision in decisions.values()):
+        raise ContractError("O3a stage decisions must remain unresolved in this gate")
+    return dict(value)
+
+
 def _write_json(path: Path, value: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -331,16 +499,30 @@ def write_runtime_and_scope_contracts(
     return runtime, scope
 
 
+def write_scope_contract(*, root: Path = ROOT) -> dict[str, Any]:
+    value = build_scope_contract(root=root)
+    _write_json(root / CONTRACT_REL, value)
+    return value
+
+
 __all__ = [
     "AUTHORIZATION_REL",
     "CONTRACT_REL",
+    "DQ_SNAPSHOT_REL",
+    "STAGE_GATE_REL",
     "RUNTIME_REL",
     "build_runtime_contract",
+    "build_dq_snapshot",
     "build_scope_contract",
     "load_authorization",
+    "load_dq_snapshot",
     "load_runtime_contract",
+    "load_stage_decision_gate",
     "load_scope_contract",
     "validate_runtime_contract",
+    "validate_dq_snapshot",
     "validate_scope_contract",
     "write_runtime_and_scope_contracts",
+    "write_dq_snapshot",
+    "write_scope_contract",
 ]
