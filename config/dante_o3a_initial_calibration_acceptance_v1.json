@@ -1,0 +1,138 @@
+{
+  "acceptance": {
+    "block_atomic": true,
+    "cross_stratum_reallocation_allowed": false,
+    "excess_power_veto_applied": false,
+    "executed_by_this_freeze": true,
+    "failure_fallback": "try the next ascending-hash candidate in the same stratum",
+    "fallback_raw_available": false,
+    "provisional_failure_action": "STOP_FALLBACK_ACQUISITION_EXTENSION_REQUIRED",
+    "required": [
+      "exact raw coverage for the complete symmetric context",
+      "finite raw samples at the canonical sample rate",
+      "finite canonical whitening output before analysis crop",
+      "finite canonical Q-transform image",
+      "finite frozen-DINOv2 patch tokens",
+      "finite primary O3b-K275 score"
+    ],
+    "score_value_or_class_may_affect_acceptance": false,
+    "stratum_exhaustion_action": "FAIL_CLOSED"
+  },
+  "contract_digest": "1c2b79a94674317edbea9f92a314d9ec08cf8425161ece8b83e4c74ad138a279",
+  "execution": {
+    "block_shards_atomic": true,
+    "device": "cuda",
+    "encoder_batch_size": 8,
+    "max_preprocess_in_flight": 16,
+    "resume_requires_shard_verification": true,
+    "workers": 8
+  },
+  "implementation_sources": {
+    "config.yaml": "8706c65bf80c88e933d9e64e7e095790f1574c652be3816bb838872037ff0fef",
+    "scripts/freeze_dante_o3a_initial_calibration_acceptance.py": "8e0cedf3740a8e2d9d29be4c6761de8df8ed95a2a47a854e1f297f3fae34e061",
+    "scripts/run_dante_o3a_initial_calibration_acceptance.py": "82730a321963071fe8d027a316ed33baac55b69c361a3cdb11b07657f338200a",
+    "src/core/encoder.py": "db579c866c2aa351ca6495c6717c2d775dac6a00aa1729c1e18db12ed8e9115f",
+    "src/core/model_loader.py": "16cc4dd386412aac0d2c87ddec4332d607d73542f8d9ce9f5c9c83fa52da9c40",
+    "src/core/patch_scorer.py": "6367d7dfff43d2225d41ea9723b18fd8dbab3e4bce4dfefc1d52f902e9ef6363",
+    "src/core/preprocessor.py": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2",
+    "src/dante_light/o3a_initial_calibration_acceptance.py": "70d553894d94a3f6d768d684fb5f80fe930ab8fb3dd3abccf94fb931e7d67cef"
+  },
+  "method_parity": {
+    "analysis_duration_s": 32.0,
+    "bandpass_hz": [
+      20.0,
+      2000.0
+    ],
+    "colormap": "cividis",
+    "frequency_range_hz": [
+      20,
+      2048
+    ],
+    "image_shape": [
+      256,
+      256,
+      3
+    ],
+    "primary_index": {
+      "artifact_id": "o3b_production_k275",
+      "n_centroids": 275,
+      "path": "data/reference/patch_compressed_index_o3b.npz",
+      "sha256": "9053477ed2f30ed866fc42ff32265957e6a0eb93238032359f5e45e2f032bb7c"
+    },
+    "query_qrange": [
+      4,
+      64
+    ],
+    "sample_rate_hz": 4096,
+    "source": {
+      "contract_digest": "f47d114a4571fb158c06c18406549eb4a3468ea47b1c1af046ec91687c82fd1e",
+      "path": "config/dante_light_o4a_v1_parity_contract.json",
+      "sha256": "f86835afccc310dedbe5e782240753705ee3cbe2deea6b59ba51962eaae0184c"
+    },
+    "top_k": 68,
+    "whitening_pad_s": 4.0
+  },
+  "parents": {
+    "canonical_runtime": {
+      "contract_digest": "e5c8b2324f631489d229cd878c109597da8e5c7fd4e62ba5d53fa7222e050dea",
+      "environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+      "path": "config/dante_o3a_native_v1_runtime.json",
+      "sha256": "3b00a0bf258cc96870971481138e10e7e85deb97a1c3c49c470626e3153d0ef2"
+    },
+    "initial_calibration_plan": {
+      "path": "config/dante_o3a_initial_calibration_plan_v1.json",
+      "plan_digest": "b735ab3821524452d7700c347de6375fd2045ffd02807958c81c52cde2cd4595",
+      "sha256": "bd5d0fa902bae502f2fc2eac4ddf5ae600e27d44886b19ff8307505d101658eb"
+    },
+    "native_scope_contract": {
+      "contract_digest": "a18dabf24f8143e6d5842379561ef2c6a58d93a573dbcc7ef8f82a0ee49eaa20",
+      "path": "config/dante_o3a_native_v1_contract.json",
+      "sha256": "6bcfe04273c7bdeabb7936873b1c4ea143169ba4fc8c22020b389213e1597adb"
+    },
+    "raw_acquisition_plan": {
+      "acquisition_digest": "25b68454e191bc45ec55a7edef65a586d73258f6654523b6eeedb4488d0b103d",
+      "path": "config/dante_o3a_initial_calibration_raw_acquisition_v1.json",
+      "sha256": "bc743d99adb75dde714de8398a72486bb2dc728eb11d7e169862b8a631c289d5"
+    },
+    "selector_contract": {
+      "contract_digest": "cc2d46523a753c62609c69965811a0ec61839ff5544a346a2d686397b7de66e7",
+      "path": "config/dante_o3a_initial_calibration_selector_v1.json",
+      "sha256": "f1b25cfeac4de359ed8bf6daf5ecd8597b409d3f8821119c445bd4b0a74a6603"
+    },
+    "stage_contract": {
+      "contract_digest": "fb29f22ffc5a796843383d6ed48032879b1b44252b46a93163e7db2eec157a7d",
+      "path": "config/dante_o3a_native_v1_stage_contract.json",
+      "sha256": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8"
+    }
+  },
+  "population": {
+    "blocks_per_detector": 295,
+    "bootstrap_rows_per_detector": 4998,
+    "candidate_rows_per_block": 17,
+    "evaluated_rows_per_detector": 5015,
+    "point_estimate_rows_per_detector": 5000,
+    "point_only_tail_rows_per_detector": 2,
+    "provisional_block_count": 590
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_outcome_review_allowed": false,
+    "classification_allowed": false,
+    "native_index_selection_allowed": false,
+    "primary_seed_scoring_allowed": true,
+    "score_magnitude_or_class_affects_acceptance": false,
+    "strain_access_allowed": true,
+    "threshold_fitting_allowed": false
+  },
+  "status": "FROZEN_O3A_INITIAL_CALIBRATION_RAW_ACCEPTANCE",
+  "verified_raw_input": {
+    "download_artifact_digest": "fbbf97bb9a4a38d0fce18cea8c2799f1b292bfb744e1d607206d7e3c8a17d0a1",
+    "download_run_key": "b6f43f84cde717eed478947ac4fccaa0f6fd5f5b16fc2740521fcca5f94b9f9f",
+    "download_summary_path": "E:\\o3a\\runs\\raw_download_b6f43f84cde717eed478947ac4fccaa0f6fd5f5b16fc2740521fcca5f94b9f9f\\summary.json",
+    "download_summary_sha256": "8f171f845d64f8182ce5aefab5b46c6a0c0d77bf8156366f9f681fe894ffc205",
+    "manifest_relative_to_raw_root": "manifests/o3a_raw_b6f43f84cde717eed478947ac4fccaa0f6fd5f5b16fc2740521fcca5f94b9f9f.jsonl",
+    "manifest_sha256": "9a60a2990cdee999e48d919bf20adf2ae5c5decd5a954440bd682c2ced7a6926",
+    "verified_file_count": 726
+  }
+}
