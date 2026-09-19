@@ -56,6 +56,7 @@ completed_at: 2026-09-19
 
 ## Next gate
 
-Perform block-atomic raw acceptance for the frozen O3a calibration/index
-populations. This next gate may open only the named raw blocks and must remain
-upstream of scoring, threshold fitting, classification, and candidate review.
+Perform block-atomic raw acceptance for the 590 provisionally selected O3a
+initial-calibration blocks. This next gate may open only the named raw blocks
+and must remain upstream of threshold fitting, classification, and candidate
+review. Native-index selection remains a later, separate gate.

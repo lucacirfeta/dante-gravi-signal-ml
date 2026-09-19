@@ -9,7 +9,8 @@
   A complete zero-network replay reproduced every canonical evidence digest.
   No strain values or outcomes were inspected. Scoring, threshold fitting,
   classification, and the primary scan remain disabled. The next gate is
-  block-atomic raw acceptance for the frozen calibration/index populations.
+  block-atomic raw acceptance for the 590 provisionally selected initial-
+  calibration blocks. Native-index selection remains a later, separate gate.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
