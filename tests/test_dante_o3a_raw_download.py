@@ -10,10 +10,12 @@ import pytest
 from src.core.patch_producer import load_frozen_raw_manifest
 from src.dante_light.o3a_raw_download import (
     _Progress,
+    _canonical_verified_record,
     _download_one,
     build_preflight,
     build_raw_manifest_rows,
     validate_hdf5_metadata,
+    write_preflight,
 )
 from src.dante_light.contracts import ContractError
 
@@ -53,6 +55,53 @@ def test_preflight_binds_all_frames_and_checks_disk(tmp_path: Path) -> None:
     assert value["expected_download_bytes"] == 726 * size
     assert value["execution_boundary"]["hdf5_bytes_downloaded"] == 0
     assert value["execution_boundary"]["strain_data_accessed"] is False
+
+
+def test_preflight_is_immutable_and_reused_for_same_run(tmp_path: Path) -> None:
+    calls = 0
+
+    def fake_head(item: dict) -> dict:
+        nonlocal calls
+        calls += 1
+        return {
+            "content_length_bytes": 1,
+            "etag": None,
+            "last_modified": None,
+            "resolved_url": item["url"],
+        }
+
+    first, path = write_preflight(
+        root=ROOT,
+        raw_root=tmp_path,
+        workers=4,
+        reserve_bytes=0,
+        head_fetcher=fake_head,
+    )
+    first_bytes = path.read_bytes()
+    assert calls == 726
+
+    def forbidden_head(item: dict) -> dict:
+        raise AssertionError(f"unexpected repeated HEAD request for {item['url']}")
+
+    second, second_path = write_preflight(
+        root=ROOT,
+        raw_root=tmp_path,
+        workers=4,
+        reserve_bytes=0,
+        head_fetcher=forbidden_head,
+    )
+    assert second_path == path
+    assert second == first
+    assert path.read_bytes() == first_bytes
+
+
+def test_verified_ledger_ignores_attempt_local_transport_source() -> None:
+    base = {"detector": "H1", "gps_start": 1000, "sha256": "a" * 64}
+    downloaded = _canonical_verified_record({**base, "source": "GWOSC_HTTPS"})
+    replayed = _canonical_verified_record(
+        {**base, "source": "VERIFIED_EXISTING_FINAL"}
+    )
+    assert downloaded == replayed == base
 
 
 def test_hdf5_metadata_and_raw_manifest_are_patch_producer_compatible(

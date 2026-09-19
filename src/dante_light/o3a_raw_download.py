@@ -233,6 +233,40 @@ def write_preflight(
     reserve_bytes: int = DEFAULT_RESERVE_BYTES,
     head_fetcher: HeadFetcher = _default_head,
 ) -> tuple[dict[str, Any], Path]:
+    plan = load_acquisition_plan(root=root)
+    run_key = _run_key(plan, root)
+    run_dir = raw_root / "runs" / f"raw_download_{run_key}"
+    path = run_dir / "preflight.json"
+    if path.is_file():
+        existing = json.loads(path.read_text(encoding="utf-8"))
+        existing_body = {
+            key: value
+            for key, value in existing.items()
+            if key != "preflight_digest"
+        }
+        if existing.get("preflight_digest") != canonical_json_sha256(existing_body):
+            raise ContractError("existing O3a raw preflight digest mismatch")
+        expected_identity = {
+            "run_key": run_key,
+            "acquisition_digest": plan["acquisition_digest"],
+            "acquisition_file_sha256": file_sha256(root / ACQUISITION_REL),
+            "implementation_sources": _source_hashes(root),
+            "raw_root": str(raw_root),
+            "workers": workers,
+            "reserve_bytes": reserve_bytes,
+        }
+        observed_identity = {
+            key: existing.get(key) for key in expected_identity
+        }
+        if observed_identity != expected_identity:
+            raise ContractError("existing O3a raw preflight identity mismatch")
+        if (
+            existing.get("status") != "PASS_O3A_RAW_DOWNLOAD_PREFLIGHT"
+            or int(existing.get("expected_file_count", -1))
+            != len(_all_frames(plan))
+        ):
+            raise ContractError("existing O3a raw preflight is incomplete")
+        return existing, path
     value = build_preflight(
         root=root,
         raw_root=raw_root,
@@ -240,8 +274,6 @@ def write_preflight(
         reserve_bytes=reserve_bytes,
         head_fetcher=head_fetcher,
     )
-    run_dir = raw_root / "runs" / f"raw_download_{value['run_key']}"
-    path = run_dir / "preflight.json"
     _atomic_json(path, value)
     return value, path
 
@@ -300,6 +332,11 @@ def _record_base(item: Mapping[str, Any]) -> dict[str, Any]:
         for key, value in item.items()
         if key not in {"content_length_bytes", "content_sha256", "download_status"}
     }
+
+
+def _canonical_verified_record(record: Mapping[str, Any]) -> dict[str, Any]:
+    """Remove attempt-local transport details from immutable verification evidence."""
+    return {key: value for key, value in record.items() if key != "source"}
 
 
 class _Progress:
@@ -488,7 +525,7 @@ def execute_download(
 
     def persist(record: dict[str, Any]) -> None:
         with ledger_lock:
-            records.append(record)
+            records.append(_canonical_verified_record(record))
             records.sort(key=lambda row: (row["detector"], row["gps_start"]))
             _atomic_jsonl(ledger_path, records)
 
