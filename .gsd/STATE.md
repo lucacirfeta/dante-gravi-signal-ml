@@ -1,14 +1,14 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.5 outcome-blind identity universes
-- **Status**: The O3a method-parity scale audit and approved stage contract
-  are complete. The public CBC_CAT1 geometry is now frozen as compact,
-  lossless universes containing 349,925 H1 and 372,986 L1 primary-scan
-  identities plus 174,967 H1 and 186,491 L1 initial-calibration proposals.
-  This checkpoint reads neither strain nor outcomes and selects no scientific
-  population members. The next gate must freeze the exact hash-stratified
-  calibration sampling and raw-quality acceptance rule before any strain
-  access or construction of disjoint population manifests.
+- **Phase**: 7.6 initial-calibration selector freeze
+- **Status**: The O3a method-parity scale audit, approved stage contract, and
+  public CBC_CAT1 identity universes are complete. The exact hash-stratified
+  17-row-block selector is now frozen with 295 chronological strata and a
+  deterministic 5,000-row provisional plan for each detector. It reads no
+  strain or outcomes. Raw acceptance, scoring, threshold fitting, and the
+  primary scan remain disabled. The next gate is a provenance-complete O3a
+  raw inventory and an execution contract for block-atomic validation of the
+  frozen priority plan.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently

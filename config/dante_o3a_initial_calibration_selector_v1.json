@@ -1,0 +1,78 @@
+{
+  "approval_date": "2026-09-19",
+  "contract_digest": "cc2d46523a753c62609c69965811a0ec61839ff5544a346a2d686397b7de66e7",
+  "detectors": [
+    "H1",
+    "L1"
+  ],
+  "execution_boundary": {
+    "outcomes_read": false,
+    "preselection_plan_allowed": true,
+    "public_geometry_only": true,
+    "raw_acceptance_execution_allowed": false,
+    "scoring_allowed": false,
+    "strain_access_allowed": false,
+    "threshold_fitting_allowed": false
+  },
+  "implementation": {
+    "entrypoint_path": "scripts/freeze_dante_o3a_initial_calibration.py",
+    "entrypoint_sha256": "97e9a725ce9cc82c686c8795aab420f3d7e9d63f8d38127e2f104644a2c83f55",
+    "path": "src/dante_light/o3a_initial_calibration.py",
+    "sha256": "64565187b0588cbdefcb9e9366362ffd6c63973119482954d606dab19e79ddd0"
+  },
+  "parents": {
+    "identity_universes": {
+      "manifest_digest": "36138d0c4115448fec56a3cf9535bff146e333ff61369bf521a6b5ea3788a00d",
+      "path": "config/dante_o3a_native_v1_identity_universes.json",
+      "sha256": "db3efd5959b03f29989e5559e58a2e7b2b9d918806959993306d5242b553b074"
+    },
+    "stage_contract": {
+      "contract_digest": "fb29f22ffc5a796843383d6ed48032879b1b44252b46a93163e7db2eec157a7d",
+      "path": "config/dante_o3a_native_v1_stage_contract.json",
+      "sha256": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8"
+    }
+  },
+  "raw_acceptance": {
+    "block_atomic": true,
+    "cross_stratum_reallocation_allowed": false,
+    "excess_power_veto_applied": false,
+    "executed_by_this_freeze": false,
+    "failure_fallback": "try the next ascending-hash candidate in the same stratum",
+    "required": [
+      "exact raw coverage for the complete symmetric context",
+      "finite raw samples at the canonical sample rate",
+      "finite canonical whitening output before analysis crop",
+      "finite canonical Q-transform image",
+      "finite frozen-DINOv2 patch tokens",
+      "finite primary O3b-K275 score"
+    ],
+    "score_value_or_class_may_affect_acceptance": false,
+    "stratum_exhaustion_action": "FAIL_CLOSED"
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "selection": {
+    "accepted_blocks_required_per_detector": 295,
+    "bootstrap_complete_blocks": 294,
+    "bootstrap_rows": 4998,
+    "candidate_block_length_rows": 17,
+    "candidate_blocks_are_non_overlapping_within_segment": true,
+    "candidate_blocks_may_cross_dq_segments": false,
+    "chronological_stratum_count": 295,
+    "complete_symmetric_context_s": 4,
+    "output_order": "detector_then_stratum_then_window_start",
+    "planned_rows_before_truncation": 5015,
+    "planned_rows_per_detector": 5000,
+    "point_estimate_rows": 5000,
+    "point_only_tail_rows": 2,
+    "priority_encoding": "ASCII selector_contract_digest|detector|stratum_index|comma-separated-integer-window-starts",
+    "priority_hash": "SHA256",
+    "priority_order": "ascending_digest_then_first_gps_start",
+    "provisional_block_rank_per_stratum": 0,
+    "source_role": "initial_calibration_proposal_universe",
+    "stratum_boundaries": "for stratum i over N chronological candidate blocks: [floor(i*N/295), floor((i+1)*N/295))",
+    "window_duration_s": 32,
+    "window_stride_s": 64
+  },
+  "status": "AUTHOR_APPROVED_O3A_INITIAL_CALIBRATION_SELECTOR"
+}
