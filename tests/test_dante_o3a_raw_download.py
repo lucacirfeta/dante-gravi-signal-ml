@@ -132,6 +132,9 @@ def test_interrupted_download_resumes_with_valid_range(
         "gps_end": 2001,
         "target_relative_path": "L1/frame.hdf5",
         "url": "https://data.gwosc.org/frame.hdf5",
+        "content_length_bytes": None,
+        "content_sha256": None,
+        "download_status": "NOT_DOWNLOADED",
     }
     record = _download_one(
         item=item,
@@ -145,6 +148,8 @@ def test_interrupted_download_resumes_with_valid_range(
     assert not partial.exists()
     assert record["source"] == "GWOSC_HTTPS"
     assert record["sha256"] == hashlib.sha256(payload).hexdigest()
+    assert "content_sha256" not in record
+    assert "download_status" not in record
 
 
 def test_download_refuses_to_overwrite_divergent_final(tmp_path: Path) -> None:

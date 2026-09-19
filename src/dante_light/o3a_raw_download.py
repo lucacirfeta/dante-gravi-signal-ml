@@ -294,6 +294,14 @@ def build_raw_manifest_rows(
     return rows
 
 
+def _record_base(item: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in item.items()
+        if key not in {"content_length_bytes", "content_sha256", "download_status"}
+    }
+
+
 class _Progress:
     def __init__(self, path: Path, expected_files: int, expected_bytes: int):
         self.path = path
@@ -366,7 +374,7 @@ def _download_one(
             raise ContractError(f"divergent existing O3a raw target: {target}")
         metadata = validate_hdf5_metadata(target, item)
         return {
-            **dict(item),
+            **_record_base(item),
             **metadata,
             "size_bytes": expected_size,
             "sha256": file_sha256(target),
@@ -384,7 +392,7 @@ def _download_one(
                 digest = file_sha256(partial)
                 os.replace(partial, target)
                 return {
-                    **dict(item),
+                    **_record_base(item),
                     **metadata,
                     "size_bytes": expected_size,
                     "sha256": digest,
@@ -425,7 +433,7 @@ def _download_one(
             digest = file_sha256(partial)
             os.replace(partial, target)
             return {
-                **dict(item),
+                **_record_base(item),
                 **metadata,
                 "size_bytes": expected_size,
                 "sha256": digest,
@@ -475,6 +483,7 @@ def execute_download(
     records: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
     ledger_path = run_dir / "verified_files.jsonl"
+    failures_path = run_dir / "failures.json"
     ledger_lock = threading.Lock()
 
     def persist(record: dict[str, Any]) -> None:
@@ -502,14 +511,21 @@ def execute_download(
                 persist(future.result())
                 progress.finish_file()
             except Exception as exc:
-                failures.append(
-                    {
-                        "detector": item["detector"],
-                        "filename": item["filename"],
-                        "error_type": type(exc).__name__,
-                        "error": str(exc),
-                    }
-                )
+                failure = {
+                    "detector": item["detector"],
+                    "filename": item["filename"],
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                }
+                with ledger_lock:
+                    failures.append(failure)
+                    failures.sort(
+                        key=lambda row: (row["detector"], row["filename"])
+                    )
+                    _atomic_json(
+                        failures_path,
+                        {"status": "RUNNING_WITH_FAILURES", "failures": failures},
+                    )
                 progress.finish_file(failed=True)
     status = "PASS_VERIFIED_RAW_DOWNLOAD" if not failures else "FAILED_INCOMPLETE"
     manifest_path = raw_root / "manifests" / f"o3a_raw_{run_key}.jsonl"
