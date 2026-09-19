@@ -1,14 +1,13 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.6 initial-calibration selector freeze
-- **Status**: The O3a method-parity scale audit, approved stage contract, and
-  public CBC_CAT1 identity universes are complete. The exact hash-stratified
-  17-row-block selector is now frozen with 295 chronological strata and a
-  deterministic 5,000-row provisional plan for each detector. It reads no
-  strain or outcomes. Raw acceptance, scoring, threshold fitting, and the
-  primary scan remain disabled. The next gate is a provenance-complete O3a
-  raw inventory and an execution contract for block-atomic validation of the
-  frozen priority plan.
+- **Phase**: 7.7 raw-source inventory and acquisition freeze
+- **Status**: The exact GWOSC O3a 4 kHz HDF5 URL inventory and the minimum
+  source-frame coverage for all 590 provisional initial-calibration blocks
+  are frozen. The plan requires 365 H1 and 361 L1 frames under `E:\o3a` and
+  has downloaded zero bytes. It reads no strain or outcomes. Raw acceptance,
+  scoring, threshold fitting, and the primary scan remain disabled. The next
+  gate is an atomic downloader and storage preflight that verifies content
+  hashes before creating the final raw manifest.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
