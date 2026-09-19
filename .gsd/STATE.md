@@ -1,16 +1,16 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.8 atomic O3a raw acquisition complete
-- **Status**: The canonical run
-  `b6f43f84cde717eed478947ac4fccaa0f6fd5f5b16fc2740521fcca5f94b9f9f`
-  verified all 726 frozen source frames (365 H1, 361 L1; 91,020,453,453
-  bytes) with zero failures and published the final raw manifest SHA-256
-  `9a60a2990cdee999e48d919bf20adf2ae5c5decd5a954440bd682c2ced7a6926`.
-  A complete zero-network replay reproduced every canonical evidence digest.
-  No strain values or outcomes were inspected. Scoring, threshold fitting,
-  classification, and the primary scan remain disabled. The next gate is
-  block-atomic raw acceptance for the 590 provisionally selected initial-
-  calibration blocks. Native-index selection remains a later, separate gate.
+- **Phase**: 7.9 O3a initial-calibration raw acceptance complete
+- **Status**: Canonical run
+  `8fdbca72bf4af0dd8b74b299aaa7ff1a7b431fa872a28eac6578fa97114f0cfd`
+  passed all 590 provisional blocks with zero failures.  The accepted ledger
+  contains exactly 5,000 point-estimate rows and 4,998 complete-block bootstrap
+  rows per detector; SHA-256
+  `b9fe2a4fb3481a44b7b067846791d2f286d2da9bd595069d2edc00a1fd4b2c2b`.
+  Score magnitude and class did not affect acceptance. No threshold, class, or
+  candidate outcome was evaluated. The next gate is to freeze the initial
+  detector-specific p99 threshold-fitting contract; classification, primary
+  scanning, and native-index selection remain closed.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
