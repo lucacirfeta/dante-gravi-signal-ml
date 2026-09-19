@@ -335,6 +335,7 @@ scripts/*
 !scripts/freeze_dante_o3a_identity_universes.py
 !scripts/freeze_dante_o3a_initial_calibration.py
 !scripts/freeze_dante_o3a_raw_acquisition.py
+!scripts/run_dante_o3a_raw_download.py
 !scripts/build_o4a_provenance_release_bundle.py
 !scripts/audit_dante_light_v8_1_phase0.py
 !scripts/manage_dante_light_v8_1_review_telemetry.py
