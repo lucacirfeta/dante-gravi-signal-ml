@@ -1,0 +1,89 @@
+{
+  "adequacy_gate": {
+    "absolute_and_relative_width_reported": true,
+    "finite_thresholds_and_endpoints": true,
+    "nondegenerate_intervals": true,
+    "point_estimate_inside_interval": true,
+    "post_hoc_o3a_specific_width_cutoff_allowed": false
+  },
+  "contract_digest": "44f188ccce5adf53d03d0a8885d279bf0dfe48881f3d34911264aa2d6a21095e",
+  "execution": {
+    "atomic_outputs_only": true,
+    "environment": "canonical WSL runtime",
+    "resume_partial_output": false
+  },
+  "implementation_sources": {
+    "scripts/freeze_dante_o3a_initial_thresholds.py": "27af1bb27a26b4a6a0d45938d7df9cbe3374aeb6bdac7ef35206f2d3277b6e15",
+    "scripts/run_dante_o3a_initial_thresholds.py": "d555979cb7a1280216d91736b775daa05a546fca7741d1b8b0d93372b71c05a6",
+    "src/dante_light/o3a_initial_thresholds.py": "780fde4a90c4959cf8bac93c5cb6aacef2c9b181face03cec89d0e39e3fa9d6a",
+    "src/pipeline_v2_production/background_calibration.py": "832e141e78a6c084fe7bdc5d444853657799b31890871ac533463370e34e1d24",
+    "tests/test_dante_o3a_initial_thresholds.py": "1fbc76c728b2b76b9235fbb0d667ba0af617883e68f78539fd226064d5da5dfb"
+  },
+  "method": {
+    "block_length": 17,
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_complete_blocks": true,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "name": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_rows": true
+  },
+  "output": {
+    "large_outputs_committed_to_git": false,
+    "root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "summary_filename": "initial_thresholds_summary.json"
+  },
+  "parents": {
+    "acceptance_contract": {
+      "contract_digest": "1c2b79a94674317edbea9f92a314d9ec08cf8425161ece8b83e4c74ad138a279",
+      "path": "config/dante_o3a_initial_calibration_acceptance_v1.json",
+      "sha256": "20c524e09212026e747ffcb3033bb4dea3a46d03c0819cf1a07fd470e9c61799"
+    },
+    "acceptance_run": {
+      "artifact_digest": "5e26caaff083050c79731b35b6109c473310bd7719c366111518a3282a1593ed",
+      "ledger_path": "/mnt/e/dante_cache/dante_light/o3a_native_v1/initial_calibration_acceptance_8fdbca72bf4af0dd8b74b299aaa7ff1a7b431fa872a28eac6578fa97114f0cfd/initial_calibration_accepted.jsonl",
+      "ledger_sha256": "b9fe2a4fb3481a44b7b067846791d2f286d2da9bd595069d2edc00a1fd4b2c2b",
+      "run_key": "8fdbca72bf4af0dd8b74b299aaa7ff1a7b431fa872a28eac6578fa97114f0cfd",
+      "summary_path": "/mnt/e/dante_cache/dante_light/o3a_native_v1/initial_calibration_acceptance_8fdbca72bf4af0dd8b74b299aaa7ff1a7b431fa872a28eac6578fa97114f0cfd/summary.json",
+      "summary_sha256": "ee164425a06e4dedc6ed6daca493f5f4401ef39242a44d6c97e92438db273e45"
+    },
+    "canonical_runtime": {
+      "contract_digest": "e5c8b2324f631489d229cd878c109597da8e5c7fd4e62ba5d53fa7222e050dea",
+      "environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+      "path": "config/dante_o3a_native_v1_runtime.json",
+      "sha256": "3b00a0bf258cc96870971481138e10e7e85deb97a1c3c49c470626e3153d0ef2"
+    },
+    "stage_contract": {
+      "contract_digest": "fb29f22ffc5a796843383d6ed48032879b1b44252b46a93163e7db2eec157a7d",
+      "path": "config/dante_o3a_native_v1_stage_contract.json",
+      "sha256": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8"
+    }
+  },
+  "population": {
+    "bootstrap_rows_per_detector": 4998,
+    "complete_blocks_per_detector": 294,
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "point_only_tail_rows_per_detector": 2,
+    "point_rows_per_detector": 5000
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "accepted_primary_scores_only": true,
+    "candidate_outcomes_reviewed": false,
+    "classification_performed": false,
+    "detector_pooling_allowed": false,
+    "native_index_selection_performed": false,
+    "primary_scan_started": false
+  },
+  "status": "FROZEN_O3A_INITIAL_THRESHOLDS_V1"
+}
