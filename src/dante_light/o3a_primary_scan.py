@@ -389,7 +389,21 @@ class FrameGroupReader:
         try:
             for frame in self.frames:
                 filename = str(frame["filename"])
-                handle = h5py.File(self.paths[filename], "r")
+                path = self.paths[filename]
+                handle: h5py.File | None = None
+                last_error: OSError | None = None
+                for attempt in range(4):
+                    try:
+                        handle = h5py.File(path, "r")
+                        break
+                    except (FileNotFoundError, OSError) as exc:
+                        last_error = exc
+                        if attempt < 3:
+                            time.sleep(0.25 * (attempt + 1))
+                if handle is None:
+                    raise InfrastructureError(
+                        f"O3a scan frame could not be opened after preparation: {path}"
+                    ) from last_error
                 dataset = handle.get("strain/Strain")
                 if dataset is None:
                     handle.close()
@@ -637,6 +651,9 @@ def _detector_events(
                 for frame in coverage:
                     filename = str(frame["filename"])
                     cached_row = cached.get(filename)
+                    if cached_row is not None and not cached_row[0].is_file():
+                        cached.pop(filename)
+                        cached_row = None
                     if cached_row is None:
                         path, record, is_retained = _prepare_frame(
                             detector=detector,
@@ -1116,7 +1133,7 @@ def clear_infrastructure_failure(
     return archive
 
 
-def run_primary_scan(
+def _run_primary_scan_locked(
     *,
     root: Path = ROOT,
     raw_root: Path = DEFAULT_RAW_ROOT,
@@ -1346,6 +1363,52 @@ def run_primary_scan(
     )
     connection.close()
     return verified, run_dir
+
+
+def run_primary_scan(
+    *,
+    root: Path = ROOT,
+    raw_root: Path = DEFAULT_RAW_ROOT,
+    external_root: Path = DEFAULT_EXTERNAL_ROOT,
+    device: str = "cuda",
+) -> tuple[dict[str, Any], Path]:
+    """Run with a process-wide advisory lock for this immutable run key."""
+
+    import fcntl
+
+    resolved_root = root.resolve()
+    resolved_external = external_root.resolve()
+    contract = load_scan_contract(root=resolved_root)
+    runtime = load_runtime_contract(
+        root=resolved_root, require_current=True, device=device
+    )
+    run_key = _run_key(
+        contract,
+        environment_digest=runtime["runtime_environment"]["environment_digest"],
+    )
+    run_dir = resolved_external / f"primary_scan_{run_key}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = run_dir / "run.lock"
+    with lock_path.open("a+", encoding="utf-8") as lock:
+        try:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ContractError(
+                "another O3a primary-scan process already owns this run key"
+            ) from exc
+        lock.seek(0)
+        lock.truncate()
+        lock.write(str(os.getpid()) + "\n")
+        lock.flush()
+        try:
+            return _run_primary_scan_locked(
+                root=resolved_root,
+                raw_root=raw_root,
+                external_root=resolved_external,
+                device=device,
+            )
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
 
 def verify_primary_scan(
