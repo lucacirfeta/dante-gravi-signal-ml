@@ -12,6 +12,7 @@ from collections import Counter, deque
 from concurrent.futures import Future, ProcessPoolExecutor
 import hashlib
 import json
+import multiprocessing as mp
 import os
 from pathlib import Path
 import queue
@@ -60,9 +61,7 @@ from src.dante_light.o3a_raw_download import (
 
 
 CONTRACT_REL = "config/dante_o3a_primary_scan_v1.json"
-THRESHOLD_ARTIFACT_REL = (
-    "artifacts/dante_light/o3a_native_v1/initial_thresholds.json"
-)
+THRESHOLD_ARTIFACT_REL = "artifacts/dante_light/o3a_native_v1/initial_thresholds.json"
 IMPLEMENTATION_REL = "src/dante_light/o3a_primary_scan.py"
 FREEZE_ENTRYPOINT_REL = "scripts/freeze_dante_o3a_primary_scan.py"
 RUN_ENTRYPOINT_REL = "scripts/run_dante_o3a_primary_scan.py"
@@ -136,8 +135,7 @@ def _threshold_artifact(root: Path) -> dict[str, Any]:
     value = _read_json(root / THRESHOLD_ARTIFACT_REL)
     if (
         value.get("status") != "PASS_VERIFIED_O3A_INITIAL_THRESHOLDS"
-        or value.get("artifact_digest")
-        != canonical_json_sha256(_threshold_body(value))
+        or value.get("artifact_digest") != canonical_json_sha256(_threshold_body(value))
         or value.get("adequacy_gate", {}).get("passed") is not True
     ):
         raise ContractError("O3a initial-threshold artifact is not verified")
@@ -157,10 +155,7 @@ def group_identities_by_target_frame(
         if previous is not None and gps <= previous:
             raise ContractError("O3a scan identities are not strictly increasing")
         previous = gps
-        while (
-            frame_index < len(frames)
-            and int(frames[frame_index]["gps_end"]) <= gps
-        ):
+        while frame_index < len(frames) and int(frames[frame_index]["gps_end"]) <= gps:
             frame_index += 1
         if frame_index >= len(frames):
             raise ContractError(f"no O3a source frame contains GPS {gps}")
@@ -183,12 +178,8 @@ def _required_frame_summary(
     for detector in ("H1", "L1"):
         frames = _inventory_frames(inventory, detector)
         required: dict[str, Mapping[str, Any]] = {}
-        for _, starts in group_identities_by_target_frame(
-            identities[detector], frames
-        ):
-            coverage = _cover_interval(
-                frames, min(starts) - 4, max(starts) + 36
-            )
+        for _, starts in group_identities_by_target_frame(identities[detector], frames):
+            coverage = _cover_interval(frames, min(starts) - 4, max(starts) + 36)
             for frame in coverage:
                 required[str(frame["filename"])] = frame
         ordered = sorted(
@@ -230,9 +221,7 @@ def build_scan_contract(*, root: Path = ROOT) -> dict[str, Any]:
         detector: float(thresholds["thresholds"][detector]["p99"])
         for detector in ("H1", "L1")
     }
-    counts = universe["roles"]["primary_scan_geometric_universe"][
-        "counts_by_detector"
-    ]
+    counts = universe["roles"]["primary_scan_geometric_universe"]["counts_by_detector"]
     body = {
         "schema_version": SCHEMA_VERSION,
         "status": "FROZEN_O3A_PRIMARY_SCAN_V1",
@@ -268,9 +257,7 @@ def build_scan_contract(*, root: Path = ROOT) -> dict[str, Any]:
                 root,
                 RUNTIME_REL,
                 contract_digest=runtime["contract_digest"],
-                environment_digest=runtime["runtime_environment"][
-                    "environment_digest"
-                ],
+                environment_digest=runtime["runtime_environment"]["environment_digest"],
             ),
         },
         "representation": dict(acceptance["method_parity"]),
@@ -292,10 +279,9 @@ def build_scan_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "execution": {
             "device": "cuda",
             "workers_per_detector": DEFAULT_WORKERS_PER_DETECTOR,
+            "process_start_method": "spawn",
             "encoder_batch_size": DEFAULT_ENCODER_BATCH_SIZE,
-            "max_preprocess_in_flight_per_detector": (
-                DEFAULT_MAX_PREPROCESS_IN_FLIGHT
-            ),
+            "max_preprocess_in_flight_per_detector": (DEFAULT_MAX_PREPROCESS_IN_FLIGHT),
             "detector_mode": "parallel_producers_shared_scorer",
             "queue_depth_batches": DEFAULT_QUEUE_DEPTH_BATCHES,
             "database_commit_rows": DEFAULT_DATABASE_COMMIT_ROWS,
@@ -511,7 +497,9 @@ def _download_frame(
         raise InfrastructureError(
             f"O3a scan frame transport failed: {last_error}"
         ) from last_error
-    raise ContractError(f"O3a scan frame validation failed: {last_error}") from last_error
+    raise ContractError(
+        f"O3a scan frame validation failed: {last_error}"
+    ) from last_error
 
 
 def _retained_raw_map(
@@ -523,8 +511,7 @@ def _retained_raw_map(
     manifest = raw_root / relative
     if (
         not manifest.is_file()
-        or file_sha256(manifest)
-        != acceptance["verified_raw_input"]["manifest_sha256"]
+        or file_sha256(manifest) != acceptance["verified_raw_input"]["manifest_sha256"]
     ):
         raise ContractError("retained O3a calibration raw manifest changed")
     result: dict[tuple[str, str], dict[str, Any]] = {}
@@ -639,7 +626,10 @@ def _detector_events(
 
     completed_normally = False
     try:
-        with ProcessPoolExecutor(max_workers=workers) as pool:
+        with ProcessPoolExecutor(
+            max_workers=workers,
+            mp_context=mp.get_context(str(execution["process_start_method"])),
+        ) as pool:
             for group_index, (_, starts) in enumerate(groups):
                 remaining = [gps for gps in starts if gps not in completed]
                 if not remaining:
@@ -680,10 +670,7 @@ def _detector_events(
                             float(gps + 32),
                             float(representation["whitening_pad_s"]),
                             tuple(int(v) for v in representation["query_qrange"]),
-                            tuple(
-                                int(v)
-                                for v in representation["frequency_range_hz"]
-                            ),
+                            tuple(int(v) for v in representation["frequency_range_hz"]),
                             tuple(int(v) for v in representation["image_shape"][:2]),
                             str(representation["colormap"]),
                         )
@@ -870,9 +857,9 @@ def _run_key(contract: Mapping[str, Any], *, environment_digest: str) -> str:
             "stage": "o3a_primary_scan_v1",
             "contract_digest": contract["contract_digest"],
             "runtime_environment_digest": environment_digest,
-            "threshold_artifact_digest": contract["parents"][
-                "threshold_artifact"
-            ]["artifact_digest"],
+            "threshold_artifact_digest": contract["parents"]["threshold_artifact"][
+                "artifact_digest"
+            ],
         }
     )
 
@@ -894,9 +881,9 @@ def _run_identity(
         "population_identity_stream_sha256": contract["population"][
             "identity_stream_sha256"
         ],
-        "threshold_artifact_digest": contract["parents"][
-            "threshold_artifact"
-        ]["artifact_digest"],
+        "threshold_artifact_digest": contract["parents"]["threshold_artifact"][
+            "artifact_digest"
+        ],
         "preflight_digest": preflight_digest,
     }
 
@@ -1006,98 +993,74 @@ def preflight_primary_scan(
         iter_role_identities(universe, "primary_scan_geometric_universe")
     )
     frames = _inventory_frames(inventory, detector)
-    coverage = _cover_interval(frames, int(gps) - 4, int(gps) + 36)
     transient_root = run_dir / "preflight_transient_raw"
-    paths: dict[str, Path] = {}
     records: list[dict[str, Any]] = []
-    temporary: list[Path] = []
-    try:
-        for frame in coverage:
-            frame_path, record, is_retained = _prepare_frame(
-                detector=detector,
-                frame=frame,
-                raw_root=raw_root,
-                transient_root=transient_root,
-                retained=retained,
-                known_hashes={},
-                retries=int(contract["execution"]["download_retries"]),
-            )
-            paths[str(frame["filename"])] = frame_path
-            records.append(record)
-            if not is_retained:
-                temporary.append(frame_path)
-        with FrameGroupReader(coverage, paths) as reader:
-            values = reader.read(int(gps) - 4, int(gps) + 36)
-        representation = contract["representation"]
-        image = _preprocess_task(
-            values,
-            float(int(gps) - 4),
-            detector,
-            float(gps),
-            float(int(gps) + 32),
-            float(representation["whitening_pad_s"]),
-            tuple(int(v) for v in representation["query_qrange"]),
-            tuple(int(v) for v in representation["frequency_range_hz"]),
-            tuple(int(v) for v in representation["image_shape"][:2]),
-            str(representation["colormap"]),
-        )
-        scorer = _build_scorer(root=root, contract=acceptance, device=device)
-        tokens = scorer.encode_patch_tokens([image])
-        if not _tokens_are_finite(tokens):
-            raise ContractError("O3a primary-scan preflight tokens are non-finite")
-        token_shape = [int(value) for value in tokens.shape]
-        if (
-            len(token_shape) != 3
-            or token_shape[0] != 1
-            or token_shape[1] <= 0
-            or token_shape[2] <= 0
-        ):
-            raise ContractError("O3a primary-scan preflight token shape is invalid")
-        score_rows = scorer.score_patch_tokens(tokens, 1.0, output_mode="score_only")
-        if len(score_rows) != 1 or not np.isfinite(
-            float(score_rows[0]["novelty_score"])
-        ):
-            raise ContractError("O3a primary-scan preflight score is invalid")
-        body = {
-            "schema_version": SCHEMA_VERSION,
-            "status": "PASS_O3A_PRIMARY_SCAN_PREFLIGHT",
-            "run_key": run_key,
-            "contract_digest": contract["contract_digest"],
-            "runtime_environment_digest": environment_digest,
-            "deterministic_identity": {
-                "detector": detector,
-                "analysis_gps_start": int(gps),
-                "identity_digest": _identity_digest(detector, int(gps)),
-            },
-            "source_frames": [
-                {
-                    "detector": row["detector"],
-                    "filename": row["filename"],
-                    "sha256": row["sha256"],
-                    "retained_calibration_raw": row[
-                        "retained_calibration_raw"
-                    ],
-                }
-                for row in records
-            ],
-            "image_sha256": hashlib.sha256(image.tobytes()).hexdigest(),
-            "token_shape": token_shape,
-            "finite_tokens_observed": True,
-            "finite_score_observed": True,
-            "candidate_outcome_disclosed": False,
-        }
-        value = {**body, "preflight_digest": canonical_json_sha256(body)}
-        _atomic_json(path, value)
-        return value, run_dir
-    finally:
-        for temporary_path in temporary:
-            if temporary_path.is_file():
-                temporary_path.unlink()
-        if transient_root.is_dir():
-            for directory in sorted(transient_root.rglob("*"), reverse=True):
-                if directory.is_dir():
-                    directory.rmdir()
-            transient_root.rmdir()
+    images: list[np.ndarray] = []
+    emitted_gps: list[int] = []
+    for kind, payload in _detector_events(
+        detector=detector,
+        identities=[int(gps)],
+        frames=frames,
+        contract=contract,
+        raw_root=raw_root,
+        transient_root=transient_root,
+        retained=retained,
+        known_hashes={},
+        completed=set(),
+    ):
+        if kind == "frame":
+            records.append(dict(payload))
+        elif kind == "batch":
+            batch_gps, batch_images = payload
+            emitted_gps.extend(int(value) for value in batch_gps)
+            images.extend(np.asarray(image, dtype=np.uint8) for image in batch_images)
+    if emitted_gps != [int(gps)] or len(images) != 1:
+        raise ContractError("O3a primary-scan preflight topology changed")
+    image = images[0]
+    scorer = _build_scorer(root=root, contract=acceptance, device=device)
+    tokens = scorer.encode_patch_tokens([image])
+    if not _tokens_are_finite(tokens):
+        raise ContractError("O3a primary-scan preflight tokens are non-finite")
+    token_shape = [int(value) for value in tokens.shape]
+    if (
+        len(token_shape) != 3
+        or token_shape[0] != 1
+        or token_shape[1] <= 0
+        or token_shape[2] <= 0
+    ):
+        raise ContractError("O3a primary-scan preflight token shape is invalid")
+    score_rows = scorer.score_patch_tokens(tokens, 1.0, output_mode="score_only")
+    if len(score_rows) != 1 or not np.isfinite(float(score_rows[0]["novelty_score"])):
+        raise ContractError("O3a primary-scan preflight score is invalid")
+    body = {
+        "schema_version": SCHEMA_VERSION,
+        "status": "PASS_O3A_PRIMARY_SCAN_PREFLIGHT",
+        "run_key": run_key,
+        "contract_digest": contract["contract_digest"],
+        "runtime_environment_digest": environment_digest,
+        "deterministic_identity": {
+            "detector": detector,
+            "analysis_gps_start": int(gps),
+            "identity_digest": _identity_digest(detector, int(gps)),
+        },
+        "source_frames": [
+            {
+                "detector": row["detector"],
+                "filename": row["filename"],
+                "sha256": row["sha256"],
+                "retained_calibration_raw": row["retained_calibration_raw"],
+            }
+            for row in records
+        ],
+        "image_sha256": hashlib.sha256(image.tobytes()).hexdigest(),
+        "token_shape": token_shape,
+        "finite_tokens_observed": True,
+        "finite_score_observed": True,
+        "candidate_outcome_disclosed": False,
+    }
+    value = {**body, "preflight_digest": canonical_json_sha256(body)}
+    _atomic_json(path, value)
+    return value, run_dir
 
 
 def clear_infrastructure_failure(
@@ -1191,13 +1154,9 @@ def _run_primary_scan_locked(
     }
     known_hashes = {
         (str(row[0]), str(row[1])): str(row[2])
-        for row in connection.execute(
-            "SELECT detector,filename,sha256 FROM raw_frames"
-        )
+        for row in connection.execute("SELECT detector,filename,sha256 FROM raw_frames")
     }
-    transient_root = run_dir / str(
-        contract["storage"]["transient_raw_subdirectory"]
-    )
+    transient_root = run_dir / str(contract["storage"]["transient_raw_subdirectory"])
     producers = {
         detector: _detector_events(
             detector=detector,
@@ -1267,9 +1226,7 @@ def _run_primary_scan_locked(
 
                 selection = torch.as_tensor(candidate_indices, device=tokens.device)
                 selected = tokens.index_select(0, selection)
-                full_rows = scorer.score_patch_tokens(
-                    selected, 1.0, output_mode="full"
-                )
+                full_rows = scorer.score_patch_tokens(selected, 1.0, output_mode="full")
                 for index, full in zip(candidate_indices, full_rows, strict=True):
                     if abs(float(full["novelty_score"]) - scores[index]) > 2e-7:
                         raise ContractError(
@@ -1358,9 +1315,7 @@ def _run_primary_scan_locked(
     _atomic_json(summary_path, summary)
     verified, _ = verify_primary_scan(root=root, external_root=external_root)
     connection = sqlite3.connect(run_dir / "primary_scan.sqlite")
-    _progress(
-        run_dir, connection=connection, contract=contract, status="COMPLETE"
-    )
+    _progress(run_dir, connection=connection, contract=contract, status="COMPLETE")
     connection.close()
     return verified, run_dir
 
@@ -1495,7 +1450,10 @@ def verify_primary_scan(
             or bool(is_candidate) != candidate
             or identity_digest != _identity_digest(detector, int(gps))
             or (candidate and (mil is None or topk is None or patch is None))
-            or (not candidate and (mil is not None or topk is not None or patch is not None))
+            or (
+                not candidate
+                and (mil is not None or topk is not None or patch is not None)
+            )
         ):
             connection.close()
             raise ContractError("O3a primary-scan row contract mismatch")
@@ -1523,9 +1481,7 @@ def verify_primary_scan(
         raise ContractError("O3a primary-scan final cardinality changed")
     if frame_count != expected_frame_count:
         raise ContractError("O3a primary-scan raw-frame ledger is incomplete")
-    transient_root = run_dir / str(
-        contract["storage"]["transient_raw_subdirectory"]
-    )
+    transient_root = run_dir / str(contract["storage"]["transient_raw_subdirectory"])
     retained_transient_files = (
         [path for path in transient_root.rglob("*") if path.is_file()]
         if transient_root.is_dir()
@@ -1538,15 +1494,14 @@ def verify_primary_scan(
         "status": "PASS_COMPLETE_O3A_PRIMARY_SCAN",
         "run_key": run_key,
         "contract_digest": contract["contract_digest"],
-        "threshold_artifact_digest": contract["parents"][
-            "threshold_artifact"
-        ]["artifact_digest"],
+        "threshold_artifact_digest": contract["parents"]["threshold_artifact"][
+            "artifact_digest"
+        ],
         "preflight_digest": preflight["preflight_digest"],
         "window_counts": dict(counts),
         "window_total": sum(counts.values()),
         "candidate_counts": {
-            detector: int(candidate_counts[detector])
-            for detector in ("H1", "L1")
+            detector: int(candidate_counts[detector]) for detector in ("H1", "L1")
         },
         "candidate_total": sum(candidate_counts.values()),
         "raw_frame_count": frame_count,

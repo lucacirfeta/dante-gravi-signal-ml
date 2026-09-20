@@ -95,8 +95,11 @@ def test_frozen_contract_binds_thresholds_population_and_noncausal_note() -> Non
     assert value["thresholds"]["detector_pooling_allowed"] is False
     assert value["thresholds"]["retuning_allowed"] is False
     assert value["storage"]["retained_primary_scan_raw_frames"] == 0
+    assert value["execution"]["process_start_method"] == "spawn"
     assert value["ci_asymmetry_annotation"]["status"] == "NON_CAUSAL_HYPOTHESIS"
-    assert value["scientific_boundary"]["candidate_outcomes_visible_during_run"] is False
+    assert (
+        value["scientific_boundary"]["candidate_outcomes_visible_during_run"] is False
+    )
 
 
 def test_contract_rejects_threshold_drift() -> None:

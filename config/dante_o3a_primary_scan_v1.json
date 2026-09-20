@@ -9,7 +9,7 @@
     "required_followup": "compare recurrence at native calibration and final thresholds",
     "status": "NON_CAUSAL_HYPOTHESIS"
   },
-  "contract_digest": "ae18bbc7bc42915e7f59e3fcc0efa8c83ad7bea5fd14da80d6ef97156ff259af",
+  "contract_digest": "c733609a5a85855ca3e51674ae1a5237df59748ab5771ce3b500d23a2977eb1b",
   "execution": {
     "database_commit_rows": 1024,
     "detector_mode": "parallel_producers_shared_scorer",
@@ -17,6 +17,7 @@
     "download_retries": 5,
     "encoder_batch_size": 32,
     "max_preprocess_in_flight_per_detector": 16,
+    "process_start_method": "spawn",
     "queue_depth_batches": 2,
     "raw_series_cache_files": 0,
     "sqlite_wal": true,
@@ -27,9 +28,9 @@
     "scripts/freeze_dante_o3a_primary_scan.py": "5c8d763a6401e87d077b977d02a91350f4fc69df6154df1853e896e79a199ce8",
     "scripts/run_dante_o3a_primary_scan.py": "b87950b8fcf9b1cb7405bd492e2f5c002419c31e217503a8051909d99c6d21b9",
     "src/dante_light/o3a_initial_calibration_acceptance.py": "70d553894d94a3f6d768d684fb5f80fe930ab8fb3dd3abccf94fb931e7d67cef",
-    "src/dante_light/o3a_primary_scan.py": "8f4a6ae23d806b9af0851cf6a6b2708820b51b5eb4b21b0844c74e474b668034",
+    "src/dante_light/o3a_primary_scan.py": "557ee84e0aff90e614b98787082a093d5ae62381952e127b477508f03e920d4c",
     "src/dante_light/o3a_raw_download.py": "dd1fd99f50d594ecbe6fa0f414fea78554004bd12be735828066b539173e12ad",
-    "tests/test_dante_o3a_primary_scan.py": "4d9591fd4ef344c478a8bd03ce4635cb61aab74af5628c65a77ed84442e43150"
+    "tests/test_dante_o3a_primary_scan.py": "a03f6f0c82c9fd714ce38c306b0107133ea2508940b19ae81fe3c6cdafe6b39e"
   },
   "parents": {
     "acceptance_contract": {
