@@ -1,0 +1,69 @@
+{
+  "acceptance_artifact_digest": "5e26caaff083050c79731b35b6109c473310bd7719c366111518a3282a1593ed",
+  "accepted_ledger_sha256": "b9fe2a4fb3481a44b7b067846791d2f286d2da9bd595069d2edc00a1fd4b2c2b",
+  "adequacy_gate": {
+    "absolute_and_relative_width_reported": true,
+    "finite_thresholds_and_endpoints": true,
+    "nondegenerate_intervals": true,
+    "passed": true,
+    "point_estimate_inside_interval": true,
+    "post_hoc_o3a_specific_width_cutoff_allowed": false
+  },
+  "artifact_digest": "b1ba3e856332bb1397212ac12792cb534d95aca4594c5493a73271b1ec3f877b",
+  "contract_digest": "44f188ccce5adf53d03d0a8885d279bf0dfe48881f3d34911264aa2d6a21095e",
+  "method": {
+    "block_length": 17,
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_complete_blocks": true,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "name": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_rows": true
+  },
+  "run_key": "13a1d508ef7246d2d70da51cd7fb50877a15ce46e0d515cb8a8292cbb5ca20bf",
+  "runtime_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "accepted_primary_scores_only": true,
+    "candidate_outcomes_reviewed": false,
+    "classification_performed": false,
+    "detector_pooling_allowed": false,
+    "native_index_selection_performed": false,
+    "primary_scan_started": false
+  },
+  "status": "PASS_VERIFIED_O3A_INITIAL_THRESHOLDS",
+  "thresholds": {
+    "H1": {
+      "block_length": 17,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_seed": 42,
+      "ci_lower": 0.41823577880859375,
+      "ci_upper": 0.4372155293822288,
+      "ci_width": 0.018979750573635046,
+      "ci_width_fraction_of_p99": 0.044343900061352255,
+      "n_bootstrap_rows": 4998,
+      "n_complete_blocks": 294,
+      "n_point_rows": 5000,
+      "p99": 0.4280126589536668
+    },
+    "L1": {
+      "block_length": 17,
+      "bootstrap_replicates": 1000000,
+      "bootstrap_seed": 42,
+      "ci_lower": 0.4196263551712036,
+      "ci_upper": 0.456072598695755,
+      "ci_width": 0.03644624352455139,
+      "ci_width_fraction_of_p99": 0.08453276916339517,
+      "n_bootstrap_rows": 4998,
+      "n_complete_blocks": 294,
+      "n_point_rows": 5000,
+      "p99": 0.43114929139614105
+    }
+  }
+}
