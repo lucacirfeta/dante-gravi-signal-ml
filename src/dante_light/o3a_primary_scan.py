@@ -172,19 +172,15 @@ def group_identities_by_target_frame(
 def _required_frame_summary(
     *, identities: Mapping[str, Sequence[int]], inventory: Mapping[str, Any]
 ) -> dict[str, Any]:
+    required_by_detector = _required_frames(
+        identities=identities,
+        inventory=inventory,
+    )
     result: dict[str, Any] = {}
     stream = hashlib.sha256()
     total = 0
     for detector in ("H1", "L1"):
-        frames = _inventory_frames(inventory, detector)
-        required: dict[str, Mapping[str, Any]] = {}
-        for _, starts in group_identities_by_target_frame(identities[detector], frames):
-            coverage = _cover_interval(frames, min(starts) - 4, max(starts) + 36)
-            for frame in coverage:
-                required[str(frame["filename"])] = frame
-        ordered = sorted(
-            required.values(), key=lambda row: (int(row["gps_start"]), row["filename"])
-        )
+        ordered = required_by_detector[detector]
         for frame in ordered:
             stream.update(
                 (
@@ -199,6 +195,27 @@ def _required_frame_summary(
         "total_count": total,
         "ordered_required_frame_stream_sha256": stream.hexdigest(),
     }
+
+
+def _required_frames(
+    *, identities: Mapping[str, Sequence[int]], inventory: Mapping[str, Any]
+) -> dict[str, list[dict[str, Any]]]:
+    result: dict[str, list[dict[str, Any]]] = {}
+    for detector in ("H1", "L1"):
+        frames = _inventory_frames(inventory, detector)
+        required: dict[str, Mapping[str, Any]] = {}
+        for _, starts in group_identities_by_target_frame(identities[detector], frames):
+            coverage = _cover_interval(frames, min(starts) - 4, max(starts) + 36)
+            for frame in coverage:
+                required[str(frame["filename"])] = frame
+        result[detector] = [
+            dict(frame)
+            for frame in sorted(
+                required.values(),
+                key=lambda row: (int(row["gps_start"]), str(row["filename"])),
+            )
+        ]
+    return result
 
 
 def build_scan_contract(*, root: Path = ROOT) -> dict[str, Any]:
@@ -907,9 +924,65 @@ def _insert_frame(connection: sqlite3.Connection, record: Mapping[str, Any]) -> 
         raise ContractError("O3a primary-scan raw frame provenance changed")
     if existing is None:
         connection.execute(
-            "INSERT INTO raw_frames VALUES(?,?,?,?,?,?,?,?)",
+            "INSERT INTO raw_frames("
+            "detector,filename,gps_start,gps_end,url,sha256,size_bytes,"
+            "retained_calibration_raw) VALUES(?,?,?,?,?,?,?,?)",
             (*key, *expected),
         )
+
+
+def _verify_raw_frame_ledger(
+    connection: sqlite3.Connection,
+    *,
+    required_by_detector: Mapping[str, Sequence[Mapping[str, Any]]],
+) -> int:
+    expected = [
+        (
+            detector,
+            int(frame["gps_start"]),
+            int(frame["gps_end"]),
+            str(frame["filename"]),
+            str(frame["url"]),
+        )
+        for detector in ("H1", "L1")
+        for frame in required_by_detector[detector]
+    ]
+    observed = connection.execute(
+        "SELECT detector,gps_start,gps_end,filename,url,sha256,size_bytes,"
+        "retained_calibration_raw FROM raw_frames "
+        "ORDER BY detector,gps_start,filename"
+    ).fetchall()
+    if len(observed) != len(expected):
+        raise ContractError("O3a primary-scan raw-frame ledger is incomplete")
+    for actual, required in zip(observed, expected, strict=True):
+        try:
+            metadata = (
+                str(actual[0]),
+                int(actual[1]),
+                int(actual[2]),
+                str(actual[3]),
+                str(actual[4]),
+            )
+        except (TypeError, ValueError) as exc:
+            raise ContractError(
+                "O3a primary-scan raw-frame provenance changed"
+            ) from exc
+        sha256 = str(actual[5])
+        try:
+            digest_bytes = bytes.fromhex(sha256)
+        except ValueError as exc:
+            raise ContractError(
+                "O3a primary-scan raw-frame SHA-256 is invalid"
+            ) from exc
+        if metadata != required:
+            raise ContractError("O3a primary-scan raw-frame provenance changed")
+        if (
+            len(digest_bytes) != 32
+            or int(actual[6]) <= 0
+            or int(actual[7]) not in (0, 1)
+        ):
+            raise ContractError("O3a primary-scan raw-frame ledger row is invalid")
+    return len(observed)
 
 
 def _preflight_path(run_dir: Path) -> Path:
@@ -1470,8 +1543,18 @@ def verify_primary_scan(
     if next(rows, None) is not None:
         connection.close()
         raise ContractError("O3a primary-scan database has extra rows")
-    frame_count = int(
-        connection.execute("SELECT COUNT(*) FROM raw_frames").fetchone()[0]
+    inventory = load_source_inventory(root=root)
+    required_identities: dict[str, list[int]] = {"H1": [], "L1": []}
+    for detector, gps in iter_role_identities(
+        universe, "primary_scan_geometric_universe"
+    ):
+        required_identities[detector].append(int(gps))
+    frame_count = _verify_raw_frame_ledger(
+        connection,
+        required_by_detector=_required_frames(
+            identities=required_identities,
+            inventory=inventory,
+        ),
     )
     expected_frame_count = int(
         contract["population"]["required_source_frames"]["total_count"]

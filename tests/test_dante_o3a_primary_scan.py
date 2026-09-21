@@ -11,8 +11,10 @@ from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.o3a_primary_scan import (
     FrameGroupReader,
     InfrastructureError,
+    _insert_frame,
     _open_database,
     _parallel_events,
+    _verify_raw_frame_ledger,
     group_identities_by_target_frame,
     load_scan_contract,
     validate_scan_contract,
@@ -72,6 +74,84 @@ def test_database_resume_identity_is_fail_closed(tmp_path: Path) -> None:
     connection.close()
     with pytest.raises(ContractError, match="identity changed"):
         _open_database(path, identity={"run_key": "different"})
+
+
+def test_raw_frame_ledger_round_trips_named_columns_and_resumes(tmp_path: Path) -> None:
+    connection = _open_database(
+        tmp_path / "scan.sqlite",
+        identity={"run_key": "run", "contract_digest": "contract"},
+    )
+    frame = {
+        "detector": "H1",
+        "gps_start": 100,
+        "gps_end": 200,
+        "filename": "H-test-100-100.hdf5",
+        "url": "https://example.invalid/H-test-100-100.hdf5",
+        "sha256": "ab" * 32,
+        "size_bytes": 123,
+        "retained_calibration_raw": False,
+    }
+    _insert_frame(connection, frame)
+    connection.commit()
+    _insert_frame(connection, frame)
+    connection.commit()
+    assert connection.execute(
+        "SELECT detector,gps_start,gps_end,filename,url,sha256,size_bytes,"
+        "retained_calibration_raw FROM raw_frames"
+    ).fetchone() == (
+        "H1",
+        100,
+        200,
+        "H-test-100-100.hdf5",
+        "https://example.invalid/H-test-100-100.hdf5",
+        "ab" * 32,
+        123,
+        0,
+    )
+    assert _verify_raw_frame_ledger(
+        connection,
+        required_by_detector={"H1": [frame], "L1": []},
+    ) == 1
+    changed = dict(frame, sha256="cd" * 32)
+    with pytest.raises(ContractError, match="provenance changed"):
+        _insert_frame(connection, changed)
+    connection.close()
+
+
+def test_raw_frame_verifier_rejects_shifted_positional_ledger(tmp_path: Path) -> None:
+    connection = _open_database(
+        tmp_path / "scan.sqlite",
+        identity={"run_key": "run", "contract_digest": "contract"},
+    )
+    connection.execute(
+        "INSERT INTO raw_frames VALUES(?,?,?,?,?,?,?,?)",
+        (
+            "H1",
+            "H-test-100-100.hdf5",
+            100,
+            200,
+            "https://example.invalid/H-test-100-100.hdf5",
+            "ab" * 32,
+            123,
+            0,
+        ),
+    )
+    with pytest.raises(ContractError, match="provenance changed"):
+        _verify_raw_frame_ledger(
+            connection,
+            required_by_detector={
+                "H1": [
+                    {
+                        "gps_start": 100,
+                        "gps_end": 200,
+                        "filename": "H-test-100-100.hdf5",
+                        "url": "https://example.invalid/H-test-100-100.hdf5",
+                    }
+                ],
+                "L1": [],
+            },
+        )
+    connection.close()
 
 
 def test_parallel_producer_preserves_retryable_failure_type() -> None:
