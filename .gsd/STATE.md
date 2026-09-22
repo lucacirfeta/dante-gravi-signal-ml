@@ -1,25 +1,17 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.12 O3a detector-aware native cohort preflight passed
-- **Status**: The canonical primary scan
-  `8f0424e5f3ea2b94449eaddb0e1ccf61c5fd7ba91d54c839bfa89d0e26efad35`
-  passed with exactly 349,925 H1 and 372,986 L1 windows, 722,911 total,
-  zero invalid or silent drops, an exact 6,313-frame provenance ledger, and
-  an empty transient raw cache. The database SHA-256 is
-  `1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699`.
-  The independent verifier passed; after adding the native-cohort gates, the
-  focused O3a suites passed 79 tests on Windows and 79 tests on WSL. Native
-  cohort selection, index construction,
-  native calibration, classification, taxonomy, coincidence, PEM, and
-  comparison remain closed. The native-cohort contract is frozen with digest
-  `4601b2e1ffeb6ef78ab68fd2eb206c9aacfb94a19e2adf7d9444959ae6c1e299`;
-  its no-strain preflight passed under run key
+- **Phase**: 7.12 O3a detector-aware native cohort verified
+- **Status**: The O3a-only native cohort is frozen at exactly 647 H1 and 647
+  L1 clean windows under run key
   `876508390ba7f1eddf2c50342870e7e8880048b243f545487039974b51df9a2c`.
-  The prior run key `29a410a80c546b2ab2d7ad1ab14e842182379e76fbce6663aba34add3c35da5b`
-  is preserved FAILED after an execution-only frame-list shadowing defect was
-  caught before the first quality shard.  The corrected source resolver and
-  direct regression test changed no scientific rule.  The quality freeze has
-  not yet restarted.
+  Artifact digest:
+  `709c6fc5c3a22c89c21cd92303de2acf4d5ab1e30a016ddaaa89ebaf69daf382`.
+  The independent verifier passed all source/context hashes, candidate guards,
+  separation, ledger parity, and empty transient-cache gates. The focused WSL
+  O3a/PatchProducer suite passed 79 tests; Ruff and the frozen WSL runtime
+  checks passed. The failed first start and two archived GWOSC transport
+  interruptions remain preserved. The next stage is the O3a-only native INDEX;
+  native calibration and all later scientific outputs remain unopened.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently

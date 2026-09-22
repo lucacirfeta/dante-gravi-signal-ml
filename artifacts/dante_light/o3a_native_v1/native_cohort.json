@@ -1,0 +1,39 @@
+{
+  "artifact_digest": "709c6fc5c3a22c89c21cd92303de2acf4d5ab1e30a016ddaaa89ebaf69daf382",
+  "contract_digest": "4601b2e1ffeb6ef78ab68fd2eb206c9aacfb94a19e2adf7d9444959ae6c1e299",
+  "counts_by_detector": {
+    "H1": 647,
+    "L1": 647
+  },
+  "ledger": {
+    "filename": "native_cohort.jsonl",
+    "row_digest": "4a21619ea9771b95cb9a539cb7de276576ae31429c3146b7b0c4f36b08479d27",
+    "sha256": "99cbc1c897ab1b30df33923b0b75693c997447ecc878971edfb913228893e298",
+    "size_bytes": 1749321
+  },
+  "preflight_digest": "ade5cec4c278633ed9cd8c3db1e4f923394fada72d41384af3d6c994d5041ae6",
+  "primary_scan_artifact_digest": "ba51f9cad83826223f860fda9b52077cbcc2e45c44fc7ad5063ebe56f49c4c79",
+  "quality_counts": {
+    "H1": {
+      "checked": 730,
+      "excess_power_veto": 83,
+      "pass_clean": 647
+    },
+    "L1": {
+      "checked": 751,
+      "excess_power_veto": 104,
+      "pass_clean": 647
+    }
+  },
+  "row_total": 1294,
+  "run_key": "876508390ba7f1eddf2c50342870e7e8880048b243f545487039974b51df9a2c",
+  "runtime_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "cohort_frozen_before_native_index": true,
+    "native_calibration_not_selected": true,
+    "native_embedding_or_score_computed": false,
+    "primary_score_or_class_read": false
+  },
+  "status": "PASS_FROZEN_O3A_NATIVE_COHORT"
+}
