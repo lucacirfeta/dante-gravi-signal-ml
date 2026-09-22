@@ -9,6 +9,7 @@ import pytest
 
 from src.dante_light.contracts import ContractError
 from src.dante_light.o3a_native_cohort import (
+    _context_sources_and_values,
     _quality_check_values,
     _scan_identity_rows,
     _source_rows_for_context,
@@ -16,6 +17,71 @@ from src.dante_light.o3a_native_cohort import (
     proposal_priority,
     select_native_proposals,
 )
+
+
+def test_context_loader_resolves_reader_frames_from_inventory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    frame = {
+        "detector": "H1",
+        "gps_start": 0,
+        "gps_end": 128,
+        "filename": "a.hdf5",
+        "url": "https://example/a",
+    }
+    frame_rows = {
+        ("H1", "a.hdf5"): {
+            **frame,
+            "sha256": "a" * 64,
+            "size_bytes": 1,
+        }
+    }
+    observed: dict[str, object] = {}
+
+    def fake_download_frame(**kwargs: object) -> dict[str, object]:
+        observed["download_frame"] = kwargs["frame"]
+        return {"sha256": "a" * 64, "size_bytes": 1}
+
+    class FakeReader:
+        def __init__(self, frames: object, paths: object) -> None:
+            observed["reader_frames"] = frames
+            observed["reader_paths"] = paths
+
+        def __enter__(self) -> "FakeReader":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self, start: int, end: int) -> np.ndarray:
+            observed["interval"] = (start, end)
+            return np.zeros(40 * 4096, dtype=np.float64)
+
+    monkeypatch.setattr(
+        "src.dante_light.o3a_native_cohort._download_frame",
+        fake_download_frame,
+    )
+    monkeypatch.setattr(
+        "src.dante_light.o3a_native_cohort.FrameGroupReader",
+        FakeReader,
+    )
+
+    values, sources, downloaded = _context_sources_and_values(
+        row={"detector": "H1", "gps_start": 64},
+        frames=[frame],
+        frame_starts=[0],
+        frame_rows=frame_rows,
+        retained={},
+        transient_root=tmp_path,
+        retries=1,
+    )
+
+    assert values.shape == (40 * 4096,)
+    assert sources[0]["filename"] == "a.hdf5"
+    assert downloaded == [tmp_path / "H1" / "a.hdf5"]
+    assert observed["download_frame"] == frame
+    assert observed["reader_frames"] == [frame]
+    assert observed["interval"] == (60, 100)
 
 
 def test_priority_is_contract_detector_and_gps_bound() -> None:

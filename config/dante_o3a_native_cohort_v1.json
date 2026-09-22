@@ -1,5 +1,5 @@
 {
-  "contract_digest": "7c8696aa313c9f06226e375e766fabd68b72c615a6e28e4542633c0b9ee79fd5",
+  "contract_digest": "4601b2e1ffeb6ef78ab68fd2eb206c9aacfb94a19e2adf7d9444959ae6c1e299",
   "execution": {
     "accepted_context_duration_s": 40,
     "accepted_context_format": "NUMPY_FLOAT64_NPY",
@@ -26,7 +26,7 @@
   "implementation_sources": {
     "scripts/freeze_dante_o3a_native_cohort.py": "0ae6a2ae447e0756e92f39c3c43a1eed163f641fa2a0ffbc0d31721b38d1616b",
     "scripts/run_dante_o3a_native_cohort.py": "d17a5f7afa1425ccbd0ce3f21c9110e2fb93fa528387a98a4905020283df7da2",
-    "src/dante_light/o3a_native_cohort.py": "ec7bbc2dd96382102523d359a61ce95fc0c1c0dd96f6dd1117b2695e39094728"
+    "src/dante_light/o3a_native_cohort.py": "9bf7537e7ab30a1b01b81d37f389ff26284c788f05335e6a0f2d7f8549b80c7d"
   },
   "parents": {
     "approved_stage_contract": {

@@ -20,11 +20,11 @@ embedding or score.
 ## Frozen evidence
 
 - Contract digest:
-  `7c8696aa313c9f06226e375e766fabd68b72c615a6e28e4542633c0b9ee79fd5`
+  `4601b2e1ffeb6ef78ab68fd2eb206c9aacfb94a19e2adf7d9444959ae6c1e299`
 - Run key:
-  `29a410a80c546b2ab2d7ad1ab14e842182379e76fbce6663aba34add3c35da5b`
+  `876508390ba7f1eddf2c50342870e7e8880048b243f545487039974b51df9a2c`
 - Preflight digest:
-  `61fe82bde76af6984fee98b9153b5ea0af53c74c7222e2b8a7e0ae98940ef731`
+  `ade5cec4c278633ed9cd8c3db1e4f923394fada72d41384af3d6c994d5041ae6`
 - Primary-scan parent artifact:
   `ba51f9cad83826223f860fda9b52077cbcc2e45c44fc7ad5063ebe56f49c4c79`
 - Primary-scan database SHA-256:
@@ -35,13 +35,25 @@ embedding or score.
 
 ## Verification
 
-- Focused Windows O3a/PatchProducer suite: 78 passed.
-- Focused WSL O3a/PatchProducer suite: 78 passed, 11 upstream GWPy warnings.
+- Focused Windows O3a/PatchProducer suite: 79 passed.
+- Focused WSL O3a/PatchProducer suite: 79 passed, 11 upstream GWPy warnings.
 - WSL Ruff: passed.
 - Repeated preflight reuse returned the same immutable run key and digest.
 - Exact-boundary unit checks cover the inclusive 128 s cross-detector guard,
   allowed 96 s separation, source-frame stitching, and canonical
   whitening-before-crop quality path.
+
+## Preserved failed start
+
+The first execution attempt under run key
+`29a410a80c546b2ab2d7ad1ab14e842182379e76fbce6663aba34add3c35da5b`
+failed before producing a quality shard because the execution-only frame list
+shadowed the immutable source-inventory argument.  Its fail-closed
+`STRUCTURAL_OR_SCIENTIFIC_FAILURE` artifact remains preserved.  The corrected
+implementation has a direct regression test proving that reader frames are
+resolved from the frozen inventory; changing its source hash produced the new
+contract and run identities above.  No scientific population, threshold, or
+quality rule changed.
 
 ## Execution boundary
 

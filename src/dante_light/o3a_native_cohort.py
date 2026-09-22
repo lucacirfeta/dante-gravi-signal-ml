@@ -797,7 +797,7 @@ def _context_sources_and_values(
     )
     paths: dict[str, Path] = {}
     downloaded: list[Path] = []
-    frames: list[dict[str, Any]] = []
+    reader_frames: list[dict[str, Any]] = []
     inventory_lookup = {str(frame["filename"]): frame for frame in frames}
     for source in sources:
         frame = dict(inventory_lookup[source["filename"]])
@@ -825,8 +825,8 @@ def _context_sources_and_values(
         paths[source["filename"]] = target
         if retained_row is None:
             downloaded.append(target)
-        frames.append(frame)
-    with FrameGroupReader(frames, paths) as reader:
+        reader_frames.append(frame)
+    with FrameGroupReader(reader_frames, paths) as reader:
         values = reader.read(
             gps - WHITENING_PAD_S,
             gps + ANALYSIS_DURATION_S + WHITENING_PAD_S,

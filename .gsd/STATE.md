@@ -8,14 +8,18 @@
   an empty transient raw cache. The database SHA-256 is
   `1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699`.
   The independent verifier passed; after adding the native-cohort gates, the
-  focused O3a suites passed 78 tests on Windows and 78 tests on WSL. Native
+  focused O3a suites passed 79 tests on Windows and 79 tests on WSL. Native
   cohort selection, index construction,
   native calibration, classification, taxonomy, coincidence, PEM, and
   comparison remain closed. The native-cohort contract is frozen with digest
-  `7c8696aa313c9f06226e375e766fabd68b72c615a6e28e4542633c0b9ee79fd5`;
+  `4601b2e1ffeb6ef78ab68fd2eb206c9aacfb94a19e2adf7d9444959ae6c1e299`;
   its no-strain preflight passed under run key
-  `29a410a80c546b2ab2d7ad1ab14e842182379e76fbce6663aba34add3c35da5b`.
-  The quality freeze has not yet started.
+  `876508390ba7f1eddf2c50342870e7e8880048b243f545487039974b51df9a2c`.
+  The prior run key `29a410a80c546b2ab2d7ad1ab14e842182379e76fbce6663aba34add3c35da5b`
+  is preserved FAILED after an execution-only frame-list shadowing defect was
+  caught before the first quality shard.  The corrected source resolver and
+  direct regression test changed no scientific rule.  The quality freeze has
+  not yet restarted.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
