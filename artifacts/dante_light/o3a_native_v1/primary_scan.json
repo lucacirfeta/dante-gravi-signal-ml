@@ -1,0 +1,44 @@
+{
+  "artifact_digest": "ba51f9cad83826223f860fda9b52077cbcc2e45c44fc7ad5063ebe56f49c4c79",
+  "candidate_counts": {
+    "H1": 3624,
+    "L1": 5276
+  },
+  "candidate_total": 8900,
+  "ci_asymmetry_annotation": {
+    "hypothesis": "detector-specific score-tail heterogeneity, nonstationarity, or calibration-population composition may contribute",
+    "not_established_by": [
+      "gross CBC_CAT1 livetime",
+      "gross CBC_CAT1 segment count"
+    ],
+    "observation": "L1_P99_CI_RELATIVE_WIDTH_EXCEEDS_H1",
+    "required_followup": "compare recurrence at native calibration and final thresholds",
+    "status": "NON_CAUSAL_HYPOTHESIS"
+  },
+  "contract_digest": "e069c93b89498e2375144ace1285d5a68c21cba4fb0acf56dbbb6ae2b653d1e5",
+  "database": {
+    "filename": "primary_scan.sqlite",
+    "sha256": "1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699",
+    "size_bytes": 213794816
+  },
+  "invalid_or_silent_drop_count": 0,
+  "preflight_digest": "7908b910ad60753288382c4c3a5daa012ef6651b8658d96f32756458f7123c29",
+  "raw_frame_count": 6313,
+  "run_key": "8f0424e5f3ea2b94449eaddb0e1ccf61c5fd7ba91d54c839bfa89d0e26efad35",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_outcomes_visible_during_run": false,
+    "fresh_o3a_scores_only": true,
+    "native_classification_executed": false,
+    "native_cohort_selected": false,
+    "publication_claim_authorized": false,
+    "taxonomy_coincidence_pem_executed": false
+  },
+  "status": "PASS_COMPLETE_O3A_PRIMARY_SCAN",
+  "threshold_artifact_digest": "b1ba3e856332bb1397212ac12792cb534d95aca4594c5493a73271b1ec3f877b",
+  "window_counts": {
+    "H1": 349925,
+    "L1": 372986
+  },
+  "window_total": 722911
+}

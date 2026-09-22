@@ -191,6 +191,21 @@
 | D-FUTURE-04 | Supporto completo V1 (Virgo) in timeslide + full_analysis | Disponibilità dati O4b | [TODO] |
 | D-FUTURE-05 | Embedding da blocchi intermedi DINOv2 (explainability) | Nessuno | [TODO] |
 | D-FUTURE-06 | Fissare random_state in DPMM/UMAP | Nessuno | ✅ DONE — risolto come ARCH-03 |
+| D-FUTURE-07 | Feasibility ML4GW come backend opzionale per Q-transform GPU, whitening/PSD, injection e correlazione | Completamento e freeze O3a; ambiente PyTorch isolato | [TODO] diagnostico |
+
+#### D-FUTURE-07 — Gate ML4GW post-O3a (aggiunto 2026-09-22)
+
+- Non modificare la pipeline O3a congelata e non sostituire silenziosamente il
+  backend GWPy.
+- Congelare prima dell'esperimento campione e criteri di equivalenza; misurare
+  sulle stesse finestre spettrogramma, embedding DINOv2, score VQ/MIL, classe,
+  throughput e memoria GPU, senza tuning sulle outcome.
+- Usare un ambiente separato finché i vincoli PyTorch di ML4GW non sono
+  compatibili con il runtime DANTE versionato.
+- Se la rappresentazione cambia materialmente, trattare l'esito come DANTE
+  vNext e ricostruire coorte, indice, calibrazione, soglie e scan.
+- Riservare `MinimumPhaseWhiten` al futuro ramo DANTE-RT: la sua semantica
+  causale non è equivalente al whitening simmetrico offline.
 
 
 ### D-XX — Audit 2026-07: invarianti hard protette da test (aggiunto 2026-07-12)
