@@ -1,0 +1,126 @@
+{
+  "contract_digest": "7c8696aa313c9f06226e375e766fabd68b72c615a6e28e4542633c0b9ee79fd5",
+  "execution": {
+    "accepted_context_duration_s": 40,
+    "accepted_context_format": "NUMPY_FLOAT64_NPY",
+    "atomic_outputs": true,
+    "canonical_environment": "WSL_CUDA_RUNTIME_IDENTITY",
+    "download_retries": 5,
+    "quality_batch_size": 32,
+    "quality_workers": 8,
+    "raw_frame_cache": "TRANSIENT_BATCH_ONLY",
+    "resume_unit": "QUALITY_PROPOSAL_SHARD"
+  },
+  "gates": {
+    "all_context_and_source_hashes_verified": true,
+    "all_rows_pass_raw_quality": true,
+    "exact_rows_by_detector": {
+      "H1": 647,
+      "L1": 647
+    },
+    "fail_closed": true,
+    "no_native_embedding_or_score_computed": true,
+    "zero_candidate_or_guard_overlap": true,
+    "zero_same_detector_separation_violation": true
+  },
+  "implementation_sources": {
+    "scripts/freeze_dante_o3a_native_cohort.py": "0ae6a2ae447e0756e92f39c3c43a1eed163f641fa2a0ffbc0d31721b38d1616b",
+    "scripts/run_dante_o3a_native_cohort.py": "d17a5f7afa1425ccbd0ce3f21c9110e2fb93fa528387a98a4905020283df7da2",
+    "src/dante_light/o3a_native_cohort.py": "ec7bbc2dd96382102523d359a61ce95fc0c1c0dd96f6dd1117b2695e39094728"
+  },
+  "parents": {
+    "approved_stage_contract": {
+      "contract_digest": "fb29f22ffc5a796843383d6ed48032879b1b44252b46a93163e7db2eec157a7d",
+      "path": "config/dante_o3a_native_v1_stage_contract.json",
+      "sha256": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8"
+    },
+    "canonical_runtime": {
+      "contract_digest": "e5c8b2324f631489d229cd878c109597da8e5c7fd4e62ba5d53fa7222e050dea",
+      "environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+      "path": "config/dante_o3a_native_v1_runtime.json",
+      "sha256": "3b00a0bf258cc96870971481138e10e7e85deb97a1c3c49c470626e3153d0ef2"
+    },
+    "corrected_o4a_method_reference": {
+      "contract_digest": "66f5796aecdea5a1009257a96a351e960c0801eadb60dc40bbf01bdfa74378c2",
+      "path": "config/dante_o4a_corrected_native_v1.json",
+      "sha256": "c601205d5ceabe9aaca7f15a03afb91467eb23e45cd89d0d1add02397a83850b"
+    },
+    "primary_scan_compact_evidence": {
+      "artifact_digest": "ba51f9cad83826223f860fda9b52077cbcc2e45c44fc7ad5063ebe56f49c4c79",
+      "database_sha256": "1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699",
+      "path": "artifacts/dante_light/o3a_native_v1/primary_scan.json",
+      "run_key": "8f0424e5f3ea2b94449eaddb0e1ccf61c5fd7ba91d54c839bfa89d0e26efad35",
+      "sha256": "7333867c9098f8bd760de1a23c333f7889c4cf14b8bc28b63fb5f6a57e437d68"
+    },
+    "primary_scan_contract": {
+      "contract_digest": "e069c93b89498e2375144ace1285d5a68c21cba4fb0acf56dbbb6ae2b653d1e5",
+      "path": "config/dante_o3a_primary_scan_v1.json",
+      "sha256": "95b609e0510b7bbbcd1b9ea7b9abc6297fa3be394fdc566ae9ae73633e458610"
+    },
+    "source_inventory": {
+      "path": "config/dante_o3a_gwosc_4khz_source_inventory_v1.json",
+      "sha256": "bbf9be18b1ec9e60599381816fbcb5acf80d2912c6153564ac284d4ffe1f5cb1"
+    }
+  },
+  "population_firewall": {
+    "initial_calibration_is_seed_only_not_final_validation": true,
+    "initial_calibration_membership_used_by_selector": false,
+    "native_calibration_candidate_guard_start_delta_s": 128,
+    "native_calibration_index_guard_interval_gap_s": 96,
+    "native_calibration_must_be_disjoint_from_index": true,
+    "native_calibration_selected_after_index_manifest": true
+  },
+  "preprocessing": {
+    "analysis_duration_s": 32,
+    "excess_power_veto": {
+      "function": "excess_power_veto",
+      "parity_source_contract": "config/dante_o4a_corrected_native_v1.json",
+      "source_path": "src/pipeline_v3_multiscale/micro_mdc_multiscale.py",
+      "source_sha256": "84abada0c4264177938f22362aa30277cb9b56edaf2c1b9082de5eb8f898bca8"
+    },
+    "preprocessor": {
+      "source_path": "src/core/preprocessor.py",
+      "source_sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2"
+    },
+    "require_exact_symmetric_context": true,
+    "require_finite_clean_window": true,
+    "require_finite_raw_context": true,
+    "sample_rate_hz": 4096,
+    "whitening_before_analysis_crop": true,
+    "whitening_pad_s": 4
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "selection": {
+    "candidate_guard_boundary": "INCLUSIVE",
+    "candidate_guard_cross_detector": true,
+    "candidate_guard_start_delta_s": 128,
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "direct_primary_candidates_excluded": true,
+    "identity_unit": "detector_plus_integer_32s_analysis_window_start",
+    "minimum_same_detector_separation_s": 96,
+    "minimum_separation_boundary": "EXACT_DISTANCE_ALLOWED",
+    "native_score_or_class_read": false,
+    "primary_score_or_class_read": false,
+    "priority_algorithm": "sha256(stage_contract_digest|detector|integer_gps_start)",
+    "proposal_stream_limit": null,
+    "selection_priority_contract": "SHA256_CONTRACT_DETECTOR_GPS",
+    "selector_database_columns": [
+      "detector",
+      "gps_start",
+      "is_candidate"
+    ],
+    "target_rows_per_detector": 647
+  },
+  "status": "FROZEN_O3A_NATIVE_COHORT_V1",
+  "storage": {
+    "external_root_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "full_o3a_frame_archive_retained": false,
+    "primary_external_root_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "raw_root_wsl": "/mnt/e/o3a",
+    "retained_scope": "ACCEPTED_40S_RAW_CONTEXTS_ONLY"
+  }
+}
