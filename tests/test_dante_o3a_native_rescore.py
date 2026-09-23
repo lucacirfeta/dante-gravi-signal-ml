@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 import torch
 
+from src.core.artifact_manifest import resolve_reference_index
 from src.dante_light.contracts import ContractError
 from src.dante_light.o3a_native_contract import ROOT
 from src.dante_light import o3a_native_rescore as rescore
@@ -134,6 +135,21 @@ def test_complete_partial_frame_is_validated_and_promoted(tmp_path: Path):
     assert result["source"] == "VERIFIED_EXISTING"
     assert target.is_file()
     assert not partial.exists()
+
+
+def test_scorer_manifest_is_accepted_by_actual_loader(tmp_path: Path):
+    index = tmp_path / "native_index.faiss"
+    index.write_bytes(b"test-index")
+    digest = rescore.file_sha256(index)
+    manifest = tmp_path / "scorer_artifact_manifest.json"
+    contract = {
+        "representation": {"embedding_dimension": 384, "qrange": [4, 64]},
+        "parents": {"native_index": {"centroid_count": 1216}},
+    }
+    rescore._scorer_manifest(manifest, index, digest, contract)
+    spec = resolve_reference_index(index, manifest_path=manifest)
+    assert spec.sha256 == digest
+    assert spec.n_centroids == 1216
 
 
 def test_cross_frame_context_and_image_replay(tmp_path: Path, monkeypatch):

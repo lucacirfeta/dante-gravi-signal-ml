@@ -33,8 +33,8 @@ from src.dante_light.o3a_primary_scan import (
 from src.dante_light.o3a_raw_download import file_sha256, validate_hdf5_metadata
 
 
-SCHEMA_VERSION = 2
-CONTRACT_REL = "config/dante_o3a_native_rescore_v2.json"
+SCHEMA_VERSION = 3
+CONTRACT_REL = "config/dante_o3a_native_rescore_v3.json"
 SCAN_REL = "artifacts/dante_light/o3a_native_v1/primary_scan.json"
 INDEX_REL = "artifacts/dante_light/o3a_native_v1/native_index.json"
 CALIBRATION_REL = "artifacts/dante_light/o3a_native_v1/native_calibration_cohort.json"
@@ -115,7 +115,7 @@ def build_rescore_contract(*, root: Path = ROOT) -> dict[str, Any]:
     execution = method["execution"]
     body = {
         "schema_version": SCHEMA_VERSION,
-        "status": "FROZEN_O3A_NATIVE_RESCORE_V2",
+        "status": "FROZEN_O3A_NATIVE_RESCORE_V3",
         "run": "O3A",
         "parents": {
             "primary_scan": _binding(root, SCAN_REL, artifact_digest=scan["artifact_digest"]),
@@ -153,6 +153,7 @@ def build_rescore_contract(*, root: Path = ROOT) -> dict[str, Any]:
             "progress_discloses_native_outcomes": False,
             "all_source_and_image_hashes_replayed": True,
             "v1_metadata_only_transport_fix": True,
+            "v2_scorer_manifest_schema_adapter_fix": True,
         },
         "implementation_sources": {relative: file_sha256(root / relative) for relative in SOURCE_PATHS},
     }
@@ -367,7 +368,7 @@ def _scorer_manifest(path: Path, index_path: Path, index_digest: str, contract: 
     _atomic_json(
         path,
         {
-            "schema_version": SCHEMA_VERSION,
+            "schema_version": 1,
             "artifact_root": str(index_path.parent),
             "reference_indices": {
                 "o3a_native_detector_aware_v1": {
