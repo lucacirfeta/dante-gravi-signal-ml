@@ -1,0 +1,87 @@
+{
+  "contract_digest": "28f478dbe6c69d5d94af3ca1d6fb959866fc49090b1550a3c8d219c28f4e3d0b",
+  "execution": {
+    "atomic_outputs": true,
+    "root_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "runtime": "canonical WSL",
+    "strain_or_native_score_opened": false
+  },
+  "implementation_sources": {
+    "scripts/freeze_dante_o3a_native_calibration_cohort.py": "a5b697f85984aa736ccff9743fc339cc7ffffed9f10e69b23cad4b43ddc926d5",
+    "src/dante_light/o3a_native_calibration_cohort.py": "f7b11e93ba4f63042f2516126ec3a4b54111eecc59ec338ad26f2b9c341226b2"
+  },
+  "parents": {
+    "approved_stage_contract": {
+      "contract_digest": "fb29f22ffc5a796843383d6ed48032879b1b44252b46a93163e7db2eec157a7d",
+      "path": "config/dante_o3a_native_v1_stage_contract.json",
+      "sha256": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8"
+    },
+    "native_cohort": {
+      "artifact_digest": "709c6fc5c3a22c89c21cd92303de2acf4d5ab1e30a016ddaaa89ebaf69daf382",
+      "ledger_sha256": "99cbc1c897ab1b30df33923b0b75693c997447ecc878971edfb913228893e298",
+      "path": "artifacts/dante_light/o3a_native_v1/native_cohort.json",
+      "sha256": "c2fa653ccf7d8b1391c04fc08834d318088d2372a0b1f714f261569df9f6bc03"
+    },
+    "native_index": {
+      "artifact_digest": "8ce38ae0ee85a2c45c01b592daab29a9beca52fa735815f1519c0603806041f0",
+      "path": "artifacts/dante_light/o3a_native_v1/native_index.json",
+      "run_key": "8b6d6cc706973bc512a9c1f76f9693c232d2c8161e47a285d563b7b3ab351e75",
+      "sha256": "99c39ba37fda6996df695a1ddd18620a41bda53062129e8df68bdb50031e6033"
+    },
+    "o4a_native_calibration_method": {
+      "contract_digest": "b64e44e666a1bd11454db063666b3275d8c0892832d0ec3647ea9733b7f6bf4b",
+      "path": "config/dante_o4a_corrected_native_calibration_v2.json",
+      "sha256": "f5dd04747b04b1224d1f0158cacc7d1c75040b90d8a97db974a55e5a75200584"
+    },
+    "o4a_selector_source": {
+      "path": "src/dante_light/o4a_corrected_native_calibration.py",
+      "sha256": "1c75eeaadd637c9caa04d945b18580d102de2b75be2a7ac4c1ce62c6c15e5f17"
+    },
+    "primary_scan": {
+      "artifact_digest": "ba51f9cad83826223f860fda9b52077cbcc2e45c44fc7ad5063ebe56f49c4c79",
+      "database_sha256": "1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699",
+      "path": "artifacts/dante_light/o3a_native_v1/primary_scan.json",
+      "run_key": "8f0424e5f3ea2b94449eaddb0e1ccf61c5fd7ba91d54c839bfa89d0e26efad35",
+      "sha256": "7333867c9098f8bd760de1a23c333f7889c4cf14b8bc28b63fb5f6a57e437d68"
+    },
+    "runtime": {
+      "environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+      "path": "config/dante_o3a_native_v1_runtime.json",
+      "sha256": "3b00a0bf258cc96870971481138e10e7e85deb97a1c3c49c470626e3153d0ef2"
+    },
+    "selector_amendment": {
+      "amendment_digest": "2d50b45c373a930d7989056502ecd0ef23c440d7ba7db94efe13ffa13491c317",
+      "path": "config/dante_o3a_native_calibration_selector_amendment_v1.json",
+      "sha256": "a36d8e5123a81f8076481468c0f9d57489275f839043d0f3457e1992b5d1043d"
+    }
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "selection": {
+    "algorithm": "O4A_NATIVE_V2_EVENLY_SPACED_COMPLETE_BLOCKS_WITH_CONTEXT_FALLBACK",
+    "block_length_rows": 17,
+    "bootstrap_rows_per_detector": 4998,
+    "candidate_and_index_guard_start_delta_s": 128,
+    "detectors": [
+      "H1",
+      "L1"
+    ],
+    "forbidden_outcome_fields": [
+      "primary score",
+      "native score",
+      "threshold",
+      "class",
+      "taxonomy"
+    ],
+    "pad_s": 4,
+    "selector_database_columns": [
+      "detector",
+      "gps_start",
+      "is_candidate"
+    ],
+    "stride_s": 64,
+    "target_rows_per_detector": 5000,
+    "window_duration_s": 32
+  },
+  "status": "FROZEN_O3A_NATIVE_CALIBRATION_COHORT_V1"
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "PASS_FROZEN_O3A_NATIVE_CALIBRATION_COHORT",
+  "run": "O3A",
+  "run_key": "ea0acdc9cd367c2e9a8b2866cd0b70b2dc71095c6eb17760aa8db60b02e02b3d",
+  "contract_digest": "28f478dbe6c69d5d94af3ca1d6fb959866fc49090b1550a3c8d219c28f4e3d0b",
+  "selector_amendment_digest": "2d50b45c373a930d7989056502ecd0ef23c440d7ba7db94efe13ffa13491c317",
+  "parent_index_artifact_digest": "8ce38ae0ee85a2c45c01b592daab29a9beca52fa735815f1519c0603806041f0",
+  "artifact_digest": "5d7b5cee05f9df8a0b7ad4307e520ffd4fefc6c7ae6c6101fc92836a6615a1db",
+  "ledger_sha256": "2cc88654bfea3792a1a423132dc286aa4f40525859565c23c2e178b94aa2c33c",
+  "ledger_row_digest": "c6e056ae75e385fe771a5af75e14c185c550be5f0a24952d006d20b470d05c31",
+  "counts_by_detector": {
+    "H1": 5000,
+    "L1": 5000
+  },
+  "bootstrap_rows_by_detector": {
+    "H1": 4998,
+    "L1": 4998
+  },
+  "scores_or_classes_read": false,
+  "independent_guard_audit": {
+    "duplicate_detector_gps": 0,
+    "candidate_guard_violations": 0,
+    "index_guard_violations": 0,
+    "context_rows": 10000,
+    "complete_bootstrap_blocks_by_detector": {
+      "H1": 294,
+      "L1": 294
+    }
+  },
+  "external_run_dir_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1/native_calibration_cohort_ea0acdc9cd367c2e9a8b2866cd0b70b2dc71095c6eb17760aa8db60b02e02b3d",
+  "compact_digest": "3d2b97374d0749120fadf8d3fe6e36eb8b62559ba30046e7535047c9724d8e00"
+}

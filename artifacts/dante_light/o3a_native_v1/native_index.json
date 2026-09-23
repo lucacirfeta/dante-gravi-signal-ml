@@ -1,0 +1,43 @@
+{
+  "artifact_digest": "8ce38ae0ee85a2c45c01b592daab29a9beca52fa735815f1519c0603806041f0",
+  "cohort_artifact_digest": "709c6fc5c3a22c89c21cd92303de2acf4d5ab1e30a016ddaaa89ebaf69daf382",
+  "cohort_row_total": 1294,
+  "contract_digest": "f8ca604dd15e0e899b155c89007eb0d297146d3a21eb7b4bba29338518f5a0dc",
+  "counts_by_detector": {
+    "H1": 647,
+    "L1": 647
+  },
+  "gates": {
+    "clean_window_hash_mismatches": 0,
+    "cohort_only": true,
+    "context_failures": 0,
+    "encoder_failures": 0,
+    "raw_context_hash_mismatches": 0
+  },
+  "index": {
+    "centroid_bytes_sha256": "6ba65fbf888419b8f3dfad7b661226b277a731957ea94c0ac3364b43cc0f4c7b",
+    "centroid_shape": [
+      1216,
+      384
+    ],
+    "filename": "native_index.npz",
+    "raw_sample_bytes_sha256": "4d3def4434b1f627f10913485b70691853f8e148601e4ce5ff571cd7b17f0009",
+    "raw_sample_shape": [
+      50000,
+      384
+    ],
+    "sha256": "79d44c710fbf8760c044ee21cf0d68f0694be13086a9de934fa7a87d66410cae",
+    "size_bytes": 72973915,
+    "token_total": 1771486
+  },
+  "replay_ledger": {
+    "filename": "native_index_replay.jsonl",
+    "row_digest": "20f4b91f61101aeb7b765605b1d2ac3b53c61771fe4022aaf7e7ada39e64eda2",
+    "row_total": 1294,
+    "sha256": "2a906dea85e4dad8cecd27974aebc1f52b43b0847388477d38bbfb0213530b9c"
+  },
+  "run_key": "8b6d6cc706973bc512a9c1f76f9693c232d2c8161e47a285d563b7b3ab351e75",
+  "runtime_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+  "schema_version": 1,
+  "status": "PASS_BUILT_O3A_NATIVE_INDEX"
+}
