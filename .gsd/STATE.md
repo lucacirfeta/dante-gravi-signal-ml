@@ -1,17 +1,19 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.14 O3a-only native calibration identity freeze completed
-- **Status**: The O3a-only native index remains adopted and unchanged. The
-  author approved a native-stage-only selector amendment matching corrected
-  O4a's evenly spaced complete-block method. The 10,000-row O3a calibration
-  identity ledger is PASS and independently guarded against primary candidates
-  and the index cohort: 5,000 rows and 294 complete bootstrap blocks per
-  detector; zero guard violations. Contract digest
-  `28f478dbe6c69d5d94af3ca1d6fb959866fc49090b1550a3c8d219c28f4e3d0b`,
-  run key `ea0acdc9cd367c2e9a8b2866cd0b70b2dc71095c6eb17760aa8db60b02e02b3d`.
-  The focused WSL O3a/PatchProducer suite passed 90 tests. No native score,
-  threshold, class or taxonomy has been computed; the next gate is a separately
-  frozen native scoring contract.
+- **Phase**: 7.15 O3a-only native score replay in progress
+- **Status**: The O3a-only native index and 10,000-row native-calibration
+  identity ledger remain adopted and unchanged. The score-only v3 contract
+  (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
+  has PASS manifest and real HDF5/CUDA preflight, including stitched context,
+  raw-file and image SHA-256 replay. Its frozen workload is 18,900 rows and
+  4,324 unique raw frames; these are workload counts, not scientific outcomes.
+  The focused WSL O3a/PatchProducer suite passed 103 tests. The full rescore
+  is active under run key
+  `e9b75ee479f5fa6850accb2178d00fa752954519fe7db768629ef1422c4c27e0`.
+  Rescore v1 and v2 are preserved as failed structural preflights with zero
+  scientific score shards. No native threshold, class, taxonomy or scientific
+  interpretation has been computed; the next gate is completed score replay
+  and independent verification.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
