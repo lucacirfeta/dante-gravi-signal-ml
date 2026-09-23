@@ -38,9 +38,9 @@ new analysis-band asymmetry relative to the published corrected-O4a method.
 The O3a initial seed contract also binds the 4 kHz O4a parity representation
 and the historical O3b K=275 index. Changing its sampling rate cannot be
 treated as an administrative source substitution. No 16 kHz scientific
-contract or run was created. The choice between preserving 4 kHz parity and
-opening a separately labeled 16 kHz experimental branch requires explicit
-scientific authorization.
+contract or run was created. The author resolved the choice on 2026-09-23:
+preserve O3a/O4a 4 kHz parity and do not open a unilateral O3a 16 kHz run.
+A paired 16 kHz O3a/O4a band-extension study is recorded only as future work.
 
 The completed 4 kHz calibration, thresholds, scan, cohort, and index remain
 unchanged. They must not be silently rebound to 16 kHz. If a distinct 16 kHz

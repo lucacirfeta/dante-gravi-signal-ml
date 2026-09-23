@@ -18,19 +18,30 @@ Evidence:
 - Replay ledger SHA-256: `2a906dea85e4dad8cecd27974aebc1f52b43b0847388477d38bbfb0213530b9c`
 - External summary SHA-256: `99c39ba37fda6996df695a1ddd18620a41bda53062129e8df68bdb50031e6033`
 
-The completed run is **not yet adopted for downstream science**. During the
+At this initial checkpoint the completed run was **not yet adopted for
+downstream science**. During the
 run, GWPy 4.0.1 consistently warned that its Q tiling lowers the requested
 20-2,048 Hz frequency range to 20-1,291.0530521679268 Hz for 4,096 Hz data
 and `qrange=(4,64)`. A direct `QTiling(32, 4096, ...)` check confirmed this;
-the identical request at 16,384 Hz (O4a sample rate) retained 2,048 Hz. O3a
+the identical request at 16,384 Hz retained 2,048 Hz. The parenthetical
+identification of 16,384 Hz as the O4a production rate was **incorrect**. O3a
 initial calibration/scan also requested 20-2,048 Hz on 4,096 Hz data, so this
-is likely a shared O3a effective-band issue, not isolated to index fitting.
-It does not invalidate the technical replay but limits a claim of identical
-effective representation between O3a and O4a. The NPZ metadata currently
-records the requested frequency range, not the effective one.
+is a shared O3a effective-band behavior, not isolated to index fitting.
+At the time it was thought to limit a claim of identical effective
+representation between O3a and O4a; the resolution below corrects that
+interpretation. The NPZ metadata records the requested frequency range,
+not the effective one.
 
-Decision required before native calibration: either retain the 4 kHz O3a
-pipeline and explicitly document/freeze its narrower effective support as a
-cross-run comparability limit, or require matched effective support (which
-would need a separately scoped source/representation change and upstream
-recomputation). No downstream stage was opened or parameter changed here.
+## Resolution, 2026-09-23
+
+The corrected-O4a native-index contract specifies 4,096 Hz, and an O4a
+multiscale reference preflight independently records the same GWPy cap of
+1,291.0530521679268 Hz. Therefore the observed cap is not an O3a-only
+cross-run comparability limit. The author selected 4 kHz method parity and
+deferred any 16 kHz extension to a separate paired O3a/O4a experiment.
+
+The index verifier passed again without recomputation, confirming the same
+run and artifact digests, 1,294 replay rows, all token shards, and exact
+index/replay hashes. The WSL O3a/PatchProducer suite passed 85 tests. The
+existing index may now feed a new O3a native-calibration stage, provided its
+population is frozen and guarded against the index cohort before scoring.
