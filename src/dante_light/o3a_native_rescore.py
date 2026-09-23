@@ -30,11 +30,11 @@ from src.dante_light.o3a_primary_scan import (
     _download_frame,
     load_scan_contract,
 )
-from src.dante_light.o3a_raw_download import file_sha256
+from src.dante_light.o3a_raw_download import file_sha256, validate_hdf5_metadata
 
 
-SCHEMA_VERSION = 1
-CONTRACT_REL = "config/dante_o3a_native_rescore_v1.json"
+SCHEMA_VERSION = 2
+CONTRACT_REL = "config/dante_o3a_native_rescore_v2.json"
 SCAN_REL = "artifacts/dante_light/o3a_native_v1/primary_scan.json"
 INDEX_REL = "artifacts/dante_light/o3a_native_v1/native_index.json"
 CALIBRATION_REL = "artifacts/dante_light/o3a_native_v1/native_calibration_cohort.json"
@@ -115,7 +115,7 @@ def build_rescore_contract(*, root: Path = ROOT) -> dict[str, Any]:
     execution = method["execution"]
     body = {
         "schema_version": SCHEMA_VERSION,
-        "status": "FROZEN_O3A_NATIVE_RESCORE_V1",
+        "status": "FROZEN_O3A_NATIVE_RESCORE_V2",
         "run": "O3A",
         "parents": {
             "primary_scan": _binding(root, SCAN_REL, artifact_digest=scan["artifact_digest"]),
@@ -152,6 +152,7 @@ def build_rescore_contract(*, root: Path = ROOT) -> dict[str, Any]:
             "native_threshold_or_class_computed": False,
             "progress_discloses_native_outcomes": False,
             "all_source_and_image_hashes_replayed": True,
+            "v1_metadata_only_transport_fix": True,
         },
         "implementation_sources": {relative: file_sha256(root / relative) for relative in SOURCE_PATHS},
     }
@@ -498,6 +499,33 @@ def _verified_cache_file(
     return stat.st_size, stat.st_mtime_ns
 
 
+def _download_scoring_frame(
+    *, source: Mapping[str, Any], target: Path, retries: int
+) -> dict[str, Any]:
+    """Supply inventory metadata and recover only a fully verified partial."""
+    duration = int(source["gps_end"]) - int(source["gps_start"])
+    if duration <= 0:
+        raise ContractError("O3a native-rescore frame duration is invalid")
+    frame = {**source, "duration_s": duration}
+    partial = target.with_suffix(target.suffix + ".part")
+    if not target.exists() and partial.is_file():
+        partial_size = partial.stat().st_size
+        expected_size = int(source["size_bytes"])
+        if partial_size > expected_size:
+            raise ContractError("O3a native-rescore partial frame exceeds ledger size")
+        if partial_size == expected_size:
+            validate_hdf5_metadata(partial, frame)
+            if file_sha256(partial) != source["sha256"]:
+                raise ContractError("O3a native-rescore complete partial frame hash changed")
+            os.replace(partial, target)
+    return _download_frame(
+        frame=frame,
+        target=target,
+        retries=retries,
+        expected_sha256=str(source["sha256"]),
+    )
+
+
 def _prepare_batch_sources(
     *, batch: Sequence[Mapping[str, Any]], run_dir: Path, contract: Mapping[str, Any],
     known: dict[tuple[str, str], tuple[int, int]],
@@ -519,11 +547,10 @@ def _prepare_batch_sources(
             continue
         if shutil.disk_usage(run_dir).free < int(source["size_bytes"]) + reserve:
             raise InfrastructureError("O3a native-rescore transient raw reserve is insufficient")
-        result = _download_frame(
-            frame=source,
+        result = _download_scoring_frame(
+            source=source,
             target=target,
             retries=int(contract["execution"]["download_retries"]),
-            expected_sha256=str(source["sha256"]),
         )
         if result["sha256"] != source["sha256"] or result["size_bytes"] != source["size_bytes"]:
             raise ContractError("O3a native-rescore raw frame ledger mismatch")

@@ -83,6 +83,8 @@ def test_verified_raw_cache_reused_then_evicted(tmp_path: Path, monkeypatch):
     source = {
         "detector": "H1",
         "filename": "raw.hdf5",
+        "gps_start": 1000,
+        "gps_end": 1001,
         "sha256": hashlib.sha256(payload).hexdigest(),
         "size_bytes": len(payload),
     }
@@ -109,6 +111,29 @@ def test_verified_raw_cache_reused_then_evicted(tmp_path: Path, monkeypatch):
         known=known,
     )
     assert not (tmp_path / "transient_raw/H1/raw.hdf5").exists()
+
+
+def test_complete_partial_frame_is_validated_and_promoted(tmp_path: Path):
+    target = tmp_path / "H1" / "raw.hdf5"
+    target.parent.mkdir(parents=True)
+    partial = target.with_suffix(".hdf5.part")
+    with h5py.File(partial, "w") as handle:
+        dataset = handle.create_dataset("strain/Strain", data=np.ones(4096, dtype=np.float64))
+        dataset.attrs["Xspacing"] = 1.0 / 4096
+    source = {
+        "detector": "H1",
+        "filename": target.name,
+        "gps_start": 1000,
+        "gps_end": 1001,
+        "url": "https://example.invalid/never-requested",
+        "sha256": rescore.file_sha256(partial),
+        "size_bytes": partial.stat().st_size,
+    }
+    result = rescore._download_scoring_frame(source=source, target=target, retries=1)
+    assert result["sha256"] == source["sha256"]
+    assert result["source"] == "VERIFIED_EXISTING"
+    assert target.is_file()
+    assert not partial.exists()
 
 
 def test_cross_frame_context_and_image_replay(tmp_path: Path, monkeypatch):
