@@ -33,6 +33,8 @@ def _fixture(monkeypatch):
         {
             "detector": detector,
             "gps_start": 1000,
+            "row_number": 0,
+            "bootstrap_block_index": 0,
             "context_sources": sources[(detector, 1000)],
             "context_sources_digest": canonical_json_sha256(sources[(detector, 1000)]),
         }
@@ -45,6 +47,7 @@ def _fixture(monkeypatch):
         frames_by_detector=frames,
         raw_frame_rows={},
         expected_calibration_rows_by_detector={"H1": 1, "L1": 1},
+        bootstrap_block_length_rows=17,
     )
     return kwargs
 
@@ -56,8 +59,9 @@ def test_exact_work_manifest_and_no_outcome(monkeypatch):
     assert audit["row_total"] == 3
     assert audit["unique_source_frames"] == 2
     assert audit["unique_source_bytes"] == 18
-    assert audit["score_or_class_read"] is False
+    assert audit["score_or_class_used_to_construct_work_manifest"] is False
     assert all("score" not in row and "class" not in row for row in rows)
+    assert all("bootstrap_block_index" in row for row in rows if row["population"] == "native_calibration")
 
 
 def test_changed_calibration_context_is_rejected(monkeypatch):

@@ -59,9 +59,11 @@ def assemble_work_rows(
     frames_by_detector: Mapping[str, Sequence[Mapping[str, Any]]],
     raw_frame_rows: Mapping[tuple[str, str], Mapping[str, Any]],
     expected_calibration_rows_by_detector: Mapping[str, int],
+    bootstrap_block_length_rows: int,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Build an exact score-only work list without opening outcome columns."""
     calibration_keys: set[tuple[str, int]] = set()
+    calibration_positions = Counter()
     work: list[dict[str, Any]] = []
     frame_starts = {
         detector: [int(frame["gps_start"]) for frame in frames]
@@ -94,8 +96,17 @@ def assemble_work_rows(
         key = (str(calibration["detector"]), int(calibration["gps_start"]))
         if key in calibration_keys or scan_rows.get(key, {}).get("is_candidate") is not False:
             raise ContractError("O3a native-rescore calibration identity is invalid")
+        if (
+            int(calibration["row_number"]) != calibration_positions[key[0]]
+            or int(calibration["bootstrap_block_index"])
+            != int(calibration["row_number"]) // bootstrap_block_length_rows
+        ):
+            raise ContractError("O3a native-rescore calibration block order changed")
         calibration_keys.add(key)
+        calibration_positions[key[0]] += 1
         row = make_row(key, "native_calibration", ordinal)
+        row["calibration_row_number"] = int(calibration["row_number"])
+        row["bootstrap_block_index"] = int(calibration["bootstrap_block_index"])
         if (
             row["context_sources"] != calibration["context_sources"]
             or row["context_sources_digest"] != calibration["context_sources_digest"]
@@ -136,7 +147,7 @@ def assemble_work_rows(
         "row_total": len(work),
         "unique_source_frames": len(unique_frames),
         "unique_source_bytes": sum(size for _sha, size in unique_frames.values()),
-        "score_or_class_read": False,
+        "score_or_class_used_to_construct_work_manifest": False,
         "strain_opened": False,
     }
     return work, audit
@@ -149,6 +160,7 @@ def read_calibration_ledger(path: Path) -> list[dict[str, Any]]:
 def preflight_from_verified_parents(
     *, scan_database: Path, calibration_ledger: Path, root: Path,
     expected_calibration_rows_by_detector: Mapping[str, int],
+    bootstrap_block_length_rows: int,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Caller must verify parent artifact digests before invoking this function."""
     scan_rows = scan_scoring_identities(scan_database)
@@ -161,4 +173,5 @@ def preflight_from_verified_parents(
         frames_by_detector=frames,
         raw_frame_rows=_raw_frame_rows(scan_database),
         expected_calibration_rows_by_detector=expected_calibration_rows_by_detector,
+        bootstrap_block_length_rows=bootstrap_block_length_rows,
     )

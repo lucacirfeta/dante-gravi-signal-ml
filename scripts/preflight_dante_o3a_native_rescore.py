@@ -1,4 +1,4 @@
-"""Read-only O3a native-rescore workload audit; no strain or scores opened."""
+"""O3a rescore workload audit; parent verification reads no native score."""
 
 from __future__ import annotations
 
@@ -51,6 +51,7 @@ def main() -> None:
         calibration_ledger=calibration_dir / calibration["ledger"]["filename"],
         root=root,
         expected_calibration_rows_by_detector=calibration["counts_by_detector"],
+        bootstrap_block_length_rows=int(contract["selection"]["block_length_rows"]),
     )
     if audit["candidate_rows_by_detector"] != scan["candidate_counts"]:
         raise ContractError("O3a native-rescore seed-count audit disagrees with scan")
