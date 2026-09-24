@@ -1,6 +1,6 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.16 Native detector-specific thresholds running; verification pending
+- **Phase**: 7.16 Native thresholds PASS verified; 7.17 classification authorized
 - **Status**: The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
@@ -18,8 +18,8 @@
   Three infrastructure failures (502, 503, connection timeout) were archived
   by the runner before same-key resumes. Rescore v1 and v2 are preserved as
   failed structural preflights with zero
-  scientific score shards. No native threshold, class, taxonomy or scientific
-  interpretation has been computed. All 15 frozen source hashes match; six
+  scientific score shards. No class, taxonomy or scientific interpretation
+  has been computed. All 15 frozen source hashes match; six
   require an exact, verified LF-to-CRLF reconstruction from Git. A clean-LF
   checkout is not directly hash-equivalent; clean-clone replay remains a
   separate follow-up (see the 2026-09-23 read-only audit).
@@ -30,9 +30,22 @@
   worker started at 18:00 Europe/Rome on 2026-09-24, with one WSL instance
   observed and an empty stderr log. Run key:
   `1bd630e29eda34be625f6bbd325b60d114d7f4dc2508a8c09c81263127f35405`.
-  Completion and independent --verify are pending. The hourly monitor is
-  active; it must report absolute/relative CI widths without a post-hoc
-  precision cutoff. Classification remains closed. See 07-16-PLAN.md.
+  Fit completed at 18:04:49 Europe/Rome with PASS_COMPLETE, no failure file
+  and empty stderr. The launch did not persist its OS exit code; do not
+  claim that code was observed. Summary digest:
+  `30671367d022c1a935a446313ea65f4b0457f6b85b2cc8f2107e94055b1d1d79`.
+  Independent --verify completed at 19:05:41; session 70020 returned exit0
+  and deterministic replay matched. Compact artifact digest:
+  `32890633207ebb91839131b972dc0ca18650ceb3fe18383fb9adee3bed6ce281`.
+  Post-run WSL regression: 122 passed, 11 upstream warnings (86.74s).
+  H1 p99=0.4057316654920578; CI width=0.008046090602874756 (1.983106%).
+  L1 p99=0.41683934092521674; CI width=0.00732177317142485 (1.756498%).
+  Exact 5000 point/4998 bootstrap rows and 294 blocks per detector;
+  receipt, summary and frozen-source audit PASS. No post-hoc width cutoff.
+  The hourly monitor remains active. The user's latest
+  authorization permits CLASSIFY as the next separate increment, following
+  the frozen stage-contract rule and passing tests/provenance first.
+  Taxonomy, coincidence and PEM remain closed.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently

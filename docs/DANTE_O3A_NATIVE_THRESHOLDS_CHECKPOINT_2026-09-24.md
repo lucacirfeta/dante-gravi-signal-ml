@@ -70,3 +70,27 @@ The existing hourly monitor was repointed to thresholds; it must not duplicate
 the worker, must run independent --verify only after successful fitting, and
 must stop for failure review. No completion or threshold result is claimed
 by this launch record.
+
+## Verified completion
+
+The fit completed at 18:04:49 Europe/Rome. Independent --verify completed
+at 19:05:41 and returned captured exit code 0. The initial launch exit code
+was not persisted and is not claimed. Both deterministic calculations match.
+
+| Detector | p99 | 95% percentile-bootstrap CI | Absolute width | Width / p99 |
+|---|---:|---|---:|---:|
+| H1 | 0.4057316654920578 | [0.4015953540802002, 0.40964144468307495] | 0.008046090602874756 | 1.9831063944976357% |
+| L1 | 0.41683934092521674 | [0.41297605633735657, 0.4202978295087814] | 0.00732177317142485 | 1.7564976365170907% |
+
+No post-hoc precision cutoff was applied. Both detectors have exactly5000
+point rows and4998 bootstrap rows (294 blocks of17;2 point-only tail rows).
+Post-run regression:122 tests passed,11 upstream warnings,86.74s.
+Source/receipt/summary consistency audit passed, retaining the EOL caveats.
+Verified compact artifact:
+`32890633207ebb91839131b972dc0ca18650ceb3fe18383fb9adee3bed6ce281`.
+Summary artifact:
+`30671367d022c1a935a446313ea65f4b0457f6b85b2cc8f2107e94055b1d1d79`.
+
+The user subsequently authorized CLASSIFY after this gate. It will use the
+already-frozen detector-local CI boundary rule, with equality classified
+AMBIGUOUS. No other downstream stage is authorized by that follow-up.
