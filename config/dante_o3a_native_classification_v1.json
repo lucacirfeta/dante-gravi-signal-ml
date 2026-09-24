@@ -1,0 +1,59 @@
+{
+  "boundary_class": "AMBIGUOUS",
+  "contract_digest": "9aaeff60fd078538355d724f4102b39886dca97fef7474d394e2ee4109f5f1a2",
+  "implementation_sources": {
+    "scripts/run_dante_o3a_native_classification.py": "376980d0db6e20671cdbc6ebbf25ab750235213b683918b6a9ae33983593681c",
+    "src/dante_light/o3a_native_classification.py": "2267162a0796b975d32da7286958efeb816fcbdd1beb12fd438af37c9f6861b4",
+    "tests/test_dante_o3a_native_classification.py": "262141d33c9f69fc97109183b7813d2a8c79f46b067b9103a68fb5a5609aaa9f"
+  },
+  "output": {
+    "candidate_filename": "native_classified_candidates.jsonl",
+    "summary_filename": "native_classification_summary.json"
+  },
+  "population": {
+    "rows_by_detector": {
+      "H1": 3624,
+      "L1": 5276
+    },
+    "selection": "ALL_FROZEN_PRIMARY_SEEDS"
+  },
+  "references": {
+    "artifacts/dante_light/o3a_native_v1/native_rescore.json": "8e4924840239bd36c0427736c554de2ba7499076a49a182016658c9a2e2d99ce",
+    "artifacts/dante_light/o3a_native_v1/native_thresholds.json": "76da3768dc134aa7179c3310966847cfca51d41d28a725c3279d91da280f72ea",
+    "config/dante_o3a_native_rescore_v3.json": "f791d7964cf4c05a56bb222028ad5675ac4bbe3f776cc9599b6955415ad20944",
+    "config/dante_o3a_native_thresholds_v1.json": "02935982681ec57c94206389b3d183205c8f9328c849c9d33d5392bb6b05f0bc",
+    "config/dante_o3a_native_v1_runtime.json": "3b00a0bf258cc96870971481138e10e7e85deb97a1c3c49c470626e3153d0ef2",
+    "config/dante_o3a_native_v1_stage_contract.json": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8"
+  },
+  "rescore_parent": {
+    "artifact_digest": "4b1eff34f618005a2b881e3dd29e4dc0b25f1c6e5b5b5d19a23c0a833245503a",
+    "contract_digest": "85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c",
+    "output_sha256": {
+      "native_calibration_H1": "bb565f0675f6472ea1bca2db18e6190506345ace0990548c7f21a5b2bc0d9b04",
+      "native_calibration_L1": "7054797893bf013fd90d66d983a5cf45fb72b85c530cb67f43cc85de91b44ba3",
+      "primary_candidate": "15b0e84ffc1fa04b5b2a5faf46b85d8fe48729e765ecf90286d083691f273c24"
+    },
+    "run_key": "e9b75ee479f5fa6850accb2178d00fa752954519fe7db768629ef1422c4c27e0"
+  },
+  "rule": "BACKGROUND_BELOW_CI_LOWER_ROBUST_ABOVE_CI_UPPER_AMBIGUOUS_OTHERWISE",
+  "run": "O3A",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "coincidence_performed": false,
+    "detector_pooling": false,
+    "global_significance_claim": false,
+    "multiscale_used": false,
+    "pem_performed": false,
+    "population_changed": false,
+    "scores_changed": false,
+    "taxonomy_performed": false,
+    "thresholds_changed": false
+  },
+  "status": "FROZEN_O3A_NATIVE_CLASSIFICATION_V1",
+  "threshold_parent": {
+    "artifact_digest": "32890633207ebb91839131b972dc0ca18650ceb3fe18383fb9adee3bed6ce281",
+    "contract_digest": "10d6279a2b637309d3d955881cf0a3d2f450f6a66adfb9de9fd2613ea3b65c5c",
+    "run_artifact_digest": "30671367d022c1a935a446313ea65f4b0457f6b85b2cc8f2107e94055b1d1d79",
+    "run_key": "1bd630e29eda34be625f6bbd325b60d114d7f4dc2508a8c09c81263127f35405"
+  }
+}

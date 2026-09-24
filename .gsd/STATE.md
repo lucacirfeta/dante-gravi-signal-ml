@@ -1,6 +1,6 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.16 Native thresholds PASS verified; 7.17 classification authorized
+- **Phase**: 7.17 Native classification frozen/tested; execution pending
 - **Status**: The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
@@ -46,6 +46,12 @@
   authorization permits CLASSIFY as the next separate increment, following
   the frozen stage-contract rule and passing tests/provenance first.
   Taxonomy, coincidence and PEM remain closed.
+  The classification adapter now has 33 passing targeted tests and 155
+  passing full O3a/PatchProducer tests (11 upstream warnings, 99.32s).
+  Contract digest:
+  `9aaeff60fd078538355d724f4102b39886dca97fef7474d394e2ee4109f5f1a2`.
+  No real classification outcome has been opened before this source freeze.
+  Next: commit/push source, then --run followed by --verify only on exit0.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
