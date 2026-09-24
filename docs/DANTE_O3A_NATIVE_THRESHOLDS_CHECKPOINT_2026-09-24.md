@@ -57,3 +57,16 @@ with --run, then --verify, which re-verifies the parent and recomputes both
 thresholds before writing a compact verified receipt. A failed hash,
 runtime, identity, interval or deterministic-replay check stops this stage;
 there is no automatic threshold retuning or downstream opening.
+
+## Launch record
+
+Source and contract committed/pushed as `b87db6a` before fitting. The --run
+worker was launched at 18:00 Europe/Rome on 2026-09-24. One WSL Python
+instance was observed (PID 422), with no stderr output at the first check.
+The run key is
+`1bd630e29eda34be625f6bbd325b60d114d7f4dc2508a8c09c81263127f35405`.
+The external directory is under `E:\dante_cache\dante_light\o3a_native_v1`.
+The existing hourly monitor was repointed to thresholds; it must not duplicate
+the worker, must run independent --verify only after successful fitting, and
+must stop for failure review. No completion or threshold result is claimed
+by this launch record.
