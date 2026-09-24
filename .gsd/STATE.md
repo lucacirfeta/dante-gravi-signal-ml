@@ -1,6 +1,6 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.17 Native classification PASS verified; awaiting downstream authorization
+- **Phase**: 7.18 Native morphology taxonomy PASS verified; awaiting downstream authorization
 - **Status**: The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
@@ -18,8 +18,8 @@
   Three infrastructure failures (502, 503, connection timeout) were archived
   by the runner before same-key resumes. Rescore v1 and v2 are preserved as
   failed structural preflights with zero
-  scientific score shards. Native classes are now verified; no taxonomy,
-  coincidence, PEM or astrophysical interpretation has been performed.
+  scientific score shards. Native classes and morphology taxonomy are now
+  verified; no coincidence, PEM or astrophysical interpretation has been performed.
   All 15 frozen rescore source hashes match; six
   require an exact, verified LF-to-CRLF reconstruction from Git. A clean-LF
   checkout is not directly hash-equivalent; clean-clone replay remains a
@@ -43,8 +43,9 @@
   L1 p99=0.41683934092521674; CI width=0.00732177317142485 (1.756498%).
   Exact 5000 point/4998 bootstrap rows and 294 blocks per detector;
   receipt, summary and frozen-source audit PASS. No post-hoc width cutoff.
-  The user's authorization covered CLASSIFY only. Taxonomy, coincidence,
-  PEM and A2 promotion remain closed; await the user before those stages.
+  The earlier authorization covered CLASSIFY only. The later explicit
+  authorization covered O4a-method-parity TAXONOMY; coincidence, PEM and A2
+  promotion remain closed pending separate authorization.
   The classification adapter now has 33 passing targeted tests and 155
   passing full O3a/PatchProducer tests (11 upstream warnings, 99.32s).
   Contract digest:
@@ -68,8 +69,18 @@
   L1: 3559 ROBUST, 295 AMBIGUOUS, 1422 BACKGROUND (5276 total).
   Total: 5850 ROBUST, 558 AMBIGUOUS, 2492 BACKGROUND (8900 seeds).
   These classes are not global significance or astrophysical detections.
-  Classification execution is complete; suspend its monitor at checkpoint
-  handoff. No active scientific worker and no downstream stage started.
+  Classification execution is complete; its monitor was suspended at that
+  checkpoint. TAXONOMY source/contract freeze was committed in 76a3552 before
+  real execution, including the pre-registered dominant-family expectation.
+  Standalone --run and --verify exited 0 under run key
+  `f475a46f829c9afd78994898f6be5f9499483e401152e0f5f148a11f00b0c629`.
+  The verified compact receipt digest is
+  `9f947eeca4d8609f2ae96659d6364cf6a303d4ab411121f74c84e4332e287b41`.
+  All 8900 O3a rows retain their native scores/classes; taxonomy has one
+  8899-member family and one singleton, confirming the pre-registered
+  single-linkage chaining expectation. Independent row, vector-hash and graph
+  connectivity checks passed; post-run WSL suite: 170 passed, 11 upstream
+  warnings. No active scientific worker and no coincidence/PEM stage started.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently

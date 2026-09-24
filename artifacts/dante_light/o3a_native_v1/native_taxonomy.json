@@ -1,0 +1,71 @@
+{
+  "artifact_digest": "9f947eeca4d8609f2ae96659d6364cf6a303d4ab411121f74c84e4332e287b41",
+  "contract_digest": "bfc1a0588ae71d63efde752ac1f2858b717e00eb10aa0291e47084a155a8769b",
+  "counts_by_detector": {
+    "H1": 3624,
+    "L1": 5276
+  },
+  "counts_by_native_class": {
+    "AMBIGUOUS": 558,
+    "BACKGROUND": 2492,
+    "ROBUST": 5850
+  },
+  "external_run_dir_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1/native_taxonomy_f475a46f829c9afd78994898f6be5f9499483e401152e0f5f148a11f00b0c629",
+  "family_id_count": 2,
+  "family_metrics": {
+    "cluster_count": 2,
+    "max_family_size": 8899,
+    "multi_member_family_count": 1,
+    "multi_member_row_count": 8899,
+    "multi_member_size_digest": "1561659e7c17258eb4d602ef6f707a74a77429831d798f423ff4607dca871840",
+    "singleton_row_count": 1
+  },
+  "largest_family_fraction": 0.9998876404494382,
+  "output_row_digest": "4b5bc7146288ced223751f4c317e8de4b73717b16f16e404d4a1c1e638032d70",
+  "output_sha256": "3afe6d840d1330dcb83252f67028e1e61220b5bd39b170c6b5d077bf7212ba8e",
+  "parent_native_classification_artifact_digest": "65d67d4c4dac2ff53893d3d23b3f308e5008c436b684a4247c8e927b662de3ac",
+  "parent_primary_scan_artifact_digest": "ba51f9cad83826223f860fda9b52077cbcc2e45c44fc7ad5063ebe56f49c4c79",
+  "pre_registered_expectation": {
+    "acceptance_cutoff": null,
+    "discrepancy_policy": "REPORT_WITHOUT_RETUNING_METHOD",
+    "o4a_largest_family": 10940,
+    "o4a_total": 10942,
+    "prediction": "SINGLE_LINKAGE_CHAINING_DOMINANT_FAMILY_EXPECTED"
+  },
+  "row_total": 8900,
+  "run_artifact_digest": "4ccc3b54f00bb3308ac8edd00803f6b88df1b5df9d609c713ac40303e7b7c1bf",
+  "run_key": "f475a46f829c9afd78994898f6be5f9499483e401152e0f5f148a11f00b0c629",
+  "runtime_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_population_changed": false,
+    "coincidence_performed": false,
+    "global_significance_claim": false,
+    "morphology_representation_recomputed": false,
+    "multiscale_used": false,
+    "native_index_used_for_morphology": false,
+    "native_scores_or_classes_changed": false,
+    "o4a_scientific_rows_imported": false,
+    "pem_performed": false,
+    "taxonomy_is_not_physical_coincidence": true
+  },
+  "source_classification_sha256": "88973cde9bf0c33307f320eab2cd8e6ca45a65dbcfaf2c04086c26ad8c3c0830",
+  "source_database_sha256": "1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699",
+  "status": "PASS_VERIFIED_O3A_NATIVE_TAXONOMY",
+  "summary_sha256": "0932ef7df8a88fd00a1f4490d94762c1f08b82f04d69eb95f76bd17fba081d69",
+  "taxonomy": {
+    "distance_threshold": 0.25,
+    "family_naming": "scipy_label_order_multi_member_then_historical_singleton_gps",
+    "family_template": "Family_{ordinal:02d}",
+    "flat_cluster_criterion": "distance",
+    "linkage": "single",
+    "normalization": "l2_per_vector",
+    "population": "all_frozen_o3a_primary_candidates",
+    "representation": "o3a_primary_scan_mil_v1",
+    "similarity": "cosine_similarity",
+    "similarity_threshold": 0.75,
+    "singleton_template": "Singleton_{gps_integer}",
+    "vector_dim": 384,
+    "vector_dtype": "float32_little_endian"
+  }
+}
