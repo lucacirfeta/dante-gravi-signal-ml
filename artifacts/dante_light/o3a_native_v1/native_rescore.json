@@ -1,0 +1,17 @@
+{
+  "artifact_digest": "4b1eff34f618005a2b881e3dd29e4dc0b25f1c6e5b5b5d19a23c0a833245503a",
+  "compact_digest": "c130482c665222bd67821a0976d403b075c329eaa368170e8994a85bf17c11df",
+  "contract_digest": "85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c",
+  "external_run_dir_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1/native_rescore_e9b75ee479f5fa6850accb2178d00fa752954519fe7db768629ef1422c4c27e0",
+  "native_threshold_or_class_computed": false,
+  "output_sha256": {
+    "native_calibration_H1": "bb565f0675f6472ea1bca2db18e6190506345ace0990548c7f21a5b2bc0d9b04",
+    "native_calibration_L1": "7054797893bf013fd90d66d983a5cf45fb72b85c530cb67f43cc85de91b44ba3",
+    "primary_candidate": "15b0e84ffc1fa04b5b2a5faf46b85d8fe48729e765ecf90286d083691f273c24"
+  },
+  "row_total": 18900,
+  "run": "O3A",
+  "run_key": "e9b75ee479f5fa6850accb2178d00fa752954519fe7db768629ef1422c4c27e0",
+  "schema_version": 3,
+  "status": "PASS_VERIFIED_O3A_NATIVE_RESCORE"
+}
