@@ -1,0 +1,119 @@
+{
+  "contract_digest": "bfc1a0588ae71d63efde752ac1f2858b717e00eb10aa0291e47084a155a8769b",
+  "gates": {
+    "exact_detector_gps_join": true,
+    "exact_identity_digest_join": true,
+    "exact_image_sha256_join": true,
+    "exact_rows_by_detector": {
+      "H1": 3624,
+      "L1": 5276
+    },
+    "exact_total_rows": 8900,
+    "full_replay_verification": true,
+    "parent_verifier_reads_primary_scores_for_integrity": true,
+    "primary_scores_not_used_for_taxonomy": true,
+    "vector_blob_bytes": 1536,
+    "vector_dim": 384,
+    "zero_duplicate_detector_gps": true,
+    "zero_missing_or_invalid_mil_vectors": true,
+    "zero_prior_taxonomy_use": true
+  },
+  "implementation_sources": {
+    "scripts/run_dante_o3a_native_taxonomy.py": "6551e3dd42342afb067221cb97c4dad056008d459fd2c82237cff1d05b2e7daf",
+    "src/dante_light/o3a_native_taxonomy.py": "908ef7786c8fd57c298ebef6bb502934ed49c6c29fce55caed1408ee070aeeb9",
+    "src/dante_light/o4a_corrected_native_taxonomy.py": "333bb0f9d4536175c40380441d61153f99dfabf1ee9e38efb61e849bef6b1080",
+    "tests/test_dante_o3a_native_taxonomy.py": "cb940c35dbaf4973d25a618199aff9ff8093d883da841b9df8f888ad42d03bcc"
+  },
+  "o4a_method_precedent": {
+    "contract_digest": "e926ef0503681cc313dfbc0a25bc4257a8d15894fe6f065f415bceccb405734e",
+    "receipt_digest": "ff4522906597b743b451d297999ede1371d24d51194a8ff787083f5a506a54f3"
+  },
+  "output": {
+    "summary_filename": "native_taxonomy_summary.json",
+    "taxonomy_filename": "native_taxonomy.jsonl"
+  },
+  "parent_native_classification": {
+    "artifact_digest": "65d67d4c4dac2ff53893d3d23b3f308e5008c436b684a4247c8e927b662de3ac",
+    "contract_digest": "9aaeff60fd078538355d724f4102b39886dca97fef7474d394e2ee4109f5f1a2",
+    "counts_by_detector_and_class": {
+      "H1": {
+        "AMBIGUOUS": 263,
+        "BACKGROUND": 1070,
+        "ROBUST": 2291
+      },
+      "L1": {
+        "AMBIGUOUS": 295,
+        "BACKGROUND": 1422,
+        "ROBUST": 3559
+      }
+    },
+    "output_row_digest": "3a8a679b7f3480ae4400bfdce1a29dd71bd12a7c7d5e05f9d1f6bc8e48c52ebc",
+    "output_sha256": "88973cde9bf0c33307f320eab2cd8e6ca45a65dbcfaf2c04086c26ad8c3c0830",
+    "row_total": 8900,
+    "run_artifact_digest": "24bfce9f2b7661ab5c4c9193d5d1200a9416df6d1704d8b80eadd7b91636c4e2",
+    "run_key": "5cedef7de1c036f49a2c33acfeaa64198a67b31bed1c1109c6b34004faf6c044",
+    "summary_sha256": "9c0c3c573685975924c5dba717526355d40179a199d7586cd65965d10a1abce5"
+  },
+  "parent_primary_scan": {
+    "artifact_digest": "ba51f9cad83826223f860fda9b52077cbcc2e45c44fc7ad5063ebe56f49c4c79",
+    "candidate_counts": {
+      "H1": 3624,
+      "L1": 5276
+    },
+    "candidate_total": 8900,
+    "contract_digest": "e069c93b89498e2375144ace1285d5a68c21cba4fb0acf56dbbb6ae2b653d1e5",
+    "database": {
+      "filename": "primary_scan.sqlite",
+      "sha256": "1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699",
+      "size_bytes": 213794816
+    },
+    "run_key": "8f0424e5f3ea2b94449eaddb0e1ccf61c5fd7ba91d54c839bfa89d0e26efad35"
+  },
+  "pre_registered_expectation": {
+    "acceptance_cutoff": null,
+    "discrepancy_policy": "REPORT_WITHOUT_RETUNING_METHOD",
+    "o4a_largest_family": 10940,
+    "o4a_total": 10942,
+    "prediction": "SINGLE_LINKAGE_CHAINING_DOMINANT_FAMILY_EXPECTED"
+  },
+  "references": {
+    "artifacts/dante_light/o3a_native_v1/native_classification.json": "49ffc508ee98d4c1f6495dd8cb0f452b3387270d057fd7d1fe81d8711de3fb32",
+    "artifacts/dante_light/o3a_native_v1/primary_scan.json": "7333867c9098f8bd760de1a23c333f7889c4cf14b8bc28b63fb5f6a57e437d68",
+    "artifacts/dante_light/o4a_v1_parity/corrected_native_taxonomy.json": "bdd270872f081f0397d85f595b1155fe5786dc623404a87621febe38395a23ba",
+    "config/dante_o3a_native_classification_v1.json": "b30224519f918a76be39f3c73475a4bca6e20a290d254f8c699093626fa36087",
+    "config/dante_o3a_native_v1_runtime.json": "3b00a0bf258cc96870971481138e10e7e85deb97a1c3c49c470626e3153d0ef2",
+    "config/dante_o3a_primary_scan_v1.json": "95b609e0510b7bbbcd1b9ea7b9abc6297fa3be394fdc566ae9ae73633e458610",
+    "config/dante_o4a_corrected_native_taxonomy_v1.json": "8e031916a8df52077aa3c832e1647812fc316e6ba3bcd9ef11c9010d65d2417d"
+  },
+  "run": "O3A",
+  "runtime_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_population_changed": false,
+    "coincidence_performed": false,
+    "global_significance_claim": false,
+    "morphology_representation_recomputed": false,
+    "multiscale_used": false,
+    "native_index_used_for_morphology": false,
+    "native_scores_or_classes_changed": false,
+    "o4a_scientific_rows_imported": false,
+    "pem_performed": false,
+    "taxonomy_is_not_physical_coincidence": true
+  },
+  "status": "FROZEN_O3A_NATIVE_TAXONOMY_V1",
+  "taxonomy": {
+    "distance_threshold": 0.25,
+    "family_naming": "scipy_label_order_multi_member_then_historical_singleton_gps",
+    "family_template": "Family_{ordinal:02d}",
+    "flat_cluster_criterion": "distance",
+    "linkage": "single",
+    "normalization": "l2_per_vector",
+    "population": "all_frozen_o3a_primary_candidates",
+    "representation": "o3a_primary_scan_mil_v1",
+    "similarity": "cosine_similarity",
+    "similarity_threshold": 0.75,
+    "singleton_template": "Singleton_{gps_integer}",
+    "vector_dim": 384,
+    "vector_dtype": "float32_little_endian"
+  }
+}
