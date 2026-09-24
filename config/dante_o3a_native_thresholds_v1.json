@@ -1,0 +1,64 @@
+{
+  "contract_digest": "10d6279a2b637309d3d955881cf0a3d2f450f6a66adfb9de9fd2613ea3b65c5c",
+  "implementation_sources": {
+    "scripts/run_dante_o3a_native_thresholds.py": "f449d8d87cf4e33ba8626be6c654a7fe07f74931ef00bc681c8c8a36ccd2c7e3",
+    "src/dante_light/contracts.py": "67400c77574cc805eccf617819d80e70907ad8aef0679ef8b8880f6ad0507e30",
+    "src/dante_light/o3a_native_thresholds.py": "1e1f9362db1e32c939a2ee1f2e0c85e8de9a37ddd783b5800718dae93fc1b6cb",
+    "src/pipeline_v2_production/background_calibration.py": "832e141e78a6c084fe7bdc5d444853657799b31890871ac533463370e34e1d24",
+    "tests/test_dante_o3a_native_thresholds.py": "13a73f56faaa1483a8328d4ba3e31d9135da8c35374dcf240bdd9b774f598b68"
+  },
+  "method": {
+    "block_length": 17,
+    "bootstrap_chunk_size": 500,
+    "bootstrap_replicates": 1000000,
+    "bootstrap_seed": 42,
+    "bootstrap_uses_first_complete_blocks": true,
+    "confidence_percentiles": [
+      2.5,
+      97.5
+    ],
+    "detector_specific": true,
+    "name": "non_overlapping_block_bootstrap_p99",
+    "percentile": 99,
+    "point_percentile_uses_all_rows": true
+  },
+  "output": {
+    "summary_filename": "native_thresholds_summary.json"
+  },
+  "parent_rescore": {
+    "artifact_digest": "4b1eff34f618005a2b881e3dd29e4dc0b25f1c6e5b5b5d19a23c0a833245503a",
+    "contract_digest": "85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c",
+    "output_sha256": {
+      "native_calibration_H1": "bb565f0675f6472ea1bca2db18e6190506345ace0990548c7f21a5b2bc0d9b04",
+      "native_calibration_L1": "7054797893bf013fd90d66d983a5cf45fb72b85c530cb67f43cc85de91b44ba3",
+      "primary_candidate": "15b0e84ffc1fa04b5b2a5faf46b85d8fe48729e765ecf90286d083691f273c24"
+    },
+    "run_key": "e9b75ee479f5fa6850accb2178d00fa752954519fe7db768629ef1422c4c27e0"
+  },
+  "population": {
+    "bootstrap_rows_per_detector": 4998,
+    "rows_by_detector": {
+      "H1": 5000,
+      "L1": 5000
+    },
+    "within_block_stride_s": 64
+  },
+  "references": {
+    "artifacts/dante_light/o3a_native_v1/native_rescore.json": "8e4924840239bd36c0427736c554de2ba7499076a49a182016658c9a2e2d99ce",
+    "config/dante_o3a_native_calibration_cohort_v1.json": "b8c15f595bab91cf8cc6a5d01c314ae642b2f860fb7f24896a77afa495163e15",
+    "config/dante_o3a_native_rescore_v3.json": "f791d7964cf4c05a56bb222028ad5675ac4bbe3f776cc9599b6955415ad20944",
+    "config/dante_o3a_native_v1_runtime.json": "3b00a0bf258cc96870971481138e10e7e85deb97a1c3c49c470626e3153d0ef2",
+    "config/dante_o3a_native_v1_stage_contract.json": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8",
+    "config/dante_o4a_corrected_native_thresholds_v1.json": "15a34d91349c949ec617633edc8919b16b13c594f4bf1ed639eebaeb22350993"
+  },
+  "run": "O3A",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "candidate_scores_used_for_fitting": false,
+    "classification_performed": false,
+    "detector_pooling": false,
+    "interval_width_reported_without_post_hoc_cutoff": true,
+    "o4a_scores_or_thresholds_used": false
+  },
+  "status": "FROZEN_O3A_NATIVE_THRESHOLDS_V1"
+}
