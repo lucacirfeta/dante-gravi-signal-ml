@@ -48,3 +48,14 @@ Full WSL O3a/PatchProducer regression: **155 passed**, 11 upstream
 deprecation warnings, 99.32 seconds. Ruff check/format passed on the three
 new Python files. Frozen contract digest:
 `9aaeff60fd078538355d724f4102b39886dca97fef7474d394e2ee4109f5f1a2`.
+
+## Launch
+
+Source frozen and pushed in `03a38ab`; all three new implementation source
+hashes match Git bytes exactly. Started the hidden WSL worker under run key
+`5cedef7de1c036f49a2c33acfeaa64198a67b31bed1c1109c6b34004faf6c044`.
+The supervising command waits for --run and captures its exit code; only
+exit0 and an absent failure file permit --verify, with distinct logs and a
+separately captured exit code. Exec session54398 holds the supervisor output.
+The hourly monitor must not duplicate either worker. Completion is pending;
+no classification counts or scientific conclusions are claimed here.

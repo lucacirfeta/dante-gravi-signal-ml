@@ -1,6 +1,6 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.17 Native classification frozen/tested; execution pending
+- **Phase**: 7.17 Native classification running; replay verification queued
 - **Status**: The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
@@ -51,7 +51,14 @@
   Contract digest:
   `9aaeff60fd078538355d724f4102b39886dca97fef7474d394e2ee4109f5f1a2`.
   No real classification outcome has been opened before this source freeze.
-  Next: commit/push source, then --run followed by --verify only on exit0.
+  Source committed/pushed as 03a38ab before execution; all three new source
+  hashes match Git bytes exactly. The hidden WSL --run worker is launched.
+  Run key: `5cedef7de1c036f49a2c33acfeaa64198a67b31bed1c1109c6b34004faf6c044`.
+  Exec session 54398 waits for --run, reports CLASSIFY_RUN_EXIT_CODE, then
+  starts --verify ONLY on exit0 and absent failure, with separate verify logs.
+  It finally reports CLASSIFY_VERIFY_EXIT_CODE. Do not duplicate either job;
+  retrieve the session output on the next heartbeat. Real outcomes remain
+  undisclosed until verified. Post-run tests, summary and compact audit pending.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
