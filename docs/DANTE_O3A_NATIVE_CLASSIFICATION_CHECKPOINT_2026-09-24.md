@@ -42,7 +42,8 @@ immutable re-sealed summary/output corruption, replay and singleton locking.
 New Python files are LF, including a pinned test-file EOL rule. Historical
 upstream byte-reconstruction qualifications are inherited, not silently fixed.
 
-No real classification result is claimed by this pre-execution checkpoint.
+No real classification result was claimed at this pre-execution checkpoint;
+verified results are recorded in the completion section below.
 
 Full WSL O3a/PatchProducer regression: **155 passed**, 11 upstream
 deprecation warnings, 99.32 seconds. Ruff check/format passed on the three
@@ -57,5 +58,38 @@ hashes match Git bytes exactly. Started the hidden WSL worker under run key
 The supervising command waits for --run and captures its exit code; only
 exit0 and an absent failure file permit --verify, with distinct logs and a
 separately captured exit code. Exec session54398 holds the supervisor output.
-The hourly monitor must not duplicate either worker. Completion is pending;
-no classification counts or scientific conclusions are claimed here.
+The launch record did not claim completion or classification counts.
+
+## Verified completion
+
+On 2026-09-24, --run completed at 20:15:30 Europe/Rome and --verify at
+20:20:13. Both captured exit codes are 0. Both stderr files are empty,
+no failure artifact exists, and no classification worker remains active.
+
+| Detector | BACKGROUND | AMBIGUOUS | ROBUST | Total |
+|---|---:|---:|---:|---:|
+| H1 | 1070 | 263 | 2291 | 3624 |
+| L1 | 1422 | 295 | 3559 | 5276 |
+| Total | 2492 | 558 | 5850 | 8900 |
+
+Post-run WSL regression: **155 passed**, 11 upstream GWPy/Matplotlib
+deprecation warnings, 107.59 seconds. A separate read-only audit checked
+every input/output row pair, recomputed labels from the detector-local
+thresholds without invoking the classifier, and confirmed unchanged source
+fields, unique detector/GPS identities and exact population/class counts.
+Contract/receipt/summary seals, input/output/summary SHA-256 values, frozen
+references and all three new source Git blobs match. Historical upstream EOL
+qualifications remain; this is not a new clean-clone numerical replay.
+
+Run summary artifact:
+`24bfce9f2b7661ab5c4c9193d5d1200a9416df6d1704d8b80eadd7b91636c4e2`.
+Verified compact artifact:
+`65d67d4c4dac2ff53893d3d23b3f308e5008c436b684a4247c8e927b662de3ac`.
+Output JSONL SHA-256:
+`88973cde9bf0c33307f320eab2cd8e6ca45a65dbcfaf2c04086c26ad8c3c0830`.
+
+No scoring, population, threshold or statistical rule was changed. The
+classification checkpoint is complete. These are single-detector labels,
+not astrophysical discoveries or global significance estimates. Taxonomy,
+coincidence and PEM remain unopened pending user authorization. Suspend the
+completed classification monitor after the branch checkpoint is pushed.

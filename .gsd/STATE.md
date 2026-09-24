@@ -1,6 +1,6 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.17 Native classification running; replay verification queued
+- **Phase**: 7.17 Native classification PASS verified; awaiting downstream authorization
 - **Status**: The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
@@ -18,8 +18,9 @@
   Three infrastructure failures (502, 503, connection timeout) were archived
   by the runner before same-key resumes. Rescore v1 and v2 are preserved as
   failed structural preflights with zero
-  scientific score shards. No class, taxonomy or scientific interpretation
-  has been computed. All 15 frozen source hashes match; six
+  scientific score shards. Native classes are now verified; no taxonomy,
+  coincidence, PEM or astrophysical interpretation has been performed.
+  All 15 frozen rescore source hashes match; six
   require an exact, verified LF-to-CRLF reconstruction from Git. A clean-LF
   checkout is not directly hash-equivalent; clean-clone replay remains a
   separate follow-up (see the 2026-09-23 read-only audit).
@@ -42,23 +43,33 @@
   L1 p99=0.41683934092521674; CI width=0.00732177317142485 (1.756498%).
   Exact 5000 point/4998 bootstrap rows and 294 blocks per detector;
   receipt, summary and frozen-source audit PASS. No post-hoc width cutoff.
-  The hourly monitor remains active. The user's latest
-  authorization permits CLASSIFY as the next separate increment, following
-  the frozen stage-contract rule and passing tests/provenance first.
-  Taxonomy, coincidence and PEM remain closed.
+  The user's authorization covered CLASSIFY only. Taxonomy, coincidence,
+  PEM and A2 promotion remain closed; await the user before those stages.
   The classification adapter now has 33 passing targeted tests and 155
   passing full O3a/PatchProducer tests (11 upstream warnings, 99.32s).
   Contract digest:
   `9aaeff60fd078538355d724f4102b39886dca97fef7474d394e2ee4109f5f1a2`.
   No real classification outcome has been opened before this source freeze.
   Source committed/pushed as 03a38ab before execution; all three new source
-  hashes match Git bytes exactly. The hidden WSL --run worker is launched.
+  hashes match Git bytes exactly. --run completed at 20:15:30 Europe/Rome
+  and standalone --verify at 20:20:13 on 2026-09-24.
   Run key: `5cedef7de1c036f49a2c33acfeaa64198a67b31bed1c1109c6b34004faf6c044`.
-  Exec session 54398 waits for --run, reports CLASSIFY_RUN_EXIT_CODE, then
-  starts --verify ONLY on exit0 and absent failure, with separate verify logs.
-  It finally reports CLASSIFY_VERIFY_EXIT_CODE. Do not duplicate either job;
-  retrieve the session output on the next heartbeat. Real outcomes remain
-  undisclosed until verified. Post-run tests, summary and compact audit pending.
+  Supervisor session 54398 returned CLASSIFY_RUN_EXIT_CODE=0 and
+  CLASSIFY_VERIFY_EXIT_CODE=0 (retrieved at the 20:48 status check).
+  Summary digest:
+  `24bfce9f2b7661ab5c4c9193d5d1200a9416df6d1704d8b80eadd7b91636c4e2`.
+  Verified compact:
+  `65d67d4c4dac2ff53893d3d23b3f308e5008c436b684a4247c8e927b662de3ac`.
+  Post-run WSL regression: 155 passed, 11 upstream warnings, 107.59s.
+  All 8900 output rows independently checked against unchanged input fields,
+  per-detector thresholds and expected labels; exact Git/source/file hashes
+  and seals pass. No failure artifact; both stderr logs empty.
+  H1: 2291 ROBUST, 263 AMBIGUOUS, 1070 BACKGROUND (3624 total).
+  L1: 3559 ROBUST, 295 AMBIGUOUS, 1422 BACKGROUND (5276 total).
+  Total: 5850 ROBUST, 558 AMBIGUOUS, 2492 BACKGROUND (8900 seeds).
+  These classes are not global significance or astrophysical detections.
+  Classification execution is complete; suspend its monitor at checkpoint
+  handoff. No active scientific worker and no downstream stage started.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently

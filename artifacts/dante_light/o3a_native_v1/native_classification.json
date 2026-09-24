@@ -1,0 +1,41 @@
+{
+  "artifact_digest": "65d67d4c4dac2ff53893d3d23b3f308e5008c436b684a4247c8e927b662de3ac",
+  "contract_digest": "9aaeff60fd078538355d724f4102b39886dca97fef7474d394e2ee4109f5f1a2",
+  "counts_by_detector_and_class": {
+    "H1": {
+      "AMBIGUOUS": 263,
+      "BACKGROUND": 1070,
+      "ROBUST": 2291
+    },
+    "L1": {
+      "AMBIGUOUS": 295,
+      "BACKGROUND": 1422,
+      "ROBUST": 3559
+    }
+  },
+  "external_run_dir_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1/native_classification_5cedef7de1c036f49a2c33acfeaa64198a67b31bed1c1109c6b34004faf6c044",
+  "output_row_digest": "3a8a679b7f3480ae4400bfdce1a29dd71bd12a7c7d5e05f9d1f6bc8e48c52ebc",
+  "output_sha256": "88973cde9bf0c33307f320eab2cd8e6ca45a65dbcfaf2c04086c26ad8c3c0830",
+  "rescore_artifact_digest": "4b1eff34f618005a2b881e3dd29e4dc0b25f1c6e5b5b5d19a23c0a833245503a",
+  "row_total": 8900,
+  "rule": "BACKGROUND_BELOW_CI_LOWER_ROBUST_ABOVE_CI_UPPER_AMBIGUOUS_OTHERWISE",
+  "run_artifact_digest": "24bfce9f2b7661ab5c4c9193d5d1200a9416df6d1704d8b80eadd7b91636c4e2",
+  "run_key": "5cedef7de1c036f49a2c33acfeaa64198a67b31bed1c1109c6b34004faf6c044",
+  "runtime_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+  "schema_version": 1,
+  "scientific_boundary": {
+    "coincidence_performed": false,
+    "detector_pooling": false,
+    "global_significance_claim": false,
+    "multiscale_used": false,
+    "pem_performed": false,
+    "population_changed": false,
+    "scores_changed": false,
+    "taxonomy_performed": false,
+    "thresholds_changed": false
+  },
+  "source_sha256": "15b0e84ffc1fa04b5b2a5faf46b85d8fe48729e765ecf90286d083691f273c24",
+  "status": "PASS_VERIFIED_O3A_NATIVE_CLASSIFICATION",
+  "summary_sha256": "9c0c3c573685975924c5dba717526355d40179a199d7586cd65965d10a1abce5",
+  "threshold_artifact_digest": "30671367d022c1a935a446313ea65f4b0457f6b85b2cc8f2107e94055b1d1d79"
+}
