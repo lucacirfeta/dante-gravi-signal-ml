@@ -48,7 +48,7 @@ from src.dante_light.o4a_corrected_native_coincidence import (
     primary_null_threshold,
 )
 
-CONTRACT_REL = "config/dante_o3a_native_coincidence_v1.json"
+CONTRACT_REL = "config/dante_o3a_native_coincidence_v2.json"
 COMPACT_REL = "artifacts/dante_light/o3a_native_v1/native_coincidence.json"
 METHOD_REL = "config/dante_o4a_corrected_native_coincidence_v1.json"
 CLASSIFICATION_REL = nc.COMPACT_REL
@@ -187,8 +187,8 @@ def build_contract(*, root: Path = ROOT) -> dict[str, Any]:
         "corrected_o4a_method": _binding(root, METHOD_REL),
     }
     body = {
-        "schema_version": 1,
-        "status": "FROZEN_O3A_NATIVE_COINCIDENCE_V1",
+        "schema_version": 2,
+        "status": "FROZEN_O3A_NATIVE_COINCIDENCE_V2",
         "run": "O3A",
         "parents": parents,
         "population": population,
@@ -200,6 +200,7 @@ def build_contract(*, root: Path = ROOT) -> dict[str, Any]:
             "temporary_threshold": rescore["scoring"]["temporary_threshold"],
         },
         "execution": {
+            "seed_batch_order": "GLOBAL_GPS_ASC_DETECTOR_ASC_INDEPENDENT_OF_CLASS",
             "workers": 8,
             "batch_size": 32,
             "download_retries": 5,
@@ -276,6 +277,16 @@ def split_seed_populations(
         return int(row["gps_start"]), str(row["detector"])
 
     return sorted(groups["primary"], key=order), sorted(groups["diagnostic"], key=order)
+
+
+def _ordered_measurement_seeds(
+    primary: Sequence[Mapping[str, Any]], diagnostic: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Process both frozen populations in one chronological stream to bound raw cache."""
+    return sorted(
+        [*(dict(row) for row in primary), *(dict(row) for row in diagnostic)],
+        key=lambda row: (int(row["gps_start"]), str(row["detector"])),
+    )
 
 
 def _source_plan(
@@ -420,7 +431,7 @@ def _preflight_details(
     if canonical_json_sha256(rows) != classified["output_row_digest"]:
         raise ContractError("O3a coincidence classified row digest changed")
     primary_seeds, diagnostic_seeds = split_seed_populations(rows, contract=contract)
-    seeds = [*primary_seeds, *diagnostic_seeds]
+    seeds = _ordered_measurement_seeds(primary_seeds, diagnostic_seeds)
     inventory = load_source_inventory(root=root)
     frames = {d: _inventory_frames(inventory, d) for d in ("H1", "L1")}
     ledger = _raw_frame_rows(scan_database)
@@ -431,7 +442,7 @@ def _preflight_details(
         duration=int(measurement["segment_duration_s"]),
     )
     body = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "PASS_O3A_COINCIDENCE_SOURCE_PREFLIGHT",
         "contract_digest": contract["contract_digest"],
         "source_classification_sha256": file_sha256(class_file),
@@ -456,7 +467,7 @@ def preflight_sources(
 
 def _run_key(contract: Mapping[str, Any], preflight: Mapping[str, Any]) -> str:
     return canonical_json_sha256({
-        "stage": "o3a_native_coincidence_v1",
+        "stage": "o3a_native_coincidence_v2",
         "contract_digest": contract["contract_digest"],
         "preflight_digest": preflight["preflight_digest"],
         "runtime_environment_digest": contract["runtime_environment_digest"],
@@ -827,6 +838,49 @@ def _batch_seed_rows(seeds: Sequence[Mapping[str, Any]], size: int) -> list[list
     ]
 
 
+def _cache_plan(
+    *, plan_batches: Sequence[Sequence[Mapping[str, Any]]],
+    last_use: Mapping[tuple[str, str], int],
+    sources: Mapping[tuple[str, str], Mapping[str, Any]],
+    initially_cached: set[tuple[str, str]],
+    contract: Mapping[str, Any],
+    source_plan_pinned_digest: str,
+    ordered_seed_digest: str,
+) -> dict[str, Any]:
+    """Prove the complete batch schedule fits the frozen transient-cache cap."""
+    if not initially_cached.issubset(sources):
+        raise ContractError("O3a coincidence initially cached frame is outside source plan")
+    active = set(initially_cached)
+    peak_bytes = 0
+    peak_frames = 0
+    peak_batch = 0
+    limit = int(contract["execution"]["raw_cache_limit_bytes"])
+    over_limit = 0
+    for number, batch in enumerate(plan_batches):
+        for row in batch:
+            for source in row["context_sources"]:
+                active.add((str(source["detector"]), str(source["filename"])))
+        size = sum(int(sources[key]["size_bytes"]) for key in active)
+        if size > peak_bytes:
+            peak_bytes, peak_frames, peak_batch = size, len(active), number
+        over_limit += size > limit
+        active = {key for key in active if last_use[key] > number}
+    body = {
+        "schema_version": 2,
+        "status": "PASS_O3A_COINCIDENCE_CACHE_PLAN" if not over_limit else "FAIL_O3A_COINCIDENCE_CACHE_PLAN",
+        "contract_digest": contract["contract_digest"],
+        "source_plan_pinned_digest": source_plan_pinned_digest,
+        "ordered_seed_digest": ordered_seed_digest,
+        "batch_total": len(plan_batches),
+        "raw_cache_limit_bytes": limit,
+        "peak_bytes": peak_bytes,
+        "peak_frames": peak_frames,
+        "peak_batch_index": peak_batch,
+        "batches_over_limit": over_limit,
+    }
+    return {**body, "cache_plan_digest": canonical_json_sha256(body)}
+
+
 def _event_summary(
     primary: Sequence[Mapping[str, Any]], diagnostic: Sequence[Mapping[str, Any]],
     contract: Mapping[str, Any],
@@ -909,7 +963,7 @@ def _aggregate_shards(
 def _finish(
     *, run_dir: Path, preflight: Mapping[str, Any], plans: Sequence[Mapping[str, Any]],
     seed_batches: Sequence[Sequence[Mapping[str, Any]]], contract: Mapping[str, Any],
-    run_key: str,
+    run_key: str, cache_plan_digest: str,
 ) -> dict[str, Any]:
     primary_raw, diagnostic_raw = _aggregate_shards(
         run_dir=run_dir, seed_batches=seed_batches, contract=contract, run_key=run_key,
@@ -931,12 +985,13 @@ def _finish(
             "row_digest": canonical_json_sha256(rows),
         }
     body = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "PASS_COMPLETE_O3A_NATIVE_COINCIDENCE",
         "run_key": run_key,
         "contract_digest": contract["contract_digest"],
         "preflight_digest": preflight["preflight_digest"],
         "source_plan_pinned_digest": canonical_json_sha256(list(plans)),
+        "cache_plan_digest": cache_plan_digest,
         "runtime_environment_digest": contract["runtime_environment_digest"],
         "population": contract["population"],
         "measurement": contract["measurement"],
@@ -998,6 +1053,16 @@ def run_native_coincidence(
             seed_batches = _batch_seed_rows(seeds, size)
             plan_batches = [_batch_plan_rows(batch, plan_map) for batch in seed_batches]
             last_use, sources = _frame_dependency_order(plan_batches)
+            cache_plan = _cache_plan(
+                plan_batches=plan_batches, last_use=last_use, sources=sources,
+                initially_cached={tuple(key.split("|", 1)) for key in new_source["frames"]},
+                contract=contract,
+                source_plan_pinned_digest=canonical_json_sha256(plans),
+                ordered_seed_digest=preflight["seed_population_digest"],
+            )
+            _atomic_json(run_dir / "cache_plan.json", cache_plan)
+            if cache_plan["status"] != "PASS_O3A_COINCIDENCE_CACHE_PLAN":
+                raise ContractError("O3a coincidence complete cache plan exceeds frozen limit")
             cache_root = run_dir / "transient_raw"
             known: dict[tuple[str, str], tuple[int, int]] = {}
             index = _sealed(root / INDEX_REL, "artifact_digest")
@@ -1052,6 +1117,7 @@ def run_native_coincidence(
             summary = _finish(
                 run_dir=run_dir, preflight=preflight, plans=plans,
                 seed_batches=seed_batches, contract=contract, run_key=run_key,
+                cache_plan_digest=cache_plan["cache_plan_digest"],
             )
             _replace_progress(
                 run_dir / "progress.json", completed=completed,
@@ -1143,10 +1209,27 @@ def verify_native_coincidence(
         raise ContractError("O3a coincidence failure evidence is present")
     if _read_json(run_dir / "preflight.json") != preflight:
         raise ContractError("O3a coincidence preflight replay changed")
-    _pin_new_frames(plans, run_dir=run_dir, contract=contract, allow_download=False)
+    new_source = _pin_new_frames(
+        plans, run_dir=run_dir, contract=contract, allow_download=False,
+    )
     if any(p.is_file() for p in (run_dir / "transient_raw").rglob("*")):
         raise ContractError("O3a coincidence transient raw cache is not empty")
     seed_batches = _batch_seed_rows(seeds, int(contract["execution"]["batch_size"]))
+    plan_map = {(p["detector"], p["gps_start"]): p for p in plans}
+    plan_batches = [_batch_plan_rows(batch, plan_map) for batch in seed_batches]
+    last_use, sources = _frame_dependency_order(plan_batches)
+    cache_plan = _cache_plan(
+        plan_batches=plan_batches, last_use=last_use, sources=sources,
+        initially_cached={tuple(key.split("|", 1)) for key in new_source["frames"]},
+        contract=contract,
+        source_plan_pinned_digest=canonical_json_sha256(plans),
+        ordered_seed_digest=preflight["seed_population_digest"],
+    )
+    if (
+        cache_plan["status"] != "PASS_O3A_COINCIDENCE_CACHE_PLAN"
+        or _sealed(run_dir / "cache_plan.json", "cache_plan_digest") != cache_plan
+    ):
+        raise ContractError("O3a coincidence cache plan verification failed")
     primary_raw, diagnostic_raw = _aggregate_shards(
         run_dir=run_dir, seed_batches=seed_batches, contract=contract, run_key=run_key,
     )
@@ -1161,6 +1244,7 @@ def verify_native_coincidence(
         or summary.get("contract_digest") != contract["contract_digest"]
         or summary.get("preflight_digest") != preflight["preflight_digest"]
         or summary.get("source_plan_pinned_digest") != canonical_json_sha256(plans)
+        or summary.get("cache_plan_digest") != cache_plan["cache_plan_digest"]
         or summary.get("event_summary") != event_summary
         or summary.get("measurement") != contract["measurement"]
         or summary.get("population") != contract["population"]
@@ -1191,11 +1275,12 @@ def verify_native_coincidence(
         ):
             raise ContractError(f"O3a coincidence {name} output changed")
     compact = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "PASS_VERIFIED_O3A_NATIVE_COINCIDENCE",
         "contract_digest": contract["contract_digest"],
         "run_key": run_key,
         "run_artifact_digest": summary["artifact_digest"],
+        "cache_plan_digest": cache_plan["cache_plan_digest"],
         "summary_sha256": file_sha256(run_dir / "native_coincidence_summary.json"),
         "external_run_dir_wsl": str(run_dir),
         "event_summary": event_summary,

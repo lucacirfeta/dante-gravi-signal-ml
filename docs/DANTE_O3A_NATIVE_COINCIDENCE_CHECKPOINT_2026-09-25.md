@@ -53,8 +53,11 @@ an independent PASS verification of coincidence and a separate public O3a
 channel/method-parity preflight.
 
 The source freeze was committed and pushed as `f79692b` before real execution.
-The single O3a coincidence worker has now started with run key
+The first O3a coincidence worker started with run key
 `713609d1605d2b2a0d2871829a2b91288ce6330510a296021b86977b3c6c4a53`.
-An hourly monitor checks health and verified-shard progress without reporting
-intermediate scores, candidate counts or outcomes. No stage result is claimed
-until standalone replay verification passes.
+It later failed at the frozen 8 GiB transient-cache cap after nine verified
+shards. Its failure, partial shards and raw cache are preserved on `E:`;
+there is no final stage summary, pooled threshold or PEM shortlist. The
+monitor was suspended. The separate cache-remediation checkpoint documents
+the authorized execution-order fix and new run; this original pre-run
+statistical preregistration remains unchanged.

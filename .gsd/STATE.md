@@ -1,7 +1,25 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.19 Native physical coincidence source frozen; execution authorized
-- **Status**: The author approved exact corrected-O4a physical-coincidence
+- **Phase**: 7.19 Native physical coincidence v2 cache remediation authorized
+- **Status**: The first O3a coincidence run is FAILED, not a verified stage.
+  Its v1 run key is
+  `713609d1605d2b2a0d2871829a2b91288ce6330510a296021b86977b3c6c4a53`;
+  the sealed failure is a structural cache-cap ContractError after nine
+  32-seed shards. The run directory and 8.65 GB transient raw cache are
+  preserved on E:, with no final threshold or PEM shortlist. A metadata-only
+  plan audit found v1 peak 90,116,154,146 bytes because ROBUST and
+  AMBIGUOUS seeds were batched in separate chronological passes. The author
+  approved v2 global chronology, preserving the same populations/method,
+  with projected peak 5,293,641,251 bytes including the pre-pinned frame,
+  below 8 GiB. Pre-freeze 187 WSL tests and Ruff passed. The v2 contract
+  was frozen with digest
+  `05565c848b08efda6d71b7acf434809f93e5db638d623ca994824d1e520d991a`;
+  source-only preflight passed with digest
+  `590242c981544aa09e623ab8931a98bf5ef0e95423b7714a72996a62963dc63d`.
+  The separate v2 run key is
+  `d42ab62e620f86a5b4c84852e74dff80bcf45ccd1beef39edcb5082979cd3e89`.
+  The hourly monitor is paused until the new source freeze and run; the failed key will not
+  resume. The author approved exact corrected-O4a physical-coincidence
   method parity for O3a on 2026-09-25. The statistical limitation of at most
   eight eligible within-seed shifts, an O3a-only pooled p99 over measured
   ROBUST seed maxima, uncertain tail precision, and diagnostic-only scope
@@ -10,11 +28,8 @@
   source-only preflight digest
   `1e8109c39b2f23d44a7da10ecbe26ba78690f28b318bdab1cdade2e05749c649`.
   Pre-run WSL suite: 185 passed, 11 upstream warnings; Ruff PASS. Source
-  freeze `f79692b` was pushed before execution. The single WSL worker is
-  active under run key
-  `713609d1605d2b2a0d2871829a2b91288ce6330510a296021b86977b3c6c4a53`;
-  its verified hourly monitor is active. No interim coincidence outcome is
-  reported. The O3a-only native index and 10,000-row native-calibration
+  freeze `f79692b` was pushed before the failed v1 execution. No interim
+  coincidence outcome is reported. The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
   has PASS manifest and real HDF5/CUDA preflight, including stitched context,

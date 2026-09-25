@@ -9,7 +9,9 @@ import pytest
 
 from src.dante_light.contracts import ContractError
 from src.dante_light.o3a_native_coincidence import (
+    _cache_plan,
     _event_summary,
+    _ordered_measurement_seeds,
     _read_shard,
     _write_shard,
     plan_sources,
@@ -46,6 +48,57 @@ def test_split_uses_seed_class_only_and_keeps_diagnostic_separate() -> None:
         ("L1", 100),
     ]
     assert [(r["detector"], r["gps_start"]) for r in diagnostic] == [("H1", 200)]
+
+
+def test_measurement_order_is_global_chronology_without_changing_population() -> None:
+    primary = [
+        {"detector": "H1", "gps_start": 100, "native_class": "ROBUST"},
+        {"detector": "L1", "gps_start": 300, "native_class": "ROBUST"},
+    ]
+    diagnostic = [
+        {"detector": "L1", "gps_start": 100, "native_class": "AMBIGUOUS"},
+        {"detector": "H1", "gps_start": 200, "native_class": "AMBIGUOUS"},
+    ]
+    ordered = _ordered_measurement_seeds(primary, diagnostic)
+    assert [(row["gps_start"], row["detector"]) for row in ordered] == [
+        (100, "H1"), (100, "L1"), (200, "H1"), (300, "L1"),
+    ]
+    assert sorted((row["detector"], row["gps_start"], row["native_class"]) for row in ordered) == sorted(
+        (row["detector"], row["gps_start"], row["native_class"])
+        for row in [*primary, *diagnostic]
+    )
+
+
+def test_cache_plan_catches_late_population_revisit_before_scoring() -> None:
+    a = {"detector": "H1", "filename": "A.hdf5"}
+    b = {"detector": "L1", "filename": "B.hdf5"}
+    sources = {("H1", "A.hdf5"): {"size_bytes": 6},
+               ("L1", "B.hdf5"): {"size_bytes": 6}}
+    contract = {"contract_digest": "c" * 64,
+                "execution": {"raw_cache_limit_bytes": 10}}
+
+    def batch(*frames):
+        return [{"context_sources": list(frames)}]
+
+    common = {
+        "sources": sources, "initially_cached": set(), "contract": contract,
+        "source_plan_pinned_digest": "p" * 64,
+        "ordered_seed_digest": "s" * 64,
+    }
+    grouped = _cache_plan(
+        plan_batches=[batch(a), batch(b), batch(a)],
+        last_use={("H1", "A.hdf5"): 2, ("L1", "B.hdf5"): 1},
+        **common,
+    )
+    chronological = _cache_plan(
+        plan_batches=[batch(a), batch(a), batch(b)],
+        last_use={("H1", "A.hdf5"): 1, ("L1", "B.hdf5"): 2},
+        **common,
+    )
+    assert grouped["status"] == "FAIL_O3A_COINCIDENCE_CACHE_PLAN"
+    assert grouped["peak_bytes"] == 12
+    assert chronological["status"] == "PASS_O3A_COINCIDENCE_CACHE_PLAN"
+    assert chronological["peak_bytes"] == 6
 
 
 @pytest.mark.parametrize("mutation", ["duplicate", "missing", "wrong_class", "float_gps"])
