@@ -9,8 +9,12 @@
   `d0734ae8e6a946d8d741211321f0dce7fc59acf53f76986564ba4a2956962ecf`;
   source-only preflight digest
   `1e8109c39b2f23d44a7da10ecbe26ba78690f28b318bdab1cdade2e05749c649`.
-  Pre-run WSL suite: 185 passed, 11 upstream warnings; Ruff PASS. No
-  coincidence outcome has been opened yet. The O3a-only native index and 10,000-row native-calibration
+  Pre-run WSL suite: 185 passed, 11 upstream warnings; Ruff PASS. Source
+  freeze `f79692b` was pushed before execution. The single WSL worker is
+  active under run key
+  `713609d1605d2b2a0d2871829a2b91288ce6330510a296021b86977b3c6c4a53`;
+  its verified hourly monitor is active. No interim coincidence outcome is
+  reported. The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
   has PASS manifest and real HDF5/CUDA preflight, including stitched context,

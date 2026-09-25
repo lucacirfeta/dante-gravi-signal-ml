@@ -51,3 +51,10 @@ stops execution; a verified transport/storage failure may be archived and
 resumed only on the same run key from validated shards. PEM begins only after
 an independent PASS verification of coincidence and a separate public O3a
 channel/method-parity preflight.
+
+The source freeze was committed and pushed as `f79692b` before real execution.
+The single O3a coincidence worker has now started with run key
+`713609d1605d2b2a0d2871829a2b91288ce6330510a296021b86977b3c6c4a53`.
+An hourly monitor checks health and verified-shard progress without reporting
+intermediate scores, candidate counts or outcomes. No stage result is claimed
+until standalone replay verification passes.
