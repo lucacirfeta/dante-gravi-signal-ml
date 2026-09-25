@@ -1,7 +1,16 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.18 Native morphology taxonomy PASS verified; awaiting downstream authorization
-- **Status**: The O3a-only native index and 10,000-row native-calibration
+- **Phase**: 7.19 Native physical coincidence source frozen; execution authorized
+- **Status**: The author approved exact corrected-O4a physical-coincidence
+  method parity for O3a on 2026-09-25. The statistical limitation of at most
+  eight eligible within-seed shifts, an O3a-only pooled p99 over measured
+  ROBUST seed maxima, uncertain tail precision, and diagnostic-only scope
+  was preregistered before outcomes. Contract digest
+  `d0734ae8e6a946d8d741211321f0dce7fc59acf53f76986564ba4a2956962ecf`;
+  source-only preflight digest
+  `1e8109c39b2f23d44a7da10ecbe26ba78690f28b318bdab1cdade2e05749c649`.
+  Pre-run WSL suite: 185 passed, 11 upstream warnings; Ruff PASS. No
+  coincidence outcome has been opened yet. The O3a-only native index and 10,000-row native-calibration
   identity ledger remain adopted and unchanged. The score-only v3 contract
   (`85028c59d55fbc95c9b2b056eb0e783dfbffb3b7f446feb1befd8c2e1ff2f20c`)
   has PASS manifest and real HDF5/CUDA preflight, including stitched context,
@@ -43,9 +52,11 @@
   L1 p99=0.41683934092521674; CI width=0.00732177317142485 (1.756498%).
   Exact 5000 point/4998 bootstrap rows and 294 blocks per detector;
   receipt, summary and frozen-source audit PASS. No post-hoc width cutoff.
-  The earlier authorization covered CLASSIFY only. The later explicit
-  authorization covered O4a-method-parity TAXONOMY; coincidence, PEM and A2
-  promotion remain closed pending separate authorization.
+  The earlier authorization covered CLASSIFY only. Later explicit
+  authorizations covered O4a-method-parity TAXONOMY and, on 2026-09-25,
+  diagnostic COINCIDENCE followed by exact-parity PEM subject to its own
+  public-channel preflight. A2 promotion and external candidate communication
+  remain closed.
   The classification adapter now has 33 passing targeted tests and 155
   passing full O3a/PatchProducer tests (11 upstream warnings, 99.32s).
   Contract digest:
@@ -80,7 +91,8 @@
   8899-member family and one singleton, confirming the pre-registered
   single-linkage chaining expectation. Independent row, vector-hash and graph
   connectivity checks passed; post-run WSL suite: 170 passed, 11 upstream
-  warnings. No active scientific worker and no coincidence/PEM stage started.
+  warnings. This was the taxonomy completion checkpoint; COINCIDENCE source
+  freeze and authorization are recorded above, with no outcomes opened yet.
 
 ## Preserved completed evidence
 - Multiscale efficiency v2 phases 6.1-6.4 remain complete and independently
