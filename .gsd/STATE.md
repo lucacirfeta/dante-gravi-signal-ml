@@ -18,8 +18,11 @@
   `590242c981544aa09e623ab8931a98bf5ef0e95423b7714a72996a62963dc63d`.
   The separate v2 run key is
   `d42ab62e620f86a5b4c84852e74dff80bcf45ccd1beef39edcb5082979cd3e89`.
-  The hourly monitor is paused until the new source freeze and run; the failed key will not
-  resume. The author approved exact corrected-O4a physical-coincidence
+  Source freeze commit `3f310fd` was pushed before the v2 run. One Linux
+  controller is measuring; the sealed cache plan passed at 5,293,641,251
+  peak bytes, zero of 201 batches above cap. The hourly monitor is active.
+  There is no v2 summary or verified scientific result yet. The failed v1
+  key will not resume. The author approved exact corrected-O4a physical-coincidence
   method parity for O3a on 2026-09-25. The statistical limitation of at most
   eight eligible within-seed shifts, an O3a-only pooled p99 over measured
   ROBUST seed maxima, uncertain tail precision, and diagnostic-only scope

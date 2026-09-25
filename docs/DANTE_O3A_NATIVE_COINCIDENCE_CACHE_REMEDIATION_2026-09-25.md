@@ -40,3 +40,12 @@ The new run key is
 `d42ab62e620f86a5b4c84852e74dff80bcf45ccd1beef39edcb5082979cd3e89`.
 It is distinct from the preserved v1 failed key. The source preflight saw
 6,408 frozen seeds and did not open strain or coincidence outcomes.
+
+Source freeze commit `3f310fd` was pushed on
+`science/o3-transfer-readiness` before the v2 run. The single Linux
+controller started under the new run key on `E:`; `cache_plan.json` sealed
+`PASS_O3A_COINCIDENCE_CACHE_PLAN` with digest
+`a46247f137bb2c86a9e4bf62ad217653f0d80849c85c78f9a1a9c14fcd83ebb7`.
+At this checkpoint the run is measuring, no failure/summary exists, and
+the hourly monitor is active. The cache plan is a resource gate, not a
+scientific result. Coincidence and PEM remain unverified/not started.
