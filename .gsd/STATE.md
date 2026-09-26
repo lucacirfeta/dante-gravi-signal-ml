@@ -19,9 +19,15 @@
   The separate v2 run key is
   `d42ab62e620f86a5b4c84852e74dff80bcf45ccd1beef39edcb5082979cd3e89`.
   Source freeze commit `3f310fd` was pushed before the v2 run. One Linux
-  controller is measuring; the sealed cache plan passed at 5,293,641,251
-  peak bytes, zero of 201 batches above cap. The hourly monitor is active.
-  There is no v2 summary or verified scientific result yet. The failed v1
+  controller began measuring; the sealed cache plan passed at 5,293,641,251
+  peak bytes, zero of 201 batches above cap. At 3,648/6,408 seed workloads,
+  a GWOSC HTTP 502 transport failure was sealed as InfrastructureError
+  (digest `1669a4b14e813ab3f2c6109feb71e3df28207ed6172b3f5771a071de0e52e3a6`).
+  The runner verified and archived this failure, preserved all 114 shards,
+  and resumed the same v2 run key from those shards. One Linux controller is
+  active again; the hourly monitor remains active. If transport repeatedly
+  fails, escalate rather than retry indefinitely. There is no v2 summary or
+  verified scientific result yet. The failed v1
   key will not resume. The author approved exact corrected-O4a physical-coincidence
   method parity for O3a on 2026-09-25. The statistical limitation of at most
   eight eligible within-seed shifts, an O3a-only pooled p99 over measured

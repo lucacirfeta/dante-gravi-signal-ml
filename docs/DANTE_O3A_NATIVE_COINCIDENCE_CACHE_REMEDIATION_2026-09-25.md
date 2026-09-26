@@ -49,3 +49,13 @@ controller started under the new run key on `E:`; `cache_plan.json` sealed
 At this checkpoint the run is measuring, no failure/summary exists, and
 the hourly monitor is active. The cache plan is a resource gate, not a
 scientific result. Coincidence and PEM remain unverified/not started.
+
+At 3,648/6,408 seed workloads, GWOSC returned HTTP 502 for a public H1
+frame. The v2 runner sealed `InfrastructureError` as artifact
+`1669a4b14e813ab3f2c6109feb71e3df28207ed6172b3f5771a071de0e52e3a6`.
+There was no final summary. The built-in recovery check verified the failure,
+preflight and 114 completed event shards, then archived the failure in
+`failure_history/` and resumed the *same* run key with separate `resume1`
+logs. No source, config, method or population changed; the failed v1 run
+remains untouched. Repeated transport failures require review, not an
+unbounded retry loop.
