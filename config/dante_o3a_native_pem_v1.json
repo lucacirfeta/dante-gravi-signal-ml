@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "status": "PREFLIGHT_O3A_NATIVE_PEM_V1",
+  "run": "O3A",
+  "contract_digest": "2249d6dd989edadd35ff75b2e83017856fbd926332eed6c724c2bac4943c4b36",
+  "method_reference": {
+    "path": "config/dante_o4a_corrected_native_pem_v1.json",
+    "sha256": "3d054649b5ab18fd3fe2681c4ad90523febc5f4ed3df0d2e603cfe5930589513"
+  },
+  "measurement": {
+    "alpha_family_wise": 0.01,
+    "background_block_s": 14400.0,
+    "background_stride_s": 96.0,
+    "background_window_s": 32.0,
+    "bootstrap_resamples": 200,
+    "bootstrap_unit": "background_window_indices",
+    "candidate_exclusion_s": 96.0,
+    "coherence_fftlength_s": 2.0,
+    "coherence_overlap_s": 1.0,
+    "event_window_s": 32.0,
+    "frequency_band_hz": [20.0, 500.0],
+    "minimum_clean_windows": 60,
+    "primary_endpoint": "quiet_zero_lag_q99_confirmed",
+    "seed": 42,
+    "strain_highpass_hz": 20.0,
+    "surrogate_guard_s": 64.0,
+    "time_shift_endpoint": "event_max_over_tested_channels_and_20_500_hz",
+    "uncalibrated_is_negative": false
+  },
+  "channels": {
+    "channel_count_per_detector": 5,
+    "H1": [
+      "H1:CAL-PCALY_RX_PD_OUT_DQ",
+      "H1:LSC-POP_A_LF_OUT_DQ",
+      "H1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
+      "H1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
+      "H1:SUS-ETMX_L3_CAL_LINE_OUT_DQ"
+    ],
+    "L1": [
+      "L1:ASC-X_TR_A_NSUM_OUT_DQ",
+      "L1:CAL-PCALY_RX_PD_OUT_DQ",
+      "L1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
+      "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
+      "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ"
+    ],
+    "explicitly_excluded": [
+      "L1:PEM-EX_VMON_ETMX_ESDPOWER24_DQ",
+      "L1:PEM-EY_MAINSMON_EBAY_1_DQ"
+    ],
+    "public_subset_is_complete_sensor_network": false
+  },
+  "population": {
+    "selection_source": "o3a_native_coincidence_exceeds_primary_threshold_true",
+    "primary": {"class": "ROBUST", "H1": 2, "L1": 9, "total": 11},
+    "diagnostic": {"class": "AMBIGUOUS", "H1": 1, "L1": 0, "total": 1},
+    "exact_total": 12,
+    "candidate_exclusion_population": "all_8900_o3a_native_classified_seeds",
+    "candidate_exclusion_total": 8900,
+    "background_class_measured": false
+  },
+  "parents": {
+    "coincidence_contract": {
+      "path": "config/dante_o3a_native_coincidence_v2.json",
+      "sha256": "9726715499533a1e3b2f6086edbf1c3fa78a2b07098128ae60fcdeed013b050c"
+    },
+    "coincidence": {
+      "path": "artifacts/dante_light/o3a_native_v1/native_coincidence.json",
+      "sha256": "5060bd1659100f6caaadc94b3b3f3e7677afeb9c1718f24b6f7e769d4d115d70",
+      "artifact_digest": "3c3b3a878ae50753ab8ba99a70acf9898c4ad9b138acde2fb4c9ad8d7116afc9"
+    },
+    "classification": {
+      "path": "artifacts/dante_light/o3a_native_v1/native_classification.json",
+      "sha256": "49ffc508ee98d4c1f6495dd8cb0f452b3387270d057fd7d1fe81d8711de3fb32",
+      "artifact_digest": "65d67d4c4dac2ff53893d3d23b3f308e5008c436b684a4247c8e927b662de3ac"
+    },
+    "source_inventory": {
+      "path": "config/dante_o3a_gwosc_4khz_source_inventory_v1.json",
+      "sha256": "bbf9be18b1ec9e60599381816fbcb5acf80d2912c6153564ac284d4ffe1f5cb1"
+    },
+    "pem_coherence": {
+      "path": "src/pipeline_v2_production/pem_coherence_analysis.py",
+      "sha256": "48c557db470441c38a0c1bd24e8a07abfca21616f7bdcc3304d2eea3b707652b"
+    },
+    "pem_null": {
+      "path": "src/pipeline_v2_production/pem_null_calibration.py",
+      "sha256": "00aad59b6ed55e82b955410833294e4af2efafd07f735f20100c07789ff8473f"
+    },
+    "stage_contract": {
+      "path": "config/dante_o3a_native_v1_stage_contract.json",
+      "sha256": "a61356fe2eb51e6530dd4ff996e7b3988b9d4ab7de4738b7d850a89a378300b8"
+    }
+  },
+  "execution": {
+    "nds_host": "nds.gwosc.org",
+    "download_retries": 5,
+    "resume_exact_completed_events": true,
+    "ephemeral_background_cache_purged": true,
+    "partial_run_interpretable": false
+  },
+  "output": {
+    "root": "E:/dante_cache/dante_light/o3a_native_v1",
+    "prefix": "native_pem_o3a_",
+    "historical_artifacts_overwritten": false
+  },
+  "scientific_boundary": {
+    "diagnostic_only": true,
+    "o4a_comparison_performed": false,
+    "global_significance_claim": false,
+    "astrophysical_confirmation_claim": false,
+    "uncalibrated_is_negative": false,
+    "primary_and_diagnostic_combined": false,
+    "a2_promoted": false,
+    "unreleased_sensors_cleared": false
+  }
+}

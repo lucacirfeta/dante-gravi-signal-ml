@@ -1,6 +1,19 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.20 O4a raw replay prepared; additive .gitattributes provenance gate blocks bulk fetch
+- **Phase**: 7.21 O3a-only diagnostic PEM input preflight prepared; no new PEM measurement
+- **O3a-only PEM preflight (2026-09-26)**: The author prioritized an O3a-only
+  diagnostic result before any O4a paired comparison. A separate candidate
+  contract and input adapter select the 12 verified O3a coincidence
+  threshold exceeders (11 ROBUST primary, 1 AMBIGUOUS diagnostic), joined to
+  the full 8,900-row O3a classification ledger and its frozen raw-context
+  source metadata. Input preflight PASS, no strain opened. The five public
+  channels per detector are the previously audited subset; the event/null
+  numerical method is checked against the versioned corrected-O4a contract,
+  but no O4a scientific rows or thresholds are imported. WSL targeted
+  O3a tests: 21 passed, 11 upstream warnings; Ruff passed. Source/contract
+  freeze and the new PEM computation have **not** occurred. The four
+  O4a-specific provenance-policy regression failures remain open and must
+  not be bypassed; the O4a comparative arm is suspended.
 - **Raw replay implementation checkpoint (2026-09-26)**: A new, separate
   O4a 4 kHz R1 raw-context replay adapter and contract map 65 historical
   targets (66 local pieces) to 64 official frames with gap-free coverage.
