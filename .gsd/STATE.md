@@ -1,6 +1,18 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.19 Native physical coincidence v2 verified; PEM preflight next
+- **Phase**: 7.20 Public common-channel PEM preflight passed; implementation next
+- **PEM common-channel checkpoint (2026-09-26)**: The author approved a new
+  O3a/O4a paired follow-up on the exact publicly common five channels per
+  detector, not a nominally equal PEM label over unequal channel sets.
+  Public O3a NDS2 inventory lacks 4/9 H1 and 2/7 L1 original O4a channels;
+  physical nonexistence and a valid alias are not inferred. All 12 O3a
+  targets have five-channel event-window coverage and a CAT1-clean 4-hour
+  background block with complete five-channel NDS2 metadata coverage.
+  O3a CBC_CAT1 and BURST_CAT1 public segment lists are exactly equal over
+  the full run for both detectors. Historical O4a outputs show all five
+  common channels available for its 65 targets, but its original
+  family-wise null cannot be reused after removing channels. Details and
+  execution gates are in `07-20-PLAN.md`. No new PEM measurement has run.
 - **Status**: O3a coincidence v2 is PASS verified, without a global
   significance or astrophysical claim. All 6,408 frozen seed workloads
   (5,850 ROBUST primary; 558 AMBIGUOUS diagnostic) completed in 201 shards;
