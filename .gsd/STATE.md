@@ -1,6 +1,15 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.21 O3a-only diagnostic PEM source frozen; production run next
+- **Phase**: 7.21 O3a-only diagnostic PEM production run active
+- **O3a-only PEM execution (2026-09-26)**: After source freeze commit
+  `eb7f6d4`, the single WSL controller began `--stage run` under key
+  `75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e`
+  at `E:\dante_cache\dante_light\o3a_native_v1`. Launcher PID 24796;
+  process was alive with empty stderr at the first check. No final summary
+  or verified PEM result exists yet. Hourly heartbeat
+  `monitor-o3a-native-cohort` is ACTIVE and quiet while healthy; it must
+  independently verify completion before any interpretation. Source commits
+  are local and not pushed to main.
 - **O3a-only PEM source freeze (2026-09-26)**: Versioned contract digest
   `a7f4202ff8d85ffb46efdb456ebcb25cc1a14b27b30cea0a64ee7ab198d05a87`;
   parent-only preflight digest
@@ -12,7 +21,7 @@
   atomic event outputs, same-key resume, and a standalone structural verifier.
   Synthetic tests cover raw replay, calibration and tamper failure. Complete
   post-freeze WSL O3a/PatchProducer suite: 194 passed, 11 upstream warnings;
-  Ruff PASS. No new PEM measurement has yet run.
+  Ruff PASS. This evidence predates the active run described above.
 - **O3a-only PEM preflight (2026-09-26)**: The author prioritized an O3a-only
   diagnostic result before any O4a paired comparison. A separate candidate
   contract and input adapter select the 12 verified O3a coincidence
