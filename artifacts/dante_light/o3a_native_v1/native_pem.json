@@ -1,0 +1,36 @@
+{
+  "artifact_digest": "263ed1744dc2dece021d8dd298ad5b5d5c3c8439f78258db4bc9368cc8471e03",
+  "contract_digest": "a7f4202ff8d85ffb46efdb456ebcb25cc1a14b27b30cea0a64ee7ab198d05a87",
+  "event_summary": {
+    "diagnostic": {
+      "calibrated": 1,
+      "total": 1,
+      "uncalibrated": 0,
+      "verdict_tier": {
+        "NO_CORRELATION": 1
+      }
+    },
+    "primary": {
+      "calibrated": 11,
+      "total": 11,
+      "uncalibrated": 0,
+      "verdict_tier": {
+        "COUPLED": 1,
+        "NO_CORRELATION": 10
+      }
+    }
+  },
+  "run_artifact_digest": "8cbfeae700857af0f5ca46054dad9c347a061088764aa881d80d0bd2283b2504",
+  "run_key": "75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e",
+  "scientific_boundary": {
+    "a2_promoted": false,
+    "astrophysical_confirmation_claim": false,
+    "diagnostic_only": true,
+    "global_significance_claim": false,
+    "o4a_comparison_performed": false,
+    "primary_and_diagnostic_combined": false,
+    "uncalibrated_is_negative": false,
+    "unreleased_sensors_cleared": false
+  },
+  "status": "PASS_VERIFIED_O3A_NATIVE_PEM_V1"
+}

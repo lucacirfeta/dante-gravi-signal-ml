@@ -1,15 +1,29 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.21 O3a-only diagnostic PEM production run active
+- **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a-only PEM verified (2026-09-27 Europe/Rome)**: The frozen run
+  `75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e`
+  finished with `PASS_COMPLETE_O3A_NATIVE_PEM_V1`; standalone `--stage verify`
+  exited 0 and produced `PASS_VERIFIED_O3A_NATIVE_PEM_V1`. All 12 targets
+  were calibrated (11 ROBUST primary, one AMBIGUOUS diagnostic); all 8,900
+  O3a classified seed identities remained in the background exclusion. The
+  raw transient cache is empty and no failure file exists. Primary H1:
+  one COUPLED, one NO_CORRELATION; primary L1: nine NO_CORRELATION;
+  diagnostic H1: one NO_CORRELATION. The COUPLED H1 target is GPS 1253581920,
+  with top tested channel H1:LSC-POP_A_LF_OUT_DQ. This is a diagnostic
+  environmental-coupling result, not astrophysical confirmation or global
+  significance. Compact artifact digest
+  `263ed1744dc2dece021d8dd298ad5b5d5c3c8439f78258db4bc9368cc8471e03`.
+  Post-run WSL suite: 194 passed, 11 upstream warnings; Ruff passed.
+  The O4a comparative/provenance gate remains separate and unopened.
 - **O3a-only PEM execution (2026-09-26)**: After source freeze commit
   `eb7f6d4`, the single WSL controller began `--stage run` under key
   `75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e`
   at `E:\dante_cache\dante_light\o3a_native_v1`. Launcher PID 24796;
-  process was alive with empty stderr at the first check. No final summary
-  or verified PEM result exists yet. Hourly heartbeat
-  `monitor-o3a-native-cohort` is ACTIVE and quiet while healthy; it must
-  independently verify completion before any interpretation. Source commits
-  are local and not pushed to main.
+  process was alive with empty stderr at the first check. This historical
+  launch record is superseded by the verified completion above. The hourly
+  monitor is suspended after verification. Source commits remain on this
+  branch only; no push to main.
 - **O3a-only PEM source freeze (2026-09-26)**: Versioned contract digest
   `a7f4202ff8d85ffb46efdb456ebcb25cc1a14b27b30cea0a64ee7ab198d05a87`;
   parent-only preflight digest
