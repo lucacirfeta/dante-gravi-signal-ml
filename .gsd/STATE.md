@@ -1,6 +1,12 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.20 Public common-channel PEM preflight passed; implementation next
+- **Phase**: 7.20 Common-channel PEM blocked on O4a raw-file provenance decision
+- **Raw provenance gate (2026-09-26)**: The first reacquired O4a L1 GWOSC
+  frame reproduces the frozen 40-second numerical context hash, but its
+  reserialized whole-file SHA-256 differs from the frozen local HDF5 receipt.
+  The original byte-identical file has not been found in the inspected local
+  checkout and E: archives. No comparative PEM run has started; the hourly
+  monitor is paused. See `07-20-PLAN.md` for exact hashes and decision options.
 - **PEM common-channel checkpoint (2026-09-26)**: The author approved a new
   O3a/O4a paired follow-up on the exact publicly common five channels per
   detector, not a nominally equal PEM label over unequal channel sets.
