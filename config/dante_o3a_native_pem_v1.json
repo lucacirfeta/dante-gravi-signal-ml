@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "status": "PREFLIGHT_O3A_NATIVE_PEM_V1",
+  "status": "FROZEN_O3A_NATIVE_PEM_V1",
   "run": "O3A",
-  "contract_digest": "2249d6dd989edadd35ff75b2e83017856fbd926332eed6c724c2bac4943c4b36",
+  "contract_digest": "a7f4202ff8d85ffb46efdb456ebcb25cc1a14b27b30cea0a64ee7ab198d05a87",
   "method_reference": {
     "path": "config/dante_o4a_corrected_native_pem_v1.json",
     "sha256": "3d054649b5ab18fd3fe2681c4ad90523febc5f4ed3df0d2e603cfe5930589513"
@@ -93,6 +93,8 @@
   "execution": {
     "nds_host": "nds.gwosc.org",
     "download_retries": 5,
+    "aux_fetch_retries": 3,
+    "aux_fetch_backoff_base_s": 2,
     "resume_exact_completed_events": true,
     "ephemeral_background_cache_purged": true,
     "partial_run_interpretable": false
@@ -111,5 +113,10 @@
     "primary_and_diagnostic_combined": false,
     "a2_promoted": false,
     "unreleased_sensors_cleared": false
+  },
+  "implementation_sources": {
+    "src/dante_light/o3a_native_pem.py": "529f5a54fe7bbcd18bf2095cbcff34feae74da0d79a10696e231c15d678f6af9",
+    "scripts/run_dante_o3a_native_pem.py": "913a4fb3720272ad55c120fe5b6ddc55871dfd4609534bec364eec5706cf6b34",
+    "tests/test_dante_o3a_native_pem.py": "12cc032ac40b843ebf88fb0506eaebfbb37ad0550568e2573f108da818b88a93"
   }
 }

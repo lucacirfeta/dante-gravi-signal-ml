@@ -1,6 +1,18 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.21 O3a-only diagnostic PEM input preflight prepared; no new PEM measurement
+- **Phase**: 7.21 O3a-only diagnostic PEM source frozen; production run next
+- **O3a-only PEM source freeze (2026-09-26)**: Versioned contract digest
+  `a7f4202ff8d85ffb46efdb456ebcb25cc1a14b27b30cea0a64ee7ab198d05a87`;
+  parent-only preflight digest
+  `02e36df7a1a6d5074c22ca1c4b93e827666dfa118eaafd42257633acbe843cc6`.
+  Exactly 12 targets and all 8,900 exclusion identities are sealed; 11
+  distinct raw frames total 1,427,071,982 source bytes. E: has ample free
+  space. The adapter includes raw-context hash replay, NDS2 event-coherence
+  measurement, a fresh O3a family-wise null and quiet zero-lag control,
+  atomic event outputs, same-key resume, and a standalone structural verifier.
+  Synthetic tests cover raw replay, calibration and tamper failure. Complete
+  post-freeze WSL O3a/PatchProducer suite: 194 passed, 11 upstream warnings;
+  Ruff PASS. No new PEM measurement has yet run.
 - **O3a-only PEM preflight (2026-09-26)**: The author prioritized an O3a-only
   diagnostic result before any O4a paired comparison. A separate candidate
   contract and input adapter select the 12 verified O3a coincidence
@@ -10,8 +22,9 @@
   channels per detector are the previously audited subset; the event/null
   numerical method is checked against the versioned corrected-O4a contract,
   but no O4a scientific rows or thresholds are imported. WSL targeted
-  O3a tests: 21 passed, 11 upstream warnings; Ruff passed. Source/contract
-  freeze and the new PEM computation have **not** occurred. The four
+  O3a tests: 21 passed, 11 upstream warnings; Ruff passed at that initial
+  checkpoint. The later source freeze is recorded above; the new PEM
+  computation has **not** occurred. The four
   O4a-specific provenance-policy regression failures remain open and must
   not be bypassed; the O4a comparative arm is suspended.
 - **Raw replay implementation checkpoint (2026-09-26)**: A new, separate
