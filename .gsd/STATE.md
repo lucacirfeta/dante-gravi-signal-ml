@@ -1,12 +1,17 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.20 Common-channel PEM blocked on O4a raw-file provenance decision
+- **Phase**: 7.20 Common-channel PEM numerical-context provenance approved; implementation pending
 - **Raw provenance gate (2026-09-26)**: The first reacquired O4a L1 GWOSC
   frame reproduces the frozen 40-second numerical context hash, but its
   reserialized whole-file SHA-256 differs from the frozen local HDF5 receipt.
-  The original byte-identical file has not been found in the inspected local
-  checkout and E: archives. No comparative PEM run has started; the hourly
-  monitor is paused. See `07-20-PLAN.md` for exact hashes and decision options.
+  The original byte-identical file has not been found in the obvious local
+  checkout and E: archives; the raw cleanup manifest lists its removal.
+  The author approved a new versioned, diagnostic-only source receipt and
+  independent numerical-context equality for all historical O4a PEM targets,
+  preserving the old receipt. The current frame is official O4a 4 kHz R1:
+  its MD5 matches GWOSC's published list, but this does not prove historic
+  whole-file equality or explain the mismatch. No comparative PEM run has
+  started. See `07-20-PLAN.md` for exact gates and interpretation boundary.
 - **PEM common-channel checkpoint (2026-09-26)**: The author approved a new
   O3a/O4a paired follow-up on the exact publicly common five channels per
   detector, not a nominally equal PEM label over unequal channel sets.
