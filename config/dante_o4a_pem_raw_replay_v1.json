@@ -1,0 +1,38 @@
+{
+  "contract_id": "dante-o4a-pem-raw-replay-v1",
+  "schema_version": 1,
+  "historical_targets": {
+    "path": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1/native_pem_1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0/native_pem_targets.jsonl",
+    "sha256": "68b6c0cd53131dfccb7116d956337577ccda7fdb5bfc2d1f13241f81a923fe4e",
+    "expected_count": 65
+  },
+  "source": {
+    "release": "O4a_4KHZ_R1",
+    "manifest_url": "https://gwosc.org/archive/md5/O4a_4KHZ_R1/strain-hdf.txt",
+    "archive_url_prefix": "https://gwosc.org/archive/data/O4a_4KHZ_R1/",
+    "frame_duration_s": 4096,
+    "sample_rate_hz": 4096,
+    "context_duration_s": 40,
+    "context_lead_s": 4,
+    "frame_type": {
+      "H1": "H1_HOFT_C00_AR",
+      "L1": "L1_HOFT_C00_AR"
+    },
+    "strain_channel": {
+      "H1": "H1:GDS-CALIB_STRAIN_CLEAN_AR",
+      "L1": "L1:GDS-CALIB_STRAIN_CLEAN_AR"
+    }
+  },
+  "provenance_policy": {
+    "historic_local_file_sha256": "RECORD_ONLY_NOT_A_PASS_GATE",
+    "official_file_md5": "MATCH_PUBLISHED_MANIFEST",
+    "official_file_sha256": "RECORD_AND_REVERIFY",
+    "historical_context_sha256": "EXACT_FLOAT64_BYTES_EACH_TARGET",
+    "historical_receipts_immutable": true,
+    "diagnostic_only": true
+  },
+  "output": {
+    "external_root_windows": "E:/dante_cache/dante_light/o3a_o4a_common_pem_v1/raw_replay"
+  },
+  "contract_digest": "81f6b609087068253faa84a0a32f94364bb727c3655077add99b19b243ccd1ba"
+}

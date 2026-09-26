@@ -1,6 +1,14 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.20 Common-channel PEM numerical-context provenance approved; implementation pending
+- **Phase**: 7.20 O4a raw replay prepared; additive .gitattributes provenance gate blocks bulk fetch
+- **Raw replay implementation checkpoint (2026-09-26)**: A new, separate
+  O4a 4 kHz R1 raw-context replay adapter and contract map 65 historical
+  targets (66 local pieces) to 64 official frames with gap-free coverage.
+  Five targeted tests and one real-frame MD5/metadata/context check pass.
+  The existing O4a PEM suite has four failures because four O3a-specific
+  `.gitattributes` LF rules on this branch are not in the old reconciliation
+  allowlist (no historical rule was removed). No bulk fetch or new PEM run
+  was started. Resolve this frozen provenance-policy gate before adoption.
 - **Raw provenance gate (2026-09-26)**: The first reacquired O4a L1 GWOSC
   frame reproduces the frozen 40-second numerical context hash, but its
   reserialized whole-file SHA-256 differs from the frozen local HDF5 receipt.
