@@ -59,3 +59,34 @@ preflight and 114 completed event shards, then archived the failure in
 logs. No source, config, method or population changed; the failed v1 run
 remains untouched. Repeated transport failures require review, not an
 unbounded retry loop.
+
+## Final v2 verification, 2026-09-26
+
+The resumed run completed all 6,408 workloads in 201 event shards, with
+no active failure and an empty transient cache. Standalone `--verify` exited
+0 and independently rebuilt the output ledgers. Summary artifact digest:
+`79bb6d04efac92a1cebf44fea29bc140b0e3d1cda5e67c20e76c220446db5c5a`;
+verified compact digest:
+`3c3b3a878ae50753ab8ba99a70acf9898c4ad9b138acde2fb4c9ad8d7116afc9`.
+The sealed raw-source receipt has 4,783 frame rows. All zero-violation
+gates passed: seed identity/score replay, detector/GPS uniqueness,
+partner-class nonuse, background exclusion, complete accounting and empty
+cache. The cache-plan digest remained
+`a46247f137bb2c86a9e4bf62ad217653f0d80849c85c78f9a1a9c14fcd83ebb7`.
+
+The primary ledger has 5,850 ROBUST seeds: 4,607 measured and 1,243
+partner-data unavailable (820 without complete source coverage; 423 with
+non-finite partner raw context). The separate diagnostic ledger has 558
+AMBIGUOUS seeds: 445 measured and 113 unavailable (65 coverage, 48
+non-finite). Measured events have 4–8 eligible shifts. The O3a-only linear
+p99 of measured primary per-seed null maxima is `0.25434447815440775`;
+11 primary measurements and one diagnostic measurement exceed it. These
+are diagnostic threshold exceedances, **not** a formal global false-alarm
+rate, astrophysical candidates or an approved PEM shortlist. PEM remains
+unopened pending its separate public-channel and method-parity preflight.
+
+Post-run WSL regression: 187 passed, 11 upstream deprecation warnings in
+122.59 s. Ruff passed. All 15 frozen implementation-source SHA-256 values
+match the live files; nine sources match Git byte-for-byte and six match an
+exact LF-to-CRLF conversion of their Git blobs. This qualifies current-run
+provenance but does not claim a clean-LF checkout is byte-equivalent.

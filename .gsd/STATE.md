@@ -1,7 +1,21 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.19 Native physical coincidence v2 cache remediation authorized
-- **Status**: The first O3a coincidence run is FAILED, not a verified stage.
+- **Phase**: 7.19 Native physical coincidence v2 verified; PEM preflight next
+- **Status**: O3a coincidence v2 is PASS verified, without a global
+  significance or astrophysical claim. All 6,408 frozen seed workloads
+  (5,850 ROBUST primary; 558 AMBIGUOUS diagnostic) completed in 201 shards;
+  cache is empty, zero current failures, and standalone `--verify` exited 0.
+  Summary digest `79bb6d04efac92a1cebf44fea29bc140b0e3d1cda5e67c20e76c220446db5c5a`;
+  compact digest `3c3b3a878ae50753ab8ba99a70acf9898c4ad9b138acde2fb4c9ad8d7116afc9`.
+  Post-run WSL tests: 187 passed, 11 upstream warnings; Ruff passed.
+  All 15 frozen source hashes match current bytes and reconstruct from Git
+  (nine exact, six exact LF-to-CRLF), but clean-LF replay is not claimed.
+  Primary: 4,607 measured, 1,243 partner-unavailable, 11 above the
+  diagnostic pooled-null p99; diagnostic: 445 measured, 113 unavailable,
+  one above that threshold. The p99 is computed from measured ROBUST
+  per-seed null maxima only and is not a global false-alarm threshold.
+  A separate public-channel/method-parity PEM preflight is next. The first
+  O3a coincidence run is FAILED, not an adopted scientific stage.
   Its v1 run key is
   `713609d1605d2b2a0d2871829a2b91288ce6330510a296021b86977b3c6c4a53`;
   the sealed failure is a structural cache-cap ContractError after nine
@@ -24,10 +38,8 @@
   a GWOSC HTTP 502 transport failure was sealed as InfrastructureError
   (digest `1669a4b14e813ab3f2c6109feb71e3df28207ed6172b3f5771a071de0e52e3a6`).
   The runner verified and archived this failure, preserved all 114 shards,
-  and resumed the same v2 run key from those shards. One Linux controller is
-  active again; the hourly monitor remains active. If transport repeatedly
-  fails, escalate rather than retry indefinitely. There is no v2 summary or
-  verified scientific result yet. The failed v1
+  and resumed the same v2 run key from those shards. That controller then
+  completed and standalone verification passed. The failed v1
   key will not resume. The author approved exact corrected-O4a physical-coincidence
   method parity for O3a on 2026-09-25. The statistical limitation of at most
   eight eligible within-seed shifts, an O3a-only pooled p99 over measured

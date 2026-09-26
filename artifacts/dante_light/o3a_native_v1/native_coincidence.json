@@ -1,0 +1,64 @@
+{
+  "artifact_digest": "3c3b3a878ae50753ab8ba99a70acf9898c4ad9b138acde2fb4c9ad8d7116afc9",
+  "cache_plan_digest": "a46247f137bb2c86a9e4bf62ad217653f0d80849c85c78f9a1a9c14fcd83ebb7",
+  "contract_digest": "05565c848b08efda6d71b7acf434809f93e5db638d623ca994824d1e520d991a",
+  "event_summary": {
+    "diagnostic": {
+      "measured": 445,
+      "partner_data_unavailable": 113,
+      "per_event_null_exceeded": 52,
+      "primary_threshold_exceeded": 1,
+      "seed_total": 558
+    },
+    "primary": {
+      "measured": 4607,
+      "partner_data_unavailable": 1243,
+      "per_event_null_exceeded": 589,
+      "primary_threshold_exceeded": 11,
+      "seed_total": 5850
+    },
+    "primary_null_p99": 0.25434447815440775
+  },
+  "external_run_dir_wsl": "/mnt/e/dante_cache/dante_light/o3a_native_v1/native_coincidence_d42ab62e620f86a5b4c84852e74dff80bcf45ccd1beef39edcb5082979cd3e89",
+  "outputs": {
+    "diagnostic": {
+      "filename": "native_coincidence_ambiguous.jsonl",
+      "row_digest": "b488ca0a7760697227de79da4bd258a887d3dfe97aeb7d108037417c4e9b52d8",
+      "row_total": 558,
+      "sha256": "6833e969499e7f9165276ce5c3dc5341faa90b56616e166f45d21dd414cea93d"
+    },
+    "primary": {
+      "filename": "native_coincidence_robust.jsonl",
+      "row_digest": "d7e27eb314d6fafa984843f8bd98fc930e667bd653caf6fbc407a84b15b4be47",
+      "row_total": 5850,
+      "sha256": "f5b473995b4cb4ded91c746b33d05602c23340fcb808cf2c09bb9e30e6c0732a"
+    },
+    "raw_source_receipt": {
+      "filename": "raw_source_receipt.jsonl",
+      "row_digest": "9b2d581fcde4b0c6b50d518c6a3e76749b3735f6f70821ac95d481994f422dcb",
+      "row_total": 4783,
+      "sha256": "04068f584b8fc154cc75de6db55bcb6b58cbcfe51636de64c79690dd10bf4710"
+    }
+  },
+  "pre_registered_limitation": {
+    "effective_independence_established": false,
+    "global_look_elsewhere_control": false,
+    "no_post_hoc_retuning": true,
+    "pooled_p99_unit": "ONE_NULL_MAXIMUM_PER_MEASURED_ROBUST_SEED",
+    "tail_precision_established": false,
+    "within_seed_shift_count_upper_bound": 8
+  },
+  "run_artifact_digest": "79bb6d04efac92a1cebf44fea29bc140b0e3d1cda5e67c20e76c220446db5c5a",
+  "run_key": "d42ab62e620f86a5b4c84852e74dff80bcf45ccd1beef39edcb5082979cd3e89",
+  "schema_version": 2,
+  "scientific_boundary": {
+    "diagnostic_only": true,
+    "global_significance_claim": false,
+    "multiscale_used": false,
+    "o4a_scientific_rows_or_thresholds_imported": false,
+    "partner_class_consulted": false,
+    "taxonomy_family_used": false
+  },
+  "status": "PASS_VERIFIED_O3A_NATIVE_COINCIDENCE",
+  "summary_sha256": "fdebd8a186f57ac9b7831e864bb2649837078b1826464225720df9e2f804cc87"
+}
