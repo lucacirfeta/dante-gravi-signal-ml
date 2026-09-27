@@ -10,6 +10,9 @@
   separately localized subwindows do not establish one physical transient.
   Three nearby L1 targets share a PEM background span. The full ledger and
   caveats are in `docs/DANTE_O3A_TWELVE_TARGET_LEDGER_REVIEW_2026-09-27.md`.
+  An official GWOSC GPS-range query, positive-controlled on a known O3a
+  event, returned no catalogued event inside any of the 11 distinct 32-s
+  target windows; this is not a significance or no-signal claim.
   Visual/independent instrumental review remains open; no candidate was
   promoted and no new scientific rule was introduced.
 - **O3a-only PEM verified (2026-09-27 Europe/Rome)**: The frozen run

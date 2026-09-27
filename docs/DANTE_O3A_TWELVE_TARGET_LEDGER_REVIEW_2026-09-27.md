@@ -80,6 +80,18 @@ riusano lo stesso span di background di 4 ore
 `1238542865–1238557265` (91 finestre clean). I loro controlli null non
 vanno trattati come tre misure indipendenti della coda.
 
+## Cross-check del catalogo pubblico
+
+La [query ufficiale GWOSC per GPS nel range dei target](https://gwosc.org/eventapi/jsonfull/query/show?min-gps-time=1238507872&max-gps-time=1253581952),
+letta il 2026-09-27, restituisce 129 versioni di eventi; nessuna ha il
+GPS catalogato dentro una delle 11 distinte finestre target di 32 s. Come
+controllo della sintassi, la stessa query ristretta attorno al GPS noto
+1248242632 restituisce le tre versioni di GW190727_060333. Per il caso
+H1/L1 a GPS 1243231936, quindi, non risulta una coincidenza con un evento
+pubblico in quella finestra **nel catalogo interrogato**. L'assenza nel
+catalogo non è prova di assenza di un segnale, né sostituisce una stima
+indipendente del false-alarm rate o una revisione time-frequency.
+
 ## Gate ancora aperti
 
 Questa è una **review documentale degli output congelati**, non una review
