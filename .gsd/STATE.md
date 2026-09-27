@@ -27,7 +27,9 @@
   source contract pins the complete public manifests and release/channel
   metadata; frozen selector replay matched all 12 O3a and 65 O4a spans,
   covered gap-free by 47 and 278 unique official frames. This is read-only
-  coverage, not frame-byte acquisition or a scientific outcome. Historical
+  coverage, not a scientific outcome. Four bounded one-second real-frame
+  probes (O3a/O4a × H1/L1) subsequently passed public MD5, metadata and
+  independent numerical replay; no full background span has passed yet. Historical
   O3a 512 Hz auxiliary channels remain eligible under the corrected
   completeness gate. Real background bytes, auxiliary receipts and
   independent end-to-end replay remain open;
