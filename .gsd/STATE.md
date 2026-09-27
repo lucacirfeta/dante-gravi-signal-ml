@@ -63,8 +63,9 @@
   An official GWOSC GPS-range query, positive-controlled on a known O3a
   event, returned no catalogued event inside any of the 11 distinct 32-s
   target windows; this is not a significance or no-signal claim.
-  Visual/independent instrumental review remains open; no candidate was
-  promoted and no new scientific rule was introduced.
+  The visual review is now complete as recorded above; independent
+  instrumental attribution remains open. No candidate was promoted and no
+  new scientific rule was introduced.
 - **O3a-only PEM verified (2026-09-27 Europe/Rome)**: The frozen run
   `75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e`
   finished with `PASS_COMPLETE_O3A_NATIVE_PEM_V1`; standalone `--stage verify`
@@ -121,7 +122,10 @@
   The existing O4a PEM suite has four failures because four O3a-specific
   `.gitattributes` LF rules on this branch are not in the old reconciliation
   allowlist (no historical rule was removed). No bulk fetch or new PEM run
-  was started. Resolve this frozen provenance-policy gate before adoption.
+  was started. A wider 2026-09-27 WSL regression reproduced the same gate
+  (6 failed, 11 passed); the exact four rules and decision boundary are in
+  `docs/DANTE_O3A_O4A_PEM_PROVENANCE_POLICY_GATE_2026-09-27.md`. Resolve this
+  frozen provenance-policy gate before adoption.
 - **Raw provenance gate (2026-09-26)**: The first reacquired O4a L1 GWOSC
   frame reproduces the frozen 40-second numerical context hash, but its
   reserialized whole-file SHA-256 differs from the frozen local HDF5 receipt.
