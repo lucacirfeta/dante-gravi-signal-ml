@@ -1,6 +1,17 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a 12-target ledger review (2026-09-27)**: Read-only joins of the
+  frozen classification, taxonomy, coincidence and PEM ledgers are complete
+  with zero identity/score/context/threshold mismatch. Seven of 11 primary
+  targets and the one diagnostic target also exceed their own per-event
+  coincidence null; four primary targets only exceed the pooled diagnostic
+  p99. H1/L1 each have a ROBUST seed in GPS window 1243231936, but their
+  separately localized subwindows do not establish one physical transient.
+  Three nearby L1 targets share a PEM background span. The full ledger and
+  caveats are in `docs/DANTE_O3A_TWELVE_TARGET_LEDGER_REVIEW_2026-09-27.md`.
+  Visual/independent instrumental review remains open; no candidate was
+  promoted and no new scientific rule was introduced.
 - **O3a-only PEM verified (2026-09-27 Europe/Rome)**: The frozen run
   `75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e`
   finished with `PASS_COMPLETE_O3A_NATIVE_PEM_V1`; standalone `--stage verify`
