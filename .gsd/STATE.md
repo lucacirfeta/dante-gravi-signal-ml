@@ -1,6 +1,14 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O4a numerical-context replay verified (2026-09-27)**: The v2 run
+  `raw_replay_fb2af10f4feff811cd624526444d6890c610e5bf5a1c23bc4fc4d25bd16eb457`
+  is PASS_COMPLETE; independent WSL `--stage verify` exited 0 with
+  PASS_VERIFIED for 64 official frames and all 65 historical 40-second
+  contexts. Post-run 43 tests and Ruff passed. Historical local HDF5
+  whole-file byte parity is not claimed. Adapter parity and gate-3 checks
+  remain before any paired PEM result. See
+  `docs/DANTE_O3A_O4A_PEM_RAW_CONTEXT_REPLAY_VERIFIED_2026-09-27.md`.
 - **O3a/O4a raw replay URL correction (2026-09-27)**: The first v1 O4a
   acquisition stopped at HTTP 404 before verifying a frame; its zero-frame
   run is preserved. The author approved a URL-only v2. The versioned v2
