@@ -1,0 +1,142 @@
+{
+  "allfreq_contact_sheet_sha256": "d7d4d8c1903cd5b4e37307d2809fa553c6b9d0e97b771f717df054b0d208f30d",
+  "contact_sheet_sha256": "022b4cbf976994cd85c7a8187a08cb484f4d6602ef1bba658cf7fbf02cd78680",
+  "contract_digest": "05565c848b08efda6d71b7acf434809f93e5db638d623ca994824d1e520d991a",
+  "full_contact_sheet_sha256": "59be65c5c0af7bbec9c08c222efa7b79985ba50455e829cef3b415f0579cd953",
+  "gps_targets": [
+    {
+      "detector": "L1",
+      "gps_start": 1238507872,
+      "identity_digest": "05662f9f6f6d188a5a56ce72a2bdb8f61a70bbb726674c417d5bf5bb97c0276d",
+      "image_sha256": "4eefde56b2893f415f9dc214ee7be313ea83502ec4c417b5cf80678bf7a0ac37",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "ae400d6b62a1e51dc806a53f411bae8b5f3522c541a10e2ea0df7085bc945b43",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1238507520-4096.hdf5",
+      "source_sha256": "7143ad2e6b5933d6e2fa3c317b20c48e6c429300d4b56875344373a06efe85c6",
+      "top_k_time_offset_s": 20.324324324324323
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1238508320,
+      "identity_digest": "05984a121470f45a97e39415fc05902f4445270f5d2222524a2e171ae1ef89e4",
+      "image_sha256": "3afecd7367b95ea04525360e21a889ee14ac0b47909f4c5c59f40057468c3418",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "f7638e95d80357d9adb34328af126826bd80074a697e60603c4de74ba24a6462",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1238507520-4096.hdf5",
+      "source_sha256": "7143ad2e6b5933d6e2fa3c317b20c48e6c429300d4b56875344373a06efe85c6",
+      "top_k_time_offset_s": 16.864864864864863
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1238515136,
+      "identity_digest": "4c5ab4492a40a62d98d0ef434b8c268734de476517e3396bc13a4625b53cbec9",
+      "image_sha256": "3946b8f5b3c3118e0c25788df4d936ed2f463887970862a01b533498aa0db9b8",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "995af650dd392b608a5f88d2d6be24fd470e2c3b372ed1be4b097227bb18f9d3",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1238511616-4096.hdf5",
+      "source_sha256": "a023af5f62fea114d0c17e8452300e897ef1b24b40a6e068d0d3cbed3b3ed74e",
+      "top_k_time_offset_s": 22.054054054054053
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1239175264,
+      "identity_digest": "fb233e86c1f0379466095e156a5bdc6baea6f5f59a72170b48cfba938e11d826",
+      "image_sha256": "df818d26f931ec29b9ab213376d3bee543f6e24e1834a9d60c5b6f2ad8b1300a",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "51703bd6f8662320be2df3721aef9a17b38c6e9cd96591a7d03182f2b23ded18",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1239175168-4096.hdf5",
+      "source_sha256": "2125f445733a4c362427ad0f729f8eac81bc743bc577b94b341bfe753acdcb93",
+      "top_k_time_offset_s": 25.513513513513512
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1239628448,
+      "identity_digest": "b4e6f205f9bae7ff445d8ccba5d46768a5174fe54a07d1c9c5789fca2a287f82",
+      "image_sha256": "8fcc40f16ce87b9039d4d7aba4db7228dbb4139641d83142c6d1644c12816208",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "fbe45f3ddfd61b2dea16e5ba3f114ce26fbd731b42dbed82f2ae8a830f559a7d",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1239625728-4096.hdf5",
+      "source_sha256": "478719f420dca1df1b36a0da266386e550fad100e636b14ec28fe4440193ef04",
+      "top_k_time_offset_s": 25.513513513513512
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1241808544,
+      "identity_digest": "24e4a450d5f886a8bdb389e35beff1f17b62d5d71208474ca7f21a2be3e81b50",
+      "image_sha256": "dd92d6954a3bc2c3c34afbd4af770256a5ebbc87a07887c349799b57b5b1672f",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "6232a522c1eb54361711c8f5c3f9e53eb69afa74bd2736cd62d1cf8fd80a0ecd",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1241804800-4096.hdf5",
+      "source_sha256": "8164b45ee5b27c7f360e4462d0be2c7f8c03353efb1bcb58c54e31685305dfbd",
+      "top_k_time_offset_s": 18.16216216216216
+    },
+    {
+      "detector": "H1",
+      "gps_start": 1243231936,
+      "identity_digest": "b3b7d35b1ddd058652ad458a68e5515a7cac20b5dcae1f445f3af1e1cfbb1579",
+      "image_sha256": "a886d06a7dc903833b855e6e1ed92b5ac8463263e71eb6a2f2042425e04539f7",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "4860005107f19ed6846fd40281b0265bf3019075af4f5ce158623bd9085d2f65",
+      "source": "H-H1_GWOSC_O3a_4KHZ_R1-1243230208-4096.hdf5",
+      "source_sha256": "10f8c28f3887dbd345945cfc30c49763a29bab0f9e5088c0cf5ba892cf8fc7e3",
+      "top_k_time_offset_s": 22.486486486486488
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1243231936,
+      "identity_digest": "17439c9563f1520c0b4cfddd7c0285a109a93f1b088d16aabbe5c07198d108f7",
+      "image_sha256": "be68474f3baab0c6fabc3194e8dfdc190cc53fa5a6e3465766a50038fc1aa7c3",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "a584442d03e5bed70621fbaf6f3886022a289fe0ed371ecf58b53854c763de31",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1243230208-4096.hdf5",
+      "source_sha256": "c00644617e737c39dc788c4d46003da1feaa85b77a4d2b03686b2ba655a474a5",
+      "top_k_time_offset_s": 22.91891891891892
+    },
+    {
+      "detector": "H1",
+      "gps_start": 1245414400,
+      "identity_digest": "dd8d3ec5ae0b7ed0859477dd171b6ab7b89a1e2824a76a9f8c392ab39652ea6a",
+      "image_sha256": "b95738d32973b9cb09dbc761d85e6b05966c77b054bb9441032cc6d5205d715d",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "934eed597d23ef355e321b51c42b9975d03c09397d07a5922369d411c8394ffa",
+      "source": "H-H1_GWOSC_O3a_4KHZ_R1-1245413376-4096.hdf5",
+      "source_sha256": "38d76e90496a284e738eacf4498f8bd51a92aa4d690ee67d6b7a116833a51d77",
+      "top_k_time_offset_s": 24.64864864864865
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1247267872,
+      "identity_digest": "f074375f60c23ed03ed6707c3b4a5e5fbb3ec3204c098e3244b3fd8dc6aded18",
+      "image_sha256": "89e22c85599b45d802b84fcc19b42d4f5868f60303cf3234b12bd623e02f24b7",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "500b9b1ae11b36f6200528d8607166a9d5c1a1839ea60a7a7747d9455611431f",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1247264768-4096.hdf5",
+      "source_sha256": "70011e2cee84b974b325585853bdbf6a4557e5124d66fe00f214043dec186769",
+      "top_k_time_offset_s": 19.027027027027028
+    },
+    {
+      "detector": "L1",
+      "gps_start": 1253362624,
+      "identity_digest": "02959baffbc201f3c9cb2e2960e7ec34fc9578f94e64134af2f9a26afa1cdb26",
+      "image_sha256": "bb0ab9d88938218ca21a18d8a43a43d3f637df4f8d689ebcdf8465d48b25eccd",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "db774adbb8b58775a81171f7eebe1be47993a01445a509950975b0412fa07e31",
+      "source": "L-L1_GWOSC_O3a_4KHZ_R1-1253359616-4096.hdf5",
+      "source_sha256": "c32ec1f8b5f94f8259444fdf37f7772a7996cac083fddb035eb7b8ab1cdffd14",
+      "top_k_time_offset_s": 17.72972972972973
+    },
+    {
+      "detector": "H1",
+      "gps_start": 1253581920,
+      "identity_digest": "60c55a99164be752e6e623e6c50e05b3fe1c21909a2d81d75f61c7941dcda92d",
+      "image_sha256": "19f3548c40a9f6bf8115445de15f176e0603ddf94a98832412abd86643b83fd2",
+      "q_frequency_max_hz": 1291.0530521679268,
+      "raw_context_sha256": "4e33409193e45cf5c357009b273146a5f2573c5a43166b2e5c5949ace9f37964",
+      "source": "H-H1_GWOSC_O3a_4KHZ_R1-1253580800-4096.hdf5",
+      "source_sha256": "d08b18b50fe1956e37f090b8bb8bb905c32a1ffe4e46d7e4fa95d8ecbbe86b72",
+      "top_k_time_offset_s": 10.81081081081081
+    }
+  ],
+  "presentation": "production RGB images; one display at +/-2.5 s around frozen Top-k offset and one at full 32 s, both 20-200 Hz",
+  "unique_source_frames": 11
+}

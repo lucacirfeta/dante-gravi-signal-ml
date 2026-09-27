@@ -1,6 +1,56 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a 12-target diagnostic closure (2026-09-27)**: Per-record crosswalk of
+  frozen Top-k time, GWOSC CBC/BURST CAT2/3, Gravity Spy window/trigger time,
+  local null and PEM is complete in the visual-review checkpoint. Eight of
+  12 full windows contain BURST_CAT2/3 failures, but only three frozen 1-s
+  Top-k subwindows overlap those failures; a fourth subwindow fails CBC_CAT2/3
+  only. Both detector subwindows at GPS 1243231936 overlap BURST failures:
+  strong mundane DQ warning, not retroactive veto or proof of shared cause.
+  L1 1238508320 and L1 1241808544 are whole-window CAT2/3-clean and above
+  their local null, with no verified causal explanation or nearby catalogued
+  trigger for their Top-k features. A read-only comparison found them 38.20
+  days apart in distinct CBC_CAT1 segments, with similar low-frequency arches
+  and 33/68 shared patch-grid positions but no evidence of a shared L1
+  instrumental state or cause. They remain descriptive residuals, not
+  promoted candidates. Review closes diagnostically; any dedicated protocol
+  is a new scientific choice for the author, not started here.
+- **O3a public DQ and frozen-method audit (2026-09-27)**: Read-only inspection
+  of original GWOSC HDF5 1-Hz masks found DATA/CBC_CAT1/BURST_CAT1 true
+  throughout all 12 windows; eight have local BURST_CAT2/3 failures.
+  Crucially, H1 and L1 both fail BURST_CAT2/3 around the GPS 1243231936
+  impulse at +22.6 s; the loud L1 GPS 1239628448 impulse at +3 s is also
+  inside a BURST_CAT2/3 failure. The latter's Top-k coordinates are
+  arithmetically consistent: only three of 68 patches fall near +3 s,
+  ranked 53/63/68, while the top ten are late. H1 GPS 1253581920 PEM
+  coherence is full-window spectral, not time-localized to its arch.
+  These are diagnostic annotations, not retrospective vetoes or new rules;
+  details in the 12-target visual-review checkpoint.
+- **O3a public Gravity Spy cross-check (2026-09-27)**: Original Zenodo O3a
+  H1/L1 CSV files passed published size/MD5 checks. Exact 32-s window joins
+  found 24 Omicron/Gravity Spy triggers in 10 of the 12 target records,
+  including 17 Scattered_Light labels across six records. This is an
+  external cataloguing of the same strain, not independent instrumental
+  attribution or a DANTE patch label. The H1/L1 GPS 1243231936 records have
+  nearby Omicron triggers with distinct Koi_Fish/Extremely_Loud ML labels;
+  L1 GPS 1239628448 shows a confirmed time-location discrepancy between
+  its loud visual impulse and frozen Top-k median. Details and caveats are
+  in `docs/DANTE_O3A_TWELVE_TARGET_VISUAL_REVIEW_2026-09-27.md`.
+- **O3a 12-target visual replay (2026-09-27)**: Eleven official O3a 4 kHz
+  source frames, all 12 raw 40-s contexts and all 12 production Q-images
+  replayed with exact frozen SHA-256 matches. Full-window and Top-k-centered
+  contact sheets plus receipt are in `docs/o3a_visual_review/`; descriptive
+  review is in `docs/DANTE_O3A_TWELVE_TARGET_VISUAL_REVIEW_2026-09-27.md`.
+  Repeated low-frequency arches in several windows are visually compatible
+  with scattered-light morphology but not identified as such; the H1/L1
+  GPS 1243231936 pair shows two narrow structures, not proven one event.
+  H1 GPS 1253581920 has PEM COUPLED peak at 390.5 Hz outside its frozen
+  Top-k band 20-92.5 Hz, so the flag does not yet explain its low-frequency
+  arch. L1 GPS 1239628448 has a dominant visible impulse far from its
+  Top-k time localization; cause untested. Instrumental attribution,
+  physically valid timing and independent significance remain open. No
+  new class, threshold or candidate promotion was made.
 - **O3a 12-target ledger review (2026-09-27)**: Read-only joins of the
   frozen classification, taxonomy, coincidence and PEM ledgers are complete
   with zero identity/score/context/threshold mismatch. Seven of 11 primary

@@ -1,7 +1,9 @@
 # O3a: review dei 12 target selezionati, solo ledger
 
-Data: 2026-09-27 Europe/Rome. Stato: **audit dei ledger completato; revisione
-visuale/strumentale non eseguita**. Questo documento non introduce statistiche,
+Data: 2026-09-27 Europe/Rome. Stato al momento di questo audit: **ledger
+completato; revisione visuale/strumentale non ancora eseguita**. La successiva
+[revisione visuale](DANTE_O3A_TWELVE_TARGET_VISUAL_REVIEW_2026-09-27.md) è
+documentata separatamente. Questo documento non introduce statistiche,
 soglie, ordinamenti o classificazioni nuovi e non promuove candidati.
 
 ## Provenance e controlli
@@ -95,7 +97,8 @@ indipendente del false-alarm rate o una revisione time-frequency.
 ## Gate ancora aperti
 
 Questa è una **review documentale degli output congelati**, non una review
-visuale delle 12 Q-transform, né un controllo indipendente di tutti i
+visuale delle 12 Q-transform (eseguita successivamente nel documento collegato),
+né un controllo indipendente di tutti i
 canali strumentali, del catalogo eventi o della significatività globale.
 Il pooled p99 della coincidenza usa fino a otto shift per seed e non è una
 correzione formale del look-elsewhere effect. Il PEM testa solo cinque
