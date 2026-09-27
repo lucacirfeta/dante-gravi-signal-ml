@@ -1,6 +1,37 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a native calibration selector and arXiv v3 follow-up (2026-09-27)**:
+  The approved native-calibration amendment and frozen cohort use the
+  corrected-O4a deterministic, evenly spaced complete-block selector with
+  context fallback, not the hash-stratified selector used in O3a initial
+  calibration. This is documented parity, not a new method change. The public
+  arXiv:2606.25702 record is still v2; no minimal v3 draft was located in
+  this project and no v3 is publicly submitted. Internal target: prepare a source-checked
+  O4a-provenance v3 draft by 2026-09-29 18:00 Europe/Rome. External submission
+  remains gated on author review and approval. The comparative PEM input
+  contract and raw context replay are verified. A separate O4a event-strain
+  adapter passed synthetic exact-numerical parity with the historical reader
+  and fail-closed tests (combined targeted suite 38 passed, Ruff PASS), but
+  the full paired measurement/null adapters and gate-3 tests are not yet
+  verified or source-frozen; no comparative result has been run. A separate
+  five-channel measurement draft now rejects incomplete event coverage,
+  changed exclusions, missing channels and stale caches, and injects an
+  explicit verified background-strain reader into the unchanged historical
+  null core. A draft official-background reader validates published MD5,
+  HDF5 geometry and numerical span hash without using unreceipted local
+  strain. The latest combined O3a/O4a PEM provenance suite passed 68 tests
+  (11 upstream warnings); Ruff lint and format pass. Live public O3a
+  CBC_CAT1/BURST_CAT1 exactly matches the frozen DQ snapshot for H1
+  (545 segments, 11,218,675 s) and L1 (535, 11,956,179 s). The background
+  source contract pins the complete public manifests and release/channel
+  metadata; frozen selector replay matched all 12 O3a and 65 O4a spans,
+  covered gap-free by 47 and 278 unique official frames. This is read-only
+  coverage, not frame-byte acquisition or a scientific outcome. Historical
+  O3a 512 Hz auxiliary channels remain eligible under the corrected
+  completeness gate. Real background bytes, auxiliary receipts and
+  independent end-to-end replay remain open;
+  no real comparative outcome has been opened.
 - **O4a numerical-context replay verified (2026-09-27)**: The v2 run
   `raw_replay_fb2af10f4feff811cd624526444d6890c610e5bf5a1c23bc4fc4d25bd16eb457`
   is PASS_COMPLETE; independent WSL `--stage verify` exited 0 with
@@ -29,7 +60,8 @@
   frozen parents. WSL 32 targeted tests passed; raw-replay preflight maps
   65 contexts to 64 official frames, without opening strain or outcomes.
   See `docs/DANTE_O3A_O4A_COMMON_PEM_INPUT_FREEZE_2026-09-27.md`. The
-  65-target numerical-context replay and paired PEM are not yet complete.
+  65-target numerical-context replay completed later on 2026-09-27 as noted
+  above; paired PEM remains unopened.
 - **O3a 12-target diagnostic closure (2026-09-27)**: Per-record crosswalk of
   frozen Top-k time, GWOSC CBC/BURST CAT2/3, Gravity Spy window/trigger time,
   local null and PEM is complete in the visual-review checkpoint. Eight of

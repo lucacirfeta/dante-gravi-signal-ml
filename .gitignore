@@ -259,6 +259,7 @@ results/figures/**
 docs/
 !docs/
 docs/*
+!docs/DANTE_O3A_O4A_COMMON_PEM_BACKGROUND_PREFLIGHT_2026-09-27.md
 !docs/GITIGNORE_AUDIT.md
 !docs/DANTE_3_8_0_RELEASE_CHECKLIST.md
 !docs/DANTE_3_8_0_RELEASE_NOTES.md
@@ -328,6 +329,7 @@ reports/
 # clone cannot regenerate the paper artifacts, which is the same
 # reproducibility gap as the unpinned dependencies (CORRECTIONS_2026-07-21, C4).
 scripts/*
+!scripts/preflight_dante_o3a_o4a_common_pem_background.py
 !scripts/audit_dante_o3a_transfer_readiness.py
 !scripts/freeze_dante_o3a_native_v1.py
 !scripts/freeze_dante_o3a_dq_snapshot.py

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import inspect
 import json
 from pathlib import Path
 
@@ -37,6 +38,25 @@ def test_real_parent_and_full_selection_preflight() -> None:
         assert run["targets"]["expected_count"] == (
             run["primary"]["total"] + run["diagnostic"]["total"]
         )
+
+
+def test_shared_null_core_matches_frozen_measurement() -> None:
+    from src.pipeline_v2_production import pem_null_calibration as null
+
+    measurement = load_contract(root=ROOT)["method"]["measurement"]
+    assert null.WINDOW_S == measurement["background_window_s"]
+    assert null.STRIDE_S == measurement["background_stride_s"]
+    assert null.GUARD_S == measurement["surrogate_guard_s"]
+    assert null.FFTLENGTH_S == measurement["coherence_fftlength_s"]
+    assert null.OVERLAP_S == measurement["coherence_overlap_s"]
+    assert (null.F_LOW, null.F_HIGH) == tuple(measurement["frequency_band_hz"])
+    assert null.CANDIDATE_EXCLUSION_S == measurement["candidate_exclusion_s"]
+    assert (
+        inspect.signature(null._pick_background_span)
+        .parameters["min_clean_windows"]
+        .default
+        == measurement["minimum_clean_windows"]
+    )
 
 
 def test_unsigned_comparative_contract_change_fails() -> None:

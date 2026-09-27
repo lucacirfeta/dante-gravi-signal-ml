@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-background-v1",
+  "status": "FROZEN_PUBLIC_SOURCE_PREFLIGHT_NO_PAIRED_MEASUREMENT",
+  "common_input": {
+    "path": "config/dante_o3a_o4a_common_pem_v1.json",
+    "sha256": "f234288f57dedf979280a97c0cb3db4a2f92794e05aebcafecf9c11eb50bd077"
+  },
+  "source_parents": {
+    "O3a": {
+      "path": "config/dante_o3a_gwosc_4khz_source_inventory_v1.json",
+      "sha256": "bbf9be18b1ec9e60599381816fbcb5acf80d2912c6153564ac284d4ffe1f5cb1"
+    },
+    "O4a": {
+      "path": "config/dante_o3a_o4a_pem_raw_replay_v2.json",
+      "sha256": "5fb1fad241d3b045aa18582f1bade8c7af7ebe33eaa0151034313c81d6c1ec82"
+    }
+  },
+  "sources": {
+    "O3a": {
+      "release": "O3a_4KHZ_R1",
+      "manifest_url": "https://gwosc.org/archive/md5/O3a_4KHZ_R1/strain-hdf.txt",
+      "manifest_sha256": "9646ed9db6663f7b136878512f1d376cb0b0605aa1bd7f7112e7aa11d9e4ca03",
+      "archive_url_prefix": "https://gwosc.org/archive/data/O3a_4KHZ_R1/",
+      "frame_duration_s": 4096,
+      "sample_rate_hz": 4096,
+      "metadata": {
+        "H1": {
+          "FrameType": "H1_HOFT_CLEAN_SUB60HZ_C01",
+          "StrainChannel": "H1:DCS-CALIB_STRAIN_CLEAN_SUB60HZ_C01"
+        },
+        "L1": {
+          "FrameType": "L1_HOFT_CLEAN_SUB60HZ_C01",
+          "StrainChannel": "L1:DCS-CALIB_STRAIN_CLEAN_SUB60HZ_C01"
+        }
+      },
+      "required_unique_frames_preflight": 47,
+      "historical_span_selection_replayed": 12
+    },
+    "O4a": {
+      "release": "O4a_4KHZ_R1",
+      "manifest_url": "https://gwosc.org/archive/md5/O4a_4KHZ_R1/strain-hdf.txt",
+      "manifest_sha256": "531912260ea45cd5265198f7a1990a8a89f69ffa98abca8a21930140e332b7ba",
+      "archive_url_prefix": "https://gwosc.org/archive/data/O4a_4KHZ_R1/",
+      "frame_duration_s": 4096,
+      "sample_rate_hz": 4096,
+      "metadata": {
+        "H1": {
+          "FrameType": "H1_HOFT_C00_AR",
+          "StrainChannel": "H1:GDS-CALIB_STRAIN_CLEAN_AR"
+        },
+        "L1": {
+          "FrameType": "L1_HOFT_C00_AR",
+          "StrainChannel": "L1:GDS-CALIB_STRAIN_CLEAN_AR"
+        }
+      },
+      "required_unique_frames_preflight": 278,
+      "historical_span_selection_replayed": 65
+    }
+  },
+  "boundary": {
+    "paired_outcomes_opened": false,
+    "background_frames_acquired_for_this_stage": false,
+    "diagnostic_only": true,
+    "published_md5_required_each_frame": true,
+    "independent_numerical_span_replay_required": true
+  },
+  "contract_digest": "c974bfb7ee83ad699bf01c2543075de27f38a772c8b76ebea775e0ec25f53fd7"
+}
