@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-v1",
+  "status": "FROZEN_INPUTS_NO_COMPARATIVE_RESULTS",
+  "contract_digest": "aa25cff27ea5af0884da16dd12d5fe579154fae5f835c88aa95d9e46df2b2f7a",
+  "method": {
+    "o3a_contract": {
+      "path": "config/dante_o3a_native_pem_v1.json",
+      "sha256": "ed20ae7534cf698ac13b9500044c5c82d3456ac0d8ba1801e28fa04660a89040"
+    },
+    "o4a_contract": {
+      "path": "config/dante_o4a_corrected_native_pem_v1.json",
+      "sha256": "3d054649b5ab18fd3fe2681c4ad90523febc5f4ed3df0d2e603cfe5930589513"
+    },
+    "measurement": {
+      "alpha_family_wise": 0.01,
+      "background_block_s": 14400.0,
+      "background_stride_s": 96.0,
+      "background_window_s": 32.0,
+      "bootstrap_resamples": 200,
+      "bootstrap_unit": "background_window_indices",
+      "candidate_exclusion_s": 96.0,
+      "coherence_fftlength_s": 2.0,
+      "coherence_overlap_s": 1.0,
+      "event_window_s": 32.0,
+      "frequency_band_hz": [20.0, 500.0],
+      "minimum_clean_windows": 60,
+      "primary_endpoint": "quiet_zero_lag_q99_confirmed",
+      "seed": 42,
+      "strain_highpass_hz": 20.0,
+      "surrogate_guard_s": 64.0,
+      "time_shift_endpoint": "event_max_over_tested_channels_and_20_500_hz",
+      "uncalibrated_is_negative": false
+    },
+    "channels": {
+      "H1": [
+        "H1:CAL-PCALY_RX_PD_OUT_DQ",
+        "H1:LSC-POP_A_LF_OUT_DQ",
+        "H1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
+        "H1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
+        "H1:SUS-ETMX_L3_CAL_LINE_OUT_DQ"
+      ],
+      "L1": [
+        "L1:ASC-X_TR_A_NSUM_OUT_DQ",
+        "L1:CAL-PCALY_RX_PD_OUT_DQ",
+        "L1:SUS-ETMX_L1_CAL_LINE_OUT_DQ",
+        "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ",
+        "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ"
+      ],
+      "explicitly_excluded": [
+        "L1:PEM-EX_VMON_ETMX_ESDPOWER24_DQ",
+        "L1:PEM-EY_MAINSMON_EBAY_1_DQ"
+      ]
+    }
+  },
+  "runs": {
+    "O3a": {
+      "pem_compact": {
+        "path": "artifacts/dante_light/o3a_native_v1/native_pem.json",
+        "sha256": "5ad80adc74c15c503aba469f902e99e576dc709518ded28b0f2fa8513edc5fba",
+        "status": "PASS_VERIFIED_O3A_NATIVE_PEM_V1"
+      },
+      "pem_summary": {
+        "path": "E:/dante_cache/dante_light/o3a_native_v1/native_pem_o3a_75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e/native_pem_summary.json",
+        "sha256": "94c5108aff20b20ba8ceaae71542e7b6ce50520d59973bc01f29dcd84c65954c"
+      },
+      "targets": {
+        "path": "E:/dante_cache/dante_light/o3a_native_v1/native_pem_o3a_75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e/native_pem_targets.jsonl",
+        "sha256": "c71125962ac1131a2c9f46978b39f1524cfc69916779009adba9557f0006a2e5",
+        "expected_count": 12
+      },
+      "classification": {
+        "path": "artifacts/dante_light/o3a_native_v1/native_classification.json",
+        "sha256": "49ffc508ee98d4c1f6495dd8cb0f452b3387270d057fd7d1fe81d8711de3fb32"
+      },
+      "candidate_exclusion": {
+        "expected_count": 8900,
+        "digest": "df543a5eda350b6a830922c2b4484e6d1dc777029ef1350efdfb6ec69627ed78"
+      },
+      "primary": {"H1": 2, "L1": 9, "total": 11},
+      "diagnostic": {"H1": 1, "L1": 0, "total": 1}
+    },
+    "O4a": {
+      "pem_compact": {
+        "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_pem.json",
+        "sha256": "03a1da8e698b399b5ea1819ee8295940d78cb16bebfad1c69907ac5cc3a8f0ba",
+        "status": "PASS_VERIFIED_NATIVE_PEM_V1"
+      },
+      "pem_summary": {
+        "path": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1/native_pem_1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0/native_pem_summary.json",
+        "sha256": "30787ed647f61b1176f6b0f91b546523882f674fd75da45c139a44ad57a171bb"
+      },
+      "targets": {
+        "path": "E:/dante_cache/dante_light/o4a_corrected_native_pem_v1/native_pem_1689b214e89305734d0b889d43f6dba4b5ede3fd22768084efe48e86707c1eb0/native_pem_targets.jsonl",
+        "sha256": "68b6c0cd53131dfccb7116d956337577ccda7fdb5bfc2d1f13241f81a923fe4e",
+        "expected_count": 65
+      },
+      "classification": {
+        "path": "artifacts/dante_light/o4a_v1_parity/corrected_native_classification.json",
+        "sha256": "4e50dc9fd113aae60769caab86a5458dd7acd8d58861c870f1ddce29526665b8"
+      },
+      "candidate_exclusion": {
+        "expected_count": 10942,
+        "digest": "71e2a6686272dc7ccb7efcf19786ad1c6d2c4dcd3baac9abef21755cf20215f7"
+      },
+      "primary": {"H1": 3, "L1": 6, "total": 9},
+      "diagnostic": {"H1": 31, "L1": 25, "total": 56}
+    }
+  },
+  "source_references": {
+    "common_contract_adapter": {
+      "path": "src/dante_light/o3a_o4a_common_pem_contract.py",
+      "sha256": "4d5a306529dbf9f41911955ee09abf633459a4822fb749e4a5f019101504c421"
+    },
+    "o4a_raw_replay_cli": {
+      "path": "scripts/run_dante_o4a_pem_raw_replay.py",
+      "sha256": "30b547ff3a5501d6c25a20c93fd56bfa1847ea3d2cd9cf08ca789d403d18cc05"
+    },
+    "o4a_raw_replay_contract": {
+      "path": "config/dante_o4a_pem_raw_replay_v1.json",
+      "sha256": "35a6fd6182db9471f85f0aa696bcfb21035cb66cd720bb6865e78d9934a2a08c"
+    },
+    "o4a_raw_replay_adapter": {
+      "path": "src/dante_light/o4a_pem_raw_replay.py",
+      "sha256": "d53101f0dcb3fb9921425b2f5dc8d8ccb7d85a48fc942ecc61a6e3c8b7c253af"
+    },
+    "o3a_pem_adapter": {
+      "path": "src/dante_light/o3a_native_pem.py",
+      "sha256": "529f5a54fe7bbcd18bf2095cbcff34feae74da0d79a10696e231c15d678f6af9"
+    },
+    "o4a_pem_adapter_current": {
+      "path": "src/dante_light/o4a_corrected_native_pem.py",
+      "sha256": "72033ba63d4fe13b05cbb2336f0982af251c6303df6d73fb55cbc61b00ab2d3c"
+    },
+    "o4a_historical_source_reconciliation": {
+      "path": "artifacts/dante_light/o4a_v1_parity/native_patch_producer_provenance_reconciliation_v1.json",
+      "sha256": "98bd1d47b5b3a131454dc82d8f2bdf4e9d45e476215758717550832f5d6e9efd"
+    },
+    "pem_coherence": {
+      "path": "src/pipeline_v2_production/pem_coherence_analysis.py",
+      "sha256": "48c557db470441c38a0c1bd24e8a07abfca21616f7bdcc3304d2eea3b707652b"
+    },
+    "pem_null": {
+      "path": "src/pipeline_v2_production/pem_null_calibration.py",
+      "sha256": "00aad59b6ed55e82b955410833294e4af2efafd07f735f20100c07789ff8473f"
+    }
+  },
+  "comparison_boundary": {
+    "diagnostic_only": true,
+    "same_five_public_channels_per_detector": true,
+    "run_specific_target_and_candidate_exclusion_populations": true,
+    "fresh_five_channel_family_wise_null_per_run": true,
+    "historical_outputs_immutable": true,
+    "primary_and_diagnostic_separate": true,
+    "unreleased_sensors_cleared": false,
+    "global_significance_claim": false,
+    "astrophysical_confirmation_claim": false,
+    "a2_promoted": false
+  }
+}

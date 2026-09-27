@@ -1,34 +1,78 @@
 #!/usr/bin/env python3
-"""Reacquire and independently verify O4a PEM numerical event contexts."""
+"""Preflight, acquire or verify official O4a PEM numerical contexts."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-import sys
 from pathlib import Path
+import sys
+from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.dante_light.o4a_pem_raw_replay import run_replay, verify_replay  # noqa: E402
+from src.dante_light.contracts import ContractError  # noqa: E402
+from src.dante_light import o3a_o4a_common_pem_contract as common_pem  # noqa: E402
+from src.dante_light.o4a_pem_raw_replay import (  # noqa: E402
+    _host_path,
+    load_contract as load_raw_contract,
+    load_targets,
+    parse_manifest,
+    required_frames,
+    run_replay,
+    verify_replay,
+)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--stage", choices=("run", "verify"), required=True)
-    parser.add_argument("--external-root", type=Path, required=True)
+    parser.add_argument(
+        "--stage", choices=("preflight", "run", "verify"), required=True
+    )
+    parser.add_argument("--external-root", type=Path)
     parser.add_argument("--run-dir", type=Path)
     args = parser.parse_args()
-    if args.stage == "run":
-        summary, run_dir = run_replay(root=ROOT, external_root=args.external_root)
+    comparison = common_pem.load_contract(root=ROOT)
+    raw = load_raw_contract(root=ROOT)
+    external_root = _host_path(raw["output"]["external_root_windows"]).resolve()
+    if args.external_root is not None and args.external_root.resolve() != external_root:
+        raise ContractError("O4a PEM raw-replay root differs from frozen contract")
+    if args.stage == "preflight":
+        targets = load_targets(raw)
+        with urlopen(raw["source"]["manifest_url"], timeout=60) as response:
+            manifest_bytes = response.read()
+        manifest = parse_manifest(manifest_bytes, raw["source"]["release"])
+        frames = required_frames(targets, manifest)
+        result = {
+            "status": "PASS_O4A_PEM_RAW_REPLAY_PREFLIGHT",
+            "comparison_contract_digest": comparison["contract_digest"],
+            "raw_contract_digest": raw["contract_digest"],
+            "manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+            "target_count": len(targets),
+            "frame_count": len(frames),
+            "strain_opened": False,
+            "pem_outcomes_opened": False,
+        }
+    elif args.stage == "run":
+        if args.run_dir is not None:
+            parser.error("--run-dir is only valid with --stage verify")
+        result, run_dir = run_replay(root=ROOT, external_root=external_root)
+        result = {"run_dir": str(run_dir), **result}
     else:
         if args.run_dir is None:
-            parser.error("--run-dir is required for --stage verify")
+            parser.error("--stage verify requires --run-dir")
         run_dir = args.run_dir.resolve()
-        summary = verify_replay(root=ROOT, run_dir=run_dir)
-    print(json.dumps({"run_dir": str(run_dir), **summary}, sort_keys=True))
+        if run_dir.parent != external_root or not run_dir.name.startswith(
+            "raw_replay_"
+        ):
+            raise ContractError(
+                "O4a PEM raw-replay verify path is outside the frozen root"
+            )
+        result = {"run_dir": str(run_dir), **verify_replay(root=ROOT, run_dir=run_dir)}
+    print(json.dumps(result, sort_keys=True, indent=2))
     return 0
 
 

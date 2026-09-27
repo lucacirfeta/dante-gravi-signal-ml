@@ -1,6 +1,16 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a common-channel PEM input freeze (2026-09-27)**: The approved
+  diagnostic comparison now has a versioned input contract digest
+  `aa25cff27ea5af0884da16dd12d5fe579154fae5f835c88aa95d9e46df2b2f7a`.
+  It independently replays 12 O3a/65 O4a target identities and the full
+  8,900/10,942 run-specific candidate-exclusion populations; five public
+  channels per detector and measurement parameters are parity-checked against
+  frozen parents. WSL 32 targeted tests passed; raw-replay preflight maps
+  65 contexts to 64 official frames, without opening strain or outcomes.
+  See `docs/DANTE_O3A_O4A_COMMON_PEM_INPUT_FREEZE_2026-09-27.md`. The
+  65-target numerical-context replay and paired PEM are not yet complete.
 - **O3a 12-target diagnostic closure (2026-09-27)**: Per-record crosswalk of
   frozen Top-k time, GWOSC CBC/BURST CAT2/3, Gravity Spy window/trigger time,
   local null and PEM is complete in the visual-review checkpoint. Eight of
