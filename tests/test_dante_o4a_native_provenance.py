@@ -84,6 +84,43 @@ def test_git_attributes_extension_is_exactly_allowlisted(
         _require_git_attributes_policy(tmp_path, reference)
 
 
+def test_o3a_git_attributes_extension_remains_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    historical = b".gitattributes text eol=lf\nsrc/**/*.py text eol=lf\n"
+    o3a_rules = (
+        b"config/dante_o3a_*.json text eol=lf\n"
+        b"tests/test_dante_o3a_native_classification.py text eol=lf\n"
+        b"tests/test_dante_o3a_native_taxonomy.py text eol=lf\n"
+        b"tests/test_dante_o3a_native_thresholds.py text eol=lf\n"
+    )
+    path = tmp_path / ".gitattributes"
+    reference = {
+        "path": ".gitattributes",
+        "sha256": hashlib.sha256(historical).hexdigest(),
+    }
+
+    def retained(command, **kwargs):
+        if command[1] == "log":
+            return "frozen\n"
+        return historical
+
+    monkeypatch.setattr(
+        "src.dante_light.o4a_native_provenance.subprocess.check_output", retained
+    )
+
+    path.write_bytes(historical + o3a_rules)
+    assert _require_git_attributes_policy(tmp_path, reference) == path.resolve()
+
+    path.write_bytes(historical.replace(b"src/**/*.py text eol=lf\n", b"") + o3a_rules)
+    with pytest.raises(ContractError, match="approved additive"):
+        _require_git_attributes_policy(tmp_path, reference)
+
+    path.write_bytes(historical + o3a_rules + b"config/dante_o3a_other.json -text\n")
+    with pytest.raises(ContractError, match="approved additive"):
+        _require_git_attributes_policy(tmp_path, reference)
+
+
 def test_scientific_boundary_tampering_fails_closed() -> None:
     payload = json.loads((ROOT / RECONCILIATION_REL).read_text(encoding="utf-8"))
     payload["scientific_boundary"]["scores_changed"] = True

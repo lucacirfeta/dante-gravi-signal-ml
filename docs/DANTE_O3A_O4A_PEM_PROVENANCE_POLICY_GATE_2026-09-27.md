@@ -41,15 +41,27 @@ reconciliation reference must not be silently rewritten.
 
 ## Decision before execution
 
-The narrow proposed resolution is to version an explicit policy extension
+The narrow proposed resolution was to version an explicit policy extension
 allowing only these four O3a LF rules, with a fail-closed regression proving
 that removal or any additional unapproved rule still fails. That changes a
-frozen provenance acceptance boundary and therefore needs the author's
-explicit approval before implementation. The alternative is to leave the
-paired O4a arm paused. Removing the LF rules, bypassing the test, or treating
-the current red suite as a scientific result is not an acceptable shortcut.
+frozen provenance acceptance boundary and required the author's explicit
+approval. The alternative was to leave the paired O4a arm paused. Removing
+the LF rules, bypassing the test, or treating the red suite as a scientific
+result was not an acceptable shortcut.
 
-Until this decision and green regression suite, do not start the O4a bulk
-frame fetch or paired PEM measurement. GPS 1243231936 remains in the O3a
-diagnostic ledger with its dual-detector BURST_CAT2/3 warning; this gate does
-not discard or reclassify it.
+## Approved resolution and validation
+
+On 2026-09-27 the author explicitly approved the exact four-rule extension.
+Only `GIT_ATTRIBUTES_ALLOWED_ADDITIONS` and its fail-closed regression test
+were changed; `.gitattributes`, the frozen historical reconciliation record,
+the original O4a receipt, and all scientific contracts were not changed.
+The new test accepts the four rules together and rejects both removal of a
+historical rule and one further unapproved rule. The previously failing WSL
+suite now exits 0: **18 passed, 11 upstream warnings**. Ruff on the two
+modified Python files and `git diff --check` also pass. This clears only
+the additive-policy gate, not the separate 65-target numerical-context
+replay or the paired PEM execution gates in 07-20-PLAN.
+
+GPS 1243231936 remains in the O3a diagnostic ledger with its dual-detector
+BURST_CAT2/3 warning; this policy resolution does not discard or reclassify
+it.

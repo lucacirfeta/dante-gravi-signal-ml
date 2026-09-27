@@ -111,10 +111,9 @@
   numerical method is checked against the versioned corrected-O4a contract,
   but no O4a scientific rows or thresholds are imported. WSL targeted
   O3a tests: 21 passed, 11 upstream warnings; Ruff passed at that initial
-  checkpoint. The later source freeze is recorded above; the new PEM
-  computation has **not** occurred. The four
-  O4a-specific provenance-policy regression failures remain open and must
-  not be bypassed; the O4a comparative arm is suspended.
+  checkpoint. This historical preflight note predates the verified O3a PEM
+  run recorded above and the later O4a policy-gate resolution recorded below.
+  The paired O4a comparison has not started.
 - **Raw replay implementation checkpoint (2026-09-26)**: A new, separate
   O4a 4 kHz R1 raw-context replay adapter and contract map 65 historical
   targets (66 local pieces) to 64 official frames with gap-free coverage.
@@ -124,8 +123,11 @@
   allowlist (no historical rule was removed). No bulk fetch or new PEM run
   was started. A wider 2026-09-27 WSL regression reproduced the same gate
   (6 failed, 11 passed); the exact four rules and decision boundary are in
-  `docs/DANTE_O3A_O4A_PEM_PROVENANCE_POLICY_GATE_2026-09-27.md`. Resolve this
-  frozen provenance-policy gate before adoption.
+  `docs/DANTE_O3A_O4A_PEM_PROVENANCE_POLICY_GATE_2026-09-27.md`. The author
+  approved exactly those four additions on 2026-09-27; the updated WSL suite
+  now has 18 pass, 0 fail, and the frozen reconciliation reference is
+  unchanged. The separate 65-target raw-context replay and comparative PEM
+  remain pending.
 - **Raw provenance gate (2026-09-26)**: The first reacquired O4a L1 GWOSC
   frame reproduces the frozen 40-second numerical context hash, but its
   reserialized whole-file SHA-256 differs from the frozen local HDF5 receipt.
