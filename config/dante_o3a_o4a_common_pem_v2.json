@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "contract_id": "dante-o3a-o4a-common-pem-v2",
+  "status": "FROZEN_INPUTS_URL_CORRECTION_NO_COMPARATIVE_RESULTS",
+  "parent_input_freeze": {
+    "path": "config/dante_o3a_o4a_common_pem_v1.json",
+    "sha256": "f234288f57dedf979280a97c0cb3db4a2f92794e05aebcafecf9c11eb50bd077",
+    "contract_digest": "aa25cff27ea5af0884da16dd12d5fe579154fae5f835c88aa95d9e46df2b2f7a"
+  },
+  "raw_replay_contract": {
+    "path": "config/dante_o3a_o4a_pem_raw_replay_v2.json",
+    "sha256": "5fb1fad241d3b045aa18582f1bade8c7af7ebe33eaa0151034313c81d6c1ec82"
+  },
+  "source_references": {
+    "common_v2_adapter": {
+      "path": "src/dante_light/o3a_o4a_common_pem_contract_v2.py",
+      "sha256": "3308310ab6540ef6a156f3474d62872870686c0fb6d2ec2dd51377fa7cd6b0b8"
+    },
+    "raw_replay_v2_adapter": {
+      "path": "src/dante_light/o4a_pem_raw_replay_v2.py",
+      "sha256": "4da49be3b708ed1ea1212409e52841050bdc0508dce5fa07749621bdf37810cd"
+    },
+    "raw_replay_v2_cli": {
+      "path": "scripts/run_dante_o4a_pem_raw_replay_v2.py",
+      "sha256": "1721e20b401b13cab2b4928985f5f05358c176a0b4d8ead57794cc7173457acf"
+    }
+  },
+  "approved_change": {
+    "scope": "GWOSC_MANIFEST_PATH_TO_PUBLIC_DOWNLOAD_URL_ONLY",
+    "manifest_path_example": "H1/1367343104/H-H1_GWOSC_O4a_4KHZ_R1-1368195072-4096.hdf5",
+    "download_path_example": "1367343104/H-H1_GWOSC_O4a_4KHZ_R1-1368195072-4096.hdf5",
+    "target_manifest_and_numeric_gates_unchanged": true,
+    "failed_v1_run_preserved": true
+  },
+  "contract_digest": "76bf71c828afbc79da2864fa7f3d7dc8ea805057a6e4e8173b6c89634bbb203e"
+}

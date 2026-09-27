@@ -1,6 +1,17 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a raw replay URL correction (2026-09-27)**: The first v1 O4a
+  acquisition stopped at HTTP 404 before verifying a frame; its zero-frame
+  run is preserved. The author approved a URL-only v2. The versioned v2
+  addendum digest is
+  `76bf71c828afbc79da2864fa7f3d7dc8ea805057a6e4e8173b6c89634bbb203e`;
+  its raw replay contract digest is
+  `8d8708ce5a809ee3259dfff4d14222a67ecfac5d5b2f59fb2bcfbd2c81690df0`.
+  Both required H1/L1 archive URL HEAD checks returned 200; 43 combined
+  O3a/O4a/PEM/provenance tests passed. Full 65-target numerical replay
+  remains pending.
+  See `docs/DANTE_O3A_O4A_PEM_RAW_REPLAY_URL_CORRECTION_2026-09-27.md`.
 - **O3a/O4a common-channel PEM input freeze (2026-09-27)**: The approved
   diagnostic comparison now has a versioned input contract digest
   `aa25cff27ea5af0884da16dd12d5fe579154fae5f835c88aa95d9e46df2b2f7a`.
