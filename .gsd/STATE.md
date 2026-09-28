@@ -4,10 +4,16 @@
 - **O3a/O4a common PEM full-span gate (2026-09-28)**: A separate
   no-download streaming producer, sealed 77-span runner, contract and tests
   were source-frozen in `97b30b2`. WSL O3a/O4a PEM/provenance suite: 72
-  passed, 11 upstream warnings; Ruff lint/format PASS. The real plan
-  preflight is running and first replays the verified 325-frame parent. No
-  full-span PASS, auxiliary receipt, PEM null or comparative outcome is
-  claimed. See
+  passed, 11 upstream warnings; Ruff lint/format PASS. The real plan passed
+  with exit 0; its run key is
+  `034102715295eec0a8937fb67233d7515933addeb98bee35fbe9d3aac3566c0d`.
+  The run produced 12 O3a and 65 O4a sealed full-span strain receipts with
+  summary PASS_COMPLETE. A second read-only standalone --stage verify
+  returned exit 0/PASS_VERIFIED_BACKGROUND_SPANS_ONLY for all 77 spans;
+  the first verifier also reported PASS but its OS exit code was not retained.
+  Zero failure, partial files or lock; three plan source SHA-256s match.
+  This closes background strain only: auxiliary receipts, PEM null and
+  comparative outcomes remain unopened. See
   `docs/DANTE_O3A_O4A_COMMON_PEM_SPAN_REPLAY_2026-09-28.md`.
 - **O3a/O4a common PEM background acquisition (2026-09-28)**: The v1
   transport-only run `5308cec1e4d935cdd5b7c93b4df60369e9814fc2a63fe0741c8208abb40edb9e`
