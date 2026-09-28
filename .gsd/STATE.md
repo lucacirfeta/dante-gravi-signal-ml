@@ -1,6 +1,16 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a common PEM auxiliary metadata gate (2026-09-28)**: The
+  source-frozen metadata-only gate `904d8f9` passed for all 77 frozen
+  targets, checking exact five-channel NDS2 availability over each event
+  and four-hour background interval. The single run exited 0 with 77
+  sealed receipts; an independent live metadata replay exited 0 with
+  `PASS_VERIFIED_AUX_METADATA_COVERAGE_ONLY`. Zero failure/partial/lock;
+  source hashes match. Post-run WSL regression: 77 passed, 11 upstream
+  warnings; Ruff PASS. No auxiliary samples, five-channel null or paired
+  PEM outcomes are verified. See
+  `docs/DANTE_O3A_O4A_COMMON_PEM_AUX_AVAILABILITY_2026-09-28.md`.
 - **O3a/O4a common PEM full-span gate (2026-09-28)**: A separate
   no-download streaming producer, sealed 77-span runner, contract and tests
   were source-frozen in `97b30b2`. WSL O3a/O4a PEM/provenance suite: 72
