@@ -45,3 +45,15 @@ completed sealed receipts and the partial file for explicit diagnosis.
 This checkpoint records the frozen protocol and pre-run checks only. The
 five-channel null, event measurement, outcome comparison and any scientific
 interpretation remain closed until their own contract, tests and gate pass.
+
+## Preflight and launch
+
+The contract/runner/tests were frozen and pushed on
+`science/o3-transfer-readiness` in commit `957d030`. The WSL common-PEM,
+native-PEM and PatchProducer regression returned 85 PASS with 11 upstream
+warnings; Ruff lint and format passed. The real `--stage plan` returned exit
+0 after live parent metadata re-query: `PASS_VERIFIED_AUX_METADATA_COVERAGE_ONLY`
+for 77 targets and `PASS_AUX_NATIVE_SAMPLE_PLAN_ONLY` for 750 series. Its
+run key is `df2a8c05f158d491d577ecf80cebae0ac2ea61b9158c2ef61fb96bedf4081b11`.
+At launch, E: had over 750 GB free, no pre-existing lock or failure, and one
+WSL controller was started. This is not a completed-sample or verifier PASS.

@@ -4,9 +4,13 @@
 - **O3a/O4a common PEM auxiliary native samples (2026-09-28)**: The
   author approved a single exact NDS2 native-rate sample acquisition plus
   independent local-file numerical replay, not a second source fetch. The
-  metadata parent is verified for all 77 targets; the new versioned sample
-  contract and runner are under pre-run validation. No sample run PASS, null,
-  comparative outcome or significance is claimed yet. See
+  metadata parent is verified for all 77 targets. Source freeze `957d030`;
+  pre-run WSL common-PEM/PatchProducer tests: 85 passed, 11 upstream warnings;
+  Ruff PASS. Real plan exited 0 after parent metadata re-query with 750
+  native series and run key
+  `df2a8c05f158d491d577ecf80cebae0ac2ea61b9158c2ef61fb96bedf4081b11`.
+  One controller is running on E:, with hourly fail-closed monitoring.
+  No sample run PASS, null, comparative outcome or significance is claimed. See
   `docs/DANTE_O3A_O4A_COMMON_PEM_AUX_SAMPLES_2026-09-28.md`.
 - **O3a/O4a common PEM auxiliary metadata gate (2026-09-28)**: The
   source-frozen metadata-only gate `904d8f9` passed for all 77 frozen
