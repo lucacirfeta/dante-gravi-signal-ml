@@ -1,6 +1,14 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a common PEM full-span gate (2026-09-28)**: A separate
+  no-download streaming producer, sealed 77-span runner, contract and tests
+  were source-frozen in `97b30b2`. WSL O3a/O4a PEM/provenance suite: 72
+  passed, 11 upstream warnings; Ruff lint/format PASS. The real plan
+  preflight is running and first replays the verified 325-frame parent. No
+  full-span PASS, auxiliary receipt, PEM null or comparative outcome is
+  claimed. See
+  `docs/DANTE_O3A_O4A_COMMON_PEM_SPAN_REPLAY_2026-09-28.md`.
 - **O3a/O4a common PEM background acquisition (2026-09-28)**: The v1
   transport-only run `5308cec1e4d935cdd5b7c93b4df60369e9814fc2a63fe0741c8208abb40edb9e`
   failed structurally after 14 frame receipts because its probe examined a
