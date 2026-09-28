@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-aux-native-samples-v1",
+  "parent_availability_run_key": "1e81576f90061f4a50648e1b1aea2871d99e5f2e8bf43016d486804a1bc52cb2",
+  "parent_availability_summary_digest": "1b37f9238661619b3d320049a75e947524c01f9712f7bb5f4ba36bd797e70cf5",
+  "source_policy": "NDS2_NATIVE_FLOAT32_SAMPLES_LOCAL_REPLAY_NO_SECOND_FETCH",
+  "sample_rate_hz": {
+    "H1": {
+      "H1:CAL-PCALY_RX_PD_OUT_DQ": 16384,
+      "H1:LSC-POP_A_LF_OUT_DQ": 2048,
+      "H1:SUS-ETMX_L1_CAL_LINE_OUT_DQ": 512,
+      "H1:SUS-ETMX_L2_CAL_LINE_OUT_DQ": 512,
+      "H1:SUS-ETMX_L3_CAL_LINE_OUT_DQ": 512
+    },
+    "L1": {
+      "L1:ASC-X_TR_A_NSUM_OUT_DQ": 2048,
+      "L1:CAL-PCALY_RX_PD_OUT_DQ": 16384,
+      "L1:SUS-ETMX_L1_CAL_LINE_OUT_DQ": 512,
+      "L1:SUS-ETMX_L2_CAL_LINE_OUT_DQ": 512,
+      "L1:SUS-ETMX_L3_CAL_LINE_OUT_DQ": 512
+    }
+  },
+  "execution": {
+    "chunk_seconds": 1024,
+    "fetch_retries": 3,
+    "backoff_base_s": 2,
+    "minimum_free_space_multiplier": 2
+  },
+  "scientific_boundary": {
+    "native_samples_no_resampling_or_cast": true,
+    "local_replay_not_second_source_acquisition": true,
+    "five_channel_null_opened": false,
+    "paired_pem_outcomes_opened": false,
+    "global_significance_claim": false
+  }
+}

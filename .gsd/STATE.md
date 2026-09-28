@@ -1,6 +1,13 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a common PEM auxiliary native samples (2026-09-28)**: The
+  author approved a single exact NDS2 native-rate sample acquisition plus
+  independent local-file numerical replay, not a second source fetch. The
+  metadata parent is verified for all 77 targets; the new versioned sample
+  contract and runner are under pre-run validation. No sample run PASS, null,
+  comparative outcome or significance is claimed yet. See
+  `docs/DANTE_O3A_O4A_COMMON_PEM_AUX_SAMPLES_2026-09-28.md`.
 - **O3a/O4a common PEM auxiliary metadata gate (2026-09-28)**: The
   source-frozen metadata-only gate `904d8f9` passed for all 77 frozen
   targets, checking exact five-channel NDS2 availability over each event
