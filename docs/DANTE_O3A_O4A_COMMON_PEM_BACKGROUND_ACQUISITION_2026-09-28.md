@@ -1,7 +1,7 @@
 # O3a/O4a common-five-channel PEM: background frame acquisition
 
-Status: **v1 FAILED_STRUCTURAL and preserved; v2 transport-only correction
-prepared, with no paired PEM measurement or outcome opened**.
+Status: **v1 FAILED_STRUCTURAL and preserved; v2 transport-only acquisition
+running, with no paired PEM measurement or outcome opened**.
 
 The source-frozen acquisition adapter is committed as `5922fac` on
 `science/o3-transfer-readiness`. Its plan independently replays the frozen
@@ -51,3 +51,15 @@ preserved. Before real execution, the v2 and adjacent common-PEM synthetic
 suite passed 43 tests (11 upstream warnings), including a frame whose first
 second is invalid but selected-span probe is valid. Full-span and downstream
 gates remain open.
+
+The v2 source freeze is commit `ad9373f`, pushed to
+`science/o3-transfer-readiness` before productive execution. The real
+`--stage plan` exited 0 and bound 47 O3a plus 278 O4a frames under new run key
+`7d21f9c38e8b29a5029d604528b78e1f5f7e30c48bf3870a414890dd7aa29e95`.
+The formerly failing L1 frame now probes `[1238542865, 1238542866)`, inside
+the frozen span; all plan source hashes match current bytes. An initial WSL
+launcher used `/mnt/e/...` for the CLI `--run-dir`, which the existing
+Windows-path converter rejects before acquiring a lock, frame or receipt; its
+stderr is retained. The corrected launcher uses `E:/...` and has one live WSL
+process. The hourly monitor is active. Neither launch is evidence of a PASS
+until the standalone full-frame verifier succeeds.

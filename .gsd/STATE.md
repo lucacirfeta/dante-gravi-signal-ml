@@ -5,11 +5,14 @@
   transport-only run `5308cec1e4d935cdd5b7c93b4df60369e9814fc2a63fe0741c8208abb40edb9e`
   failed structurally after 14 frame receipts because its probe examined a
   frame-start second outside the selected span. The failure and run are
-  preserved, not resumable. A separate v2 source/contract corrects only the
-  deterministic probe location to the earliest one-second planned span
-  overlap per frame; 43 targeted/common-PEM WSL tests pass (11 upstream
-  warnings). The full frozen plan still requires 47 O3a plus 278 O4a frames.
-  No paired PEM outcome is open. Standalone full-frame verify, complete
+  preserved, not resumable. A separate v2 source/contract in commit `ad9373f`
+  corrects only the deterministic probe location to the earliest one-second
+  planned span overlap per frame; 43 targeted/common-PEM WSL tests pass (11
+  upstream warnings). Its source-bound real plan passed with 47 O3a plus 278
+  O4a frames under run key
+  `7d21f9c38e8b29a5029d604528b78e1f5f7e30c48bf3870a414890dd7aa29e95`.
+  One WSL v2 --run instance was started; the hourly monitor is active. No
+  paired PEM outcome is open. Standalone full-frame verify, complete
   four-hour spans, auxiliary receipts and independent outcome replay remain
   pending. See
   `docs/DANTE_O3A_O4A_COMMON_PEM_BACKGROUND_ACQUISITION_2026-09-28.md`.
