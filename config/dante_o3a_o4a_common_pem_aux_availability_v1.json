@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-aux-availability-v1",
+  "parent_span_run_key": "034102715295eec0a8937fb67233d7515933addeb98bee35fbe9d3aac3566c0d",
+  "parent_span_summary_digest": "0139a9963ca5ff5a2f35ca34435f2dab6ee35ef62b44ea9bb2303a4870534661",
+  "source_policy": "NDS2_METADATA_COVERAGE_ONLY_NO_SAMPLE_FETCH",
+  "scientific_boundary": {
+    "auxiliary_samples_verified": false,
+    "paired_pem_outcomes_opened": false,
+    "global_significance_claim": false
+  }
+}
