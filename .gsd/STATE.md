@@ -11,10 +11,14 @@
   upstream warnings). Its source-bound real plan passed with 47 O3a plus 278
   O4a frames under run key
   `7d21f9c38e8b29a5029d604528b78e1f5f7e30c48bf3870a414890dd7aa29e95`.
-  One WSL v2 --run instance was started; the hourly monitor is active. No
-  paired PEM outcome is open. Standalone full-frame verify, complete
-  four-hour spans, auxiliary receipts and independent outcome replay remain
-  pending. See
+  The v2 controller completed with PASS_ACQUIRED_BACKGROUND_FRAME_BYTES_V2_ONLY;
+  standalone --stage verify exited 0 with
+  PASS_VERIFIED_BACKGROUND_FRAME_BYTES_V2_ONLY. Exactly 325 frame files and
+  325 sealed receipts are present, with zero failure, partial files or lock.
+  Post-run WSL PEM/provenance suite: 68 passed, 11 upstream warnings; Ruff
+  lint and format pass. Plan source hashes match current bytes; tracked Git
+  files are clean. No paired PEM outcome is open. Complete four-hour spans,
+  auxiliary receipts, null and independent outcome replay remain pending. See
   `docs/DANTE_O3A_O4A_COMMON_PEM_BACKGROUND_ACQUISITION_2026-09-28.md`.
 - **O3a native calibration selector and arXiv v3 follow-up (2026-09-27)**:
   The approved native-calibration amendment and frozen cohort use the

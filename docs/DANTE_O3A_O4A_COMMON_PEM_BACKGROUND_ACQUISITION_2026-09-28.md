@@ -1,7 +1,7 @@
 # O3a/O4a common-five-channel PEM: background frame acquisition
 
-Status: **v1 FAILED_STRUCTURAL and preserved; v2 transport-only acquisition
-running, with no paired PEM measurement or outcome opened**.
+Status: **v1 FAILED_STRUCTURAL and preserved; v2 transport-only frame-byte
+acquisition PASS_VERIFIED, with no paired PEM measurement or outcome opened**.
 
 The source-frozen acquisition adapter is committed as `5922fac` on
 `science/o3-transfer-readiness`. Its plan independently replays the frozen
@@ -60,6 +60,23 @@ The formerly failing L1 frame now probes `[1238542865, 1238542866)`, inside
 the frozen span; all plan source hashes match current bytes. An initial WSL
 launcher used `/mnt/e/...` for the CLI `--run-dir`, which the existing
 Windows-path converter rejects before acquiring a lock, frame or receipt; its
-stderr is retained. The corrected launcher uses `E:/...` and has one live WSL
-process. The hourly monitor is active. Neither launch is evidence of a PASS
-until the standalone full-frame verifier succeeds.
+stderr is retained. The corrected launcher used `E:/...` and ran one WSL
+controller. The launch itself was not evidence of a PASS; the standalone
+verifier below supplies the independent gate.
+
+The v2 controller subsequently completed with
+`PASS_ACQUIRED_BACKGROUND_FRAME_BYTES_V2_ONLY`. Its standalone
+`--stage verify` returned exit code 0 and
+`PASS_VERIFIED_BACKGROUND_FRAME_BYTES_V2_ONLY`. The sealed receipt digest is
+`a9d2ccbe3ab03a55d7cec2db2e27246584cd7bf84cb56ba0e7c21c5ff063ba13`.
+Exactly 47 O3a and 278 O4a frame files and 325 per-frame receipts are present;
+no failure, controller lock, or partial file remains. Post-run WSL PEM and
+provenance regression: 68 passed, 11 upstream GWPy/Matplotlib warnings.
+Ruff lint and format pass for the v2 adapter, runner and tests. Plan source
+hashes match current bytes; tracked Git files are clean.
+
+This closes **only** the official-frame-byte/probe transport gate. Complete
+four-hour numerical spans, auxiliary-channel receipts, the common-five-channel
+null, independently replayed PEM outcomes, and any comparative interpretation
+remain unverified. No new candidate or significance claim follows from this
+acquisition checkpoint.
