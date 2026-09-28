@@ -1,15 +1,17 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
-- **O3a/O4a common PEM background acquisition (2026-09-28)**: A separate
-  transport-only adapter was source-frozen and pushed as `5922fac`. A live,
-  sealed plan independently replayed all frozen span selections and bound 47
-  O3a plus 278 O4a official frames. Run key
-  `5308cec1e4d935cdd5b7c93b4df60369e9814fc2a63fe0741c8208abb40edb9e`
-  is acquiring frame bytes; no paired PEM outcome is open. Pre-run WSL suite:
-  41 passed, 11 upstream warnings; Ruff PASS. Standalone full-frame verify,
-  complete four-hour spans, auxiliary receipts and independent outcome replay
-  remain pending. See
+- **O3a/O4a common PEM background acquisition (2026-09-28)**: The v1
+  transport-only run `5308cec1e4d935cdd5b7c93b4df60369e9814fc2a63fe0741c8208abb40edb9e`
+  failed structurally after 14 frame receipts because its probe examined a
+  frame-start second outside the selected span. The failure and run are
+  preserved, not resumable. A separate v2 source/contract corrects only the
+  deterministic probe location to the earliest one-second planned span
+  overlap per frame; 43 targeted/common-PEM WSL tests pass (11 upstream
+  warnings). The full frozen plan still requires 47 O3a plus 278 O4a frames.
+  No paired PEM outcome is open. Standalone full-frame verify, complete
+  four-hour spans, auxiliary receipts and independent outcome replay remain
+  pending. See
   `docs/DANTE_O3A_O4A_COMMON_PEM_BACKGROUND_ACQUISITION_2026-09-28.md`.
 - **O3a native calibration selector and arXiv v3 follow-up (2026-09-27)**:
   The approved native-calibration amendment and frozen cohort use the

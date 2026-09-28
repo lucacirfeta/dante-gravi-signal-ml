@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "contract_id": "dante-o3a-o4a-common-pem-background-acquisition-v2",
+  "parent_background_contract_digest": "c974bfb7ee83ad699bf01c2543075de27f38a772c8b76ebea775e0ec25f53fd7",
+  "superseded_failed_run_key": "5308cec1e4d935cdd5b7c93b4df60369e9814fc2a63fe0741c8208abb40edb9e",
+  "probe_policy": "FIRST_ONE_SECOND_OF_EARLIEST_PLANNED_SPAN_OVERLAP_PER_OFFICIAL_FRAME",
+  "probe_duration_s": 1,
+  "expected_unique_frames": {
+    "O3a": 47,
+    "O4a": 278
+  },
+  "scientific_boundary": {
+    "transport_only": true,
+    "full_background_span_verified": false,
+    "auxiliary_channels_verified": false,
+    "paired_pem_outcomes_opened": false,
+    "global_significance_claim": false
+  }
+}
