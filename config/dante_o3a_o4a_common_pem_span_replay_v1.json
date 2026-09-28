@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-background-span-replay-v1",
+  "parent_acquisition_run_key": "7d21f9c38e8b29a5029d604528b78e1f5f7e30c48bf3870a414890dd7aa29e95",
+  "parent_acquisition_summary_digest": "a9d2ccbe3ab03a55d7cec2db2e27246584cd7bf84cb56ba0e7c21c5ff063ba13",
+  "source_policy": "EXISTING_VERIFIED_OFFICIAL_FRAMES_ONLY_NO_DOWNLOAD",
+  "span_policy": "FROZEN_HISTORICAL_FOUR_HOUR_SPANS_NO_RESELECTION",
+  "scientific_boundary": {
+    "background_span_samples_only": true,
+    "auxiliary_channels_verified": false,
+    "paired_pem_outcomes_opened": false,
+    "global_significance_claim": false
+  }
+}
