@@ -1,6 +1,16 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
-- **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **Phase**: O3a diagnostic checkpoint closed; no downstream stage active
+- **O3a diagnostic closure (2026-09-29)**: The frozen O3a scan,
+  detector-aware native stages, classification, taxonomy, coincidence and
+  O3a-only PEM are verified. The later five-common-channel O3a/O4a PEM
+  comparison is also verified; it does not compare prevalence across the
+  different target populations. L1 GPS 1238508320 and 1241808544 remain
+  CAT2/3-clean descriptive residuals with NO_CORRELATION in the five tested
+  public channels, not promoted candidates. Physical cause, localized timing
+  and globally calibrated significance are not established. No new protocol
+  is opened by this closure; O3b is outside its scope. See
+  `docs/DANTE_O3A_DIAGNOSTIC_CLOSURE_2026-09-29.md`.
 - **O3a/O4a common PEM verified diagnostic comparison (2026-09-29)**:
   Separate O3a and O4a runs completed under source freeze `d019d2d` and
   sealed plan `69e581fa`, with OS exit 0 and independent standalone verifier
