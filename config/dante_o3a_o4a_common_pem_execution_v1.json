@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-execution-v1",
+  "status": "FROZEN_PAIRED_DIAGNOSTIC_EXECUTION_NO_OUTCOMES",
+  "common_contract_digest": "aa25cff27ea5af0884da16dd12d5fe579154fae5f835c88aa95d9e46df2b2f7a",
+  "common_v2_contract_digest": "76bf71c828afbc79da2864fa7f3d7dc8ea805057a6e4e8173b6c89634bbb203e",
+  "input_roots": {
+    "o4a_raw_replay": "E:/dante_cache/dante_light/o3a_o4a_common_pem_v1/raw_replay/raw_replay_fb2af10f4feff811cd624526444d6890c610e5bf5a1c23bc4fc4d25bd16eb457",
+    "background_acquisition": "E:/dante_cache/dante_light/o3a_o4a_common_pem_v1/background_acquisition/background_acquisition_v2_7d21f9c38e8b29a5029d604528b78e1f5f7e30c48bf3870a414890dd7aa29e95",
+    "background_spans": "E:/dante_cache/dante_light/o3a_o4a_common_pem_v1/background_span_replay/background_spans_034102715295eec0a8937fb67233d7515933addeb98bee35fbe9d3aac3566c0d",
+    "auxiliary_samples": "E:/dante_cache/dante_light/o3a_o4a_common_pem_v1/aux_samples/aux_samples_df2a8c05f158d491d577ecf80cebae0ac2ea61b9158c2ef61fb96bedf4081b11",
+    "auxiliary_availability": "E:/dante_cache/dante_light/o3a_o4a_common_pem_v1/aux_availability/aux_availability_1e81576f90061f4a50648e1b1aea2871d99e5f2e8bf43016d486804a1bc52cb2"
+  },
+  "output_root": "E:/dante_cache/dante_light/o3a_o4a_common_pem_v1/comparative_pem",
+  "execution_transport": {
+    "O3a": {"aux_fetch_retries": 3, "aux_fetch_backoff_base_s": 2},
+    "O4a": {"aux_fetch_retries": 1, "aux_fetch_backoff_base_s": 2}
+  },
+  "run_policy": {
+    "separate_run_keys": true,
+    "verified_receipt_resume_only": true,
+    "failure_requires_manual_diagnosis": true,
+    "source_freeze_before_outcomes": true,
+    "primary_and_diagnostic_separate": true,
+    "global_significance_claim": false,
+    "astrophysical_confirmation_claim": false
+  }
+}

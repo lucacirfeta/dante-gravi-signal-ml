@@ -1,6 +1,15 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a common PEM productive preflight prepared (2026-09-29)**: A
+  separate-run, sealed-receipt runner is prepared under a versioned
+  execution contract. It binds the historical event adapters, five-channel
+  null core and verified local strain/auxiliary parents without retuning.
+  Preflight requires full target/exclusion identity, live O3a CAT1 equality,
+  O4a context replay and source freeze before outcomes. Synthetic and
+  regression checks: 106 PASS, 11 upstream warnings; Ruff PASS. No real
+  execution plan or paired PEM outcome is yet claimed. See
+  `docs/DANTE_O3A_O4A_COMMON_PEM_EXECUTION_PREFLIGHT_2026-09-29.md`.
 - **O3a/O4a common PEM background strain binding (2026-09-29)**: The
   public paired-measurement entry now accepts the sealed 77-span/325-frame
   parents as its only background strain transport. Exact target/interval,
