@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-aux-input-binding-v1",
+  "status": "FROZEN_TRANSPORT_INPUT_ONLY_NO_PEM_OUTCOMES",
+  "parent_aux_samples_run_key": "df2a8c05f158d491d577ecf80cebae0ac2ea61b9158c2ef61fb96bedf4081b11",
+  "parent_aux_samples_summary_digest": "7a860fb039a6de705aa1907e43dbc19b286c95a98edfc7dc89eed14454db6bcf",
+  "parent_aux_availability_run_key": "1e81576f90061f4a50648e1b1aea2871d99e5f2e8bf43016d486804a1bc52cb2",
+  "target_context_count": 77,
+  "transport_policy": "VERIFIED_NATIVE_FLOAT32_LOCAL_ONLY_NO_NDS2_FALLBACK",
+  "scientific_boundary": {
+    "historical_coherence_and_null_core_unchanged": true,
+    "five_channel_null_opened": false,
+    "paired_pem_outcomes_opened": false,
+    "global_significance_claim": false
+  }
+}

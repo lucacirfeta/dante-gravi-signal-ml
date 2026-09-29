@@ -105,6 +105,48 @@ def _install_success_mocks(monkeypatch: pytest.MonkeyPatch, calls: list[dict]) -
     monkeypatch.setattr(common, "calibrate_event", calibration)
 
 
+def test_public_measurement_binds_verified_local_auxiliary_reader(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    comparison, exclusions = _case()
+    bindings: list[dict] = []
+
+    class LocalOnly:
+        def __init__(self, path, **kwargs):
+            bindings.append({"path": path, **kwargs})
+
+        def fetch(self, *args, **kwargs):
+            raise AssertionError("synthetic wrapper must not fetch")
+
+    def measure(*args, **kwargs):
+        assert kwargs["auxiliary_fetch"].__self__.__class__ is LocalOnly
+        return {"status": "SYNTHETIC_ONLY"}
+
+    monkeypatch.setattr(common, "VerifiedAuxiliaryReader", LocalOnly)
+    monkeypatch.setattr(common, "_measure_event", measure)
+    result = common.measure_event(
+        {"detector": "H1", "gps_start": 100},
+        run="O3a",
+        comparison=comparison,
+        execution=_execution(),
+        run_dir=tmp_path,
+        auxiliary_run_dir=tmp_path / "sealed_parent",
+        candidate_exclusion_gps=exclusions["O3a"],
+        strain_reader=lambda: (_series(), "a" * 64),
+        background_strain_reader=lambda det, start, end: _series(start=start, end=end),
+    )
+    assert result["status"] == "SYNTHETIC_ONLY"
+    assert bindings == [
+        {
+            "path": tmp_path / "sealed_parent",
+            "run": "O3a",
+            "detector": "H1",
+            "target_gps": 100,
+            "channels": comparison["method"]["channels"]["H1"],
+        }
+    ]
+
+
 @pytest.mark.parametrize("run", ["O3a", "O4a"])
 def test_same_five_channel_core_with_run_specific_exclusion(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, run: str
@@ -112,12 +154,13 @@ def test_same_five_channel_core_with_run_specific_exclusion(
     comparison, exclusions = _case()
     calls: list[dict] = []
     _install_success_mocks(monkeypatch, calls)
-    event = common.measure_event(
+    event = common._measure_event(
         {"detector": "H1", "gps_start": 100},
         run=run,
         comparison=comparison,
         execution=_execution(),
         run_dir=tmp_path,
+        auxiliary_fetch=lambda **kwargs: _series(),
         candidate_exclusion_gps=exclusions[run],
         strain_reader=lambda: (_series(), "a" * 64),
         background_strain_reader=lambda det, start, end: _series(start=start, end=end),
@@ -156,12 +199,13 @@ def test_missing_event_channel_fails_before_null(
         lambda channel, *_: None if channel.endswith("_2") else _series(),
     )
     with pytest.raises(ContractError, match="event auxiliary channel unavailable"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O3a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O3a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
@@ -187,12 +231,13 @@ def test_incomplete_five_channel_background_null_is_rejected(
 
     monkeypatch.setattr(common, "calibrate_event", incomplete)
     with pytest.raises(ContractError, match="background null is incomplete"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O4a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O4a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
@@ -212,12 +257,13 @@ def test_changed_exclusion_fails_before_strain_read(tmp_path: Path) -> None:
         return _series(), "a" * 64
 
     with pytest.raises(ContractError, match="exclusion ledger changed"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O3a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=[1.0, 3.0],
             strain_reader=strain_reader,
             background_strain_reader=lambda det, start, end: _series(
@@ -233,12 +279,13 @@ def test_duplicate_detector_channel_fails_before_strain_read(tmp_path: Path) -> 
         0
     ]
     with pytest.raises(ContractError, match="detector-channel set is invalid"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O3a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O3a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
@@ -262,12 +309,13 @@ def test_partial_or_invalid_rate_event_auxiliary_fails_before_null(
     _install_success_mocks(monkeypatch, calls)
     monkeypatch.setattr(common, "fetch_auxiliary_data", lambda *args: auxiliary)
     with pytest.raises(ContractError, match="incomplete or invalid coverage"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O3a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O3a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
@@ -284,12 +332,13 @@ def test_historical_low_rate_auxiliary_remains_eligible(
     calls: list[dict] = []
     _install_success_mocks(monkeypatch, calls)
     monkeypatch.setattr(common, "fetch_auxiliary_data", lambda *args: _series(rate=512))
-    result = common.measure_event(
+    result = common._measure_event(
         {"detector": "H1", "gps_start": 100},
         run="O3a",
         comparison=comparison,
         execution=_execution(),
         run_dir=tmp_path,
+        auxiliary_fetch=lambda **kwargs: _series(),
         candidate_exclusion_gps=exclusions["O3a"],
         strain_reader=lambda: (_series(), "a" * 64),
         background_strain_reader=lambda det, start, end: _series(start=start, end=end),
@@ -308,12 +357,13 @@ def test_preexisting_event_cache_is_rejected(
     cache.mkdir()
     (cache / "stale.hdf5").write_bytes(b"unverified")
     with pytest.raises(ContractError, match="cache is not fresh"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O4a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O4a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
@@ -341,12 +391,13 @@ def test_background_reader_and_cache_are_scoped_and_restored(
         return original(detector, gps, channels, **kwargs)
 
     monkeypatch.setattr(common, "calibrate_event", inspect)
-    common.measure_event(
+    common._measure_event(
         {"detector": "H1", "gps_start": 100},
         run="O3a",
         comparison=comparison,
         execution=_execution(),
         run_dir=tmp_path,
+        auxiliary_fetch=lambda **kwargs: _series(),
         candidate_exclusion_gps=exclusions["O3a"],
         strain_reader=lambda: (_series(), "a" * 64),
         background_strain_reader=lambda det, start, end: _series(start=start, end=end),
@@ -369,12 +420,13 @@ def test_partial_background_strain_fails_closed(
 
     monkeypatch.setattr(common, "calibrate_event", inspect)
     with pytest.raises(ContractError, match="background strain.*coverage"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O3a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O3a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
@@ -408,12 +460,13 @@ def test_background_auxiliary_preserves_historical_low_rate_and_rejects_gap(
 
     monkeypatch.setattr(common, "calibrate_event", inspect)
     with pytest.raises(RuntimeError, match="stop synthetic null"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O3a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O3a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
@@ -426,15 +479,72 @@ def test_background_auxiliary_preserves_historical_low_rate_and_rejects_gap(
         lambda *args, **kwargs: _series(start=100, end=131, rate=512),
     )
     with pytest.raises(ContractError, match="background auxiliary.*coverage"):
-        common.measure_event(
+        common._measure_event(
             {"detector": "H1", "gps_start": 100},
             run="O3a",
             comparison=comparison,
             execution=_execution(),
             run_dir=tmp_path,
+            auxiliary_fetch=lambda **kwargs: _series(),
             candidate_exclusion_gps=exclusions["O3a"],
             strain_reader=lambda: (_series(), "a" * 64),
             background_strain_reader=lambda det, start, end: _series(
                 start=start, end=end
             ),
         )
+
+
+def test_event_and_null_fetch_only_through_supplied_auxiliary_transport(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from gwpy.timeseries import TimeSeries
+    from src.pipeline_v2_production import pem_coherence_analysis as event_core
+
+    comparison, exclusions = _case()
+    calls: list[dict] = []
+    _install_success_mocks(monkeypatch, calls)
+    monkeypatch.setattr(common, "fetch_auxiliary_data", event_core.fetch_auxiliary_data)
+    monkeypatch.setattr(event_core.time, "sleep", lambda _: None)
+    source_calls: list[tuple[str, int, int, str]] = []
+
+    def local_source(channel: str, *, start: int, end: int, host: str):
+        assert channel in comparison["method"]["channels"]["H1"]
+        assert (start, end) in ((100, 132), (200, 232))
+        assert host == "synthetic.invalid"
+        source_calls.append((channel, start, end, host))
+        return TimeSeries(
+            np.ones((end - start) * 1024, dtype=np.float32),
+            t0=start,
+            sample_rate=1024,
+            name=channel,
+        )
+
+    original_calibration = common.calibrate_event
+
+    def calibration_with_local_reads(detector, gps, channels, **kwargs):
+        for channel in channels:
+            auxiliary = common.null_core._fetch_aux_block(
+                channel, 200, 232, kwargs["nds_host"], max_fs=1024
+            )
+            assert auxiliary.sample_rate.value == 1024
+        for path in common.null_core.NULL_CACHE.glob("*.npz"):
+            path.unlink()
+        return original_calibration(detector, gps, channels, **kwargs)
+
+    monkeypatch.setattr(common, "calibrate_event", calibration_with_local_reads)
+    common._measure_event(
+        {"detector": "H1", "gps_start": 100},
+        run="O3a",
+        comparison=comparison,
+        execution=_execution(),
+        run_dir=tmp_path,
+        auxiliary_fetch=local_source,
+        candidate_exclusion_gps=exclusions["O3a"],
+        strain_reader=lambda: (_series(), "a" * 64),
+        background_strain_reader=lambda det, start, end: _series(start=start, end=end),
+    )
+    assert len(source_calls) == 10
+    assert {call[1:] for call in source_calls} == {
+        (100, 132, "synthetic.invalid"),
+        (200, 232, "synthetic.invalid"),
+    }

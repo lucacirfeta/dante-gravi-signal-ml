@@ -17,6 +17,7 @@ import numpy as np
 
 from src.core.index_contract import sha256_file
 from src.dante_light.contracts import ContractError, canonical_json_sha256
+from src.dante_light.o3a_o4a_common_pem_aux_reader import VerifiedAuxiliaryReader
 from src.pipeline_v2_production import pem_null_calibration as null_core
 from src.pipeline_v2_production.pem_coherence_analysis import (
     calculate_coherence_and_plot,
@@ -61,9 +62,51 @@ def measure_event(
     comparison: Mapping[str, Any],
     execution: Mapping[str, Any],
     run_dir: Path,
+    auxiliary_run_dir: Path,
     candidate_exclusion_gps: Sequence[float],
     strain_reader: Callable[[], tuple[Any, str]],
     background_strain_reader: Callable[[str, int, int], Any],
+) -> dict[str, Any]:
+    """Use only sealed local auxiliary input for this target's five channels."""
+    try:
+        detector = str(target["detector"])
+        gps = float(target["gps_start"])
+        channels = comparison["method"]["channels"][detector]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ContractError("common PEM target binding invalid") from exc
+    if not np.isfinite(gps) or gps != int(gps):
+        raise ContractError("common PEM target GPS is not a finite integer")
+    auxiliary_reader = VerifiedAuxiliaryReader(
+        auxiliary_run_dir,
+        run=run,
+        detector=detector,
+        target_gps=int(gps),
+        channels=channels,
+    )
+    return _measure_event(
+        target,
+        run=run,
+        comparison=comparison,
+        execution=execution,
+        run_dir=run_dir,
+        candidate_exclusion_gps=candidate_exclusion_gps,
+        strain_reader=strain_reader,
+        background_strain_reader=background_strain_reader,
+        auxiliary_fetch=auxiliary_reader.fetch,
+    )
+
+
+def _measure_event(
+    target: Mapping[str, Any],
+    *,
+    run: str,
+    comparison: Mapping[str, Any],
+    execution: Mapping[str, Any],
+    run_dir: Path,
+    candidate_exclusion_gps: Sequence[float],
+    strain_reader: Callable[[], tuple[Any, str]],
+    background_strain_reader: Callable[[str, int, int], Any],
+    auxiliary_fetch: Callable[..., Any],
 ) -> dict[str, Any]:
     """Measure one target, failing closed unless all five channels enter the null."""
     if run not in ("O3a", "O4a"):
@@ -122,13 +165,16 @@ def measure_event(
     for channel in channels:
         auxiliary = None
         for attempt in range(retry_count):
-            auxiliary = fetch_auxiliary_data(
-                channel,
-                start,
-                end,
-                event_cache,
-                host,
-            )
+            with patch.object(
+                null_core.TimeSeries, "fetch", side_effect=auxiliary_fetch
+            ):
+                auxiliary = fetch_auxiliary_data(
+                    channel,
+                    start,
+                    end,
+                    event_cache,
+                    host,
+                )
             if auxiliary is not None:
                 break
             if attempt + 1 < retry_count:
@@ -225,6 +271,7 @@ def measure_event(
         patch.object(null_core, "fetch_strain_data", verified_background),
         patch.object(null_core, "_fetch_aux_block", verified_background_aux),
         patch.object(null_core, "NULL_CACHE", background_cache),
+        patch.object(null_core.TimeSeries, "fetch", side_effect=auxiliary_fetch),
     ):
         calibration = calibrate_event(
             detector,

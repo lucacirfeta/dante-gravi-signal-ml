@@ -1,6 +1,17 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a common PEM local auxiliary binding (2026-09-29)**: A versioned
+  transport-only contract pins the verified 750-series native auxiliary
+  parent. The comparative measurement entry point now accepts auxiliary
+  samples only through a receipt-checked local reader; no NDS2 fallback.
+  Read-only source checks bound all 77 target contexts to their exact five
+  event plus five background intervals, and one real sample read preserved
+  native float32 rate. WSL regression: 99 PASS, 11 upstream warnings;
+  Ruff lint/format PASS. See
+  `docs/DANTE_O3A_O4A_COMMON_PEM_AUX_INPUT_BINDING_2026-09-29.md`.
+  The productive paired runner, five-channel null, outcomes and significance
+  remain unopened pending the remaining gate-3 checks.
 - **O3a/O4a common PEM auxiliary native samples (2026-09-28)**: The
   author approved a single exact NDS2 native-rate sample acquisition plus
   independent local-file numerical replay, not a second source fetch. The
