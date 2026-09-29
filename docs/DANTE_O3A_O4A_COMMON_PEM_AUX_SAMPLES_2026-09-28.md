@@ -42,9 +42,9 @@ completed sealed receipts and the partial file for explicit diagnosis.
    retained samples without NDS2 access. A separate exit-zero verifier is
    required for `PASS_VERIFIED_AUX_NATIVE_SAMPLES_ONLY`.
 
-This checkpoint records the frozen protocol and pre-run checks only. The
-five-channel null, event measurement, outcome comparison and any scientific
-interpretation remain closed until their own contract, tests and gate pass.
+The five-channel null, event measurement, outcome comparison and any
+scientific interpretation remain closed until their own contract, tests and
+gate pass.
 
 ## Preflight and launch
 
@@ -56,4 +56,30 @@ warnings; Ruff lint and format passed. The real `--stage plan` returned exit
 for 77 targets and `PASS_AUX_NATIVE_SAMPLE_PLAN_ONLY` for 750 series. Its
 run key is `df2a8c05f158d491d577ecf80cebae0ac2ea61b9158c2ef61fb96bedf4081b11`.
 At launch, E: had over 750 GB free, no pre-existing lock or failure, and one
-WSL controller was started. This is not a completed-sample or verifier PASS.
+WSL controller was started.
+
+## Verified sample gate, 2026-09-29
+
+The sole `--stage run` controller returned OS exit 0 and wrote sealed
+`PASS_AUX_NATIVE_SAMPLES_COMPLETE_ONLY`, digest
+`7a860fb039a6de705aa1907e43dbc19b286c95a98edfc7dc89eed14454db6bcf`.
+All 750 planned series have one sealed receipt and one NPY file: exactly
+84,158,251,008 float32 sample bytes, or 84,158,347,008 bytes including NPY
+headers. No failure, lock, partial file or stderr remained. No
+infrastructure-failure archive was needed.
+
+A separate, read-only `--stage verify` returned OS exit 0 and
+`PASS_VERIFIED_AUX_NATIVE_SAMPLES_ONLY` for all 750 files. It rechecked the
+parent metadata seals, all three source SHA-256 values, the exact receipt
+and file sets, shapes, finite samples, complete file hashes and numerical
+sample hashes. Its stderr was empty. This is an independent replay of the
+**retained local samples**, not a second NDS2 source acquisition. NDS2
+availability and the first acquisition were verified at their own gates;
+this check does not assert byte identity to an independently published
+auxiliary archive.
+
+Post-run WSL common-PEM/native-PEM/PatchProducer regression: 85 passed, 11
+upstream warnings; Ruff lint/format PASS. The three frozen source files match
+their plan hashes and tracked Git files are clean. The O3a/O4a paired PEM
+null and outcomes remain unopened. The transport/sample gate is PASS, not
+the full comparative PEM gate.

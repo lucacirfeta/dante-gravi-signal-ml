@@ -9,8 +9,11 @@
   Ruff PASS. Real plan exited 0 after parent metadata re-query with 750
   native series and run key
   `df2a8c05f158d491d577ecf80cebae0ac2ea61b9158c2ef61fb96bedf4081b11`.
-  One controller is running on E:, with hourly fail-closed monitoring.
-  No sample run PASS, null, comparative outcome or significance is claimed. See
+  The sole acquisition exited 0 with sealed summary PASS_COMPLETE, 750
+  receipts/files, zero failure/partial/lock. Standalone local replay exited 0
+  with `PASS_VERIFIED_AUX_NATIVE_SAMPLES_ONLY`; post-run 85 tests and Ruff
+  passed, source hashes match. This is not a second NDS2 fetch. No five-channel
+  null, comparative outcome or significance is claimed. See
   `docs/DANTE_O3A_O4A_COMMON_PEM_AUX_SAMPLES_2026-09-28.md`.
 - **O3a/O4a common PEM auxiliary metadata gate (2026-09-28)**: The
   source-frozen metadata-only gate `904d8f9` passed for all 77 frozen
