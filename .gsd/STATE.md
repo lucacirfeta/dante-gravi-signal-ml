@@ -1,6 +1,20 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: 7.21 O3a-only diagnostic PEM verified; further downstream paused
+- **O3a/O4a common PEM verified diagnostic comparison (2026-09-29)**:
+  Separate O3a and O4a runs completed under source freeze `d019d2d` and
+  sealed plan `69e581fa`, with OS exit 0 and independent standalone verifier
+  exit 0/PASS_VERIFIED for 12 and 65 event receipts respectively. Zero
+  failure, partial files or locks; seven source hashes match. Post-run WSL
+  regression: 106 passed, 11 upstream warnings; Ruff PASS. O3a primary:
+  H1 one COUPLED/one NO_CORRELATION, L1 nine NO_CORRELATION; one H1 diagnostic
+  NO_CORRELATION. O4a primary: H1 one COUPLED/one SUSPECT/one NO_CORRELATION,
+  L1 two COUPLED/four NO_CORRELATION. O4a diagnostic: H1 two COUPLED/two
+  SUSPECT/27 NO_CORRELATION, L1 one COUPLED/one SUSPECT/23 NO_CORRELATION.
+  This is five-public-common-channel, diagnostic-only method parity over
+  different frozen target sets, not prevalence, global significance or
+  astrophysical inference. See
+  `docs/DANTE_O3A_O4A_COMMON_PEM_RESULT_2026-09-29.md`.
 - **O3a/O4a common PEM productive preflight prepared (2026-09-29)**: A
   separate-run, sealed-receipt runner is prepared under a versioned
   execution contract. It binds the historical event adapters, five-channel
