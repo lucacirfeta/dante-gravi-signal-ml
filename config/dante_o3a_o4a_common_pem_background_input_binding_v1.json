@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-o4a-common-pem-background-input-binding-v1",
+  "status": "FROZEN_LOCAL_STRAIN_INPUT_ONLY_NO_PEM_OUTCOMES",
+  "span_run_key": "034102715295eec0a8937fb67233d7515933addeb98bee35fbe9d3aac3566c0d",
+  "span_summary_digest": "0139a9963ca5ff5a2f35ca34435f2dab6ee35ef62b44ea9bb2303a4870534661",
+  "acquisition_run_key": "7d21f9c38e8b29a5029d604528b78e1f5f7e30c48bf3870a414890dd7aa29e95",
+  "acquisition_summary_digest": "a9d2ccbe3ab03a55d7cec2db2e27246584cd7bf84cb56ba0e7c21c5ff063ba13",
+  "expected_spans": {"O3a": 12, "O4a": 65},
+  "transport_policy": "VERIFIED_OFFICIAL_FRAME_BYTES_LOCAL_ONLY_NO_DOWNLOAD",
+  "scientific_boundary": {
+    "background_strain_samples_only": true,
+    "five_channel_null_opened": false,
+    "paired_pem_outcomes_opened": false,
+    "global_significance_claim": false
+  }
+}

@@ -118,11 +118,22 @@ def test_public_measurement_binds_verified_local_auxiliary_reader(
         def fetch(self, *args, **kwargs):
             raise AssertionError("synthetic wrapper must not fetch")
 
+    class LocalSpan:
+        def __init__(self, span_path, acquisition_path, **kwargs):
+            bindings.append(
+                {"span_path": span_path, "acquisition_path": acquisition_path, **kwargs}
+            )
+
+        def __call__(self, *args, **kwargs):
+            raise AssertionError("synthetic wrapper must not read")
+
     def measure(*args, **kwargs):
         assert kwargs["auxiliary_fetch"].__self__.__class__ is LocalOnly
+        assert kwargs["background_strain_reader"].__class__ is LocalSpan
         return {"status": "SYNTHETIC_ONLY"}
 
     monkeypatch.setattr(common, "VerifiedAuxiliaryReader", LocalOnly)
+    monkeypatch.setattr(common, "VerifiedSpanReader", LocalSpan)
     monkeypatch.setattr(common, "_measure_event", measure)
     result = common.measure_event(
         {"detector": "H1", "gps_start": 100},
@@ -131,9 +142,10 @@ def test_public_measurement_binds_verified_local_auxiliary_reader(
         execution=_execution(),
         run_dir=tmp_path,
         auxiliary_run_dir=tmp_path / "sealed_parent",
+        background_span_run_dir=tmp_path / "sealed_spans",
+        background_acquisition_run_dir=tmp_path / "sealed_frames",
         candidate_exclusion_gps=exclusions["O3a"],
         strain_reader=lambda: (_series(), "a" * 64),
-        background_strain_reader=lambda det, start, end: _series(start=start, end=end),
     )
     assert result["status"] == "SYNTHETIC_ONLY"
     assert bindings == [
@@ -143,7 +155,14 @@ def test_public_measurement_binds_verified_local_auxiliary_reader(
             "detector": "H1",
             "target_gps": 100,
             "channels": comparison["method"]["channels"]["H1"],
-        }
+        },
+        {
+            "span_path": tmp_path / "sealed_spans",
+            "acquisition_path": tmp_path / "sealed_frames",
+            "run": "O3a",
+            "detector": "H1",
+            "target_gps": 100,
+        },
     ]
 
 

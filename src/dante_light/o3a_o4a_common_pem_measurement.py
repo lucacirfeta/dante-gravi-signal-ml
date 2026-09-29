@@ -18,6 +18,7 @@ import numpy as np
 from src.core.index_contract import sha256_file
 from src.dante_light.contracts import ContractError, canonical_json_sha256
 from src.dante_light.o3a_o4a_common_pem_aux_reader import VerifiedAuxiliaryReader
+from src.dante_light.o3a_o4a_common_pem_span_reader import VerifiedSpanReader
 from src.pipeline_v2_production import pem_null_calibration as null_core
 from src.pipeline_v2_production.pem_coherence_analysis import (
     calculate_coherence_and_plot,
@@ -63,11 +64,12 @@ def measure_event(
     execution: Mapping[str, Any],
     run_dir: Path,
     auxiliary_run_dir: Path,
+    background_span_run_dir: Path,
+    background_acquisition_run_dir: Path,
     candidate_exclusion_gps: Sequence[float],
     strain_reader: Callable[[], tuple[Any, str]],
-    background_strain_reader: Callable[[str, int, int], Any],
 ) -> dict[str, Any]:
-    """Use only sealed local auxiliary input for this target's five channels."""
+    """Use only sealed local auxiliary and strain-background input."""
     try:
         detector = str(target["detector"])
         gps = float(target["gps_start"])
@@ -83,6 +85,13 @@ def measure_event(
         target_gps=int(gps),
         channels=channels,
     )
+    background_reader = VerifiedSpanReader(
+        background_span_run_dir,
+        background_acquisition_run_dir,
+        run=run,
+        detector=detector,
+        target_gps=int(gps),
+    )
     return _measure_event(
         target,
         run=run,
@@ -91,7 +100,7 @@ def measure_event(
         run_dir=run_dir,
         candidate_exclusion_gps=candidate_exclusion_gps,
         strain_reader=strain_reader,
-        background_strain_reader=background_strain_reader,
+        background_strain_reader=background_reader,
         auxiliary_fetch=auxiliary_reader.fetch,
     )
 
