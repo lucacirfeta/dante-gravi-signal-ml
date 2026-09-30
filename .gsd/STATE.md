@@ -1,6 +1,17 @@
 ## Current Position
 - **Milestone**: O3a transfer readiness
 - **Phase**: O3a diagnostic checkpoint closed; no downstream stage active
+- **Localized L1 follow-up candidate (2026-09-30)**: Author approved the
+  same-five-channel study. Numerical candidate uses the frozen one-second
+  Top-k region, local Welch coherence and a two-target corrected reference-tail
+  screen D <= 0.01; it makes no formal p-value/FWER claim. Synthetic/PEM/
+  PatchProducer regression: 124 PASS, 11 upstream warnings; Ruff PASS.
+  Metadata-only preflight finds at most 31 candidate-clean 96-second control
+  blocks for GPS1238508320, versus 199 required; this design is INCONCLUSIVE
+  there. GPS1241808544 has 437 before CAT2/3 checks. Existing comparative
+  backgrounds are in different CAT1 segments. Gate C remains disabled;
+  candidate contract is not a productive source freeze. See
+  `docs/DANTE_O3A_L1_LOCAL_FOLLOWUP_GATE_B_2026-09-30.md`.
 - **O3a diagnostic closure (2026-09-29)**: The frozen O3a scan,
   detector-aware native stages, classification, taxonomy, coincidence and
   O3a-only PEM are verified. The later five-common-channel O3a/O4a PEM
