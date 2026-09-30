@@ -95,8 +95,25 @@ astrophysical origin or a discovery.
 ## Validation and execution evidence
 
 Pre-run WSL regression: **168 passed**, 11 upstream warnings, 42.20 seconds,
-OS exit 0. Ruff lint/format PASS. Productive input plan/acquisition pending
-source freeze; no real local PEM statistic has been computed.
+OS exit 0. Ruff lint/format PASS. Source freeze: `3a9303e`; plan documentation
+commit: `bacdac4`. The real `--stage plan` finished with OS exit 0 and
+`FROZEN_MATCHED_NATIVE_SAMPLE_PLAN_NO_OUTCOMES`.
 The initial synthetic fixture errors concerned its temporary root and absent
 fixture status; they were repaired before any live acquisition. The targeted
 matched-input suite subsequently passed all 25 tests.
+
+Plan/run directory:
+`E:/dante_cache/dante_light/o3a_l1_local_followup_v1/matched_samples/samples_e55ae7830250617c9c9ece1e6984285ed249c73e38a4d44740be4e4c715d4c86`.
+The plan accounts for 20 official strain frames, 54 full-used strain spans
+and 265 native control auxiliary series. All 17 sealed source hashes match;
+the three new contract/module/runner files are byte-identical to Git freeze.
+The five borrowed historical event files passed native sample replay.
+Git audit: 16 sealed sources are byte-identical to the freeze. The existing
+`src/dante_light/contracts.py` working bytes are reconstructed exactly by
+LF-to-CRLF conversion of Git bytes, matching the upstream qualification;
+the file was not normalized or modified. No unexplained source mismatch.
+
+One WSL `--stage run` controller was started with stdout/stderr retained and
+supervision session 51240 for its OS exit. No duplicate controller was found;
+initial stderr was empty and E: had about 620 GiB free. Acquisition/replay
+completion is still pending. No real local PEM statistic has been computed.

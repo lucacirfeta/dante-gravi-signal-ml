@@ -22,7 +22,10 @@
   containers (265 native auxiliary series), with five immutable historical
   event references and full-span strain replay. Targeted synthetic tests:
   25 PASS; full WSL regression 168 PASS, 11 upstream warnings; Ruff PASS.
-  Productive acquisition has not started; Gate C remains closed.
+  Source freeze `3a9303e`; plan exit OS 0, key `e55ae783`, 20 strain frames,
+  54 strain spans, 265 native control series and five replayed historical
+  event references. All 17 source hashes match, new sources Git-byte-identical.
+  One WSL acquisition is active (exec session 51240); Gate C remains closed.
   See `docs/DANTE_O3A_L1_MATCHED_SAMPLES_2026-09-30.md`.
   Sample bytes and veto safety are not established by this gate. See
   `docs/DANTE_O3A_L1_LOCAL_FOLLOWUP_GATE_B_2026-09-30.md`.
