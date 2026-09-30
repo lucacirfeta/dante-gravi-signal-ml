@@ -1,4 +1,26 @@
 ## Current Position
+- **Multi-run administrative foundation (2026-09-30)**: Author confirmed
+  all public H1/L1 runs and V1 wherever public strain is available. Phase
+  08.01 implements a versioned eight-run availability catalogue, explicit
+  run/detector selection and shared exact adapter dispatch, local source
+  freeze `8d29136`. No fallback to O4a, dropped detector, scientific default,
+  production job, download or outcome access. O4a/V1 is unavailable;
+  O2/O3a/O3b/O4b V1 is data-catalogued but scientifically blocked. Equivalent
+  complete O4a selection preserves its existing command/run identity; the
+  common full UI uses the same adapter factory, not yet a multi-run selector.
+  Complete controller regression: WSL 167 PASS/one Windows-only skip,
+  Windows 168 PASS, observed exit 0; post-freeze Windows profile suite
+  42 PASS, observed exit 0. Ruff lint PASS; format PASS for new modules/CLI.
+  Existing detached-UI deadline failed twice before the latest green full
+  suites; timing remains qualified, not claimed repaired. WSL/Windows Git
+  EOL interpretations differ; no frozen file normalization or Git-setting
+  change. See phase-08 DEBUG/VERIFICATION and
+  docs/DANTE_WORKFLOW_MULTI_RUN_2026-09-30.md. Full multi-run readiness is
+  NOT complete: O3a adapter/stage graph, GUI selection, exact-GPS preflight,
+  clean-install real replay and new-run/V1 scientific contracts remain.
+  Any new population/reference/calibration/DQ/network-null choice requires
+  author review. No push, merge, public release or automation restart.
+  The completed O3a diagnostic findings and historical runs are unchanged.
 - **Final O3a diagnostic report (2026-09-30)**: Consolidated author-review
   report at docs/DANTE_O3A_FINAL_DIAGNOSTIC_REPORT_2026-09-30.md includes
   scan/native/classification accounting, all twelve target limitations,
@@ -47,8 +69,8 @@
   See docs/DANTE_O3A_L1_GATE_C_RESULT_2026-09-30.md. No push authorized;
   monitor suspended after checkpoint/report, no downstream stage active.
   Historical method/input artifacts and user untracked files are unchanged.
-- **Milestone**: O3a transfer readiness
-- **Phase**: O3a bounded local L1 follow-up verified and closed diagnostically
+- **Milestone**: Multi-run workflow productization; O3a diagnostic closure preserved
+- **Phase**: 08.01 administrative foundation verified; full multi-run execution pending
 - **Localized L1 follow-up approved method (2026-09-30)**: Author approved the
   same-five-channel study AND its concrete numerical decision rule. The method uses the frozen one-second
   Top-k region, local Welch coherence and a two-target corrected reference-tail
