@@ -176,3 +176,61 @@ inconclusive event coverage, metadata identity/geometry errors, offline
 standalone replay and refusal to repeat a terminal run. Two test-fixture
 failures (temporary path outside the repository sandbox and missing fixture
 status) were corrected; neither reached a live query or scientific run.
+
+## Real input metadata result (30 September)
+
+Source freeze: `775ca7e`. Approved design digest:
+`2cd634e601e9c1ec0fdf4d091d205f1e0bf21c6bba50729af095e83f04831ae6`.
+The real outcome-blind plan, acquisition and separate offline verifier each
+finished with OS exit 0. Verifier status:
+`PASS_VERIFIED_LOCAL_INPUT_METADATA_ONLY`. The snapshot is retained under:
+
+`E:/dante_cache/dante_light/o3a_l1_local_followup_v1/input_preflight/inputs_18a26a658d12f510c1b77697e74faabef5e45ff36d7facdae2d3d4972c61cdc2`.
+
+Summary seal:
+`c8373038cf651baeffff651c5fb89358a0ae05ddb45b6c63431dba3ed2c01ea2`;
+summary file SHA256:
+`fddeaf1073a1c3ef751c6b364a95fcb4e60d2a3be36091a2b161e04100c8fe84`.
+
+- GPS 1238508320: INCONCLUSIVE from the 31-block upper bound alone. No new
+  source query or local event statistic was needed for this target.
+- GPS 1241808544: all 437 candidate-clean blocks accounted. Eleven are
+  excluded by local-region BURST_CAT2 **and** BURST_CAT3 coverage; **426**
+  remain. No additional CBC_CAT2/3 or native-channel metadata gap rejects a
+  block. The target event has complete tested DQ and channel metadata coverage.
+  All five exact channels have full native-context coverage for retained blocks.
+- No failure, partial file or controller lock; both stderr files are empty.
+  All nine sealed source hashes match current bytes, and the four new method/
+  input files are byte-identical to their Git source freeze. Historical EOL
+  provenance qualifications are unchanged; no shared source was normalized.
+- Post-final-CLI targeted suite: **19 PASS**, 11 upstream warnings, exit 0.
+  The full pre-run suite remains **143 PASS**, 11 upstream warnings. Ruff PASS.
+
+This is a **metadata** result, not a new PEM result or proof of native sample
+integrity. It establishes that the second target's approved reference-tail
+resolution is feasible before numerical sample acquisition. No local T,
+reference-tail score or bootstrap result has been computed on real arrays.
+
+## Next authorized implementation increment
+
+1. Freeze a transport-only acquisition plan from precisely these 426 eligible
+   blocks, preserving all block identities and all five native channel rates.
+   Adjacent contexts may share a download container, but not a statistical
+   block: this is byte transport only. The exact 1,278 control contexts form
+   53 contiguous transport intervals and require **3,266,445,312 auxiliary
+   sample bytes** before NPY headers. No rejected gap may be filled or tested.
+   Reuse event input only after its historical receipt/sample verification.
+2. Bind official O3a_4KHZ_R1 strain frames for every complete matched context;
+   require published manifest checksums, exact metadata/rate and independent
+   local numerical replay, then standalone native auxiliary file verification.
+   Preserve all previous run directories. Do not interpret partial acquisition.
+3. Implement and test identical full-context preprocessing/local sampling,
+   whole-block maxima and descriptive block bootstrap, plus a standalone
+   measurement verifier. Freeze sources and the exact verified input receipt
+   before opening Gate C. Keep the first target INCONCLUSIVE and family size
+   two. A positive exploratory screen still requires a separate channel-safety
+   and physical-coupling review before any causal interpretation.
+
+Acceptance: complete, hash-verified matched sample inputs and green tests before
+real local measurement; no change to the already approved scientific rule.
+No control-sample download or productive local measurement has yet started.

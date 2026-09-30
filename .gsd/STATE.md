@@ -10,8 +10,14 @@
   blocks for GPS1238508320, versus 199 required; this design is INCONCLUSIVE
   there. GPS1241808544 has 437 before CAT2/3 checks. Existing comparative
   backgrounds are in different CAT1 segments. Gate C remains disabled.
-  Method config is frozen; the new outcome-blind matched-control input gate
-  snapshots public DQ and NDS2 metadata, with local standalone replay.
+  Method source freeze `775ca7e`; real outcome-blind matched-control input gate
+  and separate offline verifier exited OS 0/PASS. Of the second target's
+  437 candidate-clean blocks, 11 fail local BURST_CAT2/3 coverage and 426
+  have complete DQ/five-channel metadata coverage. No event coverage gap.
+  Run key `18a26a65`, zero failure/partial/lock. Regression 143 PASS,
+  post-final-CLI targeted 19 PASS; 11 upstream warnings; Ruff PASS.
+  Next authorized increment: matched native sample transport and byte replay,
+  then fully tested/source-frozen local measurement; no download started yet.
   Sample bytes and veto safety are not established by this gate. See
   `docs/DANTE_O3A_L1_LOCAL_FOLLOWUP_GATE_B_2026-09-30.md`.
 - **O3a diagnostic closure (2026-09-29)**: The frozen O3a scan,
