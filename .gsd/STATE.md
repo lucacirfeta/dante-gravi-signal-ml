@@ -16,8 +16,8 @@
   have complete DQ/five-channel metadata coverage. No event coverage gap.
   Run key `18a26a65`, zero failure/partial/lock. Regression 143 PASS,
   post-final-CLI targeted 19 PASS; 11 upstream warnings; Ruff PASS.
-  Next authorized increment: matched native sample transport and byte replay,
-  then fully tested/source-frozen local measurement. A separate transport-only
+  Matched native sample transport and byte replay are now complete.
+  A separate transport-only
   contract/adapter now preserves these 426 blocks in 53 adjacent-context
   containers (265 native auxiliary series), with five immutable historical
   event references and full-span strain replay. Targeted synthetic tests:
@@ -25,9 +25,18 @@
   Source freeze `3a9303e`; plan exit OS 0, key `e55ae783`, 20 strain frames,
   54 strain spans, 265 native control series and five replayed historical
   event references. All 17 source hashes match, new sources Git-byte-identical.
-  One WSL acquisition is active (exec session 51240); Gate C remains closed.
+  Acquisition exit OS 0 (recovered session 51240); standalone verifier exit
+  OS 0 (session 34719), PASS_VERIFIED_MATCHED_NATIVE_SAMPLES_ONLY. Exact
+  20 frame/54 strain receipts/265 native control files and receipts/five
+  unchanged event references; zero failure/partial/lock, both stderr empty.
+  Summary seal `4e4c0269`, file SHA `5f737268`; post-run 168 PASS, 11 upstream
+  warnings, Ruff PASS. Git source audit: 16 byte matches, contracts.py exact
+  LF->CRLF reconstruction unchanged. Monitor suspended after checkpoint.
+  Next: fully tested/source-frozen local measurement adapter and verifier
+  bound to this input receipt. Gate C remains closed; no local outcome read.
   See `docs/DANTE_O3A_L1_MATCHED_SAMPLES_2026-09-30.md`.
-  Sample bytes and veto safety are not established by this gate. See
+  The earlier metadata gate alone did not establish sample bytes; the new
+  sample gate does establish local numerical integrity, not veto safety. See
   `docs/DANTE_O3A_L1_LOCAL_FOLLOWUP_GATE_B_2026-09-30.md`.
 - **O3a diagnostic closure (2026-09-29)**: The frozen O3a scan,
   detector-aware native stages, classification, taxonomy, coincidence and

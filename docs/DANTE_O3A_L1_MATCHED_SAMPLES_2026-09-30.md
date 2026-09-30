@@ -115,5 +115,46 @@ the file was not normalized or modified. No unexplained source mismatch.
 
 One WSL `--stage run` controller was started with stdout/stderr retained and
 supervision session 51240 for its OS exit. No duplicate controller was found;
-initial stderr was empty and E: had about 620 GiB free. Acquisition/replay
-completion is still pending. No real local PEM statistic has been computed.
+initial stderr was empty and E: had about 620 GiB free. No real local PEM
+statistic has been computed.
+
+## Completed input gate (30 September, heartbeat 15:16 Europe/Rome)
+
+The acquisition terminated with OS **exit 0**, recovered from supervision
+session 51240. Its sealed summary status is
+`PASS_MATCHED_NATIVE_SAMPLES_COMPLETE_ONLY`. The separate, sole standalone
+`--stage verify` invocation (session 34719) also terminated with observed OS
+**exit 0** and logged `PASS_VERIFIED_MATCHED_NATIVE_SAMPLES_ONLY`. It did not
+download, alter or reacquire any source sample.
+
+Verified counts: 20 official frame files and 20 frame receipts; 54 complete
+strain receipts; 265 native control auxiliary files and 265 receipts; five
+unchanged borrowed event references. The 426 original reference blocks still
+account for all 1,278 contexts and 3,266,445,312 native auxiliary sample bytes
+before headers. Zero failure, partial file or controller lock. Both stderr
+logs are empty and no acquisition/verifier process remains. E: has about
+615 GiB free. No historical run or user file was modified.
+
+Summary seal:
+`4e4c026972fadafb8ef931523960deeaf015c28fc06073e814d9ab08e506a3d9`.
+Summary file SHA256:
+`5f7372687efe0c302402e37b5da130a06edda04b140628b8c55572818dadbb73`.
+The standalone verifier independently replays exact official strain metadata,
+manifest checksums, full used sample geometry and numerical digests, then
+all retained auxiliary bytes and historical event references. The sealed
+summary agrees with that replay. This is local integrity verification,
+**not a second NDS2/GWOSC fetch** or proof of sensor veto safety.
+
+Post-run WSL regression: **168 passed**, 11 upstream warnings, 40.99 seconds,
+OS exit 0. Ruff lint/format PASS. All 17 sealed source hashes still match;
+16 sources are Git-byte-identical and the unchanged `contracts.py` retains
+its exact LF-to-CRLF reconstruction qualification. `git diff --check` PASS.
+Structured verification is in
+`docs/DANTE_O3A_L1_MATCHED_SAMPLES_VERIFICATION_2026-09-30.md`.
+
+Input gate complete. The monitor is suspended after this checkpoint. The
+next increment is the tested/source-frozen Gate C measurement adapter and
+independent verifier bound to this exact input receipt. It has **not** been
+implemented or executed by this transport checkpoint. GPS 1238508320 stays
+INCONCLUSIVE; the corrected family remains two. No new local PEM outcome,
+bootstrap result, association, cause, significance or discovery is claimed.
