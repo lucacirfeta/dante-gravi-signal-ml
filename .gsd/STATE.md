@@ -34,6 +34,12 @@
   LF->CRLF reconstruction unchanged. Monitor suspended after checkpoint.
   Next: fully tested/source-frozen local measurement adapter and verifier
   bound to this input receipt. Gate C remains closed; no local outcome read.
+  Gate C implementation review found two unfreezed numerical policies:
+  fractional-region sample boundary rounding and exact parent highpass
+  stream/order semantics. Await author confirmation before implementation.
+  Proposed: relative ceil/ceil half-open crop; parent native-rate highpass
+  on strain only, then antialias-resample all streams. No code/config change.
+  See `docs/DANTE_O3A_L1_GATE_C_IMPLEMENTATION_REVIEW_2026-09-30.md`.
   See `docs/DANTE_O3A_L1_MATCHED_SAMPLES_2026-09-30.md`.
   The earlier metadata gate alone did not establish sample bytes; the new
   sample gate does establish local numerical integrity, not veto safety. See
