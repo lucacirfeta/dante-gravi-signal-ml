@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-l1-local-matched-samples-v1",
+  "status": "FROZEN_TRANSPORT_ONLY_NO_LOCAL_PEM_MEASUREMENT",
+  "transport_approval_date": "2026-09-30",
+  "method": {"path": "config/dante_o3a_l1_local_followup_v1.json", "sha256": "2625867ba9eb904fe99c7185ffd1c2fc059632172dcdb8bd0bcf6b7e3be3b241"},
+  "input_metadata": {
+    "root": "E:/dante_cache/dante_light/o3a_l1_local_followup_v1/input_preflight/inputs_18a26a658d12f510c1b77697e74faabef5e45ff36d7facdae2d3d4972c61cdc2",
+    "plan_digest": "18a26a658d12f510c1b77697e74faabef5e45ff36d7facdae2d3d4972c61cdc2",
+    "summary_digest": "c8373038cf651baeffff651c5fb89358a0ae05ddb45b6c63431dba3ed2c01ea2",
+    "summary_sha256": "fddeaf1073a1c3ef751c6b364a95fcb4e60d2a3be36091a2b161e04100c8fe84"
+  },
+  "strain_source": {"path": "config/dante_o3a_o4a_common_pem_background_v1.json", "sha256": "0ee18e179a9a1d1592a451dea3373756958c2c194d7cd3be9e5d28d6584d794a", "run": "O3a"},
+  "expected": {"measured_target_count": 1, "eligible_blocks": 426, "control_contexts": 1278, "control_transport_intervals": 53, "control_auxiliary_series": 265, "control_auxiliary_sample_bytes": 3266445312, "borrowed_event_auxiliary_series": 5},
+  "transport": {
+    "grouping": "MERGE_ONLY_EXACTLY_ADJACENT_ACCEPTED_CONTEXTS_NO_GAP_FILLING",
+    "native_rates_and_nds_policy": "INHERIT_HASH_BOUND_AUXILIARY_NATIVE_RATES_CONTRACT",
+    "event_auxiliary_policy": "VERIFY_AND_REFERENCE_EXISTING_EXACT_NATIVE_EVENT_FILES_NO_REFETCH",
+    "strain_policy": "OFFICIAL_MD5_AND_METADATA_THEN_ALL_USED_SAMPLES_INDEPENDENT_LOCAL_REPLAY",
+    "probe_policy": "INHERIT_V2_EARLIEST_USED_ONE_SECOND_PROBE",
+    "sample_cast_resample_filter_allowed": false,
+    "resume_on_failure_automatic": false,
+    "partial_acquisition_interpretable": false
+  },
+  "output_root": "E:/dante_cache/dante_light/o3a_l1_local_followup_v1/matched_samples",
+  "scientific_boundary": {"transport_only": true, "local_coherence_opened": false, "local_reference_tail_opened": false, "sensor_veto_safety_established": false, "global_significance_claim": false, "historical_artifacts_modified": false}
+}

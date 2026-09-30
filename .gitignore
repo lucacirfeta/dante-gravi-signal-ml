@@ -333,6 +333,7 @@ reports/
 scripts/*
 !scripts/preflight_dante_o3a_l1_local_followup.py
 !scripts/preflight_dante_o3a_l1_local_inputs.py
+!scripts/run_dante_o3a_l1_local_samples.py
 !scripts/preflight_dante_o3a_o4a_common_pem_background.py
 !scripts/audit_dante_o3a_transfer_readiness.py
 !scripts/freeze_dante_o3a_native_v1.py

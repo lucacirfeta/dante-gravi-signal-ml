@@ -17,7 +17,13 @@
   Run key `18a26a65`, zero failure/partial/lock. Regression 143 PASS,
   post-final-CLI targeted 19 PASS; 11 upstream warnings; Ruff PASS.
   Next authorized increment: matched native sample transport and byte replay,
-  then fully tested/source-frozen local measurement; no download started yet.
+  then fully tested/source-frozen local measurement. A separate transport-only
+  contract/adapter now preserves these 426 blocks in 53 adjacent-context
+  containers (265 native auxiliary series), with five immutable historical
+  event references and full-span strain replay. Targeted synthetic tests:
+  25 PASS; full WSL regression 168 PASS, 11 upstream warnings; Ruff PASS.
+  Productive acquisition has not started; Gate C remains closed.
+  See `docs/DANTE_O3A_L1_MATCHED_SAMPLES_2026-09-30.md`.
   Sample bytes and veto safety are not established by this gate. See
   `docs/DANTE_O3A_L1_LOCAL_FOLLOWUP_GATE_B_2026-09-30.md`.
 - **O3a diagnostic closure (2026-09-29)**: The frozen O3a scan,
