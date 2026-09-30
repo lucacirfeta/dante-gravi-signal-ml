@@ -7,9 +7,10 @@ import json
 from pathlib import Path
 import sys
 
-from .adapters import WorkflowPaths
+from .adapters import AdapterError, WorkflowPaths
 from .orchestrator import OrchestrationError, WorkflowOrchestrator
 from .reporting import WorkflowReportingError, write_workflow_report
+from .run_profiles import DEFAULT_REGISTRY_RELATIVE, RunProfileError, load_run_registry
 from .schema import load_workflow_spec
 from .state import WorkflowStateError
 from .verification import WorkflowVerificationError, verify_workflow
@@ -39,7 +40,18 @@ def _add_common(
         "--cache-root", type=Path, default=Path("E:/dante_cache/dante_light")
     )
     parser.add_argument("--workflow-root", type=Path)
-    parser.add_argument("--expected-run-key", help="Reject a changed UI launch identity")
+    parser.add_argument(
+        "--expected-run-key", help="Reject a changed UI launch identity"
+    )
+    parser.add_argument(
+        "--observing-run", help="Explicit public-run profile (no fallback)"
+    )
+    parser.add_argument(
+        "--detectors", nargs="+", help="Explicit H1/L1/V1 profile scope"
+    )
+    parser.add_argument(
+        "--run-registry", type=Path, help="Versioned run profile registry"
+    )
 
 
 def _parser(
@@ -58,6 +70,8 @@ def _parser(
         "status",
         "verify",
         "report",
+        "runs",
+        "run-readiness",
     ):
         command = commands.add_parser(name)
         _add_common(command, default_repository_root=repository_root)
@@ -72,13 +86,25 @@ def _parser(
 
 def _orchestrator(args: argparse.Namespace) -> WorkflowOrchestrator:
     repository_root = args.repository_root.resolve()
+    if args.detectors is not None and args.observing_run is None:
+        raise RunProfileError("--detectors requires --observing-run")
+    if args.run_registry is not None and args.observing_run is None:
+        raise RunProfileError("--run-registry requires --observing-run")
     config = (
         args.config.resolve()
         if args.config is not None
         else repository_root / DEFAULT_CONFIG_RELATIVE
     )
+    if args.observing_run is not None:
+        registry = _registry(args)
+        selected_config = registry.resolve_workflow(args.observing_run, args.detectors)
+        if args.config is not None and config != selected_config:
+            raise RunProfileError(
+                "--config differs from the selected frozen run profile"
+            )
+        config = selected_config
     spec = load_workflow_spec(config, root=repository_root)
-    return WorkflowOrchestrator.corrected_o4a(
+    return WorkflowOrchestrator.from_spec(
         spec=spec,
         paths=WorkflowPaths(
             repository_root=repository_root,
@@ -87,6 +113,16 @@ def _orchestrator(args: argparse.Namespace) -> WorkflowOrchestrator:
         ),
         workflow_root=args.workflow_root,
     )
+
+
+def _registry(args: argparse.Namespace):
+    root = args.repository_root.resolve()
+    path = (
+        args.run_registry.resolve()
+        if args.run_registry
+        else root / DEFAULT_REGISTRY_RELATIVE
+    )
+    return load_run_registry(path, root=root)
 
 
 def main(
@@ -98,9 +134,28 @@ def main(
 
     args = _parser(default_repository_root=default_repository_root).parse_args(argv)
     try:
+        if args.command in {"runs", "run-readiness"}:
+            if args.config is not None:
+                raise RunProfileError(
+                    "catalogue commands accept --run-registry, not --config"
+                )
+            registry = _registry(args)
+            if args.command == "runs":
+                if args.observing_run is not None or args.detectors is not None:
+                    raise RunProfileError(
+                        "use run-readiness for an explicit run/detector selection"
+                    )
+                result = registry.describe()
+            else:
+                result = registry.readiness(args.observing_run, args.detectors)
+            print(json.dumps(result, indent=2, sort_keys=True))
+            print(result["status"], file=sys.stderr)
+            return 2 if result.get("blockers") else 0
         orchestrator = _orchestrator(args)
         if args.expected_run_key and args.expected_run_key != orchestrator.run_key:
-            raise OrchestrationError("requested run key differs from current source or paths")
+            raise OrchestrationError(
+                "requested run key differs from current source or paths"
+            )
         if args.command == "plan":
             result = orchestrator.plan()
         elif args.command == "status":
@@ -140,6 +195,7 @@ def main(
             return 1
         return 0
     except (
+        AdapterError,
         OrchestrationError,
         WorkflowReportingError,
         WorkflowStateError,

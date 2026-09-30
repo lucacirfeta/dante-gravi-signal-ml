@@ -153,7 +153,7 @@ class WorkflowUIController:
             # Keep the UI available so local_preflight can report an absent
             # worker. A run cannot launch until this path becomes executable.
             worker_python = self.worker_python
-        return WorkflowOrchestrator.corrected_o4a(
+        return WorkflowOrchestrator.from_spec(
             spec=spec,
             paths=WorkflowPaths(
                 repository_root=selection.repository_root,

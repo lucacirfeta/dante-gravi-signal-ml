@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .base import AdapterError, StageAdapter, StageCommand, WorkflowPaths
+from ..schema import WorkflowSpec
 from ..state import ArtifactReceipt
 
 
@@ -201,6 +202,16 @@ _DEFINITIONS = {
 
 class O4aCorrectedAdapter(StageAdapter):
     """Build exact corrected-O4a CLI calls with no metric translation."""
+
+    observing_run = "O4a"
+    detectors = ("H1", "L1")
+
+    def __init__(
+        self, spec: WorkflowSpec, *, python_executable: str = "python"
+    ) -> None:
+        if spec.adapter != "o4a_corrected":
+            raise AdapterError("O4a adapter requires the o4a_corrected contract")
+        super().__init__(spec, python_executable=python_executable)
 
     @staticmethod
     def cache_roots(paths: WorkflowPaths) -> dict[str, Path]:

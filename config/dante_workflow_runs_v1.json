@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "registry_id": "dante-public-run-profiles-v1",
+  "catalogue_source": "https://gwosc.org/data/",
+  "checked_on": "2026-09-30",
+  "runs": [
+    {
+      "name": "S5",
+      "public_strain_detectors": ["H1", "L1"],
+      "data_url": "https://gwosc.org/archive/S5/",
+      "method_contract": null,
+      "workflow_contract": null
+    },
+    {
+      "name": "S6",
+      "public_strain_detectors": ["H1", "L1"],
+      "data_url": "https://gwosc.org/archive/S6/",
+      "method_contract": null,
+      "workflow_contract": null
+    },
+    {
+      "name": "O1",
+      "public_strain_detectors": ["H1", "L1"],
+      "data_url": "https://gwosc.org/O1/",
+      "method_contract": null,
+      "workflow_contract": null
+    },
+    {
+      "name": "O2",
+      "public_strain_detectors": ["H1", "L1", "V1"],
+      "data_url": "https://gwosc.org/O2/",
+      "method_contract": null,
+      "workflow_contract": null
+    },
+    {
+      "name": "O3a",
+      "public_strain_detectors": ["H1", "L1", "V1"],
+      "data_url": "https://gwosc.org/O3/O3a/",
+      "method_contract": {
+        "path": "config/dante_o3a_native_v1_stage_contract.json",
+        "contract_digest": "fb29f22ffc5a796843383d6ed48032879b1b44252b46a93163e7db2eec157a7d",
+        "detectors": ["H1", "L1"],
+        "detector_scope_path": ["author_decisions", "initial_calibration_and_scan", "detectors"]
+      },
+      "workflow_contract": null
+    },
+    {
+      "name": "O3b",
+      "public_strain_detectors": ["H1", "L1", "V1"],
+      "data_url": "https://gwosc.org/O3/O3b/",
+      "method_contract": null,
+      "workflow_contract": null
+    },
+    {
+      "name": "O4a",
+      "public_strain_detectors": ["H1", "L1"],
+      "data_url": "https://gwosc.org/O4/O4a/",
+      "method_contract": {
+        "path": "config/dante_o4a_corrected_native_v1.json",
+        "contract_digest": "66f5796aecdea5a1009257a96a351e960c0801eadb60dc40bbf01bdfa74378c2",
+        "detectors": ["H1", "L1"],
+        "detector_scope_path": ["cohort", "detectors"]
+      },
+      "workflow_contract": {
+        "path": "config/dante_workflow_productization_v1.json",
+        "contract_digest": "1d7270c0bcd15b3c344f94bb37fe82033b67bf4ad12615bb50b5efab43422cdd",
+        "detectors": ["H1", "L1"]
+      }
+    },
+    {
+      "name": "O4b",
+      "public_strain_detectors": ["H1", "L1", "V1"],
+      "data_url": "https://gwosc.org/archive/O4b_4KHZ_R1/",
+      "method_contract": null,
+      "workflow_contract": null
+    }
+  ],
+  "registry_digest": "b1d874abd7c0c35ca97ee9dc5a19bacd63fe210c23ab9817119d77d4180d1da0"
+}

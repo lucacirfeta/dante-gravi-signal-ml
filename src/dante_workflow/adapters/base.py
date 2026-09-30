@@ -69,6 +69,9 @@ class StageCommand:
 class StageAdapter(ABC):
     """Construct commands and receipts without interpreting scientific data."""
 
+    observing_run: str
+    detectors: tuple[str, ...]
+
     def __init__(self, spec: WorkflowSpec, *, python_executable: str = "python") -> None:
         if not python_executable.strip():
             raise ValueError("python_executable must be non-empty")
@@ -80,6 +83,16 @@ class StageAdapter(ABC):
         self, stage: str, action: str, paths: WorkflowPaths
     ) -> StageCommand:
         """Return the unchanged scientific CLI plus path-only arguments."""
+
+    @abstractmethod
+    def index_window_manifest_receipt(self, cohort_ledger: Path) -> ArtifactReceipt:
+        """Bind the profile's index population to its verified cohort bytes."""
+
+    @abstractmethod
+    def cohort_manifest_receipt_from_verifier(
+        self, verifier_payload: Mapping[str, Any]
+    ) -> ArtifactReceipt:
+        """Resolve the profile's cohort receipt without interpreting outcomes."""
 
     def scientific_digests_for_stage(self, stage: str) -> Mapping[str, str]:
         stage_spec = self.spec.stage(stage)

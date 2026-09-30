@@ -12,7 +12,7 @@ import sys
 from typing import Any
 from uuid import uuid4
 
-from .adapters import O4aCorrectedAdapter, StageCommand, WorkflowPaths
+from .adapters import StageAdapter, StageCommand, WorkflowPaths, build_adapter
 from .schema import WorkflowSpec, canonical_json_sha256
 from .state import (
     ArtifactReceipt,
@@ -136,7 +136,7 @@ class WorkflowOrchestrator:
         self,
         *,
         spec: WorkflowSpec,
-        adapter: O4aCorrectedAdapter,
+        adapter: StageAdapter,
         paths: WorkflowPaths,
         runner: CommandRunner = subprocess_runner,
         source_identity: Mapping[str, str] | None = None,
@@ -264,9 +264,32 @@ class WorkflowOrchestrator:
         source_identity: Mapping[str, str] | None = None,
         workflow_root: Path | None = None,
     ) -> "WorkflowOrchestrator":
+        if spec.adapter != "o4a_corrected":
+            raise OrchestrationError("corrected_o4a requires the o4a_corrected adapter")
+        return cls.from_spec(
+            spec=spec,
+            paths=paths,
+            python_executable=python_executable,
+            runner=runner,
+            source_identity=source_identity,
+            workflow_root=workflow_root,
+        )
+
+    @classmethod
+    def from_spec(
+        cls,
+        *,
+        spec: WorkflowSpec,
+        paths: WorkflowPaths,
+        python_executable: str = sys.executable,
+        runner: CommandRunner = subprocess_runner,
+        source_identity: Mapping[str, str] | None = None,
+        workflow_root: Path | None = None,
+    ) -> "WorkflowOrchestrator":
+        """Resolve a registered adapter before opening any ledger or worker."""
         return cls(
             spec=spec,
-            adapter=O4aCorrectedAdapter(
+            adapter=build_adapter(
                 spec,
                 python_executable=python_executable,
             ),
