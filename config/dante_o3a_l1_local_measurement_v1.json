@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "contract_id": "dante-o3a-l1-local-measurement-v1",
+  "status": "FROZEN_GATE_C_EXECUTION_METHOD_UNCHANGED",
+  "author_boundary_and_preprocessing_approval_date": "2026-09-30",
+  "method": {"path": "config/dante_o3a_l1_local_followup_v1.json", "sha256": "2625867ba9eb904fe99c7185ffd1c2fc059632172dcdb8bd0bcf6b7e3be3b241"},
+  "matched_samples": {
+    "root": "E:/dante_cache/dante_light/o3a_l1_local_followup_v1/matched_samples/samples_e55ae7830250617c9c9ece1e6984285ed249c73e38a4d44740be4e4c715d4c86",
+    "plan_digest": "e55ae7830250617c9c9ece1e6984285ed249c73e38a4d44740be4e4c715d4c86",
+    "summary_digest": "4e4c026972fadafb8ef931523960deeaf015c28fc06073e814d9ab08e506a3d9",
+    "summary_sha256": "5f7372687efe0c302402e37b5da130a06edda04b140628b8c55572818dadbb73"
+  },
+  "sampling": {
+    "boundary": "HALF_OPEN_RELATIVE_SAMPLE_TIMESTAMPS",
+    "indices": "[ceil(relative_start_s * sample_rate_hz), ceil(relative_end_s * sample_rate_hz))",
+    "absolute_gps_float_subtraction_allowed": false,
+    "library_crop_rounding_allowed": false
+  },
+  "preprocessing": {
+    "order": "FULL_NATIVE_CONTEXT_STRAIN_HIGHPASS_THEN_ALL_STREAMS_ANTIALIAS_RESAMPLE_THEN_EXACT_LOCAL_CROP",
+    "strain_highpass": "GWPY_TIMESERIES_HIGHPASS_PARENT_CUTOFF_UNCHANGED_DEFAULTS",
+    "auxiliary_highpass": false,
+    "resample": "GWPY_TIMESERIES_RESAMPLE_UNCHANGED_FIR_HAMMING_DEFAULTS_SKIP_EQUAL_RATE",
+    "context": "EACH_INDIVIDUAL_FROZEN_CONTEXT_NOT_MERGED_TRANSPORT_SPAN",
+    "event_control_policy_identical": true,
+    "reason": "Methodological parity of filter placement, stream asymmetry and operation order with the historical O3a/O4a common-PEM event readers and coherence core, NOT an optimization for these post-hoc targets. The common 512 Hz rate, local region and Welch estimator remain the separately approved Gate B method. Native-rate strain highpass precedes antialiased resampling; alias rejection is provided by the resampler, not by highpass alone. Auxiliary streams inherit no additional highpass. Every complete context is processed before local cropping, equally for event and controls.",
+    "parent_cutoff": "config/dante_o3a_o4a_common_pem_v1.json:method.measurement.strain_highpass_hz",
+    "historical_sources": [
+      {"path": "src/dante_light/o3a_native_pem.py", "symbol": "_event_strain", "sha256": "529f5a54fe7bbcd18bf2095cbcff34feae74da0d79a10696e231c15d678f6af9"},
+      {"path": "src/dante_light/o3a_o4a_common_pem_strain.py", "symbol": "o4a_event_strain", "sha256": "81b2a2e692d6d9752ce28f164d4becad50cbcd57e3dd5c6f50d65c2f06d9c3da"},
+      {"path": "src/dante_light/o3a_o4a_common_pem_measurement.py", "symbol": "_measure_event", "sha256": "44f462dd083659e63b01c9ea3bf9e9c82d09519045bd34e97475b043abca87c9"},
+      {"path": "src/pipeline_v2_production/pem_coherence_analysis.py", "symbol": "calculate_coherence_and_plot", "sha256": "48c557db470441c38a0c1bd24e8a07abfca21616f7bdcc3304d2eea3b707652b"}
+    ]
+  },
+  "validation": {
+    "independent_spectrum": "DIRECT_SEGMENT_DEMEAN_PERIODIC_HANN_RFFT_CROSS_AUTOSPECTRA_NOT_SCIPY_COHERENCE",
+    "numerical_comparison_atol": 1e-12,
+    "numerical_comparison_rtol": 1e-12,
+    "tolerance_role": "REPLAY_ROUNDOFF_ONLY_NEVER_THRESHOLD_OR_TIE_TOLERANCE",
+    "exact_producer_replay_required": true,
+    "bootstrap": "PCG64_SEED_FROM_METHOD_WHOLE_BLOCK_INDEX_RESAMPLING_SAVE_ALL_EXCEEDANCE_COUNTS",
+    "bootstrap_confidence_interval_requested": false,
+    "unavailable_context": "EXCLUDE_AND_ACCOUNT_ENTIRE_INCOMPLETE_REFERENCE_BLOCK_EVENT_INCONCLUSIVE",
+    "provenance_or_geometry_mismatch": "FAIL_CLOSED_STOP_NO_AUTOMATIC_RESUME"
+  },
+  "runtime_versions": {"gwpy": "4.0.1", "numpy": "2.4.6", "scipy": "1.17.1", "h5py": "3.16.0"},
+  "execution": {"gate_c_enabled": true, "source_freeze_required": true, "download_allowed": false, "automatic_resume_allowed": false},
+  "output_root": "E:/dante_cache/dante_light/o3a_l1_local_followup_v1/local_measurement",
+  "scientific_boundary": {"post_hoc_target_selection": true, "diagnostic_only": true, "formal_p_value_or_fwer": false, "global_significance_claim": false, "astrophysical_origin_claim": false, "a2_promotion": false, "negative_clears_untested_channels": false, "historical_outputs_immutable": true, "local_screen_comparable_to_existing_intra_or_cross_detector_thresholds": false}
+}

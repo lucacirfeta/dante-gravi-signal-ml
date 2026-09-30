@@ -1,6 +1,17 @@
 ## Current Position
+- **Gate C implementation checkpoint (2026-09-30)**: Author approved the two
+  previously open policies. Separate execution contract records relative
+  half-open ceil/ceil boundaries and historical strain-only native highpass,
+  antialias resampling and local crop with four source/hash references.
+  New offline adapter, runner and independent FFT verifier passed WSL
+  regression: 210 PASS (42 new tests), 11 upstream warnings, 46.43 seconds;
+  Ruff PASS. Preliminary lint/fixture defects are corrected and retained in
+  JOURNAL; no scientific/hash gate bypass. No real local outcome opened.
+  Next: local source freeze, input-bound plan, single run and independent
+  standalone verify with observed OS exits. No push authorized.
+  Historical method/input artifacts and user untracked files are unchanged.
 - **Milestone**: O3a transfer readiness
-- **Phase**: O3a diagnostic checkpoint closed; no downstream stage active
+- **Phase**: O3a local L1 Gate C adapter validated; awaiting source freeze and real plan
 - **Localized L1 follow-up approved method (2026-09-30)**: Author approved the
   same-five-channel study AND its concrete numerical decision rule. The method uses the frozen one-second
   Top-k region, local Welch coherence and a two-target corrected reference-tail
@@ -34,11 +45,12 @@
   LF->CRLF reconstruction unchanged. Monitor suspended after checkpoint.
   Next: fully tested/source-frozen local measurement adapter and verifier
   bound to this input receipt. Gate C remains closed; no local outcome read.
-  Gate C implementation review found two unfreezed numerical policies:
-  fractional-region sample boundary rounding and exact parent highpass
-  stream/order semantics. Await author confirmation before implementation.
-  Proposed: relative ceil/ceil half-open crop; parent native-rate highpass
-  on strain only, then antialias-resample all streams. No code/config change.
+  Gate C implementation review identified two numerical policies; the author
+  has now approved relative ceil/ceil half-open crop and parent native-rate
+  highpass on strain only, followed by antialias resampling of all streams.
+  The separate versioned measurement contract records historical parity,
+  source-symbol/file-hash references and identical event/control processing.
+  The frozen Gate B method and transport contracts remain unchanged.
   See `docs/DANTE_O3A_L1_GATE_C_IMPLEMENTATION_REVIEW_2026-09-30.md`.
   See `docs/DANTE_O3A_L1_MATCHED_SAMPLES_2026-09-30.md`.
   The earlier metadata gate alone did not establish sample bytes; the new

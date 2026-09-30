@@ -1,4 +1,15 @@
-# Gate C implementation review: unresolved preprocessing semantics
+# Gate C implementation review: preprocessing semantics
+
+## Author resolution (2026-09-30, before implementation/outcomes)
+
+Both proposed policies below are now approved: relative ceil/ceil half-open
+sample selection, and historical native-rate strain-only highpass followed by
+antialiased resampling of all streams and exact local crop. The separate
+`config/dante_o3a_l1_local_measurement_v1.json` records the methodological-parity
+rationale and four historical source symbols with file hashes. This is not
+case-specific optimization. Highpass alone is not an antialias filter; the
+resampler supplies alias rejection. The original Gate B file remains unchanged.
+The earlier blocked review is retained below as decision history.
 
 Status: BLOCKED_BEFORE_IMPLEMENTATION pending two author decisions. No real
 localized coherence, reference-tail score, bootstrap or new outcome was
