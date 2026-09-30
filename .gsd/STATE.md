@@ -6,12 +6,33 @@
   New offline adapter, runner and independent FFT verifier passed WSL
   regression: 210 PASS (42 new tests), 11 upstream warnings, 46.43 seconds;
   Ruff PASS. Preliminary lint/fixture defects are corrected and retained in
-  JOURNAL; no scientific/hash gate bypass. No real local outcome opened.
-  Next: local source freeze, input-bound plan, single run and independent
-  standalone verify with observed OS exits. No push authorized.
+  JOURNAL; no scientific/hash gate bypass. No real local outcome was opened
+  before this synthetic/source-freeze gate.
+  Source freeze `6db397f`; input-bound plan completed with observed OS exit 0,
+  key `831b9072`, 426 eligible blocks and five channels. Source audit:
+  25 hashes match; 23 Git-byte-identical, contracts.py and historical
+  pem_coherence_analysis.py exactly reconstructible LF->CRLF, unchanged.
+  Productive run completed with observed OS exit 0 (session 52329), summary
+  PASS_LOCAL_L1_MEASUREMENT_COMPLETE_DIAGNOSTIC_ONLY seal b08b443b,
+  426 block receipts/1278 contexts; zero failure/partial/lock, stderr empty.
+  Standalone verifier completed with observed OS exit 0 (session 55441),
+  PASS_VERIFIED_LOCAL_L1_DIAGNOSTIC_ONLY, seal fc91e486, summary SHA1ad0780f.
+  Independent FFT and exact producer/block/decision/bootstrap replay PASS;
+  25 source hashes/Git qualifications unchanged. Both stderr empty and no
+  active controller, failure, partial or lock. Post-run 210 PASS, 11 upstream
+  warnings, 43.10 seconds; Ruff lint/format PASS. GPS1238508320 remains
+  INCONCLUSIVE (31 possible controls versus199, no new local measurement).
+  GPS1241808544: T0.6729808428996378,68/426 block exceedances,
+  D0.3231850117096019 > fixed0.01: NO_LOCALIZED_ASSOCIATION_DETECTED_IN_TESTED_CHANNELS.
+  Zero numerically unavailable blocks. Bootstrap2000 whole-block replicates
+  replayed, descriptive only; target family remains two. No cause identified,
+  no astro/global/FWER claim or A2 promotion. Bounded follow-up complete;
+  any altered controls/channels/method needs separate author decision.
+  See docs/DANTE_O3A_L1_GATE_C_RESULT_2026-09-30.md. No push authorized;
+  monitor suspended after checkpoint/report, no downstream stage active.
   Historical method/input artifacts and user untracked files are unchanged.
 - **Milestone**: O3a transfer readiness
-- **Phase**: O3a local L1 Gate C adapter validated; awaiting source freeze and real plan
+- **Phase**: O3a bounded local L1 follow-up verified and closed diagnostically
 - **Localized L1 follow-up approved method (2026-09-30)**: Author approved the
   same-five-channel study AND its concrete numerical decision rule. The method uses the frozen one-second
   Top-k region, local Welch coherence and a two-target corrected reference-tail
@@ -20,7 +41,8 @@
   Metadata-only preflight finds at most 31 candidate-clean 96-second control
   blocks for GPS1238508320, versus 199 required; this design is INCONCLUSIVE
   there. GPS1241808544 has 437 before CAT2/3 checks. Existing comparative
-  backgrounds are in different CAT1 segments. Gate C remains disabled.
+  backgrounds are in different CAT1 segments. Gate C was disabled at that
+  metadata-only checkpoint; the subsequent approved execution is recorded above.
   Method source freeze `775ca7e`; real outcome-blind matched-control input gate
   and separate offline verifier exited OS 0/PASS. Of the second target's
   437 candidate-clean blocks, 11 fail local BURST_CAT2/3 coverage and 426
@@ -43,8 +65,9 @@
   Summary seal `4e4c0269`, file SHA `5f737268`; post-run 168 PASS, 11 upstream
   warnings, Ruff PASS. Git source audit: 16 byte matches, contracts.py exact
   LF->CRLF reconstruction unchanged. Monitor suspended after checkpoint.
-  Next: fully tested/source-frozen local measurement adapter and verifier
-  bound to this input receipt. Gate C remains closed; no local outcome read.
+  Gate C was subsequently opened under a separate author-approved execution
+  contract, source-frozen adapter and verifier bound to this input receipt.
+  It is now PASS verified as recorded above; transport parents remain unchanged.
   Gate C implementation review identified two numerical policies; the author
   has now approved relative ceil/ceil half-open crop and parent native-rate
   highpass on strain only, followed by antialias resampling of all streams.

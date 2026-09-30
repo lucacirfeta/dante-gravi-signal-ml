@@ -64,3 +64,11 @@ PASS. Fixture-only preliminary defects were corrected before the source freeze;
 no real local event/null outcome was inspected. Installed versions are pinned
 in the execution contract, with numeric implementation hashes recorded in the
 plan. Git-source EOL qualifications are retained, never normalized in place.
+
+Task 1 complete under local source freeze `6db397f`. Task 2 input-bound plan
+exited OS 0 with digest `831b9072...`; run (session 52329) and independent
+verifier (session 55441) both completed with observed OS exit 0. Verification
+receipt `fc91e486...` is PASS_VERIFIED_LOCAL_L1_DIAGNOSTIC_ONLY. Post-run
+regression: 210 PASS, 11 upstream warnings, 43.10 seconds; Ruff PASS. Task 2
+complete: first target INCONCLUSIVE, second negative under the frozen local
+screen. See the result checkpoint for exact identities, receipts and limits.
