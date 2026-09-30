@@ -1,9 +1,14 @@
 # O3a two-residual localization: concrete Gate B candidate
 
-Status: method candidate tested on synthetic arrays; real measurement gate
-disabled. On 30 September the author approved the narrow five-channel scope
-and requested an explicit numerical decision threshold before measurement.
+Status: numerical method approved and frozen on 30 September; real
+measurement gate remains disabled pending verified matched sample inputs.
+The author approved the narrow five-channel scope, then explicitly approved
+the concrete D <= 0.01 candidate and the first target's INCONCLUSIVE disposition.
 The approved O3a diagnostic checkpoint remains complete.
+
+The candidate discussion and original metadata-only evidence below are kept
+as the decision history. The subsequent input gate does not change the
+statistic, region, block geometry, guard, multiplicity family or cutoff.
 
 ## Statistic, region and decision
 
@@ -131,3 +136,43 @@ against the installed WSL SciPy 1.17.1 and the fixed region geometry.
   verified and the first target cannot resolve the proposed tail cutoff.
   No new localized real outcome, productive run key or source-frozen active
   contract is claimed.
+
+## Approved method and matched-input metadata gate
+
+The contract status is now `FROZEN_GATE_B_METHOD_INPUTS_NOT_YET_VERIFIED`.
+Both author scope and numeric-rule approvals are dated 30 September. Gate C,
+sample downloading and new auxiliary outcomes remain disabled in this
+contract. A new outcome-blind preflight is implemented in
+`src/dante_light/o3a_l1_local_inputs.py` and
+`scripts/preflight_dante_o3a_l1_local_inputs.py`.
+
+Its plan binds source SHA256 values, the approved method and both target
+identities. No network/sample queries are made for the already unresolvable
+first target. For the second, public GWOSC CBC_CAT1/2/3 and BURST_CAT2/3 pass
+segments and NDS2 metadata for the exact five channels are snapshotted over
+the same frozen contiguous segment. Live CBC_CAT1 must equal that frozen
+segment. Each of the 437 candidate-clean blocks is independently accounted
+as eligible or excluded. A quality gap only excludes a block when a tested
+local region overlaps it; an auxiliary gap anywhere in a full 32-second
+context excludes the whole block. Nothing is stitched across gaps and no
+block is selected by a coherence result.
+
+Standalone verification replays the saved metadata and eligibility locally,
+requiring unchanged plan/source/parent and snapshot hashes. It is **not** a
+second NDS2 query, a sample-byte verification, an independent physical
+measurement or evidence that a sensor is veto-safe. Native sample hashes,
+matched strain coverage and positive-result channel safety remain later
+gates. Missing coverage is not a negative result. The family remains two.
+
+Plan check: requirements, dependency ordering and complete block accounting
+are covered. This increment is limited to the input metadata gate; it cannot
+produce a real local T, reference-tail score, physical attribution or discovery.
+
+Preflight source-freeze regression: **143 passed, 11 upstream warnings in
+41.15 seconds**, OS exit 0; Ruff lint/format PASS. The new input-gate tests
+cover fractional-second DQ overlap, no veto for a gap elsewhere in the
+context, full-context native-channel gaps, complete block rejection,
+inconclusive event coverage, metadata identity/geometry errors, offline
+standalone replay and refusal to repeat a terminal run. Two test-fixture
+failures (temporary path outside the repository sandbox and missing fixture
+status) were corrected; neither reached a live query or scientific run.

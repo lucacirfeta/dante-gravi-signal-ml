@@ -1,8 +1,9 @@
 {
   "schema_version": 1,
   "contract_id": "dante-o3a-l1-local-followup-v1",
-  "status": "CANDIDATE_GATE_B_METHOD_NO_REAL_MEASUREMENTS",
+  "status": "FROZEN_GATE_B_METHOD_INPUTS_NOT_YET_VERIFIED",
   "author_scope_approval_date": "2026-09-30",
+  "author_numeric_rule_approval_date": "2026-09-30",
   "targets": [
     {"detector": "L1", "gps_start": 1238508320},
     {"detector": "L1", "gps_start": 1241808544}
@@ -13,7 +14,9 @@
     "cat1": {"path": "config/dante_o3a_cbc_cat1_segments_v1.json", "sha256": "49dcfdbe642dbfb1624a1ddf544abc69667317e6be62102dc6c0424811e1e6ac"},
     "coincidence": {"path": "artifacts/dante_light/o3a_native_v1/native_coincidence.json", "sha256": "5060bd1659100f6caaadc94b3b3f3e7677afeb9c1718f24b6f7e769d4d115d70"},
     "coincidence_contract": {"path": "config/dante_o3a_native_coincidence_v2.json", "sha256": "9726715499533a1e3b2f6086edbf1c3fa78a2b07098128ae60fcdeed013b050c"},
-    "classification": {"path": "artifacts/dante_light/o3a_native_v1/native_classification.json", "sha256": "49ffc508ee98d4c1f6495dd8cb0f452b3387270d057fd7d1fe81d8711de3fb32"}
+    "classification": {"path": "artifacts/dante_light/o3a_native_v1/native_classification.json", "sha256": "49ffc508ee98d4c1f6495dd8cb0f452b3387270d057fd7d1fe81d8711de3fb32"},
+    "native_pem": {"path": "config/dante_o3a_native_pem_v1.json", "sha256": "ed20ae7534cf698ac13b9500044c5c82d3456ac0d8ba1801e28fa04660a89040"},
+    "auxiliary_native_rates": {"path": "config/dante_o3a_o4a_common_pem_aux_samples_v1.json", "sha256": "a5d0e1b978587f5d29818dcc4ec0c69455c0b9da748739b5762887c1e878db90"}
   },
   "measurement": {
     "statistic": "MAX_LOCAL_WELCH_MAGNITUDE_SQUARED_COHERENCE_OVER_FROZEN_CHANNELS_AND_BAND_BINS",
@@ -67,6 +70,15 @@
     "physical_attribution": "SEPARATE_TIMING_FREQUENCY_COUPLING_AND_CHANNEL_SAFETY_EVIDENCE_REQUIRED",
     "p_value_or_formal_fwer_claim": false,
     "note": "The Bonferroni-shaped reference score is an exploratory screen; calibration requires block exchangeability that is not proved by this contract."
+  },
+  "input_preflight": {
+    "quality_flags": ["L1_CBC_CAT1", "L1_CBC_CAT2", "L1_CBC_CAT3", "L1_BURST_CAT2", "L1_BURST_CAT3"],
+    "quality_source": "GWOSC_PUBLIC_TIMELINE_PASS_SEGMENTS",
+    "auxiliary_source": "NDS2_AVAILABILITY_METADATA_ONLY",
+    "nds_port": 31200,
+    "output_root": "E:/dante_cache/dante_light/o3a_l1_local_followup_v1/input_preflight",
+    "zero_new_sample_fetches": true,
+    "metadata_coverage_is_sample_or_veto_safety_verification": false
   },
   "execution": {
     "gate_c_enabled": false,

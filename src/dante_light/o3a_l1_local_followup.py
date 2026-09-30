@@ -1,4 +1,4 @@
-"""Candidate localized PEM design: synthetic kernel and metadata feasibility.
+"""Frozen localized PEM design: synthetic kernel and metadata feasibility.
 
 There is deliberately no real measurement runner. Metadata preflight opens
 sealed JSON/JSONL, never strain or auxiliary sample arrays. The reference-tail
@@ -28,7 +28,8 @@ CONFIG_PATH = "config/dante_o3a_l1_local_followup_v1.json"
 def load_design(root: Path = ROOT) -> dict[str, Any]:
     value = json.loads((root / CONFIG_PATH).read_text(encoding="utf-8"))
     if (
-        value.get("status") != "CANDIDATE_GATE_B_METHOD_NO_REAL_MEASUREMENTS"
+        value.get("status") != "FROZEN_GATE_B_METHOD_INPUTS_NOT_YET_VERIFIED"
+        or not value.get("author_numeric_rule_approval_date")
         or value.get("execution", {}).get("gate_c_enabled") is not False
         or value["decision"]["family_target_count"] != len(value["targets"])
         or len({(r["detector"], r["gps_start"]) for r in value["targets"]})
@@ -247,6 +248,7 @@ def metadata_preflight(root: Path = ROOT) -> dict[str, Any]:
                 "maximum_blocks_before_exclusions": (segment[1] - segment[0])
                 // design["controls"]["chronological_block_s"],
                 "candidate_clean_blocks_before_cat2_cat3": len(blocks),
+                "candidate_clean_control_blocks_gps": blocks,
                 "minimum_reference_blocks": required,
                 "best_possible_corrected_tail_fraction": design["decision"][
                     "family_target_count"
@@ -265,7 +267,7 @@ def metadata_preflight(root: Path = ROOT) -> dict[str, Any]:
             }
         )
     body = {
-        "status": "CANDIDATE_METADATA_PREFLIGHT_ONLY",
+        "status": "FROZEN_METHOD_METADATA_PREFLIGHT_ONLY",
         "design_digest": canonical_json_sha256(design),
         "targets": targets,
         "real_sample_arrays_opened": False,
