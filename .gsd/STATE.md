@@ -1,4 +1,20 @@
 ## Current Position
+- **Final O3a diagnostic report (2026-09-30)**: Consolidated author-review
+  report at docs/DANTE_O3A_FINAL_DIAGNOSTIC_REPORT_2026-09-30.md includes
+  scan/native/classification accounting, all twelve target limitations,
+  verified common PEM and the completed bounded local L1 study. GPS labels
+  identify 32-second window starts, not identified astrophysical events.
+  First residual remains INCONCLUSIVE; second has no localized association
+  detected under the frozen five-channel diagnostic screen. The 6,408
+  coincidence rows include 5,850 ROBUST and 558 AMBIGUOUS; unavailable
+  partner data remain explicit, not negative. No new scientific execution,
+  source/config change, promotion or push. Human review/publication decision
+  is the next handoff; monitor remains paused. This supersedes the earlier
+  closure's current disposition, not its immutable historical evidence.
+  Documentation consistency audit: 170 PASS, observed OS exit 0; all 77
+  common event seals and 25 local source/Git bindings checked (23 exact,
+  two qualified LF->CRLF). Existing post-measurement suite remains 210
+  PASS/11 upstream warnings; not rerun for documentation-only changes.
 - **Gate C implementation checkpoint (2026-09-30)**: Author approved the two
   previously open policies. Separate execution contract records relative
   half-open ceil/ceil boundaries and historical strain-only native highpass,
