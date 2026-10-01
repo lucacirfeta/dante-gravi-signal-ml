@@ -1,4 +1,25 @@
 ## Current Position
+- **Read-only O3a native INDEX (2026-10-01)**: Phase 08.08 continues approved A;
+  source freeze `b6b9d2c`, separate module/CLI and 72 synthetic tests. Explicit
+  immutable SCAN/COHORT parents; unchanged scientific contract/runtime and pure
+  shard/preflight validators. Retained replay/token/NPZ numerical, shape/type,
+  provenance/hash and norm gates only: no encoder, preprocessing, clustering
+  refit, fetch, raw-score replay or full-workflow PASS. Eighteen local source
+  bindings; guarded/rehash-before-receipt stdout-only interface, no history writes.
+  Windows workflow 490 PASS/exit 0; final WSL workflow + primary/cohort/INDEX/
+  PatchProducer 523 PASS/one Windows-only skip/11 warnings/exit 0. Ruff PASS,
+  three new Python source bytes match Git. Post-freeze Windows target: 72 PASS,
+  observed OS exit 0, 47.97s. Native Windows actual contract load remains
+  fail-closed on historical WSL path reconstruction; real WSL load PASS.
+  First WSL suite had one UI launcher timeout; isolated reproduction and 24.697s
+  Git identity-read latency documented, then unchanged isolated/full reruns PASS.
+  No timeout/code bypass; cold-start latency not certified resolved.
+  No old source/config/history change, public activation, push or release. User
+  untracked files and O3a diagnostic closure preserved. See 08-08 SUMMARY/
+  VERIFICATION and DANTE_WORKFLOW_O3A_INDEX_READ_ONLY_2026-10-01.md.
+  Next: native calibration/rescore read-only gates, remaining native dependency
+  chain, complete profile/preflight adoption and quiescent real clean-install
+  replay. Full multi-run/V1 scientific readiness remains open.
 - **Read-only O3a scan/native cohort chain (2026-10-01)**: Phase 08.07 continues
   approved A with a separate verifier module/CLI and 89 synthetic tests. Source
   freeze `57a99dc`. Legacy SQLite mode=ro can create WAL/SHM; reproduced only on

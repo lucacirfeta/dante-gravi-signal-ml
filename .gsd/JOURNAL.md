@@ -1,5 +1,35 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Approved A: retained INDEX read-only gate
+
+- Plan 08-08: separate INDEX module/CLI and 72 tests, local source freeze b6b9d2c.
+  No scientific source/config/method change. Frozen 08.07 immutable parent chain
+  gets explicit primary/cohort roots; no historical verifier/default-root helper.
+- Existing retained shard/replay/NPZ schema, identity, byte/value SHA, dtype,
+  metadata, finite and normalization gates; contract-derived counts/constraints.
+  Eighteen explicit local helper/wrapper pins, final input/source recheck and
+  stdout-only scoped receipt. No scoring/encoder/preprocessing/refit/fetch or
+  historical mutation/full workflow PASS/public activation.
+- Real temporary SQLite/NPY/NPZ; scaled fixture loaders, full frozen-cardinality
+  legacy INDEX summary parity with parent isolated only in that test. Byte/mtime/
+  inventory preservation and resealed semantic negatives; actual WSL contracts
+  load without history. Test import/mock setup errors fixed only in new tests.
+- Native Windows real legacy contract refusal diagnosed: only two WSL storage
+  paths rebuild with backslashes, changing digest. Explicit refusal test; no
+  normalization, altered frozen hash or claim of Windows production readiness.
+- Windows final workflow 490 PASS/exit 0/125.45s. WSL final workflow plus primary
+  scan/cohort/INDEX/PatchProducer 523 PASS/one Windows-only skip/11 warnings,
+  exit 0/178.93s. Ruff lint/format PASS. Three new Python files byte-identical
+  to Git blobs. Post-freeze target evidence recorded in 08-08 VERIFICATION.
+- First WSL full run: one UI detached-launch timeout, 522 PASS/one FAIL/one skip,
+  exit 1/203.13s. Isolated fail reproduced; Git source-identity read timed at
+  24.697s, then unchanged isolated PASS/exit 0/9.15s and full rerun PASS. No UI
+  patch/timeout increase/test exclusion. Cold-start latency remains qualified.
+- No historical run, new outcome, install, push, release or user-file mutation.
+  O3a diagnostic study closed; multi-run productization incomplete. Next:
+  calibration/rescore readonly gates, later dependencies and complete profile/
+  preflight binding plus quiescent bounded real clean-install scientific replay.
+
 ## 2026-10-01 - Approved A: immutable scan/native cohort reads
 
 - Plan 08-07 adds separate scan/cohort verifier module, CLI and 89 synthetic
