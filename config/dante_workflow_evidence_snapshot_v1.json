@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_ISOLATED_EVIDENCE_SNAPSHOT_POLICY_V1",
+  "format": "zip_stored_no_extraction",
+  "consumer_isolation": "owned_immutable_bytes",
+  "capture_consistency": "externally_pinned_expected_byte_closure",
+  "capture_platform": "posix_descriptor_relative_nofollow",
+  "limits": {
+    "member_count": 10000,
+    "member_bytes": 134217728,
+    "total_member_bytes": 536870912,
+    "archive_bytes": 629145600,
+    "manifest_bytes": 8388608
+  },
+  "boundary": {
+    "live_writer_exclusion": false,
+    "atomic_historical_capture": false,
+    "scientific_parent_closure_verified": false,
+    "pem_replayed": false,
+    "fresh_sensor_or_null_replay": false,
+    "full_workflow_verified": false,
+    "historical_artifacts_modified": false
+  }
+}
