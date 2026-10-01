@@ -1744,3 +1744,22 @@ exceedance count. The two known high-FPR L1 PEM channels remain excluded.
   PNG_SHA_PASS 1241808544 True; observed OS exit 0. Renderer Ruff PASS.
   Per-image normalization is explicit; no cross-image amplitude comparison,
   peak/arrival-time interpretation or causal identification. No commit/push.
+
+## 2026-10-01 -- native PEM safety checkpoint, no adapter adoption
+
+- Author requested proceeding after 08.12. Audited original native PEM producer,
+  CLI, preflight and verifier. No cooperative run/controller/flock protocol:
+  the previously approved persistent-lock policy cannot exclude this writer.
+  Atomic publication and final rehash do not provide writer exclusion.
+- Original verifier can write missing compact and checks retained calibration/
+  coherence evidence, not independent raw sensor/null replay. No new adapter,
+  source/config change, historical productive invocation or new measurement.
+- Original WSL PEM regression: 7 PASS, 11 upstream warnings in 7.47s,
+  observed OS exit 0. Optional real-parent preflight reads frozen selection
+  metadata only; numerical context tests use temporary fixtures. Do not claim
+  every test was synthetic or that complete pipeline readiness was validated.
+- Executor/AGENTS structural checkpoint: author chooses isolated sealed-snapshot
+  protocol with explicit capture/read-only guarantees, or keeps adoption blocked
+  pending a separately versioned shared exclusion protocol. Neither implemented.
+  08-13 PLAN/DISCOVERY record the decision. Historical evidence and user folders
+  preserved; no push/merge/release. Next step is author choice, then checked plan.

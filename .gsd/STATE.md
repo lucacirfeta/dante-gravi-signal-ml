@@ -1,4 +1,16 @@
 ## Current Position
+- **Native PEM quiescence checkpoint (2026-10-01)**: Phase 08.13 audit only,
+  starting at 8608bda. Original PEM producer/CLI has no cooperative lock;
+  approved 08.10 persistent-lock policy cannot exclude this writer. Original
+  verifier may publish missing compact and validates retained calibration/
+  coherence ledgers, not fresh sensor/null replay. No new adapter, frozen-source
+  change or historical measurement. Original WSL PEM regression 7 PASS,
+  11 upstream warnings, observed OS exit 0/7.47s; optional real-parent metadata
+  preflight is explicitly qualified. Await author structural choice: A isolated
+  sealed-snapshot gate with capture/read-only guarantees designed and tested,
+  or B keep adoption blocked pending a separate shared exclusion protocol.
+  No invented locks or weaker quiescence claim; see 08-13 PLAN/DISCOVERY.
+  Next step requires this choice. Full multi-run/Virgo readiness remains open.
 - **Read-only coincidence completed (2026-10-01)**: Phase 08.12 continues approved
   A after author `continua`; source freeze c31c35b. Separate module/CLI and 83
   tests, 37 source bindings. Actual read-only taxonomy/decision/upstream gates
