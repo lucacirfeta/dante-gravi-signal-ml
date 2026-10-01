@@ -1,5 +1,28 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Initial verification and immutable-adoption checkpoint
+
+- Author requested completion of the initial/adoption gates after 08.04.
+  Source inspection distinguishes metadata/file integrity and reconstruction
+  from stored score shards from a new raw/encoder numerical replay. Existing
+  validate_block_shard and acceptance-summary checks provide the former, not
+  the latter. Reinvoking initial productive CLIs rewrites evidence.
+- Additional positive side effects: verify_native_rescore itself calls a
+  preflight that unconditionally rewrites work_manifest.jsonl/preflight.json;
+  avoiding only the compact writer is insufficient. Native coincidence verify
+  also writes its compact. Threshold-style locks and error handlers can create
+  run.lock/failure.json; parent calls propagate the rescore writes.
+- Executor architectural-change checkpoint triggered before implementation.
+  Prepared 08-05-PLAN/DISCOVERY with recommended distinct source-frozen read-only
+  entry points versus isolated unchanged verifiers. Absolute path/source/runtime
+  bindings make simple copy/cwd remapping unsafe; no hash or provenance bypass.
+  Author decision pending. No new verifier policy, math, graph or dispatch added.
+- Fresh native-adapter synthetic regression: 45 PASS in 2.01s, OS exit 0.
+  Previous full Windows/WSL suites are historical, not rerun here. No productive
+  scientific command, data acquisition, real outcome inspection, original
+  artifact write, source/config/code change, push or public release. User
+  untracked artifacts/output preserved; O3a findings remain unchanged.
+
 ## 2026-10-01 - Native O3a interface and adoption side-effect audit
 
 - Implemented the native interface after schema-v2 approval; exact nine-stage

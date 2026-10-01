@@ -1,4 +1,19 @@
 ## Current Position
+- **O3a verification/adoption decision (2026-10-01)**: Phase 08.05 source audit
+  separates initial evidence integrity, stored-shard reconstruction and raw
+  numerical replay. Raw download and initial acceptance have no standalone
+  read-only CLI; productive calls write evidence. Expanded native audit finds
+  RESCORE's core verifier itself rewrites work_manifest/preflight through
+  preflight_rescore, and COINCIDENCE verification writes its compact. Existing
+  threshold/classification/taxonomy verification also has lock/failure and
+  transitive parent writes. No such command was executed. Recommended separate
+  source-frozen read-only entry points versus isolated legacy-verifier replica
+  awaits author structural decision; no weaker hash-only scientific PASS.
+  Fresh Windows native-adapter regression 45 PASS, OS exit 0; no code or
+  scientific config/source/artifact change. Full graph, initial numerical
+  replay and real bounded activation remain open. No push/release. See
+  08-05-PLAN/DISCOVERY. Next: decide the verification architecture, then its
+  bounded implementation; public dispatch stays blocked.
 - **Native O3a CLI/receipt interface (2026-10-01)**: Phase 08.04 implements
   nine existing native stage interfaces in local source freeze `138ed7c`.
   Exact selector/config-path mapping, v2 O3a H1/L1 scope and nested sealed
