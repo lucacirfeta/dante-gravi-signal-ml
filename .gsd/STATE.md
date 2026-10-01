@@ -1,4 +1,17 @@
 ## Current Position
+- **Threshold/classification lock-policy checkpoint (2026-10-01)**: Phase 08.10
+  audit finds original `_lock` leaves `run.lock` after release, and classification
+  shares it. Existing read-only `_clean` rejects even a healthy retained marker.
+  Temporary WSL probe exit 0 reproduces persistence, guard refusal and exclusive
+  nonblocking flock on read-only descriptor: original producer subprocess refuses
+  while held (expected exit 1), reacquires after release, lock bytes/mtime/inode
+  unchanged. Probe on temporary Linux FS only, not E: DrvFS certification.
+  No historical invocation, outcome or source/config/guard change. Await author
+  structural choice: A stage-specific read-only persistent-lock exclusion with
+  lifetime/contention/target-FS tests, or B keep blanket refusal/adoption blocked.
+  Neither ignores/removes locks. Global upstream quiescence remains open.
+  Existing WSL threshold/classification regression 52 PASS, OS exit 0/23.99s.
+  See 08-10 PLAN/DISCOVERY; adapter implementation paused under executor/AGENTS.
 - **Read-only native calibration/RESCORE (2026-10-01)**: Phase 08.09 continues
   approved A; source freeze `2a15b32`, separate module/CLI and 77 tests. Explicit
   INDEX/COHORT/SCAN roots and immutable SQLite; exact frozen evenly spaced/

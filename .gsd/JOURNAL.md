@@ -1,5 +1,30 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Threshold/classification persistent-lock checkpoint
+
+- Plan 08-10 audit only, starting f6d032a; no new verifier implemented. Original
+  thresholds `_lock` creates run.lock and releases flock without unlink; native
+  classification shares it. Existing read-only `_clean` refuses its presence,
+  so finished healthy runs would remain ineligible under the blanket guard.
+- Temporary WSL probe: OS exit 0 initially and after final formatting (5.43s).
+  Marker persists after original producer exits; original guard refuses. Read-only
+  descriptor supports exclusive nonblocking flock; separate original producer
+  refuses while held (expected exit 1), reacquires after release. Bytes, mtime,
+  inode unchanged. Temporary Linux FS only: E: DrvFS not certified, no history read.
+- Existing WSL threshold/classification tests: 52 PASS, observed OS exit 0,
+  23.99s. Probe lint E402 corrected by moving imports into main, no suppression;
+  format check then required whitespace formatting. Final Ruff lint/format PASS,
+  separate observed exits 0. No scientific gate/source/config change.
+- Executor/AGENTS structural checkpoint: recommended A opens existing lock rb,
+  holds original nonblocking exclusive flock during entire stage verification,
+  rejects busy/unsafe/replaced/unsupported state and never creates/deletes lock;
+  target-FS/lifetime/contention tests before adoption. Alternative B retains
+  blanket refusal and historical adoption blocked. Neither policy adopted yet.
+- No scientific runtime/outcome, historical mutation, install, push or public
+  activation; user untracked files and O3a diagnostic closure unchanged. Await
+  author choice before threshold/classification adapter. Full upstream quiescence,
+  remaining gates and clean-install multi-run/Virgo scientific replay remain open.
+
 ## 2026-10-01 - Approved A: calibration/RESCORE read-only gates
 
 - Plan 08-09: separate module/CLI, 77 new tests, local source freeze 2a15b32.
