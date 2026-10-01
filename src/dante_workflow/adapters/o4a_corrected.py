@@ -211,6 +211,15 @@ class O4aCorrectedAdapter(StageAdapter):
     ) -> None:
         if spec.adapter != "o4a_corrected":
             raise AdapterError("O4a adapter requires the o4a_corrected contract")
+        if spec.graph_profile is not None:
+            profile = spec.graph_profile
+            if (
+                profile.observing_run != self.observing_run
+                or profile.detectors != self.detectors
+            ):
+                raise AdapterError("O4a adapter cannot execute another run/detector profile")
+            if {stage.name for stage in spec.stages} != set(_DEFINITIONS):
+                raise AdapterError("O4a adapter requires its complete executable graph")
         super().__init__(spec, python_executable=python_executable)
 
     @staticmethod

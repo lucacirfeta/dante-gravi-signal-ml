@@ -135,6 +135,17 @@ class FileReference:
 
 
 @dataclass(frozen=True, slots=True)
+class GraphProfile:
+    """Administrative graph identity; not scientific execution permission."""
+
+    profile_id: str
+    observing_run: str
+    detectors: tuple[str, ...]
+    reference: FileReference
+    contract_digest: str
+
+
+@dataclass(frozen=True, slots=True)
 class DependencySpec:
     stage: str
     gate: str
@@ -162,6 +173,7 @@ class WorkflowSpec:
     stages: tuple[StageSpec, ...]
     policies: Mapping[str, bool]
     contract_digest: str
+    graph_profile: GraphProfile | None = None
 
     def stage(self, name: str) -> StageSpec:
         for stage in self.stages:
@@ -292,11 +304,15 @@ def _validate_stage(value: Any, *, config_names: set[str]) -> StageSpec:
     )
 
 
-def _validate_graph(stages: tuple[StageSpec, ...]) -> None:
+def _validate_graph(
+    stages: tuple[StageSpec, ...], *, profile_graph: bool = False
+) -> None:
     names = [stage.name for stage in stages]
+    if profile_graph and not names:
+        raise WorkflowSchemaError("profile graph must not be empty")
     if len(set(names)) != len(names):
         raise WorkflowSchemaError("workflow stage names must be unique")
-    if set(names) != set(REQUIRED_STAGE_NAMES):
+    if not profile_graph and set(names) != set(REQUIRED_STAGE_NAMES):
         raise WorkflowSchemaError(
             "workflow must define exactly the frozen 15-stage productization graph"
         )
@@ -352,26 +368,28 @@ def _validate_graph(stages: tuple[StageSpec, ...]) -> None:
                 raise WorkflowSchemaError(
                     f"stage {stage.name} input {required_input!r} is not produced upstream"
                 )
-    native = stage_by_name["NATIVE_CALIBRATION"]
-    native_dependencies = {dependency.stage: dependency for dependency in native.dependencies}
-    if native_dependencies.get("COHORT", DependencySpec("", "")).gate != "VERIFIED_STAGE":
-        raise WorkflowSchemaError("NATIVE_CALIBRATION requires verified COHORT")
-    index_dependency = native_dependencies.get("INDEX")
-    if (
-        index_dependency is None
-        or index_dependency.gate != "CONTENT_DIGESTED_ARTIFACT"
-        or index_dependency.artifact != "index_window_manifest"
-    ):
-        raise WorkflowSchemaError(
-            "NATIVE_CALIBRATION requires the content-digested INDEX window manifest"
-        )
-    rescore_dependencies = {item.stage: item.gate for item in stage_by_name["RESCORE"].dependencies}
-    if rescore_dependencies.get("INDEX") != "VERIFIED_STAGE" or rescore_dependencies.get(
-        "NATIVE_CALIBRATION"
-    ) != "VERIFIED_STAGE":
-        raise WorkflowSchemaError(
-            "RESCORE requires verified INDEX and NATIVE_CALIBRATION stages"
-        )
+    if "NATIVE_CALIBRATION" in stage_by_name:
+        native = stage_by_name["NATIVE_CALIBRATION"]
+        native_dependencies = {dependency.stage: dependency for dependency in native.dependencies}
+        if native_dependencies.get("COHORT", DependencySpec("", "")).gate != "VERIFIED_STAGE":
+            raise WorkflowSchemaError("NATIVE_CALIBRATION requires verified COHORT")
+        index_dependency = native_dependencies.get("INDEX")
+        if (
+            index_dependency is None
+            or index_dependency.gate != "CONTENT_DIGESTED_ARTIFACT"
+            or index_dependency.artifact != "index_window_manifest"
+        ):
+            raise WorkflowSchemaError(
+                "NATIVE_CALIBRATION requires the content-digested INDEX window manifest"
+            )
+    if "RESCORE" in stage_by_name:
+        rescore_dependencies = {item.stage: item.gate for item in stage_by_name["RESCORE"].dependencies}
+        if rescore_dependencies.get("INDEX") != "VERIFIED_STAGE" or rescore_dependencies.get(
+            "NATIVE_CALIBRATION"
+        ) != "VERIFIED_STAGE":
+            raise WorkflowSchemaError(
+                "RESCORE requires verified INDEX and NATIVE_CALIBRATION stages"
+            )
 
 
 def validate_workflow_spec(value: Mapping[str, Any], *, root: Path) -> WorkflowSpec:
@@ -383,6 +401,10 @@ def validate_workflow_spec(value: Mapping[str, Any], *, root: Path) -> WorkflowS
         raise WorkflowSchemaError("workflow must be finite JSON data") from exc
     if not isinstance(payload, dict):
         raise WorkflowSchemaError("workflow specification must be an object")
+    if payload.get("schema_version") == 2:
+        from .schema_v2 import validate_profile_workflow
+
+        return validate_profile_workflow(payload, root=root)
     _exact_keys(payload, _TOP_LEVEL_KEYS, "workflow")
     if payload["schema_version"] != SCHEMA_VERSION:
         raise WorkflowSchemaError(
@@ -472,7 +494,12 @@ def load_workflow_spec(path: Path, *, root: Path | None = None) -> WorkflowSpec:
     path = path.resolve()
     repository_root = root.resolve() if root is not None else path.parent.parent.resolve()
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        text = path.read_text(encoding="utf-8")
+        value = json.loads(text)
     except (OSError, json.JSONDecodeError) as exc:
         raise WorkflowSchemaError(f"cannot load workflow specification: {path}") from exc
+    if isinstance(value, dict) and value.get("schema_version") == 2:
+        from .schema_v2 import strict_json_object
+
+        value = strict_json_object(text, label="workflow v2")
     return validate_workflow_spec(value, root=repository_root)
