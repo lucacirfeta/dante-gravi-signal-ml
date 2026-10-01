@@ -1,4 +1,23 @@
 ## Current Position
+- **Native O3a CLI/receipt interface (2026-10-01)**: Phase 08.04 implements
+  nine existing native stage interfaces in local source freeze `138ed7c`.
+  Exact selector/config-path mapping, v2 O3a H1/L1 scope and nested sealed
+  cohort ledger receipts are tested. Shared controller adoption and release
+  verification are exercised with a synthetic runner/evidence, NOT numerical
+  O3a replay or historical adoption. Public adapter factory and run registry
+  remain unchanged: complete O3a activation stays blocked. Windows controller
+  269 PASS; WSL 268 PASS/one Windows-only skip, observed OS exit 0. New adapter
+  suite 45 PASS after freeze, exit 0; Ruff lint/format PASS. No scientific
+  config/source/script change, productive process, outcome or historical write.
+  Native calibration remains the frozen evenly spaced/context-fallback selector,
+  not initial-calibration hash stratification. Upstream acquisition/initial
+  acceptance lack standalone verification CLIs; some existing --verify paths
+  write compact/summary artifacts (RESCORE/THRESHOLDS/CLASSIFY/TAXONOMY; PEM can
+  create a missing compact). Initial verification and non-mutating adoption
+  must be bound before public activation; never substitute source-hash PASS.
+  Full graph/applicability, per-stage preflights, real bounded replay and other
+  run/V1 science remain open. No push/release; user untracked paths preserved.
+  See 08-04-SUMMARY/VERIFICATION and docs/DANTE_WORKFLOW_O3A_INTERFACE_2026-10-01.md.
 - **Approved schema-v2 profile boundary (2026-10-01)**: Author explicitly
   selected A, resolving 08.02. Phase 08.03 implements the common loader's
   separately versioned, exact sealed profile graph; v1's field set and

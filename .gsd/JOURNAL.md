@@ -1,5 +1,38 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Native O3a interface and adoption side-effect audit
+
+- Implemented the native interface after schema-v2 approval; exact nine-stage
+  CLI selector/config-path inventory and sealed nested cohort receipt parsing.
+  No scientific values are supplied by the adapter. Native calibration maps
+  to its distinct frozen selector CLI, not initial acceptance or scoring.
+  Feature freeze `138ed7c`; adapter factory/registry deliberately unchanged.
+- Source-interface tests parse scientific-module CONTRACT_REL declarations
+  without importing/executing the scientific engines. Synthetic controller
+  adoption plus independent graph verifier exercises real receipt/ledger
+  plumbing, not real scientific verification. Temporary fixture upstream
+  inputs are explicitly external; this is not a production population policy.
+- Initial TDD collection failed before module existed. First fixture failed
+  because removed SCAN outputs remained unbound; fixture-only external input
+  declarations fixed, without weakening schema gates. Adoption-status and
+  verifier-wrapper assertions were corrected against existing APIs; actual
+  verify_workflow is now exercised rather than treating verify_completed's
+  wrapper as a release receipt. Targeted 100 PASS, final adapter 45 PASS; after
+  freeze 45 PASS in 2.01s. Complete Windows 269 PASS in 43.07s; WSL 268 PASS/one
+  Windows-only skip in 108.38s. All successful checks have observed OS exit 0.
+  Ruff lint/format PASS. No dependency or historical EOL normalization.
+- Source audit found initial acquisition/acceptance lack autonomous verification
+  CLI. RESCORE verification writes its compact; threshold/classification/taxonomy
+  verification writes compact and/or summary, potentially transitively through
+  parent checks. PEM can create a missing compact. No such command executed.
+  Public activation remains blocked pending existing-check binding and a
+  historical-adoption path that preserves original evidence. Per-stage
+  preflight inputs must also be represented in the full production graph.
+- No production graph, O3a study rerun, real outcome inspection, scientific
+  config/scripts/src/dante_light/data change, push or release. User untracked
+  directories and all historical artifacts remain unchanged. This is bounded
+  interface coverage, not full multi-run scientific readiness.
+
 ## 2026-10-01 - Approved schema-v2 sealed profile graphs
 
 - Author explicitly selected A. Preserved the original 08.02 checkpoint
