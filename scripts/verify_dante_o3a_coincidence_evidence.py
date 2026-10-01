@@ -18,6 +18,11 @@ if str(ROOT) not in sys.path:
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=ROOT)
+    parser.add_argument(
+        "--allow-retained-driver-drift",
+        action="store_true",
+        help="Author-approved driver metadata waiver for retained read-only evidence only",
+    )
     for name in (
         "external-root",
         "taxonomy-external-root",

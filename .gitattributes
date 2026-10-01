@@ -2,6 +2,8 @@
 config/dante_workflow_runs_v1.json text eol=lf
 tests/test_dante_workflow_run_profiles.py text eol=lf
 config/dante_workflow_public_smoke_v1.json text eol=lf
+config/dante_workflow_o3a_retained_driver_waiver_v1.json text eol=lf
+tests/test_dante_workflow_o3a_retained_runtime.py text eol=lf
 # Machine-hashed replay artifacts must have identical bytes on Windows/Linux.
 config/dante_light_replay_v1.json text eol=lf
 config/dante_light_replay_v1.jsonl text eol=lf

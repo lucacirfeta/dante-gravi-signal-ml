@@ -15,7 +15,8 @@ from pathlib import Path, PurePosixPath
 
 from . import evidence_snapshot as snapshots
 from . import o3a_coincidence_verification as parents
-from .o3a_initial_verification import InitialEvidenceError, _Evidence, _existing, _json
+from .o3a_retained_runtime import new_evidence, receipt_fields
+from .o3a_initial_verification import InitialEvidenceError, _existing, _json
 
 
 class _SnapshotFiles:
@@ -296,13 +297,17 @@ def verify_pem_evidence(
     index_external_root,
     cohort_external_root,
     primary_external_root,
+    allow_retained_driver_drift=False,
 ):
     from src.dante_light import o3a_native_pem as pem
     from src.dante_light.contracts import canonical_json_sha256
 
     parents.decisions._fcntl()
     root = root.resolve()
-    evidence, before = _Evidence(), _sources(root)
+    evidence = new_evidence(
+        root, allow_retained_driver_drift=allow_retained_driver_drift
+    )
+    before = _sources(root)
     policy = evidence.read("snapshot_policy", _existing(root, snapshots.POLICY_REL))
     view = snapshots.admit_snapshot(
         snapshot_bytes,
@@ -445,5 +450,6 @@ def verify_pem_evidence(
             "source_fetch_executed": False,
             "historical_evidence_mutated": False,
             "full_workflow_verified": False,
+            **receipt_fields(evidence),
         }
         return {**body, "receipt_digest": canonical_json_sha256(body)}

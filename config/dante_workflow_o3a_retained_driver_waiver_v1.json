@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "AUTHOR_APPROVED_O3A_RETAINED_DRIVER_METADATA_WAIVER_V1",
+  "author_authorization": {
+    "date": "2026-10-01",
+    "instruction": "lascia perdere la versione nvidia",
+    "scope": "explicit_opt_in_read_only_retained_O3a_evidence"
+  },
+  "ignored_metadata_fields": ["cuda_device.driver_version"],
+  "derived_digest_handling": "validate_both_then_recompute_after_single_field_normalization",
+  "other_runtime_fields": "exact_frozen_equality",
+  "during_replay_runtime": "exact_observed_fingerprint_stability",
+  "boundary": {
+    "numerical_driver_equivalence_proved": false,
+    "productive_runtime_contract_changed": false,
+    "fresh_scoring_authorized": false,
+    "fresh_sensor_or_null_replay_authorized": false,
+    "full_workflow_verified": false
+  }
+}

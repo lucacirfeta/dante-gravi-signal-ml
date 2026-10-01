@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from . import o3a_native_verification as parents
+from .o3a_retained_runtime import load_runtime
 from .o3a_initial_verification import (
     InitialEvidenceError,
     _Evidence,
@@ -45,7 +46,7 @@ def _index_gate(
 
     contract = index.load_index_contract(root=root)
     parents._loaded(evidence, root, "index_contract", index.CONTRACT_REL, contract)
-    runtime = index.load_runtime_contract(root=root, require_current=True)
+    runtime = load_runtime(evidence, index.load_runtime_contract, root=root)
     parents._loaded(evidence, root, "runtime_contract", index.RUNTIME_REL, runtime)
     cohort, cohort_dir = parents._cohort_gate(
         root=root,

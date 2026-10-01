@@ -510,7 +510,7 @@ def test_exact_legacy_reconstruction_no_mutations_or_outcome_disclosure(evidence
         result["status"] == "PASS_O3A_READ_ONLY_COINCIDENCE_RETAINED_LEDGER_REPLAY_ONLY"
     )
     assert result["retained_null_ledger_replay_executed"] is True
-    assert len(result["source_bindings"]) == 37
+    assert len(result["source_bindings"]) == 39
     for flag in (
         "historical_evidence_mutated",
         "raw_score_replay_executed",
@@ -531,7 +531,9 @@ def test_exact_legacy_reconstruction_no_mutations_or_outcome_disclosure(evidence
 def test_immutable_preflight_parity_and_primary_only_null(evidence):
     from contextlib import ExitStack
 
-    tracked = verifier._Evidence()
+    from src.dante_workflow.o3a_initial_verification import _Evidence
+
+    tracked = _Evidence()
     with ExitStack() as stack:
         verifier.taxonomy._taxonomy_gate(
             root=evidence.root,
@@ -880,7 +882,7 @@ def test_windows_refuses_before_sources_or_evidence(monkeypatch):
 
 
 def test_actual_frozen_contract_sources_without_history():
-    assert len(verifier._sources(ROOT)) == 37
+    assert len(verifier._sources(ROOT)) == 39
     if os.name == "nt":
         with pytest.raises(ContractError):
             old.load_contract(root=ROOT)

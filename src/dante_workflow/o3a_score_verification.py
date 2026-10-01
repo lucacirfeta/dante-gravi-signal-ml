@@ -128,7 +128,9 @@ def _calibration_gate(
     ):
         if value["artifact_digest"] != contract["parents"][name]["artifact_digest"]:
             raise InitialEvidenceError(f"O3a calibration {name} parent changed")
-    runtime = calibration.load_runtime_contract(root=root, require_current=True)
+    from .o3a_retained_runtime import load_runtime
+
+    runtime = load_runtime(evidence, calibration.load_runtime_contract, root=root)
     parents._loaded(
         evidence, root, "runtime_contract", calibration.RUNTIME_REL, runtime
     )
@@ -235,7 +237,9 @@ def _rescore_gate(
         primary_external_root=primary_external_root,
         evidence=evidence,
     )
-    runtime = rescore.load_runtime_contract(root=root, require_current=True)
+    from .o3a_retained_runtime import load_runtime
+
+    runtime = load_runtime(evidence, rescore.load_runtime_contract, root=root)
     parents._loaded(
         evidence,
         root,

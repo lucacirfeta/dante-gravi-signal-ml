@@ -437,7 +437,7 @@ def test_scoped_receipt_and_no_mutations(evidence, stage):
     assert snapshot(evidence.root.parent) == before
     assert result["status"] == f"PASS_O3A_READ_ONLY_{stage.upper()}_RECONSTRUCTION_ONLY"
     assert result == seal(result, "receipt_digest")
-    assert len(result["source_bindings"]) == 14
+    assert len(result["source_bindings"]) == 16
     assert evidence.calls
     assert result["retained_context_samples_checked"] is (stage == "cohort")
     for field in (
@@ -879,4 +879,4 @@ def test_cli_has_no_mutation_flag(flag):
 def test_real_inherited_contracts_still_load_without_history():
     assert scan.load_scan_contract(root=ROOT)["contract_digest"]
     assert cohort.load_cohort_contract(root=ROOT)["contract_digest"]
-    assert len(verifier._sources(ROOT)) == 14
+    assert len(verifier._sources(ROOT)) == 16

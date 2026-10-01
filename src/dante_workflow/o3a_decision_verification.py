@@ -160,7 +160,9 @@ def _threshold_gate(*, root, external_root, parent_arguments, evidence, stack):
         _existing(directory, contract["output"]["summary_filename"]),
         "artifact_digest",
     )
-    runtime = nt.load_runtime_contract(root=root, require_current=True)
+    from .o3a_retained_runtime import load_runtime
+
+    runtime = load_runtime(evidence, nt.load_runtime_contract, root=root)
     scores.parents._loaded(evidence, root, "runtime_contract", nt.RUNTIME_REL, runtime)
     parent, parent_dir = scores._rescore_gate(
         root=root, evidence=evidence, **parent_arguments

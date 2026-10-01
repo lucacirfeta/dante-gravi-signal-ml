@@ -238,7 +238,7 @@ def test_integrated_parent_chain_and_scoped_no_mutation_receipt(evidence):
     assert snapshot(evidence.root.parent) == before
     assert result == seal(result, "receipt_digest")
     assert result["status"] == "PASS_O3A_READ_ONLY_INDEX_STORED_VALIDATION_ONLY"
-    assert len(result["source_bindings"]) == 18
+    assert len(result["source_bindings"]) == 20
     assert (
         result["stored_patch_tokens_checked"]
         and result["stored_npz_numerically_checked"]
@@ -646,4 +646,4 @@ def test_actual_contract_source_bindings_without_history():
         assert index.load_index_contract(root=ROOT)["gates"][
             "exact_cohort_counts_by_detector"
         ]
-    assert len(verifier._sources(ROOT)) == 18
+    assert len(verifier._sources(ROOT)) == 20

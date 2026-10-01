@@ -23,6 +23,7 @@ from .o3a_initial_verification import (
     _existing,
     _json,
 )
+from .o3a_retained_runtime import load_runtime
 
 
 def _no_journals(path: Path):
@@ -96,6 +97,7 @@ def _sources(root):
         "o3a_raw_acquisition",
         "o3a_raw_download",
         "o3a_native_contract",
+        "o4a_corrected_runtime",
         "o3a_population_geometry",
         "o3a_scale_adequacy",
         "o3a_primary_scan",
@@ -113,6 +115,7 @@ def _sources(root):
     for relative in (
         "src/dante_workflow/o3a_initial_verification.py",
         "src/dante_workflow/o3a_native_verification.py",
+        "src/dante_workflow/o3a_retained_runtime.py",
         "scripts/verify_dante_o3a_native_evidence.py",
     ):
         result[relative] = file_sha256(base / relative)
@@ -127,7 +130,7 @@ def _scan_gate(*, root, external_root, evidence):
 
     contract = scan.load_scan_contract(root=root)
     _loaded(evidence, root, "scan_contract", scan.CONTRACT_REL, contract)
-    runtime = scan.load_runtime_contract(root=root, require_current=True)
+    runtime = load_runtime(evidence, scan.load_runtime_contract, root=root)
     _loaded(evidence, root, "runtime_contract", scan.RUNTIME_REL, runtime)
     environment = runtime["runtime_environment"]["environment_digest"]
     key = scan._run_key(contract, environment_digest=environment)
@@ -318,7 +321,7 @@ def _cohort_gate(*, root, external_root, primary_external_root, evidence):
 
     contract = cohort.load_cohort_contract(root=root)
     _loaded(evidence, root, "cohort_contract", cohort.CONTRACT_REL, contract)
-    runtime = cohort.load_runtime_contract(root=root, require_current=True)
+    runtime = load_runtime(evidence, cohort.load_runtime_contract, root=root)
     _loaded(evidence, root, "runtime_contract", cohort.RUNTIME_REL, runtime)
     key = cohort._run_key(
         contract,

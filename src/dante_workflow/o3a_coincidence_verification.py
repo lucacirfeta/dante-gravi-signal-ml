@@ -9,9 +9,9 @@ import json
 from pathlib import Path
 
 from . import o3a_taxonomy_verification as taxonomy
+from .o3a_retained_runtime import load_runtime, new_evidence, receipt_fields
 from .o3a_initial_verification import (
     InitialEvidenceError,
-    _Evidence,
     _existing,
     _reference,
 )
@@ -141,7 +141,7 @@ def _coincidence_gate(
                 raise InitialEvidenceError("coincidence parent seal changed")
     for path, digest in contract["implementation_sources"].items():
         evidence.read("coincidence_source:" + path, _existing(root, path), digest)
-    runtime = coincidence.load_runtime_contract(root=root, require_current=True)
+    runtime = load_runtime(evidence, coincidence.load_runtime_contract, root=root)
     decisions.scores.parents._loaded(
         evidence, root, "runtime_contract", coincidence.RUNTIME_REL, runtime
     )
@@ -314,12 +314,16 @@ def verify_coincidence_evidence(
     index_external_root,
     cohort_external_root,
     primary_external_root,
+    allow_retained_driver_drift=False,
 ):
     from src.dante_light.contracts import canonical_json_sha256
 
     decisions._fcntl()
     root = root.resolve()
-    sources_before, evidence = _sources(root), _Evidence()
+    sources_before = _sources(root)
+    evidence = new_evidence(
+        root, allow_retained_driver_drift=allow_retained_driver_drift
+    )
     parent_arguments = {
         "external_root": rescore_external_root.resolve(),
         "calibration_external_root": calibration_external_root.resolve(),
@@ -378,6 +382,7 @@ def verify_coincidence_evidence(
             "persistent_lock_policy": "EXISTING_READ_ONLY_NONBLOCKING_EXCLUSIVE_FLOCK",
             "inputs": evidence.inputs,
             "source_bindings": sources_before,
+            **receipt_fields(evidence),
         }
         result = {**body, "receipt_digest": canonical_json_sha256(body)}
     return result
