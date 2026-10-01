@@ -1,5 +1,41 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Approved schema-v2 sealed profile graphs
+
+- Author explicitly selected A. Preserved the original 08.02 checkpoint
+  and recorded its resolution; implemented 08.03's bounded schema foundation.
+- Common loader dispatches v2 to strict profile parsing. Full stage definitions
+  must match the separately file-hashed and canonically sealed graph; native
+  parent/hash gates and generic DAG integrity remain mandatory. O4a adapter
+  rejects other run/detector scopes and shortened graphs. Unsupported adapters
+  are not registered or represented as executable. Local freeze `b9cbbc1`.
+- TDD initially failed as expected (27 FAIL/12 PASS). Targeted validation
+  subsequently passed 95 then 112 tests; after source freeze, 112 PASS in 3.90s.
+  Complete controller: Windows 224 PASS in 35.37s; WSL 223 PASS/one Windows-only
+  skip in 115.79s. All successful invocations have observed OS exit 0.
+  Ruff lint PASS; new-file format PASS through existing WSL environment.
+  Native Python lacks Ruff; no package installation or dependency change.
+- Frozen O4a config checkout SHA 7148db11ea455ff97319ac763ca420874711d3e5dcaea6f7968f85df01a75e06
+  equals its Git blob after exact LF-to-CRLF reconstruction, not raw Git bytes.
+  No frozen file normalization/Git-setting change; scientific config/scripts/
+  src/dante_light/data remain unchanged. Historical UI timing qualification
+  remains; passing controller tests do not constitute a clean-install replay.
+- No productive O3a replay, download, new outcome, Virgo method, production
+  graph/registry binding, push or release. User untracked directories preserved.
+  Next bounded work is O3a's exact graph/receipt mapping and real adapter,
+  not a claim of complete multi-run scientific readiness.
+
+## 2026-10-01 - O3a integration structural checkpoint
+
+- Inspected schema v1's fixed 15-stage O4a graph, exact adapter factory,
+  cohort/index consumption and independent receipt verification boundaries.
+- Prepared 08-02-PLAN/DISCOVERY with a decision between a separate v2
+  per-profile graph (recommended, v1 preserved) and a separate O3a controller.
+  No graph/schema/adapter implementation before author confirmation.
+- Native profile regression: 42 PASS, observed OS exit 0, 0.99 seconds.
+  No production work, scientific change, artifact rewrite, push or publication.
+  Completed O3a H1/L1 diagnostics and user untracked files remain unchanged.
+
 ## 2026-09-30 - Approved multi-run/Virgo administrative foundation
 
 - Author confirmed H1/L1 across all public runs, plus V1 where public strain

@@ -1,4 +1,30 @@
 ## Current Position
+- **Approved schema-v2 profile boundary (2026-10-01)**: Author explicitly
+  selected A, resolving 08.02. Phase 08.03 implements the common loader's
+  separately versioned, exact sealed profile graph; v1's field set and
+  frozen 15-stage O4a validation remain intact. Feature freeze `b9cbbc1`.
+  Profile file SHA, canonical seals, full stage definitions, parent/artifact
+  gates and run/detector scope are checked; unsupported adapters stay blocked.
+  No production profile/registry binding, O3a adapter, new run or V1 method
+  was enabled. Complete regression: Windows 224 PASS; WSL 223 PASS/one
+  Windows-only skip, both observed OS exit 0. Post-freeze targeted suite
+  112 PASS, observed exit 0; Ruff lint/format PASS. Existing frozen O4a
+  checkout bytes are the exact LF-to-CRLF reconstruction of its Git blob;
+  no normalization or scientific config/source/script changes. No production
+  replay, download, outcome inspection, push or release. O3a diagnostic
+  closure is unchanged. Next: exact O3a applicable-stage/receipt mapping
+  and adapter, distinguishing productive execution from verified adoption.
+  See 08-03-SUMMARY/VERIFICATION and docs/DANTE_WORKFLOW_SCHEMA_V2_2026-10-01.md.
+- **O3a controller integration checkpoint (2026-10-01)**: Phase 08.02
+  source inspection confirms the common schema accepts only the frozen
+  O4a 15-stage graph and the factory implements only o4a_corrected. Author
+  permission to proceed covers integration, not an unreviewed schema change.
+  Proposed separate schema v2/profile graph versus separate O3a controller
+  was awaiting explicit structural decision; author A selection above now
+  resolves that checkpoint. See 08-02-PLAN/DISCOVERY for the original record.
+  Profile regression 42 PASS, observed OS exit 0. No source/config patch,
+  productive run, new outcome, historical rewrite or push. O3a diagnostic
+  closure remains complete and unchanged; these planning files are local.
 - **Multi-run administrative foundation (2026-09-30)**: Author confirmed
   all public H1/L1 runs and V1 wherever public strain is available. Phase
   08.01 implements a versioned eight-run availability catalogue, explicit
