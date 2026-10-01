@@ -1,4 +1,22 @@
 ## Current Position
+- **Explicit retained-only driver waiver implemented (2026-10-01)**: Author
+  `lascia perdere la versione nvidia` resolves the 08.15 runtime decision.
+  Phase 08.16 source freeze e9a256a; separate policy/helper, explicit opt-in only
+  coincidence/snapshot PEM readers, strict defaults/original production intact.
+  Seven shared runtime checks, all non-driver fields/types exact, both seals
+  valid, actual fingerprint stable during replay, policy/source/parent audit.
+  30 new tests; 46 PEM source bindings. WSL broad 992 PASS/7 skips/11 warnings/
+  OS exit 0/534.76s; Windows 758 PASS/220 platform skips/exit 0/330.87s. Post-freeze
+  40 PASS each (WSL5.10s/Windows5.60s), Ruff PASS. Source commit20 files exact Git;
+  original three EOL qualifications unchanged. No scientific source/config edit.
+  Live runtime-only qualification PASS. Actual parent retry once, OS exit 1:
+  original persistent COHORT run.lock rejected by earlier blanket `_clean`.
+  Cohort path derived from contract; diagnostic existing-flock read-only probe
+  acquired/released unchanged bytes/size/inode/mtime, NOT new policy adoption.
+  Await author approval to extend stage-local held-lock policy to earlier native
+  ancestors. No locks deleted/ignored, no snapshot/new measures/history repair/
+  push or full-chain/all-run/Virgo certificate. User folders preserved.
+  See 08-16 SUMMARY/VERIFICATION and retained-driver-waiver checkpoint.
 - **Real snapshot parent preflight BLOCKED (2026-10-01)**: Phase 08.15 follows
   `procedi`, starting e99a496, unchanged source freeze f254b2b. Existing actual
   read-only coincidence CLI in canonical WSL Python, all nine external roots

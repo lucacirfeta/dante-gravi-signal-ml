@@ -1,5 +1,33 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Explicit retained driver waiver; independent parent lock blocker
+
+- Author `lascia perdere la versione nvidia`: 08.16 source freeze e9a256a,
+  separate policy/helper +30 tests; two independent readers/CLIs explicit opt-in,
+  strict defaults and old productive runtime contracts/guards unchanged.
+- Seven existing parent runtime sites share the qualification: validate frozen
+  contracts/both environment seals; normalize only driver field, recompute digest,
+  compare every other field/type. Return original identity for old keys; disclose
+  actual fingerprint/policy SHA and no equivalence/fresh/full-workflow claim.
+- WSL broad 992 PASS/7 skips/11 upstream warnings/exit 0/534.76s; Windows
+  758 PASS/220 platform skips/exit 0/330.87s. Post-freeze target+old native contract
+  40 PASS each, exits 0, WSL5.10s/Windows5.60s; Ruff PASS. Twenty source-commit files
+  byte-identical Git; old three exact EOL reconstructions preserved. New helper
+  and executed old runtime capture bound (46 PEM sources). User folders intact.
+- Real WSL runtime-only probe PASS, policy SHAa1a8b5ea12ba3cba6a9d5b7ccd8577db79adb995f27fc9eb8c89dde7f28b504e.
+  Actual coincidence CLI retried once with all9 roots+flag, session84328 OS exit1:
+  failure/lock evidence present: run.lock. Supervisor only summarized stdout,
+  did not alter the CLI/inputs and propagated its observed OS exit.
+- Earliest nested COHORT directory derived from frozen contract has original
+  safe 4-byte persistent run.lock and no failure/controller marker. Producer
+  code uses flock then leaves marker; earlier generic reader refuses presence.
+  Actual read-only existing-flock diagnostic acquired/released on E:, unchanged
+  bytes/size/inode/mtime, exit0. Momentary probe, not ongoing global exclusion or
+  adoption. Existing 08.10 approval was stage-local; next extension needs author.
+- No old guard/lock deletion/rewrite, scientific runtime refreeze, new measurements/snapshot,
+  full-chain PASS, push/merge/release. Record checkpoint and stop for lock-policy
+  choice; old O3a scientific outcomes unchanged.
+
 ## 2026-10-01 - Real retained snapshot preflight blocked on driver
 
 - Author `procedi`: 08.15 first actual read-only coincidence parent preflight,
