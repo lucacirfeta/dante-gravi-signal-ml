@@ -1,4 +1,30 @@
 ## Current Position
+- **Retained native PEM snapshot adapter completed (2026-10-01)**: Phase 08.14 follows
+  author `procedi`, approved isolated architecture A. Source freeze f254b2b:
+  separate module/CLI, 69 tests, 44 executed source bindings. Original unpatched
+  PEM contract/inventory/preflight/event helpers consume owned virtual byte paths;
+  exact targets/exclusion/calibration decisions, canonical JSONL, full summary and
+  existing compact compare read-only. Actual 08.12 parent gate wired, existing
+  upstream locks held through final binding/source/sidecar/guard checks.
+  Main ancestry isolated; linked actual coincidence test intentionally stops at
+  PEM handoff after proving locks, not a complete-chain success certificate.
+  Frozen repository metadata smoke has no historical PEM outcome reads.
+  Live PEM measurement bytes do not affect the snapshot; legacy guard observations
+  only, not writer exclusion/atomic capture/global quiescence/fresh sensor/null
+  replay. No productive verifier/writes/dispatcher adoption/full-workflow PASS.
+  WSL broad workflow+native PEM/PatchProducer 952 PASS/7 skips/11 upstream warnings/
+  OS exit 0/508.94s; Windows workflow 718 PASS/220 skips/exit 0/316.53s. Target
+  WSL 68 PASS/1 skip, Windows 47 PASS/22 skips. Post-freeze WSL 68 PASS/1 skip/
+  11 warnings/OS exit 0/87.16s and Windows 47 PASS/22 skips/exit 0/55.26s;
+  no source edit after f254b2b.
+  Ruff PASS, three new Python files exact Git. Native PEM sources/null exact Git;
+  coherence is exact Git LF->CRLF reconstruction matching frozen contract SHA,
+  unchanged; inherited upstream EOL qualifications retained. No historical
+  snapshot/new measurement, scientific source/config/old guard change or push.
+  User folders preserved. Next: reviewed exact real capture plan and bounded
+  complete-chain snapshot replay, then profile/preflight and clean-install proof.
+  Full multi-run/Virgo readiness remains open; see 08-14 SUMMARY/VERIFICATION
+  and DANTE_WORKFLOW_O3A_PEM_SNAPSHOT_READ_ONLY_2026-10-01.md.
 - **Isolated snapshot foundation completed (2026-10-01)**: Author approved A
   after the 08.13 checkpoint. Source freeze 9f15560: technical policy, separate
   module/CLI and 63 tests. Pinned plan bytes included in ZIP; exact member/hash/

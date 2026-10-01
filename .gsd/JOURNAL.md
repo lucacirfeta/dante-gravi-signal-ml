@@ -1,5 +1,38 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Retained native PEM snapshot decision adapter
+
+- Phase 08.14 source freeze f254b2b follows `procedi` and approved A. New module/
+  independent CLI/69 tests/PLAN only; original science/config/producer/guards
+  untouched. 44 source bindings, exact manifest repository/parents/pem closure.
+- Installed original contract/inventory/DQ/preflight/event helpers use immutable
+  virtual byte paths, no live fallback. Frozen targets/full exclusion/channel sets,
+  retained calibration decisions/strict boundaries/canonical JSONL/whole summary/
+  existing compact checked; no old productive verifier or fresh sensor/null/fetch.
+- Actual 08.12 read-only parent gate wired with all explicit roots and existing
+  held locks. Main ancestry isolated, linked actual coincidence test proves locks
+  at own contract handoff then intentionally refuses; not a positive complete-chain
+  certificate. Frozen source/DQ/method metadata, disposable own-stage events only.
+- Legacy PEM has no cooperative lock: guard/cache/failure observations before/
+  after are not writer exclusion or atomic capture. Snapshot immune to live own
+  measurement replacement; bound live parent/source drift and mid-read guard
+  changes refuse. stdout receipt denies full workflow/global quiescence/fresh
+  sensor/null/physical-cause claims; no public adoption or historical invocation.
+- WSL full workflow+native PEM/PatchProducer 952 PASS/7 skips/11 upstream warnings/
+  OS exit 0/508.94s; Windows workflow 718 PASS/220 skips/exit 0/316.53s. Target
+  WSL 68 PASS/1 skip, Windows 47 PASS/22 skips, Ruff PASS. Post-freeze WSL
+  68 PASS/1 skip/11 warnings/OS exit 0/87.16s; Windows 47 PASS/22 skips/
+  exit 0/55.26s. No source edit after f254b2b, final source bytes exact Git.
+- Three new Python files exact Git. Original native PEM module/entry/tests and
+  null helper exact Git. Coherence helper not exact Git: exact LF->CRLF Git
+  reconstruction matches working bytes and frozen SHA48c557db470441c38a0c1bd24e8a07abfca21616f7bdcc3304d2eea3b707652b.
+  Diagnosed without normalization/bypass; earlier upstream EOL qualifications stay.
+- Initial test-only import/missing copied inventory implementation errors fixed
+  in fixture, no relaxed science gate. Unsafe-link guard hardening only in new
+  adapter. No push/merge/release/automation or user untracked-file changes.
+- Next: exact reviewed real capture plan/bounded complete-chain snapshot replay,
+  then profile/preflight/clean-install integration; all-run/Virgo readiness open.
+
 ## 2026-10-01 - Isolated retained byte snapshot foundation
 
 - Author `procedi` resolved 08.13 in favor of A. Source freeze 9f15560:
