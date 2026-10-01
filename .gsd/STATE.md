@@ -1,4 +1,23 @@
 ## Current Position
+- **Read-only native calibration/RESCORE (2026-10-01)**: Phase 08.09 continues
+  approved A; source freeze `2a15b32`, separate module/CLI and 77 tests. Explicit
+  INDEX/COHORT/SCAN roots and immutable SQLite; exact frozen evenly spaced/
+  context-fallback calibration selection and full ordered RESCORE work/preflight
+  reconstructed in memory. Existing stored CUDA/shard/grouped-output validation;
+  no productive preflight writes, fresh score, fit/bootstrap/encoder/fetch or
+  full-workflow PASS. Twenty three local source pins and final input rehash;
+  stdout-only limited receipt. Windows workflow 567 PASS/exit 0; WSL workflow
+  plus old primary/cohort/INDEX/calibration/rescore/preflight/PatchProducer
+  618 PASS/one Windows-only skip/11 upstream warnings/exit 0. Ruff PASS;
+  three new Python source bytes match Git. Post-freeze Windows target 77 PASS,
+  observed OS exit 0, 27.38s.
+  Real contract loaders PASS WSL; native Windows historical root_wsl path
+  reconstruction remains fail-closed, tested without normalization or exception.
+  New fixtures isolate INDEX parent; no historical or clean-install replay claim.
+  No old source/config/history/public activation/push/release change; user files
+  and O3a diagnostic closure preserved. Next: thresholds/classification read-only
+  gates, later dependency chain, complete profile/preflight adoption and quiescent
+  bounded real clean-install scientific replay. Multi-run/Virgo readiness open.
 - **Read-only O3a native INDEX (2026-10-01)**: Phase 08.08 continues approved A;
   source freeze `b6b9d2c`, separate module/CLI and 72 synthetic tests. Explicit
   immutable SCAN/COHORT parents; unchanged scientific contract/runtime and pure

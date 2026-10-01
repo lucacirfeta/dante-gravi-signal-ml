@@ -1,5 +1,34 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Approved A: calibration/RESCORE read-only gates
+
+- Plan 08-09: separate module/CLI, 77 new tests, local source freeze 2a15b32.
+  No old scientific source/config/runner or earlier read-only module change.
+- Frozen calibration selector and context builder reconstruct exact identities/
+  audit. Explicit INDEX/COHORT/SCAN roots reuse immutable SQLite. RESCORE work
+  assembler reconstructs ordered manifest and entire preflight in memory instead
+  of invoking productive preflight writes; retained CUDA/shard/output gates stay.
+- Twenty three source bindings, guarded paths/seals and final rehash; scoped
+  stdout receipt denies fresh scoring, preprocessing/encoder/fetch/fit/bootstrap,
+  historical mutation and full scientific-workflow PASS. Public dispatch closed.
+- Fixture-only legacy selection/preflight/stored-score parity; upstream INDEX
+  parent isolated in new tests, unchanged parent integration in regressions.
+  Snapshot preservation on success/failure, immutable SQL reader parity and
+  resealed semantic negatives. No historical invocation or real replay.
+- Initial Windows target 51 PASS/one FAIL, exit 1/19.28s; stopped to diagnose
+  actual loader root_wsl backslash reconstruction. All other fields identical.
+  Preserved refusal test, no normalization/hash bypass. Actual contracts PASS
+  WSL; Windows unit success does not certify host production verification.
+- Final Windows workflow 567 PASS, exit 0/168.88s. Final WSL workflow plus old
+  primary/cohort/INDEX/calibration/rescore/preflight/PatchProducer 618 PASS,
+  one Windows-only skip, 11 upstream warnings, exit 0/237.09s. Ruff PASS.
+  Three new source files byte-identical to Git; post-freeze Windows target
+  77 PASS, observed OS exit 0, 27.38s.
+- No dependency install, outcome promotion, push/release or user-file change.
+  Next: thresholds/classification retained gates, later chain, full profile/
+  preflight adoption, quiescence and bounded real clean-install scientific replay.
+  O3a diagnostic closure preserved; overall multi-run/Virgo readiness open.
+
 ## 2026-10-01 - Approved A: retained INDEX read-only gate
 
 - Plan 08-08: separate INDEX module/CLI and 72 tests, local source freeze b6b9d2c.
