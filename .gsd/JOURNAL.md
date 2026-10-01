@@ -1,5 +1,46 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Retained taxonomy read-only numerical replay
+
+- Phase 08.11 follows author `procedi` and already approved immutable DB/lock
+  policies, no new scientific or structural choice. Source freeze 6b0f5a5,
+  separate module/CLI and 78 tests, original sources/config/earlier gates intact.
+- Original taxonomy execute writes summary/compact/failure and uses productive
+  primary verification. New path never calls it. Original MIL mode=ro reader
+  replaced only in this new wrapper by approved immutable connection and exact
+  SELECT/order/joins/vector checks, parity-tested against original reader.
+  Original build_taxonomy_rows actually supplies cosine/single-linkage/naming;
+  whole JSONL bytes, summary, compact and metrics reconstructed, no retuning.
+- Own persistent O_RDONLY/nonblocking exclusive flock, actual 08.10 classification
+  and threshold gates with explicit upstream roots, 32 source pins and final
+  input/source rehash/sidecar/guard checks. Stage-local exclusion only; stdout
+  scoped receipt emits no score/family/outcome and denies full workflow/global
+  quiescence/fresh raw score. All classes enter morphology, scores preserved.
+- Fixture setup corrections: old verify-before-run properly refused missing
+  artifacts (44 PASS/one skip/47 setup errors, exit 1/65.52s); parent reseal changed
+  run key and initially hit missing-directory guard (61 PASS/one FAIL, exit
+  1/23.09s); linked fixture guessed wrong ledger filename (one FAIL, exit 1/6.21s).
+  Only disposable fixture setup fixed, original gates never relaxed. Corrected
+  intermediate WSL target 76 PASS/one skip/11 warnings/exit 0/48.24s; linked actual
+  bootstrap/classification target one PASS/11 warnings/exit 0/6.30s.
+- Full Windows workflow 609 PASS/114 POSIX-only skips, observed OS exit 0/194.09s.
+  Full WSL workflow plus original taxonomy/parent/PatchProducer 844 PASS/three
+  Windows-only skips/11 upstream warnings, observed OS exit 0/397.99s. Earlier
+  disposable E: contention fixture enabled. Ruff full workflow/test/new CLI lint
+  and new-file format PASS; no stubs. Three new Python files and both original
+  taxonomy helpers byte-identical to Git. Upstream EOL qualifications stay.
+- Post-freeze WSL target 77 PASS/one Windows-only skip/11 upstream warnings,
+  observed OS exit 0/48.94s. No source edit after freeze.
+- Main fixtures isolate classification parent, additional linked fixture runs
+  actual detector-local threshold bootstrap and classify_rows, with RESCORE
+  ancestry isolated. Linked scaled image=NULL join is explicitly not realistic
+  image provenance. Legacy execution writes expected disposable fixtures only.
+  No historical invocation/full-population clustering/scoring/clean-install
+  validation, global quiescence, public dispatch, push/merge/install/release.
+  O3a diagnostic closure/user untracked artifacts/output preserved. Next:
+  coincidence/PEM read-only gates, full profile/preflight adoption and quiescent
+  bounded real scientific replay; multi-run/Virgo readiness still open.
+
 ## 2026-10-01 - Approved A: read-only threshold/classification numerical gates
 
 - Resolves def71fa checkpoint by author confirmation; local source freeze

@@ -1,4 +1,28 @@
 ## Current Position
+- **Read-only taxonomy completed (2026-10-01)**: Phase 08.11 continues approved
+  architecture A after author `procedi`; source freeze `6b0f5a5`. Separate module/
+  CLI and 78 tests, 32 source bindings. Exact original MIL SELECT/order/joins and
+  vector checks through approved immutable SQLite reader, unchanged original
+  cosine/single-linkage/naming builder; whole JSONL bytes, metrics, summary and
+  verified compact replay without writes. All frozen classes included; scores
+  preserved but not clustering input. Approved read-only persistent lock plus
+  actual 08.10 classification/threshold gates, explicit upstream roots, final
+  rehash/sidecar/guard checks; no original productive verifier/writer invocation.
+  Main synthetic parent isolated at classification; linked fixture runs actual
+  detector-local bootstrap and classification with only RESCORE ancestry isolated.
+  Scaled missing-image/SQL-NULL join is qualified, not real image provenance.
+  Full Windows 609 PASS/114 POSIX-only skips/exit 0; full WSL plus retained
+  scientific taxonomy/parent/PatchProducer 844 PASS/three Windows-only skips/
+  11 upstream warnings/exit 0; Ruff PASS. Three new Python files and two old
+  taxonomy helpers byte-identical to Git; prior upstream EOL qualifications stay.
+  Post-freeze WSL target 77 PASS/one Windows-only skip/11 warnings, observed
+  OS exit 0/48.94s; no source edit after freeze.
+  No real historical/full-population/fresh raw-score replay, global quiescence,
+  public activation, install/push/merge/release or other-run/Virgo certificate.
+  Old sources/config/artifacts and user untracked paths unchanged; O3a closure
+  preserved. Next: coincidence/PEM read-only chain, complete profile/preflight
+  adoption and quiescent bounded clean-install scientific replay. See 08-11
+  SUMMARY/VERIFICATION and DANTE_WORKFLOW_O3A_TAXONOMY_READ_ONLY_2026-10-01.md.
 - **Read-only thresholds/classification completed (2026-10-01)**: Author approved
   A, resolving the lock-policy checkpoint below. Phase 08.10 source freeze
   `8da8f7b`: separate module/CLI, 78 tests, 28 source bindings. Existing persistent
