@@ -1,4 +1,23 @@
 ## Current Position
+- **Read-only O3a scan/native cohort chain (2026-10-01)**: Phase 08.07 continues
+  approved A with a separate verifier module/CLI and 89 synthetic tests. Source
+  freeze `57a99dc`. Legacy SQLite mode=ro can create WAL/SHM; reproduced only on
+  a temporary DB. New immutable reads require a sealed SHA-bound standalone DB
+  and reject sidecars, locks/failures/partials and changed inputs without repair.
+  Exact scan summary reconstruction; cohort preserves existing sealed-summary,
+  ledger/shard/context and inclusive guard/separation gates. Parent reads use
+  the new scan verifier and immutable queries, never old verifier entry points.
+  Fourteen source bindings; stdout scoped receipt, no scoring/fetch or full
+  scientific-workflow PASS. Windows workflow 418 PASS, OS exit 0; WSL workflow
+  plus primary/native-cohort/PatchProducer 448 PASS/one Windows-only skip,
+  11 upstream warnings, OS exit 0. Ruff lint/format PASS; new source bytes match
+  Git. Post-freeze Windows target 89 PASS, observed OS exit 0.
+  No historical invocation, productive run, scientific source/config/artifact
+  change, normalization, public adapter activation, push or release. User
+  untracked artifacts/output and O3a diagnostic closure unchanged. See 08-07
+  SUMMARY/VERIFICATION and DANTE_WORKFLOW_O3A_SCAN_COHORT_READ_ONLY_2026-10-01.md.
+  Next: read-only INDEX, then calibration/rescore and later gates; full profile/
+  preflight binding, quiescence and bounded real clean-install replay remain open.
 - **Initial O3a read-only evidence checks (2026-10-01)**: Author approved A,
   resolving the 08.05 verification architecture checkpoint. Phase 08.06 adds
   a separate module/CLI and synthetic tests, source freeze `9d8a51a`. Raw

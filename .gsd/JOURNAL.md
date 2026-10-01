@@ -1,5 +1,38 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Approved A: immutable scan/native cohort reads
+
+- Plan 08-07 adds separate scan/cohort verifier module, CLI and 89 synthetic
+  tests; local source freeze 57a99dc. No old scientific function/config changed.
+- Temporary SQLite reproduction: mode=ro creates WAL/SHM. New SHA-bound
+  standalone DB reads use mode=ro&immutable=1/query_only, reject any transaction
+  sidecar and changed signatures/inputs; never checkpoint/remove/repair history.
+  Persistent WAL-mode bytes remain unchanged and SQL writes are rejected.
+- Scan reconstructs exact legacy summary; cohort retains legacy sealed summary,
+  ledger/shard/context provenance, inclusive cross-detector guard and same-detector
+  separation. Stored scores and retained finite float64 samples are checked,
+  not newly scored. Existing runtime/contract/coverage/shard helpers remain.
+- Fourteen helper/wrapper source bindings; scoped sealed JSON stdout only,
+  all full-workflow/raw-score/encoder/threshold-fit/fetch claims false. No
+  productive writer or legacy verifier entry point used by the implementation.
+- Real temporary SQLite/NPY, scaled fixture loaders/runtime capture, exact
+  legacy parity on fixtures only. Success/failure file-byte/mtime/inventory
+  snapshots; negative evidence resealed/repinned only in tests. Actual contract
+  loaders/source pins pass without historical evidence access. Fixture SQL
+  placeholder and immutable-connection journal-mode expectations corrected;
+  no scientific mismatch bypass. WSL Ruff used because native Python lacks it.
+- Final Windows workflow 418 PASS in 83.01s; WSL workflow plus primary scan,
+  native cohort/PatchProducer 448 PASS/one Windows-only skip/11 upstream warnings
+  in 170.29s; observed OS exits 0. Pre-freeze Windows target 89 PASS in 27.47s;
+  Ruff lint/format PASS. New module/CLI/tests are byte-identical to Git blobs.
+  Post-freeze Windows target 89 PASS in 27.53s, observed OS exit 0.
+- Public factory/registry remain blocked. No historical DB/run invocation,
+  productive process, new scientific outcome, dependency installation,
+  old source normalization, push or release; user untracked paths preserved.
+  Next: readonly index then remaining native gates, complete profile/preflight
+  binding and quiescent bounded real clean-install replay. O3a diagnostic
+  closure stays complete; multi-run scientific productization is not complete.
+
 ## 2026-10-01 - Approved A: initial read-only evidence checks
 
 - Author's "procedi" resolves the earlier 08.05 A/B checkpoint in favor of
