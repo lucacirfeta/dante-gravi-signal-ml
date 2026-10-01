@@ -1,4 +1,18 @@
 ## Current Position
+- **Real snapshot parent preflight BLOCKED (2026-10-01)**: Phase 08.15 follows
+  `procedi`, starting e99a496, unchanged source freeze f254b2b. Existing actual
+  read-only coincidence CLI in canonical WSL Python, all nine external roots
+  explicit, returned observed OS exit 1 / FAIL_CLOSED_O3A_COINCIDENCE_EVIDENCE /
+  STOP_ENVIRONMENT_MISMATCH before capture. Original runtime diagnosis validates
+  frozen contract; only non-digest difference is NVIDIA driver 616.92 -> 617.14.
+  No equivalence assumed, require_current not bypassed, runtime not refrozen.
+  WSL original O3a contract tests 10 PASS/OS exit 0/3.40s. No snapshot/real PEM
+  replay/productive work/source-config edit or historical mutation; user folders
+  preserved, no push. Await author choice: historical environment restoration
+  or separately versioned retained-only runtime qualification (new validation
+  semantics, not yet approved). Old sealed O3a results remain historical evidence;
+  current real-chain certification and all-run/Virgo readiness remain open.
+  See 08-15 PLAN/SUMMARY/VERIFICATION and runtime checkpoint.
 - **Retained native PEM snapshot adapter completed (2026-10-01)**: Phase 08.14 follows
   author `procedi`, approved isolated architecture A. Source freeze f254b2b:
   separate module/CLI, 69 tests, 44 executed source bindings. Original unpatched

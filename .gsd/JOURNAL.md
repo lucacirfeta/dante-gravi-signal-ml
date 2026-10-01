@@ -1,5 +1,22 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Real retained snapshot preflight blocked on driver
+
+- Author `procedi`: 08.15 first actual read-only coincidence parent preflight,
+  starting e99a496; canonical WSL Python, all nine explicit native external roots.
+  Session 97666 returned OS exit 1 with FAIL_CLOSED_O3A_COINCIDENCE_EVIDENCE /
+  ContractError / STOP_ENVIRONMENT_MISMATCH before capture or retained PEM replay.
+- Original runtime helpers validate the frozen contract without current check
+  and diagnose current metadata. Only driver field differs: 616.92 frozen,
+  617.14 observed; derived digests differ. No numerical equivalence inference.
+- Original O3a native-contract regressions 10 PASS, OS exit 0, 3.40s. No source/
+  config change; original current-runtime guard remains active. No new full-suite
+  or actual complete-chain PASS claim. Preserved source freeze f254b2b, old
+  history/persistent locks and user directories; no snapshot/fetch/push/release.
+- Documentation-only blocked checkpoint. Stop-and-ask: restoring a historical
+  driver or changing retained-only validation semantics requires author choice.
+  Old sealed O3a conclusions are not changed by this current-runtime refusal.
+
 ## 2026-10-01 - Retained native PEM snapshot decision adapter
 
 - Phase 08.14 source freeze f254b2b follows `procedi` and approved A. New module/
