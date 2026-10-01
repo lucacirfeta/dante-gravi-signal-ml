@@ -1,5 +1,39 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Approved A: initial read-only evidence checks
+
+- Author's "procedi" resolves the earlier 08.05 A/B checkpoint in favor of
+  separate source-frozen read-only entry points. Plan 08-06 is scoped to initial
+  evidence, not new numerical validation or full workflow activation.
+- Added o3a_initial_verification.py, verify_dante_o3a_initial_evidence.py and
+  60 synthetic tests. Raw scope checks actual local HDF5 file SHA/metadata and
+  frozen exact evidence; acceptance scope validates planned stored shards and
+  reconstructs pinned ledger/summary including bootstrap/tail flags. Stored
+  scores are read, not recomputed; acceptance does not replay raw-file bytes.
+- Output is scoped sealed JSON on stdout; no historical writer, lock, failure,
+  productive scorer, threshold fit, source fetch or freeze. Nine inherited
+  helper modules plus the wrapper/CLI are source-bound. Source review extended
+  the binding to native contract, population geometry and scale-adequacy loaders
+  before final tests; no scientific source changed.
+- Real temporary HDF5 fixtures and inherited validators; contract loader
+  substitution only for scaled fixture geometry. All fixture bytes/mtimes are
+  preserved under success/failure; writer/scoring/network hooks forbidden.
+  Resealed/repinned semantic negatives are fixture-only. Existing real contract
+  loaders/source pins pass without opening historical raw/outcome evidence.
+- Initial targeted Windows 44 PASS; extended WSL 57 PASS; final targeted WSL
+  60 PASS. Final Windows workflow 329 PASS in 53.52s; final WSL workflow plus
+  initial/PatchProducer regression 367 PASS/one Windows-only skip/11 upstream
+  warnings in 149.94s. All successful test invocations have observed OS exit 0.
+  Ruff's two unused test imports were removed; final lint/format PASS. Earlier
+  pre-transitive-binding full counts are superseded, not presented as final.
+- Source freeze 9d8a51a; three new file bytes match Git blobs without filters.
+  Post-freeze targeted Windows suite 60 PASS in 15.90s, observed OS exit 0.
+  No factory/registry/scientific source/config/data change or historical write.
+  Existing Windows/WSL Git EOL warnings are preserved, not normalized/bypassed.
+  Local commits only, no push/release; user untracked artifacts/output unchanged.
+  O3a diagnostic study remains closed. Next: non-mutating native verification
+  and parent calls, followed by full profile/preflight binding and real replay.
+
 ## 2026-10-01 - Initial verification and immutable-adoption checkpoint
 
 - Author requested completion of the initial/adoption gates after 08.04.

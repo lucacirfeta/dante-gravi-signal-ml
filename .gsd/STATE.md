@@ -1,19 +1,41 @@
 ## Current Position
-- **O3a verification/adoption decision (2026-10-01)**: Phase 08.05 source audit
+- **Initial O3a read-only evidence checks (2026-10-01)**: Author approved A,
+  resolving the 08.05 verification architecture checkpoint. Phase 08.06 adds
+  a separate module/CLI and synthetic tests, source freeze `9d8a51a`. Raw
+  selector rehashes actual local HDF5 files against the pinned historical
+  inventory; acceptance reconstructs every planned stored score shard and exact
+  ledger/summary from the threshold contract's parent. No raw/encoder score
+  replay, threshold fitting or source fetch; both receipts explicitly deny
+  full-workflow scientific verification. Eleven source bindings include the
+  inherited contract/geometry loaders and new wrapper pair. No historical
+  writes on success/failure; stdout only. Public factory/registry unchanged.
+  Final Windows controller 329 PASS, observed OS exit 0; WSL controller plus
+  existing initial-stage/PatchProducer tests 367 PASS/one Windows-only skip,
+  11 upstream warnings, observed OS exit 0. New targeted WSL 60 PASS, exit 0;
+  Ruff lint/format PASS; three new source files match committed Git bytes.
+  Post-freeze Windows targeted 60 PASS, observed OS exit 0.
+  No productive/historical verifier run, new outcomes, dependency install,
+  old source/config normalization, push or release. User untracked paths
+  preserved; O3a diagnostic closure unchanged. See 08-06-SUMMARY/VERIFICATION
+  and docs/DANTE_WORKFLOW_O3A_INITIAL_READ_ONLY_2026-10-01.md.
+  Next: separate non-mutating native verification, then complete O3a profile/
+  preflight adoption and bounded real clean-install replay; full readiness open.
+- **Prior O3a verification/adoption audit (2026-10-01)**: Phase 08.05 source audit
   separates initial evidence integrity, stored-shard reconstruction and raw
-  numerical replay. Raw download and initial acceptance have no standalone
-  read-only CLI; productive calls write evidence. Expanded native audit finds
+  numerical replay. At that checkpoint, raw download and initial acceptance
+  lacked standalone read-only CLIs; productive calls write evidence. Expanded native audit finds
   RESCORE's core verifier itself rewrites work_manifest/preflight through
   preflight_rescore, and COINCIDENCE verification writes its compact. Existing
   threshold/classification/taxonomy verification also has lock/failure and
   transitive parent writes. No such command was executed. Recommended separate
   source-frozen read-only entry points versus isolated legacy-verifier replica
-  awaits author structural decision; no weaker hash-only scientific PASS.
+  required author structural decision, now resolved as A in 08.06 above;
+  no weaker hash-only scientific PASS.
   Fresh Windows native-adapter regression 45 PASS, OS exit 0; no code or
   scientific config/source/artifact change. Full graph, initial numerical
   replay and real bounded activation remain open. No push/release. See
-  08-05-PLAN/DISCOVERY. Next: decide the verification architecture, then its
-  bounded implementation; public dispatch stays blocked.
+  08-05-PLAN/DISCOVERY. Its bounded initial implementation is recorded above;
+  remaining native/full-graph gates keep public dispatch blocked.
 - **Native O3a CLI/receipt interface (2026-10-01)**: Phase 08.04 implements
   nine existing native stage interfaces in local source freeze `138ed7c`.
   Exact selector/config-path mapping, v2 O3a H1/L1 scope and nested sealed

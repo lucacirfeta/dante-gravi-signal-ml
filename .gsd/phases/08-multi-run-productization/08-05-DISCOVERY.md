@@ -85,3 +85,12 @@ preflight inputs and clean-install bounded replay still remain after this gate.
 - User untracked paths preserved. Existing historical EOL qualifications remain.
 - Next: author chooses the verification architecture; then prepare and implement
   its bounded, source-frozen verification plan before public O3a dispatch.
+
+## Resolution after this checkpoint (2026-10-01)
+
+The author's subsequent "procedi" approves the recommended separate read-only
+entry points (option A). Original findings and alternatives above are preserved
+as the checkpoint record. Plan 08-06 implements only the initial evidence scope
+in source freeze 9d8a51a: raw integrity and stored acceptance reconstruction,
+not raw score replay, full native verification or public workflow activation.
+See 08-06-SUMMARY/VERIFICATION and the initial read-only documentation checkpoint.
