@@ -1,5 +1,24 @@
 ## Current Position
+- **Isolated snapshot foundation completed (2026-10-01)**: Author approved A
+  after the 08.13 checkpoint. Source freeze 9f15560: technical policy, separate
+  module/CLI and 63 tests. Pinned plan bytes included in ZIP; exact member/hash/
+  size closure, bounded no-extraction admission, owned immutable byte consumers.
+  POSIX descriptor-relative nofollow capture/publication, exclusive new output
+  outside input roots; Windows capture refuses, pure byte verification portable.
+  Byte receipt explicitly denies scientific parent closure, original capture
+  quiescence/live writer exclusion, PEM/null replay and full-workflow PASS.
+  Broad pre-freeze WSL workflow+old PEM/PatchProducer 884 PASS/6 skips/11 upstream
+  warnings/OS exit 0/377.77s; Windows workflow 672 PASS/197 skips/exit 0/228.18s.
+  Suites in flight during publisher hardening: final post-freeze target WSL
+  62 PASS/1 skip/exit 0/1.80s and Windows 54 PASS/9 skips/exit 0/0.46s.
+  Ruff PASS; three new source files and policy byte-exact Git. No historical
+  snapshot/productive run, scientific source/config change, dispatcher adoption,
+  push/merge/release or Virgo certification. User folders preserved.
+  Next: frozen PEM/upstream scientific closure and retained decision adapter
+  on this byte view before historical replay. Full multi-run readiness open.
+  See 08-13 SUMMARY/VERIFICATION and isolated snapshot checkpoint.
 - **Native PEM quiescence checkpoint (2026-10-01)**: Phase 08.13 audit only,
+  historical pre-approval note; superseded by the author-approved foundation above.
   starting at 8608bda. Original PEM producer/CLI has no cooperative lock;
   approved 08.10 persistent-lock policy cannot exclude this writer. Original
   verifier may publish missing compact and validates retained calibration/

@@ -1,5 +1,32 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Isolated retained byte snapshot foundation
+
+- Author `procedi` resolved 08.13 in favor of A. Source freeze 9f15560:
+  new technical policy/module/independent CLI and 63 synthetic tests. Original
+  scientific sources/config/guards and historical results remain unchanged.
+- Capture requires external plan-file pin and every expected member SHA/size;
+  original plan included in ZIP, compared independently of resealed manifest.
+  Immutable owned-byte admission never extracts or consults live origins.
+  POSIX nofollow/component-relative capture and exclusive publication; Windows
+  capture/publication refuses. Receipt is byte-only with all scientific and
+  original capture/live-writer quiescence claims false. No dispatch/adoption.
+- Broad pre-freeze WSL workflow+native PEM/PatchProducer 884 PASS/6 skips/
+  11 upstream warnings/OS exit 0/377.77s; Windows workflow 672 PASS/197 skips/
+  OS exit 0/228.18s. Broad processes in flight during publisher hardening;
+  final post-freeze WSL target 62 PASS/1 skip/OS exit 0/1.80s, Windows target
+  54 PASS/9 skips/OS exit 0/0.46s. Ruff lint/format PASS, source/policy bytes
+  equal Git. Existing upstream EOL qualifications untouched.
+- Initial launch errors (wrong context-test filename/literal Windows glob)
+  ran no tests; fixed invocation only. Late test import E402 fixed without
+  waiver. Plan-byte inclusion and descriptor-relative output tighten only
+  new technical code; no scientific gate or contract changed.
+- No historical snapshot/new measurement/external action. Existing PEM suite
+  may inspect real parent selection metadata; new snapshot fixtures are synthetic.
+  Next: native PEM complete frozen scientific-parent/source/retained-decision
+  adapter on isolated bytes; foundation PASS does not establish PEM or full
+  multi-run/Virgo readiness. User untracked folders preserved, no push.
+
 ## 2026-10-01 - Retained coincidence read-only ledger replay
 
 - Phase 08.12 follows author `continua`, existing approved immutable DB and
