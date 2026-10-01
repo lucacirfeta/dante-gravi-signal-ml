@@ -1,4 +1,30 @@
 ## Current Position
+- **Read-only coincidence completed (2026-10-01)**: Phase 08.12 continues approved
+  A after author `continua`; source freeze c31c35b. Separate module/CLI and 83
+  tests, 37 source bindings. Actual read-only taxonomy/decision/upstream gates
+  with explicit roots, approved immutable raw-frame SQL and persistent locks.
+  Original frozen seed/source/cache/shard/event builders reconstruct retained
+  ROBUST-only pooled null and separate diagnostic ledgers; exact canonical
+  output bytes, full summary and original verified compact, no retuning.
+  Entire replay/rehash/source/sidecar/guard checks under existing read-only locks;
+  no legacy productive verifier/writer, raw correlation/scoring, fetch or encoder.
+  Receipt emits no score/outcomes and denies full-workflow/global-quiescence PASS.
+  Main taxonomy ancestry isolated; linked fixture executes actual taxonomy with
+  classification ancestry isolated. Original metadata preflight and legacy finish/
+  verify establish disposable expectations only, never historical execution.
+  Full Windows 617 PASS/189 POSIX-only skips/exit 0/258.49s; full WSL with original
+  scientific counterparts/PatchProducer 954 PASS/four Windows-only skips/11 upstream
+  warnings/exit 0/444.52s; Ruff PASS. Three new Python files and native coincidence
+  helpers exact Git; physical helper explicitly exact Git LF-to-CRLF reconstruction
+  matching frozen SHA, untouched. Earlier upstream EOL qualifications remain.
+  Post-freeze WSL target 82 PASS/one Windows-only skip/11 warnings, observed OS
+  exit 0/57.85s; no source edit after freeze.
+  No real historical/full-population/fresh raw correlation, clean-install adoption,
+  global quiescence, public activation, push/merge/release or Virgo certificate.
+  Original sources/config/artifacts/user paths and O3a closure unchanged.
+  Next: PEM read-only gates, full profile/preflight adoption and quiescent bounded
+  clean-install scientific replay. Full multi-run readiness remains open. See
+  08-12 SUMMARY/VERIFICATION and coincidence read-only checkpoint.
 - **Read-only taxonomy completed (2026-10-01)**: Phase 08.11 continues approved
   architecture A after author `procedi`; source freeze `6b0f5a5`. Separate module/
   CLI and 78 tests, 32 source bindings. Exact original MIL SELECT/order/joins and

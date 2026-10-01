@@ -1,5 +1,42 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Retained coincidence read-only ledger replay
+
+- Phase 08.12 follows author `continua`, existing approved immutable DB and
+  persistent-lock policies. Source freeze c31c35b: only new module/CLI/tests/PLAN,
+  83 tests, 37 source bindings; scientific sources/config/prior gates unchanged.
+- Original verifier writes compact and validates retained shards, not fresh raw
+  correlation. New wrapper reconstructs preflight through immutable original SQL,
+  actual taxonomy/decision/upstream read-only chain and explicit roots; unchanged
+  role/order/source/cache/shard/event helpers reconstruct primary-only p99 and
+  separate diagnostic outputs. Whole bytes/summary/compact compare read-only.
+  No new threshold/statistic/method, partner-class read or global claim.
+- Existing O_RDONLY/exclusive nonblocking flock held through final source/input/
+  sidecar/guard/cache checks, stdout scoped receipt without outcomes. No productive
+  entry point, fetch/encoder/preprocessing/scoring/raw correlation, lock removal,
+  historical invocation or full-workflow/global-quiescence certificate.
+- Initial new+old WSL suite 92 PASS/one skip/11 warnings/exit 0/56.42s. Expanded
+  suite 81 PASS/one skip/one setup ERROR/exit 1/59.71s: disposable linked fixture
+  placeholder compact correctly refused by old immutable writer. Fixture-only
+  correction, no relaxed gate. Linked actual taxonomy target one PASS/82 deselected/
+  11 warnings/exit 0/8.33s, classification ancestry isolated; main taxonomy parent
+  isolated. Original metadata preflight/finish/verifier generate fixture expectation
+  only, not full historical parent provenance or raw scientific replay.
+- Full Windows workflow 617 PASS/189 POSIX-only skips/observed OS exit 0/258.49s.
+  Full WSL workflow plus retained original scientific counterparts/PatchProducer
+  954 PASS/four Windows-only skips/11 upstream warnings/observed exit 0/444.52s.
+  Disposable E: lock fixture enabled. Ruff full workflow/test/new CLI lint and
+  three-file format PASS. Three new Python files and two native helpers byte-exact
+  Git. Physical helper working SHA matches frozen contract; exact Git LF-to-CRLF
+  reconstruction also matches. No normalization, all-source identity or gate bypass;
+  existing upstream EOL qualifications remain. Post-freeze WSL target 82 PASS,
+  one Windows-only skip/11 warnings, observed OS exit 0/57.85s, no source edit.
+- Original scientific artifacts/history and user untracked directories preserved;
+  local commits only, no push/merge/main/release/external communication. O3a diagnostic
+  closure unchanged. Next: PEM read-only chain, complete profile/preflight adoption,
+  global quiescence and bounded clean-install scientific replay. Full multi-run and
+  Virgo readiness not certified by these regressions.
+
 ## 2026-10-01 - Retained taxonomy read-only numerical replay
 
 - Phase 08.11 follows author `procedi` and already approved immutable DB/lock
