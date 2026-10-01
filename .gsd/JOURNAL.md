@@ -1,5 +1,37 @@
 # DANTE v6 execution journal
 
+## 2026-10-01 - Approved A: read-only threshold/classification numerical gates
+
+- Resolves def71fa checkpoint by author confirmation; local source freeze
+  8da8f7b, separate module/CLI and 78 tests. All three new Python files exactly
+  match frozen Git blobs without normalization; old sources/config/guards unchanged.
+- Safe existing persistent lock O_RDONLY, original exclusive nonblocking flock
+  across parent validation, full numerical replay and final rehash; no marker
+  creation/deletion/write. Unsafe/missing/busy/replaced/unsupported refused.
+  Actual original producer subprocess contention and release pass on disposable
+  Linux and E: DrvFS fixtures. Scope is stage-local, not global quiescence.
+- Original score-row/compute_threshold/block-bootstrap helpers and classify_rows
+  retained; full summaries, compacts and classification JSONL bytes reconstructed.
+  Explicit frozen 08.09 upstream roots, 28 source pins, no old productive verifier
+  paths. Stdout-only receipt with limited flags, no scores or outcome counts.
+- First invalid synthetic point-only tail triggered original interval constraint:
+  one FAIL/47 setup errors/71 PASS/one skip, exit 1/72.58s. Only positive fixture
+  repaired; counterexample remains a refusal test, no scientific gate weakened.
+- Expanded WSL targeted suite 129 PASS/one skip/exit 0/76.99s; Windows targeted
+  12 PASS/66 POSIX-only skips/exit 0/14.53s. Final full Windows workflow
+  579 PASS/66 skips/exit 0/180.18s; final full WSL workflow plus retained scientific
+  and PatchProducer regressions 747 PASS/two Windows-only skips/11 upstream
+  warnings/exit 0/308.84s. Ruff lint/format PASS. Actual unchanged contract loaders
+  PASS WSL; native Windows fails closed before source/evidence reads.
+- Post-freeze WSL new target: 77 PASS/one Windows-only skip, observed OS exit
+  0/55.34s, disposable E: test explicitly enabled. No source edit after freeze.
+- New fixtures isolate RESCORE parent; actual frozen numerical helpers run with
+  scaled fixture contracts. Earlier dependency regressions remain intact; this
+  is not real historical adoption or raw scoring/clean-install certification.
+  User untracked artifacts/output and O3a diagnostic closure preserved; no push,
+  merge, install, release or public activation. Next: remaining native read-only
+  gates, profile/preflight adoption, global quiescence and real bounded replay.
+
 ## 2026-10-01 - Threshold/classification persistent-lock checkpoint
 
 - Plan 08-10 audit only, starting f6d032a; no new verifier implemented. Original

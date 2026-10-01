@@ -1,5 +1,28 @@
 ## Current Position
+- **Read-only thresholds/classification completed (2026-10-01)**: Author approved
+  A, resolving the lock-policy checkpoint below. Phase 08.10 source freeze
+  `8da8f7b`: separate module/CLI, 78 tests, 28 source bindings. Existing persistent
+  lock opened O_RDONLY, original exclusive nonblocking flock held throughout
+  replay/rehash; no create/delete/write. Busy, missing, unsafe/replaced or
+  unsupported evidence refused. Original producer subprocess contention/release
+  passes on disposable Linux and explicitly selected E: DrvFS fixtures only.
+  Exact unchanged detector-local block-bootstrap, full threshold summary/compact,
+  original classification boundaries, identities and JSONL bytes reconstructed
+  read-only. Explicit 08.09 upstream parents; no productive entry points.
+  Full Windows 579 PASS/66 POSIX-only skips/exit 0; full WSL 747 PASS/two
+  Windows-only skips/11 upstream warnings/exit 0; Ruff PASS. Three new source
+  bytes match Git. Post-freeze WSL target 77 PASS/one Windows-only skip,
+  observed OS exit 0/55.34s with disposable E: test enabled.
+  Fixture parent isolation and platform qualifications retained;
+  no historical invocation, fresh raw score or full-workflow PASS. Generic guards
+  and old sources/config/artifacts unchanged, no public activation/push/release.
+  Next: taxonomy/coincidence/PEM read-only gates, complete profile/preflight
+  adoption, global quiescence and bounded real clean-install replay. Full
+  multi-run/Virgo scientific readiness remains open. See 08-10 SUMMARY/VERIFICATION
+  and DANTE_WORKFLOW_O3A_DECISIONS_READ_ONLY_2026-10-01.md.
 - **Threshold/classification lock-policy checkpoint (2026-10-01)**: Phase 08.10
+  historical audit, superseded by author-approved A and the verified increment
+  above; the following describes the pre-approval checkpoint only.
   audit finds original `_lock` leaves `run.lock` after release, and classification
   shares it. Existing read-only `_clean` rejects even a healthy retained marker.
   Temporary WSL probe exit 0 reproduces persistence, guard refusal and exclusive
