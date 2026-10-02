@@ -1,4 +1,20 @@
 ## Current Position
+- **Primary manifest GPS/context coverage PASS (2026-10-02)**: Author `procedi`
+  approves A,08.24:common engine,preserve profile-specific frozen selection.
+  Source9fc224e;generic deny-default inspector/binding and coverage-readiness,
+  explicit unchanged corrected-O4a original selector,no universal CBC/DQ filter.
+  One real WSL metadata replay OSexit0/PASS,401442H1+409809L1=811251 identities,
+  full JSONL SHA24d6a3f6... matches contract,geometry/source/audit bytes coherent.
+  Windows318 PASS/OSexit0/55.71s;WSL317 PASS/one Windows-only skip/OSexit0/
+  138.47s;post-freeze WSL80 PASS/OSexit0/16.08s;Ruff5 files/base import PASS.
+  First WSL UI detached-launch15s timeout documented;unchanged isolated and
+  full retry green,no relaxed limit. Scientific source/EOL qualifiers intact.
+  Bounded PASS_PRIMARY_SCAN_MANIFEST_COVERAGE_ONLY:physical raw,sample-grid,
+  calibration,DQ-flag,live/runtime/writer-exclusion/scientific readiness remain
+  false.No state/worker/science execution/fetch/outcomes,registry activation,
+  O3a reopening,push/main/release;user folders intact. Next calibration input
+  coverage,then bounded clean-install numerical execution;other-run/V1 gates
+  still require explicit scientific contracts and qualification.
 - **Common input binding readiness PASS (2026-10-02)**: Author `procedi`,08.23.
   Source freeze fd9e164; post-freeze WSL42 PASS/exit0/30.27s, standalone WSL
   input-readiness exit0/PASS and bare package import PASS.

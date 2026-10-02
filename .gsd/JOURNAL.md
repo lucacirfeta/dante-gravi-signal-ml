@@ -1,5 +1,29 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Profile-specific primary GPS/context coverage
+
+- Author `procedi` accepts recommended A: common engine with existing approved
+  GPS/DQ selection per profile.08.24 source9fc224e,read-only generic binding/
+  inspector and explicit coverage-readiness CLI. Corrected-O4a reuses unchanged
+  original selector, frozen count/full identity SHA, raw manifest and retained
+  validity metadata. No protocol rebuild or extra CBC/DQ filter. Exact geometry,
+  detector-local union coverage, no rounding/gap/identity suppression; source/
+  input SHA checked before and after. No orchestrator/ledger/worker or outcome.
+- Final common16-file Windows318 PASS/OSexit0/55.71s;WSL317 PASS/one Windows-only
+  skip/OSexit0/138.47s;post-freeze WSL80 PASS/OSexit0/16.08s;Ruff5 files and base
+  import PASS. Initial WSL run316PASS/1skip/1UI detached-launch timeout/OSexit1;
+  unchanged isolated retry1PASS/9.97s then full green,limit/code unchanged.
+  Fail-closed read errors/lossy integers added before final regressions. Initial
+  helper audit paths corrected read-only;three historical EOL hashes unchanged.
+- One real standalone post-freeze metadata replay observed OSexit0/PASS:
+  401442H1+409809L1=811251;full identity SHA24d6a3f6... agrees with protocol.
+  This is PRIMARY_SCAN_MANIFEST_GPS_CONTEXT_ONLY,not raw/sample validity,
+  calibration/live/currentDQ/runtime/writer-exclusion/scientific certification.
+  No scientific source/config/registry activation,raw/HDF5/job/fetch/CUDA/outcome,
+  O3a reopening,push/main/release;user folders preserved. Next calibration input
+  coverage and bounded clean-install raw numerical proof. Other-run/V1 review
+  remains separate. Checkpoint DANTE_WORKFLOW_GPS_COVERAGE_2026-10-02.md.
+
 ## 2026-10-02 - Common input binding readiness
 
 - Author `procedi`,08.23: inspected current PREFLIGHT operational release

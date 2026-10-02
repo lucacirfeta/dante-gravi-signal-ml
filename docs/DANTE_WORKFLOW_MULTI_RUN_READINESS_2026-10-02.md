@@ -4,6 +4,12 @@ Date:2026-10-02. Internal readiness evidence, not an external LIGO/Virgo certifi
 The completed diagnostic O3a H1/L1 analysis is not being reopened.
 
 ## Verified foundations
+-08.24 `coverage-readiness` checks the approved profile's exact primary GPS/
+  context against pinned manifest metadata and original full identities.
+  Unchanged corrected-O4a selector, no added CBC/DQ filter: one real WSL replay
+  OSexit0/PASS,811251 identities. Windows318/WSL317+one skip/post-freeze80 PASS.
+  This is NOT raw/sample/calibration/live/DQ/runtime or all-run certification.
+  Details: docs/DANTE_WORKFLOW_GPS_COVERAGE_2026-10-02.md.
 -08.23 common `input-readiness` binds adapter-selected frozen declarations and
   metadata file SHA/seals without state creation or raw reads. It is NOT exact
   GPS/DQ coverage or scientific preflight PASS; productive PREFLIGHT unchanged.
@@ -32,6 +38,10 @@ The completed diagnostic O3a H1/L1 analysis is not being reopened.
    and explicit stage applicability/reporting. Initial acquisition, reference,
    calibration and scan must be bound; comparative and post-hoc follow-up stages
    are not automatically required for every future execution.
+   Primary manifest GPS/context coverage now passes08.24 for the existing
+   corrected-O4a profile only; calibration, physical raw/sample and current
+   runtime proof remain. Preserve each profile's original DQ selection, rather
+   than imposing a new universal flag policy.
 3. Prove clean-install reproducibility with bounded real raw-to-result execution
    and an independent verifier, beyond retained hashes/ledgers. Record runtime,
    source/EOL identity, detached-launch/recovery behaviour, resource requirements

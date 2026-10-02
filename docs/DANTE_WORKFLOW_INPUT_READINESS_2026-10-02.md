@@ -54,9 +54,11 @@ The report always has `scientific_execution_ready:false`,
 No existing productive or retained command, receipt interpretation, registry
 binding, scientific policy, numerical parameter or UI activation is changed.
 
-Next is an exact-GPS/DQ/context coverage gate consuming the approved profile's
-declared requirements and independent source evidence, then bounded numerical
-execution from a clean install. A new population, DQ policy or sample validity
-rule requires author review before implementation. Other-run/V1 contracts and
-their scientific qualification remain separate; synthetic labels are not that
+Subsequent08.24 adds a separate primary manifest GPS/context coverage gate:
+see docs/DANTE_WORKFLOW_GPS_COVERAGE_2026-10-02.md. The flags above still describe
+`input-readiness` itself; it does not absorb that new coverage proof. Calibration
+coverage, raw/sample/runtime and bounded numerical execution from a clean
+install remain open. A new population, DQ policy or sample validity rule
+requires author review before implementation. Other-run/V1 contracts and their
+scientific qualification remain separate; synthetic labels are not that
 qualification. O3a diagnostic science is still closed.
