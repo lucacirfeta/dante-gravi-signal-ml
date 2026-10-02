@@ -1,0 +1,477 @@
+{
+  "candidate_dataset": "O4a_4KHZ_R1",
+  "dq_validity_checked": false,
+  "historical_receipt_seal": "15ba4fc44374112f3e09ae9573d93d12d5907cee3a60ea04d83f573606fcb855",
+  "historical_receipt_sha256": "4f0732510604583e8a02827d3172e337cedd714ed3e8d3b86dfaac6c17b7fe78",
+  "historical_release_equivalence_checked": false,
+  "historical_release_version_known": false,
+  "interval_count": 28,
+  "intervals": [
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1369571328,
+          "gps_start": 1369567232,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1369440256/H-H1_GWOSC_O4a_4KHZ_R1-1369567232-4096.hdf5"
+        }
+      ],
+      "gps_end": 1369569540,
+      "gps_start": 1369569500,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1369569500/1369569540/json/",
+      "response_sha256": "aa447c39c4fb5e5b2c15b34135bdaa4e141625c054a50f2f28b8a17c4ea78d77"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1369591808,
+          "gps_start": 1369587712,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1369440256/H-H1_GWOSC_O4a_4KHZ_R1-1369587712-4096.hdf5"
+        }
+      ],
+      "gps_end": 1369590020,
+      "gps_start": 1369589980,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1369589980/1369590020/json/",
+      "response_sha256": "d78cfed80c7f7c6a3bf6eb03648f055ca91407b71d822339412f2eb7cb8e3f58"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1369628672,
+          "gps_start": 1369624576,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1369440256/H-H1_GWOSC_O4a_4KHZ_R1-1369624576-4096.hdf5"
+        }
+      ],
+      "gps_end": 1369626916,
+      "gps_start": 1369626876,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1369626876/1369626916/json/",
+      "response_sha256": "745673a68353932da23d51b387ddece0d52827c7575b0c1bd5655001bc8920a8"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1369632768,
+          "gps_start": 1369628672,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1369440256/H-H1_GWOSC_O4a_4KHZ_R1-1369628672-4096.hdf5"
+        }
+      ],
+      "gps_end": 1369630980,
+      "gps_start": 1369630940,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1369630940/1369630980/json/",
+      "response_sha256": "ff7812f82dd63a1535678a33de16837067541abfb5776e9092862cbabe20ecbc"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1372233728,
+          "gps_start": 1372229632,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1371537408/H-H1_GWOSC_O4a_4KHZ_R1-1372229632-4096.hdf5"
+        }
+      ],
+      "gps_end": 1372231172,
+      "gps_start": 1372231132,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1372231132/1372231172/json/",
+      "response_sha256": "49f7b6fbb7eee1e9f52b668cbc8871252ae263775a2453548238c5c2b3afbc4f"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1373765632,
+          "gps_start": 1373761536,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1373634560/H-H1_GWOSC_O4a_4KHZ_R1-1373761536-4096.hdf5"
+        }
+      ],
+      "gps_end": 1373761796,
+      "gps_start": 1373761756,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1373761756/1373761796/json/",
+      "response_sha256": "652f061553a2e6f9e4dafd2d1415b09a476680ad2e95a094dc1a48c0605e2381"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1374433280,
+          "gps_start": 1374429184,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1373634560/H-H1_GWOSC_O4a_4KHZ_R1-1374429184-4096.hdf5"
+        }
+      ],
+      "gps_end": 1374431748,
+      "gps_start": 1374431708,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1374431708/1374431748/json/",
+      "response_sha256": "60b2febbc34127b5b0160d3eb9a7d32c2ecefae54cd6e9a034641f15ea9eefa5"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1374588928,
+          "gps_start": 1374584832,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1373634560/H-H1_GWOSC_O4a_4KHZ_R1-1374584832-4096.hdf5"
+        }
+      ],
+      "gps_end": 1374587428,
+      "gps_start": 1374587388,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1374587388/1374587428/json/",
+      "response_sha256": "3c64237ad36c80007125a916b6d2c9dd5b14d515e4323a529a498e82514cfd7c"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1374867456,
+          "gps_start": 1374863360,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1374683136/H-H1_GWOSC_O4a_4KHZ_R1-1374863360-4096.hdf5"
+        }
+      ],
+      "gps_end": 1374864132,
+      "gps_start": 1374864092,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1374864092/1374864132/json/",
+      "response_sha256": "82a10430311d02f7deb3c2c1ba31b44bfb81c14d2098a15f89dd3c941f7d357f"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1374875648,
+          "gps_start": 1374871552,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1374683136/H-H1_GWOSC_O4a_4KHZ_R1-1374871552-4096.hdf5"
+        }
+      ],
+      "gps_end": 1374872356,
+      "gps_start": 1374872316,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1374872316/1374872356/json/",
+      "response_sha256": "82b5aba8d77baecb7247498560f2979ced8b81d335c2f4d055214e3231ffc71a"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1375997952,
+          "gps_start": 1375993856,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1375731712/H-H1_GWOSC_O4a_4KHZ_R1-1375993856-4096.hdf5"
+        }
+      ],
+      "gps_end": 1375995172,
+      "gps_start": 1375995132,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1375995132/1375995172/json/",
+      "response_sha256": "7c9d4cc3b39e7fc284785c6265d862405a928ea34e7259e8a08e1d0fad4cd5fc"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1378226176,
+          "gps_start": 1378222080,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1377828864/H-H1_GWOSC_O4a_4KHZ_R1-1378222080-4096.hdf5"
+        }
+      ],
+      "gps_end": 1378224388,
+      "gps_start": 1378224348,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1378224348/1378224388/json/",
+      "response_sha256": "b262c340183edca8b4d49bd57e1b595b23b7c7fff04cee162cc4325cc1c137ea"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1378353152,
+          "gps_start": 1378349056,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1377828864/H-H1_GWOSC_O4a_4KHZ_R1-1378349056-4096.hdf5"
+        }
+      ],
+      "gps_end": 1378349604,
+      "gps_start": 1378349564,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1378349564/1378349604/json/",
+      "response_sha256": "0ec18154c0ed6cd6b119cadb69d7fd6c857ac802c9aa5d2b2b2110bfdb22243d"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1382318080,
+          "gps_start": 1382313984,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1382023168/H-H1_GWOSC_O4a_4KHZ_R1-1382313984-4096.hdf5"
+        }
+      ],
+      "gps_end": 1382314244,
+      "gps_start": 1382314204,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1382314204/1382314244/json/",
+      "response_sha256": "a5fbc6f38ebadda05c0911d3cd7a0f79cf117a09634f153403c7d4d04270ce8f"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1382572032,
+          "gps_start": 1382567936,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1382023168/H-H1_GWOSC_O4a_4KHZ_R1-1382567936-4096.hdf5"
+        }
+      ],
+      "gps_end": 1382570532,
+      "gps_start": 1382570492,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1382570492/1382570532/json/",
+      "response_sha256": "8fafee4ee2bb45c84d8731a2e40a443af87fbbc83b4194b29f1168d0b12ee284"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1383034880,
+          "gps_start": 1383030784,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1382023168/H-H1_GWOSC_O4a_4KHZ_R1-1383030784-4096.hdf5"
+        }
+      ],
+      "gps_end": 1383031588,
+      "gps_start": 1383031548,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1383031548/1383031588/json/",
+      "response_sha256": "2d4ec60a2942675e577f9f490692c89535fb98c24ea38f1536f0bf54ca002d56"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1386655744,
+          "gps_start": 1386651648,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1386217472/H-H1_GWOSC_O4a_4KHZ_R1-1386651648-4096.hdf5"
+        }
+      ],
+      "gps_end": 1386652164,
+      "gps_start": 1386652124,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1386652124/1386652164/json/",
+      "response_sha256": "f665c9c849a80555cb5ec06e8d669d387483870e71c43a0aa3afd2f78c0c0168"
+    },
+    {
+      "detector": "H1",
+      "files": [
+        {
+          "detector": "H1",
+          "gps_end": 1388826624,
+          "gps_start": 1388822528,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1388314624/H-H1_GWOSC_O4a_4KHZ_R1-1388822528-4096.hdf5"
+        }
+      ],
+      "gps_end": 1388824068,
+      "gps_start": 1388824028,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/H1/1388824028/1388824068/json/",
+      "response_sha256": "a3cdd2beccd58b170035ce3874c1df1b029c90ddd60c1560c0d3e33db05eb353"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1371213824,
+          "gps_start": 1371209728,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1370488832/L-L1_GWOSC_O4a_4KHZ_R1-1371209728-4096.hdf5"
+        }
+      ],
+      "gps_end": 1371210756,
+      "gps_start": 1371210716,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1371210716/1371210756/json/",
+      "response_sha256": "f919d1aa2faec3668e01e784eca9da30f4b59ca5d4d9a2f6371d0dea15516797"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1374715904,
+          "gps_start": 1374711808,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1374683136/L-L1_GWOSC_O4a_4KHZ_R1-1374711808-4096.hdf5"
+        }
+      ],
+      "gps_end": 1374712580,
+      "gps_start": 1374712540,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1374712540/1374712580/json/",
+      "response_sha256": "9b57dbfd95b370bd8cba4e1354331e981cc114f119d64c4f8e292368a803b814"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1376235520,
+          "gps_start": 1376231424,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1375731712/L-L1_GWOSC_O4a_4KHZ_R1-1376231424-4096.hdf5"
+        }
+      ],
+      "gps_end": 1376235044,
+      "gps_start": 1376235004,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1376235004/1376235044/json/",
+      "response_sha256": "169cf0bb6e8eee097229b4327f3268776ffc7a7b508cdb104af2cca96a81e92e"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1376837632,
+          "gps_start": 1376833536,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1376780288/L-L1_GWOSC_O4a_4KHZ_R1-1376833536-4096.hdf5"
+        }
+      ],
+      "gps_end": 1376835332,
+      "gps_start": 1376835292,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1376835292/1376835332/json/",
+      "response_sha256": "680f799d1d6046806fcceba95c81e6ebe5d4c7e61433ab14e7e2ff9e8aa1a798"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1376845824,
+          "gps_start": 1376841728,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1376780288/L-L1_GWOSC_O4a_4KHZ_R1-1376841728-4096.hdf5"
+        }
+      ],
+      "gps_end": 1376843556,
+      "gps_start": 1376843516,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1376843516/1376843556/json/",
+      "response_sha256": "f6b3a39309d5a84bb69423e115f9903ada20a6bbdc2d1d6c809094ea5202ea22"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1378213888,
+          "gps_start": 1378209792,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1377828864/L-L1_GWOSC_O4a_4KHZ_R1-1378209792-4096.hdf5"
+        }
+      ],
+      "gps_end": 1378212132,
+      "gps_start": 1378212092,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1378212092/1378212132/json/",
+      "response_sha256": "dca0133121ae7e71665d5121b993804a6f6a490170f13877c18a0d7537a7da6d"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1381208064,
+          "gps_start": 1381203968,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1380974592/L-L1_GWOSC_O4a_4KHZ_R1-1381203968-4096.hdf5"
+        }
+      ],
+      "gps_end": 1381207844,
+      "gps_start": 1381207804,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1381207804/1381207844/json/",
+      "response_sha256": "f54a20cff4472046a364e03243e10701d89ee1ea6b595ef36ceef9501489b358"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1387167744,
+          "gps_start": 1387163648,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1386217472/L-L1_GWOSC_O4a_4KHZ_R1-1387163648-4096.hdf5"
+        }
+      ],
+      "gps_end": 1387166500,
+      "gps_start": 1387166460,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1387166460/1387166500/json/",
+      "response_sha256": "999c259b720852589697f02c072106fb7bfa9905da9159bc6e0674db28fae42b"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1387225088,
+          "gps_start": 1387220992,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1386217472/L-L1_GWOSC_O4a_4KHZ_R1-1387220992-4096.hdf5"
+        }
+      ],
+      "gps_end": 1387223812,
+      "gps_start": 1387223772,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1387223772/1387223812/json/",
+      "response_sha256": "1c55a0aec9922f5e109cd462a41a5e4eceb570fe085223d36be9b22d90e98fae"
+    },
+    {
+      "detector": "L1",
+      "files": [
+        {
+          "detector": "L1",
+          "gps_end": 1388363776,
+          "gps_start": 1388359680,
+          "sample_rate_hz": 4096,
+          "url": "https://gwosc.org/archive/data/O4a_4KHZ_R1/1388314624/L-L1_GWOSC_O4a_4KHZ_R1-1388359680-4096.hdf5"
+        }
+      ],
+      "gps_end": 1388363044,
+      "gps_start": 1388363004,
+      "metadata_url": "https://gwosc.org/archive/links/O4a_4KHZ_R1/L1/1388363004/1388363044/json/",
+      "response_sha256": "628ecac7f0afcee203aa7298d7fdfe5cafc3444ac90640e0b7108d3c47f5a5a8"
+    }
+  ],
+  "parent": {
+    "path": "config/dante_o4a_corrected_protocol_v4.json",
+    "seal": "326495389f511b378c52b2a99f7771bd13d87d6852d4191a4f0fb61d6842d4fa",
+    "seal_field": "protocol_digest",
+    "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+  },
+  "public_file_time_coverage_checked": true,
+  "queried_at_utc": "2026-10-02T20:03:31.703033+00:00",
+  "raw_files_downloaded": false,
+  "raw_samples_checked": false,
+  "replacement_bytes_admitted": false,
+  "report_digest": "bca8605881953bb399541c2ed67c353e3f672d11c23221b3dc2deda8e0267ca0",
+  "sample_rate_hz": 4096,
+  "schema_version": 1,
+  "scientific_execution_ready": false,
+  "score_values_read": false,
+  "status": "PASS_PUBLIC_TRANSPORT_METADATA_ONLY",
+  "unique_file_count": 28
+}

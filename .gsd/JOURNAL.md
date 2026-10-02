@@ -1,5 +1,25 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Missing calibration transport metadata preflight
+
+- Author accepts A after08.25;08.26 preflight only. Sourcef9ad376:common utility,
+  explicit metadata script,34 fail-closed offline tests;no raw download.
+- Frozen missing geometry,old receipt SHA/parent/seals/geometry checked before
+  official JSON GET;redirect/raw URLs rejected. Exact28 intervals18H1+10L1,
+  28 distinct public O4a_4KHZ_R1 HDF5 metadata entries at4096Hz,no time holes.
+  WSL OSexit0/PASS_PUBLIC_TRANSPORT_METADATA_ONLY at20:03:31UTC. Report digest
+  bca8605881953bb399541c2ed67c353e3f672d11c23221b3dc2deda8e0267ca0;
+  independent seal/fileSHA/exact old interval set/false-flag audit PASS/exit0.
+- Windows136 PASS/3.72s,WSL136 PASS/8.62s,post-freezeWSL34 PASS/1.14s,exit0;
+  Ruff3 files PASS. Four original qualified scientific SHA/config unchanged.
+- Exploratory API run-name query404 corrected using official release dataset
+  link;no population change. Historical GWPy fetch lacks version pin and old
+  receipt lacks release metadata:equivalence unknown,old rawstill0/28. Next
+  acquisition into new run plus numerical SHA comparison;new container receipt
+  needs explicit review,no silent old hash edits/admission/recalibration.
+- No scientific selection/score/calibration/runtime/NVIDIA changes,O3a reopening,
+  push/main/release or user-folder changes. Exact prior archives remain intact.
+
 ## 2026-10-02 - Calibration input gate; missing raw supplements
 
 - Author `procedi`,08.25 source52780ff:generic deny-default calibration input

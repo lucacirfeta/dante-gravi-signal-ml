@@ -1,4 +1,18 @@
 ## Current Position
+- **Calibration transport metadata preflight PASS (2026-10-02)**:
+  Author accepts A,08.26/sourcef9ad376. Exact missing spans from audited frozen
+  metadata reader; historical receipt SHA/parent/seals/geometry pinned. Bounded
+  official JSON queries only,no raw download/acquirer/runtime/score values.
+  WSLexit0/PASS_PUBLIC_TRANSPORT_METADATA_ONLY:28 spans18H1+10L1,28 distinct
+  O4a_4KHZ_R1 HDF5 URLs,time coverage at frozen4096Hz. Report sealbca86058...
+  Independent report/receipt identity audit PASS;old raw0/28 remains missing.
+  Windows136 PASS/3.72s,WSL136 PASS/8.62s,post-freeze34 PASS/1.14s,exit0;
+  Ruff3 files PASS,scientific/config/qualified EOL SHA unchanged. Local only.
+  Historical fetch/receipt did NOT pin GWOSC release:current availability is
+  NOT historical version/numerical equivalence,input admission or science PASS.
+  Next separately authorized transport acquisition,new preserved run and exact
+  historical numerical SHA comparison;changed containers need explicit receipt
+  review,changed samples require stop.No calibration/NVIDIA/O3a reopening/push.
 - **Calibration input gate implemented; actual inputs BLOCKED (2026-10-02)**:
   Author `procedi`,08.25 source52780ff. Generic metadata/byte inspector and
   calibration-readiness CLI;explicit frozen inventory/geometry and acquisition
