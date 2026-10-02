@@ -1,4 +1,23 @@
 ## Current Position
+- **Common input binding readiness PASS (2026-10-02)**: Author `procedi`,08.23.
+  Source freeze fd9e164; post-freeze WSL42 PASS/exit0/30.27s, standalone WSL
+  input-readiness exit0/PASS and bare package import PASS.
+  New read-only inspector and `input-readiness` CLI consume explicit adapter
+  selectors, workflow-pinned contract SHA/seal, eight declarations and five
+  frozen metadata references. Default mapping absent=blocked; no ledger/worker/
+  source fetch/raw/science access or fallback. Existing corrected-O4a population
+  remains frozen local mirror, not entire run; operational PREFLIGHT unchanged.
+  PASS_INPUT_CONTRACT_BINDING_ONLY explicitly denies exact GPS/DQ/sample/runtime/
+  writer-exclusion/scientific readiness. Generic synthetic tests do not qualify
+  other runs/V1; O3a scientific closure unchanged, registry unactivated.
+  New33 tests; focusedWindows88 PASS/exit0/1.54s; final15-fileWindows280 PASS/
+  exit0/47.39s;WSL279 PASS/one Windows-only skip/exit0/117.76s. Ruff5 files lint/
+  format PASS, real pinned-metadata probe PASS; prior three scientific EOL SHA
+  qualifiers unchanged. Corrected missing read paths, strictJSON API label and
+  unused test import before final verification. No push/main/release/GPU work;
+  user folders preserved. Next: actual exact-GPS/DQ/context coverage gate from
+  approved profile evidence, then bounded clean-install numerical execution.
+  Scientific policies and new-run/V1 contracts still require author decisions.
 - **Common operation boundary PASS (2026-10-02)**: Author clarification and
   `ok quindi vai avanti` focus the reusable engine, not another O3a study.
   08.22,source8866d17:sealed profile2 policy distinguishes productive and

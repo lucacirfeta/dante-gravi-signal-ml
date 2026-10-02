@@ -1,5 +1,29 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Common input binding readiness
+
+- Author `procedi`,08.23: inspected current PREFLIGHT operational release
+  verifier and corrected-O4a protocol. They are not full observing-run/GPS/DQ
+  proof; protocol explicitly declares a frozen local mirror. Added common
+  metadata inspector, explicit audited adapter selectors and `input-readiness`.
+  Eight selected declarations/five input hashes, exact workflow SHA/canonical
+  seal, finite unique JSON, safe paths and final contract SHA; default deny.
+  No ledger/worker, scientific helper import, raw reads or outcome exposure.
+  Six-file source freeze fd9e164; post-freeze WSL input/CLI/packaging42 PASS/
+  OSexit0/30.27s, standalone metadata CLI OSexit0/PASS and base-package import.
+- 33 new tests; Windows focused88 PASS/OSexit0/1.54s. Final15-file common suites:
+  Windows280 PASS/OSexit0/47.39s; WSL279 PASS/one Windows-only skip/OSexit0/117.76s.
+  Ruff5 files lint/format PASS. Real metadata-only probe PASS/five references/
+  eight declarations, scientific/exactGPS flags false. Three historical EOL
+  source SHA qualifications unchanged. Initial missing read paths corrected;
+  required JSON label and unused test import fixed before final regressions.
+- Separate PASS_INPUT_CONTRACT_BINDING_ONLY does not admit inputs or certify
+  coverage, DQ selection, raw numerical validity, runtime or writer exclusion.
+  Existing productive/retained commands, configs, registry and science intact;
+  no O3a reopening, raw/network/GPU execution, public activation/push/main.
+  User untracked folders preserved. Next actual GPS/DQ/context evidence gate,
+  then clean-install numerical proof; no new scientific criteria chosen here.
+
 ## 2026-10-02 - Common retained/productive operation boundary
 
 - Author asks why focus remains O3a;clarified O3a science is closed and approved

@@ -4,6 +4,10 @@ Date:2026-10-02. Internal readiness evidence, not an external LIGO/Virgo certifi
 The completed diagnostic O3a H1/L1 analysis is not being reopened.
 
 ## Verified foundations
+-08.23 common `input-readiness` binds adapter-selected frozen declarations and
+  metadata file SHA/seals without state creation or raw reads. It is NOT exact
+  GPS/DQ coverage or scientific preflight PASS; productive PREFLIGHT unchanged.
+  Details: docs/DANTE_WORKFLOW_INPUT_READINESS_2026-10-02.md.
 -08.22 common operation boundary distinguishes retained-only verification from
   productive execution in sealed profile policies, controller, CLI, report and
   UI. Synthetic O3a/O4a fixtures exercise it; no real profile is newly activated.
