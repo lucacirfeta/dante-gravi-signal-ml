@@ -1,5 +1,33 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Retained calibration directory wiring; real coincidence PASS
+
+- Author `procedi`,08.20 freezef4f86bc. One retained reader correction, two test
+  files/plan: four files exact Git. Explicit driver qualification only; frozen
+  seal/qualification/contract parent digest, original run-key parity. Productive
+  resolver and strict default unchanged, no science-source/config/policy edit.
+- Seven new tests including linked calibration gate and original guard refusal.
+  WSL scoped478 PASS/5 skips/11 warnings/exit0/343.96s; final target46 PASS/exit0/
+  3.80s; Windows167 PASS/295 platform skips/exit0/82.90s; post-freeze119 PASS/
+  exit0/53.47s. Ruff three Python files PASS, transport dependencies exact456a1ba
+  and EOL qualifications intact. Four initial Windows unit failures diagnosed:
+  root_wsl slash/backslash and derived digest only. Portable sealed contract
+  fixture corrected, not historical/provenance guards bypassed; final tests rerun.
+- Exactly one actual retained coincidence invocation62224 after source freeze,
+  all9 explicit roots + externally pinned existing DB copy + separate driver flag.
+  CLI/supervisor observed OS exit0/PASS retained-ledger-only,45 source bindings;
+  canonical receipt seal1d74f957... checked independently in memory. All12 marker
+  hashes/metadata unchanged, stderr empty, stdout SHA6a602904.... Full pins in
+  new checkpoint; sanitized record is not a full sealed parent-input receipt.
+- Threshold bootstrap/classification/taxonomy/retained-null ledgers reconstructed;
+  no encoder/preprocessing/raw score/raw correlation/fetch, historic mutation,
+  numerical driver equivalence or full-workflow/global-quiescence claim. Original
+  empty WAL/32768-byte SHM preserved; SQL on admitted copy only. Driver waiver
+  remains616.92/617.14, other runtime fields exact. Earlier failures preserved.
+  No real snapshot/fresh PEM/null/sensor, all-run/Virgo adoption, push/main/release.
+  User untracked folders intact. Next: exact historical PEM snapshot plan/capture/
+  bounded retained replay, then separate readiness gates. Local checkpoint only.
+
 ## 2026-10-02 - Explicit isolated SCAN reader admission; nested runtime blocker
 
 - Author `procedi`,08.19 freeze79f3d80. Separate admission helper, paired copy

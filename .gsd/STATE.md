@@ -1,4 +1,22 @@
 ## Current Position
+- **Retained calibration resolver + real coincidence PASS (2026-10-02)**:
+  Author `procedi`,08.20 freezef4f86bc. Retained-only resolver consumes verified
+  frozen runtime identity and contract parent digest; original key parity tested,
+  strict productive/default resolver unchanged. Seven new tests; four Git-exact
+  source files, six transport dependencies exact456a1ba, EOL qualifications intact.
+  WSL scoped478 PASS/5 skips/11 warnings/exit0/343.96s; final target46 PASS/exit0;
+  Windows167 PASS/295 skips/exit0/82.90s; post-freeze119 PASS/exit0/53.47s. Ruff PASS.
+  Four initial Windows unit failures diagnosed as root_wsl separator/digest only;
+  sealed portable fixture corrected, productive WSL contract validation unchanged.
+  Exactly one real retained coincidence retry62224, all9 roots + copy pin + driver
+  flag, observed CLI/supervisor exit0/PASS retained-ledger-only. Canonical receipt
+  seal1d74f957... checked in memory,45 bindings, all12 marker hashes/metadata
+  unchanged, stderr empty; stdout SHA6a602904.... Historical DB/sidecars untouched,
+  only isolated SQL; driver616.92/617.14 qualified, other fields exact. Prior
+  failed checkpoints preserved. No full-workflow/global-quiescence/raw replay/
+  all-run/Virgo certificate, new snapshot/scoring/null/fetch, push/main or release.
+  Next: exact real PEM snapshot plan/owned capture/bounded retained replay, then
+  separate profile/preflight/clean-install gates. User folders preserved;08.20.
 - **Explicit SCAN copy admission implemented; real parent BLOCKED (2026-10-02)**:
   Author `procedi`,08.19 source freeze79f3d80. Separate externally pinned copy
   opt-in on retained coincidence/PEM APIs/CLIs; SCAN/COHORT SQL only admitted copy,

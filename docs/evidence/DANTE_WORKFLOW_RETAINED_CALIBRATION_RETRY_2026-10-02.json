@@ -1,0 +1,85 @@
+{
+  "record_kind": "SANITIZED_TECHNICAL_SUPERVISOR_RECORD_NOT_FULL_READER_RECEIPT",
+  "source_freeze": "f4f86bc",
+  "supervisor_session": 62224,
+  "after_source_freeze_invocation_count": 1,
+  "cli_os_exit": 0,
+  "supervisor_os_exit": 0,
+  "status": "PASS_O3A_READ_ONLY_COINCIDENCE_RETAINED_LEDGER_REPLAY_ONLY",
+  "receipt_digest": "1d74f9574a197efcc87c6ea85b877a735fbdc53600e84eaa9158a5470a8c00f9",
+  "receipt_seal_checked_in_memory_by_supervisor": true,
+  "stdout_sha256": "6a6029041b89c9006254d4116f3148b7dfc1dc593f85bdc85f170a360a50b218",
+  "stderr_empty": true,
+  "lock_markers_unchanged": true,
+  "observed_marker_count": 12,
+  "source_binding_count": 45,
+  "external_root_for_all_nine_parent_arguments": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+  "scan_sql_input": {
+    "path": "/mnt/e/dante_cache/dante_light/retained_scan_copy_20261002_v1/scan.sqlite",
+    "sha256": "1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699"
+  },
+  "isolated_scan_input_qualification": {
+    "status": "ADMITTED_BYTE_IDENTICAL_ISOLATED_SCAN_SQL_INPUT_ONLY_V1",
+    "directory": "/mnt/e/dante_cache/dante_light/retained_scan_copy_20261002_v1",
+    "source_run_dir": "/mnt/e/dante_cache/dante_light/o3a_native_v1/primary_scan_8f0424e5f3ea2b94449eaddb0e1ccf61c5fd7ba91d54c839bfa89d0e26efad35",
+    "historical_database_filename": "primary_scan.sqlite",
+    "database_sha256": "1f222dfbc4066abf8fe2b2f3a09edb4a7ccbc83f79aac94ba9a54aa6b0844699",
+    "database_size_bytes": 213794816,
+    "receipt_sha256": "17558e62547be42bbd2e5310d6fa8f93e06c8e0c3a7ae352115cce33ef252508",
+    "receipt_digest": "78fdb9b109495a72c225ca568d197bfb1f7e436866d495d1fa98adcb77c31bc1",
+    "original_sidecar_pins": {
+      "-journal": null,
+      "-shm": {
+        "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+        "signature": [69, 315533448892733832, 33279, 1, 32768, 1790427539398565600, 1790427539398565600],
+        "size_bytes": 32768
+      },
+      "-wal": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "signature": [69, 194499208907151750, 33279, 1, 0, 1790062912857793600, 1790062912857793600],
+        "size_bytes": 0
+      }
+    },
+    "transport_boundary": {
+      "full_workflow_verified": false,
+      "global_writer_quiescence_proved": false,
+      "historical_artifacts_modified": false,
+      "historical_sqlite_opened": false,
+      "runtime_equivalence_proved": false,
+      "scientific_parent_closure_verified": false,
+      "transactions_replayed_or_checkpointed": false
+    }
+  },
+  "retained_runtime_qualification": {
+    "policy_id": "AUTHOR_APPROVED_O3A_RETAINED_DRIVER_METADATA_WAIVER_V1",
+    "policy_sha256": "a1a8b5ea12ba3cba6a9d5b7ccd8577db79adb995f27fc9eb8c89dde7f28b504e",
+    "driver_version_changed": true,
+    "driver_version_comparison_waived": true,
+    "frozen_driver_version": "616.92",
+    "observed_driver_version": "617.14",
+    "frozen_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+    "observed_environment_digest": "ebeae01fdbad49d252555e354daba1e69282ddfcdd89ee386ceeb3c184fb474f",
+    "other_runtime_fields_match": true,
+    "boundary": {
+      "fresh_scoring_authorized": false,
+      "fresh_sensor_or_null_replay_authorized": false,
+      "full_workflow_verified": false,
+      "numerical_driver_equivalence_proved": false,
+      "productive_runtime_contract_changed": false
+    }
+  },
+  "boundaries": {
+    "classification_replay_executed": true,
+    "encoder_executed": false,
+    "full_workflow_verified": false,
+    "global_upstream_quiescence_verified": false,
+    "historical_evidence_mutated": false,
+    "preprocessing_replay_executed": false,
+    "raw_correlation_replay_executed": false,
+    "raw_score_replay_executed": false,
+    "retained_null_ledger_replay_executed": true,
+    "source_fetch_executed": false,
+    "taxonomy_replay_executed": true,
+    "threshold_bootstrap_replay_executed": true
+  }
+}
