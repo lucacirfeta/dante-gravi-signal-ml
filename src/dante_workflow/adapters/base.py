@@ -11,6 +11,7 @@ from typing import Any, Mapping
 
 from ..schema import WorkflowSpec, canonical_json_sha256
 from ..input_preflight import InputPreflightBinding
+from ..input_coverage import InputCoverageBinding
 from ..state import ArtifactReceipt
 
 
@@ -111,6 +112,14 @@ class StageAdapter(ABC):
 
     def input_preflight_binding(self) -> InputPreflightBinding | None:
         """Default deny: a profile must audit its own input field mapping."""
+        return None
+
+    def input_coverage_binding(self) -> InputCoverageBinding | None:
+        """Default deny: never guess another profile's selection rules."""
+        return None
+
+    def iter_input_coverage(self, root: Path):
+        """An audited profile supplies its unchanged frozen metadata selector."""
         return None
 
     @staticmethod

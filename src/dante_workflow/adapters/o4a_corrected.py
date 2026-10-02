@@ -10,6 +10,7 @@ from typing import Any
 from .base import AdapterError, StageAdapter, StageCommand, WorkflowPaths
 from ..schema import WorkflowSpec
 from ..input_preflight import InputPreflightBinding
+from ..input_coverage import InputCoverageBinding, InputCoverageError
 from ..state import ArtifactReceipt
 
 
@@ -309,6 +310,57 @@ class O4aCorrectedAdapter(StageAdapter):
         if action == "verify":
             self.assert_verify_command_matches_contract(command)
         return command
+
+    def input_coverage_binding(self) -> InputCoverageBinding:
+        return InputCoverageBinding(
+            population="FROZEN_PRIMARY_SCAN_LOCAL_MIRROR",
+            selection_policy="ORIGINAL_SELECTOR_CONTEXT_AND_RETAINED_RAW_VALIDITY_NO_NEW_DQ_FILTER",
+            expected_counts=("scan_population", "eligible_counts"),
+            expected_identity_sha256=(
+                "scan_population",
+                "eligible_identity_jsonl_sha256",
+            ),
+            references={
+                name: ("source_references", name)
+                for name in ("protocol_implementation", "overlapping_raw_span_audit")
+            },
+            window_fields={
+                "detector": ("detector",),
+                "analysis_start": ("analysis_gps_start",),
+                "duration": ("duration_s",),
+                "context_interval": ("required_padded_interval",),
+            },
+            manifest_fields={
+                "detector": ("detector",),
+                "start": ("gps_start",),
+                "end": ("gps_end",),
+            },
+        )
+
+    def iter_input_coverage(self, root: Path):
+        # Load the unchanged scientific selector from the explicit checkout.
+        # No protocol rebuilding, calibration HDF5, runtime/CUDA probe or writer.
+        import importlib
+        import sys
+
+        original_path = sys.path[:]
+        try:
+            sys.path.insert(0, str(root.resolve()))
+            module = importlib.import_module("src.dante_light.o4a_corrected_protocol")
+        except ImportError as exc:
+            raise InputCoverageError(
+                "coverage replay requires the existing scientific environment"
+            ) from exc
+        finally:
+            sys.path[:] = original_path
+        if (
+            Path(module.__file__).resolve()
+            != root.resolve() / "src/dante_light/o4a_corrected_protocol.py"
+        ):
+            raise InputCoverageError(
+                "coverage selector was imported from another checkout"
+            )
+        return module.iter_scan_identities(root)
 
     def index_window_manifest_receipt(self, cohort_ledger: Path) -> ArtifactReceipt:
         """Bind INDEX consumption to the already frozen cohort ledger bytes."""

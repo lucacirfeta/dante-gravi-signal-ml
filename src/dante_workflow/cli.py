@@ -9,6 +9,7 @@ import sys
 
 from .adapters import AdapterError, WorkflowPaths, build_adapter
 from .input_preflight import inspect_input_binding
+from .input_coverage import inspect_input_coverage
 from .orchestrator import OrchestrationError, WorkflowOrchestrator
 from .reporting import WorkflowReportingError, write_workflow_report
 from .run_profiles import DEFAULT_REGISTRY_RELATIVE, RunProfileError, load_run_registry
@@ -79,6 +80,7 @@ def _parser(
         "runs",
         "run-readiness",
         "input-readiness",
+        "coverage-readiness",
     ):
         command = commands.add_parser(name)
         _add_common(command, default_repository_root=repository_root)
@@ -141,10 +143,10 @@ def main(
 
     args = _parser(default_repository_root=default_repository_root).parse_args(argv)
     try:
-        if args.command == "input-readiness":
+        if args.command in {"input-readiness", "coverage-readiness"}:
             if args.observing_run is None:
                 raise RunProfileError(
-                    "input-readiness requires an explicit run/detectors"
+                    f"{args.command} requires an explicit run/detectors"
                 )
             registry = _registry(args)
             selected = registry.resolve_workflow(args.observing_run, args.detectors)
@@ -154,10 +156,15 @@ def main(
                 )
             if args.expected_run_key:
                 raise RunProfileError(
-                    "input-readiness does not create a workflow run key"
+                    f"{args.command} does not create a workflow run key"
                 )
             spec = load_workflow_spec(selected, root=args.repository_root.resolve())
-            result = inspect_input_binding(
+            inspector = (
+                inspect_input_coverage
+                if args.command == "coverage-readiness"
+                else inspect_input_binding
+            )
+            result = inspector(
                 spec, build_adapter(spec), root=args.repository_root.resolve()
             )
             print(json.dumps(result, indent=2, sort_keys=True))
