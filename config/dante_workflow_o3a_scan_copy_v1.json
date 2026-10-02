@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "FROZEN_RETAINED_SCAN_ISOLATED_BYTE_COPY_V1",
+  "database_bytes": "exact_sealed_primary_scan_summary_sha256_and_size",
+  "wal": "absent_or_zero_bytes_only",
+  "shm": "absent_or_exact_32768_bytes_preserved_as_inert_provenance",
+  "journal": "absent_only",
+  "lock": "existing_read_only_nonblocking_exclusive_flock",
+  "publication": "exclusive_new_directory_receipt_last_no_overwrite_no_resume",
+  "platform": "posix_descriptor_relative_nofollow",
+  "limits": {"database_bytes": 536870912, "metadata_bytes": 8388608},
+  "boundary": {
+    "historical_artifacts_modified": false,
+    "historical_sqlite_opened": false,
+    "transactions_replayed_or_checkpointed": false,
+    "global_writer_quiescence_proved": false,
+    "scientific_parent_closure_verified": false,
+    "runtime_equivalence_proved": false,
+    "full_workflow_verified": false
+  }
+}
