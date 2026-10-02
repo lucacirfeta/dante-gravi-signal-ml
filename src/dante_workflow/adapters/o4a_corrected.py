@@ -9,6 +9,7 @@ from typing import Any
 
 from .base import AdapterError, StageAdapter, StageCommand, WorkflowPaths
 from ..schema import WorkflowSpec
+from ..input_preflight import InputPreflightBinding
 from ..state import ArtifactReceipt
 
 
@@ -217,7 +218,9 @@ class O4aCorrectedAdapter(StageAdapter):
                 profile.observing_run != self.observing_run
                 or profile.detectors != self.detectors
             ):
-                raise AdapterError("O4a adapter cannot execute another run/detector profile")
+                raise AdapterError(
+                    "O4a adapter cannot execute another run/detector profile"
+                )
             if {stage.name for stage in spec.stages} != set(_DEFINITIONS):
                 raise AdapterError("O4a adapter requires its complete executable graph")
         super().__init__(spec, python_executable=python_executable)
@@ -228,6 +231,41 @@ class O4aCorrectedAdapter(StageAdapter):
             name: paths.cache_root / directory
             for name, directory in _CACHE_DIRECTORIES.items()
         }
+
+    def input_preflight_binding(self) -> InputPreflightBinding:
+        return InputPreflightBinding(
+            config_ref="protocol",
+            seal_field="protocol_digest",
+            declarations={
+                "analysis_duration_s": ("representation", "analysis_duration_s"),
+                "sample_rate_hz": ("representation", "sample_rate_hz"),
+                "left_context_s": ("scientific_change", "left_context_s"),
+                "right_context_s": ("scientific_change", "right_context_s"),
+                "incomplete_context": ("scientific_change", "incomplete_context"),
+                "population_scope": (
+                    "scientific_boundary",
+                    "population_is_frozen_local_raw_mirror",
+                ),
+                "scan_identity_sha256": (
+                    "scan_population",
+                    "eligible_identity_jsonl_sha256",
+                ),
+                "calibration_identity_sha256": (
+                    "calibration_population",
+                    "identity_jsonl_sha256",
+                ),
+            },
+            references={
+                role: ("source_references", role)
+                for role in (
+                    "raw_manifest",
+                    "dq_snapshot",
+                    "canonical_runtime",
+                    "reference_artifacts",
+                    "raw_window_validity_audit",
+                )
+            },
+        )
 
     def build_command(
         self, stage: str, action: str, paths: WorkflowPaths
@@ -272,9 +310,7 @@ class O4aCorrectedAdapter(StageAdapter):
             self.assert_verify_command_matches_contract(command)
         return command
 
-    def index_window_manifest_receipt(
-        self, cohort_ledger: Path
-    ) -> ArtifactReceipt:
+    def index_window_manifest_receipt(self, cohort_ledger: Path) -> ArtifactReceipt:
         """Bind INDEX consumption to the already frozen cohort ledger bytes."""
 
         return self.artifact_receipt("index_window_manifest", cohort_ledger)

@@ -10,6 +10,7 @@ from types import MappingProxyType
 from typing import Any, Mapping
 
 from ..schema import WorkflowSpec, canonical_json_sha256
+from ..input_preflight import InputPreflightBinding
 from ..state import ArtifactReceipt
 
 
@@ -107,6 +108,10 @@ class StageAdapter(ABC):
                 for name in stage_spec.config_refs
             }
         )
+
+    def input_preflight_binding(self) -> InputPreflightBinding | None:
+        """Default deny: a profile must audit its own input field mapping."""
+        return None
 
     @staticmethod
     def artifact_receipt(name: str, path: Path) -> ArtifactReceipt:
