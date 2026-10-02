@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+from contextlib import ExitStack
 import hashlib
 import json
 from pathlib import Path
 
 from . import o3a_native_verification as parents
+from .o3a_locking import clean_native_parent, hold_native_lock
 from .o3a_retained_runtime import load_runtime
 from .o3a_initial_verification import (
     InitialEvidenceError,
     _Evidence,
-    _clean,
     _existing,
     _json,
 )
@@ -38,7 +39,7 @@ def _sources(root):
 
 
 def _index_gate(
-    *, root, external_root, cohort_external_root, primary_external_root, evidence
+    *, root, external_root, cohort_external_root, primary_external_root, evidence, stack
 ):
     import numpy as np
     from src.dante_light import o3a_native_index as index
@@ -53,6 +54,7 @@ def _index_gate(
         external_root=cohort_external_root,
         primary_external_root=primary_external_root,
         evidence=evidence,
+        stack=stack,
     )
     if (
         cohort["artifact_digest"]
@@ -61,7 +63,7 @@ def _index_gate(
         raise InitialEvidenceError("O3a native-index parent cohort changed")
     key = index._run_key(contract, runtime)
     directory = external_root / f"native_index_{key}"
-    _clean(directory)
+    hold_native_lock(directory, evidence=evidence, stack=stack, name="index")
     preflight = evidence.sealed(
         "index_preflight", _existing(directory, "preflight.json"), "preflight_digest"
     )
@@ -185,43 +187,47 @@ def verify_index_evidence(
 
     root = root.resolve()
     evidence, sources = _Evidence(), _sources(root)
-    summary, directory = _index_gate(
-        root=root,
-        external_root=external_root.resolve(),
-        cohort_external_root=cohort_external_root.resolve(),
-        primary_external_root=primary_external_root.resolve(),
-        evidence=evidence,
-    )
-    evidence.unchanged()
-    for reference in evidence.inputs.values():
-        if reference["path"].endswith(".sqlite"):
-            parents._no_journals(Path(reference["path"]))
-    for name in ("scan_summary", "cohort_summary", "index_summary"):
-        if name in evidence.inputs:
-            _clean(Path(evidence.inputs[name]["path"]).parent)
-    _clean(directory)
-    if _sources(root) != sources:
-        raise InitialEvidenceError("helper sources changed during verification")
-    body = {
-        "schema_version": 1,
-        "status": "PASS_O3A_READ_ONLY_INDEX_STORED_VALIDATION_ONLY",
-        "verification_policy_id": "o3a-native-index-evidence-read-only-v1",
-        "verification_level": "EXISTING_FROZEN_INDEX_GATE_VALIDATION",
-        "observing_run": "O3a",
-        "stage": "index",
-        "run_dir": str(directory),
-        "legacy_artifact_digest": summary["artifact_digest"],
-        "historical_evidence_mutated": False,
-        "raw_score_replay_executed": False,
-        "encoder_executed": False,
-        "preprocessing_replay_executed": False,
-        "clustering_refit_executed": False,
-        "threshold_fit_executed": False,
-        "source_fetch_executed": False,
-        "full_workflow_verified": False,
-        "stored_patch_tokens_checked": True,
-        "stored_npz_numerically_checked": True,
-        "inputs": evidence.inputs,
-        "source_bindings": sources,
-    }
-    return {**body, "receipt_digest": canonical_json_sha256(body)}
+    with ExitStack() as stack:
+        summary, directory = _index_gate(
+            root=root,
+            external_root=external_root.resolve(),
+            cohort_external_root=cohort_external_root.resolve(),
+            primary_external_root=primary_external_root.resolve(),
+            evidence=evidence,
+            stack=stack,
+        )
+        evidence.unchanged()
+        for reference in evidence.inputs.values():
+            if reference["path"].endswith(".sqlite"):
+                parents._no_journals(Path(reference["path"]))
+        for name in ("scan_summary", "cohort_summary", "index_summary"):
+            if name in evidence.inputs:
+                clean_native_parent(
+                    Path(evidence.inputs[name]["path"]).parent, stack=stack
+                )
+        clean_native_parent(directory, stack=stack)
+        if _sources(root) != sources:
+            raise InitialEvidenceError("helper sources changed during verification")
+        body = {
+            "schema_version": 1,
+            "status": "PASS_O3A_READ_ONLY_INDEX_STORED_VALIDATION_ONLY",
+            "verification_policy_id": "o3a-native-index-evidence-read-only-v1",
+            "verification_level": "EXISTING_FROZEN_INDEX_GATE_VALIDATION",
+            "observing_run": "O3a",
+            "stage": "index",
+            "run_dir": str(directory),
+            "legacy_artifact_digest": summary["artifact_digest"],
+            "historical_evidence_mutated": False,
+            "raw_score_replay_executed": False,
+            "encoder_executed": False,
+            "preprocessing_replay_executed": False,
+            "clustering_refit_executed": False,
+            "threshold_fit_executed": False,
+            "source_fetch_executed": False,
+            "full_workflow_verified": False,
+            "stored_patch_tokens_checked": True,
+            "stored_npz_numerically_checked": True,
+            "inputs": evidence.inputs,
+            "source_bindings": sources,
+        }
+        return {**body, "receipt_digest": canonical_json_sha256(body)}

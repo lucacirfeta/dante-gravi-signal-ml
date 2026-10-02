@@ -492,7 +492,7 @@ def test_exact_legacy_execute_summary_and_scoped_receipt(evidence):
         "global_upstream_quiescence_verified",
     ):
         assert result[field] is False
-    assert len(result["source_bindings"]) == 34
+    assert len(result["source_bindings"]) == 35
     assert evidence.calls == [True]
     assert "family_metrics" not in result and "counts_by_detector" not in result
     assert seal(result, "receipt_digest") == result
@@ -780,7 +780,7 @@ def test_windows_refusal_before_source_or_evidence_reads(monkeypatch):
 
 
 def test_actual_frozen_taxonomy_contract_load_without_history():
-    assert len(verifier._sources(ROOT)) == 34
+    assert len(verifier._sources(ROOT)) == 35
     if os.name == "nt":
         with pytest.raises(ContractError):
             tx.load_contract(root=ROOT)

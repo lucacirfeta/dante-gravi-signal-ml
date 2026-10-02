@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import ExitStack
 import hashlib
 import importlib.util
 import json
@@ -58,6 +59,7 @@ def forbidden(*args, **kwargs):
 
 @pytest.fixture
 def evidence(tmp_path, monkeypatch):
+    pytest.importorskip("fcntl", reason="existing read-only flock requires POSIX/WSL")
     root, external, primary = tmp_path / "repo", tmp_path / "cohort", tmp_path / "scan"
     for relative in verifier._sources(ROOT):
         if relative.startswith("src/dante_light/"):
@@ -336,6 +338,8 @@ def evidence(tmp_path, monkeypatch):
     ):
         for name in names:
             monkeypatch.setattr(module, name, forbidden)
+    for directory in (scan_dir, cohort_dir):
+        (directory / "run.lock").write_bytes(b"preserved producer PID")
     return SimpleNamespace(
         root=root,
         external=external,
@@ -358,6 +362,80 @@ def verify(f, stage="cohort"):
         stage=stage,
         primary_external_root=f.primary if stage == "cohort" else None,
     )
+
+
+@pytest.mark.parametrize("stage", ["scan", "cohort"])
+def test_native_locks_held_through_final_binding_check(evidence, monkeypatch, stage):
+    import fcntl
+
+    original = verifier._Evidence.unchanged
+    directories = [evidence.scan_dir]
+    if stage == "cohort":
+        directories.append(evidence.cohort_dir)
+    before = snapshot(evidence.root.parent)
+
+    def final_check(tracked):
+        for directory in directories:
+            with (directory / "run.lock").open("rb") as handle:
+                with pytest.raises(BlockingIOError):
+                    fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        original(tracked)
+
+    monkeypatch.setattr(verifier._Evidence, "unchanged", final_check)
+    receipt = verify(evidence, stage)
+    assert snapshot(evidence.root.parent) == before
+    for directory in directories:
+        with (directory / "run.lock").open("rb") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(handle, fcntl.LOCK_UN)
+    assert "scan_lock" in receipt["inputs"]
+    assert ("cohort_lock" in receipt["inputs"]) is (stage == "cohort")
+
+
+@pytest.mark.parametrize("which", ["scan", "cohort"])
+@pytest.mark.parametrize("problem", ["missing", "busy", "symlink", "hardlink"])
+def test_native_parent_lock_refusal_and_release(evidence, which, problem):
+    import fcntl
+
+    directory = evidence.scan_dir if which == "scan" else evidence.cohort_dir
+    path = directory / "run.lock"
+    if problem == "missing":
+        path.unlink()
+    elif problem == "symlink":
+        target = directory / "original_lock"
+        path.rename(target)
+        path.symlink_to(target)
+    elif problem == "hardlink":
+        import os
+
+        os.link(path, directory / "alias_lock")
+    if problem == "busy":
+        with path.open("rb") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            reject_unchanged(evidence, match="persistent lock")
+            fcntl.flock(handle, fcntl.LOCK_UN)
+    else:
+        reject_unchanged(evidence, match="persistent lock")
+    other = evidence.cohort_dir if which == "scan" else evidence.scan_dir
+    with (other / "run.lock").open("rb") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+@pytest.mark.parametrize("which", ["scan", "cohort"])
+def test_native_lock_replacement_cannot_emit_receipt(evidence, monkeypatch, which):
+    original = verifier._Evidence.unchanged
+    directory = evidence.scan_dir if which == "scan" else evidence.cohort_dir
+
+    def replaced(tracked):
+        original(tracked)
+        replacement = directory / "replacement"
+        replacement.write_bytes((directory / "run.lock").read_bytes())
+        replacement.replace(directory / "run.lock")
+
+    monkeypatch.setattr(verifier._Evidence, "unchanged", replaced)
+    with pytest.raises(verifier.InitialEvidenceError, match="persistent lock changed"):
+        verify(evidence)
 
 
 def reledger(f, *, shards=False):
@@ -437,7 +515,7 @@ def test_scoped_receipt_and_no_mutations(evidence, stage):
     assert snapshot(evidence.root.parent) == before
     assert result["status"] == f"PASS_O3A_READ_ONLY_{stage.upper()}_RECONSTRUCTION_ONLY"
     assert result == seal(result, "receipt_digest")
-    assert len(result["source_bindings"]) == 16
+    assert len(result["source_bindings"]) == 17
     assert evidence.calls
     assert result["retained_context_samples_checked"] is (stage == "cohort")
     for field in (
@@ -480,7 +558,8 @@ def test_exact_legacy_parity_on_temporary_evidence(evidence, stage):
     )
     if stage == "cohort":
         kwargs["primary_external_root"] = evidence.primary
-    reconstructed, _ = gate(**kwargs)
+    with ExitStack() as stack:
+        reconstructed, _ = gate(**kwargs, stack=stack)
     assert reconstructed == legacy
 
 
@@ -663,12 +742,13 @@ def test_scan_semantic_negatives_after_synthetic_repin(
 
 @pytest.mark.parametrize("which", ["scan", "cohort"])
 @pytest.mark.parametrize(
-    "name", ["failure.json", "controller.lock", "run.lock", "bad.partial", "bad.tmp"]
+    "name",
+    ["failure.json", "controller.lock", "failures.json", "bad.partial", "bad.tmp"],
 )
 def test_failure_lock_partial_rejected(evidence, which, name):
     directory = evidence.scan_dir if which == "scan" else evidence.cohort_dir
     (directory / name).write_bytes(b"preserve")
-    reject_unchanged(evidence, match="failure/lock|partial")
+    reject_unchanged(evidence, match="failure/active|partial")
 
 
 @pytest.mark.parametrize("which", ["scan", "cohort"])
@@ -879,4 +959,4 @@ def test_cli_has_no_mutation_flag(flag):
 def test_real_inherited_contracts_still_load_without_history():
     assert scan.load_scan_contract(root=ROOT)["contract_digest"]
     assert cohort.load_cohort_contract(root=ROOT)["contract_digest"]
-    assert len(verifier._sources(ROOT)) == 16
+    assert len(verifier._sources(ROOT)) == 17

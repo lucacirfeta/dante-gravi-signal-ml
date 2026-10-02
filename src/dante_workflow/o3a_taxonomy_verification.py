@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 from . import o3a_decision_verification as decisions
+from .o3a_locking import clean_native_parent
 from .o3a_initial_verification import InitialEvidenceError, _Evidence, _existing
 
 
@@ -276,7 +277,9 @@ def verify_taxonomy_evidence(
             "rescore_summary",
         ):
             if name in evidence.inputs:
-                decisions.scores._clean(Path(evidence.inputs[name]["path"]).parent)
+                clean_native_parent(
+                    Path(evidence.inputs[name]["path"]).parent, stack=stack
+                )
         for reference in evidence.inputs.values():
             if reference["path"].endswith(".sqlite"):
                 decisions.scores.parents._no_journals(Path(reference["path"]))

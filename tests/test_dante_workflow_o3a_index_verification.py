@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import ExitStack
 import hashlib
 import importlib.util
 import json
@@ -163,6 +164,7 @@ def make_index(f, rows, cohort_summary, cohort_dir):
     f.index_dir, f.index_contract = directory, contract
     f.index_cohort, f.index_cohort_dir = cohort_summary, cohort_dir
     f.runtime = runtime
+    (directory / "run.lock").write_bytes(b"preserved producer PID")
 
 
 @pytest.fixture
@@ -218,6 +220,49 @@ def verify(f):
     )
 
 
+def test_all_native_index_ancestors_locked_until_final_check(evidence, monkeypatch):
+    import fcntl
+
+    original = verifier._Evidence.unchanged
+    directories = (evidence.scan_dir, evidence.cohort_dir, evidence.index_dir)
+    before = snapshot(evidence.root.parent)
+
+    def final_check(tracked):
+        for directory in directories:
+            with (directory / "run.lock").open("rb") as handle:
+                with pytest.raises(BlockingIOError):
+                    fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        original(tracked)
+
+    monkeypatch.setattr(verifier._Evidence, "unchanged", final_check)
+    receipt = verify(evidence)
+    assert {"scan_lock", "cohort_lock", "index_lock"} <= set(receipt["inputs"])
+    assert snapshot(evidence.root.parent) == before
+    for directory in directories:
+        with (directory / "run.lock").open("rb") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+@pytest.mark.parametrize("problem", ["missing", "busy"])
+def test_index_lock_refusal_releases_ancestors(evidence, problem):
+    import fcntl
+
+    path = evidence.index_dir / "run.lock"
+    if problem == "missing":
+        path.unlink()
+        reject(evidence, "persistent lock")
+    else:
+        with path.open("rb") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            reject(evidence, "persistent lock")
+            fcntl.flock(handle, fcntl.LOCK_UN)
+    for directory in (evidence.scan_dir, evidence.cohort_dir):
+        with (directory / "run.lock").open("rb") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
 def reject(f, match=None):
     before = snapshot(f.root.parent)
     with pytest.raises((ValueError, RuntimeError, OSError, KeyError), match=match):
@@ -238,7 +283,7 @@ def test_integrated_parent_chain_and_scoped_no_mutation_receipt(evidence):
     assert snapshot(evidence.root.parent) == before
     assert result == seal(result, "receipt_digest")
     assert result["status"] == "PASS_O3A_READ_ONLY_INDEX_STORED_VALIDATION_ONLY"
-    assert len(result["source_bindings"]) == 20
+    assert len(result["source_bindings"]) == 21
     assert (
         result["stored_patch_tokens_checked"]
         and result["stored_npz_numerically_checked"]
@@ -310,13 +355,15 @@ def test_exact_legacy_index_parity_with_frozen_cardinality_parent(
     legacy, legacy_dir = evidence.legacy_index(
         root=evidence.root, external_root=evidence.index_dir.parent
     )
-    reconstructed, directory = verifier._index_gate(
-        root=evidence.root,
-        external_root=evidence.index_dir.parent,
-        cohort_external_root=evidence.external,
-        primary_external_root=evidence.primary,
-        evidence=verifier._Evidence(),
-    )
+    with ExitStack() as stack:
+        reconstructed, directory = verifier._index_gate(
+            root=evidence.root,
+            external_root=evidence.index_dir.parent,
+            cohort_external_root=evidence.external,
+            primary_external_root=evidence.primary,
+            evidence=verifier._Evidence(),
+            stack=stack,
+        )
     assert reconstructed == legacy and directory == legacy_dir
     assert verify(evidence)["legacy_artifact_digest"] == legacy["artifact_digest"]
     assert snapshot(evidence.root.parent) == before
@@ -534,7 +581,7 @@ def test_npz_semantic_negatives_after_fixture_repin(evidence, kind):
         ("index", "failure.json"),
         ("index", "controller.lock"),
         ("index", "input.partial"),
-        ("cohort", "run.lock"),
+        ("cohort", "failures.json"),
         ("scan", "failure.json"),
         ("scan", "sqlite_wal"),
     ],
@@ -646,4 +693,4 @@ def test_actual_contract_source_bindings_without_history():
         assert index.load_index_contract(root=ROOT)["gates"][
             "exact_cohort_counts_by_detector"
         ]
-    assert len(verifier._sources(ROOT)) == 20
+    assert len(verifier._sources(ROOT)) == 21

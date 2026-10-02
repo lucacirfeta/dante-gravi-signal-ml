@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from contextlib import ExitStack
 import importlib
 from pathlib import Path
 
 from . import o3a_index_verification as index_parent
 from . import o3a_native_verification as parents
+from .o3a_locking import clean_native_parent, hold_native_lock
 from .o3a_initial_verification import (
     InitialEvidenceError,
     _Evidence,
@@ -105,6 +107,7 @@ def _calibration_gate(
     cohort_external_root,
     primary_external_root,
     evidence,
+    stack,
 ):
     from src.dante_light import o3a_native_calibration_cohort as calibration
     from src.dante_light.contracts import canonical_json_sha256
@@ -119,6 +122,7 @@ def _calibration_gate(
         cohort_external_root=cohort_external_root,
         primary_external_root=primary_external_root,
         evidence=evidence,
+        stack=stack,
     )
     scan, cohort = _saved(evidence, "scan_summary"), _saved(evidence, "cohort_summary")
     for name, value in (
@@ -222,6 +226,7 @@ def _rescore_gate(
     cohort_external_root,
     primary_external_root,
     evidence,
+    stack,
 ):
     from src.dante_light import o3a_native_rescore as rescore
     from src.dante_light import o3a_native_rescore_preflight as work_builder
@@ -236,6 +241,7 @@ def _rescore_gate(
         cohort_external_root=cohort_external_root,
         primary_external_root=primary_external_root,
         evidence=evidence,
+        stack=stack,
     )
     from .o3a_retained_runtime import load_runtime
 
@@ -262,7 +268,7 @@ def _rescore_gate(
             raise InitialEvidenceError("O3a native-rescore parent changed")
         digests[name] = value["artifact_digest"]
     directory = rescore._run_dir(contract, external_root)
-    _clean(directory)
+    hold_native_lock(directory, evidence=evidence, stack=stack, name="rescore")
     preflight = evidence.sealed(
         "rescore_preflight", _existing(directory, "preflight.json"), "preflight_digest"
     )
@@ -413,57 +419,62 @@ def verify_score_evidence(
         )
     root = root.resolve()
     evidence, sources = _Evidence(), _sources(root)
-    arguments = dict(
-        root=root,
-        external_root=external_root.resolve(),
-        index_external_root=index_external_root.resolve(),
-        cohort_external_root=cohort_external_root.resolve(),
-        primary_external_root=primary_external_root.resolve(),
-        evidence=evidence,
-    )
-    if stage == "calibration":
-        summary, directory, *_ = _calibration_gate(**arguments)
-    else:
-        summary, directory = _rescore_gate(
-            **arguments, calibration_external_root=calibration_external_root.resolve()
+    with ExitStack() as stack:
+        arguments = dict(
+            root=root,
+            external_root=external_root.resolve(),
+            index_external_root=index_external_root.resolve(),
+            cohort_external_root=cohort_external_root.resolve(),
+            primary_external_root=primary_external_root.resolve(),
+            evidence=evidence,
+            stack=stack,
         )
-    evidence.unchanged()
-    for reference in evidence.inputs.values():
-        if reference["path"].endswith(".sqlite"):
-            parents._no_journals(Path(reference["path"]))
-    for name in (
-        "scan_summary",
-        "cohort_summary",
-        "index_summary",
-        "calibration_summary",
-        "rescore_summary",
-    ):
-        if name in evidence.inputs:
-            _clean(Path(evidence.inputs[name]["path"]).parent)
-    _clean(directory)
-    if _sources(root) != sources:
-        raise InitialEvidenceError("helper sources changed during verification")
-    body = {
-        "schema_version": 1,
-        "status": f"PASS_O3A_READ_ONLY_{stage.upper()}_STORED_VALIDATION_ONLY",
-        "verification_policy_id": "o3a-native-score-evidence-read-only-v1",
-        "verification_level": "EXISTING_FROZEN_GATE_RECONSTRUCTION",
-        "observing_run": "O3a",
-        "stage": stage,
-        "run_dir": str(directory),
-        "legacy_artifact_digest": summary["artifact_digest"],
-        "historical_evidence_mutated": False,
-        "raw_score_replay_executed": False,
-        "encoder_executed": False,
-        "preprocessing_replay_executed": False,
-        "threshold_fit_executed": False,
-        "source_fetch_executed": False,
-        "full_workflow_verified": False,
-        "calibration_selection_reconstructed": True,
-        "rescore_manifest_reconstructed": stage == "rescore",
-        "stored_score_shards_checked": stage == "rescore",
-        "stored_cuda_preflight_checked": stage == "rescore",
-        "inputs": evidence.inputs,
-        "source_bindings": sources,
-    }
-    return {**body, "receipt_digest": canonical_json_sha256(body)}
+        if stage == "calibration":
+            summary, directory, *_ = _calibration_gate(**arguments)
+        else:
+            summary, directory = _rescore_gate(
+                **arguments,
+                calibration_external_root=calibration_external_root.resolve(),
+            )
+        evidence.unchanged()
+        for reference in evidence.inputs.values():
+            if reference["path"].endswith(".sqlite"):
+                parents._no_journals(Path(reference["path"]))
+        for name in (
+            "scan_summary",
+            "cohort_summary",
+            "index_summary",
+            "calibration_summary",
+            "rescore_summary",
+        ):
+            if name in evidence.inputs:
+                clean_native_parent(
+                    Path(evidence.inputs[name]["path"]).parent, stack=stack
+                )
+        clean_native_parent(directory, stack=stack)
+        if _sources(root) != sources:
+            raise InitialEvidenceError("helper sources changed during verification")
+        body = {
+            "schema_version": 1,
+            "status": f"PASS_O3A_READ_ONLY_{stage.upper()}_STORED_VALIDATION_ONLY",
+            "verification_policy_id": "o3a-native-score-evidence-read-only-v1",
+            "verification_level": "EXISTING_FROZEN_GATE_RECONSTRUCTION",
+            "observing_run": "O3a",
+            "stage": stage,
+            "run_dir": str(directory),
+            "legacy_artifact_digest": summary["artifact_digest"],
+            "historical_evidence_mutated": False,
+            "raw_score_replay_executed": False,
+            "encoder_executed": False,
+            "preprocessing_replay_executed": False,
+            "threshold_fit_executed": False,
+            "source_fetch_executed": False,
+            "full_workflow_verified": False,
+            "calibration_selection_reconstructed": True,
+            "rescore_manifest_reconstructed": stage == "rescore",
+            "stored_score_shards_checked": stage == "rescore",
+            "stored_cuda_preflight_checked": stage == "rescore",
+            "inputs": evidence.inputs,
+            "source_bindings": sources,
+        }
+        return {**body, "receipt_digest": canonical_json_sha256(body)}

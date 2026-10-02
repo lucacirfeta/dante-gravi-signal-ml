@@ -10,6 +10,7 @@ from pathlib import Path
 
 from . import o3a_taxonomy_verification as taxonomy
 from .o3a_retained_runtime import load_runtime, new_evidence, receipt_fields
+from .o3a_locking import clean_native_parent
 from .o3a_initial_verification import (
     InitialEvidenceError,
     _existing,
@@ -352,7 +353,9 @@ def verify_coincidence_evidence(
             "rescore_summary",
         ):
             if name in evidence.inputs:
-                decisions.scores._clean(Path(evidence.inputs[name]["path"]).parent)
+                clean_native_parent(
+                    Path(evidence.inputs[name]["path"]).parent, stack=stack
+                )
         for reference in evidence.inputs.values():
             if reference["path"].endswith(".sqlite"):
                 decisions.scores.parents._no_journals(Path(reference["path"]))

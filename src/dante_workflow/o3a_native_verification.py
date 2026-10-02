@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import bisect
 from collections import Counter
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 import hashlib
 import importlib
 import json
@@ -19,10 +19,10 @@ import sqlite3
 from .o3a_initial_verification import (
     InitialEvidenceError,
     _Evidence,
-    _clean,
     _existing,
     _json,
 )
+from .o3a_locking import clean_native_parent, hold_native_lock
 from .o3a_retained_runtime import load_runtime
 
 
@@ -116,13 +116,14 @@ def _sources(root):
         "src/dante_workflow/o3a_initial_verification.py",
         "src/dante_workflow/o3a_native_verification.py",
         "src/dante_workflow/o3a_retained_runtime.py",
+        "src/dante_workflow/o3a_locking.py",
         "scripts/verify_dante_o3a_native_evidence.py",
     ):
         result[relative] = file_sha256(base / relative)
     return result
 
 
-def _scan_gate(*, root, external_root, evidence):
+def _scan_gate(*, root, external_root, evidence, stack):
     """Existing verify_primary_scan checks; immutable SQLite and tracked inputs."""
     import numpy as np
     from src.dante_light import o3a_primary_scan as scan
@@ -135,7 +136,7 @@ def _scan_gate(*, root, external_root, evidence):
     environment = runtime["runtime_environment"]["environment_digest"]
     key = scan._run_key(contract, environment_digest=environment)
     directory = external_root / f"primary_scan_{key}"
-    _clean(directory)
+    hold_native_lock(directory, evidence=evidence, stack=stack, name="scan")
     saved = _load(
         evidence, "scan_summary", _existing(directory, "primary_scan_summary.json")
     )
@@ -313,7 +314,7 @@ def _frame_rows(database):
     return result
 
 
-def _cohort_gate(*, root, external_root, primary_external_root, evidence):
+def _cohort_gate(*, root, external_root, primary_external_root, evidence, stack):
     """Existing verify_native_cohort checks; immutable parent query readers."""
     import numpy as np
     from src.dante_light import o3a_native_cohort as cohort
@@ -328,7 +329,7 @@ def _cohort_gate(*, root, external_root, primary_external_root, evidence):
         environment_digest=runtime["runtime_environment"]["environment_digest"],
     )
     directory = external_root / f"native_cohort_{key}"
-    _clean(directory)
+    hold_native_lock(directory, evidence=evidence, stack=stack, name="cohort")
     preflight = _load(
         evidence,
         "cohort_preflight",
@@ -370,7 +371,7 @@ def _cohort_gate(*, root, external_root, primary_external_root, evidence):
     if len(identities) != len(set(identities)):
         raise InitialEvidenceError("O3a native-cohort identities are duplicated")
     scan_summary, scan_dir = _scan_gate(
-        root=root, external_root=primary_external_root, evidence=evidence
+        root=root, external_root=primary_external_root, evidence=evidence, stack=stack
     )
     database = _existing(scan_dir, "primary_scan.sqlite")
     scan_rows = _identity_rows(database)
@@ -466,46 +467,50 @@ def verify_native_evidence(
     if (stage == "cohort") != (primary_external_root is not None):
         raise InitialEvidenceError("primary external root required only for cohort")
     sources, evidence = _sources(root), _Evidence()
-    if stage == "scan":
-        summary, directory = _scan_gate(
-            root=root, external_root=external_root, evidence=evidence
-        )
-    else:
-        summary, directory = _cohort_gate(
-            root=root,
-            external_root=external_root,
-            primary_external_root=primary_external_root.resolve(),
-            evidence=evidence,
-        )
-    evidence.unchanged()
-    for reference in evidence.inputs.values():
-        if reference["path"].endswith(".sqlite"):
-            _no_journals(Path(reference["path"]))
-    for name in ("scan_summary", "cohort_summary"):
-        if name in evidence.inputs:
-            _clean(Path(evidence.inputs[name]["path"]).parent)
-    _clean(directory)
-    if _sources(root) != sources:
-        raise InitialEvidenceError("helper sources changed during verification")
-    body = {
-        "schema_version": 1,
-        "status": f"PASS_O3A_READ_ONLY_{stage.upper()}_RECONSTRUCTION_ONLY",
-        "verification_policy_id": "o3a-scan-cohort-evidence-read-only-v1",
-        "verification_level": "EXISTING_FROZEN_GATE_RECONSTRUCTION",
-        "observing_run": "O3a",
-        "stage": stage,
-        "run_dir": str(directory),
-        "legacy_artifact_digest": summary["artifact_digest"],
-        "historical_evidence_mutated": False,
-        "raw_score_replay_executed": False,
-        "encoder_executed": False,
-        "threshold_fit_executed": False,
-        "source_fetch_executed": False,
-        "full_workflow_verified": False,
-        "stored_primary_scores_read": True,
-        "retained_context_samples_checked": stage == "cohort",
-        "sqlite_read_mode": "mode=ro&immutable=1; no transaction sidecars",
-        "inputs": evidence.inputs,
-        "source_bindings": sources,
-    }
-    return {**body, "receipt_digest": canonical_json_sha256(body)}
+    with ExitStack() as stack:
+        if stage == "scan":
+            summary, directory = _scan_gate(
+                root=root, external_root=external_root, evidence=evidence, stack=stack
+            )
+        else:
+            summary, directory = _cohort_gate(
+                root=root,
+                external_root=external_root,
+                primary_external_root=primary_external_root.resolve(),
+                evidence=evidence,
+                stack=stack,
+            )
+        evidence.unchanged()
+        for reference in evidence.inputs.values():
+            if reference["path"].endswith(".sqlite"):
+                _no_journals(Path(reference["path"]))
+        for name in ("scan_summary", "cohort_summary"):
+            if name in evidence.inputs:
+                clean_native_parent(
+                    Path(evidence.inputs[name]["path"]).parent, stack=stack
+                )
+        clean_native_parent(directory, stack=stack)
+        if _sources(root) != sources:
+            raise InitialEvidenceError("helper sources changed during verification")
+        body = {
+            "schema_version": 1,
+            "status": f"PASS_O3A_READ_ONLY_{stage.upper()}_RECONSTRUCTION_ONLY",
+            "verification_policy_id": "o3a-scan-cohort-evidence-read-only-v1",
+            "verification_level": "EXISTING_FROZEN_GATE_RECONSTRUCTION",
+            "observing_run": "O3a",
+            "stage": stage,
+            "run_dir": str(directory),
+            "legacy_artifact_digest": summary["artifact_digest"],
+            "historical_evidence_mutated": False,
+            "raw_score_replay_executed": False,
+            "encoder_executed": False,
+            "threshold_fit_executed": False,
+            "source_fetch_executed": False,
+            "full_workflow_verified": False,
+            "stored_primary_scores_read": True,
+            "retained_context_samples_checked": stage == "cohort",
+            "sqlite_read_mode": "mode=ro&immutable=1; no transaction sidecars",
+            "inputs": evidence.inputs,
+            "source_bindings": sources,
+        }
+        return {**body, "receipt_digest": canonical_json_sha256(body)}

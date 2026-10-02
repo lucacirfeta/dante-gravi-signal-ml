@@ -2,95 +2,20 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager, ExitStack
+from contextlib import ExitStack
 import hashlib
 import importlib
 import json
-import os
 from pathlib import Path
-import stat
 
 from . import o3a_score_verification as scores
+from .o3a_locking import _fcntl, _persistent_lock, clean_native_parent
 from .o3a_initial_verification import (
     InitialEvidenceError,
     _Evidence,
     _existing,
     _reference,
 )
-
-
-def _fcntl():
-    try:
-        import fcntl
-    except ImportError as error:
-        raise InitialEvidenceError(
-            "read-only persistent locks require POSIX/WSL"
-        ) from error
-    return fcntl
-
-
-def _signature(value):
-    return (
-        value.st_dev,
-        value.st_ino,
-        value.st_size,
-        value.st_mtime_ns,
-        value.st_ctime_ns,
-    )
-
-
-def _stage_clean(directory):
-    if directory.is_symlink() or not directory.is_dir():
-        raise InitialEvidenceError("missing or unsafe decision run directory")
-    for name in ("failure.json", "failures.json", "controller.lock"):
-        if (directory / name).exists() or (directory / name).is_symlink():
-            raise InitialEvidenceError(f"failure/active evidence present: {name}")
-    if any(
-        p.name.endswith((".part", ".partial", ".tmp")) for p in directory.rglob("*")
-    ):
-        raise InitialEvidenceError("partial decision evidence present")
-
-
-@contextmanager
-def _persistent_lock(directory):
-    """Hold the original flock protocol on an existing O_RDONLY regular inode."""
-    fcntl = _fcntl()
-    _stage_clean(directory)
-    path = directory / "run.lock"
-    descriptor, held = None, False
-    try:
-        before = path.lstat()
-        if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
-            raise InitialEvidenceError("unsafe persistent lock file")
-        descriptor = os.open(
-            path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC
-        )
-        opened = os.fstat(descriptor)
-        if _signature(opened) != _signature(before) or opened.st_nlink != 1:
-            raise InitialEvidenceError("persistent lock replaced during open")
-        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        held = True
-        if _signature(path.lstat()) != _signature(opened):
-            raise InitialEvidenceError("persistent lock replaced during acquisition")
-        yield
-        _stage_clean(directory)
-        if (
-            _signature(path.lstat()) != _signature(opened)
-            or _signature(os.fstat(descriptor)) != _signature(opened)
-            or os.fstat(descriptor).st_nlink != 1
-        ):
-            raise InitialEvidenceError("persistent lock changed during verification")
-    except OSError as error:
-        raise InitialEvidenceError(
-            "persistent lock missing, busy or unsupported"
-        ) from error
-    finally:
-        try:
-            if held:
-                fcntl.flock(descriptor, fcntl.LOCK_UN)
-        finally:
-            if descriptor is not None:
-                os.close(descriptor)
 
 
 def _sources(root):
@@ -165,7 +90,7 @@ def _threshold_gate(*, root, external_root, parent_arguments, evidence, stack):
     runtime = load_runtime(evidence, nt.load_runtime_contract, root=root)
     scores.parents._loaded(evidence, root, "runtime_contract", nt.RUNTIME_REL, runtime)
     parent, parent_dir = scores._rescore_gate(
-        root=root, evidence=evidence, **parent_arguments
+        root=root, evidence=evidence, stack=stack, **parent_arguments
     )
     declared = contract["parent_rescore"]
     if any(
@@ -381,7 +306,9 @@ def verify_decision_evidence(
             "rescore_summary",
         ):
             if name in evidence.inputs:
-                scores._clean(Path(evidence.inputs[name]["path"]).parent)
+                clean_native_parent(
+                    Path(evidence.inputs[name]["path"]).parent, stack=stack
+                )
         for reference in evidence.inputs.values():
             if reference["path"].endswith(".sqlite"):
                 scores.parents._no_journals(Path(reference["path"]))

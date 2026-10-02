@@ -66,6 +66,7 @@ def forbidden(*args, **kwargs):
 
 @pytest.fixture
 def evidence(tmp_path, monkeypatch):
+    pytest.importorskip("fcntl", reason="existing read-only flock requires POSIX/WSL")
     root = tmp_path / "repo"
     for relative in verifier._sources(ROOT):
         if relative.startswith("src/dante_light/"):
@@ -417,6 +418,7 @@ def evidence(tmp_path, monkeypatch):
     ):
         for name in names:
             monkeypatch.setattr(module, name, forbidden)
+    (directory / "run.lock").write_bytes(b"preserved producer PID")
     return SimpleNamespace(
         root=root,
         scan_dir=scan_dir,
@@ -456,6 +458,49 @@ def verify(f, stage="rescore"):
     )
 
 
+def test_rescore_lock_held_through_final_check(evidence, monkeypatch):
+    import fcntl
+
+    original = verifier._Evidence.unchanged
+    path = evidence.rescore_dir / "run.lock"
+    before = snapshot(evidence.root.parent)
+
+    def final_check(tracked):
+        with path.open("rb") as handle:
+            with pytest.raises(BlockingIOError):
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        original(tracked)
+
+    monkeypatch.setattr(verifier._Evidence, "unchanged", final_check)
+    receipt = verify(evidence)
+    assert "rescore_lock" in receipt["inputs"]
+    assert snapshot(evidence.root.parent) == before
+    with path.open("rb") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+@pytest.mark.parametrize("problem", ["missing", "busy"])
+def test_rescore_lock_refused(evidence, problem):
+    import fcntl
+
+    path = evidence.rescore_dir / "run.lock"
+    if problem == "missing":
+        path.unlink()
+        reject(evidence, match="persistent lock")
+    else:
+        with path.open("rb") as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            reject(evidence, match="persistent lock")
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+@pytest.mark.parametrize("stage", ["calibration", "rescore"])
+def test_noncooperative_calibration_lock_stays_strict(evidence, stage):
+    (evidence.calibration_dir / "run.lock").write_bytes(b"not approved cooperative")
+    reject(evidence, stage, match="failure/lock evidence present: run.lock")
+
+
 def reject(f, stage="rescore", match=None):
     before = snapshot(f.root.parent)
     with pytest.raises((ValueError, RuntimeError, OSError, KeyError), match=match):
@@ -469,7 +514,7 @@ def test_receipt_no_mutation_and_explicit_parent_wiring(evidence, stage):
     result = verify(evidence, stage)
     assert snapshot(evidence.root.parent) == before
     assert result == seal(result, "receipt_digest")
-    assert len(result["source_bindings"]) == 25
+    assert len(result["source_bindings"]) == 26
     assert evidence.calls[-1]["primary_external_root"] == evidence.scan_dir
     for flag in (
         "encoder_executed",
@@ -763,7 +808,7 @@ def test_mutation_option_rejected(flag):
 
 
 def test_actual_source_and_contract_loaders_without_history():
-    assert len(verifier._sources(ROOT)) == 25
+    assert len(verifier._sources(ROOT)) == 26
     if sys.platform == "win32":
         frozen = read(ROOT / calibration.CONTRACT_REL)
         rebuilt = calibration.build_cohort_contract(root=ROOT)

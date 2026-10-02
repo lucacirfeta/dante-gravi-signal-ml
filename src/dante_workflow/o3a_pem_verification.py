@@ -16,6 +16,7 @@ from pathlib import Path, PurePosixPath
 from . import evidence_snapshot as snapshots
 from . import o3a_coincidence_verification as parents
 from .o3a_retained_runtime import new_evidence, receipt_fields
+from .o3a_locking import clean_native_parent
 from .o3a_initial_verification import InitialEvidenceError, _existing, _json
 
 
@@ -419,8 +420,8 @@ def verify_pem_evidence(
             "rescore_summary",
         ):
             if name in evidence.inputs:
-                parents.decisions.scores._clean(
-                    Path(evidence.inputs[name]["path"]).parent
+                clean_native_parent(
+                    Path(evidence.inputs[name]["path"]).parent, stack=stack
                 )
         for reference in evidence.inputs.values():
             if reference["path"].endswith(".sqlite"):
