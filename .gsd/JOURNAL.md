@@ -1,5 +1,30 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Explicit isolated SCAN reader admission; nested runtime blocker
+
+- Author `procedi`,08.19 freeze79f3d80. Separate admission helper, paired copy
+  directory/external receipt SHA flags on retained coincidence/PEM APIs/CLIs;
+  strict defaults/sidecar guards and separate driver opt-in unchanged. Exact
+  original held-lock/identity/17-source transport/file closure and final pins;
+  all SCAN/COHORT SQL on admitted copy, historical name explicitly preserved.
+- New25 tests; WSL final1079 PASS/7 skips/11 upstream warnings/exit0/548.44s;
+  Windows558 PASS/507 platform skips/exit0/143.35s; post-freeze69 PASS/exit0/6.75s.
+  Ruff16 Python files PASS;18 freeze files exact Git, six transport dependencies
+  exact456a1ba. Scientific sources/configs and three EOL qualifications unchanged.
+  Synthetic fixture imports/count51-not52 and logical filename tests corrected;
+  no historical repair or hash bypass. User untracked folders preserved.
+- Actual retained coincidence retry once80477, all9 roots explicit +copy pin
+  +approved driver flag, OS exit1/FAIL_CLOSED/STOP_ENVIRONMENT_MISMATCH. All12
+  marker hashes/metadata unchanged, stderr empty; technical stdout SHA3053dc9a...
+  preserved in docs/evidence. No complete-chain receipt or outcome disclosure.
+- Source diagnosis: calibration._run_dir independently calls strict current
+  runtime loader after qualified parent call. Runtime-only probe exit0 shows
+  only616.92->617.14 driver difference, all other fields exact; no chain rerun.
+  STOP and request author confirmation of retained-only directory resolver
+  wiring using frozen identity; keep productive helper/policy unchanged.
+  No snapshot, fresh scorer/null/sensor fetch, historical change, push/main,
+  full-workflow/global-quiescence/all-run/Virgo certificate. Local checkpoint.
+
 ## 2026-10-02 - Approved isolated SCAN database byte input
 
 - Author `procedi`,08.18 source freeze456a1ba. New policy/module/CLI,34 tests;

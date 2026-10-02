@@ -1,0 +1,41 @@
+{
+  "source_freeze": "79f3d80",
+  "invocation_count": 1,
+  "supervisor_session": 80477,
+  "cli_os_exit": 1,
+  "failure": {
+    "error": "STOP_ENVIRONMENT_MISMATCH: O3a scoring requires the frozen WSL runtime",
+    "error_type": "ContractError",
+    "status": "FAIL_CLOSED_O3A_COINCIDENCE_EVIDENCE"
+  },
+  "lock_markers_unchanged": true,
+  "observed_marker_count": 12,
+  "stderr_empty": true,
+  "stdout_sha256": "3053dc9a4cb911dfdcb80515bbdb8394b0d496d3aa659c3b0bbdb8ec286c5f7b",
+  "external_roots": {
+    "external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "taxonomy-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "classification-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "threshold-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "rescore-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "calibration-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "index-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "cohort-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1",
+    "primary-external-root": "/mnt/e/dante_cache/dante_light/o3a_native_v1"
+  },
+  "scan_copy_dir": "/mnt/e/dante_cache/dante_light/retained_scan_copy_20261002_v1",
+  "expected_scan_copy_receipt_sha256": "17558e62547be42bbd2e5310d6fa8f93e06c8e0c3a7ae352115cce33ef252508",
+  "allow_retained_driver_drift": true,
+  "full_chain_verified": false,
+  "second_chain_retry_executed": false,
+  "runtime_only_diagnosis": {
+    "os_exit": 0,
+    "status": "READ_ONLY_DRIVER_QUALIFICATION_DIAGNOSIS_ONLY",
+    "frozen_driver_version": "616.92",
+    "observed_driver_version": "617.14",
+    "frozen_environment_digest": "582a9b99f689d36f126b75f95dd31763c2b399aab03180f06c9838eb1f8f1b58",
+    "observed_environment_digest": "ebeae01fdbad49d252555e354daba1e69282ddfcdd89ee386ceeb3c184fb474f",
+    "other_runtime_fields_match": true,
+    "numerical_driver_equivalence_proved": false
+  }
+}

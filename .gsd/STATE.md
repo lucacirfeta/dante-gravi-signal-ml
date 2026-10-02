@@ -1,4 +1,21 @@
 ## Current Position
+- **Explicit SCAN copy admission implemented; real parent BLOCKED (2026-10-02)**:
+  Author `procedi`,08.19 source freeze79f3d80. Separate externally pinned copy
+  opt-in on retained coincidence/PEM APIs/CLIs; SCAN/COHORT SQL only admitted copy,
+  explicit physical/logical filename, exact17 transport bindings/origin/sidecars
+  and held-lock/final checks. Strict defaults and driver waiver separate.
+  Added25 tests; WSL broad1079 PASS/7 skips/11 warnings/exit0/548.44s, Windows558
+  PASS/507 skips/exit0/143.35s; post-freeze69 PASS/exit0/6.75s, Ruff16 files PASS,
+  18 freeze files exact Git; transport456a1ba unchanged, old EOL qualifications.
+  Exactly one real retained coincidence retry80477 observed OS exit1:
+  STOP_ENVIRONMENT_MISMATCH; all12 marker hashes/metadata unchanged, stderr empty.
+  Read-only diagnosis: calibration parent calls original `_run_dir` with nested
+  require_current=True after qualified loader. Separate runtime probe exit0:
+  only616.92->617.14 driver difference, other fields exact. No second retry/fix.
+  STOP for author confirmation of retained-only calibrated-directory identity
+  resolver wiring; leave productive helper and driver policy unchanged. Real
+  chain/PEM snapshot/all-run/Virgo PASS remains open; no fresh work/push/main.
+  User folders intact;08.19/checkpoint includes sanitized technical evidence.
 - **Isolated SCAN byte input PASS verified (2026-10-02)**: Author `procedi`
   approves copy after08.17. Source freeze456a1ba: separate policy/module/CLI,
   34 tests, strict historical SQLite defaults unchanged. Existing read-only
