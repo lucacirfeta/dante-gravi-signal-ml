@@ -12,6 +12,7 @@ from typing import Any, Mapping
 from ..schema import WorkflowSpec, canonical_json_sha256
 from ..input_preflight import InputPreflightBinding
 from ..input_coverage import InputCoverageBinding
+from ..calibration_inputs import CalibrationInputBinding
 from ..state import ArtifactReceipt
 
 
@@ -120,6 +121,14 @@ class StageAdapter(ABC):
 
     def iter_input_coverage(self, root: Path):
         """An audited profile supplies its unchanged frozen metadata selector."""
+        return None
+
+    def calibration_input_binding(self) -> CalibrationInputBinding | None:
+        """Default deny: historical calibration identities are profile-specific."""
+        return None
+
+    def iter_calibration_input_metadata(self, root: Path, payload: Mapping):
+        """An audited reader may inspect identities, never calibration scores."""
         return None
 
     @staticmethod

@@ -11,6 +11,7 @@ from .base import AdapterError, StageAdapter, StageCommand, WorkflowPaths
 from ..schema import WorkflowSpec
 from ..input_preflight import InputPreflightBinding
 from ..input_coverage import InputCoverageBinding, InputCoverageError
+from ..calibration_inputs import CalibrationInputBinding
 from ..state import ArtifactReceipt
 
 
@@ -337,7 +338,7 @@ class O4aCorrectedAdapter(StageAdapter):
             },
         )
 
-    def iter_input_coverage(self, root: Path):
+    def _input_protocol(self, root: Path):
         # Load the unchanged scientific selector from the explicit checkout.
         # No protocol rebuilding, calibration HDF5, runtime/CUDA probe or writer.
         import importlib
@@ -360,7 +361,74 @@ class O4aCorrectedAdapter(StageAdapter):
             raise InputCoverageError(
                 "coverage selector was imported from another checkout"
             )
-        return module.iter_scan_identities(root)
+        return module
+
+    def iter_input_coverage(self, root: Path):
+        return self._input_protocol(root).iter_scan_identities(root)
+
+    def calibration_input_binding(self) -> CalibrationInputBinding:
+        parent = ("calibration_population",)
+        return CalibrationInputBinding(
+            inventory=parent + ("source_hdf5_references",),
+            inventory_digest=parent + ("source_hdf5_reference_digest",),
+            inventory_count=parent + ("source_hdf5_count",),
+            identity_count=parent + ("identity_count",),
+            expected_coverage=parent + ("coverage_counts",),
+            expected_contexts=parent + ("historical_context_counts",),
+            expected_sessions=parent + ("session_detector_counts",),
+            references={
+                "protocol_implementation": (
+                    "source_references",
+                    "protocol_implementation",
+                )
+            },
+        )
+
+    def iter_calibration_input_metadata(self, root: Path, payload: Mapping):
+        original = self._input_protocol(root)
+        spans = original._historical_calibration_spans(root)
+        inventory = payload["calibration_population"]["source_hdf5_references"]
+        files = original._calibration_files(root)
+        if {path.relative_to(root).as_posix() for path in files} != {
+            ref["path"] for ref in inventory
+        }:
+            raise InputCoverageError(
+                "calibration source inventory differs from original selector"
+            )
+        for path in files:
+            detector = path.stem.rsplit("_", 1)[1]
+            if detector not in self.detectors:
+                raise InputCoverageError("calibration source detector mismatch")
+            session_id = int(path.parent.name)
+            with original.h5py.File(path, "r") as handle:
+                gps = original.np.asarray(
+                    handle["background_sample/gps_times"], dtype=original.np.float64
+                )
+                # Only the score dataset shape is inspected, never its values.
+                if (
+                    gps.ndim != 1
+                    or not original.np.isfinite(gps).all()
+                    or handle["background_sample/novelty_scores"].shape != gps.shape
+                ):
+                    raise InputCoverageError("calibration GPS/score shape mismatch")
+            for value in gps:
+                geometry = original._historical_calibration_geometry(
+                    session_id=session_id,
+                    detector=detector,
+                    catalog_gps_start=float(value),
+                    session_spans=spans,
+                )
+                yield {
+                    "detector": detector,
+                    "session_id": session_id,
+                    "catalog_gps_start": float(value),
+                    "analysis_gps_start": geometry["analysis_gps_start"],
+                    "required_padded_interval": geometry["required_padded_interval"],
+                    "historical_context_disposition": geometry[
+                        "historical_context_disposition"
+                    ],
+                    "historical_hdf5": path.relative_to(root).as_posix(),
+                }
 
     def index_window_manifest_receipt(self, cohort_ledger: Path) -> ArtifactReceipt:
         """Bind INDEX consumption to the already frozen cohort ledger bytes."""

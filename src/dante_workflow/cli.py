@@ -10,6 +10,7 @@ import sys
 from .adapters import AdapterError, WorkflowPaths, build_adapter
 from .input_preflight import inspect_input_binding
 from .input_coverage import inspect_input_coverage
+from .calibration_inputs import inspect_calibration_inputs
 from .orchestrator import OrchestrationError, WorkflowOrchestrator
 from .reporting import WorkflowReportingError, write_workflow_report
 from .run_profiles import DEFAULT_REGISTRY_RELATIVE, RunProfileError, load_run_registry
@@ -81,6 +82,7 @@ def _parser(
         "run-readiness",
         "input-readiness",
         "coverage-readiness",
+        "calibration-readiness",
     ):
         command = commands.add_parser(name)
         _add_common(command, default_repository_root=repository_root)
@@ -90,6 +92,9 @@ def _parser(
             selection.add_argument("--repair-stage")
         elif name == "adopt-verified":
             command.add_argument("--through-stage")
+        elif name == "calibration-readiness":
+            command.add_argument("--acquisition-manifest", type=Path)
+            command.add_argument("--acquisition-sha256")
     return parser
 
 
@@ -143,7 +148,11 @@ def main(
 
     args = _parser(default_repository_root=default_repository_root).parse_args(argv)
     try:
-        if args.command in {"input-readiness", "coverage-readiness"}:
+        if args.command in {
+            "input-readiness",
+            "coverage-readiness",
+            "calibration-readiness",
+        }:
             if args.observing_run is None:
                 raise RunProfileError(
                     f"{args.command} requires an explicit run/detectors"
@@ -164,9 +173,18 @@ def main(
                 if args.command == "coverage-readiness"
                 else inspect_input_binding
             )
-            result = inspector(
-                spec, build_adapter(spec), root=args.repository_root.resolve()
-            )
+            if args.command == "calibration-readiness":
+                result = inspect_calibration_inputs(
+                    spec,
+                    build_adapter(spec),
+                    root=args.repository_root.resolve(),
+                    acquisition_manifest=args.acquisition_manifest,
+                    acquisition_sha256=args.acquisition_sha256,
+                )
+            else:
+                result = inspector(
+                    spec, build_adapter(spec), root=args.repository_root.resolve()
+                )
             print(json.dumps(result, indent=2, sort_keys=True))
             print(result["status"], file=sys.stderr)
             return 2 if result["blockers"] else 0
