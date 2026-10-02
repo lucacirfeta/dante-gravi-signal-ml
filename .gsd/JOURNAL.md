@@ -1,5 +1,33 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Actual isolated PEM retained reader chain PASS
+
+- Author `procedi`,08.21;named plan94 members/25242982 bytes,fa543be before
+  capture. Current original contract/references/outputSHA/compact/summary seals,
+  event/grouped identity and calibrationSHA validated,exact member consumption.
+ 51 sources audited:48 Git-exact,3 unchanged exactLF->CRLF qualifications.
+- Existing capture CLI OSexit0,exclusive new archive outside historical/repo
+  roots;SHAe58bead977de7c826e23d3002d2b9a7bf0d7c8a8c8dd6a306af74f197a92f069,
+  25320155 archive bytes. Standalone Windows byte admission OSexit0,not a second
+  capture/source fetch or Windows scientific ancestry replay.
+- Exactly one WSL PEM invocation92418,CLI/supervisor OSexit0,400.92s,stderr empty,
+  PASS_O3A_READ_ONLY_PEM_SNAPSHOT_RETAINED_DECISIONS_ONLY. Actual read-only
+  coincidence gate and complete retained ancestry used;all ten roots explicit,
+  existing driver-only qualifier and externally pinned isolated SQL input.
+  Full receiptseal aa88092ae0a24c5a7213a132d66ea3273a71a0e5b651fbc4cdef6f7106d43311
+  checked independently in memory;51 bindings,all94 final originSHA and12 marker
+  SHA/signatures unchanged. Sanitized technical record is not a full parent receipt.
+- WSL212 PASS/2 skips/11 warnings/exit0,101.92s,Ruff4 files lint/format PASS.
+  Test-selector typo collected no tests,corrected before capture;doc whitespace
+  warning fixed,science source/config unchanged. Admin readiness probe confirms
+  current O4a-only dispatch,O3a missing workflow binding,new-run/V1 method gates.
+- Original O3a diagnostic closure unchanged;no fresh raw/encoder/scoring/
+  correlation/sensor/null/fetch,numerical-driver-equivalence,writer exclusion,
+  atomic/global quiescence,full-workflow/all-run/V1 adoption,push/main/release or
+  new scientific outcome disclosure. User folders/history/sidecars intact.
+  Next:explicit O3a profile/adapter/receipt integration,preflight,clean-install
+  bounded raw numerical validation;new-run/V1 scientific decisions separately.
+
 ## 2026-10-02 - Retained calibration directory wiring; real coincidence PASS
 
 - Author `procedi`,08.20 freezef4f86bc. One retained reader correction, two test

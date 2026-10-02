@@ -1,0 +1,39 @@
+{
+  "record_kind": "PRE_CAPTURE_NAMED_CLOSURE_AND_ANCHOR_AUDIT_NOT_FULL_PARENT_RECEIPT",
+  "plan_file_sha256": "807dda32c006c012ded9f05fb1d2b6cb458d113177e51719cb9356842a5e5d47",
+  "plan_freeze": "fa543be",
+  "head": "25ebbb912f49d7d0f2946334b703095c2fb85855",
+  "member_bytes": 25242982,
+  "member_count": 94,
+  "namespace_counts": {
+    "parents": 3,
+    "pem": 28,
+    "repository": 63
+  },
+  "original_compact_digest": "263ed1744dc2dece021d8dd298ad5b5d5c3c8439f78258db4bc9368cc8471e03",
+  "original_compact_sha256": "5ad80adc74c15c503aba469f902e99e576dc709518ded28b0f2fa8513edc5fba",
+  "original_contract_digest": "a7f4202ff8d85ffb46efdb456ebcb25cc1a14b27b30cea0a64ee7ab198d05a87",
+  "original_summary_digest": "8cbfeae700857af0f5ca46054dad9c347a061088764aa881d80d0bd2283b2504",
+  "own_retained_closure_validated": true,
+  "parent_chain_reexecuted_in_this_probe": false,
+  "pem_directory": "/mnt/e/dante_cache/dante_light/o3a_native_v1/native_pem_o3a_75a40541a8122aceb35e3c68a723f6a75108b0f5cf9f14ca65529151e5e0eb3e",
+  "source_count": 51,
+  "source_eol_qualifications": {
+    "src/dante_light/contracts.py": {
+      "git_sha256": "a80e64b0ee8b7b1a5c7cc94a38e75e6136b5719001cafe3514ccf204a23a6691",
+      "qualification": "exact_Git_LF_to_CRLF",
+      "working_sha256": "67400c77574cc805eccf617819d80e70907ad8aef0679ef8b8880f6ad0507e30"
+    },
+    "src/pipeline_v2_production/coincidence_physical.py": {
+      "git_sha256": "43864aba5e601e433b45cbaaab8e991738bf338e0abe723b6c2a6697027564b6",
+      "qualification": "exact_Git_LF_to_CRLF",
+      "working_sha256": "823e3f20c6199b0a4910c234910d28b3f585c4f9de57861e4bbd6b004e302611"
+    },
+    "src/pipeline_v2_production/pem_coherence_analysis.py": {
+      "git_sha256": "591fe4ce909f0dde7903e40f724e397e2e7e3b202317e9920e8238c0c0f49dea",
+      "qualification": "exact_Git_LF_to_CRLF",
+      "working_sha256": "48c557db470441c38a0c1bd24e8a07abfca21616f7bdcc3304d2eea3b707652b"
+    }
+  },
+  "source_fetch_executed": false
+}

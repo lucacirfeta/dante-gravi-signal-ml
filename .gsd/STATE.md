@@ -1,4 +1,22 @@
 ## Current Position
+- **Actual retained PEM snapshot PASS (2026-10-02)**: Author `procedi`,08.21,
+  exact94-member plan locally frozen fa543be;63 repository/3 parent/28 PEM,
+  25242982 member bytes. Existing nofollow exclusive capture OSexit0,new archive
+  E:\dante_cache\dante_light\retained_pem_20261002_v1.zip,SHAe58bead9...;
+  independent Windows byte-only admission OSexit0. One actual WSL PEM replay
+  supervisor92418,CLI/supervisor OSexit0,400.92s,stderr empty,PASS retained-only.
+  Full canonical receiptseal aa88092a... independently checked in memory;actual
+  read-only coincidence ancestry executed,51 sources,all94 final originSHA and
+  all12 marker bytes/signatures unchanged. Existing isolated SQL pin and driver
+  metadata qualifier intact;48 sources Git-exact,3 prior EOL qualifications.
+  WSL212 PASS/2 skips/11 warnings/exit0,101.92s;Ruff4 files PASS. Original test
+  selector typo collected none and was corrected;documentation whitespace fixed.
+  No new science source/config/outcomes,raw/encoder/sensor/null measurement,fetch,
+  writer-exclusion/atomic/global-quiescence/full-workflow/all-run/V1 claim,push,
+  main or release. History and user folders intact. O3a diagnostic study closed.
+  Next:O3a profile/receipt adapter integration in common dispatcher,then preflight
+  and clean-install numerical verification;other-run/V1 scientific contracts
+  require separate decisions. Detailed remaining gates in readiness note.
 - **Retained calibration resolver + real coincidence PASS (2026-10-02)**:
   Author `procedi`,08.20 freezef4f86bc. Retained-only resolver consumes verified
   frozen runtime identity and contract parent digest; original key parity tested,
