@@ -379,7 +379,7 @@ def test_complete_replay_stdout_receipt_no_mutation(evidence, stage):
     receipt = verify(evidence, stage)
     assert snapshot(evidence.root.parent) == before
     assert receipt == seal(receipt, "receipt_digest")
-    assert len(receipt["source_bindings"]) == 31
+    assert len(receipt["source_bindings"]) == 36
     assert receipt["threshold_bootstrap_replay_executed"] is True
     assert receipt["classification_replay_executed"] == (stage == "classification")
     for key in (
@@ -793,7 +793,7 @@ def test_mutation_flags_refused(flag):
 
 
 def test_real_contract_loaders_without_history():
-    assert len(verifier._sources(ROOT)) == 31
+    assert len(verifier._sources(ROOT)) == 36
     if os.name == "nt":
         with pytest.raises(ContractError):
             nt.load_threshold_contract(root=ROOT)

@@ -472,7 +472,7 @@ def test_read_only_exact_retained_decisions_and_scoped_receipt(evidence):
     result = run(evidence)
     assert result["legacy_artifact_digest"] == evidence.summary["artifact_digest"]
     assert result["status"] == "PASS_O3A_READ_ONLY_PEM_SNAPSHOT_RETAINED_DECISIONS_ONLY"
-    assert len(result["source_bindings"]) == 47
+    assert len(result["source_bindings"]) == 51
     for name in (
         "full_workflow_verified",
         "pem_writer_exclusion_verified",

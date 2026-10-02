@@ -24,6 +24,7 @@ from .o3a_initial_verification import (
 )
 from .o3a_locking import clean_native_parent, hold_native_lock
 from .o3a_retained_runtime import load_runtime
+from .o3a_scan_copy_admission import select_scan_database, scan_database_filename
 
 
 def _no_journals(path: Path):
@@ -120,6 +121,9 @@ def _sources(root):
         "scripts/verify_dante_o3a_native_evidence.py",
     ):
         result[relative] = file_sha256(base / relative)
+    from .o3a_scan_copy_admission import source_bindings
+
+    result.update(source_bindings(base))
     return result
 
 
@@ -141,6 +145,7 @@ def _scan_gate(*, root, external_root, evidence, stack):
         evidence, "scan_summary", _existing(directory, "primary_scan_summary.json")
     )
     path = _existing(directory, "primary_scan.sqlite")
+    path = select_scan_database(evidence, path=path, summary=saved, stack=stack)
     _no_journals(path)
     digest = _pin(evidence, "scan_database", path, saved["database"]["sha256"])
     preflight = scan.load_primary_scan_preflight(
@@ -269,7 +274,7 @@ def _scan_gate(*, root, external_root, evidence, stack):
         "candidate_total": sum(candidates.values()),
         "raw_frame_count": frame_count,
         "database": {
-            "filename": path.name,
+            "filename": scan_database_filename(evidence, path),
             "sha256": digest,
             "size_bytes": path.stat().st_size,
         },
@@ -373,7 +378,7 @@ def _cohort_gate(*, root, external_root, primary_external_root, evidence, stack)
     scan_summary, scan_dir = _scan_gate(
         root=root, external_root=primary_external_root, evidence=evidence, stack=stack
     )
-    database = _existing(scan_dir, "primary_scan.sqlite")
+    database = Path(evidence.inputs["scan_database"]["path"])
     scan_rows = _identity_rows(database)
     lookup = {(d, gps): candidate for d, gps, candidate in scan_rows}
     candidates = sorted({gps for _, gps, candidate in scan_rows if candidate})

@@ -18,6 +18,8 @@ if str(ROOT) not in sys.path:
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository-root", type=Path, default=ROOT)
+    parser.add_argument("--scan-copy-dir", type=Path)
+    parser.add_argument("--expected-scan-copy-receipt-sha256")
     parser.add_argument(
         "--allow-retained-driver-drift",
         action="store_true",

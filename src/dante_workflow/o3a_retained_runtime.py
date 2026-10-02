@@ -125,13 +125,35 @@ def load_runtime(evidence, loader, *, root):
     return loader(root=root, require_current=True)
 
 
-def new_evidence(root, *, allow_retained_driver_drift=False):
+def new_evidence(
+    root,
+    *,
+    allow_retained_driver_drift=False,
+    scan_copy_dir=None,
+    expected_scan_copy_receipt_sha256=None,
+):
     if type(allow_retained_driver_drift) is not bool:
         raise InitialEvidenceError("retained driver opt-in must be boolean")
+    if (scan_copy_dir is None) != (expected_scan_copy_receipt_sha256 is None):
+        raise InitialEvidenceError(
+            "isolated scan directory and receipt SHA256 must be supplied together"
+        )
+    if scan_copy_dir is not None:
+        from .o3a_scan_copy_admission import new_copy_evidence
+
+        return new_copy_evidence(
+            root,
+            directory=scan_copy_dir,
+            expected_sha256=expected_scan_copy_receipt_sha256,
+            allow_retained_driver_drift=allow_retained_driver_drift,
+        )
     return RetainedRuntimeEvidence(root) if allow_retained_driver_drift else _Evidence()
 
 
 def receipt_fields(evidence):
+    result = {}
     if isinstance(evidence, RetainedRuntimeEvidence):
-        return {"retained_runtime_qualification": evidence.qualification()}
-    return {}
+        result["retained_runtime_qualification"] = evidence.qualification()
+    if hasattr(evidence, "scan_copy_qualification"):
+        result["isolated_scan_input_qualification"] = evidence.scan_copy_qualification()
+    return result

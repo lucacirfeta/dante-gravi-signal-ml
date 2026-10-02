@@ -510,7 +510,7 @@ def test_exact_legacy_reconstruction_no_mutations_or_outcome_disclosure(evidence
         result["status"] == "PASS_O3A_READ_ONLY_COINCIDENCE_RETAINED_LEDGER_REPLAY_ONLY"
     )
     assert result["retained_null_ledger_replay_executed"] is True
-    assert len(result["source_bindings"]) == 40
+    assert len(result["source_bindings"]) == 45
     for flag in (
         "historical_evidence_mutated",
         "raw_score_replay_executed",
@@ -882,7 +882,7 @@ def test_windows_refuses_before_sources_or_evidence(monkeypatch):
 
 
 def test_actual_frozen_contract_sources_without_history():
-    assert len(verifier._sources(ROOT)) == 40
+    assert len(verifier._sources(ROOT)) == 45
     if os.name == "nt":
         with pytest.raises(ContractError):
             old.load_contract(root=ROOT)

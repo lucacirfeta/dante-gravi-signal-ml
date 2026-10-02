@@ -11,6 +11,7 @@ from pathlib import Path
 
 from . import o3a_decision_verification as decisions
 from .o3a_locking import clean_native_parent
+from .o3a_scan_copy_admission import scan_database_filename
 from .o3a_initial_verification import InitialEvidenceError, _Evidence, _existing
 
 
@@ -147,7 +148,8 @@ def _taxonomy_gate(
         raise InitialEvidenceError("taxonomy verified parent changed")
     database = Path(evidence.inputs["scan_database"]["path"])
     if (
-        database.name != expected_primary["database"]["filename"]
+        scan_database_filename(evidence, database)
+        != expected_primary["database"]["filename"]
         or evidence.inputs["scan_database"]["sha256"]
         != expected_primary["database"]["sha256"]
     ):

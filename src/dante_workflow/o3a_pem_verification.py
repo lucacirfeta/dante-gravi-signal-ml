@@ -299,6 +299,8 @@ def verify_pem_evidence(
     cohort_external_root,
     primary_external_root,
     allow_retained_driver_drift=False,
+    scan_copy_dir=None,
+    expected_scan_copy_receipt_sha256=None,
 ):
     from src.dante_light import o3a_native_pem as pem
     from src.dante_light.contracts import canonical_json_sha256
@@ -306,7 +308,10 @@ def verify_pem_evidence(
     parents.decisions._fcntl()
     root = root.resolve()
     evidence = new_evidence(
-        root, allow_retained_driver_drift=allow_retained_driver_drift
+        root,
+        allow_retained_driver_drift=allow_retained_driver_drift,
+        scan_copy_dir=scan_copy_dir,
+        expected_scan_copy_receipt_sha256=expected_scan_copy_receipt_sha256,
     )
     before = _sources(root)
     policy = evidence.read("snapshot_policy", _existing(root, snapshots.POLICY_REL))

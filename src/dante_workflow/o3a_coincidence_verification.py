@@ -11,6 +11,7 @@ from pathlib import Path
 from . import o3a_taxonomy_verification as taxonomy
 from .o3a_retained_runtime import load_runtime, new_evidence, receipt_fields
 from .o3a_locking import clean_native_parent
+from .o3a_scan_copy_admission import scan_database_filename
 from .o3a_initial_verification import (
     InitialEvidenceError,
     _existing,
@@ -79,7 +80,7 @@ def _preflight(root, contract, evidence):
     seeds = coincidence._ordered_measurement_seeds(primary_seeds, diagnostic_seeds)
     database = Path(evidence.inputs["scan_database"]["path"])
     if (
-        database.name != primary["database"]["filename"]
+        scan_database_filename(evidence, database) != primary["database"]["filename"]
         or evidence.inputs["scan_database"]["sha256"] != primary["database"]["sha256"]
     ):
         raise InitialEvidenceError("coincidence database binding changed")
@@ -316,6 +317,8 @@ def verify_coincidence_evidence(
     cohort_external_root,
     primary_external_root,
     allow_retained_driver_drift=False,
+    scan_copy_dir=None,
+    expected_scan_copy_receipt_sha256=None,
 ):
     from src.dante_light.contracts import canonical_json_sha256
 
@@ -323,7 +326,10 @@ def verify_coincidence_evidence(
     root = root.resolve()
     sources_before = _sources(root)
     evidence = new_evidence(
-        root, allow_retained_driver_drift=allow_retained_driver_drift
+        root,
+        allow_retained_driver_drift=allow_retained_driver_drift,
+        scan_copy_dir=scan_copy_dir,
+        expected_scan_copy_receipt_sha256=expected_scan_copy_receipt_sha256,
     )
     parent_arguments = {
         "external_root": rescore_external_root.resolve(),

@@ -514,7 +514,7 @@ def test_receipt_no_mutation_and_explicit_parent_wiring(evidence, stage):
     result = verify(evidence, stage)
     assert snapshot(evidence.root.parent) == before
     assert result == seal(result, "receipt_digest")
-    assert len(result["source_bindings"]) == 26
+    assert len(result["source_bindings"]) == 31
     assert evidence.calls[-1]["primary_external_root"] == evidence.scan_dir
     for flag in (
         "encoder_executed",
@@ -808,7 +808,7 @@ def test_mutation_option_rejected(flag):
 
 
 def test_actual_source_and_contract_loaders_without_history():
-    assert len(verifier._sources(ROOT)) == 26
+    assert len(verifier._sources(ROOT)) == 31
     if sys.platform == "win32":
         frozen = read(ROOT / calibration.CONTRACT_REL)
         rebuilt = calibration.build_cohort_contract(root=ROOT)
