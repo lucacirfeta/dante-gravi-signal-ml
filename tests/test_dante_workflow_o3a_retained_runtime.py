@@ -200,6 +200,125 @@ def test_productive_runtime_guard_not_modified(environments, monkeypatch):
         native.load_runtime_contract(root=ROOT, require_current=True)
 
 
+def test_calibration_directory_strict_default_calls_original(tmp_path, monkeypatch):
+    from src.dante_light import o3a_native_calibration_cohort as calibration
+    from src.dante_workflow import o3a_score_verification as scores
+
+    seen = []
+
+    def strict(contract, **kwargs):
+        seen.append((contract, kwargs))
+        raise ContractError("STOP_ENVIRONMENT_MISMATCH")
+
+    monkeypatch.setattr(calibration, "_run_dir", strict)
+    contract = {"contract_digest": "synthetic"}
+    with pytest.raises(ContractError, match="STOP_ENVIRONMENT"):
+        scores._calibration_directory(
+            root=tmp_path,
+            external_root=tmp_path,
+            contract=contract,
+            runtime={},
+            evidence=_Evidence(),
+        )
+    assert seen == [(contract, {"root": tmp_path, "external_root": tmp_path})]
+
+
+def calibration_key_contract():
+    # Unit path parity is portable; productive contract rebuilding is WSL-only.
+    from src.dante_light import o3a_native_calibration_cohort as calibration
+
+    value = json.loads((ROOT / calibration.CONTRACT_REL).read_bytes())
+    body = dict(value)
+    seal = body.pop("contract_digest")
+    assert seal == canonical_json_sha256(body)
+    return value
+
+
+def test_qualified_calibration_directory_matches_original_key(
+    evidence, environments, monkeypatch
+):
+    from src.dante_light import o3a_native_calibration_cohort as calibration
+    from src.dante_workflow import o3a_score_verification as scores
+
+    root, obj = evidence
+    frozen, observed = environments
+    runtime = {"runtime_environment": frozen}
+    contract = calibration_key_contract()
+    before = copy.deepcopy((runtime, contract))
+    monkeypatch.setattr(native, "_capture_o3a_runtime", lambda device: observed)
+    retained.load_runtime(obj, lambda **kwargs: runtime, root=root)
+    calls = []
+
+    def historically_exact(**kwargs):
+        calls.append(kwargs)
+        return runtime
+
+    monkeypatch.setattr(calibration, "load_runtime_contract", historically_exact)
+    original = calibration._run_dir(
+        contract, root=root, external_root=root / "external"
+    )
+    assert calls == [{"root": root, "require_current": True}]
+    monkeypatch.setattr(
+        calibration,
+        "_run_dir",
+        lambda *args, **kwargs: pytest.fail("productive resolver called under opt-in"),
+    )
+    assert (
+        scores._calibration_directory(
+            root=root,
+            external_root=root / "external",
+            contract=contract,
+            runtime=runtime,
+            evidence=obj,
+        )
+        == original
+    )
+    assert (runtime, contract) == before
+    obj.unchanged()
+
+
+@pytest.mark.parametrize("change", ["seal", "environment", "parent"])
+def test_qualified_calibration_directory_rejects_substituted_identity(
+    evidence, environments, monkeypatch, change
+):
+    from src.dante_workflow import o3a_score_verification as scores
+
+    root, obj = evidence
+    frozen, observed = environments
+    runtime = {"runtime_environment": copy.deepcopy(frozen)}
+    contract = calibration_key_contract()
+    monkeypatch.setattr(native, "_capture_o3a_runtime", lambda device: observed)
+    retained.load_runtime(obj, lambda **kwargs: runtime, root=root)
+    if change == "seal":
+        runtime["runtime_environment"]["environment_digest"] = "0" * 64
+    elif change == "environment":
+        runtime["runtime_environment"] = observed
+    else:
+        contract["parents"]["runtime"]["environment_digest"] = "0" * 64
+    with pytest.raises(ValueError, match="runtime identity changed"):
+        scores._calibration_directory(
+            root=root,
+            external_root=root,
+            contract=contract,
+            runtime=runtime,
+            evidence=obj,
+        )
+
+
+def test_calibration_directory_requires_completed_qualification(evidence):
+    from src.dante_workflow import o3a_score_verification as scores
+
+    root, obj = evidence
+    with pytest.raises(ValueError, match="never checked"):
+        scores._calibration_directory(
+            root=root,
+            external_root=root,
+            contract={},
+            runtime={},
+            evidence=obj,
+        )
+
+
 def test_all_seven_existing_read_only_runtime_calls_wired():
     files = [
         "o3a_native_verification.py",

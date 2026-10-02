@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib.util
+import copy
+from contextlib import ExitStack
 import json
 from pathlib import Path
 import shutil
@@ -955,3 +957,68 @@ def test_invalid_scope_before_sources(stage, extra, monkeypatch):
 def test_missing_score_shard(evidence):
     rescore._shard_path(evidence.rescore_dir, 0).unlink()
     reject(evidence)
+
+
+def test_calibration_gate_qualified_driver_uses_frozen_directory(evidence, monkeypatch):
+    from src.dante_light import o3a_native_contract as native
+    from src.dante_workflow import o3a_retained_runtime as retained
+
+    f = evidence
+    frozen = native.load_runtime_contract(root=ROOT)["runtime_environment"]
+    observed = copy.deepcopy(frozen)
+    observed["cuda_device"]["driver_version"] = "synthetic-different-driver"
+    observed = seal(observed, "environment_digest")
+    runtime = {"runtime_environment": frozen}
+    write(f.root / calibration.RUNTIME_REL, runtime)
+    policy = f.root / retained.POLICY_REL
+    policy.parent.mkdir(parents=True, exist_ok=True)
+    policy.write_bytes((ROOT / retained.POLICY_REL).read_bytes())
+    contract = read(f.root / calibration.CONTRACT_REL)
+    contract["parents"]["runtime"] = {
+        "environment_digest": frozen["environment_digest"]
+    }
+    contract = seal(contract, "contract_digest")
+    write(f.root / calibration.CONTRACT_REL, contract)
+    key = contracts.canonical_json_sha256(
+        {
+            "stage": "o3a_native_calibration_identity_freeze",
+            "contract_digest": contract["contract_digest"],
+            "runtime_environment_digest": frozen["environment_digest"],
+        }
+    )
+    directory = f.calibration_dir.parent / f"native_calibration_cohort_{key}"
+    f.calibration_dir.rename(directory)  # Rebuild only isolated synthetic evidence.
+    summary = copy.deepcopy(f.cal)
+    summary.update(contract_digest=contract["contract_digest"], run_key=key)
+    summary = seal(summary)
+    write(directory / "native_calibration_summary.json", summary)
+    calls = []
+
+    def loader(*, root, require_current):
+        calls.append(require_current)
+        if require_current:
+            raise contracts.ContractError("STOP_ENVIRONMENT_MISMATCH")
+        return read(root / calibration.RUNTIME_REL)
+
+    monkeypatch.setattr(calibration, "load_runtime_contract", loader)
+    monkeypatch.setattr(native, "_capture_o3a_runtime", lambda device: observed)
+    with pytest.raises(contracts.ContractError, match="STOP_ENVIRONMENT"):
+        calibration._run_dir(contract, root=f.root, external_root=directory.parent)
+    calls.clear()
+    tracked = retained.new_evidence(f.root, allow_retained_driver_drift=True)
+    before = snapshot(f.root.parent)
+    with ExitStack() as stack:
+        result = verifier._calibration_gate(
+            root=f.root,
+            external_root=directory.parent,
+            index_external_root=f.index_dir,
+            cohort_external_root=f.cohort_dir,
+            primary_external_root=f.scan_dir,
+            evidence=tracked,
+            stack=stack,
+        )
+        tracked.unchanged()
+    assert result[0] == summary and result[1] == directory
+    assert calls == [False]
+    assert tracked.qualification()["other_runtime_fields_match"] is True
+    assert snapshot(f.root.parent) == before

@@ -99,6 +99,33 @@ def _calibration_expected(root, contract, database, cohort, evidence):
     )
 
 
+def _calibration_directory(*, root, external_root, contract, runtime, evidence):
+    """Keep the productive resolver strict; qualified retained keys stay frozen."""
+    from src.dante_light import o3a_native_calibration_cohort as calibration
+    from src.dante_light.contracts import canonical_json_sha256
+    from .o3a_retained_runtime import RetainedRuntimeEvidence
+
+    if not isinstance(evidence, RetainedRuntimeEvidence):
+        return calibration._run_dir(contract, root=root, external_root=external_root)
+    qualification = evidence.qualification()
+    environment = dict(runtime["runtime_environment"])
+    digest = environment.pop("environment_digest", None)
+    if (
+        digest != canonical_json_sha256(environment)
+        or digest != qualification["frozen_environment_digest"]
+        or digest != contract["parents"]["runtime"]["environment_digest"]
+    ):
+        raise InitialEvidenceError("retained calibration runtime identity changed")
+    key = canonical_json_sha256(
+        {
+            "stage": "o3a_native_calibration_identity_freeze",
+            "contract_digest": contract["contract_digest"],
+            "runtime_environment_digest": digest,
+        }
+    )
+    return external_root.resolve() / f"native_calibration_cohort_{key}"
+
+
 def _calibration_gate(
     *,
     root,
@@ -138,7 +165,13 @@ def _calibration_gate(
     parents._loaded(
         evidence, root, "runtime_contract", calibration.RUNTIME_REL, runtime
     )
-    directory = calibration._run_dir(contract, root=root, external_root=external_root)
+    directory = _calibration_directory(
+        root=root,
+        external_root=external_root,
+        contract=contract,
+        runtime=runtime,
+        evidence=evidence,
+    )
     _clean(directory)
     summary = evidence.sealed(
         "calibration_summary",
