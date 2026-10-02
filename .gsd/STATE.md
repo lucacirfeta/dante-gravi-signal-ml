@@ -1,4 +1,20 @@
 ## Current Position
+- **Isolated SCAN byte input PASS verified (2026-10-02)**: Author `procedi`
+  approves copy after08.17. Source freeze456a1ba: separate policy/module/CLI,
+  34 tests, strict historical SQLite defaults unchanged. Existing read-only
+  cooperative lock; original summary pins byte-identical DB213794816 bytes,
+  SHA1f222dfb; WAL0/SHM32768 preserved as inert provenance, journal absent.
+  Actual capture38694 OS exit0; standalone externally pinned verify57580 exit0/
+  PASS_VERIFIED_ISOLATED_SCAN_DATABASE_BYTES_ONLY_V1,17 bindings. New input
+  E:\dante_cache\dante_light\retained_scan_copy_20261002_v1;
+  receipt SHA17558e62547be42bbd2e5310d6fa8f93e06c8e0c3a7ae352115cce33ef252508.
+  Final WSL320 PASS/1 skip/exit0/63.91s, Windows98 PASS/47 skips/exit0/2.99s,
+  post-freeze34 PASS/exit0/2.86s, Ruff PASS; six source-commit files exact Git.
+  Original sources/sidecars and three EOL qualifications unchanged; no origin
+  SQL connection/repair, source fetch/scoring/null, push/main or full-chain PASS.
+  Next: explicit receipt-pinned reader opt-in and actual retained parent retry,
+  not yet wired. Byte-only gate does not certify all-run/Virgo readiness.
+  User folders preserved; see08.18 and isolated-copy checkpoint.
 - **Native upstream persistent-lock extension verified (2026-10-02)**: Author
   `preocedi` approves 08.17. Source freeze cdca437; unchanged shared O_RDONLY
   flock protocol now held through SCAN/COHORT/INDEX/RESCORE parent replay and final

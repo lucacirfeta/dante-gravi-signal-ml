@@ -1,5 +1,24 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Approved isolated SCAN database byte input
+
+- Author `procedi`,08.18 source freeze456a1ba. New policy/module/CLI,34 tests;
+  contract-derived SCAN origin and sealed summary DB pin, cooperative read-only
+  flock; no historical SQLite connection/repair/checkpoint/delete or producer.
+  Isolated exact DB bytes; WAL0/SHM32768 preserved separately as inert provenance.
+- Final scoped WSL320 PASS/1 skip/exit0/63.91s; Windows98 PASS/47 platform skips/
+  exit0/2.99s; post-freeze WSL34 PASS/exit0/2.86s. Ruff PASS, six freeze files
+  exact Git. Initial four failures only error-wrapper expectations, corrected;
+  transport-specific source closure excludes unrelated future reader edits.
+- Actual capture once38694 exit0, verify once57580 exit0/PASS byte-only,17 bindings.
+  New directory E:\dante_cache\dante_light\retained_scan_copy_20261002_v1.
+  DB213794816/SHA1f222dfb matches historical summary; receipt SHA17558e62, complete
+  pins in checkpoint. Source/sidecar bytes+metadata rechecked unchanged.
+- No scientific config/source edits or EOL normalization, push/main, fresh
+  measurements or full-chain/runtime-equivalence/global-quiescence claim.
+  Next: separately tested explicit isolated input wiring to retained readers,
+  then real parent retry. Existing user untracked folders preserved.
+
 ## 2026-10-02 - Approved native upstream read-only flock extension
 
 - Author `preocedi`: 08.17 source freeze cdca437, shared unchanged O_RDONLY
