@@ -1,5 +1,32 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Common retained/productive operation boundary
+
+- Author asks why focus remains O3a;clarified O3a science is closed and approved
+  general-engine work.08.22 policy/controller/verifier/CLI/report/UI,8866d17.
+  Profile2 explicitly binds mode and each retained receipt's scoped PASS/level/
+  seal.No productive argv for retained mode;explicit adapter audit opt-in and
+  frozen verifier prefix before ledger.Run/resume/repair/preflight denied;
+  UI disabled controls plus server guard.New retained aggregate scope does not
+  claim full science or all-run certification;no public registry activation.
+- Final Windows15-file289 PASS,51.15s,OSexit0;WSL288 PASS/one Windows-only skip,
+  136.03s,OSexit0.Ruff12 files lint/format PASS,bare installed-style package
+  import/legacy contract and staged whitespace checks PASS.Test doubles are
+  temporary/synthetic;O3a/O4a label parity tests are not scientific qualification.
+  Post-source-commit WSL48 PASS/OSexit0/38.38s;three prior EOL-qualified scientific
+  helper source SHA values unchanged.The final doc patch initially had an
+  unmatched context and made no changes;corrected before documentation commit.
+- Initial focused28 PASS;first broaderWindows201 PASS/two mocks missing spec;
+  added explicit legacy mode without weakening assertions,follow-up40 PASS.
+  Focused WSL79 PASS before final regression.Native Python has no Ruff,used
+  WSL.Corrected read-only source lookup mistakes;disabled-autocrlf diff flag
+  produced CRLF-only noise,normal repository/staged checks pass.Scientific
+  EOL-qualified inputs not rewritten;administrative formatting documented.
+- No historical run/reader/verifier,raw/NDS2/scoring/null/outcome execution,
+  NVIDIA/config scientific change,push/main/publication.No user folder touched.
+  Next common preflight/input/real receipt mapping and clean-install science
+  gates remain;other-run/V1 methods require separate author decisions.
+
 ## 2026-10-02 - Actual isolated PEM retained reader chain PASS
 
 - Author `procedi`,08.21;named plan94 members/25242982 bytes,fa543be before

@@ -4,6 +4,10 @@ Date:2026-10-02. Internal readiness evidence, not an external LIGO/Virgo certifi
 The completed diagnostic O3a H1/L1 analysis is not being reopened.
 
 ## Verified foundations
+-08.22 common operation boundary distinguishes retained-only verification from
+  productive execution in sealed profile policies, controller, CLI, report and
+  UI. Synthetic O3a/O4a fixtures exercise it; no real profile is newly activated.
+  Details: docs/DANTE_WORKFLOW_OPERATION_MODES_2026-10-02.md.
 - Versioned public-run/detector catalogue and explicit CLI selection already exist.
 - Schema-v2 per-profile graph boundary and separate O3a stage interfaces/read-only
   readers exist; original O4a graph and scientific contracts remain intact.
@@ -15,9 +19,10 @@ The completed diagnostic O3a H1/L1 analysis is not being reopened.
   retained reader chain, not raw numerical replay or full-workflow readiness.
 
 ## Concrete remaining sequence
-1. Integrate the verified O3a stage/receipt mapping into an explicit frozen
+1. Integrate individually approved stage/receipt mappings into explicit frozen
    workflow profile and common adapter/dispatcher. The current build_adapter
-   enables only o4a_corrected; O3a workflow_contract is null. Connect the UI
+   enables only o4a_corrected; O3a workflow_contract is null. The shared retained
+   versus productive operation policy now exists; actual mappings remain. Connect the UI
    selector to actual supported profiles, without an O4a fallback or no-op gates.
 2. Complete profile-specific exact-GPS data/DQ/context/source/runtime preflight
    and explicit stage applicability/reporting. Initial acquisition, reference,

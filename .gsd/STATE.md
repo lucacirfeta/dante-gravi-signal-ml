@@ -1,4 +1,22 @@
 ## Current Position
+- **Common operation boundary PASS (2026-10-02)**: Author clarification and
+  `ok quindi vai avanti` focus the reusable engine, not another O3a study.
+  08.22,source8866d17:sealed profile2 policy distinguishes productive and
+  retained-only modes;only verify commands constructed for retained mode,
+  audited adapter opt-in,frozen command checks,CLI/UI new execution guards,
+  exact scoped/sealed stage evidence and identical independent replay.
+  Distinct retained aggregate PASS/full_workflow_verified=false;report and
+  UI cannot promote it to new scientific execution. Existing schemas/configs,
+  production registry/factory and diagnostic O3a closure unchanged.
+  Final Windows289 PASS/exit0/51.15s;WSL288 PASS/one Windows-only skip/exit0/
+  136.03s;Ruff12 files PASS,package import/legacy loading and staged whitespace
+  PASS;post-source-commit WSL48 PASS/exit0/38.38s,three historical scientific
+  source qualifiers unchanged. Initial two incomplete CLI test doubles fixed explicitly;native Ruff
+  absent,use WSL without install. Synthetic fixtures only,no raw/science fetch,
+  historical verifier/reader,new GPU work,outcomes,activation,push/main/release.
+  User folders preserved;no all-run/V1 scientific certificate. Next:common
+  exact-GPS input/preflight boundary and real adapter bindings,then bounded
+  clean-install numerical verification for approved productive profiles.
 - **Actual retained PEM snapshot PASS (2026-10-02)**: Author `procedi`,08.21,
   exact94-member plan locally frozen fa543be;63 repository/3 parent/28 PEM,
   25242982 member bytes. Existing nofollow exclusive capture OSexit0,new archive
