@@ -29,6 +29,12 @@ The completed diagnostic O3a H1/L1 analysis is not being reopened.
   retained reader chain, not raw numerical replay or full-workflow readiness.
 
 ## Concrete remaining sequence
+Current blocker08.25: calibration input software is implemented/tested, but
+all28 retained acquired raw supplements are absent. Historical84 GPS-source
+HDF5 restored byte-exact from the existing archive;39971 identities accounted.
+No real input PASS, refetch, new receipt or scientific execution authorization.
+See docs/DANTE_WORKFLOW_CALIBRATION_INPUTS_2026-10-02.md for the recovery decision.
+
 1. Integrate individually approved stage/receipt mappings into explicit frozen
    workflow profile and common adapter/dispatcher. The current build_adapter
    enables only o4a_corrected; O3a workflow_contract is null. The shared retained

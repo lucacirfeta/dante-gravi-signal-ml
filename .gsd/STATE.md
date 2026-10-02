@@ -1,4 +1,20 @@
 ## Current Position
+- **Calibration input gate implemented; actual inputs BLOCKED (2026-10-02)**:
+  Author `procedi`,08.25 source52780ff. Generic metadata/byte inspector and
+  calibration-readiness CLI;explicit frozen inventory/geometry and acquisition
+  path+SHA; no state/worker/fetch/score values/full-row digest/numerical job.
+  84 original HDF5 absent;restored only these SHA-exact from September18 archive,
+  no overwrites/archive change. GPS39971=19715H1+20256L1 accounted,28 manifest gaps.
+  One real pinned-receipt inspection hostexit1/WORKFLOW_ERROR because raw files
+  absent. Diagnosis0/28 present,no prior-cache/obvious-archive copies. Metadata
+  diagnosis explicitly BLOCKED,scientific/input-coverage false;no PASS produced.
+  Windows349 PASS/49.36s,WSL348 PASS/one skip/123.13s,post-freeze111 PASS/37.78s,
+  final test exit0;Ruff5 files/bare import PASS,original science/EOL SHA intact.
+  Local commits only,no scientific config/DQ/selection/runtime change,O3a
+  reopening,network/GPU/job/outcome work,push/main/release;user folders intact.
+  STOP for author direction:transport-only recovery preflight of28 raw inputs;
+  new bytes/provenance require explicit review,not silent hash replacement.
+  Native calibration/runtime/clean-install numerical/all-run/V1 remain open.
 - **Primary manifest GPS/context coverage PASS (2026-10-02)**: Author `procedi`
   approves A,08.24:common engine,preserve profile-specific frozen selection.
   Source9fc224e;generic deny-default inspector/binding and coverage-readiness,

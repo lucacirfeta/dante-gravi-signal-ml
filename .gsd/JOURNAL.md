@@ -1,5 +1,30 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Calibration input gate; missing raw supplements
+
+- Author `procedi`,08.25 source52780ff:generic deny-default calibration input
+  binding/inspector, audited original GPS decoder/shape-only historical reader,
+  CLI without orchestrator/worker. Exact inventory/geometry/distributions,
+  explicit acquisition SHA+path,parent/seals/intervals and file bytes. Numeric
+  historical score values not decoded/reused;whole-container SHA still reads
+  encoded bytes. Full score-containing identity digest explicitly unchecked.
+- Initial probe failed at absent historical HDF5. Bounded archive audit found
+  84/84 frozen SHA matches. Restored only absent original data/production paths,
+  archive untouched/no overwrites,all destination SHA verified. No recalibration.
+- Final17-file Windows349 PASS/49.36s;WSL348 PASS/one Windows-only skip/123.13s;
+  post-freeze111 PASS/37.78s,all testOSexit0;Ruff5 files/import PASS. Initial lint
+  unused import/fixture shadow fixed;Windows source glob corrected read-only.
+  Original protocol/three qualified scientific source SHA unchanged.
+- One actual standalone pinned-receipt inspection hostOSexit1/WORKFLOW_ERROR:
+  acquired file absent. Read-only diagnosis all28 raw files absent,no copies
+  under prior acquisition dirs/obvious archive. Separate metadata diagnosis
+  BLOCKED_CALIBRATION_SUPPLEMENT_REQUIRED,39971 identities/84sources/28gaps;
+  no guest blocked exit separately captured. No real input/scientific PASS.
+  Receipt SHA4f073251... preserved;no network/raw numerical/score/outcome/job,
+  config/source/DQ/runtime change,O3a reopening,push/main/release. User folders
+  untouched. STOP:author direction for28-input transport recovery preflight;
+  different reacquired bytes need explicit provenance review/new receipt.
+
 ## 2026-10-02 - Profile-specific primary GPS/context coverage
 
 - Author `procedi` accepts recommended A: common engine with existing approved
