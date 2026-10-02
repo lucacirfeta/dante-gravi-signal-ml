@@ -7,18 +7,26 @@ import pytest
 from src.dante_workflow import cli
 
 
-@pytest.mark.parametrize("status,stage,results", [
-    ("WORKFLOW_EXECUTION_STOPPED", "ACQUIRE", []),
-    ("WORKFLOW_EXECUTION_COMPLETE", "SCAN", [{"status": "FAILED"}]),
-])
-def test_report_command_does_not_render_incomplete_runs(monkeypatch, status, stage, results):
+@pytest.mark.parametrize(
+    "status,stage,results",
+    [
+        ("WORKFLOW_EXECUTION_STOPPED", "ACQUIRE", []),
+        ("WORKFLOW_EXECUTION_COMPLETE", "SCAN", [{"status": "FAILED"}]),
+    ],
+)
+def test_report_command_does_not_render_incomplete_runs(
+    monkeypatch, status, stage, results
+):
     worker = SimpleNamespace(
         run_key="test-run",
+        spec=SimpleNamespace(retained_only=False),
         ledger=SimpleNamespace(next_incomplete_stage=lambda: stage),
         execute=lambda **kw: {"status": status, "results": results},
     )
     monkeypatch.setattr(cli, "_orchestrator", lambda args: worker)
-    monkeypatch.setattr(cli, "write_workflow_report", lambda obj: pytest.fail("incomplete report"))
+    monkeypatch.setattr(
+        cli, "write_workflow_report", lambda obj: pytest.fail("incomplete report")
+    )
     assert cli.main(["report"]) == (1 if results else 0)
 
 
@@ -36,8 +44,9 @@ def test_adopt_verified_command_never_routes_to_execute(monkeypatch):
     calls = []
     worker = SimpleNamespace(
         run_key="test-run",
-        adopt_verified_existing=lambda **kwargs: calls.append(kwargs)
-        or {"status": "WORKFLOW_ADOPTION", "results": []},
+        adopt_verified_existing=lambda **kwargs: (
+            calls.append(kwargs) or {"status": "WORKFLOW_ADOPTION", "results": []}
+        ),
         execute=lambda **kwargs: pytest.fail("adoption must not execute science"),
     )
     monkeypatch.setattr(cli, "_orchestrator", lambda args: worker)

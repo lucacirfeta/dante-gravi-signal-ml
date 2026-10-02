@@ -14,6 +14,7 @@ from uuid import uuid4
 
 from .adapters import StageAdapter, StageCommand, WorkflowPaths, build_adapter
 from .schema import WorkflowSpec, canonical_json_sha256
+from .operation_policy import retained_stage_evidence
 from .state import (
     ArtifactReceipt,
     ExecutionLease,
@@ -120,8 +121,12 @@ def repository_source_identity(repository_root: Path) -> dict[str, str]:
             capture_output=True,
         ).stdout
     except (OSError, subprocess.CalledProcessError) as exc:
-        raise OrchestrationError("could not bind workflow to the Git source tree") from exc
-    if len(head) != 40 or any(character not in "0123456789abcdef" for character in head):
+        raise OrchestrationError(
+            "could not bind workflow to the Git source tree"
+        ) from exc
+    if len(head) != 40 or any(
+        character not in "0123456789abcdef" for character in head
+    ):
         raise OrchestrationError("Git HEAD is not a full lowercase commit identity")
     return {
         "git_head": head,
@@ -144,6 +149,10 @@ class WorkflowOrchestrator:
     ) -> None:
         if adapter.spec != spec:
             raise OrchestrationError("adapter and workflow specification differ")
+        if spec.retained_only and adapter.supports_retained_verification is not True:
+            raise OrchestrationError(
+                "adapter does not support retained-only verification"
+            )
         self.spec = spec
         self.adapter = adapter
         self.paths = paths
@@ -159,10 +168,13 @@ class WorkflowOrchestrator:
         self.commands = {
             stage: {
                 action: adapter.build_command(stage, action, paths)
-                for action in ("run", "verify")
+                for action in (("verify",) if spec.retained_only else ("run", "verify"))
             }
             for stage in spec.topological_stage_names()
         }
+        if spec.retained_only:
+            for commands in self.commands.values():
+                adapter.assert_verify_command_matches_contract(commands["verify"])
         self.run_contract = {
             "workflow_id": spec.workflow_id,
             "workflow_contract_digest": spec.contract_digest,
@@ -195,7 +207,9 @@ class WorkflowOrchestrator:
             except (OSError, json.JSONDecodeError) as exc:
                 raise OrchestrationError("persisted run contract is corrupt") from exc
             if persisted != self.run_contract:
-                raise OrchestrationError("persisted run contract does not match run key")
+                raise OrchestrationError(
+                    "persisted run contract does not match run key"
+                )
         else:
             _atomic_json(contract_path, self.run_contract)
 
@@ -322,16 +336,36 @@ class WorkflowOrchestrator:
                         }
                         for dependency in stage.dependencies
                     ],
-                    "run_command_digest": self.commands[stage.name][
-                        "run"
-                    ].command_digest,
+                    "run_command_digest": self.run_command_digest(stage.name),
                     "verify_command_digest": self.commands[stage.name][
                         "verify"
                     ].command_digest,
                 }
                 for stage in self.spec.stages
             ],
+            **self.operation_boundary(),
         }
+
+    def operation_boundary(self) -> dict[str, Any]:
+        if not self.spec.retained_only:
+            return {}
+        return {
+            "operation_policy": {
+                "mode": "VERIFY_RETAINED_ONLY",
+                "new_execution_allowed": False,
+                "full_workflow_verified": False,
+            }
+        }
+
+    def run_command_digest(self, stage: str) -> str | None:
+        command = self.commands[stage].get("run")
+        return command.command_digest if command is not None else None
+
+    def require_execution_allowed(self) -> None:
+        if self.spec.retained_only:
+            raise OrchestrationError(
+                "retained-only profile forbids new run/resume/repair/preflight"
+            )
 
     def status(self) -> dict[str, Any]:
         stages: list[dict[str, Any]] = []
@@ -340,9 +374,7 @@ class WorkflowOrchestrator:
             item: dict[str, Any] = {"name": stage.name, "status": state}
             if state == "VERIFIED":
                 item["artifacts"] = [
-                    self.ledger.latest_verified_artifact(
-                        stage.name, output
-                    ).to_dict()
+                    self.ledger.latest_verified_artifact(stage.name, output).to_dict()
                     for output in stage.expected_outputs
                 ]
             stages.append(item)
@@ -354,6 +386,7 @@ class WorkflowOrchestrator:
             "run_dir": str(self.run_dir),
             "next_incomplete_stage": self.ledger.next_incomplete_stage(),
             "stages": stages,
+            **self.operation_boundary(),
         }
 
     @staticmethod
@@ -398,7 +431,7 @@ class WorkflowOrchestrator:
             "attempt_id": attempt_id,
             "execution_mode": execution_mode,
             "run_command_executed": run_result is not None,
-            "run_command_digest": self.commands[stage]["run"].command_digest,
+            "run_command_digest": self.run_command_digest(stage),
             "verify_command_digest": self.commands[stage]["verify"].command_digest,
             "run_exit_status": (
                 run_result.exit_status if run_result is not None else None
@@ -423,6 +456,10 @@ class WorkflowOrchestrator:
                 else {}
             ),
         }
+        if self.spec.retained_only:
+            receipt["retained_evidence"] = retained_stage_evidence(
+                self.spec, stage, verify_result.stdout
+            )
         path = attempt_dir / "verified_stage_receipt.json"
         _atomic_json(path, receipt)
         return path
@@ -458,6 +495,7 @@ class WorkflowOrchestrator:
             )
 
     def _execute_stage(self, lease: ExecutionLease, stage: str) -> dict[str, Any]:
+        self.require_execution_allowed()
         if self.ledger.stage_status(stage) == "VERIFIED":
             for output in self.spec.stage(stage).expected_outputs:
                 self.ledger.latest_verified_artifact(stage, output)
@@ -649,9 +687,7 @@ class WorkflowOrchestrator:
             self.clear_stop_request()
         return {
             "schema_version": 1,
-            "status": (
-                "WORKFLOW_ADOPTION_STOPPED" if stopped else "WORKFLOW_ADOPTION"
-            ),
+            "status": ("WORKFLOW_ADOPTION_STOPPED" if stopped else "WORKFLOW_ADOPTION"),
             "workflow_id": self.spec.workflow_id,
             "run_key": self.run_key,
             "results": results,
@@ -664,13 +700,16 @@ class WorkflowOrchestrator:
         through_stage: str | None = None,
         repair_stage: str | None = None,
     ) -> dict[str, Any]:
+        self.require_execution_allowed()
         ordered = self.spec.topological_stage_names()
         if through_stage is not None and through_stage not in ordered:
             raise OrchestrationError(f"unknown through stage: {through_stage}")
         if repair_stage is not None and repair_stage not in ordered:
             raise OrchestrationError(f"unknown repair stage: {repair_stage}")
         if through_stage is not None and repair_stage is not None:
-            raise OrchestrationError("through-stage and repair-stage are mutually exclusive")
+            raise OrchestrationError(
+                "through-stage and repair-stage are mutually exclusive"
+            )
         if repair_stage is not None:
             if self.ledger.stage_status(repair_stage) == "VERIFIED":
                 raise OrchestrationError("repair stage is already verified")
@@ -718,6 +757,8 @@ class WorkflowOrchestrator:
             if self.ledger.stage_status(stage) != "VERIFIED":
                 continue
             result = self.runner(self.commands[stage]["verify"])
+            if result.exit_status == 0 and self.spec.retained_only:
+                retained_stage_evidence(self.spec, stage, result.stdout)
             results.append(
                 {
                     "stage": stage,
@@ -734,8 +775,7 @@ class WorkflowOrchestrator:
             "run_key": self.run_key,
             "verdict": (
                 "PASS"
-                if results
-                and all(result["verdict"] == "PASS" for result in results)
+                if results and all(result["verdict"] == "PASS" for result in results)
                 else "FAIL"
             ),
             "results": results,

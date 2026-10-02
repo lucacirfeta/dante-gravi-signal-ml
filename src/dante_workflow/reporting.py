@@ -31,9 +31,10 @@ def _stage_durations(orchestrator: WorkflowOrchestrator) -> dict[str, float]:
     for event in orchestrator.ledger.read_events():
         if event["event_type"] == "ATTEMPT_STARTED":
             starts[event["attempt_id"]] = _timestamp(event["timestamp"])
-        elif event["event_type"] == "ATTEMPT_FINISHED" and event.get(
-            "verifier_verdict"
-        ) == "PASS":
+        elif (
+            event["event_type"] == "ATTEMPT_FINISHED"
+            and event.get("verifier_verdict") == "PASS"
+        ):
             start = starts.get(event["attempt_id"])
             if start is None:
                 raise WorkflowReportingError("verified attempt start is absent")
@@ -43,9 +44,7 @@ def _stage_durations(orchestrator: WorkflowOrchestrator) -> dict[str, float]:
     return durations
 
 
-def _collect_exclusion_fields(
-    value: Any, *, prefix: str = ""
-) -> list[tuple[str, Any]]:
+def _collect_exclusion_fields(value: Any, *, prefix: str = "") -> list[tuple[str, Any]]:
     fields: list[tuple[str, Any]] = []
     if isinstance(value, Mapping):
         for key, nested in sorted(value.items()):
@@ -115,7 +114,7 @@ def build_workflow_report(orchestrator: WorkflowOrchestrator) -> str:
         "",
         "## Verification",
         "",
-        "- Status: `PASS_VERIFIED_WORKFLOW`",
+        f"- Status: `{release['status']}`",
         f"- Workflow: `{release['workflow_id']}`",
         f"- Run key: `{release['run_key']}`",
         f"- Contract digest: `{release['contract_digest']}`",
@@ -134,6 +133,12 @@ def build_workflow_report(orchestrator: WorkflowOrchestrator) -> str:
         "## Provenance",
         "",
     ]
+    if orchestrator.spec.retained_only:
+        lines[0] = "# DANTE retained-evidence verification report"
+        lines.insert(
+            lines.index("## Provenance"),
+            "- Verification covers retained evidence only; full_workflow_verified=false. No new scientific execution or all-run certification is established.\n",
+        )
     for key, value in sorted(release["source_identity"].items()):
         lines.append(f"- `{key}`: `{value}`")
     lines.extend(
@@ -184,7 +189,9 @@ def build_workflow_report(orchestrator: WorkflowOrchestrator) -> str:
             ]
         )
     else:
-        lines.append("No exclusion or degraded-input scalar was declared by the verifiers.")
+        lines.append(
+            "No exclusion or degraded-input scalar was declared by the verifiers."
+        )
     lines.extend(
         [
             "",
@@ -221,7 +228,9 @@ def write_workflow_report(
     binding_path = target.with_suffix(target.suffix + ".receipt.json")
     temporary = binding_path.with_name(f".{binding_path.name}.{uuid4().hex}.tmp")
     try:
-        temporary.write_text(json.dumps(binding, sort_keys=True) + "\n", encoding="utf-8")
+        temporary.write_text(
+            json.dumps(binding, sort_keys=True) + "\n", encoding="utf-8"
+        )
         temporary.replace(binding_path)
     finally:
         temporary.unlink(missing_ok=True)
@@ -238,6 +247,10 @@ def verify_report_file(orchestrator: WorkflowOrchestrator) -> Path:
     receipt_path = orchestrator.run_dir / "workflow_release_receipt.json"
     try:
         release = verify_release_receipt(receipt_path)
+        if orchestrator.spec.retained_only != (
+            release["status"] == "PASS_VERIFIED_RETAINED_WORKFLOW_EVIDENCE"
+        ):
+            raise ValueError("report operation scope differs")
         binding = json.loads(
             target.with_suffix(".md.receipt.json").read_text(encoding="utf-8")
         )
@@ -266,8 +279,13 @@ def verify_report_file(orchestrator: WorkflowOrchestrator) -> Path:
             if wrapper:
                 value = json.loads(Path(wrapper["path"]).read_text(encoding="utf-8"))
                 for log in value["logs"].values():
-                    if hashlib.sha256(Path(log["path"]).read_bytes()).hexdigest() != log["sha256"]:
+                    if (
+                        hashlib.sha256(Path(log["path"]).read_bytes()).hexdigest()
+                        != log["sha256"]
+                    ):
                         raise ValueError("report source log differs")
     except Exception as exc:
-        raise WorkflowReportingError("stored report or its evidence is unavailable or altered") from exc
+        raise WorkflowReportingError(
+            "stored report or its evidence is unavailable or altered"
+        ) from exc
     return target.resolve()

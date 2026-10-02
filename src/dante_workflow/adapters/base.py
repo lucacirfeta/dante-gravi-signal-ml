@@ -71,8 +71,13 @@ class StageAdapter(ABC):
 
     observing_run: str
     detectors: tuple[str, ...]
+    # Registration plus source audit is still required; a policy alone never
+    # makes a legacy verifier read-only.
+    supports_retained_verification: bool = False
 
-    def __init__(self, spec: WorkflowSpec, *, python_executable: str = "python") -> None:
+    def __init__(
+        self, spec: WorkflowSpec, *, python_executable: str = "python"
+    ) -> None:
         if not python_executable.strip():
             raise ValueError("python_executable must be non-empty")
         self.spec = spec
@@ -116,7 +121,9 @@ class StageAdapter(ABC):
 
     def assert_verify_command_matches_contract(self, command: StageCommand) -> None:
         if command.action != "verify":
-            raise AdapterError("only verifier commands can be checked against the contract")
+            raise AdapterError(
+                "only verifier commands can be checked against the contract"
+            )
         expected = self.spec.stage(command.stage).verifier_command
         actual_prefix = command.argv[: len(expected)]
         normalized = ("python", *actual_prefix[1:])

@@ -101,11 +101,15 @@ class LocalPathPolicy:
 
     def validate(self, selection: UISelection) -> None:
         if selection.repository_root != self.repository_root:
-            raise UIControlError("the repository selector is outside the approved project")
+            raise UIControlError(
+                "the repository selector is outside the approved project"
+            )
         try:
             selection.config_path.relative_to(self.repository_root)
         except ValueError as exc:
-            raise UIControlError("the workflow config escapes the approved project") from exc
+            raise UIControlError(
+                "the workflow config escapes the approved project"
+            ) from exc
         if not _inside(selection.raw_root, self.raw_roots):
             raise UIControlError("the raw-data selector is outside the allowlist")
         if not _inside(selection.cache_root, self.cache_roots):
@@ -144,9 +148,7 @@ class WorkflowUIController:
         return self._orchestrator
 
     def _build_orchestrator(self, selection: UISelection) -> WorkflowOrchestrator:
-        spec = load_workflow_spec(
-            selection.config_path, root=selection.repository_root
-        )
+        spec = load_workflow_spec(selection.config_path, root=selection.repository_root)
         try:
             worker_python = self._worker_executable()
         except UIControlError:
@@ -174,7 +176,9 @@ class WorkflowUIController:
     ) -> dict[str, Any]:
         with self._lock:
             if self.worker_state()["state"] != "IDLE":
-                raise UIControlError("paths cannot change while a worker lease is active")
+                raise UIControlError(
+                    "paths cannot change while a worker lease is active"
+                )
             candidate = UISelection(
                 repository_root=Path(repository_root),
                 config_path=self.selection.config_path,
@@ -204,7 +208,9 @@ class WorkflowUIController:
             return str(candidate)
         resolved = shutil.which(self.worker_python)
         if resolved is None:
-            raise UIControlError(f"worker Python is not executable: {self.worker_python}")
+            raise UIControlError(
+                f"worker Python is not executable: {self.worker_python}"
+            )
         return resolved
 
     @property
@@ -251,8 +257,11 @@ class WorkflowUIController:
             raise UIControlError("the UI controller log is malformed")
         # Never reflect arbitrary fields from a locally modified log into HTTP.
         return [
-            {key: event[key] for key in ("timestamp", "event", "pid", "action", "mode")
-             if key in event}
+            {
+                key: event[key]
+                for key in ("timestamp", "event", "pid", "action", "mode")
+                if key in event
+            }
             for event in events
             if event.get("run_key") == self.orchestrator.run_key
             and event.get("event") in {"WORKER_LAUNCHED", "STOP_REQUESTED"}
@@ -326,7 +335,9 @@ class WorkflowUIController:
                     and self._process_alive(pid)
                 ):
                     return {
-                        "state": "ACTIVE" if self.orchestrator.ledger.read_events() else "LAUNCHING",
+                        "state": "ACTIVE"
+                        if self.orchestrator.ledger.read_events()
+                        else "LAUNCHING",
                         "pid": pid,
                         "stop_requested": False,
                     }
@@ -346,7 +357,9 @@ class WorkflowUIController:
 
     def require_run_key(self, expected: str) -> None:
         if expected != self.orchestrator.run_key:
-            raise UIControlError("this page refers to a different run; reload before acting")
+            raise UIControlError(
+                "this page refers to a different run; reload before acting"
+            )
 
     @contextmanager
     def control(self, expected_run_key: str):
@@ -434,6 +447,12 @@ class WorkflowUIController:
     def launch(self, action: str) -> dict[str, Any]:
         if action not in {"start", "resume", "adopt", "preflight", "verify"}:
             raise UIControlError("unsupported worker action")
+        if self.orchestrator.spec.retained_only and action in {
+            "start",
+            "resume",
+            "preflight",
+        }:
+            raise UIControlError("retained-only profile forbids new execution")
         with self._lock:
             worker = self.worker_state()
             if worker["state"] != "IDLE" and not (
@@ -445,7 +464,10 @@ class WorkflowUIController:
                 raise UIControlError("existing evidence requires Resume, not Start")
             if action == "resume" and not events_exist:
                 raise UIControlError("no prior evidence exists; use Start")
-            if action == "verify" and self.orchestrator.ledger.next_incomplete_stage() is not None:
+            if (
+                action == "verify"
+                and self.orchestrator.ledger.next_incomplete_stage() is not None
+            ):
                 raise UIControlError("complete the workflow before final verification")
             if self.local_preflight()["status"] != "READY":
                 raise UIControlError("local launcher preflight is blocked")
@@ -505,8 +527,8 @@ class WorkflowUIController:
             stderr_path = log_dir / "worker.stderr.sealed.txt"
             environment = os.environ.copy()
             executable_parent = str(Path(executable).resolve().parent)
-            environment["PATH"] = executable_parent + os.pathsep + environment.get(
-                "PATH", ""
+            environment["PATH"] = (
+                executable_parent + os.pathsep + environment.get("PATH", "")
             )
             popen_options: dict[str, Any] = {
                 "cwd": str(selection.repository_root),
@@ -530,7 +552,9 @@ class WorkflowUIController:
                     )
             except OSError as exc:
                 self._launch_path.unlink(missing_ok=True)
-                raise UIControlError("the independent worker could not be started") from exc
+                raise UIControlError(
+                    "the independent worker could not be started"
+                ) from exc
             reservation["status"] = "WORKER_LAUNCHING"
             reservation["pid"] = process.pid
             temporary = self._launch_path.with_name(

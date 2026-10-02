@@ -120,9 +120,14 @@ def _load_profile(reference: Any, *, root: Path) -> tuple[GraphProfile, dict]:
         value = strict_json_object(raw.decode("utf-8"), label="graph profile")
     except UnicodeError as exc:
         raise WorkflowSchemaError("graph profile must be UTF-8 JSON") from exc
-    _exact_keys(value, _PROFILE_KEYS, "graph profile")
-    if type(value["schema_version"]) is not int or value["schema_version"] != 1:
+    version = value.get("schema_version")
+    if type(version) is not int or version not in (1, 2):
         raise WorkflowSchemaError("unsupported graph profile schema")
+    _exact_keys(
+        value,
+        _PROFILE_KEYS | ({"operation_policy"} if version == 2 else set()),
+        "graph profile",
+    )
     seal = _check_seal(value, label="graph profile")
     detectors = _string_list(value["detectors"], "profile detectors")
     if any(item not in {"H1", "L1", "V1"} for item in detectors):
@@ -187,6 +192,16 @@ def validate_profile_workflow(payload: dict, *, root: Path) -> WorkflowSpec:
         _validate_stage(stage, config_names=set(configs)) for stage in payload["stages"]
     )
     _validate_graph(stages, profile_graph=True)
+    if raw_profile["schema_version"] == 2:
+        from dataclasses import replace
+        from .operation_policy import validate_operation_policy
+
+        profile = replace(
+            profile,
+            operation_policy=validate_operation_policy(
+                raw_profile["operation_policy"], raw_profile["stages"]
+            ),
+        )
     for stage in stages:
         for token in stage.verifier_command:
             if token.startswith("scripts/") and token.endswith(".py"):

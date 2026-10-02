@@ -13,7 +13,12 @@ from .reporting import WorkflowReportingError, write_workflow_report
 from .run_profiles import DEFAULT_REGISTRY_RELATIVE, RunProfileError, load_run_registry
 from .schema import load_workflow_spec
 from .state import WorkflowStateError
-from .verification import WorkflowVerificationError, verify_workflow
+from .verification import (
+    RELEASE_RECEIPT_NAME,
+    WorkflowVerificationError,
+    verify_release_receipt,
+    verify_workflow,
+)
 
 
 DEFAULT_CONFIG_RELATIVE = Path("config/dante_workflow_productization_v1.json")
@@ -169,9 +174,17 @@ def main(
                 through_stage=args.through_stage
             )
         elif args.command == "report":
-            result = orchestrator.execute(through_stage="REPORT")
+            if orchestrator.spec.retained_only:
+                report_path = write_workflow_report(orchestrator)
+                result = verify_release_receipt(
+                    orchestrator.run_dir / RELEASE_RECEIPT_NAME
+                )
+                result["derived_report_path"] = str(report_path)
+            else:
+                result = orchestrator.execute(through_stage="REPORT")
             if (
-                result["status"] != "WORKFLOW_EXECUTION_STOPPED"
+                not orchestrator.spec.retained_only
+                and result["status"] != "WORKFLOW_EXECUTION_STOPPED"
                 and orchestrator.ledger.next_incomplete_stage() is None
                 and not any(
                     item.get("status") == "FAILED" for item in result["results"]

@@ -115,7 +115,9 @@ def _identifier(value: Any, label: str) -> str:
     return value
 
 
-def _string_list(value: Any, label: str, *, allow_empty: bool = False) -> tuple[str, ...]:
+def _string_list(
+    value: Any, label: str, *, allow_empty: bool = False
+) -> tuple[str, ...]:
     if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
         raise WorkflowSchemaError(f"{label} must be a list of strings")
     result = tuple(value)
@@ -143,6 +145,8 @@ class GraphProfile:
     detectors: tuple[str, ...]
     reference: FileReference
     contract_digest: str
+
+    operation_policy: Any = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,6 +179,11 @@ class WorkflowSpec:
     contract_digest: str
     graph_profile: GraphProfile | None = None
 
+    @property
+    def retained_only(self) -> bool:
+        policy = self.graph_profile.operation_policy if self.graph_profile else None
+        return policy is not None and policy.mode == "VERIFY_RETAINED_ONLY"
+
     def stage(self, name: str) -> StageSpec:
         for stage in self.stages:
             if stage.name == name:
@@ -206,9 +215,7 @@ class WorkflowSpec:
         return tuple(ordered)
 
 
-def _validate_file_reference(
-    value: Any, *, name: str, root: Path
-) -> FileReference:
+def _validate_file_reference(value: Any, *, name: str, root: Path) -> FileReference:
     if not isinstance(value, Mapping):
         raise WorkflowSchemaError(f"scientific config {name!r} must be an object")
     _exact_keys(value, {"path", "sha256"}, f"scientific config {name!r}")
@@ -243,11 +250,19 @@ def _validate_dependency(value: Any, *, stage_name: str) -> DependencySpec:
     if not isinstance(value, Mapping):
         raise WorkflowSchemaError(f"stage {stage_name} dependency must be an object")
     gate = value.get("gate")
-    expected = {"stage", "gate", "artifact"} if gate == "CONTENT_DIGESTED_ARTIFACT" else {"stage", "gate"}
+    expected = (
+        {"stage", "gate", "artifact"}
+        if gate == "CONTENT_DIGESTED_ARTIFACT"
+        else {"stage", "gate"}
+    )
     _exact_keys(value, expected, f"stage {stage_name} dependency")
-    dependency_stage = _identifier(value["stage"], f"stage {stage_name} dependency stage")
+    dependency_stage = _identifier(
+        value["stage"], f"stage {stage_name} dependency stage"
+    )
     if gate not in _DEPENDENCY_GATES:
-        raise WorkflowSchemaError(f"stage {stage_name} has invalid dependency gate {gate!r}")
+        raise WorkflowSchemaError(
+            f"stage {stage_name} has invalid dependency gate {gate!r}"
+        )
     artifact = None
     if gate == "CONTENT_DIGESTED_ARTIFACT":
         artifact = _identifier(
@@ -276,7 +291,9 @@ def _validate_stage(value: Any, *, config_names: set[str]) -> StageSpec:
     config_refs = _string_list(value["config_refs"], f"stage {name} config_refs")
     unknown_refs = sorted(set(config_refs) - config_names)
     if unknown_refs:
-        raise WorkflowSchemaError(f"stage {name} has unknown config refs: {unknown_refs}")
+        raise WorkflowSchemaError(
+            f"stage {name} has unknown config refs: {unknown_refs}"
+        )
     required_inputs = _string_list(
         value["required_inputs"], f"stage {name} required_inputs"
     )
@@ -336,23 +353,22 @@ def _validate_graph(
     for name in ordered:
         direct = {dependency.stage for dependency in stage_by_name[name].dependencies}
         ancestors[name] = direct | {
-            ancestor
-            for dependency in direct
-            for ancestor in ancestors[dependency]
+            ancestor for dependency in direct for ancestor in ancestors[dependency]
         }
 
     producers: dict[str, str] = {}
     for stage in stages:
         for output in stage.expected_outputs:
             if output in producers:
-                raise WorkflowSchemaError(
-                    f"artifact {output!r} has multiple producers"
-                )
+                raise WorkflowSchemaError(f"artifact {output!r} has multiple producers")
             producers[output] = stage.name
     for stage in stages:
         for dependency in stage.dependencies:
             if dependency.gate == "CONTENT_DIGESTED_ARTIFACT":
-                if dependency.artifact not in stage_by_name[dependency.stage].expected_outputs:
+                if (
+                    dependency.artifact
+                    not in stage_by_name[dependency.stage].expected_outputs
+                ):
                     raise WorkflowSchemaError(
                         f"stage {stage.name} gates on an undeclared artifact"
                     )
@@ -370,8 +386,13 @@ def _validate_graph(
                 )
     if "NATIVE_CALIBRATION" in stage_by_name:
         native = stage_by_name["NATIVE_CALIBRATION"]
-        native_dependencies = {dependency.stage: dependency for dependency in native.dependencies}
-        if native_dependencies.get("COHORT", DependencySpec("", "")).gate != "VERIFIED_STAGE":
+        native_dependencies = {
+            dependency.stage: dependency for dependency in native.dependencies
+        }
+        if (
+            native_dependencies.get("COHORT", DependencySpec("", "")).gate
+            != "VERIFIED_STAGE"
+        ):
             raise WorkflowSchemaError("NATIVE_CALIBRATION requires verified COHORT")
         index_dependency = native_dependencies.get("INDEX")
         if (
@@ -383,10 +404,13 @@ def _validate_graph(
                 "NATIVE_CALIBRATION requires the content-digested INDEX window manifest"
             )
     if "RESCORE" in stage_by_name:
-        rescore_dependencies = {item.stage: item.gate for item in stage_by_name["RESCORE"].dependencies}
-        if rescore_dependencies.get("INDEX") != "VERIFIED_STAGE" or rescore_dependencies.get(
-            "NATIVE_CALIBRATION"
-        ) != "VERIFIED_STAGE":
+        rescore_dependencies = {
+            item.stage: item.gate for item in stage_by_name["RESCORE"].dependencies
+        }
+        if (
+            rescore_dependencies.get("INDEX") != "VERIFIED_STAGE"
+            or rescore_dependencies.get("NATIVE_CALIBRATION") != "VERIFIED_STAGE"
+        ):
             raise WorkflowSchemaError(
                 "RESCORE requires verified INDEX and NATIVE_CALIBRATION stages"
             )
@@ -413,8 +437,12 @@ def validate_workflow_spec(value: Mapping[str, Any], *, root: Path) -> WorkflowS
     workflow_id = _identifier(payload["workflow_id"], "workflow_id")
     adapter = _identifier(payload["adapter"], "adapter")
     declared_digest = payload["contract_digest"]
-    if not isinstance(declared_digest, str) or not _SHA256_RE.fullmatch(declared_digest):
-        raise WorkflowSchemaError("workflow contract_digest must be a lowercase SHA-256")
+    if not isinstance(declared_digest, str) or not _SHA256_RE.fullmatch(
+        declared_digest
+    ):
+        raise WorkflowSchemaError(
+            "workflow contract_digest must be a lowercase SHA-256"
+        )
     body = dict(payload)
     body.pop("contract_digest")
     actual_digest = canonical_json_sha256(body)
@@ -492,12 +520,16 @@ def load_workflow_spec(path: Path, *, root: Path | None = None) -> WorkflowSpec:
     """Load a workflow JSON file and verify its self-digest and references."""
 
     path = path.resolve()
-    repository_root = root.resolve() if root is not None else path.parent.parent.resolve()
+    repository_root = (
+        root.resolve() if root is not None else path.parent.parent.resolve()
+    )
     try:
         text = path.read_text(encoding="utf-8")
         value = json.loads(text)
     except (OSError, json.JSONDecodeError) as exc:
-        raise WorkflowSchemaError(f"cannot load workflow specification: {path}") from exc
+        raise WorkflowSchemaError(
+            f"cannot load workflow specification: {path}"
+        ) from exc
     if isinstance(value, dict) and value.get("schema_version") == 2:
         from .schema_v2 import strict_json_object
 

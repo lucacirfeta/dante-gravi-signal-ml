@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import json
+import re
 import subprocess
 import sys
 import time
@@ -49,16 +50,14 @@ class FakeController:
             "next_incomplete_stage": "PREFLIGHT",
             "worker": {"state": "IDLE", "stop_requested": False},
             "stages": [
-                {"name": name, "status": "PENDING"}
-                for name in REQUIRED_STAGE_NAMES
+                {"name": name, "status": "PENDING"} for name in REQUIRED_STAGE_NAMES
             ],
         }
 
     def plan(self):
         return {
             "stages": [
-                {"name": name, "dependencies": []}
-                for name in REQUIRED_STAGE_NAMES
+                {"name": name, "dependencies": []} for name in REQUIRED_STAGE_NAMES
             ]
         }
 
@@ -72,9 +71,7 @@ class FakeController:
         }
 
     def scientific_configs(self):
-        return [
-            {"name": "frozen", "path": "config/frozen.json", "sha256": "b" * 64}
-        ]
+        return [{"name": "frozen", "path": "config/frozen.json", "sha256": "b" * 64}]
 
     def administrative_logs(self):
         return []
@@ -128,6 +125,27 @@ def _app(tmp_path: Path):
     )
     app.config.update(TESTING=True)
     return app, controller
+
+
+def test_retained_dashboard_disables_new_execution_controls(tmp_path):
+    app, controller = _app(tmp_path)
+    original_plan = controller.plan
+    controller.plan = lambda: {
+        **original_plan(),
+        "operation_policy": {"new_execution_allowed": False},
+    }
+    page = app.test_client().get("/").get_data(as_text=True)
+    assert "Retained-evidence verification only" in page
+    for action in ("start", "resume", "preflight", "adopt", "verify"):
+        form = re.search(
+            rf'<form[^>]*action="/actions/{action}"[^>]*>(.*?)</form>', page, re.S
+        )
+        assert form is not None
+        button = re.search(r"<button[^>]*>", form.group(1))
+        assert button is not None
+        assert ("disabled" in button.group(0)) == (
+            action in {"start", "resume", "preflight"}
+        )
 
 
 def test_dashboard_is_semantic_and_contains_no_unverified_outcomes(
@@ -301,7 +319,9 @@ def test_validation_buttons_use_the_independent_worker(tmp_path, action):
     assert controller.calls == [("launch", action)]
 
 
-def test_stale_page_and_untrusted_host_cannot_control_current_run(tmp_path: Path) -> None:
+def test_stale_page_and_untrusted_host_cannot_control_current_run(
+    tmp_path: Path,
+) -> None:
     app, controller = _app(tmp_path)
     client = app.test_client()
     response = client.post(
@@ -314,12 +334,16 @@ def test_stale_page_and_untrusted_host_cannot_control_current_run(tmp_path: Path
     assert client.get("/", headers={"Host": "attacker.example"}).status_code == 400
 
 
-def test_real_failed_stage_outcomes_are_sealed_in_all_http_views(tmp_path: Path) -> None:
+def test_real_failed_stage_outcomes_are_sealed_in_all_http_views(
+    tmp_path: Path,
+) -> None:
     from src.dante_workflow.orchestrator import CommandResult
 
     settings = UISettings(
-        repository_root=ROOT, config_path=CONFIG,
-        raw_root=tmp_path / "raw", cache_root=tmp_path / "cache",
+        repository_root=ROOT,
+        config_path=CONFIG,
+        raw_root=tmp_path / "raw",
+        cache_root=tmp_path / "cache",
     )
     app = create_app(settings)
     app.config.update(TESTING=True)
@@ -333,23 +357,35 @@ def test_real_failed_stage_outcomes_are_sealed_in_all_http_views(tmp_path: Path)
         assert response.status_code == 200
         assert secret not in response.get_data(as_text=True)
     for path in (
-        "/artifacts/PREFLIGHT/preflight_receipt", "/logs/PREFLIGHT/run.stdout.txt",
-        "/logs/UNKNOWN/run.stdout.txt", "/report",
+        "/artifacts/PREFLIGHT/preflight_receipt",
+        "/logs/PREFLIGHT/run.stdout.txt",
+        "/logs/UNKNOWN/run.stdout.txt",
+        "/report",
     ):
         assert client.get(path).status_code == 404
 
 
 def test_ambiguous_interrupted_launch_is_not_silently_restarted(tmp_path, monkeypatch):
-    app = create_app(UISettings(
-        repository_root=ROOT, config_path=CONFIG,
-        raw_root=tmp_path / "raw", cache_root=tmp_path / "cache",
-    ))
+    app = create_app(
+        UISettings(
+            repository_root=ROOT,
+            config_path=CONFIG,
+            raw_root=tmp_path / "raw",
+            cache_root=tmp_path / "cache",
+        )
+    )
     controller = app.extensions["dante_workflow_controller"]
     controller._launch_path.parent.mkdir(parents=True, exist_ok=True)
-    controller._launch_path.write_text(json.dumps({
-        "launcher_pid": 99999, "schema_version": 1,
-        "run_key": controller.orchestrator.run_key,
-    }), encoding="utf-8")
+    controller._launch_path.write_text(
+        json.dumps(
+            {
+                "launcher_pid": 99999,
+                "schema_version": 1,
+                "run_key": controller.orchestrator.run_key,
+            }
+        ),
+        encoding="utf-8",
+    )
     monkeypatch.setattr(controller, "_process_alive", lambda pid: False)
     assert controller.worker_state()["state"] == "STALE_LAUNCH"
     with pytest.raises(UIControlError, match="already present"):
@@ -364,14 +400,22 @@ def test_real_detached_child_survives_controller_exit_and_reconnect(tmp_path):
     try:
         launcher = subprocess.run(
             [sys.executable, str(helper), "launcher", str(tmp_path)],
-            cwd=ROOT, capture_output=True, text=True, timeout=15, check=True,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=True,
         )
         launched = json.loads(launcher.stdout)
         assert process_alive(launched["pid"])
-        app = create_app(UISettings(
-            repository_root=ROOT, config_path=CONFIG,
-            raw_root=tmp_path / "raw", cache_root=tmp_path / "cache",
-        ))
+        app = create_app(
+            UISettings(
+                repository_root=ROOT,
+                config_path=CONFIG,
+                raw_root=tmp_path / "raw",
+                cache_root=tmp_path / "cache",
+            )
+        )
         status = app.test_client().get("/api/status").get_json()
         assert status["run_key"] == launched["run_key"]
         assert status["worker"]["pid"] == launched["pid"]

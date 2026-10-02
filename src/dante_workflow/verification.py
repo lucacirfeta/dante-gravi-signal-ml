@@ -10,7 +10,8 @@ from typing import Any
 from uuid import uuid4
 
 from .orchestrator import WorkflowOrchestrator
-from .schema import canonical_json_sha256
+from .schema import canonical_json_sha256, WorkflowSchemaError
+from .operation_policy import RETAINED_PASS, retained_stage_evidence
 from .state import ArtifactReceipt, ContractMismatchError
 
 
@@ -91,6 +92,8 @@ def _validate_stage_receipt(
         "verify_exit_status",
         "logs",
     }
+    if orchestrator.spec.retained_only:
+        required.add("retained_evidence")
     if set(value) != required and set(value) != required | {"verified_run_dir"}:
         raise WorkflowVerificationError(f"{stage} stage receipt fields changed")
     expected = {
@@ -100,13 +103,13 @@ def _validate_stage_receipt(
         "run_key": orchestrator.run_key,
         "contract_digest": orchestrator.spec.contract_digest,
         "stage": stage,
-        "run_command_digest": orchestrator.commands[stage]["run"].command_digest,
-        "verify_command_digest": orchestrator.commands[stage][
-            "verify"
-        ].command_digest,
+        "run_command_digest": orchestrator.run_command_digest(stage),
+        "verify_command_digest": orchestrator.commands[stage]["verify"].command_digest,
         "verify_exit_status": 0,
     }
-    if any(value.get(key) != expected_value for key, expected_value in expected.items()):
+    if any(
+        value.get(key) != expected_value for key, expected_value in expected.items()
+    ):
         raise WorkflowVerificationError(f"{stage} stage receipt identity is stale")
     mode = value.get("execution_mode")
     run_executed = value.get("run_command_executed")
@@ -123,6 +126,10 @@ def _validate_stage_receipt(
     if not valid_execution:
         raise WorkflowVerificationError(
             f"{stage} stage receipt execution provenance is invalid"
+        )
+    if orchestrator.spec.retained_only and mode != "ADOPTED_VERIFIED_EXISTING":
+        raise WorkflowVerificationError(
+            f"{stage} retained receipt claims new execution"
         )
     if not isinstance(value.get("attempt_id"), str) or not value["attempt_id"]:
         raise WorkflowVerificationError(f"{stage} stage receipt attempt is absent")
@@ -143,16 +150,39 @@ def _validate_stage_receipt(
             raise WorkflowVerificationError(f"{stage} log receipt digest mismatch")
         if log_path.name != name:
             raise WorkflowVerificationError(f"{stage} log receipt name mismatch")
+    if orchestrator.spec.retained_only:
+        stdout_path = Path(logs["verify.stdout.txt"]["path"])
+        evidence = _retained_evidence(
+            orchestrator, stage, stdout_path.read_text(encoding="utf-8")
+        )
+        if value["retained_evidence"] != evidence:
+            raise WorkflowVerificationError(
+                f"{stage} retained evidence differs from sealed log"
+            )
     return {
         "path": str(path),
         "sha256": receipt.sha256,
         "execution_mode": mode,
+        **(
+            {"retained_evidence": value["retained_evidence"]}
+            if orchestrator.spec.retained_only
+            else {}
+        ),
         **(
             {"verified_run_dir": value["verified_run_dir"]}
             if "verified_run_dir" in value
             else {}
         ),
     }
+
+
+def _retained_evidence(orchestrator, stage, stdout):
+    try:
+        return retained_stage_evidence(orchestrator.spec, stage, stdout)
+    except (WorkflowSchemaError, TypeError, ValueError) as exc:
+        raise WorkflowVerificationError(
+            f"{stage} retained verifier evidence rejected"
+        ) from exc
 
 
 def verify_workflow(orchestrator: WorkflowOrchestrator) -> dict[str, Any]:
@@ -188,6 +218,12 @@ def verify_workflow(orchestrator: WorkflowOrchestrator) -> dict[str, Any]:
         verifier = orchestrator.runner(orchestrator.commands[stage]["verify"])
         if verifier.exit_status != 0:
             raise WorkflowVerificationError(f"stage verifier failed: {stage}")
+        if orchestrator.spec.retained_only:
+            replay = _retained_evidence(orchestrator, stage, verifier.stdout)
+            if wrapper is None or wrapper["retained_evidence"] != replay:
+                raise WorkflowVerificationError(
+                    f"{stage} retained replay differs from adopted evidence"
+                )
         stage_receipts.append(
             {
                 "stage": stage,
@@ -204,9 +240,10 @@ def verify_workflow(orchestrator: WorkflowOrchestrator) -> dict[str, Any]:
     consumed = manifests.get("index_window_manifest")
     if cohort is None or consumed is None:
         raise WorkflowVerificationError("INDEX consumption manifests are incomplete")
-    if cohort.sha256 != consumed.sha256 or Path(cohort.path).resolve() != Path(
-        consumed.path
-    ).resolve():
+    if (
+        cohort.sha256 != consumed.sha256
+        or Path(cohort.path).resolve() != Path(consumed.path).resolve()
+    ):
         raise WorkflowVerificationError(
             "INDEX did not consume the exact verified COHORT manifest"
         )
@@ -220,7 +257,9 @@ def verify_workflow(orchestrator: WorkflowOrchestrator) -> dict[str, Any]:
     )
     body = {
         "schema_version": 1,
-        "status": "PASS_VERIFIED_WORKFLOW",
+        "status": RETAINED_PASS
+        if orchestrator.spec.retained_only
+        else "PASS_VERIFIED_WORKFLOW",
         "workflow_id": orchestrator.spec.workflow_id,
         "run_key": orchestrator.run_key,
         "contract_digest": orchestrator.spec.contract_digest,
@@ -234,6 +273,15 @@ def verify_workflow(orchestrator: WorkflowOrchestrator) -> dict[str, Any]:
             "metrics_transcribed": False,
             "outcomes_interpreted": False,
             "index_consumption_manifest_exact_match": True,
+            **(
+                {
+                    "verification_scope": "RETAINED_EVIDENCE_ONLY",
+                    "full_workflow_verified": False,
+                    "new_scientific_run_executed": False,
+                }
+                if orchestrator.spec.retained_only
+                else {}
+            ),
         },
     }
     release = {**body, "receipt_digest": canonical_json_sha256(body)}
@@ -256,6 +304,24 @@ def verify_release_receipt(path: Path) -> dict[str, Any]:
     declared = body.pop("receipt_digest", None)
     if declared != canonical_json_sha256(body):
         raise WorkflowVerificationError("workflow release receipt digest mismatch")
-    if value.get("status") != "PASS_VERIFIED_WORKFLOW":
+    if not isinstance(value.get("status"), str) or value["status"] not in {
+        "PASS_VERIFIED_WORKFLOW",
+        RETAINED_PASS,
+    }:
         raise WorkflowVerificationError("workflow release receipt is not PASS")
+    boundary = value.get("scientific_boundary", {})
+    if not isinstance(boundary, Mapping):
+        raise WorkflowVerificationError("workflow receipt boundary is malformed")
+    if value["status"] == RETAINED_PASS:
+        if (
+            boundary.get("verification_scope") != "RETAINED_EVIDENCE_ONLY"
+            or boundary.get("full_workflow_verified") is not False
+            or boundary.get("new_scientific_run_executed") is not False
+            or boundary.get("stage_execution_modes") != ["ADOPTED_VERIFIED_EXISTING"]
+        ):
+            raise WorkflowVerificationError("retained workflow receipt scope changed")
+    elif "verification_scope" in boundary:
+        raise WorkflowVerificationError(
+            "retained evidence cannot claim full workflow PASS"
+        )
     return value
