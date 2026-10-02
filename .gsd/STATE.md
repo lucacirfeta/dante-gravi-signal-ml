@@ -1,4 +1,21 @@
 ## Current Position
+- **Native upstream persistent-lock extension verified (2026-10-02)**: Author
+  `preocedi` approves 08.17. Source freeze cdca437; unchanged shared O_RDONLY
+  flock protocol now held through SCAN/COHORT/INDEX/RESCORE parent replay and final
+  binding/guard/source checks. Calibration/non-cooperative guards remain strict.
+  28 new tests; WSL broad1020 PASS/7 skips/11 warnings/exit0/457.84s; Windows broad
+  544 PASS/454 skips/exit0/171.08s plus helper1 PASS/7 skips/exit0. Post-freeze
+  WSL18 PASS; Windows11 PASS/7 skips, exits0. Ruff PASS; 18 files exact Git,
+  47 PEM bindings, old three EOL qualifications and science sources unchanged.
+  Actual retained coincidence retry once, all9 explicit roots+driver-only flag,
+  session93544 observed OS exit1: SQLite transaction sidecar refusal. All12 marker
+  bytes/metadata unchanged. Read-only diagnosis9582 exit0: SCAN8f0424e DB SHA
+  matches frozen summary, WAL0 bytes/SHM32768 bytes, no Linux scientific Python
+  or fuser owner observed. No global quiescence or sidecar waiver inferred.
+  STOP for author choice on isolated receipt-bound DB copy or canonical clean
+  export; neither implemented. No SQLite open/checkpoint/delete/second retry,
+  real-chain/full-workflow certificate, snapshot, fetch/new measures, push/main.
+  User folders preserved; see 08-17 docs and new SQLite blocker checkpoint.
 - **Explicit retained-only driver waiver implemented (2026-10-01)**: Author
   `lascia perdere la versione nvidia` resolves the 08.15 runtime decision.
   Phase 08.16 source freeze e9a256a; separate policy/helper, explicit opt-in only

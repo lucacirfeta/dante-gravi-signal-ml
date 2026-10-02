@@ -1,5 +1,27 @@
 # DANTE v6 execution journal
 
+## 2026-10-02 - Approved native upstream read-only flock extension
+
+- Author `preocedi`: 08.17 source freeze cdca437, shared unchanged O_RDONLY
+  flock helper; SCAN/COHORT/INDEX/RESCORE markers acquired and held through all
+  parent/final checks. No PID stale inference, creation, deletion or repair.
+  Calibration and generic initial guards strict. Existing downstream protocols
+  unchanged. Explicit ExitStack wiring and source closure47 PEM bindings.
+- 28 new tests. WSL broad1020 PASS/7 skips/11 warnings/exit0/457.84s; Windows
+  broad544 PASS/454 skips/exit0/171.08s plus separate helper1 PASS/7 skips/exit0.
+  Post-freeze WSL18 PASS/exit0/3.84s, Windows11 PASS/7 skips/exit0/2.08s; Ruff PASS.
+  Source commit18 files byte-exact Git. Scientific diff empty; inherited exact
+  LF-to-CRLF qualifications preserved. Synthetic fixture/cardinality repairs only.
+- Actual retained coincidence retry once after freeze, session93544 OS exit1,
+  all9 roots explicit and approved driver waiver. Independent SQLite sidecar
+  refusal; all12 marker bytes/metadata unchanged, stderr empty. Diagnostic9582
+  OS exit0: contract-derived SCAN8f0424e, sealed summary/DB SHA match, WAL0 bytes/
+  SHM32768 bytes; no Linux scientific Python/fuser owner observed. No global
+  quiescence/sidecar exception inferred, no SQLite open/checkpoint/delete/retry.
+  STOP for new isolated receipt-bound input versus canonical clean export choice.
+  No historic writes, capture, fresh scorer/sensor/null, push/main or full-chain
+  certificate. User folders intact; scoped lock increment complete only.
+
 ## 2026-10-01 - Explicit retained driver waiver; independent parent lock blocker
 
 - Author `lascia perdere la versione nvidia`: 08.16 source freeze e9a256a,
