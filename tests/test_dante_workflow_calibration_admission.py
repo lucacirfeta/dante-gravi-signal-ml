@@ -17,6 +17,7 @@ from tests.test_dante_workflow_calibration_recovery import case  # noqa: F401
 def admitted_case(case, tmp_path, monkeypatch):  # noqa: F811
     root, _, initial, checksums, download = case
     plan = deepcopy(initial)
+    plan["parent"]["seal_field"] = "protocol_digest"
     plan["historical_receipt"]["manifest_digest"] = "synthetic historical seal"
     oldpath = Path(plan["historical_receipt_path"])
     oldpath.write_text(json.dumps(plan["historical_receipt"]))
@@ -145,6 +146,15 @@ def test_changed_policy_refused(admitted_case, field, value):
     with pytest.raises((ValueError, recovery.RecoveryError)):
         create(c)
     assert not c.output.exists()
+
+
+def test_parent_requires_exact_seal_field(admitted_case):
+    c = admitted_case
+    c.policy["parent"].pop("seal_field")
+    c.policy_path.write_text(json.dumps(c.policy))
+    c.kwargs["policy_sha"] = recovery._hash(c.policy_path)
+    with pytest.raises(InputCoverageError, match="parent/population"):
+        create(c)
 
 
 @pytest.mark.parametrize(

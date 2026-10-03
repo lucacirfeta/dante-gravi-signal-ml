@@ -5,6 +5,7 @@
   "historical_receipt_sha256": "4f0732510604583e8a02827d3172e337cedd714ed3e8d3b86dfaac6c17b7fe78",
   "parent": {
     "path": "config/dante_o4a_corrected_protocol_v4.json",
+    "seal_field": "protocol_digest",
     "seal": "326495389f511b378c52b2a99f7771bd13d87d6852d4191a4f0fb61d6842d4fa",
     "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
   },
