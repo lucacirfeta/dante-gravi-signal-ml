@@ -1,5 +1,29 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Driver policy and bounded fresh scoring gate08.31
+
+- Author updates drivers frequently;`procedi` resolves08.30 with new separate
+  qualification,not alteration of old runtime/retained waiver. Sourcea0344a1
+  before actual GPU measurement. Driver metadata disclosed,other fields exact,
+  both seals valid,per-invocation runtime stable;fresh numerical receipt required.
+- Checkout69168 and installed39683 observed OSexit0,all28=18H1+10L1. Full08.29
+  preprocessing reverified;offline original encoder/index/scorer,configured K/batch.
+  Exact direct-forward tokens;independent CPU formula maxerror4.1391923610856196e-8
+  within existing2e-7/rtol0. No threshold fit/label/candidate/fullcalibration/O4b.
+- Receipts byte-identical SHAe8aa81d7...,seal03617f6d.... Fresh persistent wheel
+  /home/atafe/dante-score-install-UpilYg,43 source matches. Explicit reused
+  scientific dependencies/checkout,not full isolation. Stderr3xFormers warnings.
+-49 targeted,host279/WSL279/post-freezeWSL102 PASS,11 upstream warnings,RuffPASS.
+  Initial WSL278PASS/1packagingFAIL during concurrent STATE edit;unchanged stable
+  isolated/full regressionPASS. Initial wheel emptypath failure before install
+  corrected with literal path,not permission/dependency changes.
+- SourceGit16audit:8exact,7exactLF->CRLF,1exact mixedEOL reconstruction.
+  data_loader preserves bareLF lines16,82,94,95,96,97,146,164,165,166;unchanged
+ 08.29 SHA,not normalized and no hash comparator weakened. All historical
+  receipts/source/policy/methods unchanged. Local commits only,no push/main.
+- Next productive admission/runtime/full calibration/native/writer qualification
+  and other-run/V1 gates;O4b dedicated contracts after readiness.O3a stays closed.
+
 ## 2026-10-03 - Fresh scoring runtime decision checkpoint08.30
 
 - Author `procedi` after08.29. Strict actual WSL preflight exit1

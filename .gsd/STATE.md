@@ -1,15 +1,23 @@
 ## Current Position
-- **Driver policy authorized; bounded scoring gate implemented (2026-10-03)**:
+- **Bounded fresh scoring/install gate PASS (2026-10-03)**:
   Author frequent-driver-update instruction and `procedi` resolve08.30 decision.
   08.31 new opt-in config/module, original strict runtime and retained-only O3a
   waiver unchanged. Driver recorded, other runtime fields exact, observed
   fingerprint stable; fresh28-context numerical gate required, no historical
   score/threshold/shard reuse or productive promotion. Offline original encoder/
   primary index, exact direct-forward tokens and independent float64 scoring
-  oracle using existing performance-v2 tolerance.49 targeted synthetic tests PASS;
-  Windows279 PASS,WSL279 PASS/11 upstream warnings,Ruff PASS. Initial WSL packaging
-  identity race while STATE was edited resolved by unchanged stable-tree rerun;
-  original comparison untouched. Source freeze and checkout/install replay pending.
+  oracle using existing performance-v2 tolerance.Sourcea0344a1 BEFORE measurement;
+  checkout69168 /installed39683 observed OSexit0,28/28 exact direct-forward tokens,
+  maxformulaerror4.1391923610856196e-8 vs2e-7/rtol0. Entire receipts byte-identical,
+  SHAe8aa81d7...,seal03617f6d.... Fresh wheel/venv43 source matches;explicit reused
+  science checkout/dependencies,NOT full isolation.49 targeted/host279/WSL279/
+  post-freezeWSL102 PASS,11 upstream warnings,Ruff PASS. Initial packaging race
+  during STATE edit resolved by unchanged stable-tree rerun;wheel path error
+  before installation corrected with literal path.16-sourceGit audit:8exact,
+  7LF->CRLF,1 mixedEOL exact;data_loader unchanged08.29 pin,no source normalization.
+  Original historical driver test/waiver/strict contracts untouched,not blanketPASS.
+  Next productive provider/runtime integration and full calibration/native
+  qualification;other-run/V1/clean science deployment/O4b dedicated gates OPEN.
   No O4b launch/full calibration, driver/dependency modification, push/main.
 - **Bounded scoring integration BLOCKED before measurement (2026-10-03)**:
   Author `procedi` after08.29;08.30 strict actual WSLruntime preflight exit1/
