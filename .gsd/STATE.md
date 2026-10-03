@@ -1,4 +1,19 @@
 ## Current Position
+- **Bounded admitted-context numerical/install replay PASS (2026-10-03)**:
+  Author `procedi`,08.29 source566ef46. Separate provider -> existing
+  CompleteContext -> unchanged PatchProducer;all28 contexts18H1+10L1 exact
+  native samples and images vs direct official frame slices. Checkout63145
+  and installed79989 observed OSexit0;both receiptSHAa930a8c9...,sealfcc570a5...
+  identical. Fresh wheel/venv outside checkout,42 installedsource matches;
+  explicit reused scientific deps/system-site-packages,NOT fully isolated runtime.
+  Windows230/WSL230 PASS,post-freezeWSL53 PASS,11upstream warnings,Ruff2files
+  PASS. Initial /tmp launch exit1 beforePython afterWSLrestart,tmpfs diagnosed;
+  persistent /home installation passed,no comparator/input/parameter changes.
+  Oldreceipt,parent,10recovery+3admissionsources unchanged;no production factory,
+  scores,encoder/calibration run,NVIDIA,push/main/release/userfolder changes.
+  Next bounded encoder/index/scorer integration and independent replay;full
+  calibration/runtime/productive admission and other-run/V1 gates still OPEN.
+  O4b after full readiness and dedicated contracts;O3a stays closed.
 - **Explicit recovery admission PASS (2026-10-03)**: Author accepts A after08.27;
   08.28 source58f7489,policy exact-parent correction70b0a15. New separate
   receipt admission_20261003_v1.json,seal5910f65a...,SHAb17d6388...;creation93171

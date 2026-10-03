@@ -1,5 +1,24 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Bounded context consumer/install replay08.29
+
+- Author `procedi`;source566ef46,separate admitted provider,no frozen reader
+  factory or scientific source modification. Exact contexts -> CompleteContext
+  -> unchanged PatchProducer;parent-derived geometry/default parity checked.
+- Actual checkout63145 OSexit0,installed79989 OSexit0:28 raw/image comparisons
+  exact,18H1+10L1. BothfilesSHAa930a8c9af1809afad35b620f570657674cdd548d3bc4e2955f35a8c77dd3783,
+  sealfcc570a5077bf76d3e64781ae40160a7cf848b5ee2b9f7e1e83404a5dcaacd4f.
+  Installed42 Pythonfiles byte-identical;explicit scientific dependency reuse.
+- Initial installedlaunch exit1 beforePython,/tmp lostafterWSLrestart,tmpfs
+  confirmed. New persistentfresh /home/atafe installation passed;no numerical
+  rerun of checkout,no scientific/provenance bypass. WheelSHA5afffdc02c...
+- Windows230 PASS23.07s,WSL230 PASS45.85s,post-freezeWSL53 PASS34.46s,11upstream
+  warnings,Ruff2filesPASS.10recovery+3admission sourcepins and historical parent/
+  manifest unchanged. Local commits only,userfolders/historicalruns preserved.
+- Scoped input/preprocessing/installation gate only,no encoder/scorer/full
+  calibration or all-run/V1 claim. Next bounded encoder/index/scorer numerical
+  integration;O4b notstarted,O3a closed,no production activation,push/main.
+
 ## 2026-10-03 - Explicit numerical-parity recovery admission08.28
 
 - Author accepts A,new receipt instead of rewriting old hashes. Source58f7489,
