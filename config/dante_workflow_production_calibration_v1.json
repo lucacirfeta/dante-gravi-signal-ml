@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "status": "AUTHOR_APPROVED_ISOLATED_CALIBRATION_PROFILE_V1",
+  "authorization": "2026-10-03 option A: separate productive profile, unchanged scientific method",
+  "workflow_parent": {
+    "path": "config/dante_workflow_productization_v1.json",
+    "sha256": "7148db11ea455ff97319ac763ca420874711d3e5dcaea6f7968f85df01a75e06"
+  },
+  "protocol_parent": {
+    "path": "config/dante_o4a_corrected_protocol_v4.json",
+    "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+  },
+  "qualification_policy": {
+    "path": "config/dante_workflow_scoring_replay_v1.json",
+    "sha256": "9872579247010031d00d93b66d807d28b0c7f129aa5897c3193d3165c252fee6"
+  },
+  "admission_sha256": "b17d6388ff888d2b0bd332e1c993b56e83ac0c62d53e62a54d0f01e3d09de6f1",
+  "qualification_sha256": "e8aa81d70d3418f6c49b6f562380a47f6d98a7d4f8abf30c2819c4d63e77c513",
+  "source_paths": [
+    "src/dante_workflow/production_calibration.py",
+    "scripts/preflight_dante_workflow_production_calibration.py",
+    "src/dante_workflow/calibration_admission.py",
+    "src/dante_workflow/calibration_contexts.py",
+    "src/dante_workflow/calibration_inputs.py",
+    "src/dante_workflow/calibration_recovery.py",
+    "src/dante_workflow/schema.py",
+    "src/dante_workflow/adapters/o4a_corrected.py",
+    "src/dante_workflow/scoring_replay.py",
+    "src/core/patch_producer.py",
+    "src/dante_light/o4a_corrected_execution.py"
+  ],
+  "input_rule": "all calibration identities; exact admitted gaps, otherwise frozen manifest only; no hash-error fallback",
+  "copy_rule": "one existing copy per required logical span; every existing copy must match frozen SHA and size",
+  "runtime_rule": "fresh numerical receipt at exact observed runtime; driver metadata recorded, not fixed-version gate",
+  "scientific_rules": "inherit protocol population, geometry, execution parameters, per-session-detector p99 and historical full-context replay without modification",
+  "output_namespace": "production_calibration_v1",
+  "historical_output_writes_allowed": false,
+  "historical_shard_or_threshold_reuse_allowed": false,
+  "boundary": {
+    "preflight_and_provider_only": true,
+    "full_calibration_verified": false,
+    "candidate_scan_allowed": false,
+    "o4b_launch_allowed": false,
+    "legacy_workflow_redirected": false
+  }
+}
