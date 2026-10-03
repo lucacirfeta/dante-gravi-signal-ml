@@ -324,6 +324,10 @@ def preflight(
         raise InputCoverageError("productive numerical qualification parent mismatch")
     for path, sha in qualified["source_hashes"].items():
         _pinned(_file(root, path), sha)
+    for role, ref in qualified["parents"].items():
+        if policy.get(role) != ref:
+            raise InputCoverageError("qualified scientific parent differs from policy")
+        _pinned(_file(root, ref["path"]), ref["sha256"])
     frozen = strict_json_object(
         _file(root, policy["runtime_parent"]["path"]).read_text(),
         label="frozen runtime",
@@ -379,7 +383,8 @@ def preflight(
         "input_bytes_ready": ready,
         "scientific_execution_ready": False,
         "raw_manifest_samples_replayed": False,
-        "score_values_read": False,
+        "historical_calibration_score_values_read": False,
+        "verified_bounded_gate_receipt_loaded": True,
         "historical_scores_or_thresholds_reused": False,
         "writer_exclusion_established": False,
         "remaining_gates": [

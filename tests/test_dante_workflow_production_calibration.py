@@ -444,7 +444,8 @@ def preflight_case(manifest_case, population, monkeypatch):
     policy_path.write_text("{}")
     qp = {"path": policy_path.name, "sha256": _hash(policy_path)}
     policy = {
-        "runtime_parent": {"path": runtime.name},
+        "protocol_parent": parent,
+        "runtime_parent": {"path": runtime.name, "sha256": _hash(runtime)},
         "boundary": {"full_calibration_or_workflow_verified": False},
     }
     qualified = sealed(
@@ -512,7 +513,8 @@ def test_preflight_integrates_real_inventory_and_bound_receipts(preflight_case):
     assert result["admitted_context_count"] == 1
     assert result["physical_input_audit"]["verified_physical_copy_count"] == 1
     assert result["scientific_execution_ready"] is False
-    assert result["score_values_read"] is False
+    assert result["historical_calibration_score_values_read"] is False
+    assert result["verified_bounded_gate_receipt_loaded"] is True
     assert gate.preflight(**c.args) == result
     c.c.first.unlink()
     blocked = gate.preflight(**c.args)
