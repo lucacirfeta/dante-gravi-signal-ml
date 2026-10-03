@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "AUTHOR_APPROVED_BOUNDED_FRESH_SCORING_REPLAY_V1",
+  "author_authorization": {
+    "date": "2026-10-03",
+    "scope": "new_bounded_encoder_index_scorer_gate_only",
+    "driver_updates_are_not_an_identity_only_blocker": true
+  },
+  "ignored_metadata_fields": ["cuda_device.driver_version"],
+  "other_runtime_fields": "exact_frozen_equality_after_validated_digest_normalization",
+  "during_replay_runtime": "exact_observed_fingerprint_stability",
+  "decision_labels": "disabled_and_discarded_infinite_api_placeholder_not_a_scientific_threshold",
+  "token_comparison": "exact_same_runtime_bytes_independent_forward",
+  "score_comparison": "independent_numpy_float64_cosine_top_k_mean",
+  "tolerance_parent": {
+    "path": "config/dante_o4a_corrected_performance_v2.json",
+    "sha256": "43051157263ac491b191f35dfb0b13821ce71754c0dc77910727f7dbc3e954cc"
+  },
+  "protocol_parent": {
+    "path": "config/dante_o4a_corrected_protocol_v4.json",
+    "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+  },
+  "runtime_parent": {
+    "path": "config/dante_o4a_corrected_runtime_v1.json",
+    "sha256": "a28adee4850a288ab5e532bb1ba48d5efe5fc3a50493320934c793f1190f6cb2"
+  },
+  "artifact_manifest": {
+    "path": "config/reference_artifacts.json",
+    "sha256": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+  },
+  "admission_sha256": "b17d6388ff888d2b0bd332e1c993b56e83ac0c62d53e62a54d0f01e3d09de6f1",
+  "preprocessing_receipt_sha256": "a930a8c9af1809afad35b620f570657674cdd548d3bc4e2955f35a8c77dd3783",
+  "source_paths": [
+    "src/dante_workflow/scoring_replay.py",
+    "src/dante_workflow/calibration_contexts.py",
+    "src/core/patch_producer.py",
+    "src/core/preprocessor.py",
+    "src/core/utils.py",
+    "src/core/data_loader.py",
+    "src/core/encoder.py",
+    "src/core/patch_scorer.py",
+    "src/core/model_loader.py",
+    "src/core/artifact_manifest.py",
+    "src/core/index_contract.py",
+    "src/dante_light/o4a_corrected_runtime.py",
+    "src/dante_light/contracts.py",
+    "config.yaml"
+  ],
+  "boundary": {
+    "productive_runtime_contract_changed": false,
+    "historical_driver_score_equivalence_proved": false,
+    "historical_threshold_or_shard_reuse_allowed": false,
+    "threshold_fit_or_classification_allowed": false,
+    "full_calibration_or_workflow_verified": false,
+    "o4b_launch_allowed": false
+  }
+}

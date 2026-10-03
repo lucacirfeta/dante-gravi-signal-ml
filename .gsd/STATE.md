@@ -1,4 +1,16 @@
 ## Current Position
+- **Driver policy authorized; bounded scoring gate implemented (2026-10-03)**:
+  Author frequent-driver-update instruction and `procedi` resolve08.30 decision.
+  08.31 new opt-in config/module, original strict runtime and retained-only O3a
+  waiver unchanged. Driver recorded, other runtime fields exact, observed
+  fingerprint stable; fresh28-context numerical gate required, no historical
+  score/threshold/shard reuse or productive promotion. Offline original encoder/
+  primary index, exact direct-forward tokens and independent float64 scoring
+  oracle using existing performance-v2 tolerance.49 targeted synthetic tests PASS;
+  Windows279 PASS,WSL279 PASS/11 upstream warnings,Ruff PASS. Initial WSL packaging
+  identity race while STATE was edited resolved by unchanged stable-tree rerun;
+  original comparison untouched. Source freeze and checkout/install replay pending.
+  No O4b launch/full calibration, driver/dependency modification, push/main.
 - **Bounded scoring integration BLOCKED before measurement (2026-10-03)**:
   Author `procedi` after08.29;08.30 strict actual WSLruntime preflight exit1/
   STOP_ENVIRONMENT_MISMATCH. Read-only diagnosis exit0:driver610.74->617.14
