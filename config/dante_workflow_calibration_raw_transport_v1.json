@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "status": "TRANSPORT_METADATA_ONLY_V1",
+  "production_profile": {
+    "path": "config/dante_workflow_production_calibration_v1.json",
+    "sha256": "df3df74b8098fbd520180b1fd044fc55eade7d447c4a2af0b999a6604c4e12e2"
+  },
+  "blocked_preflight_sha256": "abdd416efda8e93b6140ad895c691a40a8b4a29ab414801b83b6a7455fc8f170",
+  "candidate_dataset": "O4a_4KHZ_R1",
+  "dataset_reason": "Same explicitly named candidate as the earlier 28-context transport check; historical release equivalence is NOT inferred",
+  "metadata_bucket_s": 1000000,
+  "bucket_role": "HTTP batching only; no change to required intervals or scientific population",
+  "source_paths": [
+    "src/dante_workflow/calibration_raw_transport.py",
+    "scripts/plan_dante_workflow_calibration_raw_transport.py",
+    "src/dante_workflow/calibration_transport.py",
+    "src/dante_workflow/calibration_recovery.py"
+  ],
+  "boundary": {
+    "metadata_only": true,
+    "raw_download_allowed": false,
+    "replacement_bytes_admitted": false,
+    "historical_release_equivalence_checked": false,
+    "scientific_execution_ready": false
+  }
+}
