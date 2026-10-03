@@ -1,4 +1,17 @@
 ## Current Position
+- **Bounded scoring integration BLOCKED before measurement (2026-10-03)**:
+  Author `procedi` after08.29;08.30 strict actual WSLruntime preflight exit1/
+  STOP_ENVIRONMENT_MISMATCH. Read-only diagnosis exit0:driver610.74->617.14
+  only non-derived difference;currentdigest1712a646...,frozensha48c20ee7....
+  Existing provenanceamendment616.92 also rejected;unchanged runtime suite
+  4 PASS/1 FAIL,OSexit1/10.52s,no weakening/skipping. Offline original weights/
+  DINO source/primary index SHA verified,exit0,no model inference or score.
+  Retained-only O3a waiver explicitlyfresh_scoring=false,cannot extend implicitly.
+  STOP for author A:separate versioned current-runtime qualification for NEW
+  bounded integration,history/methods unchanged,no equivalence/threshold/shard
+  reuse or production/O4b activation;or B:restore selected historicalruntime.
+  No scientific code/config/driver/history/userfolder change,push/main.08.29
+  scoped preprocessing/installPASS remains valid;08.30 not completed.
 - **Bounded admitted-context numerical/install replay PASS (2026-10-03)**:
   Author `procedi`,08.29 source566ef46. Separate provider -> existing
   CompleteContext -> unchanged PatchProducer;all28 contexts18H1+10L1 exact

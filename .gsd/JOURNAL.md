@@ -1,5 +1,21 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Fresh scoring runtime decision checkpoint08.30
+
+- Author `procedi` after08.29. Strict actual WSL preflight exit1
+  STOP_ENVIRONMENT_MISMATCH before score/inference. Diagnosisexit0:onlydriver
+  610.74->617.14 plus deriveddigest,frozen48c20ee7...,observed1712a646....
+  Existing amendment616.92 also fails current validation. Originalruntime
+  suite4 PASS/1 FAIL,OSexit1/10.52s,no editedtest or relaxed comparator.
+- Offline artifactsinspectionexit0:weightsf4331770...,DINOsourceca377bf2...,
+  primaryindex9053477e... matchfrozenprotocol,available locally,no download.
+  Diagnostic API keyword/argument typos corrected,not scientific code.
+- Existing O3aretaineddriver waiver does NOT authorizefreshscoring. Stopped
+  for A:new separate current-runtime qualification for bounded integration,
+  not driver equivalence/historythreshold reuse;or B:restore frozenenvironment.
+  Documentation-only checkpoint,plan incomplete,no harness/outcome/fresh score,
+  scientific/runtime/NVIDIA change,O3a reopening,O4b launch,push/main/release.
+
 ## 2026-10-03 - Bounded context consumer/install replay08.29
 
 - Author `procedi`;source566ef46,separate admitted provider,no frozen reader
