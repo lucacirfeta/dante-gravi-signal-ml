@@ -1,0 +1,10 @@
+{
+  "container_match_count": 0,
+  "digest": "c03856b9052632629ab315b3d3d66cdc4c6fab6d12a569a8ed9fbdecdb5b013d",
+  "interval_count": 28,
+  "replacement_bytes_admitted": false,
+  "run_digest": "b1fddd1a249a4291342f9983e2dd0002cdbfd279d8083862370300bb9938ec74",
+  "scientific_execution_ready": false,
+  "status": "PASS_VERIFIED_RAW_NUMERIC_MATCH_ONLY",
+  "verification_was_second_fetch": false
+}

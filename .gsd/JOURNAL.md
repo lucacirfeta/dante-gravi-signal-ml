@@ -1,5 +1,28 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Authorized isolated calibration recovery; admission gate
+
+- Author `procedi` authorizes acquisition and wants O4b next after correct common
+  pipeline readiness.08.27 source71c9f5e;explicit new external recovery_20261003,
+  frozen28 interval set/metadata report/old receipt SHA,parent and10sourceSHA.
+- One WSL sequential acquisition of official O4a_4KHZ_R1 HDF5,official MD5,
+  exact native float64 detector/grid/shape/slice/count/finite/rawSHA checks.
+  New container/receipt per context;preserve old runs/no automatic resume.
+  Acquisition exec90363 exit0;one standalone offline verifier exec47968 exit0,
+  no second source fetch. Both stderr empty,no failure/partial/lock.
+- Verified28/28 numerical SHA matches,0/28 containerSHA matches;28frames,
+  28contexts/receipts. Sourceframes2,637,791,038bytes,contexts35,421,936bytes.
+  Runseal b1fddd1a249a4291342f9983e2dd0002cdbfd279d8083862370300bb9938ec74;
+  verifyseal c03856b9052632629ab315b3d3d66cdc4c6fab6d12a569a8ed9fbdecdb5b013d.
+- Windows150 PASS/16.62s,WSL150 PASS/13.23s,post-freezeWSL14 PASS/2.86s,
+  OSexit0;Ruff3 files PASS,11 upstream WSL warnings. Initial helper import and
+  multiline lint exemption fixed pre-freeze,retested,no bypass. Original
+  science/config/qualified EOL SHA unchanged;no NVIDIA/runtime changes.
+- STOP per executor/scientific boundary before new receipt admission:exact raw
+  parity is proven,whole-container provenance differs. Recommend reviewed new
+  receipt preserving historical pins,not silently editing old file hashes.
+  No calibration/scoring/O3a reopening/O4b activation,push/main/release.
+
 ## 2026-10-02 - Missing calibration transport metadata preflight
 
 - Author accepts A after08.25;08.26 preflight only. Sourcef9ad376:common utility,

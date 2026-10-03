@@ -1,4 +1,18 @@
 ## Current Position
+- **Raw recovery VERIFIED; admission decision OPEN (2026-10-03)**: Author `procedi` approves
+  acquisition after08.26;08.27 source71c9f5e. Isolated external new run
+  E:/dante_cache/dante_light/o4a_corrected_v2/calibration_reacquisition/recovery_20261003,
+  acquisition and independent offline verifier WSL OSexit0. Full official frame
+  MD5/exact native slice/raw SHA:28/28 numerical matches,0/28 container matches;
+  PASS_VERIFIED_RAW_NUMERIC_MATCH_ONLY,zero failure/partial/lock. Verification
+  sealc03856b9...,runb1fddd1a...;frames2.64GB,contexts35.42MB preserved.
+  Windows150 PASS,WSL150 PASS,post-freezeWSL14 PASS,OSexit0;Ruff3 files PASS.
+  STOP before admission:approve NEW provenance receipt,never old SHA mutation.
+  Local replay NOT a second source fetch. Old receipt/source SHA
+  unchanged,no scientific config/score/calibration/runtime/NVIDIA/O3a change.
+  Author wants O4b NEXT after common pipeline readiness;no activation or legacy
+  held-out bypass. Release/DQ/population/reference/calibration/validation gates
+  still required;no implicit O4a threshold transplant,push/main/release.
 - **Calibration transport metadata preflight PASS (2026-10-02)**:
   Author accepts A,08.26/sourcef9ad376. Exact missing spans from audited frozen
   metadata reader; historical receipt SHA/parent/seals/geometry pinned. Bounded
