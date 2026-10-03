@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "scope": "CALIBRATION_RECOVERED_INPUT_ADMISSION_ONLY",
+  "identity_rule": "EXACT_NATIVE_NUMERICAL_SHA_NEW_CONTAINER_RECEIPT",
+  "historical_receipt_sha256": "4f0732510604583e8a02827d3172e337cedd714ed3e8d3b86dfaac6c17b7fe78",
+  "parent": {
+    "path": "config/dante_o4a_corrected_protocol_v4.json",
+    "seal": "326495389f511b378c52b2a99f7771bd13d87d6852d4191a4f0fb61d6842d4fa",
+    "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+  },
+  "plan_sha256": "d082bee33a74090df974cd1a37f4b4c1741d491b5b34d96bcc5c20ea6cedec38",
+  "summary_sha256": "b0797fbbebee096e7a880fb8da4dc7868d1670e7d805e31bc48b01828817ba1e",
+  "verification_sha256": "2e62742f45b09f967070a0f85da1bfe3e4aa96c6b156931ea326427fc93d5589",
+  "interval_count": 28,
+  "scientific_execution_ready": false
+}

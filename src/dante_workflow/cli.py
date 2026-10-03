@@ -95,6 +95,8 @@ def _parser(
         elif name == "calibration-readiness":
             command.add_argument("--acquisition-manifest", type=Path)
             command.add_argument("--acquisition-sha256")
+            command.add_argument("--recovery-admission", type=Path)
+            command.add_argument("--recovery-admission-sha256")
     return parser
 
 
@@ -174,13 +176,32 @@ def main(
                 else inspect_input_binding
             )
             if args.command == "calibration-readiness":
-                result = inspect_calibration_inputs(
-                    spec,
-                    build_adapter(spec),
-                    root=args.repository_root.resolve(),
-                    acquisition_manifest=args.acquisition_manifest,
-                    acquisition_sha256=args.acquisition_sha256,
-                )
+                if (args.recovery_admission is None) != (
+                    args.recovery_admission_sha256 is None
+                ):
+                    raise ValueError(
+                        "recovery admission path and SHA required together"
+                    )
+                if args.recovery_admission is not None:
+                    if args.acquisition_manifest or args.acquisition_sha256:
+                        raise ValueError("historical and recovery receipts cannot mix")
+                    from .calibration_admission import inspect_admitted_inputs
+
+                    result = inspect_admitted_inputs(
+                        spec,
+                        build_adapter(spec),
+                        root=args.repository_root.resolve(),
+                        receipt_path=args.recovery_admission,
+                        receipt_sha=args.recovery_admission_sha256,
+                    )
+                else:
+                    result = inspect_calibration_inputs(
+                        spec,
+                        build_adapter(spec),
+                        root=args.repository_root.resolve(),
+                        acquisition_manifest=args.acquisition_manifest,
+                        acquisition_sha256=args.acquisition_sha256,
+                    )
             else:
                 result = inspector(
                     spec, build_adapter(spec), root=args.repository_root.resolve()
