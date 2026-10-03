@@ -1,5 +1,24 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Missing raw transport metadata08.33
+
+- Author `procedi`; source116d0ef freezes metadata-only policy/planner/verifier,
+  backup exact-name checks,43 synthetic tests. No legacy/scientific source edits.
+- Final Windows365 PASS/17.82s,WSL365 PASS/47.15s,11 upstream warnings,exit0;
+  Ruff lint/format PASS. Four source bytes and policy exactlymatchGit.
+- Live plan25148/standalone64295 observed OSexit0; all889 logical segments
+  (428H1+461L1) covered by1176 official4096Hz R1 HDF5frames,44hashed snapshots,
+  official MD5 entries. Bothstderr empty,zero failure/partial,local replay only.
+  EvidenceSHA2cb72b09...,seal322e87ca...,external calibration_raw_transport_20261003.
+- Four configured/obvious roots,1843exact candidates each,zero original copies;
+  no indefinite backup hunt. Historical total99.485GiB not networkestimate.
+- Read-only seal audit of existing compact/84shards inventories39971identity/
+  39891unique raw-context hashes; JSON scores parsed for seals but never analyzed
+  or reused. No new native sample comparison or admission is claimed.
+- Executor/verifier enforce3/4 decision checkpoint: new calibration-only exact
+  numerical admission beyond28contexts requires AUTHOR choice,or originalbackup.
+  No raw acquisition/full calibration/O4b/push/main. Historical/userfiles preserved.
+
 ## 2026-10-03 - Isolated productive profile/input boundary08.32
 
 - Author `procwdi` approves option A. Source38dd655 new profile/module/CLI and

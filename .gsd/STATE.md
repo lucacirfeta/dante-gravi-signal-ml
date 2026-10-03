@@ -1,4 +1,18 @@
 ## Current Position
+- **Raw transport metadata PASS; expanded admission awaits author (2026-10-03)**:
+  08.33 source116d0ef,43 targeted/final Windows365/WSL365 PASS,11 upstream warnings,
+  Ruff PASS. Four source bytes and policy matchGit. Live plan25148/standalone64295
+  observed OSexit0,PASS_VERIFIED_PUBLIC_RAW_METADATA_ONLY. All889 missing logical
+  segments428H1+461L1 covered by1176 official4096s HDF5 files,44metadata queries,
+  official MD5 entries; candidate O4a_4KHZ_R1,NOT proof of historical release.
+  Four configured/obvious backup roots,1843exact paths each,zero original copies.
+  EvidenceSHA2cb72b09...,seal322e87ca...,calibration_raw_transport_20261003/metadata_v1.
+  Existing sealed84-shard baseline retains39971identity/39891unique-context rawSHA;
+  no new samples compared or scores reused. Historical99.485GiB is NOT network
+  estimate. No raw download/full calibration/O4b. Next AUTHOR DECISION: extend
+  exact native numerical admission in separate calibration-only contract/new
+  receipts,or provide byte-identical backups. Current28-key/original-container
+  rule unchanged; all-run certification OPEN. Local only,user/history preserved.
 - **Isolated productive input boundary implemented; full calibration BLOCKED (2026-10-03)**:
   Author approves A with `procwdi`.08.32 sources38dd655/86b9585: separate profile,
   namespace and exact-admission/original-manifest provider; no legacy CLI/global
