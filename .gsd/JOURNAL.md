@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Expanded exact-native calibration admission08.34
+
+- Author `procedi` approves separate calibration-only exact numerical admission;
+  no rewrite of old manifest/admission or productive/default integration.
+- Source745366c freezes new policy/module/CLI/69tests/PLAN and LF attributes
+  only for new config/test. No changes to scientific constants or protected EOL.
+- Entire workflow suite observed OSexit0: host1014 PASS/508skip/179.70s;
+  WSL1515 PASS/7skip/570.55s,11 upstream warnings. Post-freeze126 PASS/5.82s,
+  Ruff lint/format PASS.17source bytes+policy matchGit exactly.
+- Plan23452 observed OSexit0/stderr empty;SHA288f4bb0...,seala19a39a5...,
+  all39971identities,39863new+28prior contexts,707neededframes. Exact identity
+  population unchanged; transport reduced from1176 full-coverage candidates.
+  Payload52249231360bytes;free657227755520 > worst-case432890707968bytes.
+- One run4883 started after zero-controller check, exact plan pin and disk guard;
+  external calibration_expanded_admission_20261003 with separate logs. No run
+  completion/exit or actual native comparison/admission PASS yet. Fail-closed direct native
+  matching and independent local GWPy verification/admission require actual
+  execution evidence; no full calibration/scoring/O4b/scientific readiness.
+- Manifest, prior28contexts, historic evidence and unrelated user files preserved;
+  local commits only, no push/main or automatic failure resume.
+
 ## 2026-10-03 - Missing raw transport metadata08.33
 
 - Author `procedi`; source116d0ef freezes metadata-only policy/planner/verifier,

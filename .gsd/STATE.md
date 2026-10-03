@@ -1,4 +1,19 @@
 ## Current Position
+- **Expanded calibration-only native admission approved; recovery started (2026-10-03)**:
+  Author `procedi` resolves08.33 decision, original manifest/28-key admission/
+  productive profile/default runner immutable.08.34 source745366c: separate
+  policy, exact native half-open raw recovery, independent GWPy replay and new
+  admission receipt; no resampling, scores/thresholds/population change or reuse.
+  69 targeted PASS; full Windows1014 PASS/508skip and WSL1515 PASS/7skip,
+  11 upstream warnings,observed OSexit0; post-freeze126 PASS,Ruff PASS.
+  17sources+policy byte-exactGit. Plan23452 observed OSexit0/SHA288f4bb0...,
+  seal a19a39a5...;39971identities/39891contexts,39863new+28prior,707frames.
+  Payload52249231360bytes;available657227755520 > conservative432890707968.
+  One run4883 started, external calibration_expanded_admission_20261003/
+  prepared_v1/recovery; source freeze/pins immutable,no completion claim yet.
+  Remaining raw matching/standalone verify/admit, then separate productive
+  provider/full-context validity/full fresh calibration gates. O3a closed,
+  all-run certification OPEN,O4b not launched,no push/main/history changes.
 - **Raw transport metadata PASS; expanded admission awaits author (2026-10-03)**:
   08.33 source116d0ef,43 targeted/final Windows365/WSL365 PASS,11 upstream warnings,
   Ruff PASS. Four source bytes and policy matchGit. Live plan25148/standalone64295
