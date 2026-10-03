@@ -1,5 +1,27 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Isolated productive profile/input boundary08.32
+
+- Author `procwdi` approves option A. Source38dd655 new profile/module/CLI and
+ 48 synthetic tests;86b9585 before final preflight binds all qualified scientific
+ parent pins and distinguishes historical HDF5 scores (unread) from loaded
+ verified bounded-gate JSON. Old diagnostics/receipts never overwritten.
+- Host322 PASS/16.02s,WSL322 PASS/45.75s,post-freezeWSL145 PASS/9.71s,OSexit0;
+ 11 upstream warnings,Ruff lint/format3files PASS viaWSL. HostRuff unavailable.
+ 11 source bytes exactly matchGit86b9585;legacy runtime/core EOL qualifiers intact.
+- Actual final preflight7600/standalone31769 OSexit2,BLOCKED_PRODUCTIVE_RAW_FILES,
+ exact sealed reportSHAabdd416e....39971 identities,39891 unique padded contexts;
+ 28 already admitted,39863 normal unique contexts;889 required raw segments
+ 428H1+461L1 all unavailable atE:/o4a,0 physical copies/covered normal contexts.
+ ObviousSept18 output archive also0 copies. Declaredminimum99.485GiB is old
+ storage size,not currenttransfer estimate;no download or broad drive search.
+- Preserved initial38dd655 report/verify exits2;new namespaceonly. Generic score
+ flag clarified,all frozenmethod/gate/tolerance/populationunchanged. No legacy
+ runner/output override,cache replacement,score/threshold/fulljob/O4b/push/main.
+- Full measurement/verifier remains pending physical inputs and validity gates.
+ Next restore verified copies or contract transport/admission separately;never
+ rewrite old manifest or silently expand28-gap receipt. User untracked preserved.
+
 ## 2026-10-03 - Driver policy and bounded fresh scoring gate08.31
 
 - Author updates drivers frequently;`procedi` resolves08.30 with new separate

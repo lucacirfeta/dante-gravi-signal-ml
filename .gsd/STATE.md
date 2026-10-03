@@ -1,4 +1,21 @@
 ## Current Position
+- **Isolated productive input boundary implemented; full calibration BLOCKED (2026-10-03)**:
+  Author approves A with `procwdi`.08.32 sources38dd655/86b9585: separate profile,
+  namespace and exact-admission/original-manifest provider; no legacy CLI/global
+  mutation or historical output/shard/threshold reuse. All parent/source/runtime
+  pins bound; driver version not permanently fixed, fresh numerical receipt
+  required at actual runtime.48 targeted/host322/WSL322/post-freeze145 PASS,
+  11 upstream warnings,Ruff PASS;11 source bytes matchGit86b9585 exactly.
+  Final actual preflight7600 and standalone31769 both observed OSexit2,
+  BLOCKED_PRODUCTIVE_RAW_FILES,complete report identical,SHAabdd416e....
+  39971 identities19715H1+20256L1;39891 unique contexts,28 admitted+39863 normal.
+  Required889 logical raw segments428H1+461L1 absent atE:/o4a;obvious Sept18
+  archive output path also has no manifest copies,not exhaustive backup search.
+  Old minimum container99.485GiB,not current network estimate. No fetch/score/
+  threshold fit/full calibration/O4b;independent replay confirms BLOCK,notPASS.
+  Next resolve required raw copies or separately contract transport/admission;
+  then full-context validity and isolated full measurement/verifier. O3a stays
+  closed,all-run certification OPEN. User untracked/history untouched,no push/main.
 - **Bounded fresh scoring/install gate PASS (2026-10-03)**:
   Author frequent-driver-update instruction and `procedi` resolve08.30 decision.
   08.31 new opt-in config/module, original strict runtime and retained-only O3a
