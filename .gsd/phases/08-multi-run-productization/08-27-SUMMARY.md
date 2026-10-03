@@ -2,12 +2,13 @@
 phase: 08-multi-run-productization
 plan: 27
 completed_at: 2026-10-03
-status: awaiting_admission_decision
+status: completed_with_author_decision
 ---
 
 # 08.27 Summary: raw recovery numerical PASS, not admission
 
-Tasks1/2 complete;checkpoint3 awaits author. Source commit71c9f5e.
+Tasks1/2 complete;checkpoint3 author accepts A,implemented separately in08.28.
+Source commit71c9f5e;historical recovery evidence remains unchanged.
 New isolated run,one acquisition/one offline verify,both observed WSLexit0.
 28 source frames/contexts/receipts;28/28 numerical SHA matches versus frozen
 historical receipt,0/28 container SHA matches;zero failure/partial/lock.

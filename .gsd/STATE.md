@@ -1,4 +1,18 @@
 ## Current Position
+- **Explicit recovery admission PASS (2026-10-03)**: Author accepts A after08.27;
+  08.28 source58f7489,policy exact-parent correction70b0a15. New separate
+  receipt admission_20261003_v1.json,seal5910f65a...,SHAb17d6388...;creation93171
+  and independent standalone verifier71902 observed WSLexit0. All28 old raw
+  Actual explicit CLI67362 exit0,PASS_CALIBRATION_DECLARED_INPUTS_ONLY.
+  numerical SHA equal;all28 new containerSHA explicitly distinguished,old
+  receipt and all10 recovery-pinned sources immutable. Frozen39971 calibration
+  identities19715H1+20256L1 covered in DECLARED input gate only,science false.
+  Final Windows223/WSL223 PASS,11 upstream WSLwarnings,Ruff4files PASS.
+  First createexit1 diagnosed missingseal_field in NEW policy,no output;exact
+  declaration restored,tested,never relaxed compare. New explicit CLI admission
+  path+SHA,no productive consumer redirection,worker,fetch,outcome or registry
+  activation. Next bounded admitted-context numerical integration/clean-install
+  replay;O4b after full readiness and its dedicated contracts.No push/main.
 - **Raw recovery VERIFIED; admission decision OPEN (2026-10-03)**: Author `procedi` approves
   acquisition after08.26;08.27 source71c9f5e. Isolated external new run
   E:/dante_cache/dante_light/o4a_corrected_v2/calibration_reacquisition/recovery_20261003,

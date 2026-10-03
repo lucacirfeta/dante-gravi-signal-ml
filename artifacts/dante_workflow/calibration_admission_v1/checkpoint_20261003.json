@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "scope": "CALIBRATION_RECOVERED_INPUT_ADMISSION_ONLY",
+  "status": "PASS_CALIBRATION_DECLARED_INPUTS_ONLY",
+  "source_freeze": "58f7489",
+  "policy_correction": "70b0a15",
+  "policy_sha256": "1869659f1a06a0fd23d66400491e2bb25c6fcb5f5dbb9613baa1231b792c6f26",
+  "receipt": {
+    "path": "E:/dante_cache/dante_light/o4a_corrected_v2/calibration_admission/admission_20261003_v1.json",
+    "sha256": "b17d6388ff888d2b0bd332e1c993b56e83ac0c62d53e62a54d0f01e3d09de6f1",
+    "seal": "5910f65a601099ba6bc34d012ad8706ff6b7b9fc47b31875178bf7be84bdf5d3"
+  },
+  "observed_os_exits": {"create_93171": 0, "verify_71902": 0, "cli_67362": 0},
+  "first_create_24029_exit": 1,
+  "first_create_diagnosis": "New policy omitted exact parent seal_field; no output written. Fixed declaration, no relaxed validation.",
+  "record_count": 28,
+  "historical_numerical_matches": 28,
+  "historical_container_matches": 0,
+  "calibration_identity_count": 39971,
+  "calibration_counts": {"H1": 19715, "L1": 20256},
+  "tests": {"windows_pass": 223, "wsl_pass": 223, "wsl_upstream_warnings": 11},
+  "ruff": "PASS",
+  "recovery_source_hashes_unchanged": 10,
+  "historical_receipt_unchanged": true,
+  "calibration_declared_input_coverage_checked": true,
+  "scientific_execution_ready": false,
+  "verification_was_second_fetch": false,
+  "o4b_started": false
+}

@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-03 - Explicit numerical-parity recovery admission08.28
+
+- Author accepts A,new receipt instead of rewriting old hashes. Source58f7489,
+  policy correction70b0a15;27 synthetic tests including exact parentseal_field.
+  Separate module/script and explicit CLI only;all10 recoverysources immutable.
+- First real create24029 exit1 missingseal_field in newpolicy,no output;read-only
+  diagnosis proves otherpins equal;corrected declaration/test,kept exact match.
+  Corrected creation93171 exit0,independent standalone71902 exit0. New receipt
+  Actual CLI67362 exit0,explicitCALIBRATION_CLI_OS_EXIT=0,same scoped PASS.
+  28records/seal5910f65a601099ba6bc34d012ad8706ff6b7b9fc47b31875178bf7be84bdf5d3,
+  SHAb17d6388ff888d2b0bd332e1c993b56e83ac0c62d53e62a54d0f01e3d09de6f1.
+- Exact raw equality28/28;old/new containers distinguished,0 historical matches.
+  Frozen39971 identities19715H1+20256L1 accounted,declaredcoverage true,science/
+  native-calibration/runtime/writer-exclusion/full-row false. Local replay not
+  secondfetch/versionlabelproof. Historical receipt unchanged;no new raw fetch.
+- FinalWindows223 PASS/13.65s,WSL223 PASS/54.58s,OSexit0,11 upstreamwarnings;
+  Ruff4filesPASS. Temporary gitindex.lock cleared naturally,no forcing/removal.
+- No productive provider redirection,worker,GPU,NVIDIA/runtime,O3a reopening,
+  O4bactivation,push/main/release or untrackeduser edits. Next bounded numerical
+  input-provider/integration then clean-install scientific readiness gates.
+
 ## 2026-10-03 - Authorized isolated calibration recovery; admission gate
 
 - Author `procedi` authorizes acquisition and wants O4b next after correct common
