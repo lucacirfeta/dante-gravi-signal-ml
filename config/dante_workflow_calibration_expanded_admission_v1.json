@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "status": "AUTHOR_APPROVED_CALIBRATION_EXACT_NUMERIC_ADMISSION_V1",
+  "authorization": "2026-10-03 author procedi after explicit expanded calibration-only admission checkpoint",
+  "production_profile": {
+    "path": "config/dante_workflow_production_calibration_v1.json",
+    "sha256": "df3df74b8098fbd520180b1fd044fc55eade7d447c4a2af0b999a6604c4e12e2"
+  },
+  "metadata_policy": {
+    "path": "config/dante_workflow_calibration_raw_transport_v1.json",
+    "sha256": "eef2664610361987feea465e21aba6fefa9fec524540af88c326c385ad41b7e6"
+  },
+  "metadata_plan_sha256": "2cb72b0921d6dd031aef853984bad08fb4f6e6114e216d7b4232cc74ba16d3e3",
+  "historical_calibration": {
+    "path": "artifacts/dante_light/o4a_v1_parity/corrected_primary_calibration.json",
+    "sha256": "0e9e02e4ea404a557ce6f850b4029c0d24c3520f11570932455d791e586ced51"
+  },
+  "identity_rule": "EXACT_NATIVE_NUMERICAL_SHA_NEW_CONTAINER_RECEIPT_CALIBRATION_ONLY",
+  "context_geometry": "inherit exact required padded intervals and native sample rate from frozen calibration protocol; no rounding, resampling or sample substitution",
+  "series_name_template": "{detector}:GWOSC-16KHZ_R1_STRAIN",
+  "series_name_reason": "Preserve the string produced by _CorrectedContextReader._read_manifest_slice in pinned src/dante_light/o4a_corrected_execution.py; legacy 16KHZ label is NOT a native-rate claim",
+  "container_format": "gwpy_hdf5",
+  "transport": {
+    "maximum_frame_bytes": 536870912,
+    "context_container_reserve_bytes": 1073741824,
+    "automatic_retry_or_resume": false,
+    "failure_policy": "preserve failure, receipts and partial files; diagnose before any resume or new run"
+  },
+  "source_paths": [
+    "src/dante_workflow/calibration_expanded_admission.py",
+    "scripts/recover_dante_workflow_calibration_raw.py",
+    "src/dante_workflow/calibration_raw_transport.py",
+    "src/dante_workflow/calibration_transport.py",
+    "src/dante_workflow/calibration_recovery.py",
+    "src/dante_workflow/calibration_admission.py",
+    "src/dante_workflow/calibration_contexts.py",
+    "src/dante_workflow/calibration_inputs.py",
+    "src/dante_workflow/input_coverage.py",
+    "src/dante_workflow/input_preflight.py",
+    "src/dante_workflow/schema.py",
+    "src/dante_workflow/schema_v2.py",
+    "src/dante_workflow/adapters/__init__.py",
+    "src/dante_workflow/adapters/o4a_corrected.py",
+    "src/dante_light/o4a_corrected_protocol.py",
+    "src/dante_light/o4a_corrected_execution.py",
+    "src/core/patch_producer.py"
+  ],
+  "boundary": {
+    "calibration_inputs_only": true,
+    "exact_numerical_match_required": true,
+    "historical_container_equivalence_claimed": false,
+    "historical_scores_or_thresholds_reused": false,
+    "full_calibration_verified": false,
+    "candidate_scan_allowed": false,
+    "other_run_inputs_admitted": false,
+    "legacy_workflow_redirected": false,
+    "scientific_execution_ready": false
+  }
+}
