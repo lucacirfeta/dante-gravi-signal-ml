@@ -103,3 +103,26 @@ Pre-run250 WSL PASS/15new/11 upstream warnings,15.82s; Ruff4files PASS.
 Synthetic PASS is not full real-domain PASS. Freeze before binding/execution.
 Provider contractSHA d256bd969fe910605ba7ad8b37123a43a1eca4b456101552e0ac80d777d4da58;
 replay contractSHA 7cc3280238c4cf724d4a480e3ccb0216a978a9817fa948c5e0712d53dd5b5e3d.
+
+## V2 live checkpoint (not full completion)
+
+Freeze `76c42f064ba99c3ad0ffe3c8588c8e6560eb5d10`. Real binding preflight96231
+and standalone binding verification under26831 each observed OSexit0, same
+PASS_EXPANDED_CONTEXT_CONSUMER_BINDING_ONLY. New external
+`E:/dante_cache/dante_workflow/expanded_context_provider_20261004/preflight_v2.json`,
+SHA `83da191a5107029a0bd6934f70a1eebfb6694317b81806ad21dda16caf28dfae`,
+seal `d43f6af6c1cff6cbc84dafac16e4888ab6047a75b9f79f82cad9b159e3ffc7f8`.
+All39971 identities/39891 unique contexts metadata bound;28 prior names remain
+18H1:STRAIN+10L1:STRAIN. Ten source SHA matchGit freeze; all08.34 pins and v1
+contracts/failure untouched. This is binding evidence, not full native PASS.
+
+Supervisor exec26831 started one LinuxPID498 full run in fresh
+`E:/dante_cache/dante_workflow/expanded_context_replay_20261004/native_v2`.
+Startup repeats parent binding before lock/receipt creation. Task-directory
+logs `worker.v2.stdout.log`/`worker.v2.stderr.log`; standalone binding logs
+`worker.v2.binding_verify.*`; future native verifier logs `worker.v2.verify.*`.
+Durable `worker.v2.supervisor.stdout.log` retains observed OSexit messages.
+Native verifier starts once only after run0/PASS/no failure/lock/verification;
+both full-stage exits still pending. Monitor ACTIVE/30min; general readiness
+continuation remains authorized, no fixed ETA from startup. Next after verified
+native PASS: inherited full padded-context validity/preprocessing, not O4b.

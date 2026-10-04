@@ -42,3 +42,13 @@ Ruff lint/format4files PASS. Real synthetic pinned historical HDF5 names coexist
 with new-recovery names; independent synthetic verifier avoids consumer.read.
 Wrong/missing/empty/normalized names, file/value drift and detector mismatch
 reject. V1 contracts/rule/results unchanged. Full native_v2 real replay PENDING.
+
+## Real v2 binding and launch
+
+Preflight96231 OSexit0 and standalone binding verifier supervised26831 OSexit0
+observed. Same PASS_EXPANDED_CONTEXT_CONSUMER_BINDING_ONLY/39971identities,
+39891contexts. FileSHA83da191a5107029a0bd6934f70a1eebfb6694317b81806ad21dda16caf28dfae;
+seal d43f6af6c1cff6cbc84dafac16e4888ab6047a75b9f79f82cad9b159e3ffc7f8.
+Ten source SHA exactGit76c42f0, old contracts/failure/08.34 parent pins unchanged.
+Fresh native_v2 run LinuxPID498 active. Full run and native verifier exits/PASS
+not yet observed. Metadata binding is not full native replay or preprocessing.

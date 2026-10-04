@@ -1,5 +1,27 @@
 # DANTE v6 execution journal
 
+## 2026-10-04 - 08.36 v2 binding PASS and fresh full replay ACTIVE
+
+- Source freeze76c42f064ba99c3ad0ffe3c8588c8e6560eb5d10. Real v2 preflight96231
+  observed OSexit0/PASS_EXPANDED_CONTEXT_CONSUMER_BINDING_ONLY; independent
+  standalone binding verifier under26831 observed BINDING_VERIFY_EXIT_CODE=0,
+  stderr empty, same sealed result. Binding preflight_v2.json outside checkout
+  does not replace old preflight.json. FileSHA83da191a5107029a0bd6934f70a1eebfb6694317b81806ad21dda16caf28dfae,
+  seal d43f6af6c1cff6cbc84dafac16e4888ab6047a75b9f79f82cad9b159e3ffc7f8.
+- All39971identities/39891contexts metadata bound,18H1:STRAIN+10L1:STRAIN exact
+  preserved prior names. Real prior_name helper also reads actual H1:STRAIN.
+  Ten source hashes match freeze;08.34 four evidence pins, old v1 contracts and
+  failure seal unchanged. Full native replay is not yet PASS.
+- Supervisor26831 then started exactly one full replay LinuxPID498 in fresh
+  native_v2, no old receipt reuse; source freeze/actual binding SHA pinned.
+  Hidden WSL processes, distinct worker.v2 and binding_verify/verify stdout/
+  stderr; OSexit messages also retained in worker.v2.supervisor.stdout.log.
+  Verifier starts only after run0/PASS/no failure/lock/existing verifier result.
+- Heartbeat ACTIVE/30min confirmed, no duplicate phases. Startup repeats binding
+  and may take minutes before lock/receipts. No fixed ETA from startup. Continue
+  remaining approved readiness after PASS, but critical choices and O4b stop.
+  No scientific promotion, scoring, push, shutdown or unrelated untracked edits.
+
 ## 2026-10-04 - 08.36 v2 technical name repair approved/tested
 
 - Author `quindi procedi` authorizes diagnosed technical bug fix (executor Rule1),

@@ -29,3 +29,8 @@ this decision. O3a closed; no productive promotion, push, O4b or shutdown.
 Subsequent author `quindi procedi` approves per-origin name repair.
 250 WSL PASS/15new/11warnings, Ruff PASS; source freeze and fresh native_v2
 required before real closure. V1 failure remains immutable, never resumed.
+
+Source freeze76c42f0. Real v2 metadata binding and standalone replay OSexit0;
+new preflight_v2.json sealed d43f6af6.../SHA83da191a..., full39971identities.
+Fresh native_v2 replay active LinuxPID498/exec26831, full run/verifier pending;
+not yet completion. Monitor ACTIVE at30min, no duplication or guard waiver.

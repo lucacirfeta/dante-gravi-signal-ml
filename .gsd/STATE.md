@@ -1,4 +1,19 @@
 ## Current Position
+- **08.36 v2 binding independently PASS, full replay ACTIVE (2026-10-04)**:
+  Freeze76c42f064ba99c3ad0ffe3c8588c8e6560eb5d10. New binding preflight96231
+  observed0; standalone under26831 observed BINDING_VERIFY_EXIT_CODE=0.
+  Binding SHA83da191a5107029a0bd6934f70a1eebfb6694317b81806ad21dda16caf28dfae,
+  seal d43f6af6c1cff6cbc84dafac16e4888ab6047a75b9f79f82cad9b159e3ffc7f8;
+  39971identities/39891contexts,18H1:STRAIN+10L1:STRAIN prior names.
+  Exactly one full replay LinuxPID498 supervised by exec26831; fresh native_v2,
+  task logs worker.v2.stdout/stderr plus binding_verify and verify logs. Durable
+  worker.v2.supervisor.stdout.log retains OSexit messages. Standalone native
+  verifier starts only after run0/PASS/absent failure/lock/verification.
+  Ten source hashes match freeze;08.34 pins and v1 contracts/failure unchanged.
+  No run/verify PASS or exit yet, startup repeats binding before creating lock.
+  Monitor ACTIVE/30min, general readiness authority continues after PASS; no
+  unnecessary bugfix reapprovals, still stop on genuine critical scientific/
+  structural choices or before O4b. No push, score access or repeated shutdown.
 - **08.36 v2 name repair approved/tested (2026-10-04)**:
   Author `quindi procedi`: per-origin exact names from pinned historical HDF5
   versus inherited new-recovery template. No rename/alias/guard waiver, numeric
