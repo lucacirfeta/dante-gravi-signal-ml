@@ -1,5 +1,32 @@
 # DANTE v6 execution journal
 
+## 2026-10-04 - 08.36 full native replay implementation verified, run ACTIVE
+
+- Author requests autonomous completion of remaining pre-O4b points; stop only
+  on critical scientific/structural choices or before actual O4b start. O3a stays
+  closed. No additional shutdown or implicit push authorized in this increment.
+- Source freeze1fecbd3, opt-in full native consumer traversal and separate h5py
+  retained-container verifier. All08.35 per-read receipt/source/native checks
+  remain intact. No population/statistical/scoring/default changes. New receipts
+  isolated outside every preserved parent. No automatic resume or failure reset.
+- Initial synthetic tests caught official-frame versus retained-GWPy metadata
+  spelling; corrected independent reader to x0/dx before real use. Ruff caught
+  a shared-fixture import/name warning; resolved the test name, no lint-rule waiver.
+  Final242 WSL PASS (31new),11 upstream warnings,15.14s; Ruff lint/format PASS.
+- One run launched via hidden WSL supervisor exec16946, Windows launcher24080,
+  LinuxPID544. Logs under E:/dante_cache/dante_workflow/expanded_context_replay_20261004,
+  run native_v1. Supervisor starts standalone verifier only after run OSexit0,
+  PASS summary, absent failure/lock/verification; distinct logs and actual summarySHA.
+  Binding seal84545eb094ed81ac209d5199f49905ac1056e79e9792785deb3a122b68904c0f,
+  64native contexts observed10:06UTC of39891. No final PASS or exit yet.
+- Existing heartbeat updated ACTIVE/30min with current pins, no duplicate work,
+  no repetitive notifications, completion continuation and critical/O4b stops.
+  Old08.34 shutdown and monitor instructions removed from active prompt.
+- Next gated work: inherited complete padded-context validity/preprocessing,
+  isolated full calibration and qualifications, then O4b-specific readiness.
+  Full reader replay is not physical validity, scientific certification or another
+  GWOSC fetch. User untracked output/ and public_smoke_v1/ preserved.
+
 ## 2026-10-04 - 08.35 opt-in expanded input consumer binding PASS
 
 - Author `procedi` resumes the next bounded provider increment after08.34.

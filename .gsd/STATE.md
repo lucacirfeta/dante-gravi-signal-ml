@@ -1,4 +1,22 @@
 ## Current Position
+- **08.36 full native consumer replay ACTIVE (2026-10-04)**:
+  Author authorizes all remaining readiness increments until critical scientific/
+  structural decisions or immediately before O4b launch. Source freeze
+  1fecbd3a0f6a2f6465ddeebd77db2b18b16ad40c, replay contract SHA
+  1f934f040e31087b86a71306f18694bd3799d793903635fa51021030bcd0f926.
+  242 targeted WSL PASS/31 new/11 upstream warnings, Ruff lint/format PASS.
+  One WSL controller PID544, exec16946, external expanded_context_replay_20261004/
+  native_v1. Supervisor captures RUN_EXIT_CODE and launches exactly one standalone
+  h5py verifier only after OSexit0/PASS/no failure/lock or existing verification.
+  Binding digest84545eb094ed81ac209d5199f49905ac1056e79e9792785deb3a122b68904c0f;
+  observed64/39891 contexts at10:06UTC, lock matchesPID544, stderr empty;
+  run/verification PASS still PENDING. Per-read large receipt hashing retained,
+  no cached-guard waiver, no sampling or second source fetch.08.34/08.35 parents
+  unchanged, no scoring/Q/DQ change or productive promotion, O3a closed/O4b not
+  started. Monitor ACTIVE every30min, no repeated shutdown, local commits only.
+  Next after native PASS: full inherited padded-context validity/preprocessing,
+  isolated productive integration and fresh calibration, remaining qualification
+  gates; detailed ordered checklist in docs/DANTE_WORKFLOW_PRE_O4B_CHECKLIST_2026-10-04.md.
 - **08.35 opt-in expanded consumer binding PASS (2026-10-04)**:
   Source freezef9f6249: separate contract/provider/preflight CLI, no changes to
   historical readers, admission/profile or registry.211 WSL PASS including46
