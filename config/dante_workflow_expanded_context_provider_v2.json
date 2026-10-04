@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "status": "OPT_IN_EXPANDED_CALIBRATION_CONTEXT_CONSUMER_V2",
+  "authorization": "2026-10-04 author procedi: repair per-origin name guard; preserve failed v1 and all numeric/provenance checks; no productive promotion",
+  "admission_policy": {
+    "path": "config/dante_workflow_calibration_expanded_admission_v1.json",
+    "sha256": "102c7f9e5050a81c0e28d3a50b2f9ce4b2c30b5ee31427fba60767f672eef622"
+  },
+  "evidence_sha256": {
+    "admission.json": "17ff302d9fab56886d83ac57e41d56cce54f46dbeb29178a4f8607a9aa325856",
+    "plan.json": "288f4bb07f0580a6e5515ec63914efc7952aaa32488392897483e374927df155",
+    "summary.json": "5a8c37663481d08cf350da48f25e94c627a01e4efbee2b8ed682ab510424f4ad",
+    "verification.json": "c2f288a51f871de44d402494b6e16885b56ebb426f74c81b88a5ecacbb907d60"
+  },
+  "series_name_rule": "new contexts use inherited recovery template; prior contexts retain exact name from SHA-pinned historical container; no rename or alias",
+  "input_rule": "exact complete frozen calibration context union; new admitted native containers plus preserved prior references; no manifest or exception fallback",
+  "reader_reference": "src/dante_workflow/calibration_contexts.py:AdmittedContextProvider.read",
+  "representation_rule": "inherit geometry and native sample rate from admission policy protocol; no preprocessing, resampling or crop in this provider",
+  "source_paths": [
+    "src/dante_workflow/expanded_context_provider.py",
+    "scripts/preflight_dante_workflow_expanded_context_provider.py",
+    "src/dante_workflow/calibration_contexts.py",
+    "src/dante_workflow/calibration_expanded_admission.py",
+    "src/core/patch_producer.py"
+  ],
+  "boundary": {
+    "context_consumer_only": true,
+    "default_provider_replaced": false,
+    "preprocessing_verified": false,
+    "full_calibration_verified": false,
+    "scientific_execution_ready": false,
+    "candidate_scan_allowed": false,
+    "o4b_launch_allowed": false
+  }
+}

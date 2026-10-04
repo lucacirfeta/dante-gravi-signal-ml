@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "status": "FULL_EXPANDED_NATIVE_CONSUMER_REPLAY_V2",
+  "authorization": "2026-10-04 author procedi: per-origin name fix, fresh isolated replay, v1 failure preserved; no numeric/scientific policy change",
+  "consumer_contract": {
+    "path": "config/dante_workflow_expanded_context_provider_v2.json",
+    "sha256": "d256bd969fe910605ba7ad8b37123a43a1eca4b456101552e0ac80d777d4da58"
+  },
+  "replay_rule": "all admitted exact contexts through unchanged consumer; independent h5py container replay; no sampling, fallback or second fetch",
+  "automatic_resume": false,
+  "source_paths": [
+    "src/dante_workflow/expanded_context_replay.py",
+    "scripts/replay_dante_workflow_expanded_contexts.py",
+    "src/dante_workflow/expanded_context_provider.py",
+    "src/dante_workflow/calibration_contexts.py",
+    "src/dante_workflow/calibration_expanded_admission.py",
+    "src/dante_workflow/calibration_recovery.py",
+    "src/dante_workflow/calibration_admission.py",
+    "src/dante_workflow/input_preflight.py",
+    "src/dante_workflow/schema.py",
+    "src/dante_workflow/schema_v2.py"
+  ],
+  "boundary": {
+    "full_native_consumer_replay_only": true,
+    "preprocessing_verified": false,
+    "full_context_validity_verified": false,
+    "full_calibration_verified": false,
+    "default_provider_replaced": false,
+    "scientific_execution_ready": false,
+    "o4b_launch_allowed": false
+  }
+}

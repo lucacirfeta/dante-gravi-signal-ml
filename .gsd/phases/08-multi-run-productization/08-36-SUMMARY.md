@@ -23,3 +23,9 @@ freeze and isolated fresh replay. Failure remains immutable.
 08.36 full native reader gap is NOT closed. Subsequent padded-context validity,
 preprocessing, integration, fresh calibration and pre-O4b qualifications await
 this decision. O3a closed; no productive promotion, push, O4b or shutdown.
+
+## V2 correction authorized and tested
+
+Subsequent author `quindi procedi` approves per-origin name repair.
+250 WSL PASS/15new/11warnings, Ruff PASS; source freeze and fresh native_v2
+required before real closure. V1 failure remains immutable, never resumed.

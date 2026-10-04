@@ -74,10 +74,11 @@ def bind(
     root = _directory(root).resolve()
     contract_path = _pinned(contract_path, contract_sha)
     contract = strict_json_object(contract_path.read_text(), label="native replay")
+    version = contract.get("schema_version")
     if (
-        type(contract.get("schema_version")) is not int
-        or contract["schema_version"] != 1
-        or contract.get("status") != "FULL_EXPANDED_NATIVE_CONSUMER_REPLAY_V1"
+        type(version) is not int
+        or version not in (1, 2)
+        or contract.get("status") != f"FULL_EXPANDED_NATIVE_CONSUMER_REPLAY_V{version}"
         or not same(contract.get("boundary"), BOUNDARY)
         or contract.get("replay_rule") != RULE
         or contract.get("source_paths") != list(SOURCES)
@@ -96,6 +97,8 @@ def bind(
     if not same(preflight(**kwargs), expected):
         raise InputCoverageError("parent consumer binding differs")
     provider = ExpandedCalibrationContextProvider(**kwargs)
+    if provider.schema_version != version:
+        raise InputCoverageError("replay/consumer version mismatch")
     return provider, sealed(
         {
             "contract_sha256": contract_sha,
@@ -107,6 +110,15 @@ def bind(
             "unique_context_count": len(provider.allowed),
             "context_keys_sha256": canonical_json_sha256(sorted(provider.allowed)),
             "parent_evidence_sha256": provider.evidence_sha256,
+            **(
+                {
+                    "series_names_sha256": canonical_json_sha256(
+                        expected["prior_series_names"]
+                    )
+                }
+                if version == 2
+                else {}
+            ),
             "boundary": BOUNDARY,
         }
     )
@@ -160,6 +172,11 @@ def record(provider, key, values):
             "strain_values_sha256": sha,
             "container_sha256": row["file_sha256"],
             "origin": "expanded" if key in provider.rows else "prior",
+            **(
+                {"series_name": provider.expected_names[key]}
+                if getattr(provider, "schema_version", 1) == 2
+                else {}
+            ),
         }
     )
 
@@ -180,6 +197,12 @@ def independent_values(provider, key):
         if len(datasets) != 1:
             raise InputCoverageError("ambiguous retained native HDF5 dataset")
         dataset = datasets[0]
+        if getattr(provider, "schema_version", 1) == 2:
+            name = dataset.attrs.get("name")
+            if isinstance(name, bytes):
+                name = name.decode("utf-8")
+            if name != provider.expected_names[key]:
+                raise InputCoverageError("independent HDF5 series name differs")
         if (
             float(dataset.attrs.get("x0", float("nan"))) != key[1]
             or float(dataset.attrs.get("dx", float("nan"))) != 1 / row["sample_rate_hz"]

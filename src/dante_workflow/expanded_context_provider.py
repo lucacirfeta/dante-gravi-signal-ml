@@ -36,6 +36,38 @@ INPUT_RULE = (
     "exact complete frozen calibration context union; new admitted native containers "
     "plus preserved prior references; no manifest or exception fallback"
 )
+NAME_RULE = (
+    "new contexts use inherited recovery template; prior contexts retain exact "
+    "name from SHA-pinned historical container; no rename or alias"
+)
+
+
+def prior_name(prior, key):
+    """Read only metadata from the pinned prior container, not an alias table."""
+    import h5py
+
+    row = prior.rows[key]
+    path = _pinned(_file(prior.directory, row["relative_path"]), row["file_sha256"])
+    with h5py.File(path, "r") as stream:
+        datasets = []
+        stream.visititems(
+            lambda _, obj: (
+                datasets.append(obj) if isinstance(obj, h5py.Dataset) else None
+            )
+        )
+        if len(datasets) != 1:
+            raise InputCoverageError("ambiguous prior name dataset")
+        name = datasets[0].attrs.get("name")
+        if isinstance(name, bytes):
+            name = name.decode("utf-8")
+        if (
+            not isinstance(name, str)
+            or not name.startswith(key[0] + ":")
+            or len(name) <= len(key[0]) + 1
+        ):
+            raise InputCoverageError("prior name missing or detector differs")
+    _pinned(path, row["file_sha256"])
+    return name
 
 
 class ExpandedCalibrationContextProvider:
@@ -53,11 +85,14 @@ class ExpandedCalibrationContextProvider:
         contract = strict_json_object(
             self.contract_path.read_text(), label="expanded consumer"
         )
+        version = contract.get("schema_version")
         if (
-            type(contract.get("schema_version")) is not int
-            or contract["schema_version"] != 1
+            type(version) is not int
+            or version not in (1, 2)
             or contract.get("status")
-            != "OPT_IN_EXPANDED_CALIBRATION_CONTEXT_CONSUMER_V1"
+            != f"OPT_IN_EXPANDED_CALIBRATION_CONTEXT_CONSUMER_V{version}"
+            or (version == 2 and contract.get("series_name_rule") != NAME_RULE)
+            or (version == 1 and "series_name_rule" in contract)
             or not same(contract.get("boundary"), BOUNDARY)
             or contract.get("input_rule") != INPUT_RULE
             or contract.get("reader_reference")
@@ -221,6 +256,15 @@ class ExpandedCalibrationContextProvider:
         self.receipt, self.receipt_sha = receipt, pins["admission.json"]
         self.receipt_path = self.directory / "admission.json"
         self.name_template = policy["series_name_template"]
+        self.schema_version = version
+        self.expected_names = {
+            key: (
+                prior_name(self.prior, key)
+                if version == 2 and key in prior_keys
+                else self.name_template.format(detector=key[0])
+            )
+            for key in sorted(allowed)
+        }
         paths = contract["source_paths"]
         if (
             not isinstance(paths, list)
@@ -295,7 +339,7 @@ class ExpandedCalibrationContextProvider:
             or not np.isfinite(values).all()
             or hashlib.sha256(values.tobytes()).hexdigest()
             != row["historical_strain_values_sha256"]
-            or str(context.series.name) != self.name_template.format(detector=detector)
+            or str(context.series.name) != self.expected_names[key]
         ):
             raise InputCoverageError("consumer native/name identity mismatch")
         _pinned(self.receipt_path, self.receipt_sha)
@@ -309,8 +353,20 @@ class ExpandedCalibrationContextProvider:
 def preflight(**kwargs):
     """Metadata/receipt binding only; NOT full-domain consumer numerical replay."""
     provider = ExpandedCalibrationContextProvider(**kwargs)
+    names = (
+        {
+            "series_name_rule": NAME_RULE,
+            "prior_series_names": [
+                {"key": list(key), "name": provider.expected_names[key]}
+                for key in sorted(provider.prior.rows)
+            ],
+        }
+        if provider.schema_version == 2
+        else {}
+    )
     return sealed(
         {
+            **names,
             "status": "PASS_EXPANDED_CONTEXT_CONSUMER_BINDING_ONLY",
             "contract_sha256": provider.contract_sha,
             "recovery_directory": str(provider.directory),

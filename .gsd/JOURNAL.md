@@ -1,5 +1,21 @@
 # DANTE v6 execution journal
 
+## 2026-10-04 - 08.36 v2 technical name repair approved/tested
+
+- Author `quindi procedi` authorizes diagnosed technical bug fix (executor Rule1),
+  not a scientific criterion change. V1 behavior/contracts/failure unchanged.
+- V2 binds prior exact names from SHA-pinned HDF5, sealed in binding/context
+  receipt and checked independently with h5py. New template and all native/
+  grid/source/receipt guards retained. No aliases, normalization or renames.
+- Final250 WSL PASS/15new/11 upstream warnings,15.82s/OSexit0, Ruff lint/format
+  four files PASS. Real mixed-origin synthetic HDF5 and full independent replay
+  pass; wrong/missing/empty/normalized names, file/value drift, wrong detector,
+  ambiguous metadata, modified rule and wrong new name reject. V1 rule preserved.
+- Freeze before new binding and fresh native_v2; no1116 v1 receipt reuse. Real
+  full-domain PASS pending. No08.34 re-execution, scoring, scientific promotion,
+  O4b, push or repeated shutdown. Ordinary technical repairs proceed without
+  unnecessary repeated scientific approval; actual critical stops still apply.
+
 ## 2026-10-04 - 08.36 failed: preserved mixed-origin name mismatch
 
 - Exec16946 returned full tool object with exit_code1 and RUN_EXIT_CODE=1.

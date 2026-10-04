@@ -34,3 +34,11 @@ Local replay is not another source fetch or evidence of physical validity.
  replay contract and08.34/08.35 parent pins unchanged.
 -No fix, guard bypass, rename, reset, restart or downstream execution. Historical
  synthetic tests did not represent prior names. Full native reader remains OPEN.
+
+## V2 pre-run verification (approved technical repair)
+
+250 WSL PASS/15 new mixed-origin cases/11 upstream warnings,15.82s/OSexit0;
+Ruff lint/format4files PASS. Real synthetic pinned historical HDF5 names coexist
+with new-recovery names; independent synthetic verifier avoids consumer.read.
+Wrong/missing/empty/normalized names, file/value drift and detector mismatch
+reject. V1 contracts/rule/results unchanged. Full native_v2 real replay PENDING.

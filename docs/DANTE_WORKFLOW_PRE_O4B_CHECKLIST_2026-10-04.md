@@ -8,7 +8,7 @@ and unrelated user untracked files stay untouched. Prior shutdown was one-shot.
 
 | Order | Gate | Current evidence / completion condition |
 |---|---|---|
-|1|Exact full native reader|08.34 raw admission and08.35 binding PASS;08.36 FAILED/OSexit1 after1116 receipts, preserved. Prior numerical/grid/container audit passes; mixed-origin name-binding decision awaits author, monitor PAUSED. Full39891-context replay and standalone verifier remain OPEN.|
+|1|Exact full native reader|08.34 raw admission and08.35 binding PASS;08.36 v1 FAILED/OSexit1 after1116 receipts, preserved. Per-origin name repair approved; v2 implementation250 WSL PASS/Ruff PASS. Fresh39891-context replay and standalone verifier remain OPEN.|
 |2|Complete padded-context validity and preprocessing|OPEN. Inherit versioned symmetric context, native grid, existing validity/exclusion semantics, whitening before target crop and Q-transform. Full-domain input/image parity, tests then source freeze then execution/verifier. No new DQ filter or silent population reduction.|
 |3|Isolated productive integration|OPEN. Separate approved productive namespace/profile, exact-input consumer, stage prerequisites and single-writer exclusion. No legacy/global redirection. Any new active-component promotion not covered by prior approvals is an author decision.|
 |4|Full fresh calibration|OPEN. Entire frozen reference population, freshly computed embeddings/scores/thresholds as contracted, independent verifier, separate per-detector/session receipts. No historical score/threshold transplant.|

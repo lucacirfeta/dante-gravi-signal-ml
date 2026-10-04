@@ -1,4 +1,10 @@
 ## Current Position
+- **08.36 v2 name repair approved/tested (2026-10-04)**:
+  Author `quindi procedi`: per-origin exact names from pinned historical HDF5
+  versus inherited new-recovery template. No rename/alias/guard waiver, numeric
+  or scientific policy change. V1 contracts/failure and08.34/08.35 preserved.
+  Final250 WSL PASS/15new/11 upstream warnings, Ruff4files PASS; full native_v2
+  replay/verifier PENDING. Freeze before new binding/run, local commits only.
 - **08.36 FAILED, preserved; name-binding decision pending (2026-10-04)**:
   Exec16946 observed OSexit1/RUN_EXIT_CODE=1 after1116/39891 context receipts.
   No standalone verifier started, no summary/verification, no controller remains;

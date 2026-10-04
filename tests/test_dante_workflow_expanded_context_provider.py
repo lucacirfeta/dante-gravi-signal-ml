@@ -20,9 +20,12 @@ from tests.test_dante_workflow_calibration_expanded_admission import (
 
 @pytest.fixture
 def ready(request, monkeypatch):
+    return prepare_ready(request.getfixturevalue("raw_case"), monkeypatch)
+
+
+def prepare_ready(c, monkeypatch, version=1):
     from gwpy.timeseries import TimeSeries
 
-    c = request.getfixturevalue("raw_case")
     recover(c)
     put(c.run_dir / "verification.json", replay(c))
     receipt = admission.admit(
@@ -37,7 +40,7 @@ def ready(request, monkeypatch):
         json.loads(
             (
                 Path(__file__).resolve().parents[1]
-                / "config/dante_workflow_expanded_context_provider_v1.json"
+                / f"config/dante_workflow_expanded_context_provider_v{version}.json"
             ).read_text()
         )
     )
@@ -54,14 +57,15 @@ def ready(request, monkeypatch):
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes((Path(__file__).resolve().parents[1] / path).read_bytes())
-    c.prior.read = lambda **kw: SimpleNamespace(
-        series=TimeSeries(
-            np.arange(50, 66, dtype=np.float64),
-            t0=110,
-            sample_rate=4,
-            name="H1:GWOSC-16KHZ_R1_STRAIN",
+    if version == 1:
+        c.prior.read = lambda **kw: SimpleNamespace(
+            series=TimeSeries(
+                np.arange(50, 66, dtype=np.float64),
+                t0=110,
+                sample_rate=4,
+                name="H1:GWOSC-16KHZ_R1_STRAIN",
+            )
         )
-    )
     monkeypatch.setattr(consumer, "population", lambda *a: (c.metadata, c.prior))
     c.contract, c.contract_path = contract, c.root / "consumer.json"
     c.contract_sha = put(c.contract_path, contract)

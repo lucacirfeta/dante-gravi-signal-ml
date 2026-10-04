@@ -86,3 +86,20 @@ requires mixed-origin synthetic tests, new source freeze and a fresh isolated
 run; the failed native_v1 is not resumed or reinterpreted. No code/config/input
 changes made here.08.36 remains incomplete and downstream gates are blocked;
 O3a remains closed/O4b not started, no push or repeated shutdown.
+
+## Author-approved v2 technical repair
+
+Author `quindi procedi` approves per-origin names, repairing an over-strict
+metadata guard, not a scientific criterion. Ordinary technical bugs can be
+fixed and regression-tested without repeated scientific approval; preserve
+failure evidence and stop on actual critical scientific/structural changes.
+
+V2 retains08.34 pins/geometry. Prior exact name from SHA-pinned historical
+HDF5 is sealed in binding/receipt; new name uses unchanged recovery template.
+Independent h5py checks names and native grid/dtype/hashes. No alias, rename,
+arbitrary-name fallback or guard removal. V1 contracts/binding/failure remain
+reproducible at their old freeze. Fresh native_v2 reuses no1116 v1 receipts.
+Pre-run250 WSL PASS/15new/11 upstream warnings,15.82s; Ruff4files PASS.
+Synthetic PASS is not full real-domain PASS. Freeze before binding/execution.
+Provider contractSHA d256bd969fe910605ba7ad8b37123a43a1eca4b456101552e0ac80d777d4da58;
+replay contractSHA 7cc3280238c4cf724d4a480e3ccb0216a978a9817fa948c5e0712d53dd5b5e3d.
