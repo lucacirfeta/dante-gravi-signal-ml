@@ -1,4 +1,17 @@
 ## Current Position
+- **08.35 opt-in expanded consumer binding PASS (2026-10-04)**:
+  Source freezef9f6249: separate contract/provider/preflight CLI, no changes to
+  historical readers, admission/profile or registry.211 WSL PASS including46
+  new synthetic cases,11 upstream warnings; Ruff lint/format3files PASS/exit0.
+  Live preflight67604 and independent84901 each observed OSexit0, same sealed
+  PASS_EXPANDED_CONTEXT_CONSUMER_BINDING_ONLY for39971 identities19715H1+20256L1,
+  39891 contexts39863new+28prior; stderr empty. Seal321217569131d92f18f95c6c0fc985d637e1ac59543d53647c4782c0124225cb,
+  SHA6731ced30a0adf17f3054932c7be343da624539640feda3b30e3bb96f9daa9b4;
+  five source bytes+contract exactly matchfreeze. Full-domain consumer numerical
+  replay/preprocessing/validity and full fresh calibration remain OPEN; no
+  scoring, productive promotion, O4b, push/main or repeated shutdown. O3a closed;
+  monitor paused, unrelated untracked preserved. Next source-frozen full consumer
+  replay/context validity before isolated full measurement/verifier.
 - **08.34 completed: exact calibration raw inputs admitted (2026-10-04 02:12 Europe/Rome)**:
   Acquisition4883/standalone38777/admission32297 each observed OSexit0.
   PASS_ADMITTED_CALIBRATION_EXACT_NATIVE_INPUTS_ONLY, seal

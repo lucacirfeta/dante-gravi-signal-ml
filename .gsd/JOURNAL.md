@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-04 - 08.35 opt-in expanded input consumer binding PASS
+
+- Author `procedi` resumes the next bounded provider increment after08.34.
+  Sourcef9f6249: separate versioned pins/consumer/CLI, no default redirection or
+  change to population, grid, preprocessing, DQ, scoring/statistics or old receipts.
+- Final WSL211 PASS/11 upstream warnings,14.52s, including46 new consumer tests;
+  Ruff lint/format3files PASS. Five source bytes+contract matchGitfreeze exactly.
+  Synthetic test initially expected whitespace-only canonical JSON seal drift;
+  corrected test to corrupt content, without weakening any validation rule.
+- Live preflight67604 and standalone84901 each observed OSexit0, matching
+  PASS_EXPANDED_CONTEXT_CONSUMER_BINDING_ONLY,39971 identities19715H1+20256L1,
+  39891 contexts39863new+28prior; both stderr empty. Seal
+  321217569131d92f18f95c6c0fc985d637e1ac59543d53647c4782c0124225cb,
+  preflight fileSHA6731ced30a0adf17f3054932c7be343da624539640feda3b30e3bb96f9daa9b4.
+  New external output expanded_context_provider_20261004;08.34 stages not repeated.
+- Binding replay is metadata/receipt evidence, not all new sample reads through
+  this consumer or a second GWOSC fetch. Complete consumer numerical replay,
+  preprocessing/full-context validity, writer exclusion and full calibration
+  remain OPEN. No scoring/O4b/promotion/push/main or repeated shutdown; monitor
+  paused, user untracked preserved. Next full consumer replay/context validity.
+
 ## 2026-10-04 02:12 Europe/Rome - 08.34 admission PASS / final audit
 
 - Existing32297 recovered as full tool object with observed OSexit0/ADMIT_EXIT=0.
