@@ -1,5 +1,56 @@
 # DANTE v6 execution journal
 
+## 2026-10-04 02:12 Europe/Rome - 08.34 admission PASS / final audit
+
+- Existing32297 recovered as full tool object with observed OSexit0/ADMIT_EXIT=0.
+  PASS_ADMITTED_CALIBRATION_EXACT_NATIVE_INPUTS_ONLY, seal
+  97d856bcd3440d67788345adf9fbc60c1f9dbe17fde5a65d6e82245981a63665,
+  fileSHA17ff302d9fab56886d83ac57e41d56cce54f46dbeb29178a4f8607a9aa325856.
+  Receipt written02:02:23 Europe/Rome. Acquisition and standalone verification
+  previously completed with observed OSexit0; neither was repeated.
+- Final read-only audit:39971 identities19715H1+20256L1,39863new+28prior contexts,
+  707frames; all seals/parent pins/source receipts consistent,17 sources+policy
+  byte-identical toGit745366c, prior28 receipt unchanged. Zero failure/partial/tmp/
+  lock and no controller; all stage stderr empty. E: free524027904000bytes at02:10.
+- Targeted WSL expanded-admission/raw-transport/PatchProducer126 PASS,
+  11 upstream warnings,5.89s, observed OSexit0. Ruff lint and format PASS/exit0.
+  Local replay is not a second GWOSC fetch or a historical container byte claim.
+- Plan/summary/verification/checkpoint/STATE updated for local-only commit.
+  No productive calibration, score/threshold reuse, provider promotion or O4b.
+  Next separate provider/full-context validity/full fresh calibration increment.
+  Author-authorized normal shutdown remains conditional on successful local commit,
+  paused monitor and no unsafe active work; never force applications closed.
+
+## 2026-10-04 00:12 Europe/Rome - 08.34 verifier PASS / admission launch
+
+- Existing standalone38777 recovered with full tool object, observed OSexit0,
+  VERIFY_EXIT=0; stderr empty. PASS_VERIFIED_CALIBRATION_NATIVE_RAW_ONLY,
+  seal c1d63c91f0a954bd2e4c8e5cb711db10b0f6bc1dca955579e950136e9183d8fe,
+  fileSHA c2f288a51f871de44d402494b6e16885b56ebb426f74c81b88a5ecacbb907d60.
+- Seals rechecked locally;39971identities19715H1+20256L1,39863new+28prior,
+  707frames. Plan/summary/policy hashes unchanged;17sources matchGit745366c.
+  No failure/partial/tmp/lock; no historical score/outcome inspection.
+- ONE --stage admit launched after zero-controller/exclusive-evidence guards;
+  exec32297, LinuxPID423 at00:12, separate worker.admit stdout/stderr logs.
+  Admission repeats the offline verifier and binds verification fileSHA; no
+  second source fetch, no admission PASS or full scientific-readiness claim yet.
+  Post-gate tests/checkpoint/local commit remain pending. No push or O4b.
+
+## 2026-10-03 22:12 Europe/Rome - 08.34 raw completion / verifier launch
+
+- Existing run4883 recovered with full tool object: observed OSexit0 and RUN_EXIT=0.
+  Summary PASS_COMPLETE_CALIBRATION_RAW_NUMERIC_MATCH_PENDING_ADMISSION;
+  seal fd0fbbc0017eb16700c13d70de8a2507475beb5651453dfd69970bf33dfa9ec7,
+  SHA5a8c37663481d08cf350da48f25e94c627a01e4efbee2b8ed682ab510424f4ad.
+- All707frame/receipt pairs and39863newcontext/receipt pairs exist; no controller,
+  lock/failure/partial/tmp; stderr empty. E: free524057104384bytes at22:10.
+- Read-only audit17source hashes plus policy: byte-identical to Git745366c;
+  prepared/recovery plan SHA288f4bb0... unchanged. No scientific outcomes inspected.
+- Launched ONE standalone verify after duplicate/evidence/log guards; exec38777,
+  WSLPID424 at22:12. Distinct worker.verify stdout/stderr logs and OSexit supervision.
+  Local independent replay is not a second GWOSC fetch. No verification/admission
+  PASS claimed yet; productive calibration and O4b remain unopened.
+
 ## 2026-10-03 - Expanded exact-native calibration admission08.34
 
 - Author `procedi` approves separate calibration-only exact numerical admission;

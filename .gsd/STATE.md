@@ -1,4 +1,40 @@
 ## Current Position
+- **08.34 completed: exact calibration raw inputs admitted (2026-10-04 02:12 Europe/Rome)**:
+  Acquisition4883/standalone38777/admission32297 each observed OSexit0.
+  PASS_ADMITTED_CALIBRATION_EXACT_NATIVE_INPUTS_ONLY, seal
+  97d856bcd3440d67788345adf9fbc60c1f9dbe17fde5a65d6e82245981a63665,
+  SHA17ff302d9fab56886d83ac57e41d56cce54f46dbeb29178a4f8607a9aa325856.
+  39971 identities19715H1+20256L1,39863new+28prior contexts,707frames;
+  zero failure/partial/tmp/lock, all stage stderr empty. Seals and pins audited;
+  17sources+policy exactly matchGit745366c; original28 admission unchanged.
+  Post-gate126 WSL PASS/11 upstream warnings; Ruff lint/format PASS.
+  Local replay is not a second GWOSC fetch. Next separate provider/full-context
+  validity/full fresh calibration; all-run certification OPEN, O4b not started,
+  O3a closed. No scores/thresholds/provider promotion/push/main. Author requested
+  normal shutdown only after local checkpoint commit, monitor pause and safety check.
+- **08.34 independent raw verification PASS; admission replay active (2026-10-04 00:12 Europe/Rome)**:
+  Standalone38777 observed OSexit0/VERIFY_EXIT=0, stderr empty;
+  verification.json PASS_VERIFIED_CALIBRATION_NATIVE_RAW_ONLY,
+  seal c1d63c91f0a954bd2e4c8e5cb711db10b0f6bc1dca955579e950136e9183d8fe,
+  fileSHA c2f288a51f871de44d402494b6e16885b56ebb426f74c81b88a5ecacbb907d60.
+  All39971identities (19715H1+20256L1),39863new+28prior contexts,707frames;
+  plan/summary/policy pins unchanged;17source bytes matchGit745366c.
+  ONE --stage admit started, exec32297, LinuxPID423 at00:12; distinct
+  worker.admit.stdout.log/worker.admit.stderr.log and observed-exit supervision.
+  Admission itself repeats the offline verifier; do not duplicate or restart.
+  Receipt/admission PASS and post-gate tests still pending. No productive
+  provider/calibration, scores/thresholds, O4b or all-run certification opened.
+- **08.34 raw recovery complete; independent verification running (2026-10-03 22:12 Europe/Rome)**:
+  Run4883 completed with observed OSexit0; summary status
+  PASS_COMPLETE_CALIBRATION_RAW_NUMERIC_MATCH_PENDING_ADMISSION,
+  seal fd0fbbc0017eb16700c13d70de8a2507475beb5651453dfd69970bf33dfa9ec7,
+  fileSHA5a8c37663481d08cf350da48f25e94c627a01e4efbee2b8ed682ab510424f4ad.
+  707frame/receipt pairs and39863context/receipt pairs; no failure/partial/tmp/lock,
+  run stderr empty.17sources+policy byte-identical to freeze745366c.
+  ONE standalone verifier started, exec38777 (LinuxPID424 at22:12), logs
+  worker.verify.stdout.log/worker.verify.stderr.log outside recovery, pins unchanged.
+  Do not duplicate/restart verifier or acquisition. Verification/admission pending;
+  no productive calibration, scoring, thresholds, provider promotion or O4b.
 - **Expanded calibration-only native admission approved; recovery started (2026-10-03)**:
   Author `procedi` resolves08.33 decision, original manifest/28-key admission/
   productive profile/default runner immutable.08.34 source745366c: separate
