@@ -56,3 +56,33 @@ Supervisor launches verifier once only after run OSexit0/PASS/no failure/lock,
 with actual summary SHA; it prints RUN_EXIT_CODE and VERIFY_EXIT_CODE.
 Monitor ACTIVE at30min, silent unless meaningful phase result/error/decision.
 No fixed ETA from short startup sample; full-domain per-read guards preserved.
+
+## Failure checkpoint - supersedes live execution status
+
+Exec16946 completed with observed OSexit1 and RUN_EXIT_CODE=1 after1116 context
+receipts. No verifier started; no summary.json/verification.json. Controller is
+stopped, controller.lock absent, zero partial/tmp. Preserve native_v1 and logs.
+Failure sealed digest
+`0f9a4b89afb501501fbd44b9639ab5878af7cfc9f4503711e45067479e4eb570`,
+InputCoverageError `consumer native/name identity mismatch`.
+
+First rejected context H1[1369569500,1369569540) is a prior reference: actual
+name H1:STRAIN versus required H1:GWOSC-16KHZ_R1_STRAIN. The08.35 reader applies
+the new-recovery policy name template unconditionally to both origins. A
+read-only diagnostic checked all28 prior files against their existing pins:
+18H1:STRAIN+10L1:STRAIN, container/native SHA, t0/rate/sample count and finite
+samples all match. This is not evidence of raw or numerical corruption, and
+these diagnostic checks are not the08.36 independent full-domain verifier.
+
+Ten source SHA still match Git1fecbd3; replay contract and08.34/08.35 evidence
+pins unchanged. Synthetic prior fixture names used the new template and missed
+the real mixed-origin mismatch; pre-run tests therefore do not close this gate.
+
+Monitor PAUSED pending author decision. Recommended repair: explicit per-origin
+name binding, prior names from sealed historical containers and the inherited
+template for new containers, preserving numerical and provenance guards. Do not
+accept arbitrary names, remove the guard or rewrite prior containers. Approval
+requires mixed-origin synthetic tests, new source freeze and a fresh isolated
+run; the failed native_v1 is not resumed or reinterpreted. No code/config/input
+changes made here.08.36 remains incomplete and downstream gates are blocked;
+O3a remains closed/O4b not started, no push or repeated shutdown.

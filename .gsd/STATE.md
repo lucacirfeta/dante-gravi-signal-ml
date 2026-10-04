@@ -1,4 +1,20 @@
 ## Current Position
+- **08.36 FAILED, preserved; name-binding decision pending (2026-10-04)**:
+  Exec16946 observed OSexit1/RUN_EXIT_CODE=1 after1116/39891 context receipts.
+  No standalone verifier started, no summary/verification, no controller remains;
+  zero lock/partial/tmp. Sealed failure InputCoverageError: consumer native/name
+  identity mismatch, digest0f9a4b89afb501501fbd44b9639ab5878af7cfc9f4503711e45067479e4eb570.
+  First failing context H1[1369569500,1369569540), prior origin: actualH1:STRAIN
+  versus new recovery templateH1:GWOSC-16KHZ_R1_STRAIN. Read-only diagnosis of
+  all28 prior containers:18H1:STRAIN+10L1:STRAIN; container/native SHA, t0,
+  rate/count/finite all match. Ten sources exactGit1fecbd3 and parent08.34/08.35
+  pins unchanged. This is a mixed-origin metadata guard defect, not evidence of
+  raw/numerical corruption. Synthetic prior fixture missed historical names.
+  No code/config/input change, reset/resume, redownload or historical rename.
+  Monitor PAUSED. Proposed author decision: pin names separately by origin,
+  retain historical sealed names and new template, then mixed-origin tests,
+  source freeze and fresh isolated replay; native_v1 remains FAILED.08.36 not
+  complete; next gates blocked, O3a stays closed/O4b not started, no push/shutdown.
 - **08.36 full native consumer replay ACTIVE (2026-10-04)**:
   Author authorizes all remaining readiness increments until critical scientific/
   structural decisions or immediately before O4b launch. Source freeze

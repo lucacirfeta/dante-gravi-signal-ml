@@ -1,5 +1,29 @@
 # DANTE v6 execution journal
 
+## 2026-10-04 - 08.36 failed: preserved mixed-origin name mismatch
+
+- Exec16946 returned full tool object with exit_code1 and RUN_EXIT_CODE=1.
+  Controller stopped after1116 native context receipts; no standalone verifier
+  was launched. Summary/verification absent, zero lock/partial/tmp. Run native_v1
+  and stderr traceback retained without reset, archiving, resume or alteration.
+- Failure seal verified:0f9a4b89afb501501fbd44b9639ab5878af7cfc9f4503711e45067479e4eb570,
+  InputCoverageError consumer native/name identity mismatch. First failing key
+  H1[1369569500,1369569540) is prior input with H1:STRAIN, whereas the08.35 reader
+  unconditionally requires H1:GWOSC-16KHZ_R1_STRAIN from the new-recovery policy.
+- Diagnostic read-only audit OSexit0: all28 prior container/native hashes,
+  exact t0/rate/count and finite samples match their pinned records; historical
+  names are18H1:STRAIN+10L1:STRAIN. Ten source bytes exactGit freeze1fecbd3,
+  replay contract and08.34/08.35 evidence pins unchanged. No score/outcome read.
+  This diagnostic PASS is not full-domain native consumer/verifier PASS.
+- Synthetic prior fixtures used the new template and missed actual mixed-origin
+  names. Pre-run242 PASS/11 warnings and Ruff PASS remain historical evidence,
+  not proof that this real gate succeeds; no code changes or new regression run.
+- Monitor updated PAUSED and pause confirmed. Author decision requested before
+  changing validation identity: recommended per-origin pinned historical name
+  plus new template, never arbitrary names or rewriting preserved containers.
+  Approval would require mixed-origin tests, new source freeze and isolated
+  fresh replay, preserving this failure. No downstream/O4b, push or shutdown.
+
 ## 2026-10-04 - 08.36 full native replay implementation verified, run ACTIVE
 
 - Author requests autonomous completion of remaining pre-O4b points; stop only
