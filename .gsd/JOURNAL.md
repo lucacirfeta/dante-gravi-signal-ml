@@ -1,5 +1,36 @@
 # DANTE v6 execution journal
 
+## 2026-10-05 - 08.36 user interruption and authorized verification restart
+
+- First native_v2 run finished with39891receipts, sealed
+  PASS_COMPLETE_EXPANDED_NATIVE_CONSUMER_ONLY, RUN_EXIT_CODE=0 observed in
+  supervisor26831 and durable worker.v2.supervisor.stdout.log. Summary seal
+  5f8d44228d1b4ddf5e60cb9c8bb2bc0337005c397fefbae8adea23aaf269742b;
+  fileSHA108823e4cffd9c5622827bdbd5f80e7b8e0cfbc0ccab56fd3f07ffc5c7c914f5.
+- Author confirmed controlled interruption to shut down on4October. SIGINT sent
+  only to verified LinuxPID4076/stageverify/native_v2. Supervisor exited OS2,
+  observed VERIFY_EXIT_CODE=2; stderr records KeyboardInterrupt while resolving
+  an input path, not a numerical/scientific failure. Finally removed its lock.
+  Sealed progress16563/39891, digest
+  ddba303e14c02c7d99b9df8e53d8cf7f93c813b1e1c83014edd7d2b389d118fc.
+  No failure.json or verification.json; no downstream PASS inferred. Monitor
+  PAUSED confirmed. Documentation closure was interrupted before a local commit.
+- On5October author `riprendi`: no old controller remains. Ten source files,
+  both v2 contracts, consumer binding and completed summary pins match; four
+  08.34 parent evidence file pins match. Receipt seal/union audit runs read-only
+  before a new standalone verifier. Existing execute/quiet guards permit it
+  only absent lock/failure/partial/tmp/completed verification. Preserve original
+  progress/logs first; new attempt uses separate logs and restarts all contexts.
+  No raw fetch/full run repetition, source change, guard waiver, push or O4b.
+- Receipt audit22637 finished OSexit0:39891 sealed records, unique key union and
+  aggregate equal frozen binding/summary; all39971identities/19715H1+20256L1.
+  Original progress/logs copied byte-identically to external verification_attempts/
+  attempt1_user_interrupt_20261004, without moving/deleting originals. Archived
+  progress SHA34c1c84de5fc9bab8d9d44723015fa4655916091450f44abaa7f2d12805fd19a.
+  One standalone verifier restarted from beginning: exec31599, launcher9732,
+  LinuxPID427 at launch. Distinct worker.v2.verify_retry1 stdout/stderr/supervisor
+  logs; startup stderr empty, full exit/PASS pending. Monitor ACTIVE/30min confirmed.
+
 ## 2026-10-04 - 08.36 v2 binding PASS and fresh full replay ACTIVE
 
 - Source freeze76c42f064ba99c3ad0ffe3c8588c8e6560eb5d10. Real v2 preflight96231

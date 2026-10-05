@@ -1,4 +1,19 @@
-# 08.36 - FAILED, preserved pending author decision
+# 08.36 - v2 run PASS, audited verification restart active
+
+Latest status2026-10-05: native_v2 full run PASS/39891receipt/observed OSexit0.
+First verifier deliberately interrupted by author for shutdown after16563contexts,
+SIGINT/KeyboardInterrupt/observed OSexit2; no failure/lock/completed verification.
+Author `riprendi` permits audited full verification restart, not a resume from
+16563 or repetition of the completed run. Receipt/summary/source/parent audit
+and preservation of first-attempt progress/logs precede launch. Full independent
+PASS remains unobserved. Historical v1 failure below is preserved unchanged.
+
+Restart audit22637 OSexit0:39891 sealed receipts/union/aggregate and source10,
+contract/binding/summary/parent pins match. Original progress/logs copied
+byte-identically to external verification_attempts/attempt1_user_interrupt_20261004.
+One standalone verifier active exec31599/launcher9732/LinuxPID427 at launch;
+distinct worker.v2.verify_retry1 logs, monitor ACTIVE/30min. No verifier exit or
+full PASS yet; no historical run/source changed, no downstream or O4b started.
 
 Source freeze1fecbd3a0f6a2f6465ddeebd77db2b18b16ad40c.
 Run E:/dante_cache/dante_workflow/expanded_context_replay_20261004/native_v1.

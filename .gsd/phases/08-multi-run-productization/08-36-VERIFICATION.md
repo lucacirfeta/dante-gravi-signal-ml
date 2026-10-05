@@ -1,7 +1,14 @@
 # 08.36 pre-run verification - 2026-10-04
 
-Implementation pre-run evidence below. Real complete native consumer run is
-FAILED; standalone verifier was NOT STARTED. Do not report native replay PASS.
+Latest2026-10-05: v2 full run PASS/39891receipt/observed OSexit0; first standalone
+verify interrupted at author's request, OSexit2/KeyboardInterrupt after16563.
+No full verification PASS. Author permits audited fresh standalone verification
+from the beginning, preserving interruption evidence; restart audit OSexit0.
+All39891 receipt seals/union/aggregate and source10/contracts/binding/summary/
+parent pins match. First progress/logs archived byte-identically, originals kept.
+One verifier retry active exec31599/launcher9732/LinuxPID427 at launch; distinct
+worker.v2.verify_retry1 logs, monitor ACTIVE/30min. Full verifier PASS pending.
+Historical v1 failure and pre-run evidence below do not describe v2 run status.
 
 -242 targeted WSL PASS,11 upstream warnings,15.14s, observed OSexit0.
 -31 new tests: exact new/prior traversal, shared identity multiplicity,

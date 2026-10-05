@@ -126,3 +126,46 @@ Native verifier starts once only after run0/PASS/no failure/lock/verification;
 both full-stage exits still pending. Monitor ACTIVE/30min; general readiness
 continuation remains authorized, no fixed ETA from startup. Next after verified
 native PASS: inherited full padded-context validity/preprocessing, not O4b.
+
+## Run completion, user interruption and restart (2026-10-05)
+
+The native_v2 full consumer run subsequently completed all39891contexts with
+PASS_COMPLETE_EXPANDED_NATIVE_CONSUMER_ONLY and observed RUN_EXIT_CODE=0.
+Summary seal5f8d44228d1b4ddf5e60cb9c8bb2bc0337005c397fefbae8adea23aaf269742b,
+fileSHA108823e4cffd9c5622827bdbd5f80e7b8e0cfbc0ccab56fd3f07ffc5c7c914f5.
+
+The author needed shutdown and confirmed controlled interruption on4October.
+SIGINT was sent to the exact identified standalone verifierPID4076. It exited
+with observed VERIFY_EXIT_CODE=2; retained stderr ends KeyboardInterrupt while
+resolving an input path. Sealed progress16563/39891 has digest
+ddba303e14c02c7d99b9df8e53d8cf7f93c813b1e1c83014edd7d2b389d118fc.
+No controller.lock, failure.json or verification.json remained. All completed
+run receipts and original logs are retained. This is a deliberate interruption,
+not evidence of a numerical failure and not PASS_VERIFIED. Monitor was paused.
+
+On5October author `riprendi` authorizes a safe restart. Before launch: no active
+controller, existing quiet guards, source/contract/binding/parent/summary pin
+checks and a read-only all-receipt seal/identity-union/aggregate audit. Preserve
+first-attempt progress/logs outside native_v2 before retry rewrites its progress.
+The unchanged standalone verifier then reads every context from the beginning
+with distinct logs and durable OS exit capture. No automatic context-level
+resume, repeated raw acquisition/full run, lock/failure deletion, source/config
+change, new scientific decision or downstream execution. Full verifier PASS
+remains pending; local replay is not a second GWOSC fetch.
+
+Restart audit22637 completed with observed OSexit0: all39891 receipt seals,
+unique context union and aggregate match the frozen summary/binding; all39971
+identities,19715H1+20256L1. Ten sourceGit/contract/binding/summary pins and four
+08.34 parent evidence file hashes match. No controller/lock/failure/partial/tmp
+or completed verification before launch. This is not independent numeric PASS.
+
+Original progress and three first-attempt logs were copied byte-identically to
+E:/dante_cache/dante_workflow/expanded_context_replay_20261004/verification_attempts/attempt1_user_interrupt_20261004;
+originals remain in place. Archived progress fileSHA
+34c1c84de5fc9bab8d9d44723015fa4655916091450f44abaa7f2d12805fd19a.
+Exactly one unchanged standalone verifier restarted under exec31599,
+Windowslauncher9732/LinuxPID427 at launch. Separate logs are
+worker.v2.verify_retry1.stdout.log, worker.v2.verify_retry1.stderr.log and
+worker.v2.verify_retry1.supervisor.stdout.log; the latter captures actual OSexit.
+Startup stderr empty; full retry exit/PASS still pending. Monitor ACTIVE/30min
+confirmed. No full consumer/raw run repeated, new shutdown or O4b launch.

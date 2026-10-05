@@ -1,4 +1,22 @@
 ## Current Position
+- **08.36 v2 run PASS; audited verifier restart ACTIVE (2026-10-05)**:
+  First full run completed39891contexts with observed RUN_EXIT_CODE=0,
+  PASS_COMPLETE_EXPANDED_NATIVE_CONSUMER_ONLY; summary SHA
+  108823e4cffd9c5622827bdbd5f80e7b8e0cfbc0ccab56fd3f07ffc5c7c914f5.
+  On4October author needed shutdown and confirmed controlled interruption:
+  SIGINT to exact verifierPID4076; supervisor26831 observed VERIFY_EXIT_CODE=2.
+  Stderr ends KeyboardInterrupt; progress16563/39891, seal
+  ddba303e14c02c7d99b9df8e53d8cf7f93c813b1e1c83014edd7d2b389d118fc.
+  No failure/verification/lock, run/receipt/source/parent evidence retained;
+  no PASS_VERIFIED claim. Monitor was PAUSED. On5October author `riprendi` authorizes
+  audited verification restart from the beginning, NOT context-level resume or
+  repetition of completed run/raw acquisition. Archive first progress/logs
+  before restart; no deletion/waiver or frozen source/config edits. Full receipt
+  seal/union/aggregate audit completed OSexit0 for all39891receipt. First progress
+  and logs copied byte-identically to verification_attempts/attempt1_user_interrupt_20261004.
+  Exactly one fresh standalone verify active, exec31599/launcher9732/LinuxPID427
+  at launch; worker.v2.verify_retry1 stdout/stderr/supervisor logs retain exit.
+  Monitor ACTIVE/30min confirmed; full verifier PASS and downstream remain open.
 - **08.36 v2 binding independently PASS, full replay ACTIVE (2026-10-04)**:
   Freeze76c42f064ba99c3ad0ffe3c8588c8e6560eb5d10. New binding preflight96231
   observed0; standalone under26831 observed BINDING_VERIFY_EXIT_CODE=0.
