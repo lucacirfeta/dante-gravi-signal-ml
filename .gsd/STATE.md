@@ -1,4 +1,15 @@
 ## Current Position
+- **08.36 v2 full native reader PASS_VERIFIED (2026-10-05)**:
+  Run observedOS0; retry31599 observed exit_code0/VERIFY_RETRY1_EXIT_CODE=0.
+  All39891receipt/all39971identities19715H1+20256L1,39863new+28prior;
+  zero failure/partial/tmp/lock/controller. Verification seal
+  5e4dd4862e5272011b4150b83903d7f39a7585665255aaa1ddf1593e48121322,
+  SHA88011a7add59d8e053bdc87924ee67626bb878a3c8d82fbfa686ec394c499f2c.
+  Post-run250WSL PASS/11upstream warnings/16.01s/OSexit0; Ruff4files PASS.
+  Source10/parent4 match; summary unchanged. H5py local replay is not another
+  fetch, preprocessing or physical validity. Next inherited padded-context
+  validity/preprocessing discovery, no scoring/calibration/provider promotion/O4b.
+  Older active/interrupted/failed entries below are retained chronology only.
 - **08.36 v2 run PASS; audited verifier restart ACTIVE (2026-10-05)**:
   First full run completed39891contexts with observed RUN_EXIT_CODE=0,
   PASS_COMPLETE_EXPANDED_NATIVE_CONSUMER_ONLY; summary SHA

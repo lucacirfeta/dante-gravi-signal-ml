@@ -1,4 +1,16 @@
-# 08.36 pre-run verification - 2026-10-04
+# 08.36 full native consumer verification - 2026-10-05
+
+Status: PASS native-only. Run observedOS0; retry31599 full tool observedOS0,
+PASS_VERIFIED_EXPANDED_NATIVE_CONSUMER_ONLY/39891receipt/all39971identities
+(19715H1+20256L1;39863new+28prior). Zero failure/partial/tmp/lock/controller.
+Verification seal5e4dd4862e5272011b4150b83903d7f39a7585665255aaa1ddf1593e48121322,
+SHA88011a7add59d8e053bdc87924ee67626bb878a3c8d82fbfa686ec394c499f2c.
+Source10/parent4/summary pins match; retry stderr empty. Post-run250WSL PASS,
+11warnings/16.01s/OS0,Ruff4files lint/format PASS. H5py replay is not a second
+source fetch. Padded validity/preprocessing/full calibration remain OPEN;
+default/provider/scoring/scientific readiness/O4b NOT promoted.
+
+## Historical pre-run and interrupted-attempt evidence
 
 Latest2026-10-05: v2 full run PASS/39891receipt/observed OSexit0; first standalone
 verify interrupted at author's request, OSexit2/KeyboardInterrupt after16563.

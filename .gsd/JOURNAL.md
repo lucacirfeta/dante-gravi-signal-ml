@@ -1,5 +1,23 @@
 # DANTE v6 execution journal
 
+## 2026-10-05 - 08.36 full native PASS and post-run regressions
+
+- Retry31599 full tool result observed exit_code0/VERIFY_RETRY1_EXIT_CODE=0,
+  PASS_VERIFIED_EXPANDED_NATIVE_CONSUMER_ONLY/39891receipt. Verification
+  written09:57Europe/Rome; seal5e4dd4862e5272011b4150b83903d7f39a7585665255aaa1ddf1593e48121322,
+  SHA88011a7add59d8e053bdc87924ee67626bb878a3c8d82fbfa686ec394c499f2c.
+  Run observed0; interrupted first verifier remains exit2 with evidence preserved.
+- All39971identities19715H1+20256L1/39891contexts/39863new+28prior;
+  zero failure/partial/tmp/lock/controller, retry stderr empty. Ten source and
+  four parent evidence pins match, completed summary SHA unchanged.
+- Post-run suite82715 observedOS0:250PASS/11upstream warnings/16.01s;
+  expanded provider/replay/names, admission/recovery/contexts,PatchProducer.
+  Ruff lint/format4files PASS/OS0. Not carried-over pre-run certification.
+- Native reader gap closed; local retained-container h5py replay is NOT another
+  source fetch. Next inherited padded validity/preprocessing, productive
+  integration/full fresh calibration/runtime/O4b gates separate and open.
+  No provider promotion/scoring/threshold change/push or repeated shutdown.
+
 ## 2026-10-05 - 08.36 user interruption and authorized verification restart
 
 - First native_v2 run finished with39891receipts, sealed

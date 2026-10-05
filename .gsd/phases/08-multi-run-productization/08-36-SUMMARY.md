@@ -1,4 +1,16 @@
-# 08.36 - v2 run PASS, audited verification restart active
+# 08.36 - v2 full native consumer PASS_VERIFIED
+
+Final2026-10-05: run observed0; retry31599 observed exit_code0 and
+VERIFY_RETRY1_EXIT_CODE=0/PASS_VERIFIED_EXPANDED_NATIVE_CONSUMER_ONLY.
+39891receipt/all39971identities19715H1+20256L1/39863new+28prior, zero
+failure/partial/tmp/lock/controller. Verification seal
+5e4dd4862e5272011b4150b83903d7f39a7585665255aaa1ddf1593e48121322,
+SHA88011a7add59d8e053bdc87924ee67626bb878a3c8d82fbfa686ec394c499f2c.
+Post-run250WSL PASS/11warnings/16.01s/OS0,Ruff4files PASS,source10/parent4
+pins match. Native reader only: no full preprocessing/calibration/DQ/provider
+promotion/O4b claim. Next inherited padded-context validity/preprocessing.
+
+## Historical restart and failure chronology
 
 Latest status2026-10-05: native_v2 full run PASS/39891receipt/observed OSexit0.
 First verifier deliberately interrupted by author for shutdown after16563contexts,

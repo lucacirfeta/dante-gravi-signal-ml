@@ -8,7 +8,7 @@ and unrelated user untracked files stay untouched. Prior shutdown was one-shot.
 
 | Order | Gate | Current evidence / completion condition |
 |---|---|---|
-|1|Exact full native reader|08.34 raw admission and08.35 binding PASS;08.36 v1 FAILED preserved. V2 repair250 WSL PASS/Ruff PASS, real binding independently OSexit0. Fresh39891-context replay ACTIVE/exec26831; native standalone verifier pending.|
+|1|Exact full native reader|COMPLETE2026-10-05:08.34 admission/08.35 binding PASS;08.36 v2 run OS0 and retry31599 independent verifier OS0/PASS_VERIFIED_EXPANDED_NATIVE_CONSUMER_ONLY.39891contexts/all39971identities, zero failure/partial/tmp/lock. Post-run250WSL PASS/11warnings,Ruff4files PASS,source10/parent4 match. V1 failed and interrupted first verifier preserved. Not preprocessing/scientific certification.|
 |2|Complete padded-context validity and preprocessing|OPEN. Inherit versioned symmetric context, native grid, existing validity/exclusion semantics, whitening before target crop and Q-transform. Full-domain input/image parity, tests then source freeze then execution/verifier. No new DQ filter or silent population reduction.|
 |3|Isolated productive integration|OPEN. Separate approved productive namespace/profile, exact-input consumer, stage prerequisites and single-writer exclusion. No legacy/global redirection. Any new active-component promotion not covered by prior approvals is an author decision.|
 |4|Full fresh calibration|OPEN. Entire frozen reference population, freshly computed embeddings/scores/thresholds as contracted, independent verifier, separate per-detector/session receipts. No historical score/threshold transplant.|

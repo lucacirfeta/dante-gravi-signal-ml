@@ -1,5 +1,17 @@
 # Full expanded native context replay - 2026-10-04
 
+Final checkpoint2026-10-05: PASS_VERIFIED_EXPANDED_NATIVE_CONSUMER_ONLY.
+Run observedOS0 and retry31599 observedOS0/VERIFY_RETRY1_EXIT_CODE=0.
+All39891context receipts/all39971identities19715H1+20256L1,39863new+28prior;
+zero failure/partial/tmp/lock/controller, retry stderr empty. Independent
+verification seal5e4dd4862e5272011b4150b83903d7f39a7585665255aaa1ddf1593e48121322,
+fileSHA88011a7add59d8e053bdc87924ee67626bb878a3c8d82fbfa686ec394c499f2c.
+Post-run250WSL PASS/11upstream warnings/16.01s/OS0,Ruff lint/format4files PASS;
+source10 and four parent pins match, summary unchanged. Reader gap closed,
+not padded-context validity/preprocessing, full calibration or scientific
+readiness. H5py local replay is not a second fetch. Historical attempts below
+remain preserved. Next separate inherited padded-context validity/preprocessing.
+
 Scope: the08.35 opt-in reader must actually read every admitted context, not
 merely bind metadata. This is calibration-input-only, not reopening O3a.
 
