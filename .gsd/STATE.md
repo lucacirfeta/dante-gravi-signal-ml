@@ -1,4 +1,12 @@
 ## Current Position
+- **08.38 full preprocessing run ACTIVE (2026-10-05)**:
+  Source7eab4eae5d7bb9bfafb0da5cc3aaa6c8537802b7, contract73d3bdf9...
+  Fresh expanded_preprocessing_replay_20261005/calibration_v1; one supervisor
+  exec84146/launcher24404/Linuxcontroller312 at launch. Conditional standalone
+  verify only after runOS0/PASS and no failed/incomplete evidence. Separate
+  durable logs/exits, no automatic resume. Startup parent rebinding may be slow.
+  306pre-run WSL/Ruff PASS, no full real PASS or observed execution exit yet.
+  Monitor ACTIVE/30min updated to this phase; old31599 is COMPLETE, not active.
 - **08.38 full preprocessing runner/verifier tested (2026-10-05)**:
   306WSL PASS/28new replay cases/11warnings/19.49s, Ruff3files PASS.
   Exact synthetic parity including spawned worker; separate h5py reader and

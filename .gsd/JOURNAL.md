@@ -1,5 +1,20 @@
 # DANTE v6 execution journal
 
+## 2026-10-05 - 08.38 single full preprocessing launch
+
+- Freeze7eab4eae5d7bb9bfafb0da5cc3aaa6c8537802b7, contract SHA
+  73d3bdf9eb1ea49aab83cd8c2c87d902b1e65cc41451bb59f3c1206c961891aa;
+  two executed source byte pins audited against Git before launch.
+- Fresh external calibration_v1 under expanded_preprocessing_replay_20261005.
+  Supervisor84146 observed launcherPID24404, one Linuxcontroller312 at launch,
+  initial stderr empty. Separate stdout/stderr, conditional verifier after
+  run0/PASS/count match/zero incomplete or failed evidence; durable exit log.
+- No run/verify exit or full real numerical PASS yet. Actual spawned worker
+  synthetic parity and306WSL PASS/Ruff PASS are pre-run evidence only. Monitor
+  updated ACTIVE/30min to this phase; no duplicate native/transport stages.
+  Continue authorized readiness after verified PASS, stop only critical decision
+  or before actual O4b. No push/main, historical/user artifact changes or shutdown.
+
 ## 2026-10-05 - 08.38 full preprocessing implementation and pre-run tests
 
 - Separate frozen method-derived controller, fresh NPY images/receipts and

@@ -59,3 +59,23 @@ spawned worker against reconstructed synthetic input, modified pixels even
 with re-sealed receipt, missing/extra/corrupt artifacts, runtime/parent/source
 drift and failed workers. Full real execution/standalone verification still
 pending; do not infer full-domain PASS from synthetic tests.
+
+## Real full-domain replay active
+
+Source freeze7eab4eae5d7bb9bfafb0da5cc3aaa6c8537802b7, contract SHA
+73d3bdf9eb1ea49aab83cd8c2c87d902b1e65cc41451bb59f3c1206c961891aa.
+Exactly one supervisor84146/Windowslauncher24404/Linuxcontroller312 at launch.
+Fresh run E:\dante_cache\dante_workflow\expanded_preprocessing_replay_20261005\calibration_v1.
+Worker stdout/stderr and conditional verifier logs stay in its parent directory,
+with durable observed RUN_EXIT_CODE/VERIFY_EXIT_CODE. Independent verifier is
+conditional on run0/PASS and no failure, lock, partial or pre-existing verifier.
+Initial binding repeats parent checks and can precede receipt/lock creation;
+no full-domain numerical PASS or run/verify exit has been observed yet.
+Method binding parent file SHA
+4c461dde5e46a83f9c4274aaed2668b7347e29af607b26a2a4352c5d30d5318a.
+
+No fixed ETA claimed before sustained real throughput is available. Full
+context/source/receipt hashing remains enabled; no performance acceptance
+waiver. On failure preserve run/logs and diagnose, do not resume automatically.
+After both verified passes continue isolated integration and fresh calibration,
+then runtime/CLI/install/O4b-specific readiness, stopping before actual O4b.
