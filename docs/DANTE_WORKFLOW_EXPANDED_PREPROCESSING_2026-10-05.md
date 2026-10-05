@@ -1,0 +1,61 @@
+# Expanded calibration preprocessing readiness
+
+## Inherited method/input binding: PASS, not preprocessing execution
+
+08.36 full native reader is independently verified for all39,891 unique
+contexts representing39,971 frozen H1/L1 calibration identities. 08.37 binds
+that input parent to the unchanged corrected-O4a preprocessing method.
+
+New source freeze a885bbe7156fd67e5ca065a0bc763308192efe65; contract
+`config/dante_workflow_expanded_preprocessing_binding_v1.json`, SHA
+34c870c90353127da3510028ba193eaab14738547df05574e21062a2f0a0e632.
+Real exec18247 observedOS0/METHOD_BINDING_EXIT_CODE=0, stderr empty:
+PASS_INHERITED_PREPROCESSING_BINDING_ONLY, all39891contexts/39971identities,
+19715H1+20256L1, seal
+70dcea0501174ce92810fa78f4b137ead123faf29b5922b19428c1a70a3ccf66.
+Evidence/logs retained under
+E:\dante_cache\dante_workflow\expanded_preprocessing_20261005.
+Pre-run278WSL PASS/28new/11upstream warnings/16.34s, Ruff3files PASS.
+
+## Exact source qualification
+
+PatchProducer is byte-identical to the pinned protocol. Current preprocessor
+and config use CRLF, whereas historical protocol pins used LF. Replacing LF
+with CRLF in the historical bytes exactly reconstructs the current bytes;
+both hashes are enforced separately. Mixed endings or any content change fail.
+No preserved file was normalized and no existing gate was weakened.
+
+Method is parity with prior corrected-O4a calibration: complete symmetric
+context, whiten then bandpass, clean analysis crop, inherited Q-transform,
+per-image normalization and cividis RGB uint8. It is not optimization for this
+population. All numerical/geometry/representation settings come from pinned
+configuration, not chat or newly selected values.
+
+Calibration inherits full-context finite/grid requirements. Scan validity/DQ
+references are bound, but are not an implicit new filter on calibration; the
+full population and multiplicity are retained.
+
+## Next empirical check
+
+Full-domain unchanged worker replay and a standalone h5py input reader plus
+explicit inherited component-chain image reconstruction. Tests and source
+freeze precede real numerical execution. This binding alone does not establish
+image parity, physical data quality, sensor safety, full calibration, productive
+provider promotion, all-run certification or permission to launch O4b.
+
+## Full preprocessing implementation tested, real execution pending
+
+08.38 separate versioned replay contract/controller/CLI, fresh NPY uint8 images
+and sealed per-context native/image receipts. Run uses unchanged worker with
+protocol workers/batch size. Standalone verifier uses separate h5py reads and
+explicit inherited component-chain dispatch. The scientific whitening/filter/
+Q primitives are the SAME pinned functions: this is not a claim of a second
+independently implemented scientific algorithm. Exact image equality, no new
+tolerance, sampling, scoring, DQ exclusion or worker-failure skip.
+
+Pre-run306WSL PASS/56new across method+replay increments/11upstream warnings,
+19.49s, observedOS0; Ruff lint/format3replay files PASS. Tests include a real
+spawned worker against reconstructed synthetic input, modified pixels even
+with re-sealed receipt, missing/extra/corrupt artifacts, runtime/parent/source
+drift and failed workers. Full real execution/standalone verification still
+pending; do not infer full-domain PASS from synthetic tests.

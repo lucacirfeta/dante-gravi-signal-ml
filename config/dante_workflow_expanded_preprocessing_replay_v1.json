@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "FULL_EXPANDED_CALIBRATION_PREPROCESSING_REPLAY_V1",
+  "method_contract": {
+    "path": "config/dante_workflow_expanded_preprocessing_binding_v1.json",
+    "sha256": "34c870c90353127da3510028ba193eaab14738547df05574e21062a2f0a0e632",
+    "source_freeze": "a885bbe7156fd67e5ca065a0bc763308192efe65",
+    "evidence_sha256": "4c461dde5e46a83f9c4274aaed2668b7347e29af607b26a2a4352c5d30d5318a"
+  },
+  "additional_runtime_source_pins": {
+    "src/core/utils.py": "909234d6716342622c03c098be06b7e04b0978afcfb9230b0547719fabf2a9a6",
+    "src/core/data_loader.py": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636"
+  },
+  "measurement_rule": "all admitted unique full finite native contexts; unchanged PatchProducer worker images; standalone h5py reader and explicit inherited component-chain reconstruction; exact uint8 equality, no threshold or sampling",
+  "population_rule": "retain every frozen calibration identity and context; no new DQ/scan exclusion; invalid input or preprocessing failure stops instead of skipping",
+  "image_storage_rule": "fresh local NPY uint8 RGB and sealed per-context receipts; never historical shards or images",
+  "automatic_resume": false,
+  "source_paths": [
+    "src/dante_workflow/expanded_preprocessing_replay.py",
+    "scripts/replay_dante_workflow_expanded_preprocessing.py"
+  ],
+  "boundary": {
+    "full_calibration_context_preprocessing_only": true,
+    "physical_data_quality_certified": false,
+    "full_calibration_verified": false,
+    "default_provider_replaced": false,
+    "score_values_read": false,
+    "o4b_launch_allowed": false
+  }
+}

@@ -1,5 +1,17 @@
 # DANTE v6 execution journal
 
+## 2026-10-05 - 08.38 full preprocessing implementation and pre-run tests
+
+- Separate frozen method-derived controller, fresh NPY images/receipts and
+  standalone h5py input plus explicit component-chain image reconstruction.
+  Exact uint8 parity, unchanged worker, inherited workers/batch; no sampling,
+  scoring, new DQ exclusion, population skip or resume. Same scientific
+  primitives explicitly declared, not an independent scientific implementation.
+- Exec16846 observedOS0:306PASS/28new replay tests/11upstream warnings/19.49s.
+  Spawned real worker synthetic parity included. Corrupt/re-sealed pixels,
+  missing/extra files, source/parent/runtime/loaded config drift and failed
+  workers covered. Ruff lint/format3replay files PASS. No real full PASS yet.
+
 ## 2026-10-05 - 08.37 real inherited method/input binding PASS
 
 - Source a885bbe7156fd67e5ca065a0bc763308192efe65, exact contract SHA

@@ -1,4 +1,10 @@
 ## Current Position
+- **08.38 full preprocessing runner/verifier tested (2026-10-05)**:
+  306WSL PASS/28new replay cases/11warnings/19.49s, Ruff3files PASS.
+  Exact synthetic parity including spawned worker; separate h5py reader and
+  inherited component-chain reconstruction. SAME scientific primitives,
+  not an independently implemented whitening/Q algorithm. Source freeze and
+  full real execution pending. No scores, extra DQ filter or population skip.
 - **08.37 real method/input binding PASS (2026-10-05)**:
   Exec18247 observedOS0/METHOD_BINDING_EXIT_CODE=0, stderr empty; unchanged
   39891contexts/39971identities19715H1+20256L1. Method-only sealed evidence
