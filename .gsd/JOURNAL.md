@@ -1,5 +1,17 @@
 # DANTE v6 execution journal
 
+## 2026-10-05 - 08.37 real inherited method/input binding PASS
+
+- Source a885bbe7156fd67e5ca065a0bc763308192efe65, exact contract SHA
+  34c870c90353127da3510028ba193eaab14738547df05574e21062a2f0a0e632.
+- Exec18247 full tool result observed exit_code0, durable
+  METHOD_BINDING_EXIT_CODE=0, PASS_INHERITED_PREPROCESSING_BINDING_ONLY,
+  all39891contexts/39971identities19715H1+20256L1. Seal
+  70dcea0501174ce92810fa78f4b137ead123faf29b5922b19428c1a70a3ccf66;
+  stdout result and empty stderr retained. Historical parents unchanged.
+- No raw/image measurements or new DQ filter; full numerical preprocessing
+  adapter/controller and standalone verifier are next, before fresh calibration.
+
 ## 2026-10-05 - 08.37 inherited preprocessing binding implementation
 
 - New exact method/input binder and versioned contract, without measurement.

@@ -1,4 +1,10 @@
 ## Current Position
+- **08.37 real method/input binding PASS (2026-10-05)**:
+  Exec18247 observedOS0/METHOD_BINDING_EXIT_CODE=0, stderr empty; unchanged
+  39891contexts/39971identities19715H1+20256L1. Method-only sealed evidence
+  under expanded_preprocessing_20261005/method_binding_v1.json; source a885bbe.
+  278WSL/Ruff PASS. Continue full padded preprocessing replay/verifier; no
+  numerical image/calibration/provider/O4b PASS from this metadata-only gate.
 - **08.37 inherited preprocessing binder tested (2026-10-05)**:
   278WSL PASS/28new/11warnings, Ruff3files PASS. Exact current/historical
   source pins distinguish LF-to-CRLF reconstruction from scientific changes;
