@@ -1,4 +1,10 @@
 ## Current Position
+- **08.37 inherited preprocessing binder tested (2026-10-05)**:
+  278WSL PASS/28new/11warnings, Ruff3files PASS. Exact current/historical
+  source pins distinguish LF-to-CRLF reconstruction from scientific changes;
+  preserved preprocessor/config unchanged. Protocol, full native summary/
+  verification and calibration population bound; no scan/DQ filter added.
+  Metadata-only real binding pending freeze/launch; full preprocessing not PASS.
 - **08.36 v2 full native reader PASS_VERIFIED (2026-10-05)**:
   Run observedOS0; retry31599 observed exit_code0/VERIFY_RETRY1_EXIT_CODE=0.
   All39891receipt/all39971identities19715H1+20256L1,39863new+28prior;

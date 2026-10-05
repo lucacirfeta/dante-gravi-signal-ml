@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "INHERITED_CALIBRATION_PREPROCESSING_BINDING_ONLY_V1",
+  "authorization": "2026-10-04 autonomous pre-O4b readiness; 2026-10-05 riprendi; inherit existing method without scientific change",
+  "protocol": {
+    "path": "config/dante_o4a_corrected_protocol_v4.json",
+    "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc"
+  },
+  "native_replay": {
+    "contract_path": "config/dante_workflow_expanded_context_replay_v2.json",
+    "contract_sha256": "7cc3280238c4cf724d4a480e3ccb0216a978a9817fa948c5e0712d53dd5b5e3d",
+    "source_freeze": "76c42f064ba99c3ad0ffe3c8588c8e6560eb5d10",
+    "summary_sha256": "108823e4cffd9c5622827bdbd5f80e7b8e0cfbc0ccab56fd3f07ffc5c7c914f5",
+    "verification_sha256": "88011a7add59d8e053bdc87924ee67626bb878a3c8d82fbfa686ec394c499f2c"
+  },
+  "current_source_qualification": {
+    "patch_producer": {
+      "sha256": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef",
+      "historical_relation": "EXACT_BYTES"
+    },
+    "preprocessor": {
+      "sha256": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2",
+      "historical_relation": "EXACT_LF_TO_CRLF_RECONSTRUCTION"
+    },
+    "runtime_config": {
+      "sha256": "8706c65bf80c88e933d9e64e7e095790f1574c652be3816bb838872037ff0fef",
+      "historical_relation": "EXACT_LF_TO_CRLF_RECONSTRUCTION"
+    }
+  },
+  "source_qualification_reason": "Current preprocessor/config bytes are exactly historical LF bytes with LF replaced by CRLF; pin both identities explicitly, do not edit preserved sources or waive any existing gate",
+  "preprocessing_order": "unchanged PatchProducer._worker_preprocess: complete symmetric context -> whiten_context (whiten then bandpass) -> extract_clean_subwindow -> generate_qtransform -> inherited cividis RGB uint8",
+  "method_reason": "parity with pinned corrected-O4a calibration execution and earlier bounded 28-context replay, not optimization for this population",
+  "calibration_validity_rule": "inherit calibration geometry/native grid and all-sample finite requirement from src/dante_light/o4a_corrected_execution.py:run_primary_calibration; no additional DQ or scan-window exclusion",
+  "scan_validity_boundary": "raw_window_validity_audit exclusions apply to frozen scan population, not an implicit reduction of the calibration identity set; retain reference but do not apply as new calibration filter",
+  "execution_geometry": "all required intervals/analysis times/sample rate/representation and worker/batch settings are read from pinned protocol, never chat constants",
+  "source_paths": [
+    "src/dante_workflow/expanded_preprocessing_binding.py",
+    "scripts/preflight_dante_workflow_expanded_preprocessing.py"
+  ],
+  "boundary": {
+    "method_and_input_binding_only": true,
+    "all_contexts_preprocessed": false,
+    "full_context_validity_verified": false,
+    "full_calibration_verified": false,
+    "default_provider_replaced": false,
+    "score_values_read": false,
+    "o4b_launch_allowed": false
+  }
+}

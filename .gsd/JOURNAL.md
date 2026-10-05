@@ -1,5 +1,20 @@
 # DANTE v6 execution journal
 
+## 2026-10-05 - 08.37 inherited preprocessing binding implementation
+
+- New exact method/input binder and versioned contract, without measurement.
+  PatchProducer exact historical bytes; preprocessor/config current CRLF bytes
+  exactly reconstruct protocol historical LF pins. Both hashes declared, no
+  preserved source edited or existing scientific guard waived.
+- Calibration full-context finite/grid rule inherited; scan validity audit and
+  DQ snapshot bound but not new exclusions. Same39891contexts/39971identities.
+- Pre-run94386 observedOS0:278PASS/28new/11warnings/16.34s. Ruff lint/format
+  three new Python files PASS; Git diff check clean. Positive metadata-only
+  and negative source/parent/status/geometry/output preservation tests covered.
+  Fixture native-contract omission fixed before full regression execution.
+- Actual binding and full preprocessing remain pending. Local source freeze
+  precedes fresh external metadata-only run; no scoring/provider promotion/O4b.
+
 ## 2026-10-05 - 08.36 full native PASS and post-run regressions
 
 - Retry31599 full tool result observed exit_code0/VERIFY_RETRY1_EXIT_CODE=0,
