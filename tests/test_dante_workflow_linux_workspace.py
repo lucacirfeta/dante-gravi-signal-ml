@@ -79,6 +79,17 @@ def test_checked_requires_absolute():
         workspace.checked(Path("relative"))
 
 
+def test_virtual_mount_name_does_not_dereference_alias():
+    name = "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/reference"
+    assert workspace.virtual_path(name) == Path(name)
+
+
+@pytest.mark.parametrize("name", ["relative", "/etc/passwd", "/mnt/c/../e/file"])
+def test_virtual_mount_name_rejects_escape(name):
+    with pytest.raises(ValueError, match="virtual source"):
+        workspace.virtual_path(name)
+
+
 @pytest.fixture
 def prepared(tmp_path, monkeypatch):
     source = tmp_path / "opaque"

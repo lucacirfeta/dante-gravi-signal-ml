@@ -29,6 +29,18 @@ def relative(value):
     return path
 
 
+def virtual_path(value):
+    """Validate a logical mount name without dereferencing its original alias."""
+    path = Path(value)
+    if (
+        not path.is_absolute()
+        or ".." in path.parts
+        or not any(path.is_relative_to(Path(p)) for p in ("/mnt/c", "/mnt/e"))
+    ):
+        raise ValueError("snapshot virtual source must be on declared C/E roots")
+    return path
+
+
 def tree(source, excluded=()):
     """Scandir avoids repeated resolve/stat RPCs for every metadata ancestor."""
     source = checked(source)
@@ -121,9 +133,7 @@ def recipe(policy, root):
 
     def add(source, virtual=None, expected=None, size=None):
         source = Path(source)
-        virtual = Path(virtual if virtual is not None else source)
-        if not any(virtual.is_relative_to(Path(p)) for p in ("/mnt/c", "/mnt/e")):
-            raise ValueError("snapshot virtual source must be on declared C/E roots")
+        virtual = virtual_path(virtual if virtual is not None else source)
         if virtual in entries:
             old = entries[virtual]
             if source != old["source"] or (
@@ -156,7 +166,7 @@ def recipe(policy, root):
     for item in policy["trees"]:
         source, virtual = (
             checked(item["source"]),
-            checked(item.get("virtual", item["source"])),
+            virtual_path(item.get("virtual", item["source"])),
         )
         for name, size in tree(source, item.get("exclude_top", [])):
             add(source / name, virtual / name, size=size)

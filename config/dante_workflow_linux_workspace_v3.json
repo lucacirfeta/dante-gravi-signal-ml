@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "status": "NATIVE_LINUX_BYTE_PREPARATION_ONLY_V1",
+  "authorization": "2026-10-06 author proceeds with practical Linux migration and immutable initial/final metadata scans; corrected physical reference junction route, prepare only",
+  "repository_root": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml",
+  "workspace": "/home/atafe/dante_bench/native_calibration_20261006/prepare_v3",
+  "maximum_snapshot_bytes": 128849018880,
+  "protocol": "config/dante_o4a_corrected_protocol_v4.json",
+  "protocol_sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc",
+  "calibration_contract": "config/dante_workflow_expanded_calibration_v1.json",
+  "calibration_contract_sha256": "aca27040a5b42b2319fcb6064d8296fe71a170fba72b5ecebc3681179903795b",
+  "recovery_directory": "/mnt/e/dante_cache/dante_workflow/calibration_expanded_admission_20261003/prepared_v1/recovery",
+  "image_mirror": "/home/atafe/dante_bench/expanded_storage_20261006/probe_v2/parent",
+  "image_mirror_digest": "b0e819e430a5b2575198b71c081685fa42c5e4194937770e9dd4d5b76437ed2a",
+  "image_virtual_directory": "/mnt/e/dante_cache/dante_workflow/expanded_preprocessing_replay_20261005/calibration_v1",
+  "excluded_unused_inputs": "expanded recovery original GWOSC frames are archival only; all admitted context containers/receipts retained. No calibration identities excluded; no interrupted scores reused",
+  "trees": [
+    {
+      "source": "/mnt/e/dante_cache/dante_workflow/calibration_expanded_admission_20261003/prepared_v1/recovery",
+      "exclude_top": [
+        "frames"
+      ]
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_workflow/expanded_context_replay_20261004/native_v2"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_workflow/expanded_production_20261006/profile_v1"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_workflow/calibration_raw_transport_20261003/metadata_v1"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_light/o4a_corrected_v2/calibration_e70050ef91ce0c04522b17f0b51fd364ade77cd9c765d19dd4ec89df3a653ff7"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_light/o4a_corrected_v2/calibration_reacquisition/recovery_20261003"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_light/reference_artifacts/v1/data/reference",
+      "virtual": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/data/reference"
+    }
+  ],
+  "files": [
+    {
+      "source": "/mnt/e/dante_cache/dante_workflow/expanded_context_provider_20261004/preflight_v2.json",
+      "sha256": "83da191a5107029a0bd6934f70a1eebfb6694317b81806ad21dda16caf28dfae"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_workflow/expanded_preprocessing_20261005/method_binding_v1.json",
+      "sha256": "4c461dde5e46a83f9c4274aaed2668b7347e29af607b26a2a4352c5d30d5318a"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_light/o4a_corrected_v2/calibration_admission/admission_20261003_v1.json",
+      "sha256": "b17d6388ff888d2b0bd332e1c993b56e83ac0c62d53e62a54d0f01e3d09de6f1"
+    },
+    {
+      "source": "/mnt/e/dante_cache/dante_light/o4a_corrected_v2/inputs_326495389f511b378c52b2a99f7771bd13d87d6852d4191a4f0fb61d6842d4fa/acquisition_manifest.json",
+      "sha256": "4f0732510604583e8a02827d3172e337cedd714ed3e8d3b86dfaac6c17b7fe78"
+    },
+    {
+      "source": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/artifacts/dante_workflow/calibration_transport_v1/preflight_20261002.json",
+      "sha256": "9dc1c705b036a5ab83888e6438a99d4f221f65f7d489f4ede6efd00446abd48e"
+    }
+  ]
+}

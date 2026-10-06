@@ -1,4 +1,13 @@
 ## Current Position
+- **08.42 reference route fixed; immutable scan schedule approved**:
+  Author6Oct14:37Rome `procedi` follows explicit initial/final immutable scan
+  proposal; per-read hashes and full numerical verifier unchanged. prepare_v2
+  observedOS1 at11:17:41UTC during inventory, before bytes copied. Existing
+  data/reference junction resolves to E:/dante_cache/dante_light/reference_artifacts/v1/data/reference.
+  New v3 copies that exact physical tree under logical C: reference name;
+  no scientific index/path seal mutation. Source trees still reject symlinks,
+  virtual mount names validated lexically.79PASS/1SKIP/11warnings/5.87s/OS0,
+  RuffPASS and7actual source route checksPASS. v2failure preserved; no resume.
 - **08.42 launcher corrected after WSL idle-stop**:
   systemd prepare_v1 launched13:08:36Rome/PID523 then WSL poweroff13:08:51,
   empty destination and no completion/observed preparation OS exit. Preserve

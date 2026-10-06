@@ -1,5 +1,25 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - reference junction correction and immutable guard approval
+
+- prepare_v2 worker23936/WSL23176 observedPREPARATION_EXIT_CODE=1 at11:17:41UTC.
+  Failure during inventory: original C:data/reference is a legitimate junction
+  to /mnt/e/dante_cache/dante_light/reference_artifacts/v1/data/reference.
+  Destination contains only failure.json, digestbe32165cafb078d5520a6d3c1dbfc6e8716fbd3acd15f256cd39e8c19d726a70;
+  no copied inputs/scientific stage. Keep all old directories and launcher logs.
+- v3 physical tree points to canonical E: files, logical destination remains
+  C: reference name. Source no-link checks kept; virtual names validated without
+  dereferencing historical aliases. Same index/content, no provenance mismatch.
+  Seven actual routes validated; admission/mirror record schemas inspected as
+  metadata only.79WSL testsPASS/1root-onlySKIP/11upstreamwarnings/5.87s/OS0,
+  Ruff3filesPASS. New namespace prepare_v3, no resume of failed v2.
+- Latest `procedi` authorizes the proposed complete initial/final metadata scans
+  on immutable native inputs in place of repeated full-tree image-level scans.
+  All per-read native/receipt/source hashes and independent full numerical
+  verification retained. No changes to population, batching, workers, CUDA
+  precision, estimator/tolerance or default provider promotion. Wrapper requires
+  root-protected read-only input scope and tests/freeze before scientific run.
+
 ## 2026-10-06 - native launcher idle-stop diagnosis and correction
 
 - Corrected launcher initial real invocation rejected mixed-case textual config

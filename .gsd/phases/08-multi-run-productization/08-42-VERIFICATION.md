@@ -2,6 +2,14 @@
 
 This is preparation-only, not calibration/numerical equivalence or speedup.
 
+Latestv3route correction: v2observedOS1 during inventory, before copying, on
+known reference junction. All old failure evidence retained. Canonical physical
+reference source exists on E:; logical C: name copied without dereferencing that
+alias as a destination. Seven source routesPASS;79WSL testsPASS/1root-onlySKIP/
+11warnings/5.87s/OS0, RuffPASS. Frozen scientific sources unchanged. Author
+`procedi` approves immutable initial/final scan scheduling, not new numerical
+algorithms/population/tolerances. Execution wrapper still pending qualification.
+
 Latest launcher correction: initial systemd prepare_v1 stopped at WSL idle
 poweroff13:08:51Rome,15s after start; no byte receipt or Python completion.
 Microsoft documents systemd services do not keep WSL alive. The earlier8s
