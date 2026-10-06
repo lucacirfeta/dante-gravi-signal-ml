@@ -1,4 +1,15 @@
 ## Current Position
+- **Fresh installed administrative boundary PASS; O4b contract checkpoint**:
+  Native wheel built/installed offline from200c81d in clean base venv, no
+  checkoutPYTHONPATH; actualOS0. InstalledCLI/help/plan and same-interpreter
+  checkout fullplan exact equalityPASS/OS0. UI wheel isolated import with
+  existing optionaldeps via system-site-packages:3HTTP routes200/securityPASS,
+  not clean scientific install or full-chain execution.18scientificrawpinsPASS.
+  InstalledO4b H1/L1readiness actualexit2/BLOCKED_RUN_PROFILE: missing method
+  and workflow contracts. No release/GPS/DQ/population/null choices inferred.
+  Gates6/7 remainOPEN beyond administrative boundary, gates4/5 still incomplete
+  full verification. Author decision required before new scientific contract;
+  no O4b/monitor/replay/promotion/push. See installed boundary2026-10-06 doc.
 - **08.43 post-run regression COMPLETE; full verifier still interrupted**:
   Author `procedi` authorizes short post-run checks and operational qualification,
   not a verifier relaunch or O4b execution. Fresh WSL selected16-file suite:

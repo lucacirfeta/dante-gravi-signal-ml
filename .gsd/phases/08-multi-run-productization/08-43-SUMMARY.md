@@ -1,5 +1,13 @@
 # 08.43 run COMPLETE; full verifier AUTHOR-INTERRUPTED
 
+Subsequent author `procedi`: fresh post-run selected489PASS/3root-onlySKIP/
+11upstreamwarnings/27.81s; Ruff8filesPASS/OS0. Offline fresh installed workflow
+wheel/CLI/plan parity and3UI routesPASS; optional UI dependencies reused,
+not full scientific/E2E qualification.18scientificrawpins unchanged. Installed
+O4b readinessBLOCKED/actualexit2, method/workflow contracts missing; scientific
+choices require author. Completedrun preserved/fullverify remains incomplete.
+Earlier statements of no post-run suite below are historical and superseded.
+
 Author `ok procedi` confirmed stopping additional full verifier with explicitly
 stated limitation. ScopedSIGINT6361 at15:45:17.673149UTC; observedrun0/verify254,
 wholewrapperOS1 at15:45:23.3675426UTC. Finalverifyprogress7273/39971; no fullPASS.

@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - fresh installed CLI/UI administrative boundary
+
+- Native offline wheel build from200c81d, clean base venv, actual build/install
+  and installedCLI terminalOS0. Installed import proven using Python -I;
+  no checkoutPYTHONPATH. WheelSHAf742eeb1b59e2bbea14e8bfae41e200843bf8a39bcd58383db96f6b0da0ab700.
+- Installed CLI/UI --help and planPASS. Separate ui_env reuses existing optional
+  dependencies explicitly;3Flask routes200/HTML/securityPASS, not a clean full
+  science install or browser visual inspection. Same-interpreter full installed/
+  checkout plan exact equalityPASS/actualOS0;18rawscientificpins exactPASS.
+- Failed admin fixtures diagnosed: initial shell quoting gave empty mkdir arg
+  before build; UI workflow outside cache allowlist rejected, fixture corrected;
+  different interpreters produce distinct expected command digests, same-python
+  exact comparison passed. No app/scientific guards, source or tolerances changed.
+- InstalledO4b H1/L1readiness actualexit2/BLOCKED_RUN_PROFILE, missing method and
+  workflow contracts. No livecoverage claim or O4a threshold transplant. Scientific
+  contract choices require author; all full science/expanded E2E gates remain
+  honestlyOPEN. No scientific stage, O4b or automatic monitor launched.
+  Evidence /home/atafe/dante_bench/installed_boundary_20261006, detailed doc
+  docs/DANTE_WORKFLOW_INSTALLED_BOUNDARY_2026-10-06.md.
+
+
 ## 2026-10-06 - completed native run post-run regressions
 
 - Author `procedi. quando si avvia O4b?` authorizes the announced short tests
