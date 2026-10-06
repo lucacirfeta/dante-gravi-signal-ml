@@ -1,4 +1,12 @@
 ## Current Position
+- **08.43 technical root Git launch correction; v2 next**:
+  Wrapperfreeze70e6eb7. execution_v1 failed before copying wrapper/protecting
+  input or launching science: actualNATIVE_EXECUTION_EXIT_CODE=1 at13:12:04UTC,
+  Git128 dubious user-owned checkout under root. Preserved failureseal
+  be991595086e9a6c9bf7bb82c6d22c824a091fc478cc041f5631dd4d395d3527.
+  Scoped git -c safe.directory=exactRoot (no global change) fixes ownership;
+  real root proof2GitexactPASS. New configv2 changes only output namespaces.
+  134WSLPASS/3SKIP/11warnings/8.07s/actualOS0,RuffPASS. No numeric stage yet.
 - **08.42 preparation COMPLETE; native runner qualified, launch next**:
   prepare_v3 actualPREPARATION_EXIT_CODE=0 at12:56:07.9344297UTC,
   204791files/61563706027bytes/8threads; snapshotSHA

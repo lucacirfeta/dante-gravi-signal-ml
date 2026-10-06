@@ -1,5 +1,20 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - native wrapper root Git diagnostic
+
+- freeze70e6eb7 launched13:12:00UTC/Windowsworker26112/WSL27104; durable
+  NATIVE_EXECUTION_EXIT_CODE=1 at13:12:04.7910401UTC. execution_v1 contains only
+  failure.json, sealbe991595086e9a6c9bf7bb82c6d22c824a091fc478cc041f5631dd4d395d3527;
+  Git128 rejected root reading user-owned checkout. No copied wrapper, protected
+  snapshot, calibration directory or scientific stage. Preserve logs/failure.
+- Scoped one-command safe.directory=exactRoot allows ownership access while
+  still requiring every full frozen source SHA. No global Git configuration,
+  hash normalization or scientific guard bypass. Actual root readonly2Gitexact
+  proofPASS. configv2 differs fromv1 only execution/run output directories.
+  134regressionPASS/3root-onlySKIP/11warnings/8.07s/actualOS0,RuffPASS.
+  Fresh freeze/new namespace next; never resumes failed execution_v1.
+
+
 ## 2026-10-06 - complete native snapshot and qualified execution wrapper
 
 - prepare_v3 actualOS0 at12:56:07.9344297UTC;204791files/61563706027bytes,

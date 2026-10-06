@@ -206,7 +206,7 @@ def orchestrate(policy, config, sha, freeze):
         pins = {}
         for name in SOURCE_PATHS:
             raw = subprocess.run(
-                ["git", "show", f"{freeze}:{name}"],
+                ["git", "-c", f"safe.directory={root}", "show", f"{freeze}:{name}"],
                 cwd=root,
                 capture_output=True,
                 check=True,

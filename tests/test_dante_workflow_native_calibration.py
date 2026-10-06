@@ -116,6 +116,7 @@ def test_root_supervisor_records_both_actual_exits(orchestration, monkeypatch):
 
     def run(command, **kwargs):
         if command[0] == "git":
+            assert command[1:3] == ["-c", f"safe.directory={policy['repository_root']}"]
             return SimpleNamespace(stdout=b"fixture")
         stage = command[command.index("--mount-stage") + 1]
         stages.append(stage)
