@@ -1,5 +1,21 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - native16k approval and requested D: storage inventory
+
+- Author `ok` confirms explicit recommendation16384Hz natively, retaining
+  20..2048Hz scientific band; this does not approve other release/GPS/DQ,
+  population/null/tolerance/promotional decisions or O4b execution. Existing
+  historical sources/runs unchanged; implementation must be newly versioned
+  and qualified with compatible detector-specific references/calibration.
+- User permits D: for future raw/backups. Read-only WindowsGet-Volume/Disk/
+  Partition inventory: C:NVMe1TB and E:SATA960GB, bothhealthy/online. NoD:
+  volume/partition/filesystemdrive; Test-Path D:/false. E:free515687866368B,
+  C:free320902696960B. No raw acquisition/backup/move/delete/reletter/format.
+  Do not silently treat E: as D:; ask intended storage. Keep native Linuxext4
+  workspace for active I/O. A second directory/partition on the same physical
+  disk is not independent protection against physical failure.
+
+
 ## 2026-10-06 - parallel O4b preparation / source-band author checkpoint
 
 - Latest author `procediamo in parallelo`: root H1/L1 readiness audit and one

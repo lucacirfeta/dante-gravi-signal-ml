@@ -1,4 +1,15 @@
 ## Current Position
+- **Author approves native16k/20..2048; D: storage unavailable**:
+  Latest `ok. puoi usare il disco D per salvare eventuali dati di backup e o raw?`
+  confirms recommended native16384Hz processing without widening20..2048Hz band.
+  SeparateV1/reference/calibration/null required; source/code/config not yet
+  changed, release/GPS/DQ/disjoint populations and validation remain pending.
+  Read-only Get-Volume/Get-Disk/Get-Partition: onlyC:NVMe andE:SATA exposed;
+  Test-Path D:/ false, no unmounted basic data partition found. E:free
+  515687866368B, C:320902696960B at observation. Cannot use nonexistentD:;
+  do not reletter/format/move originals or silently substitute E:. Author
+  must identify intended storage. Native workingext4 stays unchanged; backup
+  must be on distinct physical storage to protect against disk failure.
 - **Parallel H1/L1 + separateV1 preparation; shared scientific checkpoint**:
   Latest `procediamo in parallelo` authorizes preparation only. Root H1/L1
   audit + delegatedread-only V1 audit; no download/fit/score/O4b/network changes.

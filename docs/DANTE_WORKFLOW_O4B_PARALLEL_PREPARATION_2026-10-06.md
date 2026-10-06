@@ -1,5 +1,24 @@
 # Parallel O4b preparation: H1/L1 and separate Virgo
 
+## Latest author choice and storage request
+
+Author `ok` after native16k recommendation approves native16384Hz processing
+while retaining20..2048Hz band. Source/band alternatives below are historical,
+not still unanswered. This does not authorize reuse of old representations/
+thresholds or any additional release/GPS/DQ/population/null choice; new method
+must be versioned and qualified before execution, with dedicated V1 artifacts.
+
+Author also permits D: for future raw/backups. Live Windows read-only inventory
+Get-Volume/Get-Disk/Get-Partition and Test-Path D:/ found noD: drive. OnlyC:
+NVMe and E:SATA data volumes are currently exposed. E:remaining515687866368B,
+C:320902696960B at observation. No data partition awaiting a letter was found.
+No format/reletter, archive, migration, backup write or raw download performed.
+Ask user whether they intend existingE: or a separately connectedD: disk.
+Do not silently substitute a destination. Keep active computation on native
+Linuxext4; raw/archive storage may be an NTFS data disk. Copies on the same
+physical disk do not protect against physical disk failure.
+
+
 Latest author `procediamo in parallelo` authorizes two preparation strands.
 Read-only V1 audit delegated in parallel; root audits H1/L1 and writes shared
 state. No strain download, numerical stage, O4b launch, network-statistic
