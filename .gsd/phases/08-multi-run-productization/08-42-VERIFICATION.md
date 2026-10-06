@@ -2,6 +2,16 @@
 
 This is preparation-only, not calibration/numerical equivalence or speedup.
 
+Latest launcher correction: initial systemd prepare_v1 stopped at WSL idle
+poweroff13:08:51Rome,15s after start; no byte receipt or Python completion.
+Microsoft documents systemd services do not keep WSL alive. The earlier8s
+fixture proved completion only, NOT idle survival. Preserve emptyv1/journal.
+New WMI-owned hidden Windows worker waits for foreground WSL actual exit;
+6Windows lifecycle checksPASS/observedOS0 with25s real Python fixture. The first
+new fixture failed -c quoting (ordinary launcher issue, no copy); both fixture
+evidence directories preserved, successfulv2 after explicit argument fix.
+New prepare_v2 config retains all input pins/population/threads, no resume.
+
 - Final targeted WSL suite:75passed,1root-onlyskipped,11upstreamwarnings,
   5.94seconds, observedOS0. Includes unchanged59calibration unit regressions.
 - Actual root private read-only mount fixture:1passed,15deselected,1.11seconds,
@@ -19,7 +29,7 @@ This is preparation-only, not calibration/numerical equivalence or speedup.
 - FreeC:442974982144bytes; ext4 guest907780648960bytes. Config copied-byte budget
   120GiB checked before copying, alongside2xguest reserve. Old expanded unused
   frame archive excluded from transfer, not from the calibration population.
-- Byte preparation pending single real launch; no snapshotPASS or scientific
+- Byte preparation v2 pending single real launch; no snapshotPASS or scientific
   stage observed yet. Failure preserves namespace/logs, no automatic resume.
   Full-tree guard scheduling remains unchanged pending author choice.
 

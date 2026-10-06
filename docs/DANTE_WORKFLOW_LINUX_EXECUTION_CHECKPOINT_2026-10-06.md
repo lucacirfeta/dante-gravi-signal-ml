@@ -47,8 +47,13 @@ The next execution can use a private read-only mount namespace at the existing
 virtual names, avoiding seal rewrites. A real root fixture verified native byte
 visibility, denied writes and preserved host originals after the namespace
 exited. This is not global redirection or provider promotion. A detached
-systemd one-shot fixture also exited successfully as UID1000, with OS0 observed
-in the journal; it is not a recurring monitor.
+systemd8s one-shot fixture exited successfully as UID1000, but did not qualify
+idle survival. The first real systemd preparation was stopped15s after launch
+by WSL idle poweroff, before any copy receipt; preserved without resume. This
+matches [Microsoft's documented limitation](https://learn.microsoft.com/en-us/windows/wsl/systemd).
+The corrected launcher holds foreground WSL from a WMI-owned hidden Windows
+worker.6actual lifecycle checksPASS/OS0,25s fixture survives the idle interval
+and caller exit. v2is a new preparation namespace, not a recurring monitor.
 
 Keep per-read hashing and current guard frequency,39,971memberships/39,891context union/
 84session-detector groups, original GPS order, batch32/workers8/CUDA precision

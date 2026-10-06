@@ -1,5 +1,27 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - native launcher idle-stop diagnosis and correction
+
+- Byte preparation freeze26f5a5fad52e4fe06f5fd50ba92d9e7685372bc5. systemd
+  prepare_v1 launched13:08:36Rome/PID523/invocationc79fad97289f440d8bab1d765d76211b,
+  but journal recorded service stop and WSL poweroff13:08:51. Empty workspace;
+  no snapshot, failure record or Python completion/OS exit observed. Preserve
+  run directory and journal; inactive/not-found defaultStatus0 is not success.
+- Microsoft WSL documentation states systemd services do not keep WSL alive:
+  https://learn.microsoft.com/en-us/windows/wsl/systemd . No explicit shutdown
+  command was issued. The8s one-shot fixture was too short to qualify idle
+  survival; launcher claim superseded. No scientific stage failure or mutation.
+- New launch_dante_workflow_linux.ps1 reuses proven WMI-owned hidden worker
+  mechanism, keeping foreground wsl.exe/Python alive and recording actual exit.
+  A first administrative fixture failed Python -c quoting before copying;
+  evidence native_linux_launcher_fixture_20261006_v1 preserved. Corrected
+  PowerShell comma/string precedence; v2fixture6checksPASS/actualOS0, Python
+  completion after25s, surviving15s daemon idle interval and caller exit.
+  Bad pin rejected before namespace; duplicate rejected; WMI owner verified.
+- config/dante_workflow_linux_workspace_v2.json changes only preparation
+  namespace/technical authorization. Same input trees, pins,8workers and byte
+  budget. Old prepare_v1 untouched; no resume, monitor, science or guard waiver.
+
 ## 2026-10-06 - practical native Linux preparation
 
 - Author approves Linux CPU/GPU work and asks not to over-focus on incidental

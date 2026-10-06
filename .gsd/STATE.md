@@ -1,4 +1,11 @@
 ## Current Position
+- **08.42 launcher corrected after WSL idle-stop**:
+  systemd prepare_v1 launched13:08:36Rome/PID523 then WSL poweroff13:08:51,
+  empty destination and no completion/observed preparation OS exit. Preserve
+  it; systemctl success/default0 is NOT a preparationPASS. New prepare_v2 uses
+  WMI-owned hidden Windows worker holding WSL foreground Python until actual
+  exit.6lifecyclechecksPASS/actualOS0,25s fixture survived observed15s interval;
+  new isolated v2 launch next, no scientific method/guard scheduling change.
 - **08.42 native byte preparation authorized (2026-10-06 afternoon)**:
   Author asks practical Linux CPU/GPU work, not unnecessary path gates. New-only
   8thread required-input snapshot tool, exact bytes, historical runs preserved.
