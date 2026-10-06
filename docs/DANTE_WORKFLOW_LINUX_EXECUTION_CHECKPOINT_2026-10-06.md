@@ -1,5 +1,18 @@
 # Native Linux execution: practical preparation
 
+## Current: completed calibration, full verification stopped by author
+
+Native calibration_v2 completed actualOS0/PASS_COMPLETE with39971identities,
+39891contexts,84session-detectors. Author confirmed stopping the additional
+full verifier with the explicit limitation: completed, not fully VERIFIED.
+SIGINT only to checkedverifier6361 at15:45:17.673149UTC; verifyexit254,
+wholewrapperOS1, finalprogress7273/39971. No numerical mismatch preceded stop.
+CompletedsummarySHA2511ff69f38c1bf7a68981f5be6f3766238083dbcebcfa5a61a3f3d50db8335c
+and all84sessionreceipts unchanged. No active controllers/launchers or lock;
+zero partial/tmp. Interruption/failure markers and logs retained; no forcedkill,
+cleanup/resume/rerun. No new post-run-suite claim or full gate closure/O4b launch.
+All remaining active/pending/ETA statements are older checkpoints.
+
 Human request: stop the storage benchmark, then work on Linux with CPU/GPU.
 Benchmark stopped; no new scientific run or productive provider promotion.
 

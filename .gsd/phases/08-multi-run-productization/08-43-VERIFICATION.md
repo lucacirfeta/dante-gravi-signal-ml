@@ -1,4 +1,28 @@
-# 08.43 observed evidence - native run pending
+# 08.43 completed run / author-stopped verification evidence
+
+## Latest actual completion and explicit stop
+
+RunactualOS0/PASS_COMPLETE_ISOLATED_EXPANDED_CALIBRATION_ONLY/full39971identities,
+39891contexts,84sessions. Summarymtime15:03:56.868833UTC; completedprogress
+39,971 at15:02:18.736298UTC. Standalone verifierPID6361 started15:05:44.957423UTC.
+It had no numerical failure at the explicit author stop decision.
+
+Author `ok procedi` confirmed scoped interruption after caveat that full replay
+would remain incomplete. pidfd-checkedCMD/lockstageverify/policy/freeze/summary
+beforeSIGINT6361 only at15:45:17.673149UTC. Observedexitsrun0/verify254; Windows
+durableNATIVE_EXECUTION_EXIT_CODE=1 at15:45:23.3675426UTC. Do not invent verifyOS0.
+Finalverifyprogress7273/39971; KeyboardInterrupt in preservedstderr. No verifier
+verification.json. Wrapperfailure and scans.verify.failure retained without
+rewriting failed status: classify as author interruption, not numeric mismatch.
+
+CompletedrunsummarySHA2511ff69f38c1bf7a68981f5be6f3766238083dbcebcfa5a61a3f3d50db8335c
+unchanged before/after. Hash all84sessionreceipts against summary:84PASS.
+Zero partial/tmp/lock; original finally removed its own lock. No manual deletion.
+Linux303/6356/6361 and Windows21932/8744 gone. Initial/final full parent scans
+2/2 on both stages,319775repeatedscans avoided duringrun and43785duringverify;
+per-read hashing/algorithm/tolerance-replaced fields false. This is scope metadata,
+not a replacement for incomplete numeric replay. No new tests or full gate closure.
+Earlier progress/launch entries below are retained history.
 
 ## Subsequent actual batch telemetry
 

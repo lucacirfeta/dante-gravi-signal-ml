@@ -1,5 +1,33 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - author stops additional full native verifier
+
+- Author asked whether duplicate full replay was necessary. Current code audit:
+  run already compares every fresh uint8 image to08.38, normalized model tokens
+  to independent forward and scores to frozen float64oracle; verifier adds local
+  h5py/primitive input dispatch and exact second-process full saved calibration
+  replay. Stopping does not alter completed calculations, but cannot claim full
+  verification gate. Explicit question offered stop with this limitation;
+  author `ok procedi` confirmed that choice. No new acceptance tolerance/config.
+- At15:45:17.673149UTC scopedSIGINT via system Python pidfd to verified6361 only,
+  lockstageverify/exactconfig+freeze+cmdline checked. Conda Python lacked pidfd
+  support; first diagnostic attempt sent no signal. System Python supported it.
+  No group signal, forced kill, machine shutdown or other controller affected.
+- Observed native exitsrun0/verify254; WindowsdurablewholewrapperOS1 at
+  15:45:23.3675426UTC. Finalprogress7273/39971; KeyboardInterrupt retained in
+  verify.stderr.log. Wrapperfailureseal1fdea31ba8cef4340b9209834f27404a821b9540fb38562b3afdb833b3426251,
+  exitseal41c72ea1b4da5dee59356319a92592e1ab7f1f7b91f97eb612e56028d605e01f.
+  Both immutable initial/final full scans completed for run and interruptedverify;
+  scanfailure marker is expected user cancellation, not numerical mismatch.
+- Completed summaryPASS_COMPLETE_ISOLATED_EXPANDED_CALIBRATION_ONLY unchanged
+  SHA2511ff69f38c1bf7a68981f5be6f3766238083dbcebcfa5a61a3f3d50db8335c,
+ 39971identities/39891contexts/84sessions.84/84sessionrawSHA match sealed summary.
+  Zero partial/tmp/controller.lock; original finally removed lock. No verification
+  JSON/PASS. Linux303/6356/6361 and Windows21932/8744 gone. All evidence retained,
+  no resume/reset/archive/rerun or new post-run tests. Gates4/5 not closed, no
+  active-provider promotion/O4b authorization. Monitor not reactivated.
+
+
 ## 2026-10-06 - native batch utilization observed
 
 - Actualcontroller531UID1000/private mountns different fromPID1, capabilities0,

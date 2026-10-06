@@ -1,4 +1,14 @@
-# 08.43 native v2 active - NOT COMPLETE
+# 08.43 run COMPLETE; full verifier AUTHOR-INTERRUPTED
+
+Author `ok procedi` confirmed stopping additional full verifier with explicitly
+stated limitation. ScopedSIGINT6361 at15:45:17.673149UTC; observedrun0/verify254,
+wholewrapperOS1 at15:45:23.3675426UTC. Finalverifyprogress7273/39971; no fullPASS.
+CompletedrunPASS_COMPLETE_ISOLATED_EXPANDED_CALIBRATION_ONLY/full39971identities/
+39891contexts/84sessions retained. SummarySHA2511ff69f38c1bf7a68981f5be6f3766238083dbcebcfa5a61a3f3d50db8335c
+unchanged; all84sessionSHA match summary. Zero lock/partial/tmp; all execution
+controllers/launchers gone. Logs/failure/interruption kept, no manual lock removal,
+reset/resume/relaunch or post-run suite. Not PASS_VERIFIED, not gate closure or
+promotion/O4b permission. Earlier active/projection statements below are historical.
 
 Latest observed:1000/39971identities,8real spawned workers +CUDA scoring.
 20.659s interval852->1000:429.83identities/min; GPU1..100%,mean17.85%,max2535MiB/

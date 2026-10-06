@@ -1,4 +1,18 @@
 ## Current Position
+- **08.43 RUN COMPLETE; verifier AUTHOR-STOPPED, not VERIFIED**:
+  Latest author `ok procedi` confirms explicit proposal to stop full verifier
+  while retaining completed calibration without full-verification claim.
+  pidfd-scopedSIGINT only to identity-checked verifier6361 at15:45:17.673149UTC.
+  Observed exits run0/verify254, WindowswholewrapperOS1 at15:45:23.3675426UTC;
+  final verifyprogress7273/39971. Controller6361/setup6356/supervisor303 and
+  Windows21932/8744 gone; original finally removed its lock, no manual cleanup.
+  Run summaryPASS_COMPLETE_ISOLATED_EXPANDED_CALIBRATION_ONLY,39971identities/
+  39891contexts/84sessions remains byte-identicalSHA2511ff69f38c1bf7a68981f5be6f3766238083dbcebcfa5a61a3f3d50db8335c.
+  All84sessionSHA match summary; zero partial/tmp/lock, no verificationPASS.
+  Wrapperfailure and scans.verify.failure preserved, explain user interruption,
+  NOT unexplained numerical failure. No resume/relaunch/post-run suite or gate
+  closure. Monitor not reactivated/no O4b/promotion/push. Historical entries
+  below superseded by this completed run and explicit verification stop.
 - **08.43 native v2 REAL BATCHING OBSERVED**:
   Latest progress1000/39971;531UID1000/controller +8spawn workers672/690/706/
   723/740/757/789/821 and resource tracker671. Not duplicated controllers.

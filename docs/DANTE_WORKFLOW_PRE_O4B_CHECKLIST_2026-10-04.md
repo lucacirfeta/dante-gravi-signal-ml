@@ -6,7 +6,14 @@ This is an execution checklist, not a claim of certification or launch authority
 O3a is closed; local commits only, no implicit push/main. Historical artifacts
 and unrelated user untracked files stay untouched. Prior shutdown was one-shot.
 
-Latest author2026-10-06 afternoon `procedi`: authorized isolated native Linux
+Latest author2026-10-06 `ok procedi` confirms explicit proposal to stop full
+native verifier with incomplete-verification caveat.08.43runPASS_COMPLETE/actual
+OS0/all39971identities/39891contexts/84sessions; verifierauthorSIGINT7273/39971,
+actualexit254/wholewrapperOS1. Completedrun/84receiptSHAs unchanged; no active
+controller/launcher/lock, no full verificationPASS. No automatic restart,
+post-run-suite claim, provider promotion or O4b permission; gates4/5 remainOPEN
+for full qualification. Original criterion is not silently waived or relabelled.
+Earlier author2026-10-06 afternoon `procedi`: authorized isolated native Linux
 execution and immutable initial/final metadata scan scheduling, per-read hashes
 and full numeric replay unchanged.08.42 required input copy completeOS0;
 08.43 native v2 controller active on frozen55bee8b, no numericPASS yet. Old08.40
