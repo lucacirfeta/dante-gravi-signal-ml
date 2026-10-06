@@ -1,5 +1,23 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - native v2 launch observed
+
+- Freeze55bee8b1d771a3d9bde8131b5905b8556ab9e957; new policyv2 SHA
+  43203199a6b77a13e367dfc293001382d8f75ebb85c95cd09c23531860664c5b.
+  Four new source/config bytes exactly Gitfreeze. One launch13:14:41UTC,
+  WMIworker21932/foregroundWSL8744. Rootorchestrator303/private-setup525 and
+  scientificUID1000controller531 observed. Parent startup1:04elapsed,CPU100%
+  singlecore, stderr empty/no failure/lock/progress/summary/verification yet.
+  GPU1%/1107MiB/4.67W sampled before model/scoring; not throughput evidence.
+  No actualrun/verifier exits observed. Pool/CUDA not yet observed active.
+- Bindingseal e4de831bb7f03abc117609cab09bf0e2302b4cc7c941f84a1a2004eecb476f4c,
+  bindingSHA5f2ac14a76013ae2eb6fbfe05f4395172f973da6bf5ba54c27643b450f4fb1b5.
+  Protected205754copied entries, unchanged snapshotseal a657ae99...; private
+  input aliases only. Native outputs execution_v2/calibration_native_v2,
+  Windowsdurablelogs E:/dante_cache/dante_workflow/native_execution_20261006_v2.
+  This supersedes pending-launch entries; no stage duplication/monitor/O4b.
+
+
 ## 2026-10-06 - native wrapper root Git diagnostic
 
 - freeze70e6eb7 launched13:12:00UTC/Windowsworker26112/WSL27104; durable

@@ -26,6 +26,12 @@ Benchmark stopped; no new scientific run or productive provider promotion.
 
 ## Latest checkpoint: copied bytes complete, native launch qualified
 
+Subsequent actuallaunch: nativev2 wrapperfreeze55bee8b,13:14:41UTC,
+Windowsworker21932/WSL8744/scientificcontroller531UID1000. Parent startup active,
+stderr empty; no numericPASS or stage exit observed. First wrapperv1 stopped
+before science on root Git ownership; retained. Scoped per-command exact-root
+Git permission and new output namespace tested/frozen beforev2; no global edit.
+
 prepare_v3 completed with observed actualOS0,204791files/61563706027bytes.
 SnapshotSHAa265ee5364c8df55122cd6ccdded4e3262f6592a8eecefdc7655245aa03f66d6.
 Author's subsequent `procedi` approves complete initial/final metadata scans

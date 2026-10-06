@@ -6,7 +6,12 @@ This is an execution checklist, not a claim of certification or launch authority
 O3a is closed; local commits only, no implicit push/main. Historical artifacts
 and unrelated user untracked files stay untouched. Prior shutdown was one-shot.
 
-Latest author2026-10-06: `stoppa tutto e prepariamo questo`. Monitoring PAUSED,
+Latest author2026-10-06 afternoon `procedi`: authorized isolated native Linux
+execution and immutable initial/final metadata scan scheduling, per-read hashes
+and full numeric replay unchanged.08.42 required input copy completeOS0;
+08.43 native v2 controller active on frozen55bee8b, no numericPASS yet. Old08.40
+interruption remains immutable. MonitorPAUSED/no O4b; gates4/5 remainOPEN.
+Earlier author2026-10-06: `stoppa tutto e prepariamo questo`. Monitoring PAUSED,
 08.40 interrupted by scoped SIGINT; no automatic scientific restart. Prepare
 isolated storage benchmark only, retaining all hash/validation semantics.
 Older overnight instruction2026-10-05: automatic work only until2026-10-06 08:00Europe/Rome

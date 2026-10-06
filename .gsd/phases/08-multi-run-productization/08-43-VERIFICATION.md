@@ -1,0 +1,37 @@
+# 08.43 observed evidence - native run pending
+
+prepare_v3 actualOS0,204791files/61563706027bytes. SnapshotSHA
+a265ee5364c8df55122cd6ccdded4e3262f6592a8eecefdc7655245aa03f66d6,
+seal a657ae9921720575f3b70f9907661c16ba30d8ce21a6b32b8e59c603e0b4865a.
+
+Native wrapperfreeze55bee8b1d771a3d9bde8131b5905b8556ab9e957;
+policyv2SHA43203199a6b77a13e367dfc293001382d8f75ebb85c95cd09c23531860664c5b.
+Three new sourcepins are recorded in binding.json; exact4Git source/config
+relation observedOS0.21scientificrawpins unchanged. Legacy sciencefreeze
+ace1b9311879e22af2b02f9891882ff0c3d4b836 and contract unchanged.
+
+Fixture/regression134PASS/3root-onlySKIP/11upstreamwarnings/8.07s/OS0.
+Actual root3fixturesPASS/2.63s/OS0: private mount isolation, root-protected ro
+scope, spawnedUID1000/capabilities0/no-new-privs, writes fail with exactEROFS/
+EACCES, global host mount inodes unchanged. RuffPASS.6WindowschecksPASS/actualOS0
+prove wrongpin rejection, detachedWMIowner,25sforegroundWSLlifetime and no duplicate.
+Fixture failures were errno expectation and missing mounted Windows cwd; fixed
+before real science. One failed wrapperattempt recorded Git128 owner restriction;
+normal scoped exact-root Git permission fix, no global Git configuration or pin
+bypass. v1failuresealbe991595086e9a6c9bf7bb82c6d22c824a091fc478cc041f5631dd4d395d3527
+retained and no scientific directory created. Newv2names only.
+
+Launch13:14:41UTC,Windowsworker21932/WSL8744. root303/private525/science531UID1000.
+Native evidence/home/atafe/dante_bench/native_calibration_20261006/execution_v2;
+run/home/atafe/dante_bench/native_calibration_20261006/calibration_native_v2.
+Windowsdurablelogs E:/dante_cache/dante_workflow/native_execution_20261006_v2.
+BindingSHA5f2ac14a76013ae2eb6fbfe05f4395172f973da6bf5ba54c27643b450f4fb1b5,
+seal e4de831bb7f03abc117609cab09bf0e2302b4cc7c941f84a1a2004eecb476f4c.
+205754copied backing entries protected; scientific equivalence false at binding.
+
+Initial sample: startup controller100%oneCPU, no stderr/failure/lock/progress/
+summary/verification. GPU1%/1107MiB/4.67W before scoring, not sustained scientific
+utilization or speedup. No RUN/VERIFYOSexit0 observed yet.8workers/batch32/CUDA
+and full39971/39891/84 population inherited, not silently changed.
+Require both actualOS0/PASS and post-run496suite/Ruff before closing; quiet while
+healthy, diagnose any failure preserving evidence, no resume/retry/reset.

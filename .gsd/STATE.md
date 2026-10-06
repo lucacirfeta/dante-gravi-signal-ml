@@ -1,4 +1,15 @@
 ## Current Position
+- **08.43 native v2 RUN ACTIVE (15:14Rome launch)**:
+  Wrapperfreeze55bee8b1d771a3d9bde8131b5905b8556ab9e957,
+  configv2SHA43203199a6b77a13e367dfc293001382d8f75ebb85c95cd09c23531860664c5b.
+  Windowsworker21932/WSL8744 hold rootorchestrator303/private-setup525/
+  scientific-controller531 UID1000. Startup parent validation CPU100%onecore;
+  stderr empty, no failure/output/lock/progress or stage exits yet. Pool/CUDA
+  not yet active at observation; no numericPASS or measured speedup/ETA.
+  Native execution_v2 bindingSHA5f2ac14a76013ae2eb6fbfe05f4395172f973da6bf5ba54c27643b450f4fb1b5,
+  root-protected205754entries, original bytes retained. Full single run/verify
+  chain only; never duplicate. Logs native_execution_20261006_v2 on E:;
+  scientific logs native execution_v2/logs on ext4. Monitor staysPAUSED.
 - **08.43 technical root Git launch correction; v2 next**:
   Wrapperfreeze70e6eb7. execution_v1 failed before copying wrapper/protecting
   input or launching science: actualNATIVE_EXECUTION_EXIT_CODE=1 at13:12:04UTC,
