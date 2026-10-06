@@ -1,4 +1,14 @@
 ## Current Position
+- **Parallel H1/L1 + separateV1 preparation; shared scientific checkpoint**:
+  Latest `procediamo in parallelo` authorizes preparation only. Root H1/L1
+  audit + delegatedread-only V1 audit; no download/fit/score/O4b/network changes.
+  Current representation4096Hz/Qrange20..2048 conflicts with official GWOSC
+  high-frequency-use guidance (~1700Hz+ requires16k data). PatchProducer
+  resamples to configured4096, so fetch16k alone is not a solution. Author
+  must choose native16k requalification or revised4k usable band/reference/
+  calibration/null before new science. Raw manifest/nativeindex stillH1/L1
+  only; V1 needs dedicated detector contracts. Plans08.44/45 and parallel prep
+  doc record evidence. No historic run reopened or verifier waived/restarted.
 - **Fresh installed administrative boundary PASS; O4b contract checkpoint**:
   Native wheel built/installed offline from200c81d in clean base venv, no
   checkoutPYTHONPATH; actualOS0. InstalledCLI/help/plan and same-interpreter

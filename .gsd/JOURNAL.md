@@ -1,5 +1,24 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - parallel O4b preparation / source-band author checkpoint
+
+- Latest author `procediamo in parallelo`: root H1/L1 readiness audit and one
+  delegated read-only separateV1 prerequisite audit. No acquisition or numerical
+  science, no source/config/interface/threshold changes, no three-detector null.
+- Verified official GWOSC O4b release and O4technicaldetails against local
+  representation4096Hz/20..2048, PatchProducer resampling and bandpass clipping.
+  GWOSC recommends16k for around1700Hz+; merely fetching16k then retaining
+  configured4096 resampling is not native16k. New-contract source/band selection
+  affects measurement/reference/calibration and requires author before edits.
+  No historical numerical mismatch/automatic invalidation claim or O3a reopening.
+- V1 catalogue availability does not bypass raw-manifestH1/L1 or indexCLI guards.
+  Existing O4b shadow/epoch metadata is historical H1/L1/O4a-calibrated scope,
+  not new readiness authority. No score/outcome artifact read or threshold reuse.
+- Plans08.44/45 plus parallel-preparation doc retain independent task ownership,
+  scientific alternatives and checkpoint. Documentation-only; no new test claim.
+  Local commits only; monitor staysPAUSED; all run/failure/user files retained.
+
+
 ## 2026-10-06 - fresh installed CLI/UI administrative boundary
 
 - Native offline wheel build from200c81d, clean base venv, actual build/install
