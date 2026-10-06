@@ -1,5 +1,32 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - overnight decision packet complete, early checkpoint pause
+
+- 08.46task2 completed from fetched official GWOSC O4b release,16k archive/
+  datasetdefinition, O4technicaldetails, alternate-release and timeline pages.
+  Distinguishes released early days from official observing interval, final/
+  alternate strain products, DATA vs analysis-specific DQ/injection flags and
+  metadata availability vs selected-window/context coverage. No segment list,
+  strain, score or outcome fetched; exact proposed populations remain absent.
+- Packet proposes final16kR1/official-run-only metadata preparation and exposes
+  DQ, disjoint-population, V1dedicatednull/validation and integration choices.
+  These are unapproved options, not implemented configs or scientific decisions.
+  Maps16k/no-hidden-resample/context/detector/installed qualification tests for
+  future approved work. CurrentQrange and actual bandpass are explicitly distinct.
+- Registry remains4kURL/nullmethod/nullworkflow. Singleworkflow/exactdetector
+  binding cannot silently promote separateV1 to three-detector network or
+  replaceH1/L1. No source/config/active-provider diff; no scientific stage.
+- Fresh readonly evidence: SOURCE_RAW_PIN_PASS=18; Windowsmatchingcontroller
+  candidates0 after excluding diagnostic shell. Linuxps -Cpython,python3,
+  python3.11 prints header only and exits1 (empty selection), not stagefailure.
+  No full machine absence claim or force-stop made. No new tests rerun.
+- Tool automation_update returned PAUSED; persisted check observed
+  AUTOMATION_STATUS=PAUSED at2026-10-06T22:48:26.2818404Z. Separate terminalOS0
+  DOC_DIFF_CHECK_EXIT_CODE=0. Stopped early because both permitted tasks are
+  complete and author decisions remain; no need to fill remaining night.
+  Backup/task1 not duplicated; historical outputs/failures/user folders retained.
+
+
 ## 2026-10-06 - E: correction and bounded overnight preparation
 
 - Author clarifies E: for raw/backups and requests autonomy until tomorrow.

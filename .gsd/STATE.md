@@ -1,4 +1,14 @@
 ## Current Position
+- **08.46 complete; automation PAUSED at author checkpoint**:
+  7October00:48Europe/Rome, before the provisional08:00deadline: both safe
+  tasks complete. Gitbackup on E: retained, official-metadata decision packet
+  in docs/DANTE_WORKFLOW_OVERNIGHT_PREPARATION_2026-10-07.md. Actual app update
+  and persistedstatusPAUSED verified2026-10-06T22:48:26.2818404Z. No new stage,
+  source/config change or strain download.18rawscientificpins exactPASS;
+  documentationdiffcheckOS0. No matching Windows controller candidates;
+  Linuxpython-name query has no matches (ps exit1 means empty selection).
+  Release/GPS/DQ, disjoint populations, null/validation and active integration
+  remain author decisions; checkpoints08.44/45 OPEN. No auto-resume/replay.
 - **Bounded autonomy until 2026-10-07 08:00 Europe/Rome (06:00 UTC)**:
   Latest author `procesi in autobomia fino a domani` renews autonomous technical
   preparation, not O4b launch or pending scientific choices. 08:00 is an explicit
