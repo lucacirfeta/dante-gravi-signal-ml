@@ -6,6 +6,10 @@
   WMI-owned hidden Windows worker holding WSL foreground Python until actual
   exit.6lifecyclechecksPASS/actualOS0,25s fixture survived observed15s interval;
   new isolated v2 launch next, no scientific method/guard scheduling change.
+  Initial corrected real launch rejected only mixed-case digest text before
+  workspace claim (actualOS1). Full rawSHA matches, no provenance drift. Added
+  hex case canonicalization; uppercase fixture6checksPASS/actualOS0, wrong pin
+  still rejected. Old logs intact; use new launch evidence directory.
 - **08.42 native byte preparation authorized (2026-10-06 afternoon)**:
   Author asks practical Linux CPU/GPU work, not unnecessary path gates. New-only
   8thread required-input snapshot tool, exact bytes, historical runs preserved.

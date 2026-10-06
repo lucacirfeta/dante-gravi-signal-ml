@@ -11,7 +11,7 @@ $launcher=Join-Path $RepositoryRoot 'scripts/launch_dante_workflow_linux.ps1'
 $config=Join-Path $RepositoryRoot 'config/dante_workflow_linux_workspace_v2.json'
 $values=@{
     RepositoryRoot=$RepositoryRoot; ConfigPath=$config
-    ConfigSha256=(Get-FileHash -LiteralPath $config).Hash.ToLower()
+    ConfigSha256=(Get-FileHash -LiteralPath $config).Hash
     SourceFreeze=(& git -C $RepositoryRoot rev-parse HEAD)
     ModuleSha256=(Get-FileHash -LiteralPath (Join-Path $RepositoryRoot 'src/dante_workflow/linux_workspace.py')).Hash.ToLower()
     EntrySha256=(Get-FileHash -LiteralPath (Join-Path $RepositoryRoot 'scripts/prepare_dante_workflow_linux.py')).Hash.ToLower()

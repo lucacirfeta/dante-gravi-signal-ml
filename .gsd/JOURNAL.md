@@ -2,6 +2,15 @@
 
 ## 2026-10-06 - native launcher idle-stop diagnosis and correction
 
+- Corrected launcher initial real invocation rejected mixed-case textual config
+  SHA in Python, actualPREPARATION_EXIT_CODE=1 at11:13:56UTC before creating
+  prepare_v2. All raw config bytes/hash match; representation/caller error only,
+  not unexplained provenance mismatch or copied-input failure. Windows launcher
+  now canonicalizes hexadecimal case before unchanged full SHA comparison;
+  fixture intentionally supplies uppercase config hash. No hash waiver.
+  Failed launch logs native_linux_preparation_20261006_v2 preserved. New log
+  namespace required; prepare_v2 still absent/unclaimed, no resume.
+
 - Byte preparation freeze26f5a5fad52e4fe06f5fd50ba92d9e7685372bc5. systemd
   prepare_v1 launched13:08:36Rome/PID523/invocationc79fad97289f440d8bab1d765d76211b,
   but journal recorded service stop and WSL poweroff13:08:51. Empty workspace;

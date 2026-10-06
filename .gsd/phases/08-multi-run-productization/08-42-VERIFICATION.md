@@ -12,6 +12,12 @@ new fixture failed -c quoting (ordinary launcher issue, no copy); both fixture
 evidence directories preserved, successfulv2 after explicit argument fix.
 New prepare_v2 config retains all input pins/population/threads, no resume.
 
+Additional launcher fixturev3:6checksPASS/actualOS0 with deliberately uppercase
+textual config digest. Hexadecimal case canonicalized before unchanged complete
+SHA equality, no bytes/seal/source normalization. Real earlier mixed-case launch
+was rejectedOS1 before prepare_v2 existed; its log namespace preserved, no copy
+or scientific stage started. Subsequent launch must use new external logs.
+
 - Final targeted WSL suite:75passed,1root-onlyskipped,11upstreamwarnings,
   5.94seconds, observedOS0. Includes unchanged59calibration unit regressions.
 - Actual root private read-only mount fixture:1passed,15deselected,1.11seconds,

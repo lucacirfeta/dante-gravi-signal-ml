@@ -12,6 +12,11 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+# Hexadecimal case is representation only; still compare every complete digest.
+$ConfigSha256 = $ConfigSha256.ToLowerInvariant()
+$ModuleSha256 = $ModuleSha256.ToLowerInvariant()
+$EntrySha256 = $EntrySha256.ToLowerInvariant()
+$LauncherSha256 = $LauncherSha256.ToLowerInvariant()
 if ($PSVersionTable.PSVersion.Major -eq 5) {
     foreach ($name in @('Microsoft.PowerShell.Utility','Microsoft.PowerShell.Management','CimCmdlets')) {
         Import-Module -Name (Join-Path $PSHOME ('Modules\'+$name+'\'+$name+'.psd1')) -ErrorAction Stop
@@ -52,6 +57,7 @@ if (-not $Worker) {
     [void](New-Item -ItemType Directory -Path $LogDirectory)
     $bound = @{}
     foreach ($key in $PSBoundParameters.Keys) { $bound[$key] = $PSBoundParameters[$key] }
+    $bound['ConfigSha256'] = $ConfigSha256
     $bound | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $LogDirectory 'launch.json')
     Log "LAUNCH_REQUEST_PID=$PID SMOKE_ONLY=$SmokeOnly"
     $shell = Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
