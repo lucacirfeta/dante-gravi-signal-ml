@@ -1,4 +1,13 @@
 ## Current Position
+- **08.43 native v2 REAL BATCHING OBSERVED**:
+  Latest progress1000/39971;531UID1000/controller +8spawn workers672/690/706/
+  723/740/757/789/821 and resource tracker671. Not duplicated controllers.
+  Real20.659s sample852->1000=429.83identities/min; GPU1..100%, mean17.85%,
+  max2535MiB/141.4W. Uses GPU in bursts, NOT continuous saturation or controlled
+  speedup proof. Short-rate projection~91min remaining RUN only, unstable;
+  full standalone verify adds unmeasured time. No run/wrapper failure; stderr
+  only3upstream xFormers warnings. Private namespace/UID1000/cap0/no-new-privs
+  observed on actual controller. No run/verifier exit or full numericPASS yet.
 - **08.43 native v2 RUN ACTIVE (15:14Rome launch)**:
   Wrapperfreeze55bee8b1d771a3d9bde8131b5905b8556ab9e957,
   configv2SHA43203199a6b77a13e367dfc293001382d8f75ebb85c95cd09c23531860664c5b.

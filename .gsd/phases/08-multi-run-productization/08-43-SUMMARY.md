@@ -1,5 +1,11 @@
 # 08.43 native v2 active - NOT COMPLETE
 
+Latest observed:1000/39971identities,8real spawned workers +CUDA scoring.
+20.659s interval852->1000:429.83identities/min; GPU1..100%,mean17.85%,max2535MiB/
+141.4W. No failure;3upstreamxFormerswarnings only. Startup statements below are
+earlier observations. Short projection~91min remainingrun only, not stableETA;
+full standalone verification adds unmeasured time. No actualstageexits/PASS yet.
+
 Required input preparation completed OS0. Versioned native wrapper qualified:
 134targetedWSLPASS/3root-onlySKIP/11warnings/8.07s,3rootfixturesPASS/2.63s,
 6Windows native lifecyclechecksPASS/actualOS0,RuffPASS.21scientificrawSHA

@@ -26,6 +26,13 @@ Benchmark stopped; no new scientific run or productive provider promotion.
 
 ## Latest checkpoint: copied bytes complete, native launch qualified
 
+Actual batching now observed:1000/39971identities,8spawnworkers and GPU scoring;
+20.659s sample429.83identities/min. GPU1..100%/mean17.85%, not continuously full.
+No error;3upstreamxFormerswarnings only. Short-rateprojection~91min run remaining
+is provisional; independent full verifier takes additional unmeasured time.
+No full calibrationPASS or run/verifier exit observed. Earlier startup statements
+below are retained observations, superseded by this actual batch evidence.
+
 Subsequent actuallaunch: nativev2 wrapperfreeze55bee8b,13:14:41UTC,
 Windowsworker21932/WSL8744/scientificcontroller531UID1000. Parent startup active,
 stderr empty; no numericPASS or stage exit observed. First wrapperv1 stopped

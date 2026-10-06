@@ -1,5 +1,17 @@
 # 08.43 observed evidence - native run pending
 
+## Subsequent actual batch telemetry
+
+Scientificcontroller531UID1000/private mountns/capabilities0/no-new-privs1;
+8spawnworker PIDs672/690/706/723/740/757/789/821 +tracker671 observed. Main44threads,
+workers31each; presence is not CPU saturation proof. No thread/batch parameter
+tuning made whileactive.20NVMLsamples1s cadence, GPUutilmin1/max100/mean17.85%,
+maxmemory2535MiB/maxpower141.4W. Actual progress852->1000 over20.659422537s,
+429.828identities/min. Read-only metrics, not scientific outcome inspection.
+No run/wrapper failure; only3upstreamxFormerswarnings. No fullPASS or stage exits.
+Short-rateprojection~91min remainingrun only; verifierdurationunmeasured. Do not
+call this sustained throughput/speedup proof or guaranteed end-to-endETA.
+
 prepare_v3 actualOS0,204791files/61563706027bytes. SnapshotSHA
 a265ee5364c8df55122cd6ccdded4e3262f6592a8eecefdc7655245aa03f66d6,
 seal a657ae9921720575f3b70f9907661c16ba30d8ce21a6b32b8e59c603e0b4865a.

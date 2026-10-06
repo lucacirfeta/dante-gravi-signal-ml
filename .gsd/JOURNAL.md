@@ -1,5 +1,21 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - native batch utilization observed
+
+- Actualcontroller531UID1000/private mountns different fromPID1, capabilities0,
+  no-new-privs1,44threads;8spawn workers672/690/706/723/740/757/789/821 eachUID1000,
+  resource tracker671. Pool workers are not duplicate controllers. CPU lifetime
+  sample main140% and workers~21%each is not an interval saturation measurement.
+- GPU20real one-second samples:1..100%/mean17.85%,max2535MiB/141.4W. Progress
+ 852->1000 in20.659422537s=429.828identities/min. Short projection~91minremaining
+  run only; not stableETA or complete run+verify estimate. No claimed controlled
+  speedup. No numeric outcomes inspected, only metadata/progress/process telemetry.
+- No run/wrapper failure. Scientificstderr contains only3knownupstreamxFormers
+  warnings. Source/algorithm/population/8workers/batch32/precision unchanged.
+  Full verifier/post-run qualification still required; do not edit frozen code,
+  duplicate stages or treatpartialprogress as a calibrationPASS. MonitorPAUSED.
+
+
 ## 2026-10-06 - native v2 launch observed
 
 - Freeze55bee8b1d771a3d9bde8131b5905b8556ab9e957; new policyv2 SHA
