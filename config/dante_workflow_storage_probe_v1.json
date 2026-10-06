@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "status": "ISOLATED_STORAGE_PROBE_V1",
+  "authorization": "2026-10-06 author stoppa tutto e prepariamo questo: prepare isolated performance probe, no scientific restart",
+  "source_directory": "/mnt/e/dante_cache/dante_workflow/expanded_preprocessing_replay_20261005/calibration_v1",
+  "workspace": "/home/atafe/dante_bench/expanded_storage_20261006/probe_v1",
+  "repetitions": 3,
+  "productive_profile": {
+    "path": "config/dante_workflow_expanded_production_v1.json",
+    "sha256": "e97ccf03c593f0a598e66b4a6d6e62dd9519323b90f7911fb470f50cfdf7f7de"
+  },
+  "source_pins": [
+    {
+      "path": "src/dante_workflow/expanded_context_replay.py",
+      "sha256": "60d8cc32443b89b2015d62d29fad6452ed4b18dc9d3aa742d35f869be5b00771"
+    },
+    {
+      "path": "src/dante_workflow/input_preflight.py",
+      "sha256": "20e6c579dfdbfb484169c09a3c862a162da24bfb27782610d33b61bdf917feff"
+    }
+  ],
+  "boundary": {
+    "io_probe_only": true,
+    "scientific_execution_ready": false,
+    "full_calibration_verified": false,
+    "default_provider_replaced": false,
+    "o4b_launch_allowed": false
+  }
+}

@@ -6,7 +6,10 @@ This is an execution checklist, not a claim of certification or launch authority
 O3a is closed; local commits only, no implicit push/main. Historical artifacts
 and unrelated user untracked files stay untouched. Prior shutdown was one-shot.
 
-Latest author2026-10-05: automatic work only until2026-10-06 08:00Europe/Rome
+Latest author2026-10-06: `stoppa tutto e prepariamo questo`. Monitoring PAUSED,
+08.40 interrupted by scoped SIGINT; no automatic scientific restart. Prepare
+isolated storage benchmark only, retaining all hash/validation semantics.
+Older overnight instruction2026-10-05: automatic work only until2026-10-06 08:00Europe/Rome
 (06:00UTC). At deadline no new stage/test/edit; pause monitor, report retained
 state and active processes, do not signal controllers or shut down the PC.
 
@@ -15,7 +18,7 @@ state and active processes, do not signal controllers or shut down the PC.
 |1|Exact full native reader|COMPLETE2026-10-05:08.34 admission/08.35 binding PASS;08.36 v2 run OS0 and retry31599 independent verifier OS0/PASS_VERIFIED_EXPANDED_NATIVE_CONSUMER_ONLY.39891contexts/all39971identities, zero failure/partial/tmp/lock. Post-run250WSL PASS/11warnings,Ruff4files PASS,source10/parent4 match. V1 failed and interrupted first verifier preserved. Not preprocessing/scientific certification.|
 |2|Complete padded-context validity and preprocessing|COMPLETE2026-10-06:08.38 run/standalone verifier both observedOS0/PASS_VERIFIED_EXPANDED_CALIBRATION_PREPROCESSING_ONLY;39891receipt+39891NPY,all39971bound identities. Zero failure/partial/tmp/lock/controller;14Git source/parent/runtime auditOS0.306post-runWSL PASS/11warnings/19.89s,Ruff3files PASS. Exact uint8 equality using SAME frozen scientific primitives, no new DQ filter/population reduction. Not physical DQ/sensor safety or full calibration.|
 |3|Isolated productive integration|INPUT BOUNDARY VERIFIED2026-10-06:08.39 bind/standalone verify bothOS0,39891contexts/all39971identities;437post-runWSL PASS/11warnings,RuffPASS,16Git source/parent audit match. Explicit separate provider/profile with per-read guards, isolated output and single writer; no legacy/global redirection. Numerical productive calibration integration is the next separate increment, not implied by metadata PASS.|
-|4|Full fresh calibration|ACTIVE08.40,2026-10-06:496pre-runWSL PASS/59new/RuffPASS,freezeace1b93; sole supervisor9907 full fresh run in separate production_v1. All39971identity memberships/84session-detector groups/39891context union, inherited criteria and fresh scores/p99. No real numerical PASS or execution exit yet. Conditional standalone verify only after runOS0/PASS and before06:00UTC; no historical score/threshold transplant.|
+|4|Full fresh calibration|USER INTERRUPTED08.40,2026-10-06:actualRUN_EXIT_CODE=2,supervisor9907OS1;2997/39971progress,7/84session receipts preserved in production_v1. No summary/verification or remaining controller/worker/lock; no verifier launched, no numerical PASS.496pre-runWSL/Ruff historical only; freezeace1b93unchanged.08.41I/O benchmark prepared separately, not calibration restart or qualification.|
 |5|Complete model/index/runtime qualification|OPEN beyond the bounded28-input proof. Full native representation/index/encoder/scoring/calibration dependencies and reproducibility gate. Driver recorded at actual runtime with fresh numeric proof, not permanently blocked by driver version.|
 |6|Common CLI/UI end-to-end|OPEN. Preliminary administrative regression2026-10-06:100WSL tests PASS/180.39s/observedOS0 across CLI/UI/run profiles/input preflight/packaging. Synthetic boundary/lifecycle checks only, not full expanded-provider scientific end-to-end. Correct adapters/prerequisites/receipts and stop/failure/resume behavior still require full-chain evidence; no scientific stage opened by UI administrative PASS alone.|
 |7|Clean scientific installation|OPEN beyond bounded proof. Fresh installed-reader/model/dependency replay; clean install green tests alone is not full scientific certification.|
@@ -48,5 +51,6 @@ calibration writer, O4b launch, source/config change or default promotion.
 These tests verify existing administrative contracts and detached-process
 fixtures. Package/module catalogue parity uses checkout PYTHONPATH, not a fresh
 wheel installation; packaging metadata tests likewise do not certify installed
-scientific dependencies. Gates6/7 remain OPEN. Full numerical08.40 remains
-ACTIVE under supervisor9907; its pending verifier is not replaced by this suite.
+scientific dependencies. Gates6/7 remain OPEN. At the time of this preliminary
+suite,08.40 was ACTIVE under supervisor9907. It is now interrupted by the author
+as recorded above; no verifier/numerical qualification is supplied by this suite.

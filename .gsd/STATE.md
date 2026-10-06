@@ -1,4 +1,18 @@
 ## Current Position
+- **Author stop; isolated storage probe PREPARED (2026-10-06 morning)**:
+  Latest instruction `stoppa tutto e prepariamo questo` supersedes overnight
+  continuation and hourly monitoring. Monitor monitor-o3a-native-cohort PAUSED
+  and read back. SIGINT only to verified calibration process group320; controller,
+  spawn worker604 and tracker603 gone.9907 observed supervisorOS1 with actual
+  RUN_EXIT_CODE=2; durable log agrees. Final progress2997/39971,7/84session
+  receipts; no failure/summary/verification/lock. All partial outputs preserved,
+  no verifier, resume, deletion or calibration PASS. Frozen science unchanged.
+  08.41 prepares byte-identical ext4 mirror and SAME quiet/hash I/O benchmark:
+  82WSL tests PASS (23new+59calibration regressions),11upstreamwarnings,6.60s;
+  Ruff3files PASS. Real mirror/measurement NOT launched; no scientific restart,
+  guard-cache waiver, new tolerance or default promotion.21frozen SHA auditPASS;
+  real-parent I/O policy pins/sealsPASS, workspace absent. See storage prep doc.
+  Older ACTIVE entries below are retained chronology, superseded by this stop.
 - **Preliminary CLI/UI administrative regression PASS (2026-10-06 03:01Rome)**:
   Unchanged checkout1d2edad,44390 actualOS0/100passed/180.39s/no stderr.
   Five existing CLI/UI/profile/input-preflight/packaging files; durable external

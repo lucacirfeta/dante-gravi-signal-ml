@@ -1,4 +1,19 @@
-# 08.40 verification checkpoint - REAL RUN ACTIVE, NOT PASS
+# 08.40 verification checkpoint - USER INTERRUPTED, NOT PASS
+
+## Latest observed stop, 2026-10-06 morning
+
+Author requested `stoppa tutto e prepariamo questo`. Automation PAUSED read back;
+scoped SIGINT to confirmed PGID320 (controller320/worker604/tracker603).9907 full
+tool object observed exit_code1; stdout and durable supervisor log both show
+RUN_EXIT_CODE=2. No controller/worker/tracker or Windowslauncher30904 remains.
+Final progress2997/39971, digest
+4a135347571d9ed6f86102c4b77ecc0dcfbc49bbac98a77644555d2b95ce4e09.
+Seven session receipts, no failure/summary/verification/controller.lock. Original
+finally removed its own lock; no manual lock cleanup, reset, archive or resume.
+KeyboardInterrupt is preserved in stderr, not reinterpreted as a numeric failure
+or PASS. No verifier started. Source/module/config raw SHA still frozen.
+
+Remaining text records the original launch/pre-run evidence, not live activity.
 
 Source freezeace1b9311879e22af2b02f9891882ff0c3d4b836; contractSHA
 aca27040a5b42b2319fcb6064d8296fe71a170fba72b5ecebc3681179903795b.

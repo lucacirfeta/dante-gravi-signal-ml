@@ -1,5 +1,47 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - author stop and isolated storage benchmark preparation
+
+- Author `stoppa tutto e prepariamo questo` overrides continuation and the
+  recently requested hourly read-only monitor. Existing automation updated with
+  full preserved fields to PAUSED; persisted status read back. No replacement.
+- Read-only process/lock check confirmed WSL controller320, PGID320, only
+  tracker603/worker604 in that scientific group, Windowslauncher30904. Sent
+  SIGINT to this exact group.9907 returned actual supervisor exit_code1 and
+  RUN_EXIT_CODE=2; durable worker.supervisor.stdout.log agrees. No processes
+  remain at320/603/604; launcher30904 gone. No machine/WSL shutdown command.
+- Final progress2997/39971,digest4a135347571d9ed6f86102c4b77ecc0dcfbc49bbac98a77644555d2b95ce4e09;
+  seven session receipts. Lock cleaned by the original controller's finally,
+  not manually deleted. No failure.json (KeyboardInterrupt bypasses Exception),
+  summary or verification. Stderr retains controller and worker interruption.
+  Historical outputs, failed/interrupted stages and user untracked preserved.
+- Prior read-only sample07:57Rome: WSL CPU97.3-98.8%idle; RTX5070 GPU0-4%,
+  roughly3.3-3.6GiB allocated; only one spawned worker despite configured8max.
+  Main thread repeatedly p9_client_rpc, worker pipe_read. Native WSL mount sees
+  16logical CPUs; no evidence of CPU/GPU saturation. Five preprocessing quiet
+  invocations per row from nested guard/read calls. Separate warm scan pair
+  0.496s partial+0.474s tmp. Estimated multiplication is NOT full-path profiling
+  or a promised speedup. Stop traceback also lands in repeated guard _hash.
+- Prepared isolated I/O-only mirror/measure tool, versioned configuration,
+ 23fixture safety/byte-parity tests and08.41plan. Copies are new-only, complete,
+  source/destination SHA-verified and never scientific-provider-admitted. SAME
+  frozen quiet function, all original science/config/hash cadence unchanged.
+  No raw fetch, model/scoring invocation, calibration resume, copy or real
+  benchmark execution. No arbitrary changed batch sizes or thread settings.
+- First test run77PASS; Ruff lintPASS but format check identified2newfiles.
+  Mechanical formatting and extra failure/policy tests then80PASS/6.07s.
+  Added empty-directory layout drift rejection; final82PASS,
+  11upstreamwarnings/6.60s, Ruff lint and format3filesPASS, actualOSexit0.
+  These are probe/unit regressions, NOT08.40post-run qualification or a speedup.
+- Next: source freeze then explicit mirror/measure on full08.38parent. Pure
+  storage timing does not certify numeric equivalence or productive promotion.
+  Pipeline overlap/fewer repeated guards require separate reviewed design;
+  no weakened validation or independent replacement scientific algorithm.
+- Final read-only audit observedOS0:FROZEN_SHA_PASS count=21, existing18science
+  pins plus2runner sources+contract unchanged. PINNED_IO_POLICY_PASS
+  scientific_execution_ready=False; real probe workspace does not exist.
+  MonitorPAUSED read back; no pipeline/spawn process remains. git diff--checkPASS.
+
 ## 2026-10-06 - preliminary CLI/UI administrative regression
 
 - Existing CLI/UI/run-profile/input-preflight/packaging suite, unchangedHEAD
