@@ -1,4 +1,19 @@
 ## Current Position
+- **08.38 full preprocessing PASS_VERIFIED (2026-10-06)**:
+  Supervisor84146 observed exit_code0/RUN_EXIT_CODE=0/VERIFY_EXIT_CODE=0;
+  verifier completed01:51:18Rome.39891receipts+39891NPY/all39971bound identities
+  19715H1+20256L1,39863new+28prior. Zero failure/partial/tmp/lock/controller.
+  Verification SHA3a96f012f5007b855db82df223372359661465203a3b6201a1bd0b144e9b4f7f,
+  seal4e31466a574ac8078ed377a8fbafafa105cecfb405666b678bcdef716f23a8d1.
+  Post-run85168 OS0:306PASS/11warnings/19.89s,Ruff3files PASS. Corrected audit
+  86486 OS0:14Git sources,parent/runtime,receipt seals/union/aggregate match.
+  Next08.39 isolated productive input integration in preparation; not full
+  calibration, physical DQ, GPU/encoder/runtime qualification or O4b authority.
+- **Overnight authority limited to2026-10-06 08:00Europe/Rome**:
+  User asks automatic work until morning. No new stage/test/edit at06:00UTC,
+  pause monitor and report durable state; leave active processes untouched.
+  Existing heartbeat updated to this deadline; no push/main/O3a/O4b/shutdown.
+  Older entries below are retained chronology, not current active processes.
 - **08.38 full preprocessing run ACTIVE (2026-10-05)**:
   Source7eab4eae5d7bb9bfafb0da5cc3aaa6c8537802b7, contract73d3bdf9...
   Fresh expanded_preprocessing_replay_20261005/calibration_v1; one supervisor

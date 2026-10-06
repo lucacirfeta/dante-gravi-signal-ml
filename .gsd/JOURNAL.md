@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - 08.38 full preprocessing verified and post-run audit
+
+- Full84146 result observed exit_code0/VERIFY_EXIT_CODE=0; durable supervisor
+  also RUN_EXIT_CODE=0. Completed39891contexts+NPY/39971bound identities,
+  39863expanded+28prior, no failure/partial/tmp/lock/controller or stderr.
+- Summary SHAa78c5f3896206d651d27d062861404a26c6046f0d4771c423030db233fb449c5;
+  verification SHA3a96f012f5007b855db82df223372359661465203a3b6201a1bd0b144e9b4f7f,
+  seal4e31466a574ac8078ed377a8fbafafa105cecfb405666b678bcdef716f23a8d1.
+- Post-run85168 OS0:306passed,11upstream warnings in19.89s. Ruff lint/format
+  three replay files PASS. Audit86486 OS0 exact output:
+  SOURCE_PARENT_RUNTIME_PASS Git_sources=14 parent_pins=match identity_parent=39971
+  POST_RUN_AUDIT_PASS receipts=39891 images=39891 bound_identities=39971 H1=19715 L1=20256 Git_sources=14 seals_union_aggregate=match new=39863 prior=28
+- First read-only audit46842 exit1/KeyError(identity_keys), diagnostic expected
+  an absent multiplicity field in context receipts. Corrected to exact sealed
+  plan context union and bound identity parent; no input/source normalization,
+  scientific run failure, altered count, guard waiver or numeric rerun.
+- SAME scientific primitives, local h5py reader/explicit dispatch; no second
+  fetch or physical DQ/full calibration/active provider/O4b certificate. Next
+  separate approved isolated productive integration08.39. Latest deadline
+  6October08:00Rome: no new work, pause monitor, keep active processes intact.
+
 ## 2026-10-05 - 08.38 single full preprocessing launch
 
 - Freeze7eab4eae5d7bb9bfafb0da5cc3aaa6c8537802b7, contract SHA

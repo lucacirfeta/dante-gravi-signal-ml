@@ -1,5 +1,27 @@
 # Expanded calibration preprocessing readiness
 
+## Final full-domain gate: PASS_VERIFIED (2026-10-06)
+
+Run and standalone verifier both observedOS0, completed21:00:46 on5October and
+01:51:18 on6October Europe/Rome. All39891context receipts+39891NPY images,
+bound39971identities19715H1+20256L1,39863expanded+28prior; no failure/partial/
+tmp/lock/controller, stderr empty. Exact full-population uint8 RGB reconstruction
+using a separate h5py reader and the SAME frozen scientific primitives.
+Verification SHA3a96f012f5007b855db82df223372359661465203a3b6201a1bd0b144e9b4f7f,
+seal4e31466a574ac8078ed377a8fbafafa105cecfb405666b678bcdef716f23a8d1.
+Summary SHAa78c5f3896206d651d27d062861404a26c6046f0d4771c423030db233fb449c5.
+Post-run306WSL PASS/11warnings/19.89s; Ruff3files PASS. Metadata auditOS0:
+14Git sources/all parent hashes/runtime, sealed receipt union/aggregate match.
+Evidence retained in expanded_preprocessing_replay_20261005/calibration_v1.
+
+This closes preprocessing parity/finite-grid validity only: not physical DQ or
+sensor safety, independently implemented science, full fresh calibration,
+GPU/encoder/scoring qualification, provider default promotion or O4b authority.
+Next isolated productive integration08.39. New work stops6October08:00Rome
+under latest author instruction; active processes are not forcibly terminated.
+
+Earlier sections below preserve implementation/launch chronology.
+
 ## Inherited method/input binding: PASS, not preprocessing execution
 
 08.36 full native reader is independently verified for all39,891 unique
