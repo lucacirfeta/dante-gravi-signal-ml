@@ -1,5 +1,42 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - detached I/O launcher qualification
+
+- Original probe processes and both supervisors absent, sessions23591/80088
+  unknown, logs have launch lines only, no exits; probe_v1 zero copied files,
+  no mirror/measurement/failure seal. Host boot5Oct07:55:50; WSL observed freshly
+  started. Author reports Codex updated. App restart plausibly interrupted
+  session-owned children; exact causal chain unproven. No timing/scientific PASS.
+- Author `procedi` authorizes detached launcher/new isolated I/O attempt.
+  New launch_dante_workflow_storage.ps1 uses Win32_Process.Create through WMI,
+  hidden stable Windows PowerShell worker outside calling/Codex process tree.
+  New-only claim/log directory, raw pins before launch and again in worker.
+  Python storage_supervisor does ONE mirror, requires actualOS0+SAME sealed
+  byte receipt before ONE measure, rechecks pins/parents, durable fsync events
+  and exits, final sealed I/O-only summary. No retry or scientific invocation.
+- Initial WSL tests90PASS/2FAIL: test expected FileNotFoundError but existing
+  helper wraps it as InputCoverageError; tampered owned fixture accidentally
+  retained its old digest. Corrected tests, no guard or production waiver.
+  Final93PASS (11supervisor+23probe+59calibration regression),11known upstream
+  warnings/7.53s,actualOS0; Ruff lint/formatPASS.
+- Windows fixture_v1 rejected valid launch because inherited bundled pwsh
+  PSModulePath excluded Windows PowerShell Get-FileHash. Worker now explicitly
+  imports system modules. fixture_v2 completion log did not suffice: process
+  ExitCode unavailable without a live handle. Test captures live handle before
+  caller exits. fixture_v3/v4:6checks PASS, caller actualOS0, WMI parent21544,
+  detached worker survives caller exit with native observedOS0; duplicate and
+  wrong-pin launch rejected. No application restart was deliberately tested.
+- Full Windows->WSL fixture full_wsl_v1 failedOS2 before any mirror because
+  PowerShell argument expression concatenated an array. Parenthesized single
+  path argument and recorded argv. New full_wsl_v2: Windowsworker17356,
+  WSLlauncher3076, Python425; mirror426OS0,measure427OS0, supervisorOS0,
+  sealed COMPLETE_SUPERVISED_IO_ONLY/3files381bytes. Tiny fixture ONLY, not real
+  performance or numerical qualification. All failed fixture evidence preserved.
+- FROZEN_SHA_PASS count24:18scientificpins+2runner+contract+original probe
+  module/script/config. v2 config differs only authorization/workspace; same
+  repetitions, parent hashes, SAME quiet/hash operations and boundary. Monitor
+  PAUSED, user untracked and interrupted08.40unchanged. No real v2 stage yet.
+
 ## 2026-10-06 - authorized real storage mirror launch
 
 - Direct author `procedi` after the prepared tool authorizes isolated storage

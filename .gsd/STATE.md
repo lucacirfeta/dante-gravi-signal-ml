@@ -1,4 +1,15 @@
 ## Current Position
+- **08.41 detached launcher QUALIFIED; real v2 pending launch (2026-10-06)**:
+  Author updated Codex and then authorized technical correction/new isolated
+  attempt. Original23591/80088 and Windows21040/13484 disappeared without exit
+  or receipt, probe_v1 empty; no timing result. Update/restart is a plausible
+  cause, not proven causality; host LastBootUpTime5Oct07:55:50 excludes a Windows
+  reboot in this interval. Preserve all evidence, never resume probe_v1.
+  New WMI-owned hidden Windows worker, stable system PowerShell, durable Python
+  supervisor.93WSL PASS/11warnings/7.53s;6Windows lifecycle checks PASS; tiny
+  Windows->WSL byte fixture complete with actual supervisor/mirror/measureOS0.
+  24raw SHA unchanged (21science+original3probe pins); v2 changes only I/O
+  namespace/authorization. MonitorPAUSED; no science/O4b/default promotion.
 - **08.41 real storage mirror ACTIVE (2026-10-06 08:30Rome)**:
   Direct author `procedi` authorizes the prepared mirror/measure only; no
   overnight continuation, scientific restart or monitor reactivation. Freeze
