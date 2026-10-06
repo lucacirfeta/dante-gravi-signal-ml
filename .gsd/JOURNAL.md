@@ -1,5 +1,31 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - complete native snapshot and qualified execution wrapper
+
+- prepare_v3 actualOS0 at12:56:07.9344297UTC;204791files/61563706027bytes,
+  snapshotSHAa265ee5364c8df55122cd6ccdded4e3262f6592a8eecefdc7655245aa03f66d6,
+  seal a657ae9921720575f3b70f9907661c16ba30d8ce21a6b32b8e59c603e0b4865a.
+  Preparation is byte-only, no scientific equivalence or measured speedup.
+- Author-approved explicit scan scope replaces repeated complete enumerations
+  only for the two declared immutable parents; initial/final full scans,
+  per-read hashes and full numerical verifier unchanged. No scientific edits.
+  New native orchestration binds private C/E aliases to copied ext4 input,
+  root-protects backing bytes then drops toUID1000/no capabilities/no-new-privs.
+  Standalone verifier only after actualrunOS0/complete frozen cardinalities.
+- 134targetedWSL PASS/3root-onlySKIP/11warnings/8.07s/actualOS0;3root fixtures
+  PASS/2.66s/OS0, including actual spawn workers with read-only input and backing
+  denied writes, original global mount inodes unchanged.18rawscientificpinsPASS.
+  RuffPASS.6Windows native launcher checksPASS/actualOS0,25sforeground survival,
+  detached WMI owner, wrong-pin and duplicate rejection. Evidence:
+  E:/dante_cache/dante_workflow/native_execution_launcher_fixture_20261006_v1.
+- Fixture initially expected PermissionError rather than actual kernelEROFS;
+  corrected assertion checks exacterrno. Spawn fixture showed missing inherited
+  Windows cwd under tiny mount; child now uses native execution cwd. Failed
+  fixture alone interrupted, directories retained; no real scientific job yet.
+  New entry uses __main__ guard to avoid reexecution in spawn workers.
+  All historical preparation/calibration interruptions remain immutable.
+
+
 ## 2026-10-06 - reference junction correction and immutable guard approval
 
 - prepare_v2 worker23936/WSL23176 observedPREPARATION_EXIT_CODE=1 at11:17:41UTC.

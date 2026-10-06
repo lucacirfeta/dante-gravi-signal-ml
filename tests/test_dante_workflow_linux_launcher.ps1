@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][string]$RepositoryRoot,
-    [Parameter(Mandatory=$true)][string]$EvidenceDirectory
+    [Parameter(Mandatory=$true)][string]$EvidenceDirectory,
+    [switch]$NativeCalibration
 )
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
@@ -17,9 +18,18 @@ $values=@{
     EntrySha256=(Get-FileHash -LiteralPath (Join-Path $RepositoryRoot 'scripts/prepare_dante_workflow_linux.py')).Hash.ToLower()
     LauncherSha256=(Get-FileHash -LiteralPath $launcher).Hash.ToLower()
 }
+if ($NativeCalibration) {
+    $config=Join-Path $RepositoryRoot 'config/dante_workflow_native_calibration_v1.json'
+    $values.ConfigPath=$config
+    $values.ConfigSha256=(Get-FileHash -LiteralPath $config).Hash
+    $values.ModuleSha256=(Get-FileHash -LiteralPath (Join-Path $RepositoryRoot 'src/dante_workflow/native_calibration.py')).Hash
+    $values.EntrySha256=(Get-FileHash -LiteralPath (Join-Path $RepositoryRoot 'scripts/execute_dante_workflow_native.py')).Hash
+    $values.ScanScopeSha256=(Get-FileHash -LiteralPath (Join-Path $RepositoryRoot 'src/dante_workflow/immutable_scan_scope.py')).Hash
+}
 function Arguments([string]$Directory,[switch]$WrongPin) {
     $parts=@('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',
         '"'+$launcher+'"','-SmokeOnly','-LogDirectory','"'+$Directory+'"')
+    if ($NativeCalibration) { $parts += '-NativeCalibration' }
     foreach($key in $values.Keys) {
         $value=$values[$key]
         if($WrongPin -and $key -eq 'ConfigSha256') { $value='0'*64 }
@@ -71,7 +81,9 @@ if(-not $worker.WaitForExit(45000)) { throw 'Fixture timed out; preserve process
 if($null -eq $worker.ExitCode -or $worker.ExitCode -ne 0) { throw 'Worker fixture failed' }
 $log=Get-Content -LiteralPath (Join-Path $valid 'launcher.log') -Raw
 $stdout=Get-Content -LiteralPath (Join-Path $valid 'worker.stdout.log') -Raw
-if($log -notmatch 'PREPARATION_EXIT_CODE=0 SMOKE_ONLY=True' -or $stdout -notmatch '12345') {
+$exitLabel='PREPARATION_EXIT_CODE'
+if ($NativeCalibration) { $exitLabel='NATIVE_EXECUTION_EXIT_CODE' }
+if($log -notmatch ($exitLabel+'=0 SMOKE_ONLY=True') -or $stdout -notmatch '12345') {
     throw 'No actual WSL fixture completion'
 }
 Write-Output "CHECK5_FOREGROUND_WSL_SURVIVED_IDLE_INTERVAL ACTUAL_OS_EXIT_CODE=$($worker.ExitCode)"

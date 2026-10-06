@@ -1,5 +1,17 @@
 # 08.42 native preparation verification
 
+## Complete byte snapshot - observed actual OS exit
+
+prepare_v3 Windowsworker11188/WSLlauncher7148; durable launcher log records
+PREPARATION_EXIT_CODE=0 SMOKE_ONLY=False at2026-10-06T12:56:07.9344297Z.
+204791files,61563706027bytes,8copythreads. Native receipt:
+/home/atafe/dante_bench/native_calibration_20261006/prepare_v3/snapshot.json.
+SHA256a265ee5364c8df55122cd6ccdded4e3262f6592a8eecefdc7655245aa03f66d6,
+seal a657ae9921720575f3b70f9907661c16ba30d8ce21a6b32b8e59c603e0b4865a.
+StatusBYTE_IDENTICAL_NATIVE_REQUIRED_INPUT_SNAPSHOT_ONLY; scientific run and
+equivalence fields false. All old failure/stop evidence retained. The following
+pending statements are historical checkpoints, superseded by this completion.
+
 This is preparation-only, not calibration/numerical equivalence or speedup.
 
 Latestv3route correction: v2observedOS1 during inventory, before copying, on

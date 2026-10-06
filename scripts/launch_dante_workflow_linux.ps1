@@ -7,6 +7,8 @@ param(
     [Parameter(Mandatory=$true)][string]$EntrySha256,
     [Parameter(Mandatory=$true)][string]$LauncherSha256,
     [Parameter(Mandatory=$true)][string]$LogDirectory,
+    [string]$ScanScopeSha256,
+    [switch]$NativeCalibration,
     [switch]$Worker,
     [switch]$SmokeOnly
 )
@@ -17,6 +19,7 @@ $ConfigSha256 = $ConfigSha256.ToLowerInvariant()
 $ModuleSha256 = $ModuleSha256.ToLowerInvariant()
 $EntrySha256 = $EntrySha256.ToLowerInvariant()
 $LauncherSha256 = $LauncherSha256.ToLowerInvariant()
+if ($ScanScopeSha256) { $ScanScopeSha256 = $ScanScopeSha256.ToLowerInvariant() }
 if ($PSVersionTable.PSVersion.Major -eq 5) {
     foreach ($name in @('Microsoft.PowerShell.Utility','Microsoft.PowerShell.Management','CimCmdlets')) {
         Import-Module -Name (Join-Path $PSHOME ('Modules\'+$name+'\'+$name+'.psd1')) -ErrorAction Stop
@@ -50,8 +53,14 @@ if (-not $ConfigPath.StartsWith($RepositoryRoot.TrimEnd('\')+'\',[StringComparis
     $SourceFreeze -notmatch '^[0-9a-f]{40}$') { throw 'Invalid preparation scope' }
 Assert-Pin $PSCommandPath $LauncherSha256
 Assert-Pin $ConfigPath $ConfigSha256
-Assert-Pin (Join-Path $RepositoryRoot 'src/dante_workflow/linux_workspace.py') $ModuleSha256
-Assert-Pin (Join-Path $RepositoryRoot 'scripts/prepare_dante_workflow_linux.py') $EntrySha256
+if ($NativeCalibration) {
+    Assert-Pin (Join-Path $RepositoryRoot 'src/dante_workflow/native_calibration.py') $ModuleSha256
+    Assert-Pin (Join-Path $RepositoryRoot 'scripts/execute_dante_workflow_native.py') $EntrySha256
+    Assert-Pin (Join-Path $RepositoryRoot 'src/dante_workflow/immutable_scan_scope.py') $ScanScopeSha256
+} else {
+    Assert-Pin (Join-Path $RepositoryRoot 'src/dante_workflow/linux_workspace.py') $ModuleSha256
+    Assert-Pin (Join-Path $RepositoryRoot 'scripts/prepare_dante_workflow_linux.py') $EntrySha256
+}
 if (-not $Worker) {
     if (Test-Path -LiteralPath $LogDirectory) { throw 'Existing launch namespace preserved' }
     [void](New-Item -ItemType Directory -Path $LogDirectory)
@@ -69,6 +78,11 @@ if (-not $Worker) {
         $parts += '"'+(Get-Variable -Name $name -ValueOnly)+'"'
     }
     if ($SmokeOnly) { $parts += '-SmokeOnly' }
+    if ($NativeCalibration) {
+        $parts += '-NativeCalibration'
+        $parts += '-ScanScopeSha256'
+        $parts += '"'+$ScanScopeSha256+'"'
+    }
     $created = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{
         CommandLine=($parts -join ' '); CurrentDirectory=$RepositoryRoot
     }
@@ -82,13 +96,18 @@ $claim = [IO.File]::Open((Join-Path $LogDirectory 'worker.claim'),
 try {
     Log "WORKER_PID=$PID SMOKE_ONLY=$SmokeOnly"
     $arguments = @('-d','Ubuntu','--','/home/atafe/miniconda/envs/dante_env/bin/python','-B')
+    if ($NativeCalibration) {
+        $arguments = @('-d','Ubuntu','-u','root','--','/home/atafe/miniconda/envs/dante_env/bin/python','-B')
+    }
     if ($SmokeOnly) {
         # Real WSL foreground lifetime exceeds the observed15s daemon idle stop.
         $code = 'import os,time;print(os.getpid(),flush=True);time.sleep(25);print(12345,flush=True)'
         $arguments += '-c'
         $arguments += ('"'+$code+'"')
     } else {
-        $arguments += '"'+(Wsl-Path (Join-Path $RepositoryRoot 'scripts/prepare_dante_workflow_linux.py'))+'"'
+        $entryPath = 'scripts/prepare_dante_workflow_linux.py'
+        if ($NativeCalibration) { $entryPath = 'scripts/execute_dante_workflow_native.py' }
+        $arguments += '"'+(Wsl-Path (Join-Path $RepositoryRoot $entryPath))+'"'
         foreach ($pair in @(
             @('--config',(Wsl-Path $ConfigPath)),
             @('--config-sha256',$ConfigSha256),@('--source-freeze',$SourceFreeze)
@@ -110,7 +129,9 @@ try {
     $process.WaitForExit()
     $exitCode = $process.ExitCode
     if ($null -eq $exitCode) { throw 'Observed WSL exit unavailable' }
-    Log "PREPARATION_EXIT_CODE=$exitCode SMOKE_ONLY=$SmokeOnly"
+    $exitLabel = 'PREPARATION_EXIT_CODE'
+    if ($NativeCalibration) { $exitLabel = 'NATIVE_EXECUTION_EXIT_CODE' }
+    Log "$exitLabel=$exitCode SMOKE_ONLY=$SmokeOnly"
     exit $exitCode
 } catch {
     Log ('WORKER_FAILURE_NO_RETRY='+$_.Exception.Message)

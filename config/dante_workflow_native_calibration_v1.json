@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "status": "PRIVATE_IMMUTABLE_NATIVE_CALIBRATION_V1",
+  "authorization": "2026-10-06 author proceeds: native Linux migration and immutable initial/final full metadata scans; per-read hashes, full numerical verifier and scientific method unchanged",
+  "repository_root": "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml",
+  "source_paths": [
+    "src/dante_workflow/native_calibration.py",
+    "src/dante_workflow/immutable_scan_scope.py",
+    "scripts/execute_dante_workflow_native.py"
+  ],
+  "snapshot_receipt": "/home/atafe/dante_bench/native_calibration_20261006/prepare_v3/snapshot.json",
+  "preparation_freeze": "6011411b1fb00b514470fa516b0af5bf1cb32b5c",
+  "preparation_config_sha256": "d3155d77dda7768fc15422d47e90106f54c7a4a7e42869177d69c60a5ce8e563",
+  "preparation_launcher_log": "/mnt/e/dante_cache/dante_workflow/native_linux_preparation_20261006_v3/launcher.log",
+  "execution_directory": "/home/atafe/dante_bench/native_calibration_20261006/execution_v1",
+  "run_directory": "/home/atafe/dante_bench/native_calibration_20261006/calibration_native_v1",
+  "scan_policy": "INITIAL_FINAL_IMMUTABLE_PARENT_SCANS",
+  "protected_scan_directories": [
+    "/mnt/e/dante_cache/dante_workflow/expanded_preprocessing_replay_20261005/calibration_v1",
+    "/mnt/e/dante_cache/dante_workflow/expanded_production_20261006/profile_v1"
+  ],
+  "expected_population": {
+    "identity_count": 39971,
+    "context_count": 39891,
+    "session_detector_count": 84
+  },
+  "calibration_arguments": [
+    "--repository-root",
+    "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml",
+    "--contract",
+    "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/config/dante_workflow_expanded_calibration_v1.json",
+    "--contract-sha256",
+    "aca27040a5b42b2319fcb6064d8296fe71a170fba72b5ecebc3681179903795b",
+    "--source-freeze",
+    "ace1b9311879e22af2b02f9891882ff0c3d4b836",
+    "--profile",
+    "/mnt/c/Users/atafe/PycharmProjects/dante-gravi-signal-ml/config/dante_workflow_expanded_production_v1.json",
+    "--profile-sha256",
+    "e97ccf03c593f0a598e66b4a6d6e62dd9519323b90f7911fb470f50cfdf7f7de",
+    "--productive-source-freeze",
+    "2ed46b5de582466c7463e294f43bd2181b23fbd7",
+    "--productive-dir",
+    "/mnt/e/dante_cache/dante_workflow/expanded_production_20261006/profile_v1",
+    "--recovery-dir",
+    "/mnt/e/dante_cache/dante_workflow/calibration_expanded_admission_20261003/prepared_v1/recovery",
+    "--native-dir",
+    "/mnt/e/dante_cache/dante_workflow/expanded_context_replay_20261004/native_v2",
+    "--binding",
+    "/mnt/e/dante_cache/dante_workflow/expanded_context_provider_20261004/preflight_v2.json",
+    "--binding-sha256",
+    "83da191a5107029a0bd6934f70a1eebfb6694317b81806ad21dda16caf28dfae",
+    "--method",
+    "/mnt/e/dante_cache/dante_workflow/expanded_preprocessing_20261005/method_binding_v1.json",
+    "--preprocessing-dir",
+    "/mnt/e/dante_cache/dante_workflow/expanded_preprocessing_replay_20261005/calibration_v1"
+  ],
+  "o4b_launch_allowed": false,
+  "automatic_resume": false,
+  "default_provider_replaced": false
+}

@@ -1,4 +1,17 @@
 ## Current Position
+- **08.42 preparation COMPLETE; native runner qualified, launch next**:
+  prepare_v3 actualPREPARATION_EXIT_CODE=0 at12:56:07.9344297UTC,
+  204791files/61563706027bytes/8threads; snapshotSHA
+  a265ee5364c8df55122cd6ccdded4e3262f6592a8eecefdc7655245aa03f66d6,
+  seal a657ae9921720575f3b70f9907661c16ba30d8ce21a6b32b8e59c603e0b4865a.
+  New explicit native wrapper: root-owned read-only backing/private mounts,
+  scientific UID1000/no capabilities, complete initial/final metadata scans;
+  all per-read hashes/numerical rules unchanged.134WSL PASS/3root-onlySKIP/
+  11warnings/8.07s/actualOS0;3root fixtures separatelyPASS/2.66s/OS0,
+  RuffPASS.6native launcher lifecycle checksPASS/OS0 including25s foreground.
+  Ordinary fixture EROFS expectation and spawn cwd diagnosed/corrected before
+  science; fixture directories preserved.18scientific raw source pinsPASS.
+  No new scientific run/PASS yet. See08-43PLAN. MonitorPAUSED; no O4b/push.
 - **08.42 reference route fixed; immutable scan schedule approved**:
   Author6Oct14:37Rome `procedi` follows explicit initial/final immutable scan
   proposal; per-read hashes and full numerical verifier unchanged. prepare_v2

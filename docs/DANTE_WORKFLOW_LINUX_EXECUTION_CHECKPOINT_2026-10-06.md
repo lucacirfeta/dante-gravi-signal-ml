@@ -24,6 +24,28 @@ Benchmark stopped; no new scientific run or productive provider promotion.
   for this documentation-only checkpoint. Automation remainsPAUSED.
 - Ubuntu ext4.vhdx on C:, originals/logs E:. D: currently unavailable.
 
+## Latest checkpoint: copied bytes complete, native launch qualified
+
+prepare_v3 completed with observed actualOS0,204791files/61563706027bytes.
+SnapshotSHAa265ee5364c8df55122cd6ccdded4e3262f6592a8eecefdc7655245aa03f66d6.
+Author's subsequent `procedi` approves complete initial/final metadata scans
+on immutable inputs instead of repeated full directory enumeration. The new
+versioned native runner explicitly records this policy; per-read hashes,
+population, configured8workers/batch32/CUDA and full numerical verifier remain
+unchanged. No claimed speedup or calibrated scientific PASS at this checkpoint.
+
+134targetedWSL testsPASS/3root-onlySKIP;3real root namespace fixturesPASS,
+RuffPASS and6Windows native launcher checksPASS with actualOS0. Actual spawn
+workers run UID1000/capabilities0 and cannot write either the mounted input or
+the root-protected backing copy. Host C/E mount inodes remain unchanged outside
+the private namespace. Fixture errno/cwd problems fixed before scientific launch.
+The native wrapper will run one fresh isolated calibration, then one standalone
+verifier only after actualrunOS0/full population. Never resumes historical runs,
+rewrites seals, changes tolerances or launches O4b. Monitor remainsPAUSED.
+
+Remaining sections record earlier checkpoints; pending guard authorization and
+pending byte preparation statements below are superseded by this section.
+
 ## Path binding, not just file copying
 
 The verified mirror is I/O-only. It covers preprocessing images/receipts, not
