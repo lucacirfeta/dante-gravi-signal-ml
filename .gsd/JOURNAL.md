@@ -1,5 +1,54 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - practical native Linux preparation
+
+- Author approves Linux CPU/GPU work and asks not to over-focus on incidental
+  path associations. Versioned required-byte snapshot tool uses8copythreads
+  inherited from protocol; all scientific processing still unchanged. Existing
+  verified image mirror reused for copying only; unused expanded archival GWOSC
+  frames excluded, required prior recovery frames and all admitted inputs kept.
+- Initial preparation regression73PASS/1FAIL exposed ordinary top-level frame
+  exclusion bug before any real preparation; fixed PurePosixPath truthiness.
+  Subsequent74PASS/11upstreamwarnings/5.93s/OS0 and RuffPASS. A new root-only
+  mount fixture subsequently1PASS/15deselected/1.11s/OS0: private native view,
+  write denied, host originals unchanged. Final combined suite75PASS/1root-only
+  SKIP/11upstreamwarnings/5.94s/OS0; root fixture separately passed. Ruff3files
+  PASS, frozen21scientificrawSHA PASS and10protocolartifactbyteSHA PASS.
+- systemd one-shot lifecycle fixture observed UID1000 PID598, completion marker
+  and Deactivated successfully. No recurring automation reactivated. C: host
+  free442974982144bytes and guest ext4 free907780648960bytes at13:04Rome.
+- Single native full metadata scan0.576051603seconds; proposed immutable
+  initial/final full scans with unchanged per-read hashing and full numerical
+  verifier requires author response. No such guard change or new scientific
+  run yet. Benchmark/failure/interruption evidence preserved.
+
+## 2026-10-06 - authorized benchmark stop and native Linux checkpoint
+
+- Human approved stopping the oversized timing comparison and Linux CPU/GPU
+  work. Checked child740/parent447/PGID447 identities before SIGINT to740 only.
+  Actual signal exit-2 observed09:59:24.596134UTC, FAILED_NO_RETRY retained,
+  launcher observed SUPERVISOR_EXIT_CODE=1 at09:59:24.7452769UTC. Original
+  Python447/740 and Windows26668/28508 absent afterward. No WSL/machine stop.
+- Byte mirror completedOS0 at08:33:19.678542UTC and admitted08:33:20.928332:
+  79787files/7889662239bytes, digest
+  b0e819e430a5b2575198b71c081685fa42c5e4194937770e9dd4d5b76437ed2a.
+  Native copy and all failure/logs preserved; no measurement.json or speedup.
+  Expected author interruption, not completed benchmark/scientific failure.
+- Linux hardware smokeOS0: actual small CUDA arithmeticPASS,16CPU affinity,
+  RTX5070/12227MiB total VRAM/driver617.14, torch2.12.1+cu130/CUDA13.0,
+  torch intra-op8/inter-op16. WSL approximately30GiB RAM. Availability proof
+  only, not sustained CPU/GPU utilization, DINO/scoring/full calibration PASS.
+  Current ext4 VHD on C:, originals/logs E:, D: absent from logical drives.
+- Read-only frozen source audit21raw SHA PASS. No new scientific suite;
+  prior93launcher tests remain historical. No changed workers8/batch32/CUDA,
+  numerical tolerances, hashing cadence, population, historical output or seal.
+- Native provider checks sealed recovery_directory equality and prior paths.
+  I/O copy cannot silently become productive. Proposed isolated versioned
+  relocation/provenance binding with unchanged full population, batches,
+  primitives and per-read guards, then fresh numerical run/standalone verifier.
+  Stop for AGENTS structural author approval before adapter implementation.
+  MonitorPAUSED; no automatic resume/retry, O3a/O4b, push/main or shutdown.
+
 ## 2026-10-06 - detached I/O launcher qualification
 
 - Original probe processes and both supervisors absent, sessions23591/80088

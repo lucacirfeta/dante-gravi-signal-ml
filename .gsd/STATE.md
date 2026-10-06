@@ -1,4 +1,30 @@
 ## Current Position
+- **08.42 native byte preparation authorized (2026-10-06 afternoon)**:
+  Author asks practical Linux CPU/GPU work, not unnecessary path gates. New-only
+  8thread required-input snapshot tool, exact bytes, historical runs preserved.
+  Private read-only mount fixture1PASS/OS0; host originals unaffected. systemd
+  one-shot fixture completed UID1000/OS0. Frozen scientific sources unchanged;
+  no new calibration or monitor. Initial/final immutable full-tree scans in
+  place of repeated image-level scans proposed separately; awaiting author,
+  not implemented. Current source path gates handled by isolated mounts, no
+  seal rewrites. See08-42PLAN. Earlier approval-stop proposal superseded.
+  Final WSL75PASS/1root-onlySKIP/11warnings/5.94s/OS0; root fixture separately
+  1PASS/OS0, Ruff3filesPASS; unchanged21scientificSHA and10artifactpinsPASS.
+- **Author-stopped I/O measurement; native Linux checkpoint (2026-10-06 noon)**:
+  Author approved stopping the benchmark and Linux CPU/GPU work. SIGINT only
+  to verified measurePID740; durable actualsignalexit-2 at09:59:24UTC,
+  supervisorOS1 recorded by Windows launcher. Original Python447/740 and
+  Windows26668/28508 gone. MirrorOS0 at08:33:19UTC,79787files/7889662239bytes,
+  digest b0e819e430a5b2575198b71c081685fa42c5e4194937770e9dd4d5b76437ed2a.
+  Copy/failure/logs retained; no measurement PASS or measured speedup.
+  Linux16CPU affinity/RTX5070; actual small CUDA arithmetic smokePASS/OS0,
+  torch2.12.1+cu130/CUDA13.0. Not numerical pipeline qualification.
+  Frozen science21SHA unchanged; protocol8workers/batch32/CUDA unchanged.
+  Sealed recovery_directory/prior paths require explicit versioned relocation
+  binding before productive native input; structural AGENTS author checkpoint.
+  See DANTE_WORKFLOW_LINUX_EXECUTION_CHECKPOINT_2026-10-06.md. No new science,
+  recurring monitor, O4b, deletion or push. MonitorPAUSED. Older active entries
+  below are retained chronology, superseded by these observed stop/completion.
 - **08.41 detached launcher QUALIFIED; real v2 pending launch (2026-10-06)**:
   Author updated Codex and then authorized technical correction/new isolated
   attempt. Original23591/80088 and Windows21040/13484 disappeared without exit

@@ -1,5 +1,25 @@
 # 08.41 - launcher qualification, not real performance PASS
 
+## Author stop after verified byte mirror; no timing comparison PASS
+
+Real mirrorOS0 observed08:33:19.678542UTC on6October; sealed copy admitted
+08:33:20.928332,79787files/7889662239bytes, digest
+b0e819e430a5b2575198b71c081685fa42c5e4194937770e9dd4d5b76437ed2a.
+Native /home/atafe/dante_bench/expanded_storage_20261006/probe_v2/parent
+retained, not scientifically admitted or substituted for productive input.
+
+Human approved stopping. Verified measurePID740 before one SIGINT to740 only.
+Durable events09:59:24.596134UTC record actualsignalexit-2; supervisor failure
+retains `measure observed OS exit -2; no retry`. Windows launcher observes
+SUPERVISOR_EXIT_CODE=1 at09:59:24.7452769UTC. Original scoped processes absent.
+No measurement.json/comparison/speedup/PASS. All v1/v2 evidence preserved.
+
+Separate hardware smokeOS0: actual CUDA arithmeticPASS,16CPU affinity,
+torch2.12.1+cu130/CUDA13.0, RTX5070. Availability only, no pipeline numerical
+validation or sustained utilization. Frozen SHA audit21PASS. Protocol remains
+8workers/batch32/CUDA, no guard-frequency/arithmetic changes. Below launch
+and pending records are historical, superseded by this completion/stop.
+
 Real v2 latest: freeze0477a155b22fe726b8dabeeab880c0d01400839b, launch09:04Rome.
 ParentactualOS0; detachedworker26668 is WMI31048-owned, survives original caller
 exit. WSL28508/Python447supervisor/451mirror, no duplicate/science. Durable events
