@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "status": "FULL_ISOLATED_EXPANDED_CALIBRATION_V1",
+  "authorization": "2026-10-04 full readiness; 2026-10-05 automatic until 2026-10-06 08:00 Europe/Rome; inherited isolated option A, no global promotion",
+  "source_paths": [
+    "src/dante_workflow/expanded_calibration.py",
+    "scripts/replay_dante_workflow_expanded_calibration.py"
+  ],
+  "measurement_rule": "full frozen per-session-detector identity multiset and GPS-ordered configured batches; fresh native preprocessing and scoring; inherited p99/historical replay; no old score, threshold or shard transplant",
+  "same_runtime_replay_rule": "inherit scoring_replay.main pinned expected sealed equality; no new tolerance",
+  "automatic_resume": false,
+  "productive_parent": {
+    "profile_sha256": "e97ccf03c593f0a598e66b4a6d6e62dd9519323b90f7911fb470f50cfdf7f7de",
+    "source_freeze": "2ed46b5de582466c7463e294f43bd2181b23fbd7",
+    "preflight_sha256": "41e140726295eb5a0508a7531bce272fb4b20376729595145af0c9ae6b92868a",
+    "verification_sha256": "93a9d52e208a1ce6fb687ca382d4564e90c728b5f6e22760d9c0bc877f1490fc"
+  },
+  "qualification_policy": {
+    "path": "config/dante_workflow_scoring_replay_v1.json",
+    "sha256": "9872579247010031d00d93b66d807d28b0c7f129aa5897c3193d3165c252fee6"
+  },
+  "scientific_source_pins": {
+    "src/dante_workflow/scoring_replay.py": "1fe5e15089baf13ff3ce26e051ae0883b44685f2fb8d5e98f3f31a9e0ac53dfb",
+    "src/dante_workflow/calibration_contexts.py": "c927d7fba25cf89e35400a1cf43b9a6d183e5e291552e340b60b72cc7a70d575",
+    "src/core/patch_producer.py": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef",
+    "src/core/preprocessor.py": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2",
+    "src/core/utils.py": "909234d6716342622c03c098be06b7e04b0978afcfb9230b0547719fabf2a9a6",
+    "src/core/data_loader.py": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636",
+    "src/core/encoder.py": "db579c866c2aa351ca6495c6717c2d775dac6a00aa1729c1e18db12ed8e9115f",
+    "src/core/patch_scorer.py": "6367d7dfff43d2225d41ea9723b18fd8dbab3e4bce4dfefc1d52f902e9ef6363",
+    "src/core/model_loader.py": "16cc4dd386412aac0d2c87ddec4332d607d73542f8d9ce9f5c9c83fa52da9c40",
+    "src/core/artifact_manifest.py": "ca2593e081997a6db79c891cbb4522d9dfc29204004a6f60e3f216e6060bc02e",
+    "src/core/index_contract.py": "43aa2d29423b782648f5b22a18c2108ab93cae0cf4367d2434ffef87a4d38e15",
+    "src/dante_light/o4a_corrected_runtime.py": "35f1ce6a785ab6e56bedd16324962c6eeca057a07eb4215bb40f4cf9138aacaf",
+    "src/dante_light/contracts.py": "67400c77574cc805eccf617819d80e70907ad8aef0679ef8b8880f6ad0507e30",
+    "config.yaml": "8706c65bf80c88e933d9e64e7e095790f1574c652be3816bb838872037ff0fef",
+    "src/dante_light/o4a_corrected_protocol.py": "1ee8201318d18b7dc45a1301b6a23e202f136b338134aca2622e81db2db3ac12",
+    "src/dante_light/o4a_dependency_audit.py": "b38791d68439d79919ce50a0013034e4daa37238b483cf35f2c8543b030209cd",
+    "src/dante_light/o4a_corrected_execution.py": "368ba6b0ad1f78b162fe4556541dcc7157fbd77d04b4b53f5ac5e3de47687a65",
+    "src/dante_light/evidence.py": "8b16c3c5aff532df1a5e16f8181af1a09b52fadc40e668d34fabf6d82c663d9a"
+  },
+  "boundary": {
+    "isolated_full_calibration_only": true,
+    "default_provider_replaced": false,
+    "historical_scores_or_thresholds_reused": false,
+    "candidate_scan_allowed": false,
+    "o4b_launch_allowed": false,
+    "physical_data_quality_certified": false
+  }
+}
