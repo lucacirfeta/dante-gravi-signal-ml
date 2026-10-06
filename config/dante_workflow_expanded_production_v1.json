@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "ISOLATED_EXPANDED_PRODUCTIVE_INPUT_PROFILE_V1",
+  "authorization": "2026-10-03 option A isolated productive integration; 2026-10-04 full readiness; 2026-10-05 automatic until 2026-10-06 08:00 Europe/Rome; no global provider promotion",
+  "approved_profile_parent": {
+    "path": "config/dante_workflow_production_calibration_v1.json",
+    "sha256": "df3df74b8098fbd520180b1fd044fc55eade7d447c4a2af0b999a6604c4e12e2"
+  },
+  "preprocessing_parent": {
+    "path": "config/dante_workflow_expanded_preprocessing_replay_v1.json",
+    "sha256": "73d3bdf9eb1ea49aab83cd8c2c87d902b1e65cc41451bb59f3c1206c961891aa",
+    "source_freeze": "7eab4eae5d7bb9bfafb0da5cc3aaa6c8537802b7",
+    "summary_sha256": "a78c5f3896206d651d27d062861404a26c6046f0d4771c423030db233fb449c5",
+    "verification_sha256": "3a96f012f5007b855db82df223372359661465203a3b6201a1bd0b144e9b4f7f"
+  },
+  "input_rule": "entire verified expanded calibration context union through unchanged per-read native guards; no manifest, error fallback, historical shard or threshold reuse",
+  "output_namespace": "expanded_production_v1",
+  "automatic_resume": false,
+  "source_paths": [
+    "src/dante_workflow/expanded_production.py",
+    "scripts/preflight_dante_workflow_expanded_production.py"
+  ],
+  "boundary": {
+    "isolated_productive_input_binding_only": true,
+    "default_provider_replaced": false,
+    "full_calibration_verified": false,
+    "encoder_scoring_runtime_qualified": false,
+    "historical_scores_or_thresholds_reused": false,
+    "candidate_scan_allowed": false,
+    "o4b_launch_allowed": false
+  }
+}
