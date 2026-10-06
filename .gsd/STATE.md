@@ -1,4 +1,11 @@
 ## Current Position
+- **Preliminary CLI/UI administrative regression PASS (2026-10-06 03:01Rome)**:
+  Unchanged checkout1d2edad,44390 actualOS0/100passed/180.39s/no stderr.
+  Five existing CLI/UI/profile/input-preflight/packaging files; durable external
+  operational.preliminary logs and observed OPERATIONAL_TEST_EXIT_CODE=0.
+  Synthetic administrative/lifecycle boundary only, no full expanded scientific
+  end-to-end or fresh installed wheel proof. Gates6/7 remainOPEN; no frozen
+  scientific source/config edits, active9907 run duplicated or outcomes inspected.
 - **08.40 full fresh isolated calibration ACTIVE (2026-10-06 02:46Rome)**:
   Freezeace1b9311879e22af2b02f9891882ff0c3d4b836; contractSHA
   aca27040a5b42b2319fcb6064d8296fe71a170fba72b5ecebc3681179903795b.

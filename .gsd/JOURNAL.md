@@ -1,5 +1,17 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - preliminary CLI/UI administrative regression
+
+- Existing CLI/UI/run-profile/input-preflight/packaging suite, unchangedHEAD
+  1d2edad. Supervisor44390/Windowslauncher1600 observedOS0:100passed/180.39s,
+  stderr empty; durable operational.preliminary logs outside the checkout.
+- Synthetic safety/lifecycle and packaging boundaries only. Catalogue parity
+  uses checkout PYTHONPATH, not fresh installed scientific execution. Common
+  full expanded-provider CLI/UI and clean scientific installation remainOPEN.
+- Independent safe operational checks while sole scientific controller320 /
+  supervisor9907 remains active. No scientific duplicate, frozen source/config
+  change, default promotion, score/outcome inspection, O4b or push.
+
 ## 2026-10-06 - 08.40 full fresh calibration launch
 
 - Source freezeace1b9311879e22af2b02f9891882ff0c3d4b836; new isolated contract

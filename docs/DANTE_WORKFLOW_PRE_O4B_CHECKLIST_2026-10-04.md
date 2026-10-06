@@ -17,7 +17,7 @@ state and active processes, do not signal controllers or shut down the PC.
 |3|Isolated productive integration|INPUT BOUNDARY VERIFIED2026-10-06:08.39 bind/standalone verify bothOS0,39891contexts/all39971identities;437post-runWSL PASS/11warnings,RuffPASS,16Git source/parent audit match. Explicit separate provider/profile with per-read guards, isolated output and single writer; no legacy/global redirection. Numerical productive calibration integration is the next separate increment, not implied by metadata PASS.|
 |4|Full fresh calibration|ACTIVE08.40,2026-10-06:496pre-runWSL PASS/59new/RuffPASS,freezeace1b93; sole supervisor9907 full fresh run in separate production_v1. All39971identity memberships/84session-detector groups/39891context union, inherited criteria and fresh scores/p99. No real numerical PASS or execution exit yet. Conditional standalone verify only after runOS0/PASS and before06:00UTC; no historical score/threshold transplant.|
 |5|Complete model/index/runtime qualification|OPEN beyond the bounded28-input proof. Full native representation/index/encoder/scoring/calibration dependencies and reproducibility gate. Driver recorded at actual runtime with fresh numeric proof, not permanently blocked by driver version.|
-|6|Common CLI/UI end-to-end|OPEN. Correct adapters/prerequisites/receipts and stop/failure/resume behavior; no scientific stage opened by UI administrative PASS alone.|
+|6|Common CLI/UI end-to-end|OPEN. Preliminary administrative regression2026-10-06:100WSL tests PASS/180.39s/observedOS0 across CLI/UI/run profiles/input preflight/packaging. Synthetic boundary/lifecycle checks only, not full expanded-provider scientific end-to-end. Correct adapters/prerequisites/receipts and stop/failure/resume behavior still require full-chain evidence; no scientific stage opened by UI administrative PASS alone.|
 |7|Clean scientific installation|OPEN beyond bounded proof. Fresh installed-reader/model/dependency replay; clean install green tests alone is not full scientific certification.|
 |8|O4b-specific frozen scientific contract|OPEN. Explicit public release, detectors/GPS, DQ, population/reference/calibration and validation rules. Use versioned config, no O4a threshold reuse. Any not-yet-approved scientific choice requires author before execution.|
 |9|O4b source/data/runtime/disk preflight|OPEN. Exact scientific contract, source/runtime/input receipts, completeness, independent replay and reviewable readiness summary.|
@@ -33,3 +33,20 @@ Every scientific increment still requires tests before production, source freeze
 observed execution evidence and its named verifier before PASS. On a failed
 provenance/scientific gate preserve everything, diagnose and request direction;
 never bypass a pin, tune after outcomes, reset failure or invent an observed exit.
+
+## Preliminary operational regression, 2026-10-06 03:01Rome
+
+Unchanged checkout1d2edad, supervisor44390/Windowslauncher1600: actualOS0,
+100passed in180.39s, no failures or stderr. Existing five-file suite:
+test_dante_workflow_cli, test_dante_workflow_ui, test_dante_workflow_run_profiles,
+test_dante_workflow_input_preflight and test_dante_workflow_packaging.
+Durable operational.preliminary.{stdout,stderr}.log and
+operational.preliminary.supervisor.log under external expanded_calibration_20261006;
+supervisor records OPERATIONAL_TEST_EXIT_CODE=0. No real scientific stage,
+calibration writer, O4b launch, source/config change or default promotion.
+
+These tests verify existing administrative contracts and detached-process
+fixtures. Package/module catalogue parity uses checkout PYTHONPATH, not a fresh
+wheel installation; packaging metadata tests likewise do not certify installed
+scientific dependencies. Gates6/7 remain OPEN. Full numerical08.40 remains
+ACTIVE under supervisor9907; its pending verifier is not replaced by this suite.
