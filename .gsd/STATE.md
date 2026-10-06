@@ -1,4 +1,16 @@
 ## Current Position
+- **08.40 full fresh isolated calibration ACTIVE (2026-10-06 02:46Rome)**:
+  Freezeace1b9311879e22af2b02f9891882ff0c3d4b836; contractSHA
+  aca27040a5b42b2319fcb6064d8296fe71a170fba72b5ecebc3681179903795b.
+  Sole supervisor9907/launcher30904/Linuxcontroller320 at launch; fresh
+  expanded_calibration_20261006/production_v1. Startup full parent binding
+  may precede lock/progress.496pre-run WSL PASS/59new/11warnings/26.16s,
+  Ruff3filesPASS; no real run/verifier PASS or exit observed yet.
+  Conditional standalone verify only after runOS0/PASS and before06:00UTC.
+  Driver610.74->617.14 is sole runtime metadata drift; fresh numeric gate
+  pending. Existing core bytes pinned, not normalized; all18Git relations
+  explained:9exact+9exact LF-to-CRLF reconstructions (data_loader subset).
+  Monitor deadline unchanged; no duplicate stage or frozen source/config edit.
 - **08.39 isolated productive input PASS_VERIFIED (2026-10-06)**:
   Supervisor19709 observed exit_code0/BIND_EXIT_CODE=0/VERIFY_EXIT_CODE=0.
   39891contexts/all39971identities; preflight SHA41e140726295eb5a0508a7531bce272fb4b20376729595145af0c9ae6b92868a,

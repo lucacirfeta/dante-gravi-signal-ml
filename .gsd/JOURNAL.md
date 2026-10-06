@@ -1,5 +1,27 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - 08.40 full fresh calibration launch
+
+- Source freezeace1b9311879e22af2b02f9891882ff0c3d4b836; new isolated contract
+  SHAaca27040a5b42b2319fcb6064d8296fe71a170fba72b5ecebc3681179903795b.
+-496WSL pre-run PASS/59new cases/11warnings/26.16s/Ruff3filesPASS. Exactly
+  inherited full session memberships/order/batch geometry, new raw-to-image
+  processing and scores/p99; no historical output/shard/threshold transplant.
+  Historical values only enforce unchanged full-context comparison scope.
+- Sole supervisor9907/Windowslauncher30904/Linux320; new external production_v1.
+  Durable worker.supervisor.stdout.log and separate worker/worker.verify logs.
+  Verifier launch is conditional on observed runOS0/PASS/counts/clean evidence
+  AND UTCbefore06:00. Otherwise log DEADLINE_REACHED_NO_VERIFY_LAUNCH.
+- Startup observed single correct run process, stderr empty, E free515691347968B.
+  No run/verifierOSexit, scientific numerical PASS or completion claimed yet.
+- Read-only runtime probeOS0: validated drift is only driver610.74->617.14;
+  historical equivalence remains unproved. New numeric replay must pass.
+- Supplementary Git diagnostic initially assumed whole-file LF->CRLF conversion
+  and failed on preserved mixed-ending data_loader.py. Corrected read-only probe
+  proved18current raw pins/9Git-exact files/9exact newline reconstructions;
+  data_loader retains10LF plus550CRLF. No source edits/normalization/hash waiver,
+  runtime guard bypass or actual scientific stage failure. See08-40-VERIFICATION.
+
 ## 2026-10-06 - 08.39 isolated productive input verified
 
 - Source freeze2ed46b5de582466c7463e294f43bd2181b23fbd7; profile SHA
