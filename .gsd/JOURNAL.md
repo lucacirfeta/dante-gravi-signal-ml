@@ -1,5 +1,38 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - authorized real storage mirror launch
+
+- Direct author `procedi` after the prepared tool authorizes isolated storage
+  copy/measurement, not calibration restart, weakened guards or promotion.
+  Fresh82WSL PASS/11known upstreamwarnings/6.57s; Ruff lint/format3filesPASS,
+  actualOS0. Frozen local commit1e3918fc2a0dbb514889dacafa84177338f274aa;
+  no push, original user untracked directories untouched.
+- Initial ad hoc PowerShell audit incorrectly treated scientific_source_pins
+  as an array rather than JSON object: Get-FileHash null-path diagnostic and
+  printed count4 were NOT valid audit evidence. Corrected fail-fast traversal
+  of PSObject.Properties:18scientific pins+2runner sources+contract, count21
+  exact raw SHA PASS. No source/hash mismatch or guard waiver occurred.
+- Probe raw SHA:module64b94ef0bc730a4f526732fc68bbbc526519a3e61995b956e83c10c3f5ba40ce;
+  script8f739f6f03309e7af9543c125f63abaad7224478c21a543d7feadd8b21c282e6;
+  config407ee599075c4474fd3b01727052248004ff8990cf0a51a0536fdde79582158c.
+- Mirror only launched06:30:28.6636124UTC, session23591, Windows supervisor21040,
+  sole WSL305. No science/spawn job present. Windows read-only source listing:
+  79787files,7889662239bytes; native ext4free916003696640bytes. Startupstderr
+  empty; no sealed mirror result/exit observed yet. New-only target
+  /home/atafe/dante_bench/expanded_storage_20261006/probe_v1/parent.
+- Durable logs: E:\dante_cache\dante_workflow\storage_probe_20261006\mirror.*.log.
+  Mirror and measurement are separate invocations; no automatic scientific
+  stage. Existing monitor remainsPAUSED and08.40interruption remains preserved.
+- Single downstream supervisor80088/Windows13484 created06:36:22.8640196UTC,
+  waits original mirror process handle, then requires durableMIRROR_EXIT_CODE=0
+  and exact freeze line. Checks all3probe raw SHA, SAME read_sealed receipt,
+  exact source/target/BOUNDARY,79787unique rows/7889662239bytes, no failed or
+  measured workspace, available space. Admission actualOS0 required before ONE
+  explicit --stage measure, whose frozen code again checks every byte/layout.
+  Durable mirror.admission.*, measure.* logs store exit evidence. No resume,
+  retry, calibration/verifier stage or recurring automation. No mirrorOS0,
+  admissionOS0, measurement launch/result observed at supervisor creation.
+
 ## 2026-10-06 - author stop and isolated storage benchmark preparation
 
 - Author `stoppa tutto e prepariamo questo` overrides continuation and the

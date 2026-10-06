@@ -1,5 +1,27 @@
 # Storage optimization preparation - no scientific restart
 
+## Authorized real execution (6 October morning)
+
+Direct author `procedi` authorizes the prepared I/O comparison, not scientific
+restart. Local freeze1e3918fc2a0dbb514889dacafa84177338f274aa. Fresh82WSL tests
+PASS/11upstreamwarnings/6.57s; Ruff lint/formatPASS;21frozen scienceSHA exact.
+Mirror launched08:30Rome: session23591, Windows supervisor21040, WSL305.
+Source79787files/7889662239bytes; native ext4 initially916003696640bytes free.
+No sealed mirror/exit or speedup observed at launch. Initial full inventories
+also incur Windows9p metadata overhead; this is not a failed/stalled science run.
+
+Single downstream supervisor80088/Windows13484 waits the mirror handle to exit,
+requires durable actualMIRROR_EXIT_CODE=0, frozen raw probe SHA and SAME
+read_sealed receipt, exact cardinality/bytes/source/target/I/O-only boundary,
+no failure/previous measurement and available space. Admission actualOS0 is
+required before one explicit measure invocation. The frozen measure CLI repeats
+full policy/parent, directory and byte-inventory checks for both arms. No retries
+or scientific stages are chained. Logs/exits remain in
+`E:\dante_cache\dante_workflow\storage_probe_20261006`; read these for observed
+completion. Overnight/hourly monitor remains PAUSED; this is a single job only.
+Preparation statements below are preserved historical evidence, not claims that
+the real comparison is already complete.
+
 ## Preserved stop
 
 Author `stoppa tutto e prepariamo questo` stopped automatic monitoring and the

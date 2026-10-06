@@ -1,4 +1,17 @@
 ## Current Position
+- **08.41 real storage mirror ACTIVE (2026-10-06 08:30Rome)**:
+  Direct author `procedi` authorizes the prepared mirror/measure only; no
+  overnight continuation, scientific restart or monitor reactivation. Freeze
+  1e3918fc2a0dbb514889dacafa84177338f274aa. Sole mirror23591/Windows supervisor
+  21040/WSL305. Source08.38:79787files/7889662239bytes; ext4 initially
+  916003696640bytes free. Durable logs in storage_probe_20261006. No mirror
+  exit/receipt or measured speedup yet.82WSL PASS/11warnings/6.57s and RuffPASS.
+  Corrected read-only audit21frozen science SHA PASS; original calibration
+  remains interrupted, automation PAUSED. One downstream supervisor80088 /
+  Windows13484 waits for mirror21040exit and durableOS0, frozen probe hashes,
+  SAME read_sealed and79787files/7889662239bytes/no failure before launching
+  ONE explicit measure. Its CLI repeats full inventories/policy/parent checks.
+  No measurement launched yet, no retries and no chained scientific stage.
 - **Author stop; isolated storage probe PREPARED (2026-10-06 morning)**:
   Latest instruction `stoppa tutto e prepariamo questo` supersedes overnight
   continuation and hourly monitoring. Monitor monitor-o3a-native-cohort PAUSED
