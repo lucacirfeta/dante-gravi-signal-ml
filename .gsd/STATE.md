@@ -1,4 +1,12 @@
 ## Current Position
+- **08.39 isolated productive input PASS_VERIFIED (2026-10-06)**:
+  Supervisor19709 observed exit_code0/BIND_EXIT_CODE=0/VERIFY_EXIT_CODE=0.
+  39891contexts/all39971identities; preflight SHA41e140726295eb5a0508a7531bce272fb4b20376729595145af0c9ae6b92868a,
+  verification SHA93a9d52e208a1ce6fb687ca382d4564e90c728b5f6e22760d9c0bc877f1490fc.
+  437post-run WSL PASS/11warnings/25.58s,Ruff3files PASS;16Git source auditOS0,
+  sealed relationships/parent pins/counts match, zero incomplete evidence.
+  Explicit isolated wrapper only; global provider, full calibration and GPU
+  qualification remain unpromoted. Continue full fresh calibration design.
 - **08.38 full preprocessing PASS_VERIFIED (2026-10-06)**:
   Supervisor84146 observed exit_code0/RUN_EXIT_CODE=0/VERIFY_EXIT_CODE=0;
   verifier completed01:51:18Rome.39891receipts+39891NPY/all39971bound identities
@@ -7,7 +15,7 @@
   seal4e31466a574ac8078ed377a8fbafafa105cecfb405666b678bcdef716f23a8d1.
   Post-run85168 OS0:306PASS/11warnings/19.89s,Ruff3files PASS. Corrected audit
   86486 OS0:14Git sources,parent/runtime,receipt seals/union/aggregate match.
-  Next08.39 isolated productive input integration in preparation; not full
+  Next08.39 isolated productive input integration now verified; not full
   calibration, physical DQ, GPU/encoder/runtime qualification or O4b authority.
 - **Overnight authority limited to2026-10-06 08:00Europe/Rome**:
   User asks automatic work until morning. No new stage/test/edit at06:00UTC,

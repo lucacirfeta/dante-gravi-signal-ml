@@ -1,5 +1,22 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - 08.39 isolated productive input verified
+
+- Source freeze2ed46b5de582466c7463e294f43bd2181b23fbd7; profile SHA
+  e97ccf03c593f0a598e66b4a6d6e62dd9519323b90f7911fb470f50cfdf7f7de.
+- One supervisor19709: bind18948/Linux303, then verify6548/Linux535;
+  both actual stage exits0, supervisor exit_code0. No repeated native,
+  preprocessing or historical acquisition. Full input union39891/39971.
+- Preflight SHA41e140726295eb5a0508a7531bce272fb4b20376729595145af0c9ae6b92868a;
+  verification SHA93a9d52e208a1ce6fb687ca382d4564e90c728b5f6e22760d9c0bc877f1490fc,
+  seal23af3f709a58a1aace8f47bf3306b2df5e2753677409b0fec008489d1b3f12b1.
+- Post-run41287 actualOS0:437passed/11upstream warnings/25.58s; Ruff3files
+  lint/format PASS. Metadata auditOS0:16Git sources/seals/parent relationships
+  and counts match; only preflight/verification present, no incomplete evidence.
+- Existing monitor updated via OpenAI Docs guidance, same ACTIVE cadence and
+  hard06:00UTC deadline. Continue separate full fresh calibration/qualification;
+  no global provider promotion, score/threshold transplant, O4b or push.
+
 ## 2026-10-06 - 08.38 full preprocessing verified and post-run audit
 
 - Full84146 result observed exit_code0/VERIFY_EXIT_CODE=0; durable supervisor
