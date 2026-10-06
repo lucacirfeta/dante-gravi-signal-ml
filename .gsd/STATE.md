@@ -9,7 +9,11 @@
   supervisor.93WSL PASS/11warnings/7.53s;6Windows lifecycle checks PASS; tiny
   Windows->WSL byte fixture complete with actual supervisor/mirror/measureOS0.
   24raw SHA unchanged (21science+original3probe pins); v2 changes only I/O
-  namespace/authorization. MonitorPAUSED; no science/O4b/default promotion.
+  namespace/authorization. Freeze0477a155b22fe726b8dabeeab880c0d01400839b;
+  new v2 launched09:04Rome once, Windowsworker26668 parentWmiPrvSE31048,
+  WSLlauncher28508/Python supervisor447/mirror451. Caller12872 exited, worker
+  still alive. Durable v2events STARTED; no mirror/measureOS0 or timing result
+  yet. Logs storage_probe_20261006_v2. MonitorPAUSED; no science/O4b/promotion.
 - **08.41 real storage mirror ACTIVE (2026-10-06 08:30Rome)**:
   Direct author `procedi` authorizes the prepared mirror/measure only; no
   overnight continuation, scientific restart or monitor reactivation. Freeze

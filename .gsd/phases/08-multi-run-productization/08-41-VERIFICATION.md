@@ -1,5 +1,11 @@
 # 08.41 - launcher qualification, not real performance PASS
 
+Real v2 latest: freeze0477a155b22fe726b8dabeeab880c0d01400839b, launch09:04Rome.
+ParentactualOS0; detachedworker26668 is WMI31048-owned, survives original caller
+exit. WSL28508/Python447supervisor/451mirror, no duplicate/science. Durable events
+STARTED, stderr empty. Mirror/measurement OS exits, complete byte proof and
+speedup still pending. Logs E:\dante_cache\dante_workflow\storage_probe_20261006_v2.
+
 Original v1: interrupted/lost processes, no actual OS exits or sealed receipts;
 zero copied files at inspection. Original evidence immutable. Human reports
 Codex update; causal inference plausible only, not certified from application logs.

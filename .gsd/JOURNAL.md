@@ -36,6 +36,18 @@
   module/script/config. v2 config differs only authorization/workspace; same
   repetitions, parent hashes, SAME quiet/hash operations and boundary. Monitor
   PAUSED, user untracked and interrupted08.40unchanged. No real v2 stage yet.
+- Tested local freeze0477a155b22fe726b8dabeeab880c0d01400839b; then ONE real
+  v2 launch07:04:26.6404583UTC (09:04Rome), invoking parentactualOS0.
+  Detached Windowsworker26668 parentWmiPrvSE31048; WSLlauncher28508,
+  Python447supervisor,451sole mirror. Python events SUPERVISOR_STARTED and
+  mirrorSTARTED observed. No science process, mirror exit/receipt or measurement
+  launch/result yet; stderr empty. Runtime logs storage_probe_20261006_v2;
+  full byte mirror to fresh native probe_v2. ext4free916002701312bytes.
+- Launch manifest raw pins: config3448a3e6f5474f5c77c5a7528f1cd16b2d897fbc67380d1030ac8ce3bcc35d26;
+  supervisor2ee2d73991723ee9c7963656311f4a360a27347aaf0eb575bc5b34bf5f3de0db;
+  entry7582469194ef3d0d84e2d99ce18e709bcc06c9fd04223868aec500252916202e;
+  Windowslauncher91adb86511179555c28826c7443ffd2d12705682d9cdf1e4f2ab015cf664b0f3.
+  Original module/runner SHA unchanged. No push, recurring task, resume or O4b.
 
 ## 2026-10-06 - authorized real storage mirror launch
 

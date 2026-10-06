@@ -1,5 +1,12 @@
 # Detached one-shot storage probe
 
+Latest real attempt: local freeze0477a155b22fe726b8dabeeab880c0d01400839b;
+probe_v2 launched once6October09:04Europe/Rome. Windowsworker26668 is owned by
+WmiPrvSE31048, not the exited caller12872. WSLlauncher28508, Python447supervisor
+and451mirror. Durable STARTED events and empty stderr observed; full byte proof,
+actual mirror/measure exits and real performance result remain pending. This is
+an independently launched background job, not a reactivated scheduled monitor.
+
 Original probe_v1 is interrupted/unverified: no processes, observed exit or sealed
 mirror. Preserve its namespace and logs. Human reports Codex update; a lifecycle
 interruption is plausible, not a demonstrated benchmark/scientific failure.
