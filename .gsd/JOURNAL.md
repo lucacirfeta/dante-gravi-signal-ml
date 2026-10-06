@@ -1,5 +1,30 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - E: correction and bounded overnight preparation
+
+- Author clarifies E: for raw/backups and requests autonomy until tomorrow.
+  Provisional deadline2026-10-07 08:00Europe/Rome/06:00UTC communicated;
+  optional clarification requested. Earlier6October deadline is superseded.
+- Plan08.46 permits a fresh local Git backup on E: and a read-only release/
+  coverage decision packet. It does not select release/GPS/DQ/populations/null,
+  modify scientific config/source, fetch strain, restart interrupted verification,
+  promote a provider or execute O4b. Checkpoints08.44/45 remain binding.
+- Historical native run remains complete but full standalone verification
+  author-interrupted; no waiver/PASS inferred. Existing489-test post-run and
+  installed administrative checks remain historical, not repeated tonight.
+- Existing paused hourly heartbeat will be updated through the app tool, not
+  by editing automation.toml. Completion/critical-choice/deadline triggers pause;
+  record actual activation/backup evidence separately after observing it.
+- Observed app update returns ACTIVE and persisted automation matches hourly
+  cadence/currentthread. Old production_v1 monitoring prompt replaced; no stale
+  controller lookup or interrupted verifier restart. No duplicate automation.
+- Fresh E: Git bundle create/verify/list-heads all actualOS0, terminalOS0;
+  complete branch history throughbfdd18305d9d860c90a4238eb9f7cf893ab3aa11,
+  size40180949B, SHA429fa4a550b6b26a56bcf2c567459e03a8479b988139aede3f14f4228036abd8.
+  Backup excludes user untracked outputs, external cache/raw and pending docs.
+  No new scientific measurement, tests or qualification claims.
+
+
 ## 2026-10-06 - native16k approval and requested D: storage inventory
 
 - Author `ok` confirms explicit recommendation16384Hz natively, retaining

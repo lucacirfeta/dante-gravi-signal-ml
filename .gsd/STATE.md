@@ -1,4 +1,21 @@
 ## Current Position
+- **Bounded autonomy until 2026-10-07 08:00 Europe/Rome (06:00 UTC)**:
+  Latest author `procesi in autobomia fino a domani` renews autonomous technical
+  preparation, not O4b launch or pending scientific choices. 08:00 is an explicit
+  provisional assumption from the prior overnight cycle, pending the author's
+  optional hour clarification. Follow plan08.46 for E: backup and a concrete
+  author decision packet; never bypass checkpoints08.44/45. Stop earlier if a
+  critical choice is required or safe preparation is complete. At deadline do
+  not begin new work; pause and verify automation, retain logs, do not kill jobs.
+  Hourly heartbeatACTIVE observed through app tool and persisted automation.
+  08.46task1 complete: E: Git bundle40,180,949B, create/verify/list-headsOS0,
+  backed-upHEADbfdd183; task2 author decision packet remains pending. No science
+  changes or controller launched. Receipt in overnight preparation2026-10-07 doc.
+- **E: storage correction approved**:
+  Author `volevo dire E` supersedes the earlier nonexistentD: request. E: is
+  permitted for raw/archive/backup; native Linuxext4 remains the active working
+  filesystem. No new strain acquisition or population selection follows from
+  this storage approval. Heavy archive copies should not compete with compute.
 - **Author approves native16k/20..2048; D: storage unavailable**:
   Latest `ok. puoi usare il disco D per salvare eventuali dati di backup e o raw?`
   confirms recommended native16384Hz processing without widening20..2048Hz band.
