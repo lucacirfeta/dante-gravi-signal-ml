@@ -1,4 +1,14 @@
 ## Current Position
+- **08.43 post-run regression COMPLETE; full verifier still interrupted**:
+  Author `procedi` authorizes short post-run checks and operational qualification,
+  not a verifier relaunch or O4b execution. Fresh WSL selected16-file suite:
+  489PASS/3root-onlySKIP/11upstreamwarnings/27.81s. Terminal wrapperOS0;
+  intended echo of pytest exit was blank because PowerShell expanded shell
+  variables before Bash. No separate pytest exit receipt is claimed. Complete
+  pytest summary is observed; durable log /home/atafe/dante_bench/postrun_20261006_08_43/pytest.log.
+  This selected set is not relabelled as the historical496-test suite.
+  Ruff lint/format8files PASS/observedOS0. No science/source/config changes.
+  Gates4/5 remain OPEN; next fresh installed-package administrative qualification.
 - **08.43 RUN COMPLETE; verifier AUTHOR-STOPPED, not VERIFIED**:
   Latest author `ok procedi` confirms explicit proposal to stop full verifier
   while retaining completed calibration without full-verification claim.

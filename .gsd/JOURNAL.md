@@ -1,5 +1,23 @@
 # DANTE v6 execution journal
 
+## 2026-10-06 - completed native run post-run regressions
+
+- Author `procedi. quando si avvia O4b?` authorizes the announced short tests
+  and remaining safe operational work. No standalone verifier restart or O4b.
+- Fresh WSL suite selected preprocessing binding/replay, expanded production/
+  calibration/provider/replay/names, admission/recovery/contexts, PatchProducer,
+  scoring replay and native-wrapper/immutable-scan/Linux-workspace tests.
+  Observed489passed/3root-onlyskipped/11upstreamwarnings in27.81s. This is the
+  explicit selected16-file suite, not an invented historical496-test count.
+  Whole terminal command exit0 observed. POSTRUN_TEST_EXIT_CODE echo was blank:
+  PowerShell expanded Bash variables in the double-quoted command first.
+  No distinct subprocess exit receipt is inferred; full pytest PASS summary
+  remains durable at /home/atafe/dante_bench/postrun_20261006_08_43/pytest.log.
+- Ruff check --no-cache and format --check bothPASS for8 calibration/native
+  implementation/script/test files, observedOS0. No source or config changed.
+  Interrupted full numerical verification remains incomplete; gates4/5 OPEN.
+
+
 ## 2026-10-06 - author stops additional full native verifier
 
 - Author asked whether duplicate full replay was necessary. Current code audit:

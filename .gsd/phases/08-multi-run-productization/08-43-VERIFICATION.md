@@ -1,5 +1,19 @@
 # 08.43 completed run / author-stopped verification evidence
 
+## Subsequent post-run regression evidence
+
+Author `procedi` approved short post-run checks without relaunching science.
+Fresh selected16-file WSL suite:489passed/3root-onlyskipped/11upstreamwarnings/
+27.81s. Full output retained at /home/atafe/dante_bench/postrun_20261006_08_43/pytest.log.
+Whole terminal wrapperexit0 observed; the separate intended Bash exit-code echo
+was blank due to PowerShell interpolation, so no separate pytest exit receipt
+is claimed. Ruff lint/format8files bothPASS/actualOS0. Selected scope covers
+expanded preprocessing/production/calibration/provider, recovery/admission/
+contexts, PatchProducer/scoring and native execution wrappers. It is not the
+historical496-test invocation and does not replace full numerical verification.
+No scientific code/config edits, verifier restart, provider promotion or gate
+closure. Earlier statements of no post-run suite are historical and superseded.
+
 ## Latest actual completion and explicit stop
 
 RunactualOS0/PASS_COMPLETE_ISOLATED_EXPANDED_CALIBRATION_ONLY/full39971identities,
