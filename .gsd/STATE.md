@@ -1,4 +1,16 @@
 ## Current Position
+- **08.51 bounded CW diagnostic and parallel O4b inventory COMPLETE**:
+  Freeze5b16082 before single StageC run; terminal49628 actualOS0 and durable
+  RUN_EXIT_CODE0. 2896images/2880pairs/16noises/9re-encodes/2905tokens,
+  no failure/incomplete/lock/controller. Retainedartifactcheck97358OS0;
+  alltokenSHA/maingeometry/finiteness, parent/source pins unchanged.
+  Finalpostrun16PASS/1.81s/OS0/RuffPASS. Dose0.01 all512inband score shifts nonzero,
+  medianabs1.553446e-4 vs three-baseline repeatmax2.682209e-7, descriptive only.
+  Signed effects/bounds/dose tables in DANTE_CW_STAGE_C_RESULTS_2026-10-07.md;
+  no equivalence/flags/real-CW claim or 16k reference qualification.
+  Parallel O4b report complete. Next author checkpoint: concrete16k method,
+  compatible reference, population and contracts, not automatic more CW tests.
+  Monitor paused; oldverifier254 preserved, no StageB/O4b/promotion/push.
 - **08.51 paired inference diagnostic approved, pre-run tested**:
   Author `ok procediamo in parallelo` approves retained Stage A RGB -> unchanged
   DINO/scorer and parallel O4b readiness inventory only. All16baselines and

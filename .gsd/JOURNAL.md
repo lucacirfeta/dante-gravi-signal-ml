@@ -1,5 +1,27 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Stage C completed: actual paired token and score responses
+
+- Freeze5b16082 preceded ONE supervised GPU inference; session49628 actualOS0,
+  controller411, durable RUN_EXIT_CODE0. Existing2896RGB only,2880pairedarms,
+  16independentnoises,120sharedbaselinepairs,9re-encodes/2905retainedtokens.
+  SummarySHA6ffb8ad691e16c8862c5112aed1c91eae9b00e2c9cb374e3415f4017ccf61aac.
+- Dose0.01 all512inband actualscorechanges nonzero, medianabs1.553446e-4,
+  maxabs2.936482e-3; above observed three-baseline repeatmax2.682209e-7.
+  Not a universal numeric floor or equivalence/decision/real-dose conclusion.
+  Signs bothdirections, boundexcess0/all2880. Offband2991Hz exactnull/dose0.01,
+ 12.43Hz residual in some cases. Phase-specific tables and limitations retained.
+- Nativeext4 output, unchanged offlineDINO/historicalreference/scorer; no new
+  preprocessing/strain/threshold/flag. Modelcache source/weights pins validated
+  startup/final, runtime stable; source18pins and parentmetadata remainexact.
+- Post-run retainedcheck97358OS0/alltokenSHA/mainshape-finiteness/sixmetric
+  roundtrips without secondforward; finalnewfixtures16PASS/1.81s/OS0/RuffPASS.
+  No failure/partial/tmp/lock or activecontroller. Only3upstreamxFormerswarnings.
+- Parallel O4b readiness inventory complete. Scientificmethod/reference,
+  populations/contracts and installedE2E stillopen; not silently adopted.
+  Approved bounded increment complete, nextauthorcheckpoint documented.
+  Monitorpaused, nativeverifier254 not retried; no StageB/O4b/promotion/push.
+
 ## 2026-10-07 - Bounded Stage C inference and parallel O4b inventory frozen
 
 - Author `ok procediamo in parallelo` approves the bounded descriptive proposal.
