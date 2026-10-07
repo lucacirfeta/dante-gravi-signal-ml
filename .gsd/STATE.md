@@ -1,4 +1,15 @@
 ## Current Position
+- **08.47 metadata capture COMPLETE; CW policy author checkpoint**:
+  Freeze4bdb8b6; once-only live58049 actualOS0; archive
+  E:/dante_cache/dante_workflow/o4b_metadata_proposal_20261007/snapshot_v1.
+  Raw43/timeline42/query/SHA/full-endpoint independent sweepPASS/OS0;
+  source18pins exact. DATAseconds H1=12219205,L1=17112628,V1=17920765.
+  DATA passing allNO-HW masks H1=5,L1=1073086,V1=17920765; excludingCW
+  from proposed veto preserves allDATA, but this alternative is NOT adopted.
+  Official GWOSC notes confirm CW injections in LIGO and no released observing
+  transient-HW injection cohort. Author must choose annotation vs strictCWveto
+  before scientific selection. No active config/provider/population/strain/O4b.
+  Inventory doc records exact scope; monitor persistedPAUSED rechecked.
 - **08.47 daytime metadata-only preparation authorized; source freeze**:
   Author `procedi` follows recommendation finalO4b16kR1/official-run-only,
   DATAfloor, separate injections, temporal disjointness and separateV1.

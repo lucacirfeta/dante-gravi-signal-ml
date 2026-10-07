@@ -1,5 +1,29 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - metadata capture complete, CW injection policy checkpoint
+
+- Source freeze4bdb8b6 precedes once-only fresh snapshot_v1 onE:.
+  Actualsession58049 OSexit0; request/dataset bytes and42timeline responses
+  preserved, zero strain inspected. ProposalSHA
+  5233f7567afaaa354115f2178f30da39e69b8af1ea55901d23e8dc795d7dfc0e.
+- Independent full endpoint sweep (not producerhelpers) verifies exact
+  intersection/complement/DQ/alternative inventory;43rawSHA/querybindingsPASS,
+  source18rawpins exact, terminalOS0. No sampling or numerical-science replay.
+- Unexpected policy consequence: allNO-HW masks retain only5s H1 and1073086s
+  L1, versus DATA12219205s/17112628s. CW alone explains the loss; four non-CW
+  masks retain allDATA. V1DATA17920765s passes allfive. Alternatives are only
+  bookkeeping, not admitted populations; no active source/config adjustment.
+- Official O4 injection notes distinguish CW LIGO injections from absent
+  released observing-time transient hardware injections. Metadata cannot
+  certify morphology/effects; no assumed O4b transient validation cohort.
+- Safe metadata tasks finished. Present author choice: explicitCWannotation
+  with separately approved effects validation, or strictall-injection-free
+  scope requiring redesignedH1 populations. No waiver/notching/subtraction or
+  scientific role allocation. Automation remainsPAUSED; no launch/strain/push.
+- Post-capture newmetadata-only fixture suite30PASS1.17s, terminalOS0;
+  RuffPASS/diffcheckOS0, request/script rawSHA still exact freeze. No further
+  scientific stage or historical-suite repetition.08.47summary records closure.
+
 ## 2026-10-07 - daytime metadata-only source freeze
 
 - New author `procedi` approves the explicit metadata-only next step after
