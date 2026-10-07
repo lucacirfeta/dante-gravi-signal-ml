@@ -8,6 +8,11 @@ Livingston PSD and cannot establish robustness on L1 O4b strain. Native
 16,384 Hz processing with the requested Q-transform band 20..2048 Hz is
 approved in principle; the production configuration remains 4096 Hz.
 
+The subsequent author `procedi` approves the dimensionless dose definition:
+injected line power divided by noise power in the same declared frequency
+band. The band, estimator and numerical grid proposed below are not inferred
+from that approval and are not active in production configuration.
+
 This document prepares the protocol, not an executable scientific contract.
 No numerical grid, estimator, acceptance margin or production promotion is
 implicitly approved. Stage A has not run. Stage B, O4b execution and any
@@ -142,7 +147,7 @@ reference/calibration; it cannot silently become the production method.
 | Field | Status and proposed next choice |
 | --- | --- |
 | Stage A design PSD | Approved: aLIGOZeroDetHighPower, not measured L1 noise |
-| Noise-relative dose | Pending: prefer integrated line power divided by noise power in the same declared band; amplitude/PSD alone is dimensionally ambiguous |
+| Noise-relative dose | Approved: integrated line power divided by noise power in the same declared band; the band and estimator below still require approval |
 | Stage A spectral and image observables | Pending: exact estimator, bands, image metric and two-tone resolution criterion |
 | Stage A grid and reproducibility | Pending: doses, frequency and phase conventions, spacings, independent realizations, seed policy and uncertainty reporting |
 | Native 16k configuration | Pending executable isolated contract: preserve scientific primitives, no hidden 4k resampling, explicit synthesis domain and runtime freeze |
@@ -154,6 +159,118 @@ Approve these definitions before creating the versioned executable contract,
 then test the isolated implementation and freeze it before any run. Stage A
 is descriptive qualification, not an O4b readiness or CW immunity certificate.
 
+## Proposed first descriptive package
+
+All numeric settings here are **PROPOSED_NOT_APPROVED**. They form one bounded
+Stage A package for author review. After approval they must enter a versioned
+isolated executable config before tests and source freeze. Existing production
+configuration and historical sources remain unchanged.
+
+### Synthetic noise and paired inputs
+
+Propose 16 independent Gaussian noise realizations at 16384 Hz, each generated
+over 128 seconds, taking the central 40 seconds for the unchanged 32-second
+analysis with four seconds of padding on each side. The longer generation
+avoids equating the analysed context with the complete periodic FFT synthesis
+interval; it does not make the noise representative of a real detector.
+Use NumPy PCG64 with SeedSequence master seed 20261007 and 16 child streams,
+shared across frequencies and doses. Different phases and doses on the same
+noise are not extra independent realizations.
+
+Use the approved PSD from 10 Hz to Nyquist; below 10 Hz propose a constant
+extension at S_h(10 Hz), with zero DC and Nyquist Fourier components. This
+is an explicit synthetic boundary convention, not physical detector noise.
+The [LALSimulation model](https://lscsoft.docs.ligo.org/lalsuite/7.26/lalsimulation/group___l_a_l_sim_noise_p_s_d__c.html)
+includes only thermal and quantum noise and is documented as valid above
+approximately 9 Hz. Do not extrapolate its formula to zero. Test one-sided
+noise synthesis normalization separately from whitening PSD estimation.
+
+### Frequencies and doses
+
+Use all 18 `f0 (epoch start)` values in the
+[T2500198 v3 table](https://dcc.ligo.org/public/0200/T2500198/003/O4_injection_params.html),
+one stationary tone at a time, preserving pulsar IDs. This is a diagnostic
+column choice, not the detector-frame frequency at every O4b GPS. Retain the
+two out-of-analysis-band tones as labelled controls, not silently excluded
+trials or evidence of in-band validation. No hardware amplitude is inferred.
+
+Propose a one-Hz band B centered on each tone and doses R = 0.01, 0.1, 1,
+10, 100, plus a shared no-injection baseline. Noise power is the integral of
+the known synthesis PSD over B, not estimated from injected data. Scale each
+tone so its tone-only Hann-periodogram power integrated over B, on the central
+32 seconds, equals R times that noise power. Use the estimator defined below
+for this construction, accounting for off-bin leakage rather than substituting
+total sample mean square for in-band power. Inject over all 40 seconds,
+with phases 0 and pi/2 at
+analysis start. R is model-relative power, not a nominal hardware multiplier.
+This four-decade power sweep is descriptive, not a statistical power guarantee.
+
+The singleton workload is 2880 injected contexts: 18 frequencies x 5 doses x
+16 noise realizations x 2 phases, plus 16 baselines. Reuse a baseline only
+for its exact identical noise input; every injected arm recomputes whitening
+PSD. Baseline images are not reference-index or threshold-calibration inputs.
+
+### Spectral and image responses
+
+For temporal output after whitening, bandpass and crop, propose a one-sided
+full-32-second Hann periodogram, constant detrending, no zero-padding and
+`scaling='density'`; see [SciPy periodogram](https://docs.scipy.org/doc/scipy-1.17.0/reference/generated/scipy.signal.periodogram.html).
+This diagnostic estimator is separate from the inherited whitening estimator.
+Integrate bin powers with bin-width overlap over B. Retain P_base(B),
+P_injected(B), their signed difference, E = (P_injected - P_base) / P_base,
+and G = E / R. G is empirical response, not a linear filter gain. Keep negative
+E; a nonpositive/nonfinite denominator is a diagnostic failure, never fixed
+with an epsilon or clipping.
+
+For final uint8 RGB images propose full-image mean absolute paired pixel
+difference divided by 255. Keep images and resized min-max scalar Q maps for
+interpretation. Neither has physical power units. Record Q frequency grids
+when the optimizer chooses different Q values; do not assume native bins
+match between arms. Keep inherited 256 x 256 geometry and Cividis mapping.
+No encoder, reference index, calibrated threshold or flag is computed.
+
+Retain every pair; report median/minimum/maximum over the 16 noise realizations
+separately by phase, frequency and dose. These are descriptive summaries, not
+confidence intervals or equivalence tests. No bootstrap or success threshold
+is introduced in this first package.
+
+G is specifically a noise-relative response. A linear filter attenuating
+both a tone and local noise can cancel in that ratio; G alone cannot establish
+bandpass attenuation. The absolute signed excess P_injected - P_base must also
+be shown in post-whitening units, not physical input-strain power. Together
+these characterize the whole chain without attributing a measured change to
+one component or assuming the filter's nominal pass edge predicts it.
+
+### Resolution probes and workload
+
+Propose tone pairs centered on published pulsars 10, 0 and 14, covering low
+band, interior and high edge. Separations are 0.03125, 0.0625, 0.125, 0.25,
+0.5, 1, 2 and 4 Hz. Each component has R = 1 in its own one-Hz band and
+phase 0; overlapping bands are not independent power measurements. Reusing
+the same 16 noise realizations gives 384 pair contexts. Total proposed
+workload: **3280 contexts**, not 3280 independent experiments.
+
+Keep full temporal spectral profiles, final images and native/resized scalar
+Q profiles with frequency coordinates. Do not infer minimum resolved
+separation from FFT spacing or add a post-hoc peak/valley threshold. This
+first package characterizes profiles; a binary resolution endpoint requires
+a separately approved criterion before becoming an acceptance rule.
+
+### Isolated implementation after approval
+
+Use the existing scientific primitives in a synthetic worker with explicit
+16384 Hz input; assert rate preservation through whitening and crop. Do not
+use the default 4096 Hz resampling route or modify frozen production sources.
+Freeze runtime/filter settings and fixture equality with inherited primitives.
+This qualifies an isolated call chain, not installed production 16k routing.
+
+Tests must cover paired identity, exact dose construction, complete context,
+noise normalization, probe counts, estimator units, invalid denominator
+rejection, source/config boundaries and absence of real-strain/encoder access.
+Fixtures precede source freeze; only then launch one fresh Stage A run on
+Linux ext4, with CPU workers bounded by memory. GPU inference is absent by
+design. No execution-time promise or automated Stage B/O4b/monitor follows.
+
 ## Preparation verification
 
 Documentation-only scope; numerical regression suites are not rerun or
@@ -161,4 +278,11 @@ claimed as new evidence. The availability check above passed with observed
 OS exit 0. Nine required boundary markers and five local references passed
 the documentation check. The staged diff contains only five documentation
 files and `git diff --cached --check` passed, with observed OS exit 0.
-These checks validate preparation scope, not the eventual numerical method.
+These historical checks validate scope, not the eventual numerical method.
+The proposed package has not run or been numerically qualified; its new
+checks are limited to documentation and workload arithmetic.
+
+Package revision checks returned OS exit 0: twelve approval/boundary markers
+passed, and 18 x 5 x 16 x 2 + 16 + 3 x 8 x 16 = 3280 workload contexts
+reconciled. These are document/arithmetic checks, not numerical experiment
+tests or a qualified implementation.

@@ -1,5 +1,24 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - CW dose approved and single numeric package proposed
+
+- Author `procedi` approves line/noise power in the same declared band;
+  band/estimator are not silently selected. Do not ask this definition again.
+- One draft package proposes the remaining settings: 16 independent noises,
+  two phases, five doses, 18 epoch-start-frequency tones, one-Hz bands,
+  descriptive temporal PSD/final RGB/two-tone profiles. Workload proposal:
+  2880 injected singleton +16 baseline +384 pair =3280 contexts, not independent
+  experimental units or observed outcomes. No binary-resolution cutoff adopted.
+- Synthetic low-frequency extension and isolated16k route are explicit proposals;
+  no anchored hardware amplitude, equivalence margin or StageB population chosen.
+- Docs only; no synthetic generator/source/config/numerical execution, old
+  test suite/replay, automation restart, O4b or push. Package approval precedes
+  implementation/tests/freeze and a single isolated StageA run.
+- Revision checks actualOS0: twelve approval/scope markers PASS; proposed
+  workload arithmetic 2880+16+384=3280 PASS; Git diffcheck PASS. No numerical
+  scientific tests started. Ratio-normalized response cannot alone establish
+  filter attenuation; absolute signed excess is explicitly retained too.
+
 ## 2026-10-07 - CW design noise approved and qualification draft prepared
 
 - Author `procedi` approves aLIGOZeroDetHighPower for synthetic StageA, not

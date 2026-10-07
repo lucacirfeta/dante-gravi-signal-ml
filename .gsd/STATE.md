@@ -1,4 +1,13 @@
 ## Current Position
+- **08.48 dimensionless dose approved; one StageA package proposed**:
+  Latest author `procedi` approves line/noise power over the same declared
+  band, not the numeric band/grid/estimator. Draft proposes those together:
+  16 independent noises/two phases/five doses/all18published-start-frequency
+  tones, one-Hz bands, descriptive PSD/image/two-tone profiles. Proposed3280
+  contexts is workload only; no noise or scientific measurement generated,
+  no implemented config/auto-launch. Do not ask dose-definition approval again.
+  Next checkpoint is approval/revision of this package; StageB is separate.
+  No new scheduled task/O4b/verifier restart or historical-source modification.
 - **08.48 CW protocol draft prepared; synthetic PSD approved**:
   Author7October `procedi` approves aLIGOZeroDetHighPower as StageA design-noise
   benchmark, not measuredL1/O4b PSD. No-globalCWveto with annotation confirmed;
