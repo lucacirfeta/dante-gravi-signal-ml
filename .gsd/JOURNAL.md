@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - CW design noise approved and qualification draft prepared
+
+- Author `procedi` approves aLIGOZeroDetHighPower for synthetic StageA, not
+  measured L1 noise or O4b scientific execution. Records confirmed CW annotation
+  without global veto and accepted normalization/L1/fallback additions.
+- New draft and plan08.48 distinguish empirical temporal power/image response,
+  paired PSD recomputation and resolution probes from StageB step-zero real
+  amplitude anchoring and primary decision-unit equivalence. Numeric definitions,
+  grid, synthesis domain and acceptance/populations remain author checkpoints.
+- ReadonlyWSL PSD callable/import check observed actualOS0; Python3.11.15,
+  LALSuite7.26.15/GWpy4.0.1/SciPy1.17.1/NumPy2.4.6. No PSD samples, synthetic
+  noise, strain or scores generated; no availability-to-qualification claim.
+- Docs only, no frozen source/config/metadata snapshot or historical run change.
+  No additional metadata sweep, historical test suite, verifier restart,
+  new automation, O4b launch, provider promotion, push or shutdown.
+  This is daytime preparation under new authority, not the expired night task.
+- Preparation checks actualOS0: nine required boundary markers/five local
+  references PASS, staged doc-only file scope five PASS, staged diffcheck PASS.
+  Git ignored-directory staging required explicit force-add of only these
+  documentation files; ignore rules unchanged, no science file staged.
+
 ## 2026-10-07 - metadata capture complete, CW injection policy checkpoint
 
 - Source freeze4bdb8b6 precedes once-only fresh snapshot_v1 onE:.

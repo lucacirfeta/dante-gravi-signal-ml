@@ -2,9 +2,10 @@
 
 ## Outcome and boundary
 
-Metadata capture and independent accounting PASS. Scientific selection is
-blocked at an explicit CW-injection-policy checkpoint; no strain or outcomes
-were read, no reference/calibration/evaluation members selected, and no O4b
+Metadata capture and independent accounting PASS. The author subsequently
+confirmed CW annotation without a global CW veto; scientific selection still
+requires the dedicated qualification and population contracts. No strain or
+outcomes were read, no reference/calibration/evaluation members selected, and no O4b
 execution or active provider promotion occurred. The literal all-injection-free
 draft inventory is not suitable for an H1 background population: only five
 seconds of released H1 DATA pass every published NO-hardware-injection mask.
@@ -109,7 +110,15 @@ outside the production package; registry/source/method pins remain untouched.
 untracked output/public_smoke and all historical failed/interrupted runs are
 preserved. The author-stopped native verifier remains not PASS_VERIFIED.
 
-## Required author choice
+## CW policy checkpoint and subsequent author decision
+
+The original alternatives below preserve the metadata-stage checkpoint. The
+author subsequently confirmed option 1, with paired CW validation and explicit
+fallbacks rather than an assumption of irrelevance. The strict snapshot and
+its bookkeeping remain unchanged; no resulting population has been admitted.
+Stage A's design PSD is now approved, while observables and executable
+qualification remain pending in the
+[CW protocol draft](DANTE_CW_PREPROCESSING_STAGE_A_DRAFT_2026-10-07.md).
 
 1. Recommended for discussion: keep CW state as an explicit annotation,
    rather than an unconditional time veto, while retaining DATA admission
@@ -121,7 +130,8 @@ preserved. The author-stopped native verifier remains not PASS_VERIFIED.
    is only5s, so this cannot support the intended substantial H1 populations.
    A different data scope or scientific design would require author approval.
 
-No choice is implemented. After a decision, exact temporal allocation,
+The annotation policy is approved but not implemented in an active contract.
+Exact temporal allocation,
 padding/disjointness, native16k filter qualification, detector-specific
 reference/calibration/null and installed scientific boundary still precede
 any O4b launch. V1 availability is not V1 method/null qualification and never

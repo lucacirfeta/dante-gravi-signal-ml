@@ -1,4 +1,17 @@
 ## Current Position
+- **08.48 CW protocol draft prepared; synthetic PSD approved**:
+  Author7October `procedi` approves aLIGOZeroDetHighPower as StageA design-noise
+  benchmark, not measuredL1/O4b PSD. No-globalCWveto with annotation confirmed;
+  normalization/L1-first/extendedfallback approvals recorded in new CW draft.
+  This supersedes the older pendingCWpolicy entries below, not snapshot bytes.
+  StageA separates temporal spectral power from image response, recomputes
+  PSD per paired arm, and cannot replace StageB real amplitude anchoring.
+  ReadonlyWSL importOS0: PSD callable available, LALSuite7.26.15/GWpy4.0.1/
+  SciPy1.17.1/NumPy2.4.6. No synthetic noise, strain or scores generated.
+  Observable/dose/grid/replicate/synthesis-domain definitions remain pending;
+  StageB endpoint/margin/power/multiplicity/disjoint populations remain pending.
+  Draft/plan08.48 only: no active16k config, production promotion or O4b run.
+  Monitor remains paused; no full-verifier relaunch or historical-suite repeat.
 - **08.47 metadata capture COMPLETE; CW policy author checkpoint**:
   Freeze4bdb8b6; once-only live58049 actualOS0; archive
   E:/dante_cache/dante_workflow/o4b_metadata_proposal_20261007/snapshot_v1.
