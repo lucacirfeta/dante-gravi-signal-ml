@@ -1,5 +1,17 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Stage A one native run launched
+
+- Tested implementation frozen local commitb7f2df4aed245e0c07368b04f8044700dcfc62f6.
+  Only10required execution files copied into a fresh ext4 execution_v1; rawSHA
+  exact config/module/CLI and inherited source/runtime auditOS0 in native snapshot.
+- Exec97566 supervisorLinux310/controller420,13spawnworkers, launch12:25UTC.
+  Run/home/atafe/dante_bench/cw_stage_a_20261007/run_v1; nativeparent logs
+  run_v1.supervisor.log/stdout.log/stderr.log preserve observed child exit.
+- First observed595/3280 at12:26UTC, stderrempty/no failure.13workerCPU~99%each,
+  nativefree785GiB. These are live execution observations, not completion/PASS.
+  No runOSexit yet, no automatic StageB/O4b/monitor. Frozen sources untouched.
+
 ## 2026-10-07 - Full Stage A package approved and implementation tested
 
 - Latest author `procedi` approves the complete numeric package in546d07d;

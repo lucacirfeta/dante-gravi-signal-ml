@@ -77,3 +77,18 @@ checks hashes, identity/count, finiteness and reconstructs metrics from retained
 arrays; it explicitly does NOT repeat numerical preprocessing or certify CW
 equivalence. No real-strain/DINO/index/threshold/flags/StageB/O4b route.
 No automatic next scientific stage, old verifier retry or scheduled monitor.
+
+## Native launch evidence
+
+Source freezeb7f2df4aed245e0c07368b04f8044700dcfc62f6. Ten execution files
+copied byte-exact to/home/atafe/dante_bench/cw_stage_a_20261007/execution_v1,
+including immutable inherited primitives/config. NativeauditOS0 reports exact
+config/module/CLI SHA above and pinned runtime/filter, chooses13workers by
+available-memory bound. No prior cache/raw/model/artifact copied.
+
+One run launched12:25UTC7October:exec97566, supervisorLinux310/controller420,
+13spawned workers (workerpool is not duplicated controllers). Outputrun_v1
+in the same parent, durable run_v1.supervisor.log and separate stdout/stderr.
+First observed595/3280 at12:26UTC, stderrempty/no failure, workerCPU~99%each,
+785GiB free ext4. No actualRUN_EXIT_CODE or complete result observed yet.
+No source change after freeze; documentation-only launch bookkeeping follows.

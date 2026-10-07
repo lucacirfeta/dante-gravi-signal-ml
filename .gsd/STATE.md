@@ -1,11 +1,18 @@
 ## Current Position
-- **08.49 full Stage A package APPROVED, implementation tested**:
+- **08.49 Stage A implementation FROZEN; one synthetic run active**:
   Latest author `procedi` approves the complete package proposed in546d07d.
   This supersedes the pending StageA numeric choices below, not StageB choices.
   New isolated config/module/CLI/tests preserve production source bytes.
   WSL101passed/14warnings/16.51s/OS0, RuffPASS; spawned exactRGB fixturePASS.
-  No measured strain, DINO/flags/equivalence or O4b; tests/freeze before one
-  native-ext4 descriptive run. Monitor remains paused; no old verifier retry.
+  Freezeb7f2df4; byte-exact native snapshot
+  /home/atafe/dante_bench/cw_stage_a_20261007/execution_v1, auditOS0.
+  One run/home/atafe/dante_bench/cw_stage_a_20261007/run_v1;
+  exec97566/supervisorLinux310/controller420/13spawnworkers. Launch12:25UTC.
+  First observed progress595/3280 at12:26UTC, stderr empty, no failure;
+  actual RUN_EXIT_CODE not yet observed. Durable run_v1.supervisor.log in parent.
+  CPU workers observed~99%each; GPU absent by approved preprocessing-onlyscope.
+  No measured strain, DINO/flags/equivalence or O4b. Do not duplicate/reset/resume
+  this run or alter frozen execution files. Monitor paused; no old verifier retry.
 - **08.48 dimensionless dose approved; one StageA package proposed**:
   Latest author `procedi` approves line/noise power over the same declared
   band, not the numeric band/grid/estimator. Draft proposes those together:
