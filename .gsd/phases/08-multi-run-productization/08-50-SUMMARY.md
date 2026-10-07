@@ -1,14 +1,16 @@
 ---
 phase: 08-multi-run-productization
 plan: 50
-status: awaiting_reporting_population_decision
+status: awaiting_numeric_preregistration_package
 ---
 
 # Confirmatory Stage B preparation checkpoint
 
 Task 1 complete: author choices recorded, metadata capacities reconciled,
 population recommendation and unresolved preregistration fields documented.
-Task 2 awaits author decision; this plan is not a completed scientific study.
+Task 2 reporting scope approved by the author's latest `procedi`; the remaining
+numeric preregistration package still awaits approval and unresolved inputs.
+This plan is not a completed scientific study.
 No active source/config, population allocation or strain/score execution.
 
 ## Observed verification
@@ -33,9 +35,29 @@ No active source/config, population allocation or strain/score execution.
   ignore rules; explicit addition of the three new checkpoint documents only
   preserves those rules and excludes the user's untracked output folders.
 
-Executor checkpoint: approve the margin's reporting population before selecting
-windows or setting numerical uncertainty/margin/pilot/block/power/anchoring.
-Recommended: eventual admitted L1 O4b reporting population per declared epoch,
-CW annotated; alternative CW-off-only claim is scientifically narrower.
+## Continuation evidence after reporting-scope approval
+
+- Proposed, not adopted: family alpha0.05/two epoch alpha0.025/95% intervals,
+  95% per-epoch power (union-bound at least90% joint), 20% pilot-duration target
+  and secondary discordance budget sharing the primary absolute bias allowance.
+- Readonly WSL analytic planning actualOS0: illustrative delta1.03/q0.0001
+  requires17587 independent pairs; q0.001 requires175867. Delta1.05 scenarios
+  require6455/64550 respectively. No empirical q/effectiveN/margin estimated,
+  detector-outcome simulation, i.i.d. bootstrap or scientific measurement.
+- Official T2500198v3 approximate epoch stop1420815618 converts to
+  2025-01-13T15:00:00UTC; all29January CW-off intervals fall after it,
+  January18T15:23:31 through January24T15:11:56UTC. WSL conversion actualOS0.
+  This is a documentary uncertainty, not proof of an amplitude change.
+  No January exclusion, silent nominal extrapolation or external message.
+- Reporting scope approval does not authorize numeric defaults, real strain,
+  score, active configuration or a new hardware-equivalence assumption.
+- Final doc boundary check actualOS0:14markers/fiveMarkdownfiles/zero scientific
+  files, whitespacePASS. Initial checker expected a phrase not literally in
+  the draft; corrected the lexical check, not the method or scientific evidence.
+
+Executor checkpoint: resolve numerical preregistration and amplitude-history
+inputs before selecting windows or implementing the scientific experiment.
+Approved reporting target: eventual admitted L1 O4b population per declared
+epoch, CW annotated; the CW-off-only reporting alternative is not selected.
 Stage A remains complete, old author-interrupted verifier remains incomplete,
 automation stays paused. No Stage B/O4b, promotion, push or shutdown.

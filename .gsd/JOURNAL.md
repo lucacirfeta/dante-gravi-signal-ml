@@ -1,5 +1,23 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Reporting population approved, numerical package proposed
+
+- Latest author `procedi` after explicit08.50choice approves L1 O4b reporting
+  data per declared epoch includingCW-on with annotation; no exact GPS/DQ/split.
+- Documentation recommends familyalpha0.05, two epoch95%pairedintervals,
+  95%power per epoch (joint at least90%),20%pilot-duration target and a shared
+  absolute-bias budget for secondary discordance. These are proposals only.
+- WSL independent-pair analytic sensitivity actualOS0: delta1.03/q0.0001
+  N17587 and q0.001 N175867; delta1.05 N6455/64550. Nominalp from frozenp99;
+  no data-driven delta/q/effectiveN, no simulation/score/bootstrap/sciencePASS.
+- Official T2500198v3 stop is approximate1420815618=13Jan2025T15:00UTC,
+  before all29JanCW-off intervals18..24Jan; readonlyUTC arithmetic actualOS0.
+  Not an observed amplitude change. History/realized uncertainty and stepzero
+  cannot be inferred from the table; no silent extrapolation or January veto.
+- No scientific sources/config/artifacts changed, no acquisition or expert
+  message. Executor stops at remaining numeric/physical preregistration gate.
+  StageA remains complete, old verifier not restarted, monitor stays paused.
+
 ## 2026-10-07 - Confirmatory CW Stage B documentation checkpoint
 
 - Author chooses confirmatory paired flag-rate ratio with reciprocal bounds,

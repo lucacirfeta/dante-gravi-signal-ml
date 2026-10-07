@@ -1,4 +1,16 @@
 ## Current Position
+- **08.50 reporting scope approved; numeric package proposed only**:
+  Latest author `procedi` accepts eventual admitted L1 O4b reporting population
+  per epoch, CW annotated, for margin anchoring; exact GPS/DQ/epochs unselected.
+  Draft proposes familyalpha0.05/twoepoch95%intervals,95%epochpower,20%pilot
+  and secondary discordance budget tied to primary absolute bias allowance.
+  None adopted as runtime constants; delta/block/tail/stepzero remain pending.
+  Readonly analytic arithmeticOS0, no empirical power or score. Officialtable
+  approximate injectionstop13Jan2025 predates all29JanCW-off intervals18..24Jan;
+  UTCconversionOS0. Not proof of changed amplitudes; require documentary history,
+  no silent extrapolation/January exclusion/expert message. No strain or config.
+  Next: approve/revise package, establish physical anchoring and final contract;
+  monitor remains paused, no StageA repeat/old verifier/StageB/O4b/push.
 - **08.50 confirmatory Stage B draft prepared; population checkpoint**:
   Author selects paired flag-rate ratio/reciprocal bounds as primary and
   discordance as secondary; no descriptive-only substitution. Existing L1
