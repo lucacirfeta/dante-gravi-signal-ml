@@ -1,0 +1,74 @@
+{
+  "schema": "dante_cw_stage_a_v1",
+  "scope": "synthetic_design_noise_descriptive_preprocessing_only",
+  "approval": "author_procedi_after_546d07d_package",
+  "noise": {
+    "model": "SimNoisePSDaLIGOZeroDetHighPower",
+    "source": "https://lscsoft.docs.ligo.org/lalsuite/7.26/lalsimulation/group___l_a_l_sim_noise_p_s_d__c.html",
+    "sample_rate_hz": 16384,
+    "synthesis_seconds": 128,
+    "context_seconds": 40,
+    "analysis_seconds": 32,
+    "pad_seconds": 4,
+    "low_flat_hz": 10,
+    "dc_nyquist": "zero",
+    "realizations": 16,
+    "seed": 20261007,
+    "generator": "PCG64_SeedSequence_children"
+  },
+  "probes": {
+    "source": "https://dcc.ligo.org/public/0200/T2500198/003/O4_injection_params.html",
+    "column": "f0 (epoch start)",
+    "stationary_only": true,
+    "frequencies_hz": [265.5745434232393, 848.8981075185, 575.1634884305022, 108.85715939098749, 1387.484022633, 52.8083243575123, 144.56462627835, 1220.2882099224, 188.96871151675, 763.8473164910492, 26.321649449695, 31.42463753447877, 36.987650118750004, 12.425616064669999, 1991.092161606467, 2991.092161606467, 234.567, 890.123],
+    "band_hz": 1,
+    "doses": [0.01, 0.1, 1, 10, 100],
+    "phase_radians": [0, 1.5707963267948966],
+    "pair_ids": [10, 0, 14],
+    "pair_separations_hz": [0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4],
+    "pair_component_dose": 1,
+    "pair_component_phase": 0
+  },
+  "diagnostic": {
+    "window": "hann",
+    "detrend": "constant",
+    "scaling": "density",
+    "return_onesided": true,
+    "zero_padding": false,
+    "integration": "bin_width_overlap",
+    "summaries": ["median", "minimum", "maximum"],
+    "image_metric": "mean_absolute_paired_uint8_RGB_difference_divided_by_255",
+    "acceptance_threshold": null
+  },
+  "preprocessing": {
+    "f_low": 20.0,
+    "f_high": 2000.0,
+    "qrange": [4, 64],
+    "frange": [20, 2048],
+    "output_size": [256, 256],
+    "colormap": "cividis",
+    "whitening": "per_arm_context_gwpy_default_ASD",
+    "filter": "inherited_gwpy_cheby1_gpass2_gstop30_filtfilt_SOS",
+    "normalization": "inherited_per_image_min_max"
+  },
+  "runtime_versions": {
+    "numpy": "2.4.6", "scipy": "1.17.1", "gwpy": "4.0.1",
+    "lalsuite": "7.26.15", "matplotlib": "3.11.0", "astropy": "8.0.0"
+  },
+  "inherited_sha256": {
+    "src/core/preprocessor.py": "e31a9b618482cfb4db09048f350bd9084849ff27cf1f88dd94088bf912736fc2",
+    "src/core/utils.py": "909234d6716342622c03c098be06b7e04b0978afcfb9230b0547719fabf2a9a6",
+    "src/core/data_loader.py": "b287dab88a260d67592485f3862836d7355f12824b4c4f4fb4143d7517dad636",
+    "src/core/patch_producer.py": "67b858e2ed6e6b0451cf29040f0a39ba98b29828460b5094be6d2f47012f7fef",
+    "config.yaml": "8706c65bf80c88e933d9e64e7e095790f1574c652be3816bb838872037ff0fef"
+  },
+  "operations": {
+    "threads_per_worker": 1,
+    "worker_memory_budget_bytes": 2147483648,
+    "reserve_memory_bytes": 2147483648,
+    "minimum_free_disk_bytes": 21474836480,
+    "output_root": "/home/atafe/dante_bench/cw_stage_a_20261007"
+  },
+  "expected_contexts": 3280,
+  "forbidden": ["real_strain", "network_fetch", "encoder", "index", "scores", "flags", "equivalence", "stage_b", "o4b_execution", "production_promotion"]
+}

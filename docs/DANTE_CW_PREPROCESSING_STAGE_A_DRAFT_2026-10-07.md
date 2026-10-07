@@ -159,12 +159,14 @@ Approve these definitions before creating the versioned executable contract,
 then test the isolated implementation and freeze it before any run. Stage A
 is descriptive qualification, not an O4b readiness or CW immunity certificate.
 
-## Proposed first descriptive package
+## Approved first descriptive package
 
-All numeric settings here are **PROPOSED_NOT_APPROVED**. They form one bounded
-Stage A package for author review. After approval they must enter a versioned
-isolated executable config before tests and source freeze. Existing production
-configuration and historical sources remain unchanged.
+The author's latest `procedi` approves **the complete numeric package** below,
+following its proposal in546d07d. It is now represented by the isolated
+`config/dante_cw_stage_a_v1.json`, with tests and source freeze before execution.
+This approval supersedes StageA pending/proposed language in the preceding
+historical preparation sections; StageB decisions remain pending. Existing
+production configuration and historical scientific sources remain unchanged.
 
 ### Synthetic noise and paired inputs
 
@@ -279,8 +281,8 @@ OS exit 0. Nine required boundary markers and five local references passed
 the documentation check. The staged diff contains only five documentation
 files and `git diff --cached --check` passed, with observed OS exit 0.
 These historical checks validate scope, not the eventual numerical method.
-The proposed package has not run or been numerically qualified; its new
-checks are limited to documentation and workload arithmetic.
+Those preparation checks did not run or numerically qualify the package.
+Implementation and measurement evidence is tracked separately in08.49.
 
 Package revision checks returned OS exit 0: twelve approval/boundary markers
 passed, and 18 x 5 x 16 x 2 + 16 + 3 x 8 x 16 = 3280 workload contexts

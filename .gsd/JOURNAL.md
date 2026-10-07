@@ -1,5 +1,22 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Full Stage A package approved and implementation tested
+
+- Latest author `procedi` approves the complete numeric package in546d07d;
+  pending StageA choices in older entries are superseded, not StageB choices.
+- New isolated config/module/CLI/tests; no inherited scientific source changes.
+  Same inherited Q call observed to retain native profiles, no alternate chain.
+- Final WSL targeted suite101passed/14warnings/16.51s, actualOS0/TEST_EXIT_CODE0,
+  session84525; new real spawned synthetic fixture exactly matches inheritedRGB.
+  Ruff new3filesPASS/OS0; initial E731 reporting-helper issue fixed pre-freeze.
+- First test iteration97passed/15.05s/OS0 had an empty Bash exit marker; preserved
+  separately, not substituted for the corrected final supervisor evidence.
+- Plan08.49 task1 tested; freeze and one ext4 StageA measurement next. This is
+  descriptive design-noise response, not measuredL1/CW safety/equivalence/O4b.
+  Monitor remains paused; no old verifier/StageB/production activation.
+- Intermediate99passed regression log retained. Final101suite also checks
+  durable supervisor observed nonzero OS exit and duplicate launch refusal.
+
 ## 2026-10-07 - CW dose approved and single numeric package proposed
 
 - Author `procedi` approves line/noise power in the same declared band;

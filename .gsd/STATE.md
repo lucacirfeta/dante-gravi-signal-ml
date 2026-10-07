@@ -1,4 +1,11 @@
 ## Current Position
+- **08.49 full Stage A package APPROVED, implementation tested**:
+  Latest author `procedi` approves the complete package proposed in546d07d.
+  This supersedes the pending StageA numeric choices below, not StageB choices.
+  New isolated config/module/CLI/tests preserve production source bytes.
+  WSL101passed/14warnings/16.51s/OS0, RuffPASS; spawned exactRGB fixturePASS.
+  No measured strain, DINO/flags/equivalence or O4b; tests/freeze before one
+  native-ext4 descriptive run. Monitor remains paused; no old verifier retry.
 - **08.48 dimensionless dose approved; one StageA package proposed**:
   Latest author `procedi` approves line/noise power over the same declared
   band, not the numeric band/grid/estimator. Draft proposes those together:
