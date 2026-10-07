@@ -1,5 +1,14 @@
 ## Current Position
-- **08.49 Stage A implementation FROZEN; one synthetic run active**:
+- **08.49 Stage A COMPLETE, actual runOS0 and all artifacts checked**:
+  One frozenb7f2df4 native run ended12:30:08UTC7October. Session97566 actualOS0,
+  durableRUN_EXIT_CODE0.3280receipt+NPZ/16noiseNPY/zero failure,tmp,partial,lock.
+  COMPLETE_DESCRIPTIVE_SYNTHETIC_STAGE_A_ONLY and artifact-integrityPASS;
+  no numerical preprocessing rerun/equivalence/realCW/O4b readiness claim.
+  Nativeexecution_v1/run_v1 preserved in/home/atafe/dante_bench/cw_stage_a_20261007.
+  Reportdocs/DANTE_CW_STAGE_A_RESULTS_2026-10-07.md; no controller/worker active.
+  Next: StageB author endpoint/margin/power/real-amplitude/disjointinput checkpoint.
+  Monitor paused; no StageB/O4b acquisition/scoring, promotion or old verifier.
+- **08.49 launch checkpoint (historical, now complete above)**:
   Latest author `procedi` approves the complete package proposed in546d07d.
   This supersedes the pending StageA numeric choices below, not StageB choices.
   New isolated config/module/CLI/tests preserve production source bytes.

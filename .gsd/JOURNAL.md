@@ -1,5 +1,22 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Stage A complete descriptive measurement
+
+- Exec97566 actualOS0; durableRUN_EXIT_CODE0, supervisor310/controller420 ended.
+  SummaryCOMPLETE_DESCRIPTIVE_SYNTHETIC_STAGE_A_ONLY at12:30:08UTC.
+- ArtifactintegrityPASS:3280receipt+NPZ/16noiseNPY, all identities/hashes/finite
+  arrays/paired spectral and RGB metrics reconstructed; zero failure,tmp,partial,
+  lock. No second numerical preprocessing replay or equivalence certificate.
+- summarySHA200003323561d2e39183d8373e704bc3019b9dfbbc78ad6f2cd4548b93868cb2,
+  verificationSHAbbd5f69b03a606034169b02334af6fcfdd2b5802f1bcf77b58fce7c830b32e8f.
+  Source/config/CLI remain frozen exact; no old artifacts modified.
+- New results report preserves signed responses and separate phase/dose/noise
+  summaries. Nonzero image response is not score/decision effect; no CW safety
+  conclusion or binary resolution endpoint. No processes active or nextstage.
+- Next author checkpoint remains StageB real amplitude anchoring, disjoint
+  inputs/referenceCW state, primary endpoint, bilateral margin/power/multiplicity.
+  Monitor stays paused; no O4b/StageB/old verifier/promotion/push/shutdown.
+
 ## 2026-10-07 - Stage A one native run launched
 
 - Tested implementation frozen local commitb7f2df4aed245e0c07368b04f8044700dcfc62f6.

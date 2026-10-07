@@ -92,3 +92,20 @@ in the same parent, durable run_v1.supervisor.log and separate stdout/stderr.
 First observed595/3280 at12:26UTC, stderrempty/no failure, workerCPU~99%each,
 785GiB free ext4. No actualRUN_EXIT_CODE or complete result observed yet.
 No source change after freeze; documentation-only launch bookkeeping follows.
+
+## Completed run and final administrative audit
+
+Exec97566 returned full object actualOSexit0. Durable supervisor310 records
+actualRUN_EXIT_CODE0; controller420 and13workers have exited. Summary ended
+12:30:08.935049UTC:COMPLETE_DESCRIPTIVE_SYNTHETIC_STAGE_A_ONLY. Full retained
+integrity checkPASS_RETAINED_ARTIFACT_INTEGRITY_ONLY,3280contexts/16noises,
+numerical_preprocessing_replay=false/CW_equivalence=false. Observed3280receipt,
+3280NPZ,16noiseNPY; failure/tmp/partial/lock allzero. Stderr empty. No rerun.
+
+summarySHA200003323561d2e39183d8373e704bc3019b9dfbbc78ad6f2cd4548b93868cb2;
+verificationSHAbbd5f69b03a606034169b02334af6fcfdd2b5802f1bcf77b58fce7c830b32e8f;
+freezeSHA5c9307aafbb0ed74c90aa4bd020d0750e2d1f687f7d4228a62f2538c36aec360.
+Final reportdocs/DANTE_CW_STAGE_A_RESULTS_2026-10-07.md. No inherited source,
+isolated source/config/CLI or historical run changed after freeze. No post-run
+numerical regression repeat claimed: fixture evidence remains pre-run, final
+check is retained-artifact audit. StageB/O4b decisions remain author-gated.

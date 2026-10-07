@@ -8,16 +8,18 @@ Livingston PSD and cannot establish robustness on L1 O4b strain. Native
 16,384 Hz processing with the requested Q-transform band 20..2048 Hz is
 approved in principle; the production configuration remains 4096 Hz.
 
-The subsequent author `procedi` approves the dimensionless dose definition:
-injected line power divided by noise power in the same declared frequency
-band. The band, estimator and numerical grid proposed below are not inferred
-from that approval and are not active in production configuration.
+The author first approved the dimensionless dose definition, then approved
+the full bounded numeric package below with the latest `procedi`. Its settings
+are versioned in the isolated `config/dante_cw_stage_a_v1.json`; they are not
+active in production configuration.
 
-This document prepares the protocol, not an executable scientific contract.
-No numerical grid, estimator, acceptance margin or production promotion is
-implicitly approved. Stage A has not run. Stage B, O4b execution and any
-new strain acquisition remain separately gated. Automation stays paused;
-historical calibration and its author-interrupted verifier remain unchanged.
+Implementation is frozen in local commitb7f2df4 after101 targeted WSL tests
+and exact inherited uint8RGB fixture equality. One synthetic StageA run is
+tracked in08.49; its outcome is separate from the pre-run implementation tests.
+No acceptance margin or production promotion follows this approval. StageB,
+O4b execution and any new strain acquisition remain separately gated.
+Automation stays paused; historical calibration and its author-interrupted
+verifier remain unchanged.
 
 CW status is to be annotated rather than globally vetoed, following the
 author's confirmed option 1. The original metadata snapshot and its strict
@@ -147,17 +149,17 @@ reference/calibration; it cannot silently become the production method.
 | Field | Status and proposed next choice |
 | --- | --- |
 | Stage A design PSD | Approved: aLIGOZeroDetHighPower, not measured L1 noise |
-| Noise-relative dose | Approved: integrated line power divided by noise power in the same declared band; the band and estimator below still require approval |
-| Stage A spectral and image observables | Pending: exact estimator, bands, image metric and two-tone resolution criterion |
-| Stage A grid and reproducibility | Pending: doses, frequency and phase conventions, spacings, independent realizations, seed policy and uncertainty reporting |
-| Native 16k configuration | Pending executable isolated contract: preserve scientific primitives, no hidden 4k resampling, explicit synthesis domain and runtime freeze |
+| Noise-relative dose | Approved: integrated line power divided by known model noise power in the same one-Hz band |
+| Stage A spectral and image observables | Approved: the full package below; descriptive two-tone profiles, no binary resolution criterion |
+| Stage A grid and reproducibility | Approved: doses, frequencies, phases, spacings,16 child noises and seed policy below; descriptive median/min/max only |
+| Native 16k configuration | Tested isolated contract and source freeze08.49; unchanged production configuration |
 | Stage B primary endpoint | Pending choice: calibrated flag-rate change versus a specified percentile endpoint |
 | Stage B acceptance and power | Pending bilateral margin, block scheme, tail support, power target and multiplicity across epochs |
 | Stage B real inputs and anchoring | Pending disjoint populations, reference CW state, amplitude history and step-zero spectral agreement criterion |
 
-Approve these definitions before creating the versioned executable contract,
-then test the isolated implementation and freeze it before any run. Stage A
-is descriptive qualification, not an O4b readiness or CW immunity certificate.
+StageA definitions have been approved, tested and frozen separately in08.49.
+StageB definitions still need approval before any real-data implementation.
+StageA is descriptive qualification, not an O4b readiness or CW immunity certificate.
 
 ## Approved first descriptive package
 
