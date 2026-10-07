@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scope": "DRAFT_METADATA_ONLY_NOT_SCIENTIFIC_ADMISSION",
+  "dataset": "O4b_16KHZ_R1",
+  "timeline_dataset": "O4b",
+  "sample_rate_hz": 16384,
+  "gps_start": 1396796418,
+  "gps_end": 1422118818,
+  "detectors": ["H1", "L1", "V1"],
+  "dataset_metadata_url": "https://gwosc.org/archive/dataset/O4b_16KHZ_R1/json/",
+  "release_source": "https://gwosc.org/O4/O4b/",
+  "flag_source": "https://gwosc.org/archive/dataset/O4b_16KHZ_R1/",
+  "timeline_base_url": "https://gwosc.org/timeline/segments/json/O4b/",
+  "dq_flags": ["DATA", "CBC_CAT1", "CBC_CAT2", "CBC_CAT3", "BURST_CAT1", "BURST_CAT2", "BURST_CAT3", "STOCH_CAT1", "CW_CAT1"],
+  "no_hw_inj_flags": ["NO_CBC_HW_INJ", "NO_BURST_HW_INJ", "NO_DETCHAR_HW_INJ", "NO_CW_HW_INJ", "NO_STOCH_HW_INJ"],
+  "background_proposal": "DATA intersect all published no-hardware-injection flags; no further DQ veto; unassigned to reference/calibration/evaluation",
+  "population_allocation": null,
+  "whitening_context_geometry": null,
+  "scientific_execution_ready": false,
+  "transport": {"workers": 3, "timeout_s": 30, "max_response_bytes": 2097152}
+}

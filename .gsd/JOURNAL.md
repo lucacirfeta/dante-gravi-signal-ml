@@ -1,5 +1,24 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - daytime metadata-only source freeze
+
+- New author `procedi` approves the explicit metadata-only next step after
+  recommended final16kR1/official-run/DATAfloor/injection separation/disjoint
+  populations/separateV1. Exact allocations/context/filter/null and execution
+  remain pending; no automatic continuation of expired overnight authority.
+- New draft request and isolated stdlib tool retain datasetdefinition and all
+  42 published DQ/injection timelines, with URL/query/SHA identity. Candidate
+  background bookkeeping intersects DATA with all published NO-HW masks;
+  other DQ flags are annotations, not vetoes. No-mask-pass complement is not
+  certified injection events or morphology. No context/window selection.
+- Existing partneravailability script reads historical outcomes and is not
+  used. New destinations are exclusive; errors preserve partial evidence and
+  cannot overwrite an existing snapshot. No automatic retry/resume.
+- Initial29fixtures PASS1.11s; final new30fixtures plus targeted existing
+  profile/inputcoverage regressions:110PASS/42.56s, actualterminalOS0;
+  Ruffformat/lintPASS, gitdiffcheckOS0. No frozen scientific source/config edits.
+  Source freeze precedes live metadata collection; automation remainsPAUSED.
+
 ## 2026-10-07 - overnight decision packet complete, early checkpoint pause
 
 - 08.46task2 completed from fetched official GWOSC O4b release,16k archive/

@@ -1,4 +1,15 @@
 ## Current Position
+- **08.47 daytime metadata-only preparation authorized; source freeze**:
+  Author `procedi` follows recommendation finalO4b16kR1/official-run-only,
+  DATAfloor, separate injections, temporal disjointness and separateV1.
+  Scope is metadata proposal only: no strain, outcome, scientific population
+  allocation, method promotion or O4b execution. Overnight deadline has ended;
+  this is fresh daytime authority and automation staysPAUSED.
+  Isolated request/script/tests: WSL110PASS/42.56s, RuffPASS, diffcheckOS0.
+  Thirty new bookkeeping fixtures; existing profile/inputcoverage tests included
+  only as targeted regression, not historical scientific suites reopened.
+  Next: one fresh official metadata snapshot, independent interval/hash audit,
+  then author checkpoint for exact population/context/filter/null choices.
 - **08.46 complete; automation PAUSED at author checkpoint**:
   7October00:48Europe/Rome, before the provisional08:00deadline: both safe
   tasks complete. Gitbackup on E: retained, official-metadata decision packet
