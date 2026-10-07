@@ -1,4 +1,15 @@
 ## Current Position
+- **08.51 paired inference diagnostic approved, pre-run tested**:
+  Author `ok procediamo in parallelo` approves retained Stage A RGB -> unchanged
+  DINO/scorer and parallel O4b readiness inventory only. All16baselines and
+  2880single-tone arms; historical primary reference is diagnostic, not16k
+  qualification. Patch-level bound, signed score deltas and same-runtime
+  repeatability; no thresholds/flags/equivalence/real-dose extrapolation.
+  New WSL16passed/1.83s/actualOS0; Ruff3filesPASS. Reviewer binding/output/pin
+  corrections included before freeze. No real inference exit observed yet.
+  Dedicated Linux ext4 output; fresh supervised run follows local freeze.
+  O4b inventory prepared separately, old verifier exit254 remains unverified.
+  Monitor paused; no StageB/O4b/production promotion/push/shutdown.
 - **08.50 planning criteria approved; disabled partial contract tested**:
   Latest author `procedi` approves alpha/power/pilot20%/secondary-budget rules.
   config/dante_cw_stage_b_planning_v1.json is explicitly nonexecutable, all

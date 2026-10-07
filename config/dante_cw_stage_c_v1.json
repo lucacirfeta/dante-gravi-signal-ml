@@ -1,0 +1,31 @@
+{
+  "schema": "dante_cw_stage_c_v1",
+  "scope": "isolated_descriptive_existing_synthetic_RGB_to_patch_tokens_and_score_only",
+  "approval": "author_ok_procediamo_in_parallelo_after_bounded_diagnostic_proposal",
+  "parent_root": "/home/atafe/dante_bench/cw_stage_a_20261007/run_v1",
+  "output_root": "/home/atafe/dante_bench/cw_stage_c_20261007",
+  "parent_summary_sha256": "200003323561d2e39183d8373e704bc3019b9dfbbc78ad6f2cd4548b93868cb2",
+  "parent_verification_sha256": "bbd5f69b03a606034169b02334af6fcfdd2b5802f1bcf77b58fce7c830b32e8f",
+  "pinned_files": {
+    "src/validation/cw_stage_a.py": "e825c833b7864beb1e6497fcf71abe31543810b32978265e5f10a35dfc041e4d",
+    "config/dante_cw_stage_a_v1.json": "2124e321d5f40b068d022d48b021a0ea22cd70d88e4a48e8a30fd292abe2347e",
+    "config/dante_workflow_expanded_calibration_v1.json": "aca27040a5b42b2319fcb6064d8296fe71a170fba72b5ecebc3681179903795b",
+    "config/dante_o4a_corrected_protocol_v4.json": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc",
+    "config/reference_artifacts.json": "8352154f097b10aa167119b85e94a259a2170c0b68b46dcc6a9127b44cceb1fe"
+  },
+  "selection": "all_baselines_and_all_single_tone_arms_from_parent_grid_no_pairs_no_sampling",
+  "representation": "inherit_primary_index_model_top_k_and_batch_size_from_pinned_protocol_v4",
+  "reference_scope": "historical_O3b_primary_index_for_diagnostic_only_not_a_16k_O4b_reference_qualification",
+  "metrics": ["signed_score_delta", "patch_l2_mean", "patch_l2_max", "patch_top_k_l2_bound", "arithmetic_bound_excess"],
+  "independent_noise_comparison": "all_unordered_baseline_pairs_descriptive_not_independent_CI_not_acceptance",
+  "repeatability": {
+    "baseline_count": 3,
+    "selection": "first_sorted_noise_ids",
+    "runs": "two_single_image_encodes_and_one_joint_batch_compared_with_main_baseline_batch",
+    "scope": "same_observed_GPU_runtime_batch_variation_only_not_cross_hardware"
+  },
+  "operations": {"threads": 1, "minimum_free_bytes": 10737418240},
+  "acceptance_threshold": null,
+  "equivalence_claim_allowed": false,
+  "forbidden": ["new_strain", "preprocessing_rerun", "network_download", "new_reference", "threshold_calibration", "flags", "stage_b", "o4b_execution", "production_promotion", "real_dose_extrapolation"]
+}

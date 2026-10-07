@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Bounded Stage C inference and parallel O4b inventory frozen
+
+- Author `ok procediamo in parallelo` approves the bounded descriptive proposal.
+  New config/module/CLI/tests process existing paired synthetic RGB, never
+  reacquire strain or rerun preprocessing. All16baseline+2880single-tone images;
+  384two-tone resolution arms are outside this score diagnostic by design.
+- Unchanged frozen DINO, historical primary reference and inherited top-k;
+  reference is a diagnostic comparator, not an approved16k/O4b reference.
+  Report patch-token L2, actual signed score delta, exact-arithmetic top-k bound
+  and observed float32 excess, no newly invented numeric acceptance tolerance.
+- Read-only review identified and corrected canonical same-noise baseline
+  binding, imported StageA source pin, full cardinality, dedicated ext4 output,
+  interruption evidence and newly observed pre-forward receipt inventory.
+  Parent metadata integrity is not misrepresented as a historical receipt seal.
+- Final pre-run WSL16passed/1.83s/actualOS0; Ruff3filesPASS. Real inference has
+  not yet launched. Freeze precedes one fresh supervised execution, no resume.
+- Parallel agent created the O4b readiness checkpoint report; native calibration
+  run0/verifier254 is not verified. Method/reference/population/contracts and
+  scientific install/E2E gates remain open. Monitor paused; no StageB/O4b,
+  thresholds/flags/promotions, external messages, push or shutdown.
+
 ## 2026-10-07 - Approved criteria recorded in disabled partial contract
 
 - Latest author `procedi` approves previously listed error-control, power,
