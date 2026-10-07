@@ -1,5 +1,22 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Confirmatory CW Stage B documentation checkpoint
+
+- Author chooses confirmatory paired flag-rate ratio with reciprocal bounds,
+  secondary discordance and disjoint feasibility pilot. No numeric delta,
+  discordance limit, pilot fraction or real population is silently selected.
+- New08.50plan/draft distinguish publication reporting denominator from CW-off
+  validation sample. Recommend eventual admitted L1 O4b reporting population
+  per declared epoch; author decision precedes population implementation.
+- Readonly WSL metadata arithmetic actualOS0:54intervals/1073086s across3groups;
+  Aug-Sep24/787923s/24607analysis or19689context-disjoint capacities,
+  January29/285099s/8887 or7114, November1/64s/1 or1. IndependentN unknown.
+  p99 nominal tail parsed from frozen protocol; no threshold/rate transplantation.
+- No strain, encoder/score, measuredPSD, acquisition or new scientific tests.
+  StageA artifacts/source unchanged; no activeconfig or historic verifier retry.
+  Executor checkpoint stops before unresolved population/margin/power decisions.
+  Monitor stays paused; no StageB/O4b/promotion/push/shutdown.
+
 ## 2026-10-07 - Stage A complete descriptive measurement
 
 - Exec97566 actualOS0; durableRUN_EXIT_CODE0, supervisor310/controller420 ended.

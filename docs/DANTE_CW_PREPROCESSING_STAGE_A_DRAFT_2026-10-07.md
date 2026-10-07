@@ -153,13 +153,18 @@ reference/calibration; it cannot silently become the production method.
 | Stage A spectral and image observables | Approved: the full package below; descriptive two-tone profiles, no binary resolution criterion |
 | Stage A grid and reproducibility | Approved: doses, frequencies, phases, spacings,16 child noises and seed policy below; descriptive median/min/max only |
 | Native 16k configuration | Tested isolated contract and source freeze08.49; unchanged production configuration |
-| Stage B primary endpoint | Pending choice: calibrated flag-rate change versus a specified percentile endpoint |
+| Stage B primary endpoint | Author selected confirmatory paired flag-rate ratio with reciprocal bounds; secondary paired discordance |
 | Stage B acceptance and power | Pending bilateral margin, block scheme, tail support, power target and multiplicity across epochs |
 | Stage B real inputs and anchoring | Pending disjoint populations, reference CW state, amplitude history and step-zero spectral agreement criterion |
 
 StageA definitions have been approved, tested and frozen separately in08.49.
 StageB definitions still need approval before any real-data implementation.
 StageA is descriptive qualification, not an O4b readiness or CW immunity certificate.
+
+The later [Stage B confirmatory draft](DANTE_CW_STAGE_B_CONFIRMATORY_DRAFT_2026-10-07.md)
+supersedes the earlier endpoint-choice language above. The reporting population,
+numeric margin, pilot/power/block scheme and real anchoring remain checkpoints;
+confirmatory direction is not permission to infer those parameters or launch.
 
 ## Approved first descriptive package
 

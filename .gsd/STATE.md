@@ -1,4 +1,15 @@
 ## Current Position
+- **08.50 confirmatory Stage B draft prepared; population checkpoint**:
+  Author selects paired flag-rate ratio/reciprocal bounds as primary and
+  discordance as secondary; no descriptive-only substitution. Existing L1
+  CW-off metadata:24/29intervals,787923/285099s,24607/8887analysis capacities,
+  not independent N. Readonly WSL arithmeticOS0; no strain/score/new selection.
+  Draftdocs/DANTE_CW_STAGE_B_CONFIRMATORY_DRAFT_2026-10-07.md separates nominal
+  p99tail1% from unverified O4b rate and leaves all numeric choices pending.
+  Next author decision: real reporting population anchoring scientific margin;
+  recommend eventual admitted L1 O4b population per reporting epoch, CWannotated,
+  not automatically CW-off test N. Margin/pilot/block/power/stepzero still gated.
+  StageA complete unchanged, monitor paused, no old verifier/StageB/O4b launch.
 - **08.49 Stage A COMPLETE, actual runOS0 and all artifacts checked**:
   One frozenb7f2df4 native run ended12:30:08UTC7October. Session97566 actualOS0,
   durableRUN_EXIT_CODE0.3280receipt+NPZ/16noiseNPY/zero failure,tmp,partial,lock.
