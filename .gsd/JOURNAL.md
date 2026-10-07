@@ -1,5 +1,22 @@
 # DANTE v6 execution journal
 
+## 2026-10-07 - Approved criteria recorded in disabled partial contract
+
+- Latest author `procedi` approves previously listed error-control, power,
+  pilot20%duration and secondary-budget rules; exact populations and scientific
+  method choices remain unresolved. New partial planningJSON records approvals
+  and nulls, scientific_execution_readyfalse, all launch/acquisition flagsfalse.
+- New contract-only WSL9passed/1.05s/actualOS0 after format-only correction;
+  Ruff lintOS0. Fixtures read only JSON/versioned parent, no detector data or
+  numerical pipeline. Historical production sources/config/artifacts unchanged.
+- Bounded public documentation check did not supply realized amplitude history
+  or anchor uncertainty; old-version DCC tool errors not treated as absence.
+  New expert query draft UNSENT. No strain, score or external message.
+- Physical anchoring and remaining margin/blocks/role allocation/flag contract
+  still require evidence and author checkpoint. Contact needs named recipient
+  and explicit send authorization; no silent extrapolation or January removal.
+  Monitor remains paused; no StageA repeat/oldverifier/StageB/O4b/push/shutdown.
+
 ## 2026-10-07 - Reporting population approved, numerical package proposed
 
 - Latest author `procedi` after explicit08.50choice approves L1 O4b reporting

@@ -1,7 +1,7 @@
 ---
 phase: 08-multi-run-productization
 plan: 50
-status: awaiting_numeric_preregistration_package
+status: partial_planning_approved_physical_contract_pending
 ---
 
 # Confirmatory Stage B preparation checkpoint
@@ -11,6 +11,11 @@ population recommendation and unresolved preregistration fields documented.
 Task 2 reporting scope approved by the author's latest `procedi`; the remaining
 numeric preregistration package still awaits approval and unresolved inputs.
 This plan is not a completed scientific study.
+
+Later author `procedi` aftere47a514 approves the listed error-control, power,
+pilot and secondary budget criteria. New disabled partial planning contract
+records them, leaving unresolved scientific fields null. This supersedes earlier
+pending language for those four criteria only, not final preregistration.
 No active source/config, population allocation or strain/score execution.
 
 ## Observed verification
@@ -61,3 +66,18 @@ Approved reporting target: eventual admitted L1 O4b population per declared
 epoch, CW annotated; the CW-off-only reporting alternative is not selected.
 Stage A remains complete, old author-interrupted verifier remains incomplete,
 automation stays paused. No Stage B/O4b, promotion, push or shutdown.
+
+## Partial-contract continuation verification
+
+- WSL final nine new contract checks:9passed/1.05s, actualOS0. Initial nine
+  fixtures passed in1.16s; formatter then mechanically reformatted only the
+  new test. Ruff lintOS0. No numerical scientific suite or old test rerun.
+- Approved targets frozen in non-executable JSON; missing allocation/block/
+  margin/flag/waveform/tolerance stay null, all execution approvals false.
+- Official-table/release public-source search is bounded, not an exhaustive
+  absence proof. Older DCC version landing-page requests returned tool errors,
+  not proof of missing versions. No amplitude history or uncertainty adopted.
+- Expert query prepared UNSENT; no outbound external coordination authorized.
+  Author can provide documentation or authorize contact with a named expert.
+- Initial test-file discovery used a wrong filename, then rg located the
+  existing metadata tests. No provenance failure, guard waiver or source change.

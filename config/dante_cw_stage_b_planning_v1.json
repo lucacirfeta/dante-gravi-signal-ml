@@ -1,0 +1,97 @@
+{
+  "schema": "dante_cw_stage_b_planning_v1",
+  "scope": "APPROVED_PARTIAL_PLANNING_ONLY_NOT_EXECUTABLE",
+  "scientific_execution_ready": false,
+  "approval": "author_procedi_after_e47a514_numeric_planning_checkpoint",
+  "reporting_population": {
+    "detector": "L1",
+    "scope": "eventual_admitted_O4b_reporting_population_per_epoch",
+    "cw_policy": "annotate_not_global_veto",
+    "exact_epoch_gps": null,
+    "dq_selection": null,
+    "reference_calibration_exclusions": null,
+    "window_grid_and_complete_context": null
+  },
+  "primary": {
+    "endpoint": "paired_injected_over_baseline_flag_rate_ratio",
+    "nominal_physically_anchored_arm_only": true,
+    "epochs": ["L1_August_September_2024", "L1_January_2025"],
+    "epoch_pooling_allowed": false,
+    "flag_rule": null,
+    "fresh_16k_threshold_calibration": null,
+    "historical_numeric_threshold_reuse_allowed": false
+  },
+  "error_control": {
+    "family_alpha": 0.05,
+    "primary_epoch_count": 2,
+    "procedure": "Bonferroni_across_epoch_equivalence_claims",
+    "epoch_alpha": 0.025,
+    "paired_interval_coverage": 0.95,
+    "interval_algorithm": null,
+    "simultaneous_95_percent_coverage_claim_allowed": false
+  },
+  "power": {
+    "target_per_epoch": 0.95,
+    "minimum_joint_target_union_bound": 0.9,
+    "empirical_qualification": null,
+    "independent_pair_scenarios_are_observed_power": false
+  },
+  "pilot": {
+    "target_fraction_of_eligible_cw_off_duration_per_epoch": 0.2,
+    "purpose": "discordance_dependence_and_feasibility_only",
+    "metadata_stratified_temporally_disjoint": true,
+    "exact_allocation": null,
+    "context_guards": null,
+    "confirmatory_recycling_allowed": false
+  },
+  "margin": {
+    "scale": "reciprocal_rate_ratio_bounds_1_over_delta_to_delta",
+    "reporting_population_anchor_approved": true,
+    "candidate_half_sigma_rule_not_numerically_frozen": true,
+    "planning_reporting_rate": null,
+    "reporting_uncertainty_method": null,
+    "planning_reporting_sigma": null,
+    "delta": null,
+    "scientific_bias_cap": null,
+    "confirmatory_outcome_margin_retuning_allowed": false
+  },
+  "secondary": {
+    "endpoint": "paired_discordance_fraction_both_directions",
+    "limit_rule": "planning_reporting_rate_times_delta_minus_one",
+    "limit": null,
+    "additional_primary_equivalence_claim": false,
+    "observational_placebo_can_define_paired_margin": false
+  },
+  "uncertainty": {
+    "bootstrap_if_used": "block_based_paired_only",
+    "block_scheme": null,
+    "rare_zero_event_coverage_qualification": null,
+    "minimum_tail_support": null,
+    "zero_flag_handling": null,
+    "zero_observed_discordance_implies_zero_variance": false
+  },
+  "step_zero": {
+    "parameter_source": "https://dcc.ligo.org/public/0200/T2500198/003/O4_injection_params.html",
+    "approximate_published_epoch_stop_gps": 1420815618,
+    "realized_amplitude_history": null,
+    "primary_physical_waveform": null,
+    "spectral_agreement_tolerance": null,
+    "independent_real_cw_on_anchor": null,
+    "public_o4_psd_dose_screen_source": null,
+    "silent_nominal_extrapolation_allowed": false,
+    "before_any_stage_b_score": true
+  },
+  "inherited_point_p99_comparison_only": {
+    "path": "config/dante_o4a_corrected_protocol_v4.json",
+    "sha256": "d88535676a73301c329e3f942a140b6557c6499a6fb2fc66eb966f4a7bb875dc",
+    "new_stage_b_flag_rule_adopted": false
+  },
+  "execution": {
+    "strain_acquisition_authorized": false,
+    "stage_b_launch_authorized": false,
+    "o4b_launch_authorized": false,
+    "production_promotion_authorized": false,
+    "h1_transfer_authorized": false,
+    "v1_h1_l1_null_reuse_authorized": false
+  }
+}

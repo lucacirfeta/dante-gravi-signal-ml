@@ -1,4 +1,15 @@
 ## Current Position
+- **08.50 planning criteria approved; disabled partial contract tested**:
+  Latest author `procedi` approves alpha/power/pilot20%/secondary-budget rules.
+  config/dante_cw_stage_b_planning_v1.json is explicitly nonexecutable, all
+  execution flags false, delta/GPS/DQ/roles/blocks/flag/waveform/tolerance null.
+  New bookkeeping-onlyWSL9PASS/1.05s/OS0; Ruff lintPASS, format corrected before
+  final tests. No active production loader or science algorithm changed.
+  Bounded publicsource search did not establish realization/history uncertainty;
+  unsent querydocs/DANTE_CW_PARAMETER_HISTORY_QUERY_DRAFT_2026-10-07.md prepared.
+  No external message, strain, score, oldverifier, StageB/O4b or promotion.
+  Next: documented physical history/anchoring and remaining scientific contract;
+  external contact needs named recipient and author authorization. Monitorpaused.
 - **08.50 reporting scope approved; numeric package proposed only**:
   Latest author `procedi` accepts eventual admitted L1 O4b reporting population
   per epoch, CW annotated, for margin anchoring; exact GPS/DQ/epochs unselected.

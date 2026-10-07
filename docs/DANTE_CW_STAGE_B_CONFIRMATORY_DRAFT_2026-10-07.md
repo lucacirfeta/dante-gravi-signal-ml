@@ -145,21 +145,26 @@ active new constant. These checks are metadata/arithmetic evidence only,
 not numerical scientific regressions, independence, power or readiness PASS.
 No strain, PSD from measured data, encoder or score was accessed.
 
-## Proposed preregistration package -- not approved numerical settings
+## Partially approved planning package -- not executable preregistration
 
-These recommendations are bundled for author review, not adopted runtime
-constants. The final approved values must live in an isolated versioned
-scientific contract before implementation/tests/freeze or real-data access.
+The latest author `procedi` after the numeric checkpoint approves the 20%
+pilot-duration target, two-epoch error-control criteria, 95% per-epoch power
+target and secondary discordance budget rule. They are recorded in the isolated
+[partial planning contract](../config/dante_cw_stage_b_planning_v1.json).
+Its scope is APPROVED_PARTIAL_PLANNING_ONLY_NOT_EXECUTABLE and scientific
+execution is disabled. The table below preserves the proposals' derivation;
+unresolved entries remain null, not defaulted or adopted as runtime behavior.
+The final scientific contract still needs approval/tests/freeze before data.
 
 | Field | Proposed rule | Still required before execution |
 | --- | --- | --- |
 | Primary flag | Same point-p99 exceedance in both arms; fresh independent 16k calibration, never historical numeric threshold | Author approval of flag definition and reference/calibration allocation |
 | Primary family | Two epoch-specific nominal-amplitude rate ratios; no epoch pooling | Exact epoch boundaries and physically anchored primary waveform |
-| Error control | Family alpha 0.05; Bonferroni epoch alpha 0.025; corresponding two-sided 95% paired intervals for equivalence | Qualified block-based interval procedure, not a t test copied onto rare flags |
-| Power | At least 95% per epoch under no effect, giving at least 90% for both by a union bound | Pilot-based conservative dependence/discordance model and feasible sample size |
-| Pilot | Target 20% of eligible CW-off duration per epoch, metadata-stratified and temporally separated; confirmation never recycled into pilot | Deterministic allocation and guards, approved before any score; actual capacity after all exclusions |
+| Error control | Approved family alpha 0.05; Bonferroni epoch alpha 0.025; corresponding two-sided 95% paired intervals for equivalence | Qualified block-based interval procedure, not a t test copied onto rare flags |
+| Power | Approved target at least 95% per epoch under no effect, giving at least 90% for both by a union bound | Pilot-based conservative dependence/discordance model and feasible sample size |
+| Pilot | Approved target 20% of eligible CW-off duration per epoch, metadata-stratified and temporally separated; confirmation never recycled into pilot | Deterministic allocation and guards, approved before any score; actual capacity after all exclusions |
 | Primary margin | Freeze delta from the approved reporting population's independent planning uncertainty using the candidate half-sigma rule | Reporting effective N, planning rate/uncertainty and any scientific cap; no plug-in from confirmation |
-| Secondary discordance | Propose q_limit = p_pub * (delta - 1), sharing the primary absolute bias budget | Approval of this conservative identity-change budget; secondary reporting does not create another primary equivalence claim |
+| Secondary discordance | Approved budget rule q_limit = p_pub * (delta - 1), sharing the primary absolute bias budget | Numerical p_pub/delta; secondary reporting does not create another primary equivalence claim |
 | Remaining doses | Descriptive only, no dose or favorable epoch selected from scores | Frozen noise-relative dose mapping and scope |
 
 The confidence-level relation follows the two-one-sided-test construction:
@@ -235,3 +240,18 @@ planning arithmetic returned actual OS exit 0; all four sample-size scenarios
 meet the proposed normal-approximation target after rounding. No measurement,
 simulation of detector outcomes, bootstrap, scientific regression suite or
 Stage B/O4b execution was performed.
+
+### Partial-contract implementation checks
+
+Nine new planning-contract fixtures passed in WSL, observed OS exit 0:
+final `9 passed in 1.05s`. Ruff lint passed; the first format-only check requested
+reformatting, applied mechanically before the final tests. These tests check
+approved alpha/power/pilot arithmetic, unresolved values, no silent historical
+flag/threshold adoption, source pin and disabled execution. They do not qualify
+a block interval, power, waveform, scientific install or Stage B method.
+No production loader, CLI or scientific algorithm consumes this partial file.
+
+The bounded public-source check did not resolve realized amplitude history.
+The [expert-query draft](DANTE_CW_PARAMETER_HISTORY_QUERY_DRAFT_2026-10-07.md)
+is prepared but UNSENT. Obtaining outside clarification requires an identified
+recipient and explicit author authorization to send; drafting is not sending.
