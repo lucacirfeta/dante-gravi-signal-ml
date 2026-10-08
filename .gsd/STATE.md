@@ -1,4 +1,17 @@
 ## Current Position
+- **08.52 A1/A2/B design APPROVED; O4a identity checkpoint OPEN**:
+  Author `pusha` approves working-branch push and A1 historicalO4a16k/held-out
+  O4a, A2 SAME reference/O4b, B adaptedO4b SECONDARY; retainedfilter20..2000,
+  Q20..2048. Exclusive A/B and proposedO3b source below superseded.
+  Push actualOS0 published132localcommits ae9395a..b08cc5d; live remote tip
+  b08cc5d/main3e3302f unchanged. Prepush55fixturesPASS/3.12s/OS0/diffclean;
+  objectaudit796blob/nooversize/nohighconfidencepattern, not fullsecurityaudit.
+  Exact correctedO4aledgerSHA358138d9 verified;1294uniqueidentities647H1+647L1.
+  LegacyGPSledger1294 has no detector. Recommend correctedcohort but need
+  author's population confirmation; old4096Hz proof is NOT16kqualification.
+  Raw16kcontext availability/evaluation/calibration/GPS/DQ/contracts stillopen.
+  New approvaldocument only; no activeconfig/strain/indexbuild/O4b launch.
+  Monitorpaused, verifier254 retained, useruntrackedoutput/publicsmoke untouched.
 - **08.52 O4b method/reference decision PREPARED, awaiting author**:
   Latest `da quanto non pushiamo? poi procedi con i next step` authorizes next
   preparation, not push/new scientific choices. Live remoteae9395a matches

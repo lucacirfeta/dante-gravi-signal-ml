@@ -1,5 +1,12 @@
 # O4b: prossimo contratto scientifico, 8 ottobre 2026
 
+> Aggiornamento successivo: l'autore ha approvato A1/O4a, A2/O4b e B come
+> confronto secondario, mantenendo filtro20–2000/Q20–2048. La scelta esclusiva
+> A/B e la reference O3b proposte sotto sono superate da
+> [DANTE_O4B_TRANSFER_DESIGN_2026-10-08.md](DANTE_O4B_TRANSFER_DESIGN_2026-10-08.md).
+> Il push del branch è ora autorizzato ed eseguito; il testo sotto conserva
+> l'evidenza precedente, non descrive più lo stato corrente del remoto.
+
 ## Stato verificato oggi
 
 HEAD iniziale480df74; branch science/o3-transfer-readiness, solo output/ e

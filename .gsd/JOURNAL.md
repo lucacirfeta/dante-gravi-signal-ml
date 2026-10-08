@@ -1,5 +1,26 @@
 # DANTE v6 execution journal
 
+## 2026-10-08 - Working-branch push and A1/A2/B approval recorded
+
+- Explicit `pusha`: git push origin HEAD:refs/heads/science/o3-transfer-readiness
+  actualOS0, ae9395a..b08cc5d (132previouslylocalcommits). Live ls-remote
+  confirms b08cc5dba17f314846cfc184921c39e7aca95622 and unchangedmain
+  3e3302f94f3ab1b4dfbf4a99c7f677bf304efbe4. No merge/main/promotion.
+- Prepush scopedWSL CWStageC/planning/metadata fixtures55PASS/3.12s/actualOS0;
+  diffcheckclean. Newobjectaudit796blob/25273129B/nooversize/no recognized
+  high-confidence credentialpatterns; not comprehensive securitycertification.
+- Author approves A1 samehistoricalO4a windows rebuilt16k/O4aholdout; A2
+  SAMEreference/O4b; B newdisjointO4breference SECONDARY, not exclusiveoption
+  or guaranteedupperbound. Retainfilter20..2000/Q20..2048. O3b proposal superseded.
+- Readonlysourcefeasibility: legacyledgerSHAeb941186/1294numericGPS/no detector;
+  corrected externalledgerSHA358138d9 EXACT/1294rows=uniqueidentities/647each.
+  Existingcorrectedcontract4096Hz; no raw16kavailability or scientificPASS inferred.
+  Newdocument records evidence and one exacttrainingmembership checkpoint:
+  recommend correctedcohort; author confirmation required before build.
+- No oldCW/testsuite/verifier254 retried, no strain/score/activeconfig/indices
+  touched, no O4b stage launched. Historicalartifacts and useruntracked preserved.
+  Documentation-only changes receive diffcheck; monitor remainspaused.
+
 ## 2026-10-08 - Push recency verified and concrete O4b method checkpoint
 
 - Initial HEAD480df74, clean trackedtree. Local reflog last update-by-push
