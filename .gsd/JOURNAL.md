@@ -1,5 +1,24 @@
 # DANTE v6 execution journal
 
+## 2026-10-08 - Push recency verified and concrete O4b method checkpoint
+
+- Initial HEAD480df74, clean trackedtree. Local reflog last update-by-push
+  29September20:18:02Europe/Rome,ae9395a. Actual git ls-remote origin confirms
+  ae9395a science/o3-transfer-readiness and3e3302f main; ahead131 at observation.
+  No fetch/push/remote mutation. User untrackedoutput/publicsmoke preserved.
+- New document presents A rebuilt historical-membership16k reference for
+  transfer versus B new disjoint O4b reference for adaptation, not silently
+  selected. A requires source/member/16kcontext feasibility audit after decision;
+  absent evidence is a checkpoint, not permission to substitute population.
+- Existing StageA geometry proposed, with explicit filter20..2000 versus
+  Q20..2048 distinction; no guarantee of physical coverage or4k equivalence.
+  Previously approved sampling/band/CWannotation/V1separation/storage retained.
+- 08.52 task1 documentation prepared; task2 scientificdecision awaitingauthor.
+  Verification: StageA/protocol rawSHA match prior recorded2124e321/d8853567;
+  registry/source unchanged in Git diff. Documentation diff check clean;
+  no new numerical testPASS claimed for this preparation.
+  No config/source/scientificstage/test suite changed or repeated. Source/RGB
+  artifacts and interruptedverifier254 untouched. Monitorpaused; no O4b launch.
 ## 2026-10-07 - Stage C completed: actual paired token and score responses
 
 - Freeze5b16082 preceded ONE supervised GPU inference; session49628 actualOS0,

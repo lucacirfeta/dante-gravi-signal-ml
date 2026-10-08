@@ -1,4 +1,15 @@
 ## Current Position
+- **08.52 O4b method/reference decision PREPARED, awaiting author**:
+  Latest `da quanto non pushiamo? poi procedi con i next step` authorizes next
+  preparation, not push/new scientific choices. Live remoteae9395a matches
+  latest local update-by-push29Sep20:18:02Rome;131ahead at initial480df74.
+  New decisiondocument separates historical-reference16k reconstruction
+  (transfer) from newO4breference (adaptation), no option adopted. Proposed
+  retained StageA filter20..2000/Q20..2048 geometry explicitly not physical
+  flat-response proof or alreadyactive16kmethod. Reference source feasibility
+  stillunchecked; no silent replacement. GPS/DQ/members/contracts await approval.
+  Documentation-only; no CW rerun, oldverifierretry, strain or tests required.
+  Monitorpaused; no push/main/O4b/promotion/scientificconfig modification.
 - **08.51 bounded CW diagnostic and parallel O4b inventory COMPLETE**:
   Freeze5b16082 before single StageC run; terminal49628 actualOS0 and durable
   RUN_EXIT_CODE0. 2896images/2880pairs/16noises/9re-encodes/2905tokens,
